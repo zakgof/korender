@@ -1,0 +1,101 @@
+package com.zakgof.korender.math
+
+import com.zakgof.korender.glgpu.BufferUtils
+import math.Vec3
+import java.nio.FloatBuffer
+
+class Mat4(
+    val m00: Float,
+    val m01: Float,
+    val m02: Float,
+    val m03: Float,
+    val m10: Float,
+    val m11: Float,
+    val m12: Float,
+    val m13: Float,
+    val m20: Float,
+    val m21: Float,
+    val m22: Float,
+    val m23: Float,
+    val m30: Float,
+    val m31: Float,
+    val m32: Float,
+    val m33: Float
+
+) {
+    companion object {
+        val ZERO: Mat4 = Mat4(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
+        val IDENTITY: Mat4 = Mat4(1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f)
+    }
+
+    operator fun times(a: Float): Mat4 {
+        return Mat4(
+            m00 * a,
+            m01 * a,
+            m02 * a,
+            m03 * a,
+            m10 * a,
+            m11 * a,
+            m12 * a,
+            m13 * a,
+            m20 * a,
+            m21 * a,
+            m22 * a,
+            m23 * a,
+            m30 * a,
+            m31 * a,
+            m32 * a,
+            m33 * a
+        )
+    }
+
+    operator fun times(vec: Vec3): Vec3 {
+        return Vec3(
+            (m00 * vec.x + m01 * vec.y + m02 * vec.z + m03),
+            (m10 * vec.x + m11 * vec.y + m12 * vec.z + m13),
+            (m20 * vec.x + m21 * vec.y + m22 * vec.z + m23)
+        )
+    }
+
+    fun project(vec: Vec3): Vec3 {
+        val w_inv: Float = 1.0f / (m30 * vec.x + m31 * vec.y + m32 * vec.z + m33)
+        return Vec3(
+            w_inv * (m00 * vec.x + m01 * vec.y + m02 * vec.z + m03),
+            w_inv * (m10 * vec.x + m11 * vec.y + m12 * vec.z + m13),
+            w_inv * (m20 * vec.x + m21 * vec.y + m22 * vec.z + m23)
+        )
+    }
+
+    fun asArray(): FloatArray = floatArrayOf(
+        m00, m10, m20, m30,
+        m01, m11, m21, m31,
+        m02, m12, m22, m32,
+        m03, m13, m23, m33
+    )
+
+    fun asBuffer(): FloatBuffer =
+        BufferUtils.createFloatBuffer(16).put(asArray())
+
+
+    operator fun times(mat: Mat4): Mat4 = Mat4(
+        m00 * mat.m00 + m01 * mat.m10 + m02 * mat.m20 + m03 * mat.m30,
+        m00 * mat.m01 + m01 * mat.m11 + m02 * mat.m21 + m03 * mat.m31,
+        m00 * mat.m02 + m01 * mat.m12 + m02 * mat.m22 + m03 * mat.m32,
+        m00 * mat.m03 + m01 * mat.m13 + m02 * mat.m23 + m03 * mat.m33,
+
+        m10 * mat.m00 + m11 * mat.m10 + m12 * mat.m20 + m13 * mat.m30,
+        m10 * mat.m01 + m11 * mat.m11 + m12 * mat.m21 + m13 * mat.m31,
+        m10 * mat.m02 + m11 * mat.m12 + m12 * mat.m22 + m13 * mat.m32,
+        m10 * mat.m02 + m11 * mat.m13 + m12 * mat.m23 + m13 * mat.m33,
+
+        m20 * mat.m00 + m21 * mat.m10 + m22 * mat.m20 + m23 * mat.m30,
+        m20 * mat.m01 + m21 * mat.m11 + m22 * mat.m21 + m23 * mat.m31,
+        m20 * mat.m02 + m21 * mat.m12 + m22 * mat.m22 + m23 * mat.m32,
+        m20 * mat.m03 + m21 * mat.m13 + m22 * mat.m23 + m23 * mat.m33,
+
+        m30 * mat.m00 + m31 * mat.m10 + m32 * mat.m20 + m33 * mat.m30,
+        m30 * mat.m01 + m31 * mat.m11 + m32 * mat.m21 + m33 * mat.m31,
+        m30 * mat.m02 + m31 * mat.m12 + m32 * mat.m22 + m33 * mat.m32,
+        m30 * mat.m03 + m31 * mat.m13 + m32 * mat.m23 + m33 * mat.m33
+    )
+}
