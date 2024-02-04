@@ -1,6 +1,5 @@
 package com.zakgof.korender.lwjgl
 
-import com.zakgof.korender.Engine
 import com.zakgof.korender.Platform
 import gl.*
 import org.lwjgl.glfw.GLFW
@@ -80,8 +79,8 @@ class LwjglPlatform : Platform {
         val vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor())!!
         GLFW.glfwSetWindowPos(
             window,
-            (vidmode.width() - Engine.WINDOW_SIZE.first) / 2,
-            (vidmode.height() - Engine.WINDOW_SIZE.second) / 2
+            (vidmode.width() - width) / 2,
+            (vidmode.height() - height) / 2
         );
         GLFW.glfwMakeContextCurrent(window)
         GLFW.glfwSwapInterval(1)

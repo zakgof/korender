@@ -1,7 +1,9 @@
 package com.zakgof.korender
 
-import com.zakgof.korender.com.zakgof.korender.DefaultCamera
+import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.glgpu.GlGpu
+import com.zakgof.korender.projection.OrthoProjection
+import com.zakgof.korender.projection.Projection
 import math.Vec3
 
 fun korender(platform: Platform, block: KorenderContext.() -> Unit): Unit = KorenderContext(platform).start(block)
@@ -34,18 +36,19 @@ class KorenderContext(val platform: Platform) {
         UniformSupplier { material[it] ?: contextUniforms[it] }
 
     fun start(block: KorenderContext.() -> Unit) {
-        platform.run(800, 600, {block.invoke(this)}, this::frame)
+        platform.run(1280, 800, {block.invoke(this)}, this::frame)
     }
 
     private fun frame() {
-        context.put("view", camera.mat4())
-        context.put("projection", projection.mat4())
-
-        val t1 = projection.mat4().project(camera.mat4() * Vec3.ZERO)
-        val t2 = projection.mat4().project(camera.mat4() * Vec3.X)
-        val t3 = projection.mat4().project(camera.mat4() * Vec3.Y)
-
+        updateContext()
         onFrame.invoke()
         renderables.forEach { it.render() }
+    }
+
+    private fun updateContext() {
+        context.run {
+            put("view", camera.mat4())
+            put("projection", projection.mat4())
+        }
     }
 }

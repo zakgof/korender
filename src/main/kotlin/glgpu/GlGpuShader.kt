@@ -1,10 +1,11 @@
 package com.zakgof.korender.glgpu
 
-import com.zakgof.korender.KrException
-import com.zakgof.korender.ShaderDebugInfo
+import com.zakgof.korender.KorenderException
 import com.zakgof.korender.UniformSupplier
 import com.zakgof.korender.gpu.GpuMesh
 import com.zakgof.korender.gpu.GpuShader
+import com.zakgof.korender.gpu.GpuTexture
+import com.zakgof.korender.material.ShaderDebugInfo
 import com.zakgof.korender.math.Mat4
 import gl.VGL11
 import gl.VGL20
@@ -99,6 +100,8 @@ class GlGpuShader(
             val location = VGL20.glGetAttribLocation(programHandle, name);
             name to location
         }.toMap()
+
+
     }
 
     fun close() {
@@ -126,24 +129,30 @@ class GlGpuShader(
     }
 
     private fun bindUniforms(uniformSupplier: UniformSupplier) {
+        var currentTexUnit = 0
         uniformLocations.forEach {
             val uniformValue =
                 requireNotNull(uniformSupplier[it.key]) { "Material does not provide value for the uniform ${it.key}" }
-            bind(uniformValue, it.value)
+            if (bind(uniformValue, it.value, currentTexUnit))
+                currentTexUnit++
         }
     }
 
-    private fun bind(value: Any, location: Int) {
+    private fun bind(value: Any, location: Int, currentTexUnit: Int) : Boolean {
         when (value) {
             is Int -> VGL20.glUniform1i(location, value)
             is Float -> VGL20.glUniform1f(location, value)
             is Vec3 -> VGL20.glUniform3f(location, value.x, value.y, value.z)
             is Mat4 -> VGL20.glUniformMatrix4fv(location, false, value.asBuffer().rewind())
+            is GpuTexture -> {
+                value.bind(currentTexUnit)
+                VGL20.glUniform1i(location, currentTexUnit)
+            }
             // is Mat2 -> VGL20.glUniformMatrix2fv(uniformLocationByName(uniform), false, value.rewind())
             // is Mat3 -> VGL20.glUniformMatrix3fv(uniformLocationByName(uniform), false, value.rewind())
-            else -> throw KrException("Unsupported uniform type ${value::class.java}")
+            else -> throw KorenderException("Unsupported uniform type ${value::class.java}")
         }
-
+        return value is GpuTexture
     }
 
     override fun toString() = title

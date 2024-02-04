@@ -1,7 +1,5 @@
 package com.zakgof.korender
 
-import com.zakgof.korender.glgpu.Attribute
-
 object Attributes {
     val POS: Attribute = Attribute("pos", 3)
     val NORMAL: Attribute = Attribute("normal", 3)

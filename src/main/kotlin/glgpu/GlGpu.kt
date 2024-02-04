@@ -1,7 +1,8 @@
 package com.zakgof.korender.glgpu
 
+import com.zakgof.korender.Attribute
 import com.zakgof.korender.Gpu
-import com.zakgof.korender.ShaderDebugInfo
+import com.zakgof.korender.material.ShaderDebugInfo
 import com.zakgof.korender.gpu.GpuMesh
 import com.zakgof.korender.gpu.GpuShader
 import java.nio.ByteBuffer

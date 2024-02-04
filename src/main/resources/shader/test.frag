@@ -1,7 +1,14 @@
 #version 130
 
+uniform sampler2D textureMap;
+
+in vec3 vpos;
+in vec3 vnormal;
+in vec2 vtex;
+
 out vec4 fragColor;
 
 void main() {
-  	fragColor = vec4(1, 1, 1, 1);
+	vec4 light = vec4(vnormal * 0.001, 0);
+  	fragColor = texture2D(textureMap, vtex) + light;
 }

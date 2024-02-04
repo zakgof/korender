@@ -1,40 +1,36 @@
 package com.zakgof.korender
 
-import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.com.zakgof.korender.DefaultCamera
+import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.lwjgl.LwjglPlatform
+import com.zakgof.korender.material.ShaderBuilder
+import com.zakgof.korender.projection.OrthoProjection
 import math.Color
 import math.Vec3
+import noise.PerlinNoise
+import java.awt.image.BufferedImage
 
 fun main(): Unit = korender(LwjglPlatform()) {
 
-    val gpuMesh = mesh(3, 3, POS) {
-        vertices(0f, 0f, 0f)
-        vertices(1f, 0f, 0f)
-        vertices(0f, 1f, 0f)
-        indices(0, 1, 2)
-    }.build(gpu)
+    camera = DefaultCamera(pos = Vec3(0f, 0f, 15f), dir = Vec3(0f, 0f, -1f), up = Vec3(0f, 1f, 0f))
+    projection = OrthoProjection(width = 5f, height = 5f, near = 10f, far = 1000f)
 
+    val quadMesh = Meshes.quad(4f).build(gpu)
     val gpuShader = ShaderBuilder("test.vert", "test.frag").build(gpu)
+    val image = createNoisyImage()
+    val gpuTexture = Textures.create(image).build(gpu)
     val material = MapUniformSupplier(
-        "color" to Color(1f, 0f, 0f)
+        "textureMap" to gpuTexture
     )
-
-    val renderable = Renderable(gpuMesh, gpuShader, withContext(material))
-
-    camera = DefaultCamera(
-        pos = Vec3(0f, 0f, 15f),
-        dir = Vec3(0f, 0f, -1f),
-        up = Vec3(0f, 1f, 0f)
-    )
-
-    projection = OrthoProjection(
-        width = 5f,
-        height = 5f,
-        near = 10f,
-        far = 1000f
-    )
-
+    val renderable = Renderable(quadMesh, gpuShader, withContext(material))
     add(renderable)
+}
+
+fun createNoisyImage(): BufferedImage {
+    val noise = PerlinNoise()
+    val image = Images.create(1024, 1024) { x: Int, y: Int ->
+        val n = noise.noise(x.toFloat() , y.toFloat()) * 0.5f + 0.5f
+        Color(n, n, n)
+    }
+    return image
 }
 
