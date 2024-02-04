@@ -1,5 +1,6 @@
 package com.zakgof.korender.glgpu
 
+import com.zakgof.korender.Attribute
 import com.zakgof.korender.gpu.GpuMesh
 import gl.VGL11
 import gl.VGL15

@@ -1,6 +1,5 @@
-package com.zakgof.korender.com.zakgof.korender
+package com.zakgof.korender.camera
 
-import com.zakgof.korender.Camera
 import com.zakgof.korender.math.Mat4
 import math.Vec3
 

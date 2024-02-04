@@ -1,4 +1,4 @@
-package com.zakgof.korender
+package com.zakgof.korender.projection
 
 import com.zakgof.korender.math.Mat4
 

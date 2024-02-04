@@ -1,4 +1,4 @@
-package com.zakgof.korender
+package com.zakgof.korender.material
 
 import java.util.*
 import java.util.regex.Pattern

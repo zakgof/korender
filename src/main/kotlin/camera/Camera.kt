@@ -1,4 +1,4 @@
-package com.zakgof.korender
+package com.zakgof.korender.camera
 
 import com.zakgof.korender.math.Mat4
 
