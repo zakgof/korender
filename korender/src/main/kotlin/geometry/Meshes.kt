@@ -48,7 +48,7 @@ object Meshes {
             this.indexIntBuffer = if (isLongIndex) indexBuffer.asIntBuffer() else null
         }
 
-        fun vertices(vararg values: Vec3) =  values.forEach { vertices(it.x, it.y, it.z) }
+        fun vertices(vararg values: Vec3) = values.forEach { vertices(it.x, it.y, it.z) }
 
         fun vertices(vararg values: Float) {
             println("Vertex ${floatVertexBuffer.position() / 8}: ${values[0]}, ${values[1]}, ${values[2]}")
@@ -67,14 +67,25 @@ object Meshes {
         fun transformPos(function: (Vec3) -> Vec3): MeshBuilder {
             val positionOffset = attrs.takeWhile { it != POS }.sumOf { it.size }
             for (v in 0 until vertexNumber) {
-                floatVertexBuffer.position(v * vertexSize/4 + positionOffset)
+                floatVertexBuffer.position(v * vertexSize / 4 + positionOffset)
                 val x = floatVertexBuffer.get()
                 val y = floatVertexBuffer.get()
                 val z = floatVertexBuffer.get()
-                floatVertexBuffer.position(v * vertexSize/4 + positionOffset)
+                floatVertexBuffer.position(v * vertexSize / 4 + positionOffset)
                 vertices(function.invoke(Vec3(x, y, z)))
             }
             return this
+        }
+
+        fun positions(): List<Vec3> {
+            val positionOffset = attrs.takeWhile { it != POS }.sumOf { it.size }
+            return (0 until vertexNumber).map {
+                floatVertexBuffer.position(it * vertexSize / 4 + positionOffset)
+                val x = floatVertexBuffer.get()
+                val y = floatVertexBuffer.get()
+                val z = floatVertexBuffer.get()
+                Vec3(x, y, z)
+            }
         }
 
         fun build(gpu: Gpu): GpuMesh {
@@ -105,29 +116,29 @@ object Meshes {
     fun cube(hs: Float = 0.5f): MeshBuilder =
         create(24, 36, POS, NORMAL, TEX) {
             vertices(-hs, -hs, -hs, -1f, 0f, 0f, 0f, 0f)
-            vertices(-hs,  hs, -hs, -1f, 0f, 0f, 0f, 1f)
-            vertices(-hs,  hs,  hs, -1f, 0f, 0f, 1f, 1f)
-            vertices(-hs, -hs,  hs, -1f, 0f, 0f, 1f, 0f)
-            vertices(-hs, -hs,  hs,  0f, 0f, 1f, 0f, 0f)
-            vertices(-hs,  hs,  hs,  0f, 0f, 1f, 0f, 1f)
-            vertices( hs,  hs,  hs,  0f, 0f, 1f, 1f, 1f)
-            vertices( hs, -hs,  hs,  0f, 0f, 1f, 1f, 0f)
-            vertices( hs, -hs,  hs,  1f, 0f, 0f, 0f, 0f)
-            vertices( hs,  hs,  hs,  1f, 0f, 0f, 0f, 1f)
-            vertices( hs,  hs, -hs,  1f, 0f, 0f, 1f, 1f)
-            vertices( hs, -hs, -hs,  1f, 0f, 0f, 1f, 0f)
-            vertices( hs, -hs, -hs,  0f, 0f, -1f, 0f, 0f)
-            vertices( hs,  hs, -hs,  0f, 0f, -1f, 0f, 1f)
-            vertices(-hs,  hs, -hs,  0f, 0f, -1f, 1f, 1f)
-            vertices(-hs, -hs, -hs,  0f, 0f, -1f, 1f, 0f)
-            vertices(-hs,  hs,  hs,  0f, 1f, 0f, 0f, 0f)
-            vertices(-hs,  hs, -hs,  0f, 1f, 0f, 0f, 1f)
-            vertices( hs,  hs, -hs,  0f, 1f, 0f, 1f, 1f)
-            vertices( hs,  hs,  hs,  0f, 1f, 0f, 1f, 0f)
-            vertices( hs, -hs,  hs,  0f, -1f, 0f, 0f, 0f)
-            vertices( hs, -hs, -hs,  0f, -1f, 0f, 0f, 1f)
-            vertices(-hs, -hs, -hs,  0f, -1f, 0f, 1f, 1f)
-            vertices(-hs, -hs,  hs,  0f, -1f, 0f, 1f, 0f)
+            vertices(-hs, hs, -hs, -1f, 0f, 0f, 0f, 1f)
+            vertices(-hs, hs, hs, -1f, 0f, 0f, 1f, 1f)
+            vertices(-hs, -hs, hs, -1f, 0f, 0f, 1f, 0f)
+            vertices(-hs, -hs, hs, 0f, 0f, 1f, 0f, 0f)
+            vertices(-hs, hs, hs, 0f, 0f, 1f, 0f, 1f)
+            vertices(hs, hs, hs, 0f, 0f, 1f, 1f, 1f)
+            vertices(hs, -hs, hs, 0f, 0f, 1f, 1f, 0f)
+            vertices(hs, -hs, hs, 1f, 0f, 0f, 0f, 0f)
+            vertices(hs, hs, hs, 1f, 0f, 0f, 0f, 1f)
+            vertices(hs, hs, -hs, 1f, 0f, 0f, 1f, 1f)
+            vertices(hs, -hs, -hs, 1f, 0f, 0f, 1f, 0f)
+            vertices(hs, -hs, -hs, 0f, 0f, -1f, 0f, 0f)
+            vertices(hs, hs, -hs, 0f, 0f, -1f, 0f, 1f)
+            vertices(-hs, hs, -hs, 0f, 0f, -1f, 1f, 1f)
+            vertices(-hs, -hs, -hs, 0f, 0f, -1f, 1f, 0f)
+            vertices(-hs, hs, hs, 0f, 1f, 0f, 0f, 0f)
+            vertices(-hs, hs, -hs, 0f, 1f, 0f, 0f, 1f)
+            vertices(hs, hs, -hs, 0f, 1f, 0f, 1f, 1f)
+            vertices(hs, hs, hs, 0f, 1f, 0f, 1f, 0f)
+            vertices(hs, -hs, hs, 0f, -1f, 0f, 0f, 0f)
+            vertices(hs, -hs, -hs, 0f, -1f, 0f, 0f, 1f)
+            vertices(-hs, -hs, -hs, 0f, -1f, 0f, 1f, 1f)
+            vertices(-hs, -hs, hs, 0f, -1f, 0f, 1f, 0f)
 
             indices(0, 2, 1, 0, 3, 2)
             indices(4, 6, 5, 4, 7, 6)
