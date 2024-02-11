@@ -92,7 +92,7 @@ class LwjglPlatform : Platform {
             (vidmode.height() - height) / 2
         );
         GLFW.glfwMakeContextCurrent(window)
-        GLFW.glfwSwapInterval(1)
+        GLFW.glfwSwapInterval(0)
         GLFW.glfwShowWindow(window)
     }
 

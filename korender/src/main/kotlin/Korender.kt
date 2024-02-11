@@ -1,12 +1,14 @@
 package com.zakgof.korender
 
 import com.zakgof.korender.camera.DefaultCamera
+import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.glgpu.GlGpu
 import com.zakgof.korender.gpu.GpuMesh
 import com.zakgof.korender.gpu.GpuShader
 import com.zakgof.korender.material.GpuMaterial
 import com.zakgof.korender.material.MapUniformSupplier
 import com.zakgof.korender.material.UniformSupplier
+import com.zakgof.korender.math.BoundingBox
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.OrthoProjection
 import com.zakgof.korender.projection.Projection
@@ -17,6 +19,7 @@ fun korender(platform: Platform, block: KorenderContext.() -> Unit): Unit = Kore
 
 class KorenderContext(val platform: Platform, var width: Int = 1280, var height: Int = 800) {
 
+
     private val renderables = mutableListOf<Renderable>()
     private val context = mutableMapOf<String, Any>()
     private val contextUniforms = MapUniformSupplier(context)
@@ -24,6 +27,8 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
     private var startNanos: Long = 0
     private var prevFrameNano: Long = 0
     private val frames: Queue<Long> = LinkedList()
+    private var frameRenderableCount: Int = 0
+    private var frameVisibleRenderableCount: Int = 0
 
     val gpu: Gpu = GlGpu()
     var onFrame: KorenderContext.(FrameInfo) -> Unit = {}
@@ -73,14 +78,34 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
         updateContext()
         val frameTime = now - prevFrameNano
         frames.add(frameTime)
-        val frameInfo = FrameInfo(now - startNanos, frameTime, calcAverageFps())
+        val frameInfo =
+            FrameInfo(now - startNanos, frameTime, calcAverageFps(), frameRenderableCount, frameVisibleRenderableCount)
         prevFrameNano = now
         onFrame.invoke(this, frameInfo)
-        renderables.forEach { it.render() }
+        render()
     }
 
+    private fun render() {
+        val visibleRenderables = renderables.filter { isVisible(it) }
+
+        frameRenderableCount = renderables.size
+        frameVisibleRenderableCount = visibleRenderables.size
+
+        visibleRenderables.forEach { it.render() }
+    }
+
+    private fun isVisible(renderable: Renderable): Boolean {
+        if (renderable.worldBoundingBox == null) {
+            return true
+        } else {
+            return renderable.worldBoundingBox!!.isIn(projection.mat4() * camera.mat4())
+        }
+
+    }
+
+
     private fun calcAverageFps(): Double {
-        while (frames.size > 8) {
+        while (frames.size > 128) {
             frames.poll()
         }
         return 1e9 / frames.average()
@@ -98,7 +123,15 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
         Renderable(gpuMesh, gpuShader, UniformSupplier { material[it] ?: contextUniforms[it] })
 
     fun renderable(gpuMesh: GpuMesh, gpuMaterial: GpuMaterial): Renderable =
-        Renderable(gpuMesh, gpuMaterial.shader, UniformSupplier {  gpuMaterial.uniforms[it] ?: contextUniforms[it] })
+        Renderable(gpuMesh, gpuMaterial.shader, UniformSupplier { gpuMaterial.uniforms[it] ?: contextUniforms[it] })
+
+    fun renderable(meshBuilder: Meshes.MeshBuilder, gpuMaterial: GpuMaterial): Renderable =
+        Renderable(
+            meshBuilder.build(gpu),
+            gpuMaterial.shader,
+            UniformSupplier { gpuMaterial.uniforms[it] ?: contextUniforms[it] })
+            .apply { modelBoundingBox = BoundingBox(meshBuilder.positions()) }
+
 
 }
 
