@@ -84,3 +84,21 @@ vec4 triplanar(sampler2D tex, vec3 pos, vec3 normal) {
                     col2.xyzw * blend_weights.yyyy +  
                     col3.xyzw * blend_weights.zzzz; 
 }
+
+vec4 aperiodic(sampler2D tilesetSampler, sampler2D indexSampler, vec2 tex) {
+	const float factor = 0.0625;
+	vec2 intile = fract(tex) * factor;
+	vec2 indexCoords = (floor(tex) + vec2(0.5, 0.5)) / 1024.0;
+	int index = int(round(texture2D(indexSampler, indexCoords).r * 255.0));
+	int xoffset = index >> 4;
+	int yoffset = index & 15;
+
+	vec2 tilepos = vec2(xoffset, yoffset) * factor;
+
+	vec2 derx = dFdx(tex) * factor;
+	vec2 dery = dFdy(tex) * factor;
+	return textureGrad(tilesetSampler, tilepos + intile, derx, dery);
+
+	//return texture2D(tilesetSampler, tilepos + intile);
+
+}

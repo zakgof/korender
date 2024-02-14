@@ -5,8 +5,16 @@
 uniform sampler2D textureMap;
 uniform vec3 cameraPos;
 
+uniform float ambient;
+uniform float diffuse;
+uniform float specular;
+uniform float specularPower;
+
 #ifdef TRIPLANAR
   uniform float triplanarScale;
+#endif
+#ifdef APERIODIC
+  uniform sampler2D tileIndexMap;
 #endif
 
 in vec3 mpos;
@@ -21,15 +29,19 @@ void main() {
   vec3 light = normalize(vec3(1, 0, 0));
 
   vec3 look = normalize(vpos - cameraPos);
-  float ambient = 0.3;
-  float diffuse = 0.7 * clamp(dot(-light, vnormal), 0.0, 1.0);
-  float spec = 1.2 * pow(clamp(dot(reflect(-light, vnormal), look), 0.0, 1.0), 6.0);
+
+  float diffuseRatio = diffuse * clamp(dot(-light, vnormal), 0.0, 1.0);
+  float specRatio = specular * pow(clamp(dot(reflect(-light, vnormal), look), 0.0, 1.0), specularPower);
 
   #ifdef TRIPLANAR
 	vec4 texColor = triplanar(textureMap, mpos * triplanarScale, mnormal);
   #else
-	vec4 texColor = texture2D(textureMap, vtex);
+     #ifdef APERIODIC
+	   vec4 texColor = aperiodic(textureMap, tileIndexMap, vtex);
+     #else
+       vec4 texColor = texture2D(textureMap, vtex);
+     #endif
   #endif
 
-  fragColor = texColor * (diffuse + ambient + spec);
+  fragColor = texColor * (ambient + diffuseRatio + specRatio);
 }
