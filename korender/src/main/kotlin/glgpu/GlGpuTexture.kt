@@ -1,9 +1,9 @@
 package com.zakgof.korender.glgpu
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.gpu.GpuTexture
 import com.zakgof.korender.material.TextureFilter
 import com.zakgof.korender.material.TextureWrap
-import com.zakgof.korender.gpu.GpuTexture
 import gl.*
 import java.nio.ByteBuffer
 
@@ -13,7 +13,7 @@ class GlGpuTexture(
     bytes: ByteBuffer,
     filter: TextureFilter = TextureFilter.MipMapLinearLinear,
     wrap: TextureWrap = TextureWrap.Repeat,
-    aniso: Int = 0
+    aniso: Int = 1024
 ) : GpuTexture {
 
     companion object {
@@ -37,7 +37,6 @@ class GlGpuTexture(
 
     init {
         glHandle = VGL11.glGenTextures()
-
         VGL13.glActiveTexture(VGL13.GL_TEXTURE0)
         VGL11.glBindTexture(VGL11.GL_TEXTURE_2D, glHandle)
 
@@ -52,8 +51,10 @@ class GlGpuTexture(
             VGL11.GL_UNSIGNED_BYTE,
             bytes
         )
-        if (VGL11.glGetError() != 0) {
-            throw KorenderException("Error in glTexImage2D")
+
+        val errcode = VGL11.glGetError()
+        if (errcode != 0) {
+            throw KorenderException("Error in glTexImage2D: ${errcode}")
         }
 
         if (filter !== TextureFilter.Linear && filter !== TextureFilter.Nearest) {
@@ -64,7 +65,7 @@ class GlGpuTexture(
         VGL11.glTexParameteri(
             VGL11.GL_TEXTURE_2D,
             VGL11.GL_TEXTURE_MAG_FILTER,
-            filterMap[if (filter === TextureFilter.Linear) TextureFilter.Nearest else filter]!!
+            if (filter === TextureFilter.Nearest) VGL11.GL_NEAREST else VGL11.GL_LINEAR
         )
 
         VGL11.glTexParameteri(VGL11.GL_TEXTURE_2D, VGL11.GL_TEXTURE_WRAP_S, wrapMap[wrap]!!)
@@ -78,11 +79,9 @@ class GlGpuTexture(
             )
         }
 
-
         // VGL11.glTexParameteri(VGL11.GL_TEXTURE_2D, VGL14.GL_TEXTURE_COMPARE_MODE, VGL11.GL_NONE);
         VGL11.glBindTexture(VGL11.GL_TEXTURE_2D, 0)
     }
-
 
     fun close() {
         if (glHandle != 0) {

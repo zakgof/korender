@@ -1,6 +1,7 @@
 package com.zakgof.korender.geometry
 
 import com.zakgof.korender.Gpu
+import com.zakgof.korender.KorenderException
 import com.zakgof.korender.geometry.Attributes.NORMAL
 import com.zakgof.korender.geometry.Attributes.POS
 import com.zakgof.korender.geometry.Attributes.TEX
@@ -10,10 +11,12 @@ import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.FloatMath.cos
 import com.zakgof.korender.math.FloatMath.sin
 import com.zakgof.korender.math.Vec3
+import de.javagl.obj.Obj
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import java.nio.ShortBuffer
+import kotlin.math.abs
 
 object Meshes {
 
@@ -40,7 +43,7 @@ object Meshes {
             this.vertexBuffer = BufferUtils.createByteBuffer(vertexNumber * vertexSize)
             this.floatVertexBuffer = vertexBuffer.asFloatBuffer()
 
-            this.isLongIndex = vertexNumber > 32767 // TODO : doesn't work for shared bulk buffer !
+            this.isLongIndex = vertexNumber > 32767
 
             this.indexBuffer = BufferUtils.createByteBuffer(indexNumber * (if (isLongIndex) 4 else 2))
 
@@ -50,10 +53,7 @@ object Meshes {
 
         fun vertices(vararg values: Vec3) = values.forEach { vertices(it.x, it.y, it.z) }
 
-        fun vertices(vararg values: Float) {
-            println("Vertex ${floatVertexBuffer.position() / 8}: ${values[0]}, ${values[1]}, ${values[2]}")
-            floatVertexBuffer.put(values)
-        }
+        fun vertices(vararg values: Float) = floatVertexBuffer.put(values)
 
         fun indices(vararg values: Int) {
             for (value in values) {
@@ -183,5 +183,56 @@ object Meshes {
             }
         }
 
+    fun create(obj: Obj): MeshBuilder {
 
+        val mapping = mutableMapOf<String, Int>()
+        val vertices = mutableListOf<FloatArray>()
+        var indices = mutableListOf<Int>()
+
+        // Rewiring
+        for (i in 0 until obj.numFaces) {
+            val face = obj.getFace(i)
+            val newFaceIndices = mutableListOf<Int>()
+            for (ii in 0 until face.numVertices) {
+                val vertexIndex = face.getVertexIndex(ii)
+                val normalIndex = face.getNormalIndex(ii)
+                val texIndex = face.getTexCoordIndex(ii)
+                val key = "$vertexIndex/$normalIndex/$texIndex"
+                val newVertIndex = mapping[key]
+                if (newVertIndex == null) {
+                    val vertex = obj.getVertex(vertexIndex)
+                    val normal = obj.getNormal(normalIndex)
+                    val tex = obj.getTexCoord(texIndex)
+                    vertices.add(floatArrayOf(vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z, tex.x, 1f - tex.y))
+                    mapping[key] = vertices.size - 1
+                    newFaceIndices.add(vertices.size - 1)
+                } else {
+                    newFaceIndices.add(newVertIndex)
+                }
+            }
+
+            val v1 = vertices[newFaceIndices[1]]
+            val v2 = vertices[newFaceIndices[2]]
+            if (abs(v1[0]-v2[0]) > 1.0f)
+                println("Index buffer position: ${indices.size-1} Delta x: ${v1[0]-v2[0]} Delta y: ${v1[1]-v2[1]} Delta z: ${v1[2]-v2[2]}")
+
+            indices.add(newFaceIndices[0])
+            indices.add(newFaceIndices[1])
+            indices.add(newFaceIndices[2])
+            if (newFaceIndices.size == 4) {
+                indices.add(newFaceIndices[0])
+                indices.add(newFaceIndices[2])
+                indices.add(newFaceIndices[3])
+            }
+            if (newFaceIndices.size != 3 && newFaceIndices.size != 4) {
+                throw KorenderException("Only triangles and quads supported in .obj files")
+            }
+        }
+        return create(vertices.size, indices.size, POS, NORMAL, TEX) {
+            vertices.forEach() { vertices(*it) }
+            indices(*indices.toIntArray())
+        }
+
+    }
 }
+

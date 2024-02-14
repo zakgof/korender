@@ -32,15 +32,23 @@ class Transform(private val matrix: Mat4 = Mat4.IDENTITY) {
         )
     }
 
-    fun translate(offset: Vec3): Transform {
-        return Transform(
-            Mat4(
-                1f, 0f, 0f, offset.x,
-                0f, 1f, 0f, offset.y,
-                0f, 0f, 1f, offset.z,
-                0f, 0f, 0f, 1f
-            ) * matrix
-        )
-    }
+    fun translate(offset: Vec3): Transform = Transform(
+        Mat4(
+            1f, 0f, 0f, offset.x,
+            0f, 1f, 0f, offset.y,
+            0f, 0f, 1f, offset.z,
+            0f, 0f, 0f, 1f
+        ) * matrix
+    )
+
+
+    fun scale(s: Float): Transform = Transform(
+        Mat4(
+            s, 0f, 0f, 0f,
+            0f, s, 0f, 0f,
+            0f, 0f, s, 0f,
+            0f, 0f, 0f, 1f
+        ) * matrix
+    )
 
 }

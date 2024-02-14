@@ -8,19 +8,24 @@ import com.zakgof.korender.gpu.GpuTexture
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferByte
 import java.nio.ByteBuffer
+import javax.imageio.ImageIO
 
 object Textures {
 
+    fun create(resource: String): TextureBuilder = create(ImageIO.read(Textures::class.java.getResourceAsStream(resource)!!))
     fun create(image: BufferedImage): TextureBuilder = TextureBuilder(image)
 
     class TextureBuilder(private val image: BufferedImage) {
+
+        var filter: TextureFilter = TextureFilter.MipMapLinearLinear
+
         fun build(gpu: Gpu): GpuTexture {
             val data = (image.raster.dataBuffer as DataBufferByte).data
             val bytes = when (image.type) {
                 BufferedImage.TYPE_3BYTE_BGR -> loadBgr(data)
                 else -> throw KorenderException("Unknown image format")
             }
-            return GlGpuTexture(image.width, image.height, bytes)
+            return GlGpuTexture(image.width, image.height, bytes, filter)
         }
 
         private fun loadBgr(data: ByteArray): ByteBuffer {
@@ -31,6 +36,11 @@ object Textures {
                     .put(data[i * 3])
             }
             return buffer.flip();
+        }
+
+        fun filter(filter: TextureFilter): TextureBuilder {
+            this.filter = filter
+            return this
         }
 
     }
