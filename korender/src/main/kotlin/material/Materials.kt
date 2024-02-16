@@ -4,43 +4,52 @@ import com.zakgof.korender.Gpu
 import com.zakgof.korender.gpu.GpuTexture
 
 object Materials {
-    fun standard(gpu: Gpu, vararg defs: String, block: StandardUniforms.() -> Unit): GpuMaterial {
-        val gpuShader = ShaderBuilder("test.vert", "test.frag", *defs).build(gpu)
-        val uniformSupplier = StandardUniforms().apply(block).build(gpu)
-        return GpuMaterial(gpuShader, uniformSupplier)
-    }
+    fun standard(gpu: Gpu, block: StandardUniforms.() -> Unit): StandardUniforms =
+        StandardUniforms(gpu).apply(block)
 }
 
-class StandardUniforms {
-    var triplanarScale: Float = 1.0f
-    var textureFile: String? = null
-    var textureMap: GpuTexture? = null
+class StandardUniforms(private val gpu: Gpu) : UniformSupplier {
+
+    var colorTexture: GpuTexture? = null
+    var normalTexture: GpuTexture? = null
+    var aperiodicTexture: GpuTexture? = null
+    var shadowTexture: GpuTexture? = null
+    var colorFile: String? = null
+        set(value) {
+            field = value
+            colorTexture = Textures.create(colorFile!!)
+                .build(gpu)
+        }
+    var normalFile: String? = null
+        set(value) {
+            field = value
+            normalTexture = Textures.create(normalFile!!)
+                .build(gpu)
+        }
     var aperiodicFile: String? = null
-    var aperiodicMap: GpuTexture? = null
-    var ambient = 1f
-    var diffuse = 1f
-    var specular = 1f
-    var specularPower = 20f
-
-    fun build(gpu: Gpu): UniformSupplier {
-
-        if (aperiodicFile != null) {
-            aperiodicMap = Textures.create(aperiodicFile!!)
+        set(value) {
+            field = value
+            aperiodicTexture = Textures.create(aperiodicFile!!)
                 .filter(TextureFilter.Nearest)
                 .build(gpu)
         }
-        if (textureFile != null) {
-            textureMap = Textures.create(textureFile!!)
-                .build(gpu)
+    var triplanarScale = 1.0f
+    var ambient = 0.3f
+    var diffuse = 0.7f
+    var specular = 0.3f
+    var specularPower = 20f
+
+    override fun get(key: String): Any? =
+        when (key) {
+            "colorTexture" -> colorTexture
+            "normalTexture" -> normalTexture
+            "aperiodicTexture" -> aperiodicTexture
+            "shadowTexture" -> shadowTexture
+            "triplanarScale" -> triplanarScale
+            "ambient" -> ambient
+            "diffuse" -> diffuse
+            "specular" -> specular
+            "specularPower" -> specularPower
+            else -> null
         }
-        return MapUniformSupplier(
-            Pair("textureMap", textureMap),
-            Pair("tileIndexMap", aperiodicMap),
-            Pair("triplanarScale", triplanarScale),
-            Pair("ambient", ambient),
-            Pair("diffuse", diffuse),
-            Pair("specular", specular),
-            Pair("specularPower", specularPower)
-        )
-    }
 }

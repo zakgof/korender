@@ -1,18 +1,16 @@
 package com.zakgof.korender
 
-import com.zakgof.korender.gpu.GpuMesh
+import com.zakgof.korender.geometry.Mesh
 import com.zakgof.korender.gpu.GpuShader
 import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.BoundingBox
 import com.zakgof.korender.math.Transform
-import com.zakgof.korender.math.Vec3
 
 data class Renderable(
-    private val gpuMesh: GpuMesh,
-    private val gpuShader: GpuShader,
-    private val uniforms: UniformSupplier
+    val mesh: Mesh,
+    val gpuShader: GpuShader,
+    val uniforms: UniformSupplier
 ) {
-    var modelBoundingBox: BoundingBox? = null
     var worldBoundingBox: BoundingBox? = null
     var transform: Transform = Transform()
         set(value) {
@@ -25,13 +23,13 @@ data class Renderable(
     }
 
     private fun updateBB(): BoundingBox? {
-        modelBoundingBox?.let {
+        mesh.modelBoundingBox?.let {
             return it.transform(transform)
         }
         return null
     }
 
-    fun render() =
-        gpuShader.render(UniformSupplier { uniforms[it] ?: mapOf("model" to transform.mat4())[it] }, gpuMesh)
+    fun render(contextUniforms: UniformSupplier) =
+        gpuShader.render( { uniforms[it] ?: mapOf("model" to transform.mat4())[it] ?: contextUniforms[it] }, mesh.gpuMesh)
 
 }

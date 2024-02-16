@@ -1,17 +1,16 @@
 package com.zakgof.korender
 
 import com.zakgof.korender.camera.DefaultCamera
-import com.zakgof.korender.geometry.Meshes
+import com.zakgof.korender.geometry.Mesh
 import com.zakgof.korender.glgpu.GlGpu
-import com.zakgof.korender.gpu.GpuMesh
 import com.zakgof.korender.gpu.GpuShader
-import com.zakgof.korender.material.GpuMaterial
 import com.zakgof.korender.material.MapUniformSupplier
 import com.zakgof.korender.material.UniformSupplier
-import com.zakgof.korender.math.BoundingBox
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.OrthoProjection
 import com.zakgof.korender.projection.Projection
+import gl.VGL11
+import org.lwjgl.opengl.GL11
 import java.lang.System.nanoTime
 import java.util.*
 
@@ -19,10 +18,9 @@ fun korender(platform: Platform, block: KorenderContext.() -> Unit): Unit = Kore
 
 class KorenderContext(val platform: Platform, var width: Int = 1280, var height: Int = 800) {
 
-
     private val renderables = mutableListOf<Renderable>()
-    private val context = mutableMapOf<String, Any>()
-    private val contextUniforms = MapUniformSupplier(context)
+    private val context = mutableMapOf<String, Any?>()
+    val contextUniforms = MapUniformSupplier(context)
 
     private var startNanos: Long = 0
     private var prevFrameNano: Long = 0
@@ -31,6 +29,8 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
     private var frameVisibleRenderableCount: Int = 0
 
     val gpu: Gpu = GlGpu()
+    var shadower: Shadower? = null;
+
     var onFrame: KorenderContext.(FrameInfo) -> Unit = {}
     var onResize: KorenderContext.() -> Unit = {}
     var camera: DefaultCamera = DefaultCamera(
@@ -38,19 +38,26 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
         dir = Vec3(0f, 0f, -1f),
         up = Vec3(0f, 1f, 0f)
     )
+        set(value) {
+            field = value
+            updateContext()
+        }
     var projection: Projection = OrthoProjection(
         width = 10f,
         height = 10f,
         near = 10f,
         far = 10000f
     )
+        set(value) {
+            field = value
+            updateContext()
+        }
+    var light = Vec3(1f, -1f, 0f).normalize()
+
 
     fun add(renderable: Renderable) {
         renderables.add(renderable) // TODO standard buckets
     }
-
-    fun withContext(material: UniformSupplier): UniformSupplier =
-        UniformSupplier { material[it] ?: contextUniforms[it] }
 
     fun start(block: KorenderContext.() -> Unit) {
         startNanos = nanoTime()
@@ -59,6 +66,7 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
             width = width,
             height = height,
             init = {
+                shadower = Shadower(gpu)
                 block.invoke(this)
                 onResize.invoke(this)
             },
@@ -82,27 +90,35 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
             FrameInfo(now - startNanos, frameTime, calcAverageFps(), frameRenderableCount, frameVisibleRenderableCount)
         prevFrameNano = now
         onFrame.invoke(this, frameInfo)
+
+        shadower?.render(light)
+        context["shadowTexture"] = shadower?.texture()
+        context["shadowProjection"] = shadower?.projection?.mat4()
+        context["shadowView"] = shadower?.camera?.mat4()
+
         render()
     }
 
     private fun render() {
+        VGL11.glViewport(0, 0, width, height)
+        VGL11.glEnable(GL11.GL_CULL_FACE)
+        VGL11.glCullFace(VGL11.GL_BACK);
+
         val visibleRenderables = renderables.filter { isVisible(it) }
 
         frameRenderableCount = renderables.size
         frameVisibleRenderableCount = visibleRenderables.size
 
-        visibleRenderables.forEach { it.render() }
+        visibleRenderables.forEach { it.render(contextUniforms) }
     }
 
     private fun isVisible(renderable: Renderable): Boolean {
-        if (renderable.worldBoundingBox == null) {
-            return true
+        return if (renderable.worldBoundingBox == null) {
+            true
         } else {
-            return renderable.worldBoundingBox!!.isIn(projection.mat4() * camera.mat4())
+            renderable.worldBoundingBox!!.isIn(projection.mat4() * camera.mat4())
         }
-
     }
-
 
     private fun calcAverageFps(): Double {
         while (frames.size > 128) {
@@ -119,20 +135,6 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
         }
     }
 
-    fun renderable(gpuMesh: GpuMesh, gpuShader: GpuShader, material: UniformSupplier): Renderable =
-        Renderable(gpuMesh, gpuShader, UniformSupplier { material[it] ?: contextUniforms[it] })
-
-    fun renderable(gpuMesh: GpuMesh, gpuMaterial: GpuMaterial): Renderable =
-        Renderable(gpuMesh, gpuMaterial.shader, UniformSupplier { gpuMaterial.uniforms[it] ?: contextUniforms[it] })
-
-    fun renderable(meshBuilder: Meshes.MeshBuilder, gpuMaterial: GpuMaterial): Renderable =
-        Renderable(
-            meshBuilder.build(gpu),
-            gpuMaterial.shader,
-            UniformSupplier { gpuMaterial.uniforms[it] ?: contextUniforms[it] })
-            .apply { modelBoundingBox = BoundingBox(meshBuilder.positions()) }
-
-
+    fun renderable(mesh: Mesh, gpuShader: GpuShader, material: UniformSupplier): Renderable =
+        Renderable(mesh, gpuShader, material)
 }
-
-

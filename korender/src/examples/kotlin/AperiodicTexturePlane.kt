@@ -7,6 +7,7 @@ import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
 import com.zakgof.korender.lwjgl.LwjglPlatform
 import com.zakgof.korender.material.Materials
+import com.zakgof.korender.material.Shaders
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -20,15 +21,16 @@ fun main(): Unit = korender(LwjglPlatform()) {
     }
 
     val terrain = renderable(
-        gpuMesh = Meshes.create(4, 6, POS, NORMAL, TEX) {
+        mesh = Meshes.create(gpu,4, 6, POS, NORMAL, TEX) {
             vertices(-100f, 0f, -100f, 0f, 1f, 0f, 0f, 0f)
             vertices(-100f, 0f,  100f, 0f, 1f, 0f, 0f, 50f)
             vertices( 100f, 0f,  100f, 0f, 1f, 0f, 50f, 50f)
             vertices( 100f, 0f, -100f, 0f, 1f, 0f, 50f, 0f)
             indices(0, 1, 2, 0, 2, 3)
-        }.build(gpu),
-        gpuMaterial = Materials.standard(gpu, "APERIODIC") {
-            textureFile = "/grass-aperiodic.png"
+        },
+        gpuShader = Shaders.standard(gpu, "APERIODIC"),
+        material = Materials.standard(gpu) {
+            colorFile = "/grass-aperiodic.png"
             aperiodicFile = "/aperiodic.png"
         })
     add(terrain)

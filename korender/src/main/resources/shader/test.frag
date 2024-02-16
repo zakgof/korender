@@ -1,8 +1,9 @@
 #version 130
 
 #import "texturing.glsl"
+#import "light.glsl"
 
-uniform sampler2D textureMap;
+uniform sampler2D colorTexture;
 uniform vec3 cameraPos;
 
 uniform float ambient;
@@ -14,7 +15,13 @@ uniform float specularPower;
   uniform float triplanarScale;
 #endif
 #ifdef APERIODIC
-  uniform sampler2D tileIndexMap;
+  uniform sampler2D aperiodicTexture;
+#endif
+#ifdef NORMAL_MAP
+  uniform sampler2D normalTexture;
+#endif
+#ifdef SHADOW_RECEIVER
+  uniform sampler2D shadowTexture;
 #endif
 
 in vec3 mpos;
@@ -22,26 +29,48 @@ in vec3 mnormal;
 in vec3 vpos;
 in vec3 vnormal;
 in vec2 vtex;
+#ifdef SHADOW_RECEIVER
+  in vec3 vshadow;
+#endif
 
 out vec4 fragColor;
 
 void main() {
-  vec3 light = normalize(vec3(1, 0, 0));
 
+  vec3 normal = normalize(vnormal);
+  vec3 light = normalize(vec3(1.0, -1.0, 0.0));
   vec3 look = normalize(vpos - cameraPos);
 
-  float diffuseRatio = diffuse * clamp(dot(-light, vnormal), 0.0, 1.0);
-  float specRatio = specular * pow(clamp(dot(reflect(-light, vnormal), look), 0.0, 1.0), specularPower);
+  #ifdef NORMAL_MAP
+    normal = perturbNormal(normal, normalTexture, vtex, look);
+  #endif
+
+  float diffuseRatio = diffuse * clamp(dot(-light, normal), 0.0, 1.0);
+  float specRatio = specular * pow(clamp(dot(reflect(-light, normal), look), 0.0, 1.0), specularPower);
+  float lighting = ambient + diffuseRatio + specRatio;
 
   #ifdef TRIPLANAR
-	vec4 texColor = triplanar(textureMap, mpos * triplanarScale, mnormal);
+	vec4 texColor = triplanar(colorTexture, mpos * triplanarScale, mnormal);
   #else
      #ifdef APERIODIC
-	   vec4 texColor = aperiodic(textureMap, tileIndexMap, vtex);
+	   vec4 texColor = aperiodic(colorTexture, aperiodicTexture, vtex);
      #else
-       vec4 texColor = texture2D(textureMap, vtex);
+       vec4 texColor = texture2D(colorTexture, vtex);
      #endif
   #endif
 
-  fragColor = texColor * (ambient + diffuseRatio + specRatio);
+  #ifdef SHADOW_RECEIVER
+    float shadow = 1.0;
+    float shadowSample = texture2D(shadowTexture, vshadow.xy).r;
+    if (shadowSample  >=  vshadow.z && vshadow.z > 0.0) {
+       lighting = ambient;
+    }
+  #endif
+
+  #ifdef SHADOW_CASTER
+    fragColor = vec4(gl_FragCoord.z, gl_FragCoord.z, gl_FragCoord.z, 1.0);
+  #else
+    fragColor = texColor * lighting;
+  #endif
+
 }

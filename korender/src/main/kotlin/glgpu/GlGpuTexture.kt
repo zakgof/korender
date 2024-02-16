@@ -7,14 +7,7 @@ import com.zakgof.korender.material.TextureWrap
 import gl.*
 import java.nio.ByteBuffer
 
-class GlGpuTexture(
-    width: Int,
-    height: Int,
-    bytes: ByteBuffer,
-    filter: TextureFilter = TextureFilter.MipMapLinearLinear,
-    wrap: TextureWrap = TextureWrap.Repeat,
-    aniso: Int = 1024
-) : GpuTexture {
+class GlGpuTexture(val glHandle: Int) : GpuTexture {
 
     companion object {
         val filterMap = mapOf(
@@ -33,10 +26,15 @@ class GlGpuTexture(
         )
     }
 
-    val glHandle: Int
+    constructor(
+        width: Int,
+        height: Int,
+        bytes: ByteBuffer,
+        filter: TextureFilter = TextureFilter.MipMapLinearLinear,
+        wrap: TextureWrap = TextureWrap.Repeat,
+        aniso: Int = 1024
+    ) : this(VGL11.glGenTextures()) {
 
-    init {
-        glHandle = VGL11.glGenTextures()
         VGL13.glActiveTexture(VGL13.GL_TEXTURE0)
         VGL11.glBindTexture(VGL11.GL_TEXTURE_2D, glHandle)
 

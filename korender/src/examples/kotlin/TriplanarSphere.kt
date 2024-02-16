@@ -4,6 +4,7 @@ import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
 import com.zakgof.korender.lwjgl.LwjglPlatform
 import com.zakgof.korender.material.Materials
+import com.zakgof.korender.material.Shaders
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -17,9 +18,10 @@ fun main(): Unit = korender(LwjglPlatform()) {
     }
 
     val sphere = renderable(
-        gpuMesh = Meshes.sphere(2f).build(gpu),
-        gpuMaterial = Materials.standard(gpu, "TRIPLANAR") {
-            textureFile = "/sand.png"
+        mesh = Meshes.sphere(gpu,2f),
+        gpuShader = Shaders.standard(gpu, "TRIPLANAR"),
+        material = Materials.standard(gpu) {
+            colorFile = "/sand.png"
             triplanarScale = 0.4f
         })
     add(sphere)

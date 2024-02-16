@@ -12,6 +12,8 @@ import org.lwjgl.system.MemoryUtil
 
 class LwjglPlatform : Platform {
 
+    private var windowWidth: Int = 0
+    private var windowHeight: Int = 0
     private var window: Long = 0
     private var keyCallback: GLFWKeyCallback? = null
     private var resizeCallback: GLFWWindowSizeCallback? = null
@@ -30,6 +32,8 @@ class LwjglPlatform : Platform {
         val errorCallback = GLFW.glfwSetErrorCallback(GLFWErrorCallback.createThrow())
         try {
             createWindow(width, height, onResize)
+            windowWidth = width
+            windowHeight = height
             GL.createCapabilities()
             init.invoke()
             loop(onFrame)
@@ -80,6 +84,8 @@ class LwjglPlatform : Platform {
 
         resizeCallback = GLFW.glfwSetWindowSizeCallback(window, object : GLFWWindowSizeCallback() {
             override fun invoke(window: Long, width: Int, height: Int) {
+                windowWidth = width
+                windowHeight = height
                 GL11.glViewport(0, 0, width, height);
                 onFrame.invoke(width, height)
             }
@@ -99,8 +105,9 @@ class LwjglPlatform : Platform {
     private fun loop(frameCallback: () -> Unit) {
         GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         GL11.glEnable(GL11.GL_DEPTH_TEST)
-        //GL11.glEnable(GL11.GL_CULL_FACE);
+        //;
         while (!GLFW.glfwWindowShouldClose(window)) {
+            GL11.glViewport(0, 0, windowWidth, windowHeight)
             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT or GL11.GL_DEPTH_BUFFER_BIT)
             frameCallback.invoke()
             GLFW.glfwSwapBuffers(window);
