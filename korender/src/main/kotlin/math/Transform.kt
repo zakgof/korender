@@ -51,4 +51,13 @@ class Transform(private val matrix: Mat4 = Mat4.IDENTITY) {
         ) * matrix
     )
 
+    fun scale(xs: Float, ys: Float, zs: Float): Transform = Transform(
+        Mat4(
+            xs, 0f, 0f, 0f,
+            0f, ys, 0f, 0f,
+            0f, 0f, zs, 0f,
+            0f, 0f, 0f, 1f
+        ) * matrix
+    )
+
 }

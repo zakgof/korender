@@ -3,12 +3,11 @@ import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
 import com.zakgof.korender.lwjgl.LwjglPlatform
-import com.zakgof.korender.material.Images
 import com.zakgof.korender.material.Materials
+import com.zakgof.korender.material.Shaders
 import com.zakgof.korender.math.*
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.projection.FrustumProjection
-import de.javagl.obj.ObjReader
 
 fun main(): Unit = korender(LwjglPlatform()) {
 
@@ -17,20 +16,17 @@ fun main(): Unit = korender(LwjglPlatform()) {
         projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
     }
 
-
-    val obj = ObjReader.read(Images.javaClass.getResourceAsStream("/cat-red.obj"))
-    val mb = Meshes.create(obj)
+    val mesh = Meshes.cube(gpu, 15f)
+    val shader = Shaders.standard(gpu, "NORMAL_MAP")
     val material = Materials.standard(gpu) {
-        textureFile = "/cat-red.jpg"
-        ambient = 1.0f
-        diffuse = 1.0f
-        specular = 0.0f
+        normalFile = "/normal.png"
+        colorFile = "/sand.png"
     }
-    val renderable = renderable(mb, material)
+    val renderable = renderable(mesh, shader, material)
     add(renderable)
 
-    onFrame = { kc ->
-        renderable.transform = Transform().scale(0.1f).rotate(1.x, -PI * 0.5f).rotate(1.y, kc.nanoTime * 1e-10f)
-        println("FPS=${kc.avgFps} ~FPS=${1e9 / kc.dt} Renderables ${kc.visibleRenderableCount}/${kc.renderableCount}")
+    onFrame = { frameInfo ->
+        renderable.transform = Transform().scale(0.1f).rotate(1.x, -PI * 0.5f).rotate(1.y, frameInfo.nanoTime * 1e-10f)
+        println("FPS=${frameInfo.avgFps} ~FPS=${1e9 / frameInfo.dt} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")
     }
 }
