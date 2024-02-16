@@ -22,8 +22,8 @@ import kotlin.math.abs
 
 object Meshes {
 
-    fun create(gpu: Gpu, vertexNumber: Int, indexNumber: Int, vararg attrs: Attribute, block: MeshBuilder.() -> Unit) =
-        MeshBuilder(vertexNumber, indexNumber, attrs).apply(block).build(gpu)
+    fun create(vertexNumber: Int, indexNumber: Int, vararg attrs: Attribute, block: MeshBuilder.() -> Unit) =
+        MeshBuilder(vertexNumber, indexNumber, attrs).apply(block)
 
     class MeshBuilder(
         private val vertexNumber: Int,
@@ -66,6 +66,8 @@ object Meshes {
             }
         }
 
+        private fun indexGet(): Int = if (isLongIndex) indexIntBuffer!!.get() else indexShortBuffer!!.get().toInt()
+
         fun transformPos(function: (Vec3) -> Vec3): MeshBuilder {
             val positionOffset = attrs.takeWhile { it != POS }.sumOf { it.size }
             for (v in 0 until vertexNumber) {
@@ -94,7 +96,36 @@ object Meshes {
             )
         }
 
+        fun instancing(instances: Int, transform: (Int) -> Transform): MeshBuilder {
+            val that = this
+            return create(vertexNumber * instances, indexNumber * instances, *attrs) {
+                for (i in 0 until instances) {
+                    that.floatVertexBuffer.rewind()
+                    that.indexIntBuffer?.rewind()
+                    that.indexShortBuffer?.rewind()
+                    for (v in 0 until that.vertexNumber) {
+                        for (attr in attrs) {
+                            if (attr == POS) {
+                                val x = that.floatVertexBuffer.get()
+                                val y = that.floatVertexBuffer.get()
+                                val z = that.floatVertexBuffer.get()
+                                val newpos = transform.invoke(i).mat4().project(Vec3(x, y, z))
+                                vertices(newpos)
+                            } else {
+                                for (a in 0 until attr.size) {
+                                    vertices(that.floatVertexBuffer.get())
+                                }
+                            }
+                        }
+                    }
+                    for (ind in 0 until that.indexNumber) {
+                        indices(that.indexGet() + i * that.vertexNumber)
+                    }
+                }
+            }
+        }
     }
+
 
     class DefaultMesh(
         gpu: Gpu,
@@ -128,8 +159,8 @@ object Meshes {
         }
     }
 
-    fun quad(gpu: Gpu, halfSide: Float = 0.5f, block: MeshBuilder.() -> Unit = {}) =
-        create(gpu, 4, 6, POS, NORMAL, TEX) {
+    fun quad(halfSide: Float = 0.5f, block: MeshBuilder.() -> Unit = {}) =
+        create(4, 6, POS, NORMAL, TEX) {
             vertices(-halfSide, -halfSide, 0f, 0f, 0f, 1f, 0f, 0f)
             vertices(-halfSide, halfSide, 0f, 0f, 0f, 1f, 0f, 1f)
             vertices(halfSide, halfSide, 0f, 0f, 0f, 1f, 1f, 1f)
@@ -138,8 +169,8 @@ object Meshes {
             block.invoke(this)
         }
 
-    fun cube(gpu: Gpu, hs: Float = 0.5f, block: MeshBuilder.() -> Unit = {}) =
-        create(gpu, 24, 36, POS, NORMAL, TEX) {
+    fun cube(hs: Float = 0.5f, block: MeshBuilder.() -> Unit = {}) =
+        create(24, 36, POS, NORMAL, TEX) {
             vertices(-hs, -hs, -hs, -1f, 0f, 0f, 0f, 0f)
             vertices(-hs, hs, -hs, -1f, 0f, 0f, 0f, 1f)
             vertices(-hs, hs, hs, -1f, 0f, 0f, 1f, 1f)
@@ -174,8 +205,8 @@ object Meshes {
             block(this)
         }
 
-    fun sphere(gpu: Gpu, radius: Float = 1.0f, slices: Int = 32, sectors: Int = 32, block: MeshBuilder.() -> Unit = {}) =
-        create(gpu, 2 + (slices - 1) * sectors, sectors * 3 * 2 + (slices - 2) * sectors * 6, POS, NORMAL, TEX) {
+    fun sphere(radius: Float = 1.0f, slices: Int = 32, sectors: Int = 32, block: MeshBuilder.() -> Unit = {}) =
+        create(2 + (slices - 1) * sectors, sectors * 3 * 2 + (slices - 2) * sectors * 6, POS, NORMAL, TEX) {
             vertices(0f, -radius, 0f, 0f, -1f, 0f, 0f, 0f)
             for (slice in 1..slices - 1) {
                 for (sector in 0..sectors - 1) {
@@ -210,7 +241,7 @@ object Meshes {
             block(this)
         }
 
-    fun create(gpu: Gpu, obj: Obj): DefaultMesh {
+    fun create(obj: Obj): MeshBuilder {
 
         val mapping = mutableMapOf<String, Int>()
         val vertices = mutableListOf<FloatArray>()
@@ -266,11 +297,10 @@ object Meshes {
                 throw KorenderException("Only triangles and quads supported in .obj files")
             }
         }
-        return create(gpu, vertices.size, indices.size, POS, NORMAL, TEX) {
+        return create(vertices.size, indices.size, POS, NORMAL, TEX) {
             vertices.forEach() { vertices(*it) }
             indices(*indices.toIntArray())
         }
-
     }
 }
 

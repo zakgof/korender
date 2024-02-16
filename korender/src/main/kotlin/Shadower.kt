@@ -34,7 +34,7 @@ class Shadower(private val gpu: Gpu) {
             VGL11.glCullFace(VGL11.GL_FRONT);
             casters.forEach() { r ->
                 casterShader.render({
-                    r.uniforms[it] ?: mapOf(
+                    r.material.uniforms[it] ?: mapOf(
                         "model" to r.transform.mat4(),
                         "view" to camera!!.mat4(),
                         "projection" to projection!!.mat4(),

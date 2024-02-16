@@ -1,4 +1,5 @@
 
+import com.zakgof.korender.Renderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
@@ -16,13 +17,12 @@ fun main(): Unit = korender(LwjglPlatform()) {
         projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
     }
 
-    val mesh = Meshes.cube(gpu, 15f)
-    val shader = Shaders.standard(gpu, "NORMAL_MAP")
-    val material = Materials.standard(gpu) {
+    val mesh = Meshes.cube( 15f).build(gpu)
+    val material = Materials.standard(gpu, "NORMAL_MAP") {
         normalFile = "/normal.png"
         colorFile = "/sand.png"
     }
-    val renderable = renderable(mesh, shader, material)
+    val renderable = Renderable(mesh, material)
     add(renderable)
 
     onFrame = { frameInfo ->

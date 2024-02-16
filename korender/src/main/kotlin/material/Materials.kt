@@ -1,14 +1,19 @@
 package com.zakgof.korender.material
 
 import com.zakgof.korender.Gpu
+import com.zakgof.korender.gpu.GpuShader
 import com.zakgof.korender.gpu.GpuTexture
 
 object Materials {
-    fun standard(gpu: Gpu, block: StandardUniforms.() -> Unit): StandardUniforms =
-        StandardUniforms(gpu).apply(block)
+    fun standard(gpu: Gpu, vararg defs: String, block: StandardMaterial.() -> Unit): StandardMaterial =
+        StandardMaterial(gpu, *defs).apply(block)
 }
 
-class StandardUniforms(private val gpu: Gpu) : UniformSupplier {
+class StandardMaterial(private val gpu: Gpu, vararg defs: String) : Material {
+
+    override val gpuShader: GpuShader = ShaderBuilder("test.vert", "test.frag", *defs).build(gpu)
+    override val uniforms: UniformSupplier
+        get() = UniformSupplier { get(it) }
 
     var colorTexture: GpuTexture? = null
     var normalTexture: GpuTexture? = null
@@ -39,7 +44,7 @@ class StandardUniforms(private val gpu: Gpu) : UniformSupplier {
     var specular = 0.3f
     var specularPower = 20f
 
-    override fun get(key: String): Any? =
+    fun get(key: String): Any? =
         when (key) {
             "colorTexture" -> colorTexture
             "normalTexture" -> normalTexture

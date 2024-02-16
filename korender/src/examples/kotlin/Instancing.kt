@@ -1,4 +1,4 @@
-
+import com.zakgof.korender.Renderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
@@ -17,22 +17,17 @@ fun main(): Unit = korender(LwjglPlatform()) {
     onResize = {
         projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
     }
-    val gpuShader = Shaders.standard(gpu, "TRIPLANAR")
-    val material = Materials.standard(gpu) {
+    val material = Materials.standard(gpu, "TRIPLANAR") {
         colorFile = "/sand.png"
         triplanarScale = 0.4f
     }
+    val mesh = Meshes.sphere(0.5f)
+        .instancing(100) { Transform().translate(Vec3(it / 10 - 5f, it % 10 - 5f, 0f)) }
+        .build(gpu)
 
-    for (x in -30..30) {
-        for (y in -30..30) {
-            val mesh = Meshes.sphere(gpu, 0.5f) {
-                transformPos(Transform().translate(Vec3(x.toFloat(), y.toFloat(), 0f)))
-            }
-            add(renderable(mesh, gpuShader, material))
-        }
-    }
+    add(Renderable(mesh, material))
 
     onFrame = { frameInfo ->
-        println("FPS=${frameInfo.avgFps} ~FPS=${1e9 / frameInfo.dt} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")
+        println("~FPS=${frameInfo.avgFps} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")
     }
 }
