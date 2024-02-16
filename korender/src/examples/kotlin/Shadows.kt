@@ -1,4 +1,5 @@
 
+import com.zakgof.korender.Renderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
@@ -16,17 +17,16 @@ fun main(): Unit = korender(LwjglPlatform()) {
         projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
     }
 
-    val cube = Meshes.cube(gpu, 1.5f)
-    val plate = Meshes.cube(gpu, 1f) {
+    val cube = Meshes.cube(1.5f).build(gpu)
+    val plate = Meshes.cube(1f) {
         transformPos(Transform().scale(5f, 1f, 5f).translate(-1.6f.y))
-    }
-    val shader = Shaders.standard(gpu, "SHADOW_RECEIVER")
-    val material = Materials.standard(gpu) {
+    }.build(gpu)
+    val material = Materials.standard(gpu, "SHADOW_RECEIVER") {
         colorFile = "/sand.png"
     }
 
-    val rcube = renderable(cube, shader, material)
-    val rplate = renderable(plate, shader, material)
+    val rcube = Renderable(cube, material)
+    val rplate = Renderable(plate, material)
 
     shadower!!.add(rcube)
     add(rcube)

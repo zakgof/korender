@@ -1,11 +1,8 @@
 package com.zakgof.korender
 
 import com.zakgof.korender.camera.DefaultCamera
-import com.zakgof.korender.geometry.Mesh
 import com.zakgof.korender.glgpu.GlGpu
-import com.zakgof.korender.gpu.GpuShader
 import com.zakgof.korender.material.MapUniformSupplier
-import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.OrthoProjection
 import com.zakgof.korender.projection.Projection
@@ -134,7 +131,4 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
             put("cameraPos", camera.position())
         }
     }
-
-    fun renderable(mesh: Mesh, gpuShader: GpuShader, material: UniformSupplier): Renderable =
-        Renderable(mesh, gpuShader, material)
 }

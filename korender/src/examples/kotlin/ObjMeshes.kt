@@ -1,4 +1,5 @@
 
+import com.zakgof.korender.Renderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
@@ -19,15 +20,14 @@ fun main(): Unit = korender(LwjglPlatform()) {
     }
 
     val obj = ObjReader.read(Images.javaClass.getResourceAsStream("/cat-red.obj"))
-    val mesh = Meshes.create(gpu, obj)
-    val shader = Shaders.standard(gpu)
+    val mesh = Meshes.create(obj).build(gpu)
     val material = Materials.standard(gpu) {
         colorFile = "/cat-red.jpg"
         ambient = 1.0f
         diffuse = 1.0f
         specular = 0.0f
     }
-    val renderable = renderable(mesh, shader, material)
+    val renderable = Renderable(mesh, material)
     add(renderable)
 
     onFrame = { frameInfo ->
