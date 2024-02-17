@@ -6,5 +6,5 @@ import com.zakgof.korender.math.BoundingBox
 interface Mesh {
     val gpuMesh : GpuMesh
 
-    val modelBoundingBox: BoundingBox
+    val modelBoundingBox: BoundingBox?
 }

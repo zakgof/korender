@@ -138,10 +138,10 @@ object Meshes {
 
         override val gpuMesh: GpuMesh = gpu.createMesh(vb, ib, vertices, indices, attrs, vertexSize)
 
-        override val modelBoundingBox: BoundingBox
+        override val modelBoundingBox: BoundingBox?
 
         init {
-            modelBoundingBox = BoundingBox(positions())
+            modelBoundingBox = if (attrs.contains(POS)) BoundingBox(positions()) else null
         }
 
         fun positions(): List<Vec3> {
@@ -166,6 +166,16 @@ object Meshes {
             indices(0, 1, 2, 0, 2, 3)
             block.invoke(this)
         }
+
+    fun screenQuad() =
+        create(4, 6, TEX) {
+            vertices(0f, 0f)
+            vertices(0f, 1f)
+            vertices(1f, 1f)
+            vertices(1f, 0f)
+            indices(0, 2, 1, 0, 3, 2)
+        }
+
 
     fun cube(halfSide: Float = 0.5f, block: MeshBuilder.() -> Unit = {}) =
         create(24, 36, POS, NORMAL, TEX) {

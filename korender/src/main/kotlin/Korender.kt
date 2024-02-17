@@ -1,7 +1,10 @@
 package com.zakgof.korender
 
 import com.zakgof.korender.camera.DefaultCamera
+import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.glgpu.GlGpu
+import com.zakgof.korender.glgpu.GlGpuFrameBuffer
+import com.zakgof.korender.gpu.GpuMesh
 import com.zakgof.korender.material.MapUniformSupplier
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.OrthoProjection
@@ -23,13 +26,15 @@ fun korender(platform: Platform, block: KorenderContext.() -> Unit) {
             block.invoke(korender!!)
             korender!!.onResize.invoke(korender!!)
         },
-        onFrame = { korender!!::frame },
+        onFrame = { korender!!.frame() },
         onResize = { x, y -> korender!!.resize(x, y) }
     )
 }
 
 class KorenderContext(var width: Int = 1280, var height: Int = 800) {
 
+    private val filters = mutableListOf<Filter>()
+    private val filterFrameBuffers = mutableListOf<GlGpuFrameBuffer>()
     private val renderables = mutableListOf<Renderable>()
     private val context = mutableMapOf<String, Any?>()
     private val contextUniforms = MapUniformSupplier(context)
@@ -41,6 +46,8 @@ class KorenderContext(var width: Int = 1280, var height: Int = 800) {
     private var frameVisibleRenderableCount: Int = 0
 
     val gpu: Gpu = GlGpu()
+    val filterScreenQuad : GpuMesh = Meshes.screenQuad().build(gpu).gpuMesh
+
     var shadower: Shadower = SimpleShadower(gpu)
     var onFrame: KorenderContext.(FrameInfo) -> Unit = {}
     var onResize: KorenderContext.() -> Unit = {}
@@ -80,7 +87,33 @@ class KorenderContext(var width: Int = 1280, var height: Int = 800) {
         updateContext()
         onFrame.invoke(this, frameInfo)
         renderShadowMap()
-        render()
+
+        if (filters.isEmpty()) {
+            render()
+        } else {
+            for (p in 0..filters.size) {
+                val frameBuffer = if (p==filters.size) null else filterFrameBuffers.get(p%2)
+                renderTo(frameBuffer) {
+                    if (p==0) {
+                        VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
+                        render()
+                    } else {
+                        val filter = filters[p-1]
+                        VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
+                        filter.gpuShader.render({filter.uniforms[it]?: contextUniforms[it]}, filterScreenQuad)
+                    }
+                }
+                context["filterColorTexture"] = frameBuffer?.colorTexture
+                context["filterDepthTexture"] = frameBuffer?.depthTexture
+            }
+        }
+    }
+
+    fun renderTo(fb: GlGpuFrameBuffer?, block: () -> Unit) {
+        if (fb == null)
+            block()
+        else
+            fb.exec { block() }
     }
 
     private fun renderShadowMap() {
@@ -132,4 +165,14 @@ class KorenderContext(var width: Int = 1280, var height: Int = 800) {
         context["cameraPos"] = camera.position()
         context["light"] = light
     }
+
+    fun addFilter(filter: Filter) {
+        filters.add(filter)
+        if (filters.size == 1 || filters.size == 2) {
+            filterFrameBuffers.add(GlGpuFrameBuffer(width, height, true))
+        }
+        // TODO: custom dimensions framebuffers
+        // TODO: resizing screensize framebuffers
+    }
+
 }

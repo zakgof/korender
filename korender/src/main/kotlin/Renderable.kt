@@ -18,7 +18,7 @@ data class Renderable(val mesh: Mesh, val material: Material) {
         worldBoundingBox = updateBB()
     }
 
-    private fun updateBB(): BoundingBox = mesh.modelBoundingBox.transform(transform)
+    private fun updateBB() = mesh.modelBoundingBox?.transform(transform)
 
     fun render(contextUniforms: UniformSupplier) =
         material.gpuShader.render({
