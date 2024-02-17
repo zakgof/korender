@@ -53,9 +53,9 @@ vec4 triplanar(sampler2D tex, vec3 pos, vec3 normal) {
     blend_weights /= (blend_weights.x + blend_weights.y + blend_weights.z);
     vec4 blended_color;
 
-    vec4 col1 = randomizedTexture2D(tex, pos.yz);
-    vec4 col2 = randomizedTexture2D(tex, pos.zx);
-    vec4 col3 = randomizedTexture2D(tex, pos.xy);
+    vec4 col1 = texture2D(tex, pos.yz);
+    vec4 col2 = texture2D(tex, pos.zx);
+    vec4 col3 = texture2D(tex, pos.xy);
 
     return col1.xyzw * blend_weights.xxxx +
       col2.xyzw * blend_weights.yyyy +
