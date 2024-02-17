@@ -1,10 +1,12 @@
-package com.zakgof.korender
+package com.zakgof.korender.shadow
 
+import com.zakgof.korender.Gpu
+import com.zakgof.korender.Renderable
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.gpu.GpuShader
-import com.zakgof.korender.material.ShaderBuilder
+import com.zakgof.korender.material.Shaders
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.projection.OrthoProjection
@@ -12,18 +14,19 @@ import com.zakgof.korender.projection.Projection
 import gl.VGL11
 import org.lwjgl.opengl.GL11
 
-class Shadower(private val gpu: Gpu) {
+class SimpleShadower(gpu: Gpu) : Shadower {
 
-    private val casterShader: GpuShader = ShaderBuilder("test.vert", "test.frag", "SHADOW_CASTER").build(gpu)
+    private val casterShader: GpuShader = Shaders.standard(gpu, "SHADOW_CASTER")
     private val casters = mutableListOf<Renderable>()
     private val fb: GlGpuFrameBuffer = GlGpuFrameBuffer(1024, 1024, false)
 
-    var camera: Camera? = null
-    var projection: Projection? = null
+    override val texture = fb.colorTexture
+    override var camera: Camera? = null
+    override var projection: Projection? = null
 
-    fun add(renderable: Renderable) = casters.add(renderable)
+    override fun add(renderable: Renderable) = casters.add(renderable)
 
-    fun render(light: Vec3) {
+    override fun render(light: Vec3) {
         if (casters.isEmpty()) {
             return
         }
@@ -31,8 +34,8 @@ class Shadower(private val gpu: Gpu) {
         fb.exec {
             VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or GL11.GL_DEPTH_BUFFER_BIT)
             VGL11.glEnable(GL11.GL_DEPTH_TEST)
-            VGL11.glCullFace(VGL11.GL_FRONT);
-            casters.forEach() { r ->
+            VGL11.glCullFace(VGL11.GL_FRONT)
+            casters.forEach { r ->
                 casterShader.render({
                     r.material.uniforms[it] ?: mapOf(
                         "model" to r.transform.mat4(),
@@ -66,9 +69,7 @@ class Shadower(private val gpu: Gpu) {
 
         camera = DefaultCamera(pos = cameraPos, dir = light, up = up)
         projection =
-            OrthoProjection(width = width * 0.51f, height = height * 0.51f, near = near * 0.9f, far = far * 1.1f)
+            OrthoProjection(width = width * 0.51f, height = height * 0.51f, near = near * 0.98f, far = far * 1.05f)
     }
-
-    fun texture() = fb.colorTexture
 
 }

@@ -5,7 +5,6 @@ import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
 import com.zakgof.korender.lwjgl.LwjglPlatform
 import com.zakgof.korender.material.Materials
-import com.zakgof.korender.material.Shaders
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
