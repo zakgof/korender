@@ -1,10 +1,10 @@
+
 import com.zakgof.korender.Renderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
 import com.zakgof.korender.lwjgl.LwjglPlatform
 import com.zakgof.korender.material.Materials
-import com.zakgof.korender.material.Shaders
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -28,6 +28,6 @@ fun main(): Unit = korender(LwjglPlatform()) {
     add(Renderable(mesh, material))
 
     onFrame = { frameInfo ->
-        println("~FPS=${frameInfo.avgFps} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")
+        println("FPS=~${frameInfo.avgFps} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")
     }
 }
