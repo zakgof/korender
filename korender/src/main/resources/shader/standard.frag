@@ -5,6 +5,7 @@
 
 uniform sampler2D colorTexture;
 uniform vec3 cameraPos;
+uniform vec3 light;
 
 uniform float ambient;
 uniform float diffuse;
@@ -38,16 +39,11 @@ out vec4 fragColor;
 void main() {
 
   vec3 normal = normalize(vnormal);
-  vec3 light = normalize(vec3(1.0, -1.0, 0.0));
   vec3 look = normalize(vpos - cameraPos);
 
   #ifdef NORMAL_MAP
     normal = perturbNormal(normal, normalTexture, vtex, look);
   #endif
-
-  float diffuseRatio = diffuse * clamp(dot(-light, normal), 0.0, 1.0);
-  float specRatio = specular * pow(clamp(dot(reflect(-light, normal), look), 0.0, 1.0), specularPower);
-  float lighting = ambient + diffuseRatio + specRatio;
 
   #ifdef TRIPLANAR
 	vec4 texColor = triplanar(colorTexture, mpos * triplanarScale, mnormal);
@@ -59,8 +55,9 @@ void main() {
      #endif
   #endif
 
+  float lighting = lite(light, normal, look, ambient, diffuse, specular, specularPower);
+
   #ifdef SHADOW_RECEIVER
-    float shadow = 1.0;
     float shadowSample = texture2D(shadowTexture, vshadow.xy).r;
     if (shadowSample  >=  vshadow.z && vshadow.z > 0.0) {
        lighting = ambient;

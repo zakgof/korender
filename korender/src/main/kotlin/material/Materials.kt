@@ -11,7 +11,7 @@ object Materials {
 
 class StandardMaterial(private val gpu: Gpu, vararg defs: String) : Material {
 
-    override val gpuShader: GpuShader = ShaderBuilder("test.vert", "test.frag", *defs).build(gpu)
+    override val gpuShader: GpuShader = Shaders.standard(gpu, *defs)
     override val uniforms: UniformSupplier
         get() = UniformSupplier { get(it) }
 

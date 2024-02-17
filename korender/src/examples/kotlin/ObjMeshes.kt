@@ -6,7 +6,6 @@ import com.zakgof.korender.korender
 import com.zakgof.korender.lwjgl.LwjglPlatform
 import com.zakgof.korender.material.Images
 import com.zakgof.korender.material.Materials
-import com.zakgof.korender.material.Shaders
 import com.zakgof.korender.math.*
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.projection.FrustumProjection
@@ -32,6 +31,6 @@ fun main(): Unit = korender(LwjglPlatform()) {
 
     onFrame = { frameInfo ->
         renderable.transform = Transform().scale(0.1f).rotate(1.x, -PI * 0.5f).rotate(1.y, frameInfo.nanoTime * 1e-10f)
-        println("FPS=${frameInfo.avgFps} ~FPS=${1e9 / frameInfo.dt} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")
+        println("FPS=~${1e9 / frameInfo.dt} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")
     }
 }

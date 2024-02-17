@@ -38,10 +38,9 @@ object Meshes {
         private val indexShortBuffer: ShortBuffer?
         private var isLongIndex: Boolean
 
-        private val vertexSize: Int
+        private val vertexSize: Int = attrs.sumOf { it.size } * 4
 
         init {
-            this.vertexSize = attrs.sumOf { it.size } * 4
             this.vertexBuffer = BufferUtils.createByteBuffer(vertexNumber * vertexSize)
             this.floatVertexBuffer = vertexBuffer.asFloatBuffer()
 
@@ -81,7 +80,7 @@ object Meshes {
             return this
         }
 
-        fun transformPos(transform: Transform) = transformPos({ transform.mat4().project(it) })
+        fun transformPos(transform: Transform) = transformPos { transform.mat4().project(it) }
 
         fun build(gpu: Gpu): DefaultMesh {
             // TODO: validate vb/ib full
@@ -130,19 +129,18 @@ object Meshes {
     class DefaultMesh(
         gpu: Gpu,
         private val vb: ByteBuffer,
-        private val ib: ByteBuffer,
+        ib: ByteBuffer,
         private val vertices: Int,
-        private val indices: Int,
+        indices: Int,
         private val attrs: List<Attribute>,
         private val vertexSize: Int
     ) : Mesh {
 
-        override val gpuMesh: GpuMesh
+        override val gpuMesh: GpuMesh = gpu.createMesh(vb, ib, vertices, indices, attrs, vertexSize)
 
         override val modelBoundingBox: BoundingBox
 
         init {
-            gpuMesh = gpu.createMesh(vb, ib, vertices, indices, attrs, vertexSize)
             modelBoundingBox = BoundingBox(positions())
         }
 
@@ -169,32 +167,32 @@ object Meshes {
             block.invoke(this)
         }
 
-    fun cube(hs: Float = 0.5f, block: MeshBuilder.() -> Unit = {}) =
+    fun cube(halfSide: Float = 0.5f, block: MeshBuilder.() -> Unit = {}) =
         create(24, 36, POS, NORMAL, TEX) {
-            vertices(-hs, -hs, -hs, -1f, 0f, 0f, 0f, 0f)
-            vertices(-hs, hs, -hs, -1f, 0f, 0f, 0f, 1f)
-            vertices(-hs, hs, hs, -1f, 0f, 0f, 1f, 1f)
-            vertices(-hs, -hs, hs, -1f, 0f, 0f, 1f, 0f)
-            vertices(-hs, -hs, hs, 0f, 0f, 1f, 0f, 0f)
-            vertices(-hs, hs, hs, 0f, 0f, 1f, 0f, 1f)
-            vertices(hs, hs, hs, 0f, 0f, 1f, 1f, 1f)
-            vertices(hs, -hs, hs, 0f, 0f, 1f, 1f, 0f)
-            vertices(hs, -hs, hs, 1f, 0f, 0f, 0f, 0f)
-            vertices(hs, hs, hs, 1f, 0f, 0f, 0f, 1f)
-            vertices(hs, hs, -hs, 1f, 0f, 0f, 1f, 1f)
-            vertices(hs, -hs, -hs, 1f, 0f, 0f, 1f, 0f)
-            vertices(hs, -hs, -hs, 0f, 0f, -1f, 0f, 0f)
-            vertices(hs, hs, -hs, 0f, 0f, -1f, 0f, 1f)
-            vertices(-hs, hs, -hs, 0f, 0f, -1f, 1f, 1f)
-            vertices(-hs, -hs, -hs, 0f, 0f, -1f, 1f, 0f)
-            vertices(-hs, hs, hs, 0f, 1f, 0f, 0f, 0f)
-            vertices(-hs, hs, -hs, 0f, 1f, 0f, 0f, 1f)
-            vertices(hs, hs, -hs, 0f, 1f, 0f, 1f, 1f)
-            vertices(hs, hs, hs, 0f, 1f, 0f, 1f, 0f)
-            vertices(hs, -hs, hs, 0f, -1f, 0f, 0f, 0f)
-            vertices(hs, -hs, -hs, 0f, -1f, 0f, 0f, 1f)
-            vertices(-hs, -hs, -hs, 0f, -1f, 0f, 1f, 1f)
-            vertices(-hs, -hs, hs, 0f, -1f, 0f, 1f, 0f)
+            vertices(-halfSide, -halfSide, -halfSide, -1f, 0f, 0f, 0f, 0f)
+            vertices(-halfSide, halfSide, -halfSide, -1f, 0f, 0f, 0f, 1f)
+            vertices(-halfSide, halfSide, halfSide, -1f, 0f, 0f, 1f, 1f)
+            vertices(-halfSide, -halfSide, halfSide, -1f, 0f, 0f, 1f, 0f)
+            vertices(-halfSide, -halfSide, halfSide, 0f, 0f, 1f, 0f, 0f)
+            vertices(-halfSide, halfSide, halfSide, 0f, 0f, 1f, 0f, 1f)
+            vertices(halfSide, halfSide, halfSide, 0f, 0f, 1f, 1f, 1f)
+            vertices(halfSide, -halfSide, halfSide, 0f, 0f, 1f, 1f, 0f)
+            vertices(halfSide, -halfSide, halfSide, 1f, 0f, 0f, 0f, 0f)
+            vertices(halfSide, halfSide, halfSide, 1f, 0f, 0f, 0f, 1f)
+            vertices(halfSide, halfSide, -halfSide, 1f, 0f, 0f, 1f, 1f)
+            vertices(halfSide, -halfSide, -halfSide, 1f, 0f, 0f, 1f, 0f)
+            vertices(halfSide, -halfSide, -halfSide, 0f, 0f, -1f, 0f, 0f)
+            vertices(halfSide, halfSide, -halfSide, 0f, 0f, -1f, 0f, 1f)
+            vertices(-halfSide, halfSide, -halfSide, 0f, 0f, -1f, 1f, 1f)
+            vertices(-halfSide, -halfSide, -halfSide, 0f, 0f, -1f, 1f, 0f)
+            vertices(-halfSide, halfSide, halfSide, 0f, 1f, 0f, 0f, 0f)
+            vertices(-halfSide, halfSide, -halfSide, 0f, 1f, 0f, 0f, 1f)
+            vertices(halfSide, halfSide, -halfSide, 0f, 1f, 0f, 1f, 1f)
+            vertices(halfSide, halfSide, halfSide, 0f, 1f, 0f, 1f, 0f)
+            vertices(halfSide, -halfSide, halfSide, 0f, -1f, 0f, 0f, 0f)
+            vertices(halfSide, -halfSide, -halfSide, 0f, -1f, 0f, 0f, 1f)
+            vertices(-halfSide, -halfSide, -halfSide, 0f, -1f, 0f, 1f, 1f)
+            vertices(-halfSide, -halfSide, halfSide, 0f, -1f, 0f, 1f, 0f)
 
             indices(0, 2, 1, 0, 3, 2)
             indices(4, 6, 5, 4, 7, 6)
@@ -208,8 +206,8 @@ object Meshes {
     fun sphere(radius: Float = 1.0f, slices: Int = 32, sectors: Int = 32, block: MeshBuilder.() -> Unit = {}) =
         create(2 + (slices - 1) * sectors, sectors * 3 * 2 + (slices - 2) * sectors * 6, POS, NORMAL, TEX) {
             vertices(0f, -radius, 0f, 0f, -1f, 0f, 0f, 0f)
-            for (slice in 1..slices - 1) {
-                for (sector in 0..sectors - 1) {
+            for (slice in 1..<slices) {
+                for (sector in 0..<sectors) {
                     val theta = PI - PI * slice / slices
                     val phi = PI * 2f * sector / sectors
                     val normal = Vec3(sin(theta) * cos(phi), cos(theta), sin(theta) * sin(phi))
@@ -225,9 +223,9 @@ object Meshes {
             for (sector in 0 until sectors) {
                 indices(0, sector + 1, ((sector + 1) % sectors) + 1)
             }
-            for (slice in 1..slices - 2) {
+            for (slice in 1..<slices - 1) {
                 val b = 1 + (slice - 1) * sectors
-                for (sector in 0..sectors - 1) {
+                for (sector in 0..<sectors) {
                     val nextSector = (sector + 1) % sectors
                     indices(b + sector, b + sector + sectors, b + nextSector + sectors)
                     indices(b + nextSector + sectors, b + nextSector, b + sector)
@@ -235,7 +233,7 @@ object Meshes {
             }
             val b = 1 + sectors * (slices - 2)
             val top = b + sectors
-            for (sector in 0..sectors - 1) {
+            for (sector in 0..<sectors) {
                 indices(b + sector, top, b + ((sector + 1) % sectors))
             }
             block(this)
