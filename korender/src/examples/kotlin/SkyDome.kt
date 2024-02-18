@@ -1,11 +1,11 @@
 
-import com.zakgof.korender.Filter
 import com.zakgof.korender.Renderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
 import com.zakgof.korender.lwjgl.LwjglPlatform
 import com.zakgof.korender.material.Materials
+import com.zakgof.korender.material.ShaderBuilder
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -20,13 +20,12 @@ fun main(): Unit = korender(LwjglPlatform()) {
 
     add(
         Renderable(
-            Meshes.sphere(1.5f).build(gpu),
-            Materials.standard(gpu) {
-                colorFile = "/sand.png"
-            })
+            Meshes.screenQuad().build(gpu),
+            Materials.create(
+                ShaderBuilder("filter.vert", "cloudsky.frag").build(gpu)
+            )
+        )
     )
-
-    addFilter(Filter(gpu, "bw.frag") { null })
 
     onFrame = { frameInfo ->
         println("FPS=~${1e9 / frameInfo.dt} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")
