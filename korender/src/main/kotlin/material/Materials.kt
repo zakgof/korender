@@ -7,6 +7,13 @@ import com.zakgof.korender.gpu.GpuTexture
 object Materials {
     fun standard(gpu: Gpu, vararg defs: String, block: StandardMaterial.() -> Unit): StandardMaterial =
         StandardMaterial(gpu, *defs).apply(block)
+
+    fun create(gpuShader: GpuShader, uniforms: UniformSupplier = UniformSupplier { null }) = object : Material {
+        override val gpuShader
+            get() = gpuShader
+        override val uniforms: UniformSupplier
+            get() = uniforms
+    }
 }
 
 class StandardMaterial(private val gpu: Gpu, vararg defs: String) : Material {

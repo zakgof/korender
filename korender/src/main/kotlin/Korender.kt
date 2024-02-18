@@ -164,6 +164,9 @@ class KorenderContext(var width: Int = 1280, var height: Int = 800) {
         context["projection"] = projection.mat4()
         context["cameraPos"] = camera.position()
         context["light"] = light
+        context["screenWidth"] = width.toFloat()
+        context["screenHeight"] = height.toFloat()
+        context["time"] = ((nanoTime() - startNanos) * 1e-9).toFloat()
     }
 
     fun addFilter(filter: Filter) {
