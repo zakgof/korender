@@ -5,8 +5,6 @@ import com.zakgof.korender.gpu.GpuShader
 import com.zakgof.korender.gpu.GpuTexture
 
 object Materials {
-    fun standard(gpu: Gpu, vararg defs: String, block: StandardMaterial.() -> Unit): StandardMaterial =
-        StandardMaterial(gpu, *defs).apply(block)
 
     fun create(gpuShader: GpuShader, uniforms: UniformSupplier = UniformSupplier { null }) = object : Material {
         override val gpuShader
@@ -14,6 +12,14 @@ object Materials {
         override val uniforms: UniformSupplier
             get() = uniforms
     }
+
+    fun standard(gpu: Gpu, vararg defs: String, block: StandardMaterial.() -> Unit): StandardMaterial =
+        StandardMaterial(gpu, *defs).apply(block)
+
+    fun sky(gpu: Gpu, skyTextureFile: String) = create(
+        ShaderBuilder("screen.vert", "texsky.frag").build(gpu),
+        MapUniformSupplier("skyTexture" to Textures.create(skyTextureFile).build(gpu))
+    )
 }
 
 class StandardMaterial(private val gpu: Gpu, vararg defs: String) : Material {

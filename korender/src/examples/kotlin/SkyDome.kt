@@ -1,4 +1,3 @@
-
 import com.zakgof.korender.Renderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
@@ -22,7 +21,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
         Renderable(
             Meshes.screenQuad().build(gpu),
             Materials.create(
-                ShaderBuilder("filter.vert", "cloudsky.frag").build(gpu)
+                ShaderBuilder("screen.vert", "starsky.frag").build(gpu)
             )
         )
     )
