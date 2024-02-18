@@ -5,5 +5,5 @@ import com.zakgof.korender.material.ShaderBuilder
 import com.zakgof.korender.material.UniformSupplier
 
 class Filter(gpu: Gpu, fragmentShaderFile: String, val uniforms: UniformSupplier) {
-    val gpuShader : GpuShader = ShaderBuilder("filter.vert", fragmentShaderFile).build(gpu)
+    val gpuShader : GpuShader = ShaderBuilder("screen.vert", fragmentShaderFile).build(gpu)
 }
