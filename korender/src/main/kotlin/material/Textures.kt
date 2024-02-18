@@ -20,10 +20,9 @@ object Textures {
         var filter: TextureFilter = TextureFilter.MipMapLinearLinear
 
         fun build(gpu: Gpu): GpuTexture {
-            val data = (image.raster.dataBuffer as DataBufferByte).data
             val bytes = when (image.type) {
-                BufferedImage.TYPE_3BYTE_BGR -> loadBgr(data)
-                else -> throw KorenderException("Unknown image format")
+                BufferedImage.TYPE_3BYTE_BGR -> loadBgr((image.raster.dataBuffer as DataBufferByte).data)
+                else -> throw KorenderException("Unknown image format ${image.type}")
             }
             return GlGpuTexture(image.width, image.height, bytes, filter)
         }

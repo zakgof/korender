@@ -18,8 +18,8 @@ fun main(): Unit = korender(LwjglPlatform()) {
         projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
     }
 
-    val mesh = Meshes.heightMap(256, 256, 0.1f) { x, y -> 0.4f *
-        sin(0.3f * x.toFloat()) * sin(0.3f * y.toFloat())
+    val mesh = Meshes.heightMap(256, 256, 0.1f) { x, y ->
+        0.4f * sin(0.3f * x.toFloat()) * sin(0.3f * y.toFloat())
     }.build(gpu)
     val material = Materials.standard(gpu) {
         colorFile = "/sand.png"
@@ -31,7 +31,6 @@ fun main(): Unit = korender(LwjglPlatform()) {
     add(renderable)
 
     onFrame = { frameInfo ->
-       // renderable.transform = Transform().scale(0.1f).rotate(1.y, frameInfo.nanoTime * 1e-10f)
         println("FPS=~${1e9 / frameInfo.dt} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")
     }
 }
