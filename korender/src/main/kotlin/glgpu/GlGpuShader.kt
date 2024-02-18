@@ -6,6 +6,7 @@ import com.zakgof.korender.gpu.GpuShader
 import com.zakgof.korender.gpu.GpuTexture
 import com.zakgof.korender.material.ShaderDebugInfo
 import com.zakgof.korender.material.UniformSupplier
+import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Mat3
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec3
@@ -144,6 +145,7 @@ class GlGpuShader(
             is Int -> VGL20.glUniform1i(location, value)
             is Float -> VGL20.glUniform1f(location, value)
             is Vec3 -> VGL20.glUniform3f(location, value.x, value.y, value.z)
+            is Color -> VGL20.glUniform3f(location, value.r, value.b, value.g)
             is Mat4 -> VGL20.glUniformMatrix4fv(location, false, value.asBuffer().rewind())
             is Mat3 -> VGL20.glUniformMatrix3fv(location, false, value.asBuffer().rewind())
             is GpuTexture -> {

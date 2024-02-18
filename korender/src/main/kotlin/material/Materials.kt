@@ -3,6 +3,7 @@ package com.zakgof.korender.material
 import com.zakgof.korender.Gpu
 import com.zakgof.korender.gpu.GpuShader
 import com.zakgof.korender.gpu.GpuTexture
+import com.zakgof.korender.math.Color
 
 object Materials {
 
@@ -20,6 +21,12 @@ object Materials {
         ShaderBuilder("screen.vert", "texsky.frag").build(gpu),
         MapUniformSupplier("skyTexture" to Textures.create(skyTextureFile).build(gpu))
     )
+
+    fun text(gpu: Gpu, fontTexture: GpuTexture, color: Color) = create(
+        ShaderBuilder("font.vert", "font.frag").build(gpu),
+        MapUniformSupplier("fontTexture" to fontTexture, "color" to color)
+    )
+
 }
 
 class StandardMaterial(private val gpu: Gpu, vararg defs: String) : Material {
