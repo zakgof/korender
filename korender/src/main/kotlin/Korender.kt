@@ -12,7 +12,6 @@ import com.zakgof.korender.projection.Projection
 import com.zakgof.korender.shadow.Shadower
 import com.zakgof.korender.shadow.SimpleShadower
 import gl.VGL11
-import org.lwjgl.opengl.GL11
 import java.lang.System.nanoTime
 import java.util.*
 
@@ -135,7 +134,7 @@ class KorenderContext(var width: Int = 1280, var height: Int = 800) {
 
     private fun render() {
         VGL11.glViewport(0, 0, width, height)
-        VGL11.glEnable(GL11.GL_CULL_FACE)
+        VGL11.glEnable(VGL11.GL_CULL_FACE)
         VGL11.glCullFace(VGL11.GL_BACK)
 
         val visibleRenderables = renderables.filter { isVisible(it) }
