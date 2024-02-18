@@ -19,6 +19,8 @@ import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import java.nio.ShortBuffer
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 object Meshes {
 
@@ -309,6 +311,35 @@ object Meshes {
             vertices.forEach() { vertices(*it) }
             indices(*indices.toIntArray())
         }
+    }
+
+    fun heightMap(xsize: Int, ysize: Int, cell: Float, height: (Int, Int) -> Float) =
+        create((xsize + 1) * (ysize + 1), xsize * ysize * 6, POS, NORMAL, TEX) {
+            for (x in 0..xsize) {
+                for (y in 0..ysize) {
+                    vertices(x * cell - 0.5f * cell * xsize, height(x, y), y * cell- 0.5f * cell * ysize)
+                    val n = normal(x, y, xsize, ysize, cell, height);
+                    vertices(n)
+                    vertices(x.toFloat() / (xsize + 1), y.toFloat() / (ysize + 1))
+                }
+            }
+            for (x in 0..<xsize) {
+                for (y in 0..<ysize) {
+                    val b = x + (xsize + 1) * y
+                    indices(b, b + 1, b + xsize + 1, b + xsize + 1, b + 1, b + xsize + 2)
+                }
+            }
+        }
+
+    private fun normal(x: Int, y: Int, xsize: Int, ysize: Int, cell: Float, height: (Int, Int) -> Float): Vec3 {
+        val h = height(x, y)
+        val dhx = (max(x - 1, 0)..min(x + 1, xsize) step 2)
+            .map { (height(it, y) - h) * (it - x) }
+            .average().toFloat()
+        val dhy = (max(y - 1, 0)..min(y + 1, ysize) step 2)
+            .map { (height(x, it) - h) * (it - y) }
+            .average().toFloat()
+        return Vec3(-dhx, cell, -dhy).normalize()
     }
 }
 
