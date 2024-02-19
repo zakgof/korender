@@ -1,6 +1,5 @@
 
 import com.zakgof.korender.Renderable
-import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Attributes.NORMAL
 import com.zakgof.korender.geometry.Attributes.POS
 import com.zakgof.korender.geometry.Attributes.TEX
@@ -8,15 +7,12 @@ import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
 import com.zakgof.korender.lwjgl.LwjglPlatform
 import com.zakgof.korender.material.Materials
-import com.zakgof.korender.material.Shaders
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.math.y
-import com.zakgof.korender.math.z
 import com.zakgof.korender.projection.FrustumProjection
 
 fun main(): Unit = korender(LwjglPlatform()) {
 
-    camera = DefaultCamera(pos = Vec3(0f, 3f, 20f), dir = -1.z, up = 1.y)
+    val flyCamera = FlyCamera(platform, Vec3(0f, 3f, 20f));
     onResize = {
         projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
     }
@@ -34,4 +30,9 @@ fun main(): Unit = korender(LwjglPlatform()) {
             aperiodicFile = "/aperiodic.png"
         })
     add(terrain)
+
+    onFrame = { frameInfo ->
+        camera = flyCamera.idle(frameInfo.dt)
+        println("FPS=~${frameInfo.avgFps}")
+    }
 }
