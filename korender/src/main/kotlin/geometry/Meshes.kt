@@ -317,7 +317,7 @@ object Meshes {
         create((xsize + 1) * (ysize + 1), xsize * ysize * 6, POS, NORMAL, TEX) {
             for (x in 0..xsize) {
                 for (y in 0..ysize) {
-                    vertices(x * cell - 0.5f * cell * xsize, height(x, y), y * cell- 0.5f * cell * ysize)
+                    vertices(x * cell - 0.5f * cell * xsize, height(x, y), y * cell - 0.5f * cell * ysize)
                     val n = normal(x, y, xsize, ysize, cell, height);
                     vertices(n)
                     vertices(x.toFloat() / (xsize + 1), y.toFloat() / (ysize + 1))
@@ -340,6 +340,14 @@ object Meshes {
             .map { (height(x, it) - h) * (it - y) }
             .average().toFloat()
         return Vec3(-dhx, cell, -dhy).normalize()
+    }
+
+    fun billboard() = create(4, 6, POS, TEX) {
+        vertices(0f, 0f, 0f, 0f, 0f)
+        vertices(0f, 0f, 0f, 0f, 1f)
+        vertices(0f, 0f, 0f, 1f, 1f)
+        vertices(0f, 0f, 0f, 1f, 0f)
+        indices(0, 2, 1, 0, 3, 2)
     }
 }
 

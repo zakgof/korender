@@ -27,6 +27,19 @@ object Materials {
         MapUniformSupplier("fontTexture" to fontTexture, "color" to color)
     )
 
+    fun billboard(gpu: Gpu, colorTextureFile: String, xscale: Float = 1.0f, yscale: Float = 1.0f): Material = create(
+        ShaderBuilder("billboard.vert", "standard.frag").build(gpu),
+        MapUniformSupplier(
+            "colorTexture" to Textures.create(colorTextureFile).build(gpu),
+            "xscale" to xscale,
+            "yscale" to yscale,
+            "ambient" to 1.0f,  // TODO
+            "diffuse" to 0.1f,
+            "specular" to 0.0f,
+            "specularPower" to 20.0f
+        )
+    )
+
 }
 
 class StandardMaterial(private val gpu: Gpu, vararg defs: String) : Material {
