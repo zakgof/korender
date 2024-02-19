@@ -6,7 +6,7 @@ import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.BoundingBox
 import com.zakgof.korender.math.Transform
 
-data class Renderable(val mesh: Mesh, val material: Material) {
+class Renderable(val mesh: Mesh, val material: Material) {
     var worldBoundingBox: BoundingBox? = null
     var transform: Transform = Transform()
         set(value) {
