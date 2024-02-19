@@ -18,6 +18,10 @@ class LwjglPlatform : Platform {
     private var keyCallback: GLFWKeyCallback? = null
     private var resizeCallback: GLFWWindowSizeCallback? = null
 
+    override var onFrame: () -> Unit = {}
+    override var onResize: (Int, Int) -> Unit = { _, _ -> }
+    override var onKey: (Platform.KeyEvent) -> Unit = { _ -> }
+
     init {
         VGL11.gl = Lwjgl11()
         VGL12.gl = Lwjgl12()
@@ -28,10 +32,14 @@ class LwjglPlatform : Platform {
         VGL30.gl = Lwjgl30()
     }
 
-    override fun run(width: Int, height: Int, init: () -> Unit, onFrame: () -> Unit, onResize: (Int, Int) -> Unit) {
+    override fun run(
+        width: Int,
+        height: Int,
+        init: () -> Unit
+    ) {
         val errorCallback = GLFW.glfwSetErrorCallback(GLFWErrorCallback.createThrow())
         try {
-            createWindow(width, height, onResize)
+            createWindow(width, height)
             windowWidth = width
             windowHeight = height
             GL.createCapabilities()
@@ -46,7 +54,7 @@ class LwjglPlatform : Platform {
         }
     }
 
-    fun createWindow(width: Int, height: Int, onFrame: (Int, Int) -> Unit) {
+    fun createWindow(width: Int, height: Int) {
 
         if (!GLFW.glfwInit()) {
             throw IllegalStateException("Unable to initialize GLFW")
@@ -79,6 +87,10 @@ class LwjglPlatform : Platform {
                 if (key == GLFW.GLFW_KEY_ESCAPE && action == GLFW.GLFW_RELEASE) {
                     GLFW.glfwSetWindowShouldClose(window, true)
                 }
+                when (action) {
+                    GLFW.GLFW_PRESS -> onKey(LwjglKeyEvent(key, true))
+                    GLFW.GLFW_RELEASE -> onKey(LwjglKeyEvent(key, false))
+                }
             }
         })
 
@@ -87,7 +99,7 @@ class LwjglPlatform : Platform {
                 windowWidth = width
                 windowHeight = height
                 GL11.glViewport(0, 0, width, height);
-                onFrame.invoke(width, height)
+                onResize(width, height)
             }
         })
 
@@ -109,10 +121,13 @@ class LwjglPlatform : Platform {
         while (!GLFW.glfwWindowShouldClose(window)) {
             GL11.glViewport(0, 0, windowWidth, windowHeight)
             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT or GL11.GL_DEPTH_BUFFER_BIT)
-            frameCallback.invoke()
+            frameCallback()
             GLFW.glfwSwapBuffers(window);
             GLFW.glfwPollEvents();
         }
     }
 
+
 }
+
+class LwjglKeyEvent(override val code: Int, override val press: Boolean) : Platform.KeyEvent

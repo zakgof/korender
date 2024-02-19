@@ -1,5 +1,6 @@
 package com.zakgof.korender
 
+import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.glgpu.GlGpu
@@ -17,20 +18,21 @@ import java.util.*
 
 fun korender(platform: Platform, block: KorenderContext.() -> Unit) {
     var korender: KorenderContext? = null
+
     platform.run(
         width = 1280,
         height = 800,
         init = {
-            korender = KorenderContext()
+            korender = KorenderContext(platform)
+            platform.onFrame = { korender!!.frame() }
+            platform.onResize = { x, y -> korender!!.resize(x, y) }
             block.invoke(korender!!)
             korender!!.onResize.invoke(korender!!)
-        },
-        onFrame = { korender!!.frame() },
-        onResize = { x, y -> korender!!.resize(x, y) }
+        }
     )
 }
 
-class KorenderContext(var width: Int = 1280, var height: Int = 800) {
+class KorenderContext(val platform: Platform, var width: Int = 1280, var height: Int = 800) {
 
     private val filters = mutableListOf<Filter>()
     private val filterFrameBuffers = mutableListOf<GlGpuFrameBuffer>()
@@ -50,7 +52,7 @@ class KorenderContext(var width: Int = 1280, var height: Int = 800) {
     var shadower: Shadower = SimpleShadower(gpu)
     var onFrame: KorenderContext.(FrameInfo) -> Unit = {}
     var onResize: KorenderContext.() -> Unit = {}
-    var camera: DefaultCamera = DefaultCamera(
+    var camera: Camera = DefaultCamera(
         pos = Vec3(0f, 5f, 15f),
         dir = Vec3(0f, 0f, -1f),
         up = Vec3(0f, 1f, 0f)
