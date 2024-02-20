@@ -1,5 +1,4 @@
 
-import com.zakgof.korender.Bucket
 import com.zakgof.korender.Renderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
@@ -29,8 +28,8 @@ fun main(): Unit = korender(LwjglPlatform()) {
     val rplate = Renderable(plate, material)
 
     shadower.add(rcube)
-    add(rcube, Bucket.TRANSPARENT)
-    add(rplate, Bucket.TRANSPARENT)
+    add(rcube)
+    add(rplate)
 
     onFrame = { frameInfo ->
         rcube.transform = Transform().rotate(1.x, -FloatMath.PI * 0.5f).rotate(1.y, frameInfo.nanoTime * 1e-10f)

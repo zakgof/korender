@@ -49,20 +49,22 @@ class SimpleShadower(gpu: Gpu) : Shadower {
     }
 
     private fun updateCamera(light: Vec3) {
-        val left = (1.y % light).normalize()
-        val up = (light % left).normalize()
+        val right = (light % 1.y).normalize()
+        val up = (right % light).normalize()
         val corners = casters.mapNotNull { it.worldBoundingBox }
             .flatMap { it.corners }
-        val xmin = corners.minOf { it * left }
+        val xmin = corners.minOf { it * right }
         val ymin = corners.minOf { it * up }
         val zmin = corners.minOf { it * light }
-        val xmax = corners.maxOf { it * left }
+        val xmax = corners.maxOf { it * right}
         val ymax = corners.maxOf { it * up }
         val zmax = corners.maxOf { it * light }
 
-        val center = Vec3((xmin + xmax) * 0.5f, (ymin + ymax) * 0.5f, (zmin + zmax) * 0.5f)
+        val center = right * ((xmin + xmax) * 0.5f) +
+                    up *  ((ymin + ymax) * 0.5f) +
+                    light * ((zmin + zmax) * 0.5f)
         val near = 5f
-        val far = near + (zmax - zmin)
+        val far = near + (zmax - zmin) + 10.0f // TODO: this is crazy hack!
         val cameraPos = center - light * (near + (zmax - zmin) * 0.5f)
         val width = xmax - xmin
         val height = ymax - ymin

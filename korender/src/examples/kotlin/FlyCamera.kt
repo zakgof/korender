@@ -35,9 +35,9 @@ class FlyCamera(platform: Platform, startPos: Vec3) {
     }
 
     fun idle(dt: Long) : Camera {
-        if (pressedKeys.contains('A'.code))
+        if (pressedKeys.contains(263))
             phi -= rotationSpeed * dt
-        if (pressedKeys.contains('D'.code))
+        if (pressedKeys.contains(262))
             phi += rotationSpeed * dt
         if (pressedKeys.contains(265))
             theta += rotationSpeed * dt
@@ -47,6 +47,10 @@ class FlyCamera(platform: Platform, startPos: Vec3) {
             position += look() * (moveSpeed * dt)
         if (pressedKeys.contains('S'.code))
             position -= look() * (moveSpeed * dt)
+        if (pressedKeys.contains('D'.code))
+            position += (look() % Vec3.Y).normalize() * (moveSpeed * dt)
+        if (pressedKeys.contains('A'.code))
+            position -= (look() % Vec3.Y).normalize() * (moveSpeed * dt)
         camera = update()
         return camera
     }

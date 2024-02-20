@@ -38,6 +38,7 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
     private val filterFrameBuffers = mutableListOf<GpuFrameBuffer>()
     private val opaques = mutableListOf<Renderable>()
     private val transparents = mutableListOf<Renderable>()
+    private val skies = mutableListOf<Renderable>()
     private val context = mutableMapOf<String, Any?>()
     private val contextUniforms = MapUniformSupplier(context)
 
@@ -78,6 +79,7 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
         when (bucket) {
             Bucket.OPAQUE -> opaques.add(renderable)
             Bucket.TRANSPARENT -> transparents.add(renderable)
+            Bucket.SKY -> skies.add(renderable)
         }
     }
 
@@ -146,8 +148,8 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
         VGL11.glCullFace(VGL11.GL_BACK)
 
         renderBucket(opaques, 1.0)
+        skies.forEach { it.render(contextUniforms) }
         renderBucket(transparents, -1.0)
-
     }
 
     private fun renderBucket(renderables: MutableList<Renderable>, sortFactor: Double) {
