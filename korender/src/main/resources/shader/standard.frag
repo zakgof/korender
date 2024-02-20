@@ -46,7 +46,11 @@ void main() {
   #endif
 
   #ifdef TRIPLANAR
-	vec4 texColor = triplanar(colorTexture, mpos * triplanarScale, mnormal);
+     #ifdef APERIODIC
+         vec4 texColor = triplanarAperiodic(colorTexture, aperiodicTexture, mpos * triplanarScale, mnormal);
+     #else
+         vec4 texColor = triplanar(colorTexture, mpos * triplanarScale, mnormal);
+     #endif
   #else
      #ifdef APERIODIC
 	   vec4 texColor = aperiodic(colorTexture, aperiodicTexture, vtex);
@@ -68,7 +72,7 @@ void main() {
   #ifdef SHADOW_CASTER
     fragColor = vec4(gl_FragCoord.z, gl_FragCoord.z, gl_FragCoord.z, 1.0);
   #else
-    fragColor = texColor * lighting;
+    fragColor = vec4(texColor.xyz * lighting, texColor.a);
   #endif
 
 }

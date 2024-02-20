@@ -41,7 +41,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
             }
         }
         mesh.update()
-        println("FPS=~${frameInfo.avgFps} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")
+        println("FPS=~${frameInfo.avgFps}")
     }
 }
 
