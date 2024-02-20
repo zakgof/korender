@@ -35,4 +35,9 @@ class BoundingBox(val corners: Set<Vec3>) {
                 )
     }
 
+    fun center(): Vec3 = Vec3(corners.sumOf { it.x.toDouble() }.toFloat(),
+        corners.sumOf { it.y.toDouble() }.toFloat(),
+        corners.sumOf { it.z.toDouble() }.toFloat()
+    )
+
 }

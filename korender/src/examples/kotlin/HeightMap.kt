@@ -1,4 +1,5 @@
 
+import com.zakgof.korender.Bucket
 import com.zakgof.korender.Renderable
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
@@ -25,7 +26,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
         specular = 2.0f
     }
     val renderable = Renderable(mesh, material)
-    add(renderable)
+    add(renderable, Bucket.TRANSPARENT)
 
     onFrame = { frameInfo ->
         camera = flyCamera.idle(frameInfo.dt)

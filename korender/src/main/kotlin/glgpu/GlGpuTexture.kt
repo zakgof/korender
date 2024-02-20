@@ -8,7 +8,6 @@ import gl.*
 import java.nio.ByteBuffer
 
 class GlGpuTexture(val glHandle: Int) : GpuTexture {
-
     companion object {
         val filterMap = mapOf(
             TextureFilter.Nearest to VGL11.GL_NEAREST,
@@ -32,7 +31,8 @@ class GlGpuTexture(val glHandle: Int) : GpuTexture {
         bytes: ByteBuffer,
         filter: TextureFilter = TextureFilter.MipMapLinearLinear,
         wrap: TextureWrap = TextureWrap.Repeat,
-        aniso: Int = 1024
+        aniso: Int = 1024,
+        alpha: Boolean = false
     ) : this(VGL11.glGenTextures()) {
 
         VGL13.glActiveTexture(VGL13.GL_TEXTURE0)
@@ -41,11 +41,11 @@ class GlGpuTexture(val glHandle: Int) : GpuTexture {
         VGL11.glTexImage2D(
             VGL11.GL_TEXTURE_2D,
             0,
-            VGL11.GL_RGB,
+            if (alpha) VGL11.GL_RGBA else VGL11.GL_RGB,
             width,
             height,
             0,
-            VGL11.GL_RGB,
+            if (alpha) VGL11.GL_RGBA else VGL11.GL_RGB,
             VGL11.GL_UNSIGNED_BYTE,
             bytes
         )
@@ -76,8 +76,6 @@ class GlGpuTexture(val glHandle: Int) : GpuTexture {
                 VGL11.GL_TEXTURE_2D, VGLExt.GL_TEXTURE_MAX_ANISOTROPY, Math.min(aniso, anisoMax[0].toInt())
             )
         }
-
-        // VGL11.glTexParameteri(VGL11.GL_TEXTURE_2D, VGL14.GL_TEXTURE_COMPARE_MODE, VGL11.GL_NONE);
         VGL11.glBindTexture(VGL11.GL_TEXTURE_2D, 0)
     }
 

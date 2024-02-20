@@ -1,4 +1,5 @@
 
+import com.zakgof.korender.Bucket
 import com.zakgof.korender.Filter
 import com.zakgof.korender.Renderable
 import com.zakgof.korender.camera.DefaultCamera
@@ -23,7 +24,8 @@ fun main(): Unit = korender(LwjglPlatform()) {
             Meshes.sphere(1.5f).build(gpu),
             Materials.standard(gpu) {
                 colorFile = "/sand.png"
-            })
+            }),
+        Bucket.TRANSPARENT
     )
 
     addFilter(Filter(gpu, "bw.frag") { null })

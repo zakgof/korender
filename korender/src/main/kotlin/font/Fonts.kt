@@ -1,12 +1,11 @@
-package com.zakgof.korender
+package com.zakgof.korender.font
 
+import com.zakgof.korender.Gpu
 import com.zakgof.korender.material.Textures
 import java.awt.Color
 import java.awt.Font.TRUETYPE_FONT
 import java.awt.image.BufferedImage
-import java.io.File
 import java.io.InputStream
-import javax.imageio.ImageIO
 import kotlin.math.max
 import kotlin.math.round
 

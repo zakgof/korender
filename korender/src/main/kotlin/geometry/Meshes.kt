@@ -4,6 +4,7 @@ import com.zakgof.korender.Gpu
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.geometry.Attributes.NORMAL
 import com.zakgof.korender.geometry.Attributes.POS
+import com.zakgof.korender.geometry.Attributes.SCALE
 import com.zakgof.korender.geometry.Attributes.TEX
 import com.zakgof.korender.glgpu.BufferUtils
 import com.zakgof.korender.gpu.GpuMesh
@@ -12,6 +13,7 @@ import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.FloatMath.cos
 import com.zakgof.korender.math.FloatMath.sin
 import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import de.javagl.obj.Obj
 import java.nio.ByteBuffer
@@ -84,7 +86,7 @@ object Meshes {
 
         fun transformPos(transform: Transform) = transformPos { transform.mat4().project(it) }
 
-        fun build(gpu: Gpu): DefaultMesh {
+        fun build(gpu: Gpu, isDynamic: Boolean = false): DefaultMesh {
             // TODO: validate vb/ib full
             return DefaultMesh(
                 gpu,
@@ -93,11 +95,13 @@ object Meshes {
                 vertexNumber,
                 indexNumber,
                 attrs.toList(),
-                vertexSize
+                vertexSize,
+                isDynamic
             )
         }
 
-        fun instancing(instances: Int, transform: (Int) -> Transform): MeshBuilder {
+        fun instancing(instances: Int, transform: (Int, Vertex) -> Unit = { _, _ -> }): MeshBuilder {
+            // TODO: transform should be able to transform not only position
             val that = this
             return create(vertexNumber * instances, indexNumber * instances, *attrs) {
                 for (i in 0 until instances) {
@@ -105,19 +109,9 @@ object Meshes {
                     that.indexIntBuffer?.rewind()
                     that.indexShortBuffer?.rewind()
                     for (v in 0 until that.vertexNumber) {
-                        for (attr in attrs) {
-                            if (attr == POS) {
-                                val x = that.floatVertexBuffer.get()
-                                val y = that.floatVertexBuffer.get()
-                                val z = that.floatVertexBuffer.get()
-                                val newpos = transform.invoke(i).mat4().project(Vec3(x, y, z))
-                                vertices(newpos)
-                            } else {
-                                for (a in 0 until attr.size) {
-                                    vertices(that.floatVertexBuffer.get())
-                                }
-                            }
-                        }
+                        val vertex = getVertex(that.floatVertexBuffer, v, vertexSize, attrs.toList())
+                        transform(v, vertex)
+                        putVertex(floatVertexBuffer, i * that.vertexNumber + v, vertex, vertexSize, attrs.toList())
                     }
                     for (ind in 0 until that.indexNumber) {
                         indices(that.indexGet() + i * that.vertexNumber)
@@ -127,22 +121,23 @@ object Meshes {
         }
     }
 
-
     class DefaultMesh(
         gpu: Gpu,
         private val vb: ByteBuffer,
-        ib: ByteBuffer,
-        private val vertices: Int,
-        indices: Int,
+        private val ib: ByteBuffer,
+        val vertices: Int,
+        val indices: Int,
         private val attrs: List<Attribute>,
-        private val vertexSize: Int
+        private val vertexSize: Int,
+        isDynamic: Boolean = false
     ) : Mesh {
 
-        override val gpuMesh: GpuMesh = gpu.createMesh(vb, ib, vertices, indices, attrs, vertexSize)
+        override val gpuMesh: GpuMesh = gpu.createMesh(attrs, vertexSize, isDynamic)
 
         override val modelBoundingBox: BoundingBox?
 
         init {
+            gpuMesh.update(vb, ib, vertices, indices)
             modelBoundingBox = if (attrs.contains(POS)) BoundingBox(positions()) else null
         }
 
@@ -157,6 +152,46 @@ object Meshes {
                 Vec3(x, y, z)
             }
         }
+
+        fun setPosition(index: Int, pos: Vec3) {
+            val floatVertexBuffer = vb.asFloatBuffer()
+            val positionOffset = attrs.takeWhile { it != POS }.sumOf { it.size }
+            floatVertexBuffer.position(index * vertexSize / 4 + positionOffset)
+            floatVertexBuffer.put(pos.x)
+            floatVertexBuffer.put(pos.y)
+            floatVertexBuffer.put(pos.z)
+        }
+
+        fun update() {
+
+            val fb = vb.asFloatBuffer().rewind()
+            val debug1 = fb.get()
+            val debug2 = fb.get()
+            val debug3 = fb.get()
+            val debug4 = fb.get()
+            val debug5 = fb.get()
+            val debug6 = fb.get()
+            val debug7 = fb.get()
+
+            gpuMesh.update(vb, ib, vertices, indices)
+        }
+
+        fun updateVertex(vertexIndex: Int, block: (Vertex) -> Unit) {
+            val vertex = getVertex(vertexIndex)
+            block(vertex)
+            putVertex(vertexIndex, vertex)
+        }
+
+        private fun putVertex(vertexIndex: Int, vertex: Vertex) {
+            val floatVertexBuffer = vb.asFloatBuffer() // TODO: optimize me
+            putVertex(floatVertexBuffer, vertexIndex, vertex, vertexSize, attrs)
+        }
+
+        fun getVertex(vertexIndex: Int): Vertex {
+            val floatVertexBuffer = vb.asFloatBuffer() // TODO: optimize me
+            return getVertex(floatVertexBuffer, vertexIndex, vertexSize, attrs.toList())
+        }
+
     }
 
     fun quad(halfSide: Float = 0.5f, block: MeshBuilder.() -> Unit = {}) =
@@ -342,12 +377,80 @@ object Meshes {
         return Vec3(-dhx, cell, -dhy).normalize()
     }
 
-    fun billboard() = create(4, 6, POS, TEX) {
-        vertices(0f, 0f, 0f, 0f, 0f)
-        vertices(0f, 0f, 0f, 0f, 1f)
-        vertices(0f, 0f, 0f, 1f, 1f)
-        vertices(0f, 0f, 0f, 1f, 0f)
-        indices(0, 2, 1, 0, 3, 2)
+    fun billboard(position: Vec3 = Vec3.ZERO, scaleX: Float = 1.0f, scaleY: Float = 1.0f) =
+        create(4, 6, POS, TEX, SCALE) {
+            vertices(position)
+            vertices(0f, 0f, scaleX, scaleY)
+            vertices(position)
+            vertices(0f, 1f, scaleX, scaleY)
+            vertices(position)
+            vertices(1f, 1f, scaleX, scaleY)
+            vertices(position)
+            vertices(1f, 0f, scaleX, scaleY)
+            indices(0, 2, 1, 0, 3, 2)
+        }
+}
+
+class Vertex(var pos: Vec3? = null, var normal: Vec3? = null, var tex: Vec2? = null, var scale: Vec2? = null)
+
+private fun getVertex(
+    floatVertexBuffer: FloatBuffer,
+    vertexIndex: Int,
+    vertexSize: Int,
+    attrs: List<Attribute>
+): Vertex {
+
+    val vertex = Vertex()
+    floatVertexBuffer.position(vertexIndex * vertexSize / 4)
+    for (attr in attrs) {
+        when (attr) {
+            POS -> vertex.pos = readVec3(floatVertexBuffer)
+            NORMAL -> vertex.normal = readVec3(floatVertexBuffer)
+            TEX -> vertex.tex = readVec2(floatVertexBuffer)
+            SCALE -> vertex.scale = readVec2(floatVertexBuffer)
+            else -> floatVertexBuffer.position(floatVertexBuffer.position() + attr.size)
+        }
+    }
+    return vertex
+}
+
+private fun putVertex(
+    floatVertexBuffer: FloatBuffer,
+    vertexIndex: Int,
+    vertex: Vertex,
+    vertexSize: Int,
+    attrs: List<Attribute>
+) {
+    floatVertexBuffer.position(vertexIndex * vertexSize / 4)
+    for (attr in attrs) {
+        when (attr) {
+            POS -> write(floatVertexBuffer, vertex.pos!!)
+            NORMAL -> write(floatVertexBuffer, vertex.normal!!)
+            TEX -> write(floatVertexBuffer, vertex.tex!!)
+            SCALE -> write(floatVertexBuffer, vertex.scale!!)
+            else -> floatVertexBuffer.position(floatVertexBuffer.position() + attr.size)
+        }
     }
 }
 
+private fun readVec3(fvb: FloatBuffer): Vec3 {
+    val x = fvb.get()
+    val y = fvb.get()
+    val z = fvb.get()
+    return Vec3(x, y, z)
+}
+
+private fun readVec2(fvb: FloatBuffer): Vec2 {
+    val x = fvb.get()
+    val y = fvb.get()
+    return Vec2(x, y)
+}
+
+
+private fun write(fvb: FloatBuffer, value: Vec3) {
+    fvb.put(value.x).put(value.y).put(value.z)
+}
+
+private fun write(fvb: FloatBuffer, value: Vec2) {
+    fvb.put(value.x).put(value.y)
+}

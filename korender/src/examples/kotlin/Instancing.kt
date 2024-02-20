@@ -1,11 +1,10 @@
-
+import com.zakgof.korender.Bucket
 import com.zakgof.korender.Renderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
 import com.zakgof.korender.lwjgl.LwjglPlatform
 import com.zakgof.korender.material.Materials
-import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -22,10 +21,12 @@ fun main(): Unit = korender(LwjglPlatform()) {
         triplanarScale = 0.4f
     }
     val mesh = Meshes.sphere(0.5f)
-        .instancing(100) { Transform().translate(Vec3(it / 10 - 5f, it % 10 - 5f, 0f)) }
+        .instancing(100) { i, v ->
+            v.pos = v.pos!! + Vec3(i / 10 - 5f, i % 10 - 5f, 0f)
+        }
         .build(gpu)
 
-    add(Renderable(mesh, material))
+    add(Renderable(mesh, material), Bucket.TRANSPARENT)
 
     onFrame = { frameInfo ->
         println("FPS=~${frameInfo.avgFps} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")

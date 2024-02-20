@@ -7,34 +7,20 @@ import gl.VGL15
 import java.nio.ByteBuffer
 
 class GlGpuMesh(
-    vb: ByteBuffer,
-    ib: ByteBuffer,
-    private val vertices: Int,
-    private val indices: Int,
     val attrs: List<Attribute>,
     val vertexSize: Int,
     isDynamic: Boolean = false
 ) : GpuMesh {
 
-    private val vbHandle: Int
-    private val ibHandle: Int
+    private val vbHandle: Int = VGL15.glGenBuffers()
+    private val ibHandle: Int = VGL15.glGenBuffers()
+    private val usage: Int = if (isDynamic) VGL15.GL_DYNAMIC_DRAW else VGL15.GL_STATIC_DRAW
 
-    init {
-        vbHandle = VGL15.glGenBuffers()
-        ibHandle = VGL15.glGenBuffers()
+    private var vertices: Int = -1
+    private var indices: Int  = -1
 
-        vb.rewind()
-        ib.rewind()
+    override fun render() {
 
-        val usage: Int = if (isDynamic) VGL15.GL_DYNAMIC_DRAW else VGL15.GL_STATIC_DRAW // TODO : stream
-
-        VGL15.glBindBuffer(VGL15.GL_ARRAY_BUFFER, vbHandle)
-        VGL15.glBindBuffer(VGL15.GL_ELEMENT_ARRAY_BUFFER, ibHandle)
-        VGL15.glBufferData(VGL15.GL_ARRAY_BUFFER, vb, usage)
-        VGL15.glBufferData(VGL15.GL_ELEMENT_ARRAY_BUFFER, ib, usage)
-    }
-
-    fun render() {
         VGL11.glDrawElements(
             VGL11.GL_TRIANGLES,
             indices,
@@ -43,8 +29,16 @@ class GlGpuMesh(
         )
     }
 
-    fun bind() {
+    override fun bind() {
         VGL15.glBindBuffer(VGL15.GL_ARRAY_BUFFER, vbHandle)
         VGL15.glBindBuffer(VGL15.GL_ELEMENT_ARRAY_BUFFER, ibHandle)
+    }
+
+    override fun update(vb: ByteBuffer, ib: ByteBuffer, vertices: Int, indices: Int) {
+        this.vertices = vertices
+        this.indices = indices
+        bind()
+        VGL15.glBufferData(VGL15.GL_ARRAY_BUFFER, vb.rewind(), usage)
+        VGL15.glBufferData(VGL15.GL_ELEMENT_ARRAY_BUFFER, ib.rewind(), usage)
     }
 }

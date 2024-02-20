@@ -1,4 +1,5 @@
 
+import com.zakgof.korender.Bucket
 import com.zakgof.korender.Renderable
 import com.zakgof.korender.geometry.Attributes.NORMAL
 import com.zakgof.korender.geometry.Attributes.POS
@@ -29,7 +30,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
             colorFile = "/grass-aperiodic.png"
             aperiodicFile = "/aperiodic.png"
         })
-    add(terrain)
+    add(terrain, Bucket.TRANSPARENT)
 
     onFrame = { frameInfo ->
         camera = flyCamera.idle(frameInfo.dt)
