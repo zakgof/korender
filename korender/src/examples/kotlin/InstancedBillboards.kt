@@ -11,7 +11,7 @@ import kotlin.random.Random
 
 fun main(): Unit = korender(LwjglPlatform()) {
 
-    val flyCamera = FlyCamera(platform, Vec3(0f, 4f, 20f))
+    val flyCamera = FlyCamera(platform, Vec3(5f, 4f, 20f))
     onResize = {
         projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
     }
@@ -26,17 +26,17 @@ fun main(): Unit = korender(LwjglPlatform()) {
     onFrame = { frameInfo ->
         camera = flyCamera.idle(frameInfo.dt)
         for (i in particles.indices) {
-            val particle = particles[i]
-            if (!particle.update(frameInfo.dt * 1e-9f))
-                particles[i] = Particle(Random.nextDouble(5.0).toFloat())
+            if (!particles[i].update(frameInfo.dt * 1e-9f))
+                particles[i] = Particle()
         }
-        particles.sortBy {- (it.pos - camera.position()).lengthSquared() }
+        particles.sortByDescending { (it.pos - camera.position()).lengthSquared() }
         for (i in particles.indices) {
             val particle = particles[i]
             for (v in 0 until 4) {
                 mesh.updateVertex(i * 4 + v) {
                     it.pos = particle.pos
-                    it.scale = Vec2((5.0f - particle.ttl)*0.1f , (5.0f - particle.ttl)*0.1f)
+                    val scale = (5.0f - particle.ttl) * 0.3f
+                    it.scale = Vec2(scale, scale)
                 }
             }
         }
@@ -48,14 +48,9 @@ fun main(): Unit = korender(LwjglPlatform()) {
 class Particle(initTtl: Float = 5.0f) {
     var ttl = initTtl
     var pos = Vec3.ZERO
-    private var v = Vec3(
-        Random.nextDouble(-1.0, 1.0).toFloat(),
-        Random.nextDouble(-1.0, 1.0).toFloat() + 8.0f,
-        Random.nextDouble(-1.0, 1.0).toFloat()
-    )
-
+    private var v = Vec3.random() + Vec3(4f, 8f, 0f)
     fun update(dt: Float): Boolean {
-        v += -5.y * dt // gravity
+        v += -5.y * dt
         pos += v * dt
         ttl -= dt
         return ttl > 0
