@@ -1,4 +1,4 @@
-
+import com.zakgof.korender.Bucket
 import com.zakgof.korender.Renderable
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
@@ -21,7 +21,8 @@ fun main(): Unit = korender(LwjglPlatform()) {
             Materials.create(
                 ShaderBuilder("screen.vert", "starsky.frag").build(gpu)
             )
-        )
+        ),
+        Bucket.TRANSPARENT
     )
 
     onFrame = { frameInfo ->

@@ -1,5 +1,6 @@
 
-import com.zakgof.korender.Fonts
+import com.zakgof.korender.Bucket
+import com.zakgof.korender.font.Fonts
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.korender
 import com.zakgof.korender.lwjgl.LwjglPlatform
@@ -17,5 +18,5 @@ fun main(): Unit = korender(LwjglPlatform()) {
 
     val font = Fonts.load(gpu, "/ubuntu.ttf")
     val text = font.renderable("This is some text", Color(0x30F0FF),32.0f / height, 0.0f, (height - 32.0f) / height)
-    add(text)
+    add(text, Bucket.TRANSPARENT)
 }

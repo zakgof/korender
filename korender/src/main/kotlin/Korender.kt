@@ -4,7 +4,7 @@ import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.glgpu.GlGpu
-import com.zakgof.korender.glgpu.GlGpuFrameBuffer
+import com.zakgof.korender.gpu.GpuFrameBuffer
 import com.zakgof.korender.gpu.GpuMesh
 import com.zakgof.korender.material.MapUniformSupplier
 import com.zakgof.korender.math.Vec3
@@ -35,8 +35,9 @@ fun korender(platform: Platform, block: KorenderContext.() -> Unit) {
 class KorenderContext(val platform: Platform, var width: Int = 1280, var height: Int = 800) {
 
     private val filters = mutableListOf<Filter>()
-    private val filterFrameBuffers = mutableListOf<GlGpuFrameBuffer>()
-    private val renderables = mutableListOf<Renderable>()
+    private val filterFrameBuffers = mutableListOf<GpuFrameBuffer>()
+    private val opaques = mutableListOf<Renderable>()
+    private val transparents = mutableListOf<Renderable>()
     private val context = mutableMapOf<String, Any?>()
     private val contextUniforms = MapUniformSupplier(context)
 
@@ -47,7 +48,7 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
     private var frameVisibleRenderableCount: Int = 0
 
     val gpu: Gpu = GlGpu()
-    val filterScreenQuad : GpuMesh = Meshes.screenQuad().build(gpu).gpuMesh
+    val filterScreenQuad: GpuMesh = Meshes.screenQuad().build(gpu).gpuMesh
 
     var shadower: Shadower = SimpleShadower(gpu)
     var onFrame: KorenderContext.(FrameInfo) -> Unit = {}
@@ -73,8 +74,11 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
         }
     var light = Vec3(1f, -1f, 0f).normalize()
 
-    fun add(renderable: Renderable) {
-        renderables.add(renderable) // TODO standard buckets
+    fun add(renderable: Renderable, bucket: Bucket = Bucket.OPAQUE) {
+        when (bucket) {
+            Bucket.OPAQUE -> opaques.add(renderable)
+            Bucket.TRANSPARENT -> transparents.add(renderable)
+        }
     }
 
     fun resize(w: Int, h: Int) {
@@ -93,15 +97,15 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
             render()
         } else {
             for (p in 0..filters.size) {
-                val frameBuffer = if (p==filters.size) null else filterFrameBuffers.get(p%2)
+                val frameBuffer = if (p == filters.size) null else filterFrameBuffers.get(p % 2)
                 renderTo(frameBuffer) {
-                    if (p==0) {
+                    if (p == 0) {
                         VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
                         render()
                     } else {
-                        val filter = filters[p-1]
+                        val filter = filters[p - 1]
                         VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
-                        filter.gpuShader.render({filter.uniforms[it]?: contextUniforms[it]}, filterScreenQuad)
+                        filter.gpuShader.render({ filter.uniforms[it] ?: contextUniforms[it] }, filterScreenQuad)
                     }
                 }
                 context["filterColorTexture"] = frameBuffer?.colorTexture
@@ -110,7 +114,7 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
         }
     }
 
-    fun renderTo(fb: GlGpuFrameBuffer?, block: () -> Unit) {
+    fun renderTo(fb: GpuFrameBuffer?, block: () -> Unit) {
         if (fb == null)
             block()
         else
@@ -136,12 +140,19 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
 
     private fun render() {
         VGL11.glViewport(0, 0, width, height)
+        VGL11.glEnable(VGL11.GL_BLEND)
+        VGL11.glBlendFunc(VGL11.GL_SRC_ALPHA, VGL11.GL_ONE_MINUS_SRC_ALPHA);
         VGL11.glEnable(VGL11.GL_CULL_FACE)
         VGL11.glCullFace(VGL11.GL_BACK)
 
+        renderBucket(opaques, 1.0)
+        renderBucket(transparents, -1.0)
+
+    }
+
+    private fun renderBucket(renderables: MutableList<Renderable>, sortFactor: Double) {
         val visibleRenderables = renderables.filter { isVisible(it) }
-        frameRenderableCount = renderables.size
-        frameVisibleRenderableCount = visibleRenderables.size
+            .sortedBy { (it.worldBoundingBox!!.center() - camera.position()).lengthSquared() * sortFactor }
         visibleRenderables.forEach { it.render(contextUniforms) }
     }
 
@@ -173,7 +184,7 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
     fun addFilter(filter: Filter) {
         filters.add(filter)
         if (filters.size == 1 || filters.size == 2) {
-            filterFrameBuffers.add(GlGpuFrameBuffer(width, height, true))
+            filterFrameBuffers.add(gpu.createFrameBuffer(width, height, true))
         }
         // TODO: custom dimensions framebuffers
         // TODO: resizing screensize framebuffers

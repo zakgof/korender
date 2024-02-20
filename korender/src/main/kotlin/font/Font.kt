@@ -1,5 +1,7 @@
-package com.zakgof.korender
+package com.zakgof.korender.font
 
+import com.zakgof.korender.Gpu
+import com.zakgof.korender.Renderable
 import com.zakgof.korender.geometry.Attributes.TEX
 import com.zakgof.korender.geometry.Attributes.TEX1
 import com.zakgof.korender.geometry.Meshes

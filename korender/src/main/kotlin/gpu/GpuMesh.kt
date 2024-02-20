@@ -1,5 +1,9 @@
 package com.zakgof.korender.gpu
 
-interface GpuMesh {
+import java.nio.ByteBuffer
 
+interface GpuMesh {
+    fun render()
+    fun bind()
+    fun update(vb: ByteBuffer, ib: ByteBuffer, vertices: Int, indices: Int)
 }

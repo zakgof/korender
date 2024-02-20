@@ -1,4 +1,5 @@
 
+import com.zakgof.korender.Bucket
 import com.zakgof.korender.Renderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
@@ -23,7 +24,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
             colorFile = "/sand.png"
             triplanarScale = 0.4f
         })
-    add(sphere)
+    add(sphere, Bucket.TRANSPARENT)
 
     onFrame = {
         sphere.transform = Transform().rotate(1.y, it.nanoTime * 1e-9f)

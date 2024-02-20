@@ -54,7 +54,8 @@ void main() {
        vec4 texColor = texture2D(colorTexture, vtex);
      #endif
   #endif
-
+  if (texColor.a < 0.01)
+    discard;
   float lighting = lite(light, normal, look, ambient, diffuse, specular, specularPower);
 
   #ifdef SHADOW_RECEIVER

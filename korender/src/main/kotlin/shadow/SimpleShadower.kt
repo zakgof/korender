@@ -4,7 +4,7 @@ import com.zakgof.korender.Gpu
 import com.zakgof.korender.Renderable
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
-import com.zakgof.korender.glgpu.GlGpuFrameBuffer
+import com.zakgof.korender.gpu.GpuFrameBuffer
 import com.zakgof.korender.gpu.GpuShader
 import com.zakgof.korender.material.Shaders
 import com.zakgof.korender.math.Vec3
@@ -18,7 +18,7 @@ class SimpleShadower(gpu: Gpu) : Shadower {
 
     private val casterShader: GpuShader = Shaders.standard(gpu, "SHADOW_CASTER")
     private val casters = mutableListOf<Renderable>()
-    private val fb: GlGpuFrameBuffer = GlGpuFrameBuffer(1024, 1024, false)
+    private val fb: GpuFrameBuffer = gpu.createFrameBuffer(1024, 1024, false)
 
     override val texture = fb.colorTexture
     override var camera: Camera? = null

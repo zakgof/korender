@@ -33,7 +33,7 @@ object Materials {
             "colorTexture" to Textures.create(colorTextureFile).build(gpu),
             "xscale" to xscale,
             "yscale" to yscale,
-            "ambient" to 1.0f,  // TODO
+            "ambient" to 1.0f,  // TODO move to parameters
             "diffuse" to 0.1f,
             "specular" to 0.0f,
             "specularPower" to 20.0f

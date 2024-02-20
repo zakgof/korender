@@ -1,14 +1,17 @@
 package com.zakgof.korender.glgpu
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.gpu.GpuFrameBuffer
 import gl.*
 import java.io.Closeable
 
-class GlGpuFrameBuffer(private val width: Int, private val height: Int, useDepthBuffer: Boolean) : Closeable {
+class GlGpuFrameBuffer(private val width: Int, private val height: Int, useDepthBuffer: Boolean) : GpuFrameBuffer,
+    Closeable {
 
     private val fbHandle: Int = VGL30.glGenFramebuffers()
-    val colorTexture: GlGpuTexture
-    val depthTexture: GlGpuTexture?
+
+    override val colorTexture: GlGpuTexture
+    override val depthTexture: GlGpuTexture?
 
     // TODO: multiple RTs !
     init {
@@ -73,7 +76,7 @@ class GlGpuFrameBuffer(private val width: Int, private val height: Int, useDepth
 //        }
     }
 
-    fun exec(block: ()->Unit) {
+    override fun exec(block: () -> Unit) {
         bind()
         block.invoke()
         unbind()
