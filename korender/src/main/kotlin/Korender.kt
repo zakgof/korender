@@ -188,8 +188,7 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
         if (filters.size == 1 || filters.size == 2) {
             filterFrameBuffers.add(gpu.createFrameBuffer(width, height, true))
         }
-        // TODO: custom dimensions framebuffers
-        // TODO: resizing screensize framebuffers
+        // TODO: resizing screensize framebuffers ?
     }
 
 }

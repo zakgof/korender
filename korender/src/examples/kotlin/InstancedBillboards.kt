@@ -19,15 +19,14 @@ fun main(): Unit = korender(LwjglPlatform()) {
     val particleNum = 1000
     val particles = Array(particleNum) { Particle(Random.nextDouble(5.0).toFloat()) }
     val mesh = Meshes.billboard().instancing(particleNum).build(gpu)
-    val material = Materials.billboard(gpu, "/splat.png")
+    val material = Materials.billboard(gpu) { colorFile = "/splat.png" }
 
     add(Renderable(mesh, material))
 
     onFrame = { frameInfo ->
         camera = flyCamera.idle(frameInfo.dt)
-        for (i in particles.indices) {
-            if (!particles[i].update(frameInfo.dt * 1e-9f))
-                particles[i] = Particle()
+        particles.forEach {
+            it.update(frameInfo.dt * 1e-9f)
         }
         particles.sortByDescending { (it.pos - camera.position()).lengthSquared() }
         for (i in particles.indices) {
@@ -49,11 +48,15 @@ class Particle(initTtl: Float = 5.0f) {
     var ttl = initTtl
     var pos = Vec3.ZERO
     private var v = Vec3.random() + Vec3(4f, 8f, 0f)
-    fun update(dt: Float): Boolean {
+    fun update(dt: Float) {
         v += -5.y * dt
         pos += v * dt
         ttl -= dt
-        return ttl > 0
+        if (ttl < 0) {
+            ttl = 5.0f
+            pos = Vec3.ZERO
+            v = Vec3.random() + Vec3(4f, 8f, 0f)
+        }
     }
 
 }

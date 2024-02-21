@@ -7,15 +7,14 @@ import com.zakgof.korender.math.Color
 
 object Materials {
 
-    fun create(gpuShader: GpuShader, uniforms: UniformSupplier = UniformSupplier { null }) = object : Material {
-        override val gpuShader
-            get() = gpuShader
-        override val uniforms: UniformSupplier
-            get() = uniforms
-    }
+    fun create(gpuShader: GpuShader, uniforms: UniformSupplier = UniformSupplier { null }) = DirectMaterial(gpuShader, uniforms)
 
-    fun standard(gpu: Gpu, vararg defs: String, block: StandardMaterial.() -> Unit): StandardMaterial =
-        StandardMaterial(gpu, *defs).apply(block)
+    class DirectMaterial(override val gpuShader: GpuShader, override val uniforms: UniformSupplier) : Material
+
+    fun standard(gpu: Gpu, vararg defs: String, block: StockUniforms.() -> Unit): Material = create(
+        ShaderBuilder("standard.vert", "standard.frag", *defs).build(gpu),
+        StockUniforms(gpu).apply(block).uniforms
+    )
 
     fun sky(gpu: Gpu, skyTextureFile: String) = create(
         ShaderBuilder("screen.vert", "texsky.frag").build(gpu),
@@ -27,26 +26,17 @@ object Materials {
         MapUniformSupplier("fontTexture" to fontTexture, "color" to color)
     )
 
-    fun billboard(gpu: Gpu, colorTextureFile: String, xscale: Float = 1.0f, yscale: Float = 1.0f): Material = create(
+    fun billboard(gpu: Gpu, block: StockUniforms.() -> Unit): Material = create(
         ShaderBuilder("billboard.vert", "standard.frag").build(gpu),
-        MapUniformSupplier(
-            "colorTexture" to Textures.create(colorTextureFile).build(gpu),
-            "xscale" to xscale,
-            "yscale" to yscale,
-            "ambient" to 1.0f,  // TODO move to parameters
-            "diffuse" to 0.1f,
-            "specular" to 0.0f,
-            "specularPower" to 20.0f
-        )
+        StockUniforms(gpu).apply(block).uniforms
     )
 
 }
 
-class StandardMaterial(private val gpu: Gpu, vararg defs: String) : Material {
+class StockUniforms(private val gpu: Gpu) {
 
-    override val gpuShader: GpuShader = Shaders.standard(gpu, *defs)
-    override val uniforms: UniformSupplier
-        get() = UniformSupplier { get(it) }
+    val uniforms: UniformSupplier = UniformSupplier { get(it) }
+    private val customs = mutableMapOf<String, Any>()
 
     var colorTexture: GpuTexture? = null
     var normalTexture: GpuTexture? = null
@@ -76,8 +66,14 @@ class StandardMaterial(private val gpu: Gpu, vararg defs: String) : Material {
     var diffuse = 0.7f
     var specular = 0.3f
     var specularPower = 20f
+    var xscale = 1f
+    var yscale = 1f
 
-    fun get(key: String): Any? =
+    fun put(key: String, value: Any) {
+        customs[key] = value
+    }
+
+    private fun get(key: String): Any? =
         when (key) {
             "colorTexture" -> colorTexture
             "normalTexture" -> normalTexture
@@ -88,6 +84,8 @@ class StandardMaterial(private val gpu: Gpu, vararg defs: String) : Material {
             "diffuse" -> diffuse
             "specular" -> specular
             "specularPower" -> specularPower
-            else -> null
+            "xscale" -> xscale
+            "yscale" -> yscale
+            else -> customs[key]
         }
 }

@@ -93,7 +93,7 @@ class Farter(kc: KorenderContext) {
     private val particleNum = 1000
     private val mesh = Meshes.billboard().instancing(particleNum).build(kc.gpu)
     private val particles = Array(particleNum) { Farticle() }
-    val renderable = Renderable(mesh, Materials.billboard(kc.gpu, "/splat.png"))
+    val renderable = Renderable(mesh, Materials.billboard(kc.gpu) { colorFile = "/splat.png" })
 
     fun update(campos: Vec3, secs: Float) {
         particles.forEach { it.update(secs) }

@@ -17,7 +17,9 @@ fun main(): Unit = korender(LwjglPlatform()) {
     }
 
     val mesh = Meshes.billboard().build(gpu)
-    val material = Materials.billboard(gpu, "/splat.png")
+    val material = Materials.billboard(gpu) {
+        colorFile = "/splat.png"
+    }
 
     for (x in -5..5) {
         for (y in -5..5) {

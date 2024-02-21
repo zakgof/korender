@@ -25,7 +25,7 @@ class GlGpu : Gpu {
         fragDebugInfo: ShaderDebugInfo
     ): GpuShader = GlGpuShader(title, vertCode, fragCode, vertDebugInfo, fragDebugInfo)
 
-    // TODO: texture formats
+    // TODO: more texture formats
     override fun createTexture(width: Int, height: Int, bytes: ByteBuffer, filter: TextureFilter, wrap: TextureWrap, aniso: Int, alpha: Boolean): GpuTexture =
         GlGpuTexture(width, height, bytes, filter, wrap, aniso, alpha)
 
