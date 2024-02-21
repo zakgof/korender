@@ -180,7 +180,7 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
         context["light"] = light
         context["screenWidth"] = width.toFloat()
         context["screenHeight"] = height.toFloat()
-        context["time"] = ((nanoTime() - startNanos) * 1e-9).toFloat()
+        context["time"] = (nanoTime() - startNanos) * 1e-9f
     }
 
     fun addFilter(filter: Filter) {
