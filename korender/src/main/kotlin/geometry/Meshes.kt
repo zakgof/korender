@@ -16,10 +16,7 @@ import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import de.javagl.obj.Obj
-import java.nio.ByteBuffer
-import java.nio.FloatBuffer
-import java.nio.IntBuffer
-import java.nio.ShortBuffer
+import java.nio.*
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -40,20 +37,22 @@ object Meshes {
         private val indexBuffer: ByteBuffer
         private val indexIntBuffer: IntBuffer?
         private val indexShortBuffer: ShortBuffer?
+        private val indexConcreteBuffer: Buffer
         private var isLongIndex: Boolean
 
         private val vertexSize: Int = attrs.sumOf { it.size } * 4
 
         init {
-            this.vertexBuffer = BufferUtils.createByteBuffer(vertexNumber * vertexSize)
-            this.floatVertexBuffer = vertexBuffer.asFloatBuffer()
+            vertexBuffer = BufferUtils.createByteBuffer(vertexNumber * vertexSize)
+            floatVertexBuffer = vertexBuffer.asFloatBuffer()
 
-            this.isLongIndex = vertexNumber > 32767
+            isLongIndex = vertexNumber > 32767
 
-            this.indexBuffer = BufferUtils.createByteBuffer(indexNumber * (if (isLongIndex) 4 else 2))
+            indexBuffer = BufferUtils.createByteBuffer(indexNumber * (if (isLongIndex) 4 else 2))
 
-            this.indexShortBuffer = if (isLongIndex) null else indexBuffer.asShortBuffer()
-            this.indexIntBuffer = if (isLongIndex) indexBuffer.asIntBuffer() else null
+            indexShortBuffer = if (isLongIndex) null else indexBuffer.asShortBuffer()
+            indexIntBuffer = if (isLongIndex) indexBuffer.asIntBuffer() else null
+            indexConcreteBuffer = if (isLongIndex) indexIntBuffer!! else indexShortBuffer!!
         }
 
         fun vertices(vararg values: Vec3) = values.forEach { vertices(it.x, it.y, it.z) }
@@ -87,7 +86,13 @@ object Meshes {
         fun transformPos(transform: Transform) = transformPos { transform.mat4().project(it) }
 
         fun build(gpu: Gpu, isDynamic: Boolean = false): DefaultMesh {
-            // TODO: validate vb/ib full
+            if (floatVertexBuffer.position() != floatVertexBuffer.limit()) {
+                throw KorenderException("Vertex buffer not full: ${floatVertexBuffer.position()}/${floatVertexBuffer.limit()}")
+            }
+            if (indexConcreteBuffer.position() != indexConcreteBuffer.limit()) {
+                throw KorenderException("Index buffer not full: ${indexConcreteBuffer.position()}/${indexConcreteBuffer.limit()}")
+            }
+
             return DefaultMesh(
                 gpu,
                 vertexBuffer.rewind(),
@@ -101,7 +106,6 @@ object Meshes {
         }
 
         fun instancing(instances: Int, transform: (Int, Vertex) -> Unit = { _, _ -> }): MeshBuilder {
-            // TODO: transform should be able to transform not only position
             val that = this
             return create(vertexNumber * instances, indexNumber * instances, *attrs) {
                 for (i in 0 until instances) {
@@ -132,6 +136,8 @@ object Meshes {
         isDynamic: Boolean = false
     ) : Mesh {
 
+        private val floatVertexBuffer = vb.asFloatBuffer()
+
         override val gpuMesh: GpuMesh = gpu.createMesh(attrs, vertexSize, isDynamic)
 
         override val modelBoundingBox: BoundingBox?
@@ -142,7 +148,6 @@ object Meshes {
         }
 
         fun positions(): List<Vec3> {
-            val floatVertexBuffer = vb.asFloatBuffer()
             val positionOffset = attrs.takeWhile { it != POS }.sumOf { it.size }
             return (0 until vertices).map {
                 floatVertexBuffer.position(it * vertexSize / 4 + positionOffset)
@@ -153,28 +158,7 @@ object Meshes {
             }
         }
 
-        fun setPosition(index: Int, pos: Vec3) {
-            val floatVertexBuffer = vb.asFloatBuffer()
-            val positionOffset = attrs.takeWhile { it != POS }.sumOf { it.size }
-            floatVertexBuffer.position(index * vertexSize / 4 + positionOffset)
-            floatVertexBuffer.put(pos.x)
-            floatVertexBuffer.put(pos.y)
-            floatVertexBuffer.put(pos.z)
-        }
-
-        fun updateGpu() {
-
-            val fb = vb.asFloatBuffer().rewind()
-            val debug1 = fb.get()
-            val debug2 = fb.get()
-            val debug3 = fb.get()
-            val debug4 = fb.get()
-            val debug5 = fb.get()
-            val debug6 = fb.get()
-            val debug7 = fb.get()
-
-            gpuMesh.update(vb, ib, vertices, indices)
-        }
+        fun updateGpu() = gpuMesh.update(vb, ib, vertices, indices)
 
         fun updateVertex(vertexIndex: Int, block: (Vertex) -> Unit) {
             val vertex = getVertex(vertexIndex)
@@ -182,16 +166,8 @@ object Meshes {
             putVertex(vertexIndex, vertex)
         }
 
-        private fun putVertex(vertexIndex: Int, vertex: Vertex) {
-            val floatVertexBuffer = vb.asFloatBuffer() // TODO: optimize me
-            putVertex(floatVertexBuffer, vertexIndex, vertex, vertexSize, attrs)
-        }
-
-        fun getVertex(vertexIndex: Int): Vertex {
-            val floatVertexBuffer = vb.asFloatBuffer() // TODO: optimize me
-            return getVertex(floatVertexBuffer, vertexIndex, vertexSize, attrs.toList())
-        }
-
+        fun putVertex(vertexIndex: Int, vertex: Vertex) = putVertex(floatVertexBuffer, vertexIndex, vertex, vertexSize, attrs)
+        fun getVertex(vertexIndex: Int): Vertex = getVertex(floatVertexBuffer, vertexIndex, vertexSize, attrs.toList())
     }
 
     fun quad(halfSide: Float = 0.5f, block: MeshBuilder.() -> Unit = {}) =

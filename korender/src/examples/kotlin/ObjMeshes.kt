@@ -1,5 +1,4 @@
 
-import com.zakgof.korender.Bucket
 import com.zakgof.korender.Renderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
@@ -28,7 +27,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
         specular = 0.0f
     }
     val renderable = Renderable(mesh, material)
-    add(renderable, Bucket.TRANSPARENT)
+    add(renderable)
 
     onFrame = { frameInfo ->
         renderable.transform = Transform().scale(0.1f).rotate(1.x, -PI * 0.5f).rotate(1.y, frameInfo.nanoTime * 1e-10f)

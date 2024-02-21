@@ -33,6 +33,6 @@ fun main(): Unit = korender(LwjglPlatform()) {
     }
 
     onFrame = { frameInfo ->
-        println("FPS=~${1e9 / frameInfo.dt} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")
+        println("FPS=~${frameInfo.avgFps}")
     }
 }
