@@ -42,7 +42,7 @@ float fbm(vec2 uv) {
 
 float singleSmoker(vec2 uv, vec2 seed, float t) {
     vec2 q = (uv - 0.5) * 2.2 / t;
-    float n = fbm(4.0 * q + seed * 0.8 * t);
+    float n = fbm(4.0 * q + seed * 0.8 * time);
     float c = 1. - 16. * pow(max(0., length(q) - n * .25), 1.2);
     float c1 = n * c * (1.5);
     c1 = clamp(c1, 0., 1.);
@@ -50,13 +50,13 @@ float singleSmoker(vec2 uv, vec2 seed, float t) {
 }
 
 void main() {
-    float t = time - startTime;
+    float dt = time - startTime;
     vec2 uv = vtex;
-    float c1 = singleSmoker(uv, vec2(-1.0, 0.0), t);
-    float c2 = singleSmoker(uv, vec2(1.0, 0.0), t);
-    float c3 = singleSmoker(uv, vec2(0.0, 1.0), t);
-    float c4 = singleSmoker(uv, vec2(0.0, -1.0), t);
+    float c1 = singleSmoker(uv, vec2(-1.0, 0.1), dt);
+    float c2 = singleSmoker(uv, vec2(1.0, 0.0), dt);
+    float c3 = singleSmoker(uv, vec2(-0.05, 0.9), dt);
+    float c4 = singleSmoker(uv, vec2(0.0, -1.0), dt);
     float c = (c1 + c2 + c3 + c4) * 0.25;
     c = clamp(c, 0., 1.);
-    fragColor = vec4(c, c, c, 1.0 / (t*t));
+    fragColor = vec4(c, c, c, 1.0 / (dt*dt));
 }
