@@ -34,7 +34,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
         for (i in 0..<mesh.vertices) {
             mesh.setPosition(i, perturb(originalPointPositions[i], frameInfo.nanoTime))
         }
-        mesh.update()
+        mesh.updateGpu()
         println("FPS=~${frameInfo.avgFps}")
     }
 }

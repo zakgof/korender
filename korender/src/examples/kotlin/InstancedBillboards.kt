@@ -40,7 +40,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
                 }
             }
         }
-        mesh.update()
+        mesh.updateGpu()
         println("FPS=~${frameInfo.avgFps}")
     }
 }

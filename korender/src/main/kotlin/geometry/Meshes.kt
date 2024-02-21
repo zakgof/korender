@@ -162,7 +162,7 @@ object Meshes {
             floatVertexBuffer.put(pos.z)
         }
 
-        fun update() {
+        fun updateGpu() {
 
             val fb = vb.asFloatBuffer().rewind()
             val debug1 = fb.get()
