@@ -22,16 +22,13 @@ class GlGpuShader(
     fragDebugInfo: ShaderDebugInfo
 ) :
     GpuShader {
-    private val programHandle: Int
-    private val vertexShaderHandle: Int
-    private val fragmentShaderHandle: Int
+    private val programHandle: Int = VGL20.glCreateProgram()
+    private val vertexShaderHandle: Int = VGL20.glCreateShader(VGL20.GL_VERTEX_SHADER)
+    private val fragmentShaderHandle: Int = VGL20.glCreateShader(VGL20.GL_FRAGMENT_SHADER)
     private val uniformLocations: Map<String, Int>
     private val attributeLocations: Map<String, Int>
 
     init {
-        programHandle = VGL20.glCreateProgram()
-        vertexShaderHandle = VGL20.glCreateShader(VGL20.GL_VERTEX_SHADER)
-        fragmentShaderHandle = VGL20.glCreateShader(VGL20.GL_FRAGMENT_SHADER)
 
         VGL20.glShaderSource(vertexShaderHandle, vertexShaderText)
         VGL20.glCompileShader(vertexShaderHandle)
@@ -152,8 +149,6 @@ class GlGpuShader(
                 value.bind(currentTexUnit)
                 VGL20.glUniform1i(location, currentTexUnit)
             }
-            // is Mat2 -> VGL20.glUniformMatrix2fv(uniformLocationByName(uniform), false, value.rewind())
-            // is Mat3 -> VGL20.glUniformMatrix3fv(uniformLocationByName(uniform), false, value.rewind())
             else -> throw KorenderException("Unsupported uniform type ${value::class.java}")
         }
         return value is GpuTexture
