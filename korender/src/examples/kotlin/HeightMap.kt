@@ -1,5 +1,5 @@
 
-import com.zakgof.korender.Renderable
+import com.zakgof.korender.SimpleRenderable
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
 import com.zakgof.korender.lwjgl.LwjglPlatform
@@ -24,7 +24,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
         ambient = 0.2f
         specular = 2.0f
     }
-    add(Renderable(mesh, material))
+    add(SimpleRenderable(mesh, material))
 
     onFrame = { frameInfo ->
         camera = flyCamera.idle(frameInfo.dt)

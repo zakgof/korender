@@ -36,9 +36,12 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
 
     private val filters = mutableListOf<Filter>()
     private val filterFrameBuffers = mutableListOf<GpuFrameBuffer>()
+
     private val opaques = mutableListOf<Renderable>()
     private val transparents = mutableListOf<Renderable>()
     private val skies = mutableListOf<Renderable>()
+    private val screens = mutableListOf<Renderable>()
+
     private val context = mutableMapOf<String, Any?>()
     private val contextUniforms = MapUniformSupplier(context)
 
@@ -80,6 +83,7 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
             Bucket.OPAQUE -> opaques.add(renderable)
             Bucket.TRANSPARENT -> transparents.add(renderable)
             Bucket.SKY -> skies.add(renderable)
+            Bucket.SCREEN -> screens.add(renderable)
         }
     }
 
@@ -107,7 +111,7 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
                     } else {
                         val filter = filters[p - 1]
                         VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
-                        filter.gpuShader.render({ filter.uniforms[it] ?: contextUniforms[it] }, filterScreenQuad)
+                        filter.gpuShader.render(filter.uniforms + contextUniforms, filterScreenQuad)
                     }
                 }
                 context["filterColorTexture"] = frameBuffer?.colorTexture
@@ -147,6 +151,7 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
         VGL11.glEnable(VGL11.GL_CULL_FACE)
         VGL11.glCullFace(VGL11.GL_BACK)
 
+        screens.forEach { it.render(contextUniforms) }
         renderBucket(opaques, 1.0)
         skies.forEach { it.render(contextUniforms) }
         renderBucket(transparents, -1.0)

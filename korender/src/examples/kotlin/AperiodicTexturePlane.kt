@@ -1,5 +1,5 @@
 
-import com.zakgof.korender.Renderable
+import com.zakgof.korender.SimpleRenderable
 import com.zakgof.korender.geometry.Attributes.NORMAL
 import com.zakgof.korender.geometry.Attributes.POS
 import com.zakgof.korender.geometry.Attributes.TEX
@@ -17,7 +17,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
         projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
     }
 
-    val terrain = Renderable(
+    val terrain = SimpleRenderable(
         mesh = Meshes.create(4, 6, POS, NORMAL, TEX) {
             vertices(-100f, 0f, -100f, 0f, 1f, 0f, 0f, 0f)
             vertices(-100f, 0f,  100f, 0f, 1f, 0f, 0f, 50f)

@@ -142,7 +142,7 @@ class GlGpuShader(
             is Int -> VGL20.glUniform1i(location, value)
             is Float -> VGL20.glUniform1f(location, value)
             is Vec3 -> VGL20.glUniform3f(location, value.x, value.y, value.z)
-            is Color -> VGL20.glUniform3f(location, value.r, value.b, value.g)
+            is Color -> VGL20.glUniform3f(location, value.r, value.g, value.b)
             is Mat4 -> VGL20.glUniformMatrix4fv(location, false, value.asBuffer().rewind())
             is Mat3 -> VGL20.glUniformMatrix3fv(location, false, value.asBuffer().rewind())
             is GpuTexture -> {

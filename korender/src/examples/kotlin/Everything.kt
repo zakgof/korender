@@ -3,9 +3,9 @@ import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.lwjgl.LwjglPlatform
 import com.zakgof.korender.material.Images
 import com.zakgof.korender.material.Materials
-import com.zakgof.korender.material.ShaderBuilder
+import com.zakgof.korender.material.Shaders
 import com.zakgof.korender.math.*
-import com.zakgof.korender.math.FloatMath.PI
+import com.zakgof.korender.math.FloatMath.PIdiv2
 import com.zakgof.korender.projection.FrustumProjection
 import de.javagl.obj.ObjReader
 import javax.imageio.ImageIO
@@ -40,7 +40,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
 private fun terrain(gpu: Gpu): Renderable {
     val raster = ImageIO.read(Images.javaClass.getResourceAsStream("/heightmap.png")).raster
     val pix = FloatArray(3)
-    return Renderable(
+    return SimpleRenderable(
         Meshes.heightMap(raster.width - 1, raster.height - 1, 1.0f) { x, y ->
             raster.getPixel(x, y, pix)[0] * 0.1f
         }.build(gpu),
@@ -52,7 +52,7 @@ private fun terrain(gpu: Gpu): Renderable {
     )
 }
 
-private fun cat(gpu: Gpu): Renderable = Renderable(
+private fun cat(gpu: Gpu) = SimpleRenderable(
     Meshes.create(ObjReader.read(Images.javaClass.getResourceAsStream("/cat-red.obj"))).build(gpu),
     Materials.standard(gpu) {
         colorFile = "/cat-red.jpg"
@@ -61,15 +61,15 @@ private fun cat(gpu: Gpu): Renderable = Renderable(
         specular = 0.0f
     }).apply {
     transform = Transform().scale(0.1f)
-        .rotate(1.x, -PI * 0.5f)
-        .rotate(1.y, PI * 0.5f)
-        .translate(Vec3(0f, 0f, 230f))
+        .rotate(1.x, -PIdiv2)
+        .rotate(1.y, PIdiv2)
+        .translate(230.z)
 }
 
-private fun sky(gpu: Gpu): Renderable = Renderable(
+private fun sky(gpu: Gpu): Renderable = SimpleRenderable(
     Meshes.screenQuad().build(gpu),
     Materials.create(
-        ShaderBuilder("screen.vert", "starsky.frag").build(gpu)
+        Shaders.create(gpu, "screen.vert", "starsky.frag")
     )
 )
 
@@ -93,7 +93,7 @@ class Farter(kc: KorenderContext) {
     private val particleNum = 1000
     private val mesh = Meshes.billboard().instancing(particleNum).build(kc.gpu)
     private val particles = Array(particleNum) { Farticle() }
-    val renderable = Renderable(mesh, Materials.billboard(kc.gpu) { colorFile = "/splat.png" })
+    val renderable = SimpleRenderable(mesh, Materials.billboard(kc.gpu) { colorFile = "/splat.png" })
 
     fun update(campos: Vec3, secs: Float) {
         particles.forEach { it.update(secs) }
