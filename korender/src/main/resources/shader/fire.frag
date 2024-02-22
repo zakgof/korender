@@ -51,5 +51,5 @@ void main() {
     c1 = clamp(c1, 0., 1.);
     vec3 col = vec3(1.5 * c1, 1.5 * c1 * c1 * c1, c1 * c1 * c1 * c1 * c1 * c1);
     float a = c * (1. - pow(uv.y, 3.));
-    fragColor = vec4(mix(vec3(0.), col, a), 1.0);
+    fragColor = vec4(mix(vec3(0.), col, a), a * 0.8);
 }

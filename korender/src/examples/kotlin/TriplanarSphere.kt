@@ -1,6 +1,6 @@
 
 import com.zakgof.korender.Bucket
-import com.zakgof.korender.Renderable
+import com.zakgof.korender.SimpleRenderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
@@ -18,7 +18,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
         projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
     }
 
-    val sphere = Renderable(
+    val sphere = SimpleRenderable(
         mesh = Meshes.sphere(2f).build(gpu),
         material = Materials.standard(gpu, "TRIPLANAR") {
             colorFile = "/sand.png"

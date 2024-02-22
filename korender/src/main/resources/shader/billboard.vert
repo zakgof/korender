@@ -3,6 +3,7 @@
 in vec3 pos;
 in vec2 tex;
 in vec2 scale;
+in float phi;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -11,16 +12,25 @@ uniform vec3 cameraPos;
 
 uniform float xscale;
 uniform float yscale;
+uniform float rotation;
 
 out vec3 vpos;
 out vec3 vnormal;
 out vec2 vtex;
 
 void main() {
+
     vec3 center = (model * vec4(pos, 1)).xyz;
     vec3 cameraRight = normalize(vec3(view[0][0], view[1][0], view[2][0]));
     vec3 cameraUp = normalize(vec3(view[0][1], view[1][1], view[2][1]));
-    vpos = center + cameraRight * ((tex.x - 0.5) * xscale * scale.x * model[0].x) + cameraUp * ((tex.y - 0.5) * yscale * scale.y * model[1].y);
+
+    float right = ((tex.x - 0.5) * xscale * scale.x * model[0].x);
+    float up = ((tex.y - 0.5) * yscale * scale.y * model[1].y);
+
+    float l = sqrt(right * right + up * up);
+    float angle = atan(up, right) + phi + rotation;
+
+    vpos = center + cameraRight * l * cos(angle) + cameraUp * l * sin(angle);
     vtex = tex;
     vnormal = normalize(cameraPos - center);
 

@@ -1,5 +1,6 @@
+
 import com.zakgof.korender.Bucket
-import com.zakgof.korender.Renderable
+import com.zakgof.korender.SimpleRenderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
@@ -26,7 +27,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
         }
         .build(gpu)
 
-    add(Renderable(mesh, material), Bucket.TRANSPARENT)
+    add(SimpleRenderable(mesh, material), Bucket.TRANSPARENT)
 
     onFrame = { frameInfo ->
         println("FPS=~${frameInfo.avgFps} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")

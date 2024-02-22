@@ -1,10 +1,11 @@
 
-import com.zakgof.korender.Renderable
+
+import com.zakgof.korender.SimpleRenderable
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
 import com.zakgof.korender.lwjgl.LwjglPlatform
 import com.zakgof.korender.material.Materials
-import com.zakgof.korender.material.ShaderBuilder
+import com.zakgof.korender.material.Shaders
 import com.zakgof.korender.material.StockUniforms
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.FrustumProjection
@@ -17,14 +18,14 @@ fun main(): Unit = korender(LwjglPlatform()) {
     }
 
     val mesh = Meshes.billboard().build(gpu)
-    val shader = ShaderBuilder("billboard.vert", "fire.frag").build(gpu)
+    val shader = Shaders.create(gpu,"billboard.vert", "fire.frag")
     val material = Materials.create(shader, StockUniforms(gpu).apply {
         xscale = 2.0f
         yscale = 10.0f
-        put("strength", 4.0f)
-    }.uniforms)
+        static("strength", 4.0f)
+    })
 
-    add(Renderable(mesh, material))
+    add(SimpleRenderable(mesh, material))
 
     onFrame = { frameInfo ->
         camera = flyCamera.idle(frameInfo.dt)

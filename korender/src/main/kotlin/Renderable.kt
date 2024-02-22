@@ -1,27 +1,22 @@
 package com.zakgof.korender
 
 import com.zakgof.korender.geometry.Mesh
+import com.zakgof.korender.material.MapUniformSupplier
 import com.zakgof.korender.material.Material
 import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.BoundingBox
 import com.zakgof.korender.math.Transform
 
-class Renderable(val mesh: Mesh, val material: Material) {
-    var worldBoundingBox: BoundingBox? = null
-    var transform: Transform = Transform()
-        set(value) {
-            field = value
-            worldBoundingBox = updateBB()
-        }
+interface Renderable {
 
-    init {
-        worldBoundingBox = updateBB()
-    }
-
-    private fun updateBB() = mesh.modelBoundingBox?.transform(transform)
+    val material: Material
+    val transform: Transform
+    val mesh: Mesh
+    val worldBoundingBox: BoundingBox?
 
     fun render(contextUniforms: UniformSupplier) =
-        material.gpuShader.render({
-            material.uniforms[it] ?: mapOf("model" to transform.mat4())[it] ?: contextUniforms[it]
-        }, mesh.gpuMesh)
+        material.gpuShader.render(
+            material.uniforms + MapUniformSupplier("model" to transform.mat4()) + contextUniforms,
+            mesh.gpuMesh
+        )
 }

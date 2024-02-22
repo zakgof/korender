@@ -3,6 +3,7 @@ package com.zakgof.korender.geometry
 import com.zakgof.korender.Gpu
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.geometry.Attributes.NORMAL
+import com.zakgof.korender.geometry.Attributes.PHI
 import com.zakgof.korender.geometry.Attributes.POS
 import com.zakgof.korender.geometry.Attributes.SCALE
 import com.zakgof.korender.geometry.Attributes.TEX
@@ -13,7 +14,6 @@ import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.FloatMath.cos
 import com.zakgof.korender.math.FloatMath.sin
 import com.zakgof.korender.math.Transform
-import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import de.javagl.obj.Obj
 import java.nio.*
@@ -86,10 +86,10 @@ object Meshes {
         fun transformPos(transform: Transform) = transformPos { transform.mat4().project(it) }
 
         fun build(gpu: Gpu, isDynamic: Boolean = false): DefaultMesh {
-            if (floatVertexBuffer.position() != floatVertexBuffer.limit()) {
+            if (!isDynamic && floatVertexBuffer.position() != floatVertexBuffer.limit()) {
                 throw KorenderException("Vertex buffer not full: ${floatVertexBuffer.position()}/${floatVertexBuffer.limit()}")
             }
-            if (indexConcreteBuffer.position() != indexConcreteBuffer.limit()) {
+            if (!isDynamic && indexConcreteBuffer.position() != indexConcreteBuffer.limit()) {
                 throw KorenderException("Index buffer not full: ${indexConcreteBuffer.position()}/${indexConcreteBuffer.limit()}")
             }
 
@@ -129,8 +129,8 @@ object Meshes {
         gpu: Gpu,
         private val vb: ByteBuffer,
         private val ib: ByteBuffer,
-        val vertices: Int,
-        val indices: Int,
+        var vertices: Int,
+        var indices: Int,
         private val attrs: List<Attribute>,
         private val vertexSize: Int,
         isDynamic: Boolean = false
@@ -166,7 +166,9 @@ object Meshes {
             putVertex(vertexIndex, vertex)
         }
 
-        fun putVertex(vertexIndex: Int, vertex: Vertex) = putVertex(floatVertexBuffer, vertexIndex, vertex, vertexSize, attrs)
+        fun putVertex(vertexIndex: Int, vertex: Vertex) =
+            putVertex(floatVertexBuffer, vertexIndex, vertex, vertexSize, attrs)
+
         fun getVertex(vertexIndex: Int): Vertex = getVertex(floatVertexBuffer, vertexIndex, vertexSize, attrs.toList())
     }
 
@@ -329,7 +331,7 @@ object Meshes {
             for (x in 0..xsize) {
                 for (y in 0..ysize) {
                     vertices(x * cell - 0.5f * cell * xsize, height(x, y), y * cell - 0.5f * cell * ysize)
-                    val n = normal(x, y, xsize, ysize, cell, height);
+                    val n = normal(x, y, xsize, ysize, cell, height)
                     vertices(n)
                     vertices(x.toFloat() / (xsize + 1), y.toFloat() / (ysize + 1))
                 }
@@ -353,21 +355,19 @@ object Meshes {
         return Vec3(-dhx, cell, -dhy).normalize()
     }
 
-    fun billboard(position: Vec3 = Vec3.ZERO, scaleX: Float = 1.0f, scaleY: Float = 1.0f) =
-        create(4, 6, POS, TEX, SCALE) {
+    fun billboard(position: Vec3 = Vec3.ZERO, scaleX: Float = 1.0f, scaleY: Float = 1.0f, phi: Float = 0.0f) =
+        create(4, 6, POS, TEX, SCALE, PHI) {
             vertices(position)
-            vertices(0f, 0f, scaleX, scaleY)
+            vertices(0f, 0f, scaleX, scaleY, phi)
             vertices(position)
-            vertices(0f, 1f, scaleX, scaleY)
+            vertices(0f, 1f, scaleX, scaleY, phi)
             vertices(position)
-            vertices(1f, 1f, scaleX, scaleY)
+            vertices(1f, 1f, scaleX, scaleY, phi)
             vertices(position)
-            vertices(1f, 0f, scaleX, scaleY)
+            vertices(1f, 0f, scaleX, scaleY, phi)
             indices(0, 2, 1, 0, 3, 2)
         }
 }
-
-class Vertex(var pos: Vec3? = null, var normal: Vec3? = null, var tex: Vec2? = null, var scale: Vec2? = null)
 
 private fun getVertex(
     floatVertexBuffer: FloatBuffer,
@@ -375,17 +375,10 @@ private fun getVertex(
     vertexSize: Int,
     attrs: List<Attribute>
 ): Vertex {
-
     val vertex = Vertex()
     floatVertexBuffer.position(vertexIndex * vertexSize / 4)
     for (attr in attrs) {
-        when (attr) {
-            POS -> vertex.pos = readVec3(floatVertexBuffer)
-            NORMAL -> vertex.normal = readVec3(floatVertexBuffer)
-            TEX -> vertex.tex = readVec2(floatVertexBuffer)
-            SCALE -> vertex.scale = readVec2(floatVertexBuffer)
-            else -> floatVertexBuffer.position(floatVertexBuffer.position() + attr.size)
-        }
+        attr.reader(floatVertexBuffer, vertex)
     }
     return vertex
 }
@@ -399,34 +392,9 @@ private fun putVertex(
 ) {
     floatVertexBuffer.position(vertexIndex * vertexSize / 4)
     for (attr in attrs) {
-        when (attr) {
-            POS -> write(floatVertexBuffer, vertex.pos!!)
-            NORMAL -> write(floatVertexBuffer, vertex.normal!!)
-            TEX -> write(floatVertexBuffer, vertex.tex!!)
-            SCALE -> write(floatVertexBuffer, vertex.scale!!)
-            else -> floatVertexBuffer.position(floatVertexBuffer.position() + attr.size)
-        }
+        attr.writer(floatVertexBuffer, vertex)
     }
 }
 
-private fun readVec3(fvb: FloatBuffer): Vec3 {
-    val x = fvb.get()
-    val y = fvb.get()
-    val z = fvb.get()
-    return Vec3(x, y, z)
-}
-
-private fun readVec2(fvb: FloatBuffer): Vec2 {
-    val x = fvb.get()
-    val y = fvb.get()
-    return Vec2(x, y)
-}
 
 
-private fun write(fvb: FloatBuffer, value: Vec3) {
-    fvb.put(value.x).put(value.y).put(value.z)
-}
-
-private fun write(fvb: FloatBuffer, value: Vec2) {
-    fvb.put(value.x).put(value.y)
-}

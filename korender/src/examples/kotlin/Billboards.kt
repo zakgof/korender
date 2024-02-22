@@ -1,6 +1,6 @@
 
 import com.zakgof.korender.Bucket
-import com.zakgof.korender.Renderable
+import com.zakgof.korender.SimpleRenderable
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
 import com.zakgof.korender.lwjgl.LwjglPlatform
@@ -18,12 +18,12 @@ fun main(): Unit = korender(LwjglPlatform()) {
 
     val mesh = Meshes.billboard().build(gpu)
     val material = Materials.billboard(gpu) {
-        colorFile = "/splat.png"
+        colorFile = "/sand.png"
     }
 
     for (x in -5..5) {
         for (y in -5..5) {
-            val renderable = Renderable(mesh, material)
+            val renderable = SimpleRenderable(mesh, material)
             renderable.transform = Transform().scale(0.8f).translate(Vec3(x.toFloat(), y.toFloat(), 0f))
             add(renderable, Bucket.TRANSPARENT)
         }

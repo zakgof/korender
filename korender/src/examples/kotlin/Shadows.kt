@@ -1,5 +1,5 @@
 
-import com.zakgof.korender.Renderable
+import com.zakgof.korender.SimpleRenderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
@@ -24,15 +24,15 @@ fun main(): Unit = korender(LwjglPlatform()) {
         colorFile = "/sand.png"
     }
 
-    val rcube = Renderable(cube, material)
-    val rplate = Renderable(plate, material)
+    val rcube = SimpleRenderable(cube, material)
+    val rplate = SimpleRenderable(plate, material)
 
     shadower.add(rcube)
     add(rcube)
     add(rplate)
 
     onFrame = { frameInfo ->
-        rcube.transform = Transform().rotate(1.x, -FloatMath.PI * 0.5f).rotate(1.y, frameInfo.nanoTime * 1e-10f)
+        rcube.transform = Transform().rotate(1.x, -FloatMath.PIdiv2).rotate(1.y, frameInfo.nanoTime * 1e-10f)
         println("FPS=~${1e9 / frameInfo.dt} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")
     }
 

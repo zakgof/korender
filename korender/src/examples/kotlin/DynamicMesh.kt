@@ -1,5 +1,6 @@
+
 import com.zakgof.korender.Bucket
-import com.zakgof.korender.Renderable
+import com.zakgof.korender.SimpleRenderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
@@ -26,7 +27,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
         colorFile = "/sand.png"
         triplanarScale = 0.01f
     }
-    val renderable = Renderable(mesh, material)
+    val renderable = SimpleRenderable(mesh, material)
     add(renderable, Bucket.TRANSPARENT)
 
     onFrame = { frameInfo ->

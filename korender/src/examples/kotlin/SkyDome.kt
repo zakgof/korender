@@ -1,10 +1,10 @@
 
-import com.zakgof.korender.Renderable
+import com.zakgof.korender.SimpleRenderable
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
 import com.zakgof.korender.lwjgl.LwjglPlatform
 import com.zakgof.korender.material.Materials
-import com.zakgof.korender.material.ShaderBuilder
+import com.zakgof.korender.material.Shaders
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.FrustumProjection
 
@@ -16,10 +16,10 @@ fun main(): Unit = korender(LwjglPlatform()) {
     }
 
     add(
-        Renderable(
+        SimpleRenderable(
             Meshes.screenQuad().build(gpu),
             Materials.create(
-                ShaderBuilder("screen.vert", "starsky.frag").build(gpu)
+                Shaders.create(gpu, "screen.vert", "starsky.frag")
             )
         ),
     )

@@ -1,7 +1,7 @@
 
 import com.zakgof.korender.Bucket
 import com.zakgof.korender.Filter
-import com.zakgof.korender.Renderable
+import com.zakgof.korender.SimpleRenderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
@@ -20,7 +20,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
     }
 
     add(
-        Renderable(
+        SimpleRenderable(
             Meshes.sphere(1.5f).build(gpu),
             Materials.standard(gpu) {
                 colorFile = "/sand.png"

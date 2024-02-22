@@ -1,6 +1,6 @@
 
 import com.zakgof.korender.Bucket
-import com.zakgof.korender.Renderable
+import com.zakgof.korender.SimpleRenderable
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
@@ -28,7 +28,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
             val mesh = Meshes.sphere(0.5f) {
                 transformPos(Transform().translate(Vec3(x.toFloat(), y.toFloat(), 0f)))
             }.build(gpu)
-            add(Renderable(mesh, material), Bucket.TRANSPARENT)
+            add(SimpleRenderable(mesh, material), Bucket.TRANSPARENT)
         }
     }
 

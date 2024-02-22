@@ -7,36 +7,37 @@ import com.zakgof.korender.math.Color
 
 object Materials {
 
-    fun create(gpuShader: GpuShader, uniforms: UniformSupplier = UniformSupplier { null }) = DirectMaterial(gpuShader, uniforms)
+    fun create(gpuShader: GpuShader, uniforms: UniformSupplier = UniformSupplier { null }) =
+        DirectMaterial(gpuShader, uniforms)
 
     class DirectMaterial(override val gpuShader: GpuShader, override val uniforms: UniformSupplier) : Material
 
     fun standard(gpu: Gpu, vararg defs: String, block: StockUniforms.() -> Unit): Material = create(
-        ShaderBuilder("standard.vert", "standard.frag", *defs).build(gpu),
-        StockUniforms(gpu).apply(block).uniforms
+        Shaders.standard(gpu, *defs),
+        StockUniforms(gpu).apply(block)
     )
 
     fun sky(gpu: Gpu, skyTextureFile: String) = create(
-        ShaderBuilder("screen.vert", "texsky.frag").build(gpu),
+        Shaders.create(gpu, "screen.vert", "texsky.frag"),
         MapUniformSupplier("skyTexture" to Textures.create(skyTextureFile).build(gpu))
     )
 
     fun text(gpu: Gpu, fontTexture: GpuTexture, color: Color) = create(
-        ShaderBuilder("font.vert", "font.frag").build(gpu),
+        Shaders.create(gpu, "font.vert", "font.frag"),
         MapUniformSupplier("fontTexture" to fontTexture, "color" to color)
     )
 
     fun billboard(gpu: Gpu, block: StockUniforms.() -> Unit): Material = create(
-        ShaderBuilder("billboard.vert", "standard.frag").build(gpu),
-        StockUniforms(gpu).apply(block).uniforms
+        Shaders.create(gpu,"billboard.vert", "standard.frag"),
+        StockUniforms(gpu).apply(block)
     )
 
 }
 
-class StockUniforms(private val gpu: Gpu) {
+class StockUniforms(private val gpu: Gpu) : UniformSupplier {
 
-    val uniforms: UniformSupplier = UniformSupplier { get(it) }
-    private val customs = mutableMapOf<String, Any>()
+    private val static = mutableMapOf<String, Any>()
+    private val dynamic = mutableMapOf<String, () -> Any>()
 
     var colorTexture: GpuTexture? = null
     var normalTexture: GpuTexture? = null
@@ -68,12 +69,17 @@ class StockUniforms(private val gpu: Gpu) {
     var specularPower = 20f
     var xscale = 1f
     var yscale = 1f
+    var rotation = 0f
 
-    fun put(key: String, value: Any) {
-        customs[key] = value
+    fun static(key: String, value: Any) {
+        static[key] = value
     }
 
-    private fun get(key: String): Any? =
+    fun dynamic(key: String, valueSupplier: () -> Any) {
+        dynamic[key] = valueSupplier
+    }
+
+    override operator fun get(key: String): Any? =
         when (key) {
             "colorTexture" -> colorTexture
             "normalTexture" -> normalTexture
@@ -86,6 +92,8 @@ class StockUniforms(private val gpu: Gpu) {
             "specularPower" -> specularPower
             "xscale" -> xscale
             "yscale" -> yscale
-            else -> customs[key]
+            "rotation" -> rotation
+            else -> static[key] ?: dynamic[key]?.let { it() }
         }
+
 }

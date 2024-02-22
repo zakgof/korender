@@ -2,7 +2,7 @@ package com.zakgof.korender.math
 
 data class Color(val r: Float, val g: Float, val b: Float) {
 
-    constructor(rgb: Int) : this(
+    constructor(rgb: Int) : this( // TODO there is a bug ?
         rgb.shr(16).toFloat() / 255f,
         rgb.shr(8).and(0xFF).toFloat() / 255f,
         rgb.and(0xFF).toFloat() / 255f

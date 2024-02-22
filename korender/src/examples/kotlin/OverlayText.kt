@@ -1,7 +1,7 @@
 
 import com.zakgof.korender.Bucket
-import com.zakgof.korender.font.Fonts
 import com.zakgof.korender.camera.DefaultCamera
+import com.zakgof.korender.font.Fonts
 import com.zakgof.korender.korender
 import com.zakgof.korender.lwjgl.LwjglPlatform
 import com.zakgof.korender.math.Color
@@ -17,6 +17,14 @@ fun main(): Unit = korender(LwjglPlatform()) {
     }
 
     val font = Fonts.load(gpu, "/ubuntu.ttf")
-    val text = font.renderable("This is some text", Color(0x30F0FF),32.0f / height, 0.0f, (height - 32.0f) / height)
-    add(text, Bucket.TRANSPARENT)
+    val title = font.renderable("Hello Korender", Color(0x3087FF),32.0f / height, 0.0f, (height - 32.0f) / height)
+    add(title, Bucket.SCREEN)
+
+    val fps = font.dynamic(gpu,10, Color(0x00FF00))
+    add(fps, Bucket.SCREEN)
+
+    onFrame = {frameInfo ->
+        fps.update("FPS: " + frameInfo.avgFps.toInt(), 32.0f / height, 0.0f, 0.0f)
+    }
+
 }
