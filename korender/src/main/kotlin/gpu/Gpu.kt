@@ -1,10 +1,6 @@
-package com.zakgof.korender
+package com.zakgof.korender.gpu
 
 import com.zakgof.korender.geometry.Attribute
-import com.zakgof.korender.gpu.GpuFrameBuffer
-import com.zakgof.korender.gpu.GpuMesh
-import com.zakgof.korender.gpu.GpuShader
-import com.zakgof.korender.gpu.GpuTexture
 import com.zakgof.korender.material.ShaderDebugInfo
 import com.zakgof.korender.material.TextureFilter
 import com.zakgof.korender.material.TextureWrap
@@ -21,6 +17,8 @@ interface Gpu {
         fragDebugInfo: ShaderDebugInfo
     ): GpuShader
 
+    fun createFrameBuffer(width: Int, height: Int, useDepthBuffer: Boolean): GpuFrameBuffer
+
     fun createTexture(
         width: Int,
         height: Int,
@@ -28,9 +26,6 @@ interface Gpu {
         filter: TextureFilter = TextureFilter.MipMapLinearLinear,
         wrap: TextureWrap = TextureWrap.Repeat,
         aniso: Int = 1024,
-        alpha: Boolean = false
+        format: GpuTexture.Format = GpuTexture.Format.RGB
     ): GpuTexture
-
-    fun createFrameBuffer(width: Int, height: Int, useDepthBuffer: Boolean): GpuFrameBuffer
-
 }

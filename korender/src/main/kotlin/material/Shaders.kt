@@ -1,6 +1,6 @@
 package com.zakgof.korender.material
 
-import com.zakgof.korender.Gpu
+import com.zakgof.korender.gpu.Gpu
 import com.zakgof.korender.gpu.GpuShader
 import java.io.BufferedReader
 import java.io.IOException

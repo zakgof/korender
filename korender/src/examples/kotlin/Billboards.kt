@@ -18,7 +18,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
 
     val mesh = Meshes.billboard().build(gpu)
     val material = Materials.billboard(gpu) {
-        colorFile = "/sand.png"
+        colorFile = "/splat.png"
     }
 
     for (x in -5..5) {
@@ -31,6 +31,6 @@ fun main(): Unit = korender(LwjglPlatform()) {
 
     onFrame = { frameInfo ->
         camera = flyCamera.idle(frameInfo.dt)
-        println("FPS=~${frameInfo.avgFps} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")
+        println("FPS=~${frameInfo.avgFps}")
     }
 }

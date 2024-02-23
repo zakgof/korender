@@ -1,6 +1,5 @@
 package com.zakgof.korender.lwjgl
 
-import com.zakgof.korender.Platform
 import gl.*
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWErrorCallback

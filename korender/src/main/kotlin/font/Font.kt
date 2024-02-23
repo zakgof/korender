@@ -1,6 +1,6 @@
 package com.zakgof.korender.font
 
-import com.zakgof.korender.Gpu
+import com.zakgof.korender.gpu.Gpu
 import com.zakgof.korender.Renderable
 import com.zakgof.korender.SimpleRenderable
 import com.zakgof.korender.geometry.Attributes.SCREEN

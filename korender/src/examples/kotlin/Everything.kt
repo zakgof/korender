@@ -1,5 +1,6 @@
 import com.zakgof.korender.*
 import com.zakgof.korender.geometry.Meshes
+import com.zakgof.korender.gpu.Gpu
 import com.zakgof.korender.lwjgl.LwjglPlatform
 import com.zakgof.korender.material.Images
 import com.zakgof.korender.material.Materials

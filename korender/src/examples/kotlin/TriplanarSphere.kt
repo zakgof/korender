@@ -24,7 +24,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
             colorFile = "/sand.png"
             triplanarScale = 0.4f
         })
-    add(sphere, Bucket.TRANSPARENT)
+    add(sphere)
 
     onFrame = {
         sphere.transform = Transform().rotate(1.y, it.nanoTime * 1e-9f)

@@ -1,6 +1,6 @@
 package com.zakgof.korender.material
 
-import com.zakgof.korender.Gpu
+import com.zakgof.korender.gpu.Gpu
 import com.zakgof.korender.gpu.GpuShader
 import com.zakgof.korender.gpu.GpuTexture
 import com.zakgof.korender.math.Color
@@ -43,6 +43,7 @@ class StockUniforms(private val gpu: Gpu) : UniformSupplier {
     var normalTexture: GpuTexture? = null
     var aperiodicTexture: GpuTexture? = null
     var shadowTexture: GpuTexture? = null
+    var detailTexture: GpuTexture? = null
     var colorFile: String? = null
         set(value) {
             field = value
@@ -62,7 +63,15 @@ class StockUniforms(private val gpu: Gpu) : UniformSupplier {
                 .filter(TextureFilter.Nearest)
                 .build(gpu)
         }
+    var detailFile: String? = null
+        set(value) {
+            field = value
+            detailTexture = Textures.create(detailFile!!)
+                .build(gpu)
+        }
     var triplanarScale = 1.0f
+    var detailScale = 16.0f
+    var detailRatio = 0.3f
     var ambient = 0.3f
     var diffuse = 0.7f
     var specular = 0.3f
@@ -85,7 +94,10 @@ class StockUniforms(private val gpu: Gpu) : UniformSupplier {
             "normalTexture" -> normalTexture
             "aperiodicTexture" -> aperiodicTexture
             "shadowTexture" -> shadowTexture
+            "detailTexture" -> detailTexture
             "triplanarScale" -> triplanarScale
+            "detailScale" -> detailScale
+            "detailRatio" -> detailRatio
             "ambient" -> ambient
             "diffuse" -> diffuse
             "specular" -> specular

@@ -1,6 +1,6 @@
 package com.zakgof.korender.font
 
-import com.zakgof.korender.Gpu
+import com.zakgof.korender.gpu.Gpu
 import com.zakgof.korender.material.Textures
 import java.awt.Color
 import java.awt.Font.TRUETYPE_FONT
