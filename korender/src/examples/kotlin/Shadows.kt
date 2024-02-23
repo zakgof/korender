@@ -33,7 +33,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
 
     onFrame = { frameInfo ->
         rcube.transform = Transform().rotate(1.x, -FloatMath.PIdiv2).rotate(1.y, frameInfo.nanoTime * 1e-10f)
-        println("FPS=~${1e9 / frameInfo.dt} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")
+        println("FPS=~${frameInfo.avgFps}")
     }
 
 }

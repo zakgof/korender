@@ -23,6 +23,10 @@ class GlGpuTexture(val glHandle: Int) : GpuTexture {
             TextureWrap.ClampToEdge to VGL12.GL_CLAMP_TO_EDGE,
             TextureWrap.Repeat to VGL11.GL_REPEAT
         )
+        val formatMap = mapOf(
+            GpuTexture.Format.RGBA to VGL11.GL_RGBA,
+            GpuTexture.Format.RGB to VGL11.GL_RGB,
+        )
     }
 
     constructor(
@@ -32,7 +36,7 @@ class GlGpuTexture(val glHandle: Int) : GpuTexture {
         filter: TextureFilter = TextureFilter.MipMapLinearLinear,
         wrap: TextureWrap = TextureWrap.Repeat,
         aniso: Int = 1024,
-        alpha: Boolean = false
+        format: GpuTexture.Format = GpuTexture.Format.RGB
     ) : this(VGL11.glGenTextures()) {
 
         VGL13.glActiveTexture(VGL13.GL_TEXTURE0)
@@ -41,11 +45,11 @@ class GlGpuTexture(val glHandle: Int) : GpuTexture {
         VGL11.glTexImage2D(
             VGL11.GL_TEXTURE_2D,
             0,
-            if (alpha) VGL11.GL_RGBA else VGL11.GL_RGB,
+            formatMap[format]!!,
             width,
             height,
             0,
-            if (alpha) VGL11.GL_RGBA else VGL11.GL_RGB,
+            formatMap[format]!!,
             VGL11.GL_UNSIGNED_BYTE,
             bytes
         )

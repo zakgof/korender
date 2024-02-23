@@ -1,6 +1,5 @@
 package com.zakgof.korender.geometry
 
-import com.zakgof.korender.Gpu
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.geometry.Attributes.NORMAL
 import com.zakgof.korender.geometry.Attributes.PHI
@@ -8,6 +7,7 @@ import com.zakgof.korender.geometry.Attributes.POS
 import com.zakgof.korender.geometry.Attributes.SCALE
 import com.zakgof.korender.geometry.Attributes.TEX
 import com.zakgof.korender.glgpu.BufferUtils
+import com.zakgof.korender.gpu.Gpu
 import com.zakgof.korender.gpu.GpuMesh
 import com.zakgof.korender.math.BoundingBox
 import com.zakgof.korender.math.FloatMath.PI
@@ -114,7 +114,7 @@ object Meshes {
                     that.indexShortBuffer?.rewind()
                     for (v in 0 until that.vertexNumber) {
                         val vertex = getVertex(that.floatVertexBuffer, v, vertexSize, attrs.toList())
-                        transform(v, vertex)
+                        transform(i * that.vertexNumber + v, vertex)
                         putVertex(floatVertexBuffer, i * that.vertexNumber + v, vertex, vertexSize, attrs.toList())
                     }
                     for (ind in 0 until that.indexNumber) {
@@ -178,7 +178,7 @@ object Meshes {
             vertices(-halfSide, halfSide, 0f, 0f, 0f, 1f, 0f, 1f)
             vertices(halfSide, halfSide, 0f, 0f, 0f, 1f, 1f, 1f)
             vertices(halfSide, -halfSide, 0f, 0f, 0f, 1f, 1f, 0f)
-            indices(0, 1, 2, 0, 2, 3)
+            indices(0, 2, 1, 0, 3, 2)
             block.invoke(this)
         }
 

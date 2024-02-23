@@ -30,6 +30,6 @@ fun main(): Unit = korender(LwjglPlatform()) {
     add(SimpleRenderable(mesh, material), Bucket.TRANSPARENT)
 
     onFrame = { frameInfo ->
-        println("FPS=~${frameInfo.avgFps} Renderables ${frameInfo.visibleRenderableCount}/${frameInfo.renderableCount}")
+        println("FPS=~${frameInfo.avgFps}")
     }
 }

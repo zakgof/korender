@@ -58,5 +58,8 @@ void main() {
     float c4 = singleSmoker(uv, vec2(0.0, -1.0), dt);
     float c = (c1 + c2 + c3 + c4) * 0.25;
     c = clamp(c, 0., 1.);
-    fragColor = vec4(c, c, c, 1.0 / (dt*dt));
+    float a = 1.0 / (dt*dt);
+    if (c * a < 0.05)
+       discard;
+    fragColor = vec4(c, c, c, c * a);
 }

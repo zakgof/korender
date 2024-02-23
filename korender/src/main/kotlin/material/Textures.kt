@@ -1,8 +1,8 @@
 package com.zakgof.korender.material
 
-import com.zakgof.korender.Gpu
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.glgpu.BufferUtils
+import com.zakgof.korender.gpu.Gpu
 import com.zakgof.korender.gpu.GpuTexture
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferByte
@@ -26,6 +26,7 @@ object Textures {
             val bytes = when (image.type) {
                 BufferedImage.TYPE_3BYTE_BGR -> loadBgr((image.raster.dataBuffer as DataBufferByte).data)
                 BufferedImage.TYPE_4BYTE_ABGR -> loadAbgr((image.raster.dataBuffer as DataBufferByte).data)
+                BufferedImage.TYPE_BYTE_GRAY -> loadGray((image.raster.dataBuffer as DataBufferByte).data)
                 else -> throw KorenderException("Unknown image format ${image.type}")
             }
             return gpu.createTexture(
@@ -35,7 +36,11 @@ object Textures {
                 filter,
                 wrap,
                 aniso,
-                image.type == BufferedImage.TYPE_4BYTE_ABGR
+                when (image.type) {
+                    BufferedImage.TYPE_3BYTE_BGR -> GpuTexture.Format.RGB
+                    BufferedImage.TYPE_4BYTE_ABGR -> GpuTexture.Format.RGBA
+                    else -> throw KorenderException("Unknown image format ${image.type}")
+                }
             )
         }
 
@@ -47,6 +52,12 @@ object Textures {
                     .put(data[i * 3])
             }
             return buffer.flip();
+        }
+
+        private fun loadGray(data: ByteArray): ByteBuffer {
+            val buffer = BufferUtils.createByteBuffer(data.size)
+            buffer.put(data)
+            return buffer.flip()
         }
 
         private fun loadAbgr(data: ByteArray): ByteBuffer {

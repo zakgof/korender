@@ -1,6 +1,6 @@
 package com.zakgof.korender.shadow
 
-import com.zakgof.korender.Gpu
+import com.zakgof.korender.gpu.Gpu
 import com.zakgof.korender.Renderable
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera

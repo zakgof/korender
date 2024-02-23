@@ -4,11 +4,15 @@ import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.glgpu.GlGpu
+import com.zakgof.korender.gpu.Gpu
 import com.zakgof.korender.gpu.GpuFrameBuffer
 import com.zakgof.korender.gpu.GpuMesh
+import com.zakgof.korender.lwjgl.Platform
 import com.zakgof.korender.material.MapUniformSupplier
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.projection.OrthoProjection
+import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
+import com.zakgof.korender.projection.FrustumProjection
 import com.zakgof.korender.projection.Projection
 import com.zakgof.korender.shadow.Shadower
 import com.zakgof.korender.shadow.SimpleShadower
@@ -17,17 +21,17 @@ import java.lang.System.nanoTime
 import java.util.*
 
 fun korender(platform: Platform, block: KorenderContext.() -> Unit) {
-    var korender: KorenderContext? = null
+    var korender: KorenderContext
 
     platform.run(
         width = 1280,
         height = 800,
         init = {
             korender = KorenderContext(platform)
-            platform.onFrame = { korender!!.frame() }
-            platform.onResize = { x, y -> korender!!.resize(x, y) }
-            block.invoke(korender!!)
-            korender!!.onResize.invoke(korender!!)
+            platform.onFrame = { korender.frame() }
+            platform.onResize = { x, y -> korender.resize(x, y) }
+            block.invoke(korender)
+            korender.onResize.invoke(korender)
         }
     )
 }
@@ -48,30 +52,19 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
     private var startNanos: Long = nanoTime()
     private var prevFrameNano: Long = nanoTime()
     private val frames: Queue<Long> = LinkedList()
-    private var frameRenderableCount: Int = 0
-    private var frameVisibleRenderableCount: Int = 0
 
     val gpu: Gpu = GlGpu()
-    val filterScreenQuad: GpuMesh = Meshes.screenQuad().build(gpu).gpuMesh
+    private val filterScreenQuad: GpuMesh = Meshes.screenQuad().build(gpu).gpuMesh
 
     var shadower: Shadower = SimpleShadower(gpu)
     var onFrame: KorenderContext.(FrameInfo) -> Unit = {}
     var onResize: KorenderContext.() -> Unit = {}
-    var camera: Camera = DefaultCamera(
-        pos = Vec3(0f, 5f, 15f),
-        dir = Vec3(0f, 0f, -1f),
-        up = Vec3(0f, 1f, 0f)
-    )
+    var camera: Camera = DefaultCamera(20.z, -1.z, 1.y)
         set(value) {
             field = value
             updateContext()
         }
-    var projection: Projection = OrthoProjection(
-        width = 10f,
-        height = 10f,
-        near = 10f,
-        far = 10000f
-    )
+    var projection: Projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
         set(value) {
             field = value
             updateContext()
@@ -139,7 +132,7 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
         val frameTime = now - prevFrameNano
         frames.add(frameTime)
         val frameInfo =
-            FrameInfo(now - startNanos, frameTime, calcAverageFps(), frameRenderableCount, frameVisibleRenderableCount)
+            FrameInfo(now - startNanos, frameTime, calcAverageFps())
         prevFrameNano = now
         return frameInfo
     }
@@ -152,14 +145,14 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
         VGL11.glCullFace(VGL11.GL_BACK)
 
         screens.forEach { it.render(contextUniforms) }
-        renderBucket(opaques, 1.0)
+        renderBucket(opaques, -1.0)
         skies.forEach { it.render(contextUniforms) }
-        renderBucket(transparents, -1.0)
+        renderBucket(transparents, 1.0)
     }
 
     private fun renderBucket(renderables: MutableList<Renderable>, sortFactor: Double) {
         val visibleRenderables = renderables.filter { isVisible(it) }
-            .sortedBy { (it.worldBoundingBox!!.center() - camera.position()).lengthSquared() * sortFactor }
+            .sortedBy { (camera.mat4() * it.worldBoundingBox!!.center()).z * sortFactor }
         visibleRenderables.forEach { it.render(contextUniforms) }
     }
 

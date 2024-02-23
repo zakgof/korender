@@ -21,6 +21,11 @@ uniform float specularPower;
 #ifdef NORMAL_MAP
   uniform sampler2D normalTexture;
 #endif
+#ifdef DETAIL
+  uniform sampler2D detailTexture;
+  uniform float detailScale;
+  uniform float detailRatio;
+#endif
 #ifdef SHADOW_RECEIVER
   uniform sampler2D shadowTexture;
 #endif
@@ -60,6 +65,11 @@ void main() {
   #endif
   if (texColor.a < 0.01)
     discard;
+  #ifdef DETAIL
+    vec4 detailColor = texture2D(detailTexture, vtex * detailScale);
+    texColor = mix(texColor, detailColor, detailRatio);
+  #endif
+
   float lighting = lite(light, normal, look, ambient, diffuse, specular, specularPower);
 
   #ifdef SHADOW_RECEIVER
@@ -67,6 +77,10 @@ void main() {
     if (shadowSample  >=  vshadow.z && vshadow.z > 0.0) {
        lighting = ambient;
     }
+  #endif
+
+  #ifdef NO_LIGHT
+    lighting = 1.0f;
   #endif
 
   #ifdef SHADOW_CASTER

@@ -1,4 +1,4 @@
-import com.zakgof.korender.Renderable
+
 import com.zakgof.korender.SimpleRenderable
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.korender
@@ -29,7 +29,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
         particles.forEach {
             it.update(frameInfo.dt * 1e-9f)
         }
-        particles.sortByDescending { (it.pos - camera.position()).lengthSquared() }
+        particles.sortBy { (camera.mat4() * it.pos).z }
         for (i in particles.indices) {
             val particle = particles[i]
             for (v in 0 until 4) {

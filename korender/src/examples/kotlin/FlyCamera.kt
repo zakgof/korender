@@ -1,4 +1,4 @@
-import com.zakgof.korender.Platform
+import com.zakgof.korender.lwjgl.Platform
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.math.FloatMath.cos
