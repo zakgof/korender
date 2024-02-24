@@ -21,7 +21,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
     val sphere = SimpleRenderable(
         mesh = Meshes.sphere(2f).build(gpu),
         material = Materials.standard(gpu, "TRIPLANAR") {
-            colorFile = "/sand.png"
+            colorFile = "/sand.jpg"
             triplanarScale = 0.4f
         })
     add(sphere)

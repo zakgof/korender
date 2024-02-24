@@ -19,7 +19,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
         projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
     }
     val material = Materials.standard(gpu, "TRIPLANAR") {
-        colorFile = "/sand.png"
+        colorFile = "/sand.jpg"
         triplanarScale = 0.4f
     }
 

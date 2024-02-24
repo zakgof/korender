@@ -21,7 +21,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
         transformPos(Transform().scale(5f, 1f, 5f).translate(-1.6f.y))
     }.build(gpu)
     val material = Materials.standard(gpu, "SHADOW_RECEIVER") {
-        colorFile = "/sand.png"
+        colorFile = "/sand.jpg"
     }
 
     val rcube = SimpleRenderable(cube, material)

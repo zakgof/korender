@@ -24,7 +24,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
     val originalPointPositions = mesh.positions();
 
     val material = Materials.standard(gpu, "TRIPLANAR") {
-        colorFile = "/sand.png"
+        colorFile = "/sand.jpg"
         triplanarScale = 0.01f
     }
     val renderable = SimpleRenderable(mesh, material)

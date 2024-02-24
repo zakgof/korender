@@ -20,7 +20,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
     val mesh = Meshes.cube( 15f).build(gpu)
     val material = Materials.standard(gpu, "NORMAL_MAP") {
         normalFile = "/normal.png"
-        colorFile = "/sand.png"
+        colorFile = "/sand.jpg"
     }
     val renderable = SimpleRenderable(mesh, material)
     add(renderable)

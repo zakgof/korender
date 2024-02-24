@@ -19,7 +19,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
         0.4f * sin(0.3f * x.toFloat()) * sin(0.3f * y.toFloat())
     }.build(gpu)
     val material = Materials.standard(gpu) {
-        colorFile = "/sand.png"
+        colorFile = "/sand.jpg"
         diffuse = 0.8f
         ambient = 0.2f
         specular = 2.0f
