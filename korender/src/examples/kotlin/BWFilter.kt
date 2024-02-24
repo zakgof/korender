@@ -23,7 +23,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
         SimpleRenderable(
             Meshes.sphere(1.5f).build(gpu),
             Materials.standard(gpu) {
-                colorFile = "/sand.png"
+                colorFile = "/sand.jpg"
             }),
         Bucket.TRANSPARENT
     )

@@ -30,7 +30,7 @@ class BoundingBox(val corners: Set<Vec3>) {
                 || screenSpaceCorners.all { it.x > 1f }
                 || screenSpaceCorners.all { it.y < -1f }
                 || screenSpaceCorners.all { it.y > 1f }
-                || screenSpaceCorners.all { it.z < -1f }
+                || screenSpaceCorners.all { it.z < 0f }
                 || screenSpaceCorners.all { it.z > 1f }
                 )
     }
