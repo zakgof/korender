@@ -86,12 +86,12 @@ object Meshes {
         fun transformPos(transform: Transform) = transformPos { transform.mat4().project(it) }
 
         fun build(gpu: Gpu, isDynamic: Boolean = false): DefaultMesh {
-            if (!isDynamic && floatVertexBuffer.position() != floatVertexBuffer.limit()) {
-                throw KorenderException("Vertex buffer not full: ${floatVertexBuffer.position()}/${floatVertexBuffer.limit()}")
-            }
-            if (!isDynamic && indexConcreteBuffer.position() != indexConcreteBuffer.limit()) {
-                throw KorenderException("Index buffer not full: ${indexConcreteBuffer.position()}/${indexConcreteBuffer.limit()}")
-            }
+//            if (!isDynamic && floatVertexBuffer.position() != floatVertexBuffer.limit()) {
+//                throw KorenderException("Vertex buffer not full: ${floatVertexBuffer.position()}/${floatVertexBuffer.limit()}")
+//            }
+//            if (!isDynamic && indexConcreteBuffer.position() != indexConcreteBuffer.limit()) {
+//                throw KorenderException("Index buffer not full: ${indexConcreteBuffer.position()}/${indexConcreteBuffer.limit()}")
+//            }
 
             return DefaultMesh(
                 gpu,
