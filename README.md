@@ -4,7 +4,7 @@ Simple 3D graphics rendering engine in Kotlin
 ### Features
 - Rendering opaque and transparent objects
 - Diffuse, specular and ambient lighting (direction light)
-- Projection shadow maps
+- Projection shadow maps with percentage close soft shadows
 - Texturing:
   - uv mapped
   - triplanar

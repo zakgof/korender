@@ -1,9 +1,9 @@
 package com.zakgof.korender.shadow
 
-import com.zakgof.korender.gpu.Gpu
 import com.zakgof.korender.Renderable
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
+import com.zakgof.korender.gpu.Gpu
 import com.zakgof.korender.gpu.GpuFrameBuffer
 import com.zakgof.korender.gpu.GpuShader
 import com.zakgof.korender.material.Shaders
@@ -14,11 +14,11 @@ import com.zakgof.korender.projection.Projection
 import gl.VGL11
 import org.lwjgl.opengl.GL11
 
-class SimpleShadower(gpu: Gpu) : Shadower {
+class SimpleShadower(gpu: Gpu, size: Int = 1024) : Shadower {
 
     private val casterShader: GpuShader = Shaders.standard(gpu, "SHADOW_CASTER")
     private val casters = mutableListOf<Renderable>()
-    private val fb: GpuFrameBuffer = gpu.createFrameBuffer(1024, 1024, false)
+    private val fb: GpuFrameBuffer = gpu.createFrameBuffer(size, size, false)
 
     override val texture = fb.colorTexture
     override var camera: Camera? = null

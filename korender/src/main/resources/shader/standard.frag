@@ -70,17 +70,15 @@ void main() {
     texColor = mix(texColor, detailColor, detailRatio);
   #endif
 
-  float lighting = lite(light, normal, look, ambient, diffuse, specular, specularPower);
-
-  #ifdef SHADOW_RECEIVER
-    float shadowSample = texture2D(shadowTexture, vshadow.xy).r;
-    if (shadowSample  >=  vshadow.z && vshadow.z > 0.0) {
-       lighting = ambient;
-    }
+  #ifdef NO_LIGHT
+    float lighting = 1.0f;
+  #else
+    float lighting = lite(light, normal, look, ambient, diffuse, specular, specularPower);
   #endif
 
-  #ifdef NO_LIGHT
-    lighting = 1.0f;
+  #ifdef SHADOW_RECEIVER
+    float shadowRatio = shadow(shadowTexture, vshadow);
+    lighting = mix(lighting, ambient, shadowRatio);
   #endif
 
   #ifdef SHADOW_CASTER

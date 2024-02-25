@@ -67,10 +67,6 @@ object Textures {
                     .put(data[i * 4 + 2])
                     .put(data[i * 4 + 1])
                     .put(data[i * 4])
-//                buffer.put(255.toByte()) // r
-//                    .put(128.toByte())   // g
-//                    .put(128.toByte())   // b
-//                    .put(16.toByte())   // a
             }
             return buffer.flip();
         }
