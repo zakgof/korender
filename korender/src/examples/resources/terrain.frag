@@ -59,5 +59,12 @@ void main() {
 
   float lighting = lite(light, normal, look, ambient, diffuse, specular, specularPower);
 
-  fragColor = vec4(texColor.xyz * lighting, texColor.a);
+  vec3 pixelColor = texColor.xyz * lighting;
+
+  float distance = length(vpos - cameraPos);
+  float fogFactor = clamp( distance / 1024.0, 0.0, 1.0);
+  vec3 fogColor = vec3(0.7, 0.7, 0.8);
+  pixelColor = mix(pixelColor, fogColor, fogFactor);
+
+fragColor = vec4(pixelColor, texColor.a);
 }
