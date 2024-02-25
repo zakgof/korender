@@ -56,6 +56,6 @@ private fun terrain(gpu: Gpu): Renderable {
 private fun sky(gpu: Gpu): Renderable = SimpleRenderable(
     Meshes.screenQuad().build(gpu),
     Materials.create(
-        Shaders.create(gpu, "screen.vert", "starsky.frag")
+        Shaders.create(gpu, "screen.vert", "cloudsky.frag")
     )
 )
