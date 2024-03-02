@@ -35,8 +35,8 @@ fun main(): Unit = korender(LwjglPlatform()) {
 
     onFrame = { frameInfo ->
         camera = flyCamera.idle(frameInfo.dt)
-        rcube.transform = Transform().rotate(1.x, -FloatMath.PIdiv2).rotate(1.y, frameInfo.nanoTime * 1e-10f)
-        rsphere.transform = Transform().translate(Vec3(-4.0f, 2.0f + sin(frameInfo.nanoTime * 1e-9f), 0.0f));
+        rcube.transform = Transform().rotate(1.x, -FloatMath.PIdiv2).rotate(1.y, frameInfo.time * 0.1f)
+        rsphere.transform = Transform().translate(Vec3(-4.0f, 2.0f + sin(frameInfo.time), 0.0f));
         println("FPS=~${frameInfo.avgFps}")
     }
 

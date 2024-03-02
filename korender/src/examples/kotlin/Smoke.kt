@@ -29,7 +29,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
 
     onFrame = { frameInfo ->
         camera = flyCamera.idle(frameInfo.dt)
-        startTime = frameInfo.nanoTime * 1e-9f - 1.5f;
+        startTime = frameInfo.time - 1.5f;
         println("FPS=~${frameInfo.avgFps}")
     }
 }

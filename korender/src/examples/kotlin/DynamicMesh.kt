@@ -31,14 +31,14 @@ fun main(): Unit = korender(LwjglPlatform()) {
     add(renderable, Bucket.TRANSPARENT)
 
     onFrame = { frameInfo ->
-        renderable.transform = Transform().scale(0.1f).rotate(1.y, frameInfo.nanoTime * 1e-10f)
+        renderable.transform = Transform().scale(0.1f).rotate(1.y, frameInfo.time * 0.1f)
         for (i in 0..<mesh.vertices) {
-            mesh.updateVertex(i) { it.pos = perturb(originalPointPositions[i], frameInfo.nanoTime) }
+            mesh.updateVertex(i) { it.pos = perturb(originalPointPositions[i], frameInfo.time) }
         }
         mesh.updateGpu()
         println("FPS=~${frameInfo.avgFps}")
     }
 }
 
-fun perturb(orig: Vec3, time: Long) = Vec3(orig.x * (1.0f + 0.6f * sin(time * 1e-9f)), orig.y, orig.z)
+fun perturb(orig: Vec3, time: Float) = Vec3(orig.x * (1.0f + 0.6f * sin(time)), orig.y, orig.z)
 

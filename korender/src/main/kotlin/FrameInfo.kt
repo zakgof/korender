@@ -1,7 +1,8 @@
 package com.zakgof.korender
 
 class FrameInfo(
-    val nanoTime: Long,
-    val dt: Long,
-    val avgFps: Double,
+    val frame: Long,
+    val time: Float,
+    val dt: Float,
+    val avgFps: Float,
 )

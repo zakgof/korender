@@ -84,6 +84,10 @@ class StockUniforms(private val gpu: Gpu) : UniformSupplier {
         static[key] = value
     }
 
+    fun staticTex(key: String, textureFile: String) {
+        static[key] = Textures.create(textureFile).build(gpu)
+    }
+
     fun dynamic(key: String, valueSupplier: () -> Any) {
         dynamic[key] = valueSupplier
     }

@@ -49,6 +49,7 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
     private val context = mutableMapOf<String, Any?>()
     private val contextUniforms = MapUniformSupplier(context)
 
+    private var frameNumber = 0L
     private var startNanos: Long = nanoTime()
     private var prevFrameNano: Long = nanoTime()
     private val frames: Queue<Long> = LinkedList()
@@ -132,8 +133,9 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
         val frameTime = now - prevFrameNano
         frames.add(frameTime)
         val frameInfo =
-            FrameInfo(now - startNanos, frameTime, calcAverageFps())
+            FrameInfo(frameNumber, (now - startNanos) * 1e-9f, frameTime * 1e-9f, calcAverageFps())
         prevFrameNano = now
+        frameNumber++
         return frameInfo
     }
 
@@ -164,11 +166,11 @@ class KorenderContext(val platform: Platform, var width: Int = 1280, var height:
         }
     }
 
-    private fun calcAverageFps(): Double {
+    private fun calcAverageFps(): Float {
         while (frames.size > 128) {
             frames.poll()
         }
-        return 1e9 / frames.average()
+        return 1e9f / frames.average().toFloat()
     }
 
     private fun updateContext() {
