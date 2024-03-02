@@ -1,14 +1,15 @@
-import com.zakgof.korender.lwjgl.Platform
+
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
+import com.zakgof.korender.lwjgl.Platform
 import com.zakgof.korender.math.FloatMath.cos
 import com.zakgof.korender.math.FloatMath.sin
 import com.zakgof.korender.math.Vec3
 
 class FlyCamera(platform: Platform, startPos: Vec3) {
 
-    private val rotationSpeed = 1e-9f;
-    private val moveSpeed = 1e-8f
+    private val rotationSpeed = 1f;
+    private val moveSpeed = 10f
     private var position = startPos;
     private var phi = 0f
     private var theta = 0f
@@ -34,7 +35,7 @@ class FlyCamera(platform: Platform, startPos: Vec3) {
         return DefaultCamera(position, look, up)
     }
 
-    fun idle(dt: Long) : Camera {
+    fun idle(dt: Float) : Camera {
         if (pressedKeys.contains(263))
             phi -= rotationSpeed * dt
         if (pressedKeys.contains(262))

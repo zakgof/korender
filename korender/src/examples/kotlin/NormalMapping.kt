@@ -26,7 +26,7 @@ fun main(): Unit = korender(LwjglPlatform()) {
     add(renderable)
 
     onFrame = { frameInfo ->
-        renderable.transform = Transform().scale(0.1f).rotate(1.y, frameInfo.nanoTime * 1e-10f)
+        renderable.transform = Transform().scale(0.1f).rotate(1.y, frameInfo.time * 0.1f)
         println("FPS=~${frameInfo.avgFps}")
     }
 }

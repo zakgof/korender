@@ -45,12 +45,12 @@ fun main(): Unit = korender(LwjglPlatform()) {
     add(addFire(gpu), Bucket.TRANSPARENT)
 
     onFrame = { frameInfo ->
-        startTime = frameInfo.nanoTime * 1e-9f - 1.0f
+        startTime = frameInfo.time - 1.0f
         camera = flyCamera.idle(frameInfo.dt)
         println("FPS=~${frameInfo.avgFps}")
 
         particles.forEach {
-            it.update(frameInfo.dt * 1e-9f)
+            it.update(frameInfo.dt)
         }
         particles.sortBy { (camera.mat4() * it.pos).z }
         for (i in particles.indices) {

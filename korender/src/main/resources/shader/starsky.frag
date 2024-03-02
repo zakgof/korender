@@ -28,7 +28,7 @@ out vec4 fragColor;
 
 void main() {
 
-    vec2 uv = skydisk(vtex, cameraPos, projection * view);
+    vec2 uv = skydisk(vtex, cameraPos, projection * view, 1.5);
 
     vec3 dir = vec3(uv * zoom, 1.);
 

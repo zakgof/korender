@@ -47,7 +47,7 @@ void main() {
   vec4 grass = texture2D(grassTexture, vtex * detailScale);
   vec4 dirt = texture2D(dirtTexture, vtex * detailScale);
 
-  float sandRatio  = clamp(1.0 - abs(x-0.10)*5., 0.1, 1.0);
+  float sandRatio  = clamp(1.0 - abs(x-0.10)*5., 0.1, 1.0) + max(8. - vpos.y, 0.) / 3.0 ;
   float rockRatio  = clamp(1.0 - abs(x-0.40)*5., 0.1, 1.0);
   float grassRatio = clamp(1.0 - abs(x-0.60)*5., 0.1, 1.0);
   float dirtRatio  = clamp(1.0 - abs(x-1.80)*5., 0.1, 1.0);
@@ -61,10 +61,10 @@ void main() {
 
   vec3 pixelColor = texColor.xyz * lighting;
 
-  float distance = length(vpos - cameraPos);
-  float fogFactor = clamp( distance / 1024.0, 0.0, 1.0);
-  vec3 fogColor = vec3(0.7, 0.7, 0.8);
-  pixelColor = mix(pixelColor, fogColor, fogFactor);
+//  float distance = length(vpos - cameraPos);
+//  float fogFactor = clamp( distance / 1024.0, 0.0, 1.0);
+//  vec3 fogColor = vec3(0.7, 0.7, 0.8);
+//  pixelColor = mix(pixelColor, fogColor, fogFactor);
 
-fragColor = vec4(pixelColor, texColor.a);
+  fragColor = vec4(pixelColor, texColor.a);
 }
