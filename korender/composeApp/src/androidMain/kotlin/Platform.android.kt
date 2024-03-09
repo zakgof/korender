@@ -50,7 +50,7 @@ class AndroidPlatform : Platform {
             else -> throw KorenderException("Unsupported image format $format")
         }
         val gpuBytes = when(format) {
-            Bitmap.Config.ARGB_8888 -> ARGBtoRGBA(byteBuffer)
+            Bitmap.Config.ARGB_8888 -> ARGBtoRGBA(byteBuffer) // TODO: how come ?
             else -> throw KorenderException("Unsupported image format $format")
         }
         return AndroidImage(
@@ -67,12 +67,7 @@ class AndroidPlatform : Platform {
             buffer.put(data[i * 4 + 0])
                 .put(data[i * 4 + 1])
                 .put(data[i * 4 + 2])
-                .put(data[i * 4])
-
-//            buffer.put(128.toByte())
-//                .put(255.toByte())
-//                .put(0.toByte())
-//                .put(255.toByte())
+                .put(data[i * 4 + 3])
         }
         return buffer.flip() as ByteBuffer
     }

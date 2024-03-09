@@ -104,9 +104,9 @@ compose.desktop {
         jvmArgs("--add-exports", "java.desktop/sun.awt=ALL-UNNAMED")
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Msi)
             packageName = "com.zakgof.korender"
-            packageVersion = "1.0.0"
+            packageVersion = "0.0.1"
         }
     }
 }

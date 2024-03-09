@@ -1,5 +1,9 @@
 # korender
-Simple 3D graphics rendering engine in Kotlin
+Simple 3D graphics rendering engine based on Kotlin Multiplatform
+
+### Supported platforms
+- Desktop (Windows)
+- Android
 
 ### Features
 - Rendering opaque and transparent objects
@@ -27,13 +31,16 @@ Simple 3D graphics rendering engine in Kotlin
   
 ### Quickstart
 ````kotlin
-fun main() = korender(LwjglPlatform()) {
-  add(SimpleRenderable(
-    mesh = Meshes.sphere(2f).build(gpu),
-    material = Materials.standard(gpu) {
-      colorFile = "/sand.png"
-    }
-  ))
+@Composable
+fun App() {
+  Korender() {
+    add(SimpleRenderable(
+      mesh = Meshes.sphere(2f).build(gpu),
+      material = Materials.standard(gpu) {
+        colorFile = "/sand.jpg"
+      }
+    ))
+  }
 }
 ````
 

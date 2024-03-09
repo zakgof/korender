@@ -35,6 +35,8 @@ class Lwjgl11 : IGL11 {
     override fun glGetFloatv(pname: Int, params: FloatArray) = GL11.glGetFloatv(pname, params)
     override fun glGetError(): Int = GL11.glGetError()
     override fun glClear(mask: Int) = GL11.glClear(mask)
+    override fun glClearColor(fl: Float, fl1: Float, fl2: Float, fl3: Float) = GL11.glClearColor(fl, fl1, fl2, fl3)
+
     override fun glViewport(x: Int, y: Int, w: Int, h: Int) = GL11.glViewport(x, y, w, h)
     override fun glTexParameteri(target: Int, pname: Int, param: Int) = GL11.glTexParameteri(target, pname, param)
 

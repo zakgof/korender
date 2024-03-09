@@ -37,6 +37,7 @@ class SimpleShadower(gpu: Gpu, size: Int = 1024) : Shadower {
             casters.forEach { r ->
                 casterShader.render({
                     r.material.uniforms[it] ?: mapOf(
+                        "light" to light,
                         "model" to r.transform.mat4(),
                         "view" to camera!!.mat4(),
                         "projection" to projection!!.mat4(),
@@ -63,7 +64,7 @@ class SimpleShadower(gpu: Gpu, size: Int = 1024) : Shadower {
                     up *  ((ymin + ymax) * 0.5f) +
                     light * ((zmin + zmax) * 0.5f)
         val near = 5f
-        val far = near + (zmax - zmin) + 10.0f // TODO: this is crazy hack!
+        val far = near + (zmax - zmin) + 30.0f // TODO: this is crazy hack!
         val cameraPos = center - light * (near + (zmax - zmin) * 0.5f)
         val width = xmax - xmin
         val height = ymax - ymin
