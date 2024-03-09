@@ -22,7 +22,6 @@ import com.zakgof.korender.lwjgl.Lwjgl20
 import com.zakgof.korender.lwjgl.Lwjgl30
 import com.zakgof.korender.material.Image
 import org.lwjgl.opengl.GL.createCapabilities
-import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.awt.AWTGLCanvas
 import org.lwjgl.opengl.awt.GLData
 import java.awt.GraphicsEnvironment
@@ -75,7 +74,6 @@ class JVMPlatform : Platform {
                     override fun initGL() {
                         println("OpenGL version: ${effective.majorVersion}.${effective.minorVersion} (Profile: ${effective.profile})")
                         createCapabilities()
-                        GL11.glClearColor(0.1f, 0.0f, 0.0f, 0.0f) // TODO move to init
                         init()
                         resize(
                             (this.size.width * pixelRatio[0]).toInt(),

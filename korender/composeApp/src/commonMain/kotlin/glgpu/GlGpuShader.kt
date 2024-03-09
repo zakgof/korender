@@ -139,7 +139,6 @@ class GlGpuShader(
     }
 
     private fun bind(value: Any, location: Int, currentTexUnit: Int) : Boolean {
-        println("LOCATION ${location} VALUE ${value}")
         when (value) {
             is Int -> VGL20.glUniform1i(location, value)
             is Float -> VGL20.glUniform1f(location, value)

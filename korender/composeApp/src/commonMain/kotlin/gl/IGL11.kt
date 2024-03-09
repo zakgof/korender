@@ -47,4 +47,6 @@ interface IGL11 {
     fun glViewport(x: Int, y: Int, w: Int, h: Int)
 
     fun glTexParameteri(target: Int, pname: Int, param: Int)
+
+    fun glClearColor(fl: Float, fl1: Float, fl2: Float, fl3: Float)
 }

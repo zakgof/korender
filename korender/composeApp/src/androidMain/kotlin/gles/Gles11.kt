@@ -51,6 +51,7 @@ object Gles11 : IGL11 {
     override fun glGetFloatv(pname: Int, params: FloatArray) = GLES11.glGetFloatv(pname, params, 0)
     override fun glGetError(): Int = GLES11.glGetError()
     override fun glClear(mask: Int) = GLES11.glClear(mask)
+    override fun glClearColor(fl: Float, fl1: Float, fl2: Float, fl3: Float) = GLES11.glClearColor(fl, fl1, fl2, fl3)
     override fun glViewport(x: Int, y: Int, w: Int, h: Int) = GLES11.glViewport(x, y, w, h)
     override fun glTexParameteri(target: Int, pname: Int, param: Int) =
         GLES11.glTexParameteri(target, pname, param)

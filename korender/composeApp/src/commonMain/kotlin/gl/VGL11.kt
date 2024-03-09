@@ -866,5 +866,11 @@ object VGL11 {
         gl!!.glTexParameteri(target, pname, param)
     }
 
+    fun glClearColor(fl: Float, fl1: Float, fl2: Float, fl3: Float) {
+        gl!!.glClearColor(fl, fl1, fl2, fl3)
+    }
+
     fun shaderEnv() = gl!!.shaderEnv
+
+
 }
