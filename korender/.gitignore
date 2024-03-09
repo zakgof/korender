@@ -1,0 +1,5 @@
+/.idea
+/.fleet
+.gradle
+build
+local.properties
