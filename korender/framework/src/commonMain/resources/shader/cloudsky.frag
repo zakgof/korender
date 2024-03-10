@@ -1,5 +1,4 @@
-#version 140
-
+#import "header.glsl"
 #import "cloudsky.glsl"
 
 in vec2 vtex;
