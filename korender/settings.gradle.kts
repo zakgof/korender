@@ -18,4 +18,5 @@ dependencyResolutionManagement {
     }
 }
 
-include(":composeApp")
+include(":framework")
+include(":examples")

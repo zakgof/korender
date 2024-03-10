@@ -26,6 +26,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
+            implementation(project(":framework"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
@@ -35,30 +36,7 @@ kotlin {
             implementation(libs.obj)
         }
         desktopMain.dependencies {
-            runtimeOnly(libs.kotlin.reflect)
             implementation(compose.desktop.currentOs)
-
-            implementation(libs.lwjgl)
-            implementation(libs.lwjgl.glfw)
-            implementation(libs.lwjgl.opengl)
-            implementation(libs.lwjgl.jawt)
-            implementation(libs.lwjgl3.awt)
-
-            runtimeOnly("org.lwjgl:lwjgl:3.3.3") {
-                artifact {
-                    classifier = "natives-windows"
-                }
-            }
-            runtimeOnly("org.lwjgl:lwjgl-glfw:3.3.3") {
-                artifact {
-                    classifier = "natives-windows"
-                }
-            }
-            runtimeOnly("org.lwjgl:lwjgl-opengl:3.3.3") {
-                artifact {
-                    classifier = "natives-windows"
-                }
-            }
         }
     }
 }
@@ -72,7 +50,7 @@ android {
     sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
     defaultConfig {
-        applicationId = "com.zakgof.korender"
+        applicationId = "com.zakgof.korenderdemo"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
