@@ -40,7 +40,7 @@ fun Korender(block: KorenderContext.() -> Unit) {
     )
 }
 
-class KorenderContext(var width: Int = 100, var height: Int = 100) {
+class KorenderContext(var width: Int = 1500, var height: Int = 1500) {
 
     private val filters = mutableListOf<Filter>()
     private val filterFrameBuffers = mutableListOf<GpuFrameBuffer>()
@@ -92,6 +92,11 @@ class KorenderContext(var width: Int = 100, var height: Int = 100) {
     fun resize(w: Int, h: Int) {
         width = w
         height = h
+        val bufferCount = filterFrameBuffers.size
+        filterFrameBuffers.clear() // TODO DISPOSE THEM !!!!
+        for (i in 0 until bufferCount) {
+            filterFrameBuffers.add(gpu.createFrameBuffer(width, height, false))
+        }
         onResize.invoke(this)
     }
 
@@ -193,7 +198,7 @@ class KorenderContext(var width: Int = 100, var height: Int = 100) {
     fun addFilter(filter: Filter) {
         filters.add(filter)
         if (filters.size == 1 || filters.size == 2) {
-            filterFrameBuffers.add(gpu.createFrameBuffer(width, height, true))
+            filterFrameBuffers.add(gpu.createFrameBuffer(width, height, false))
         }
         // TODO: resizing screensize framebuffers ?
     }
