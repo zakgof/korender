@@ -29,7 +29,6 @@ import java.nio.ByteBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-
 class AndroidPlatform : Platform {
 
     override val name: String = "Android ${Build.VERSION.SDK_INT}"
