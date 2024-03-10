@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun AppExample() {
-    val options = listOf("Tex", "Obj", "Shadow")
+    val options = listOf("Tex", "Obj", "Shadow", "Filter")
     var option by remember { mutableStateOf(options[0]) }
     Column {
         Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -28,6 +28,7 @@ fun AppExample() {
             "Tex" -> TexturingExample()
             "Obj" -> ObjFileExample()
             "Shadow" -> ShadowExample()
+            "Filter" -> FilterExample()
         }
     }
 }

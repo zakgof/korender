@@ -4,7 +4,6 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.gl.VGL11
 import com.zakgof.korender.gl.VGL12
 import com.zakgof.korender.gl.VGL13
-import com.zakgof.korender.gl.VGL14
 import com.zakgof.korender.gl.VGL30
 import com.zakgof.korender.gpu.GpuFrameBuffer
 import java.io.Closeable
@@ -58,12 +57,12 @@ class GlGpuFrameBuffer(private val width: Int, private val height: Int, useDepth
         VGL11.glTexImage2D(
             VGL11.GL_TEXTURE_2D,
             0,
-            if (depth) VGL14.GL_DEPTH_COMPONENT24 else VGL11.GL_RGB,
+            if (depth) VGL11.GL_DEPTH_COMPONENT else VGL11.GL_RGB,
             width,
             height,
             0,
             if (depth) VGL11.GL_DEPTH_COMPONENT else VGL11.GL_RGB,
-            if (depth) VGL11.GL_UNSIGNED_BYTE else VGL11.GL_UNSIGNED_BYTE,
+            VGL11.GL_UNSIGNED_BYTE,
             null
         )
         VGL11.glTexParameteri(VGL11.GL_TEXTURE_2D, VGL11.GL_TEXTURE_MIN_FILTER, VGL11.GL_LINEAR);

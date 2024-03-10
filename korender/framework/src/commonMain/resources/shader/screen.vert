@@ -1,4 +1,4 @@
-#version 140
+#import "header.glsl"
 
 in vec2 tex;
 out vec2 vtex;
