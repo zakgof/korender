@@ -1,5 +1,5 @@
 # korender
-![Korender](korender/doc/korender32.png)
+![Korender](doc/korender32.png)
 Simple 3D graphics rendering engine based on Kotlin Multiplatform
 
 
@@ -15,7 +15,7 @@ fun App() = Korender() {
 }
 ````
 
-![Korender](korender/doc/quickstart.jpg)
+![Korender](doc/quickstart.jpg)
 
 ### Supported platforms
 - Desktop (Windows)
