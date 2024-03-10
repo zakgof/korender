@@ -1,5 +1,8 @@
 # korender
+![Korender](doc/korender32.png)
 Simple 3D graphics rendering engine based on Kotlin Multiplatform
+
+Korender rendering canvas integrates into Compose UI
 
 ### Supported platforms
 - Desktop (Windows)
@@ -28,19 +31,22 @@ Simple 3D graphics rendering engine based on Kotlin Multiplatform
 - Simple effects
   - smoke
   - fire
+
+### Demo app
+
+- JVM Desktop Windows:
+- Android APK: 
   
 ### Quickstart
 ````kotlin
 @Composable
-fun App() {
-  Korender() {
-    add(SimpleRenderable(
-      mesh = Meshes.sphere(2f).build(gpu),
-      material = Materials.standard(gpu) {
-        colorFile = "/sand.jpg"
-      }
+fun App() = Korender() { 
+    add(Renderables.create(
+        mesh = Meshes.sphere(2f).build(gpu),
+        material = Materials.standard(gpu) {
+            colorFile = "/sand.jpg"
+        }
     ))
-  }
 }
 ````
 
