@@ -2,7 +2,12 @@
 #import "texturing.glsl"
 #import "light.glsl"
 
-uniform sampler2D colorTexture;
+#ifdef COLOR
+  uniform vec3 color;
+#else
+  uniform sampler2D colorTexture;
+#endif
+
 uniform vec3 cameraPos;
 uniform vec3 light;
 
@@ -59,7 +64,11 @@ void main() {
      #ifdef APERIODIC
 	   vec4 texColor = aperiodic(colorTexture, aperiodicTexture, vtex);
      #else
-       vec4 texColor = texture(colorTexture, vtex);
+       #ifdef COLOR
+         vec4 texColor = vec4(color, 1.0);
+       #else
+         vec4 texColor = texture(colorTexture, vtex);
+       #endif
      #endif
   #endif
   if (texColor.a < 0.01)
