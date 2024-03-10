@@ -12,7 +12,7 @@ object Skies {
         SimpleRenderable(
             Meshes.screenQuad().build(gpu),
             Materials.create(
-                Shaders.create(gpu, "screen.vert", fragShader), uniforms
+                Shaders.create(gpu, "sky.vert", fragShader), uniforms
             ),
             true
         )

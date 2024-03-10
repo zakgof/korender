@@ -1,4 +1,4 @@
-#version 130
+#import "header.glsl"
 
 // Credits: Xavier Benech https://www.shadertoy.com/view/XsXSWS
 
