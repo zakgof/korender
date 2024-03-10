@@ -28,6 +28,9 @@ fun Korender(block: KorenderContext.() -> Unit) {
 
     getPlatform().openGL(
         init = {
+            VGL11.glEnable(VGL11.GL_BLEND)
+            VGL11.glBlendFunc(VGL11.GL_SRC_ALPHA, VGL11.GL_ONE_MINUS_SRC_ALPHA)
+            VGL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
             korender = KorenderContext()
             block.invoke(korender)
             korender.onResize.invoke(korender)
@@ -146,11 +149,8 @@ class KorenderContext(var width: Int = 100, var height: Int = 100) {
 
     private fun render() {
         VGL11.glViewport(0, 0, width, height)
-        VGL11.glEnable(VGL11.GL_BLEND)
-        VGL11.glBlendFunc(VGL11.GL_SRC_ALPHA, VGL11.GL_ONE_MINUS_SRC_ALPHA);
         VGL11.glEnable(VGL11.GL_CULL_FACE)
         VGL11.glCullFace(VGL11.GL_BACK)
-        VGL11.glClearColor(0.3f, 0.0f, 0.0f, 0.0f) // TODO move to init
         VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
 
         screens.forEach { it.render(contextUniforms) }

@@ -5,7 +5,7 @@ import androidx.compose.ui.window.application
 import com.zakgof.korender.examples.AppExample
 
 fun main() = application {
-    Window(onCloseRequest = ::exitApplication, title = "korender") {
+    Window(onCloseRequest = ::exitApplication, title = "Korender Demo") {
         AppExample()
     }
 }
