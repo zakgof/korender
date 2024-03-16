@@ -1,5 +1,5 @@
-# korender
-![Korender](doc/korender32.png)
+# ![Korender](doc/korender32.png) korender
+
 Simple 3D graphics rendering engine based on Kotlin Multiplatform
 
 
