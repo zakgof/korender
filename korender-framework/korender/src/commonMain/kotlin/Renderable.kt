@@ -7,7 +7,6 @@ import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.Transform
 
 class Renderable(
-
     val mesh: Mesh,
     val shader: GpuShader,
     val uniforms: UniformSupplier,

@@ -4,9 +4,8 @@ import androidx.compose.runtime.Composable
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.declaration.FilterDeclaration
-import com.zakgof.korender.declaration.InstancedBillboardsContext
-import com.zakgof.korender.declaration.MaterialDeclaration
 import com.zakgof.korender.declaration.MeshDeclaration
+import com.zakgof.korender.declaration.RenderableDeclaration
 import com.zakgof.korender.declaration.ShaderDeclaration
 import com.zakgof.korender.geometry.Mesh
 import com.zakgof.korender.geometry.Meshes
@@ -19,10 +18,7 @@ import com.zakgof.korender.gpu.GpuShader
 import com.zakgof.korender.gpu.GpuTexture
 import com.zakgof.korender.material.MapUniformSupplier
 import com.zakgof.korender.material.Shaders
-import com.zakgof.korender.material.StockUniforms
 import com.zakgof.korender.material.Textures
-import com.zakgof.korender.material.UniformSupplier
-import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -175,44 +171,6 @@ class KorenderContext(var width: Int, var height: Int) {
 
 }
 
-class SceneContext(val frameInfo: FrameInfo, private val sceneBuilder: SceneDeclaration) {
-    fun Renderable(
-        mesh: MeshDeclaration,
-        material: MaterialDeclaration,
-        transform: Transform = Transform()
-    ) = sceneBuilder.add(
-        RenderableDeclaration(mesh, material.shader, material.uniforms, transform)
-    )
-
-    fun Billboard(fragment: String = "billboard.frag", material: StockUniforms.() -> Unit) =
-        sceneBuilder.add(
-            RenderableDeclaration(
-                MeshDeclaration.BillboardDeclaration,
-                ShaderDeclaration("billboard.vert", fragment, setOf()),
-                StockUniforms().apply(material)
-            )
-        ) // TODO Bucket
-
-    fun Filter(fragment: String, uniforms: UniformSupplier = UniformSupplier { null }) =
-        sceneBuilder.add(FilterDeclaration(fragment, uniforms))
-
-    fun InstancedBillboards(
-        id: Any,
-        count: Int,
-        zSort: Boolean = false,
-        fragment: String = "standard.frag",
-        material: StockUniforms.() -> Unit,
-        block: InstancedBillboardsContext.() -> Unit
-    ) =
-        sceneBuilder.add(
-            RenderableDeclaration(
-                MeshDeclaration.InstancedBillboardDeclaration(id, count, zSort, block),
-                ShaderDeclaration("billboard.vert", fragment, setOf()),
-                StockUniforms().apply(material)
-            )
-        ) // TODO Bucket
-}
-
 class SceneDeclaration {
 
     val renderables = mutableListOf<RenderableDeclaration>()
@@ -267,11 +225,3 @@ class Inventory(val gpu: Gpu) {
     fun texture(decl: String): GpuTexture = textures[decl]
 
 }
-
-class RenderableDeclaration(
-    val mesh: MeshDeclaration,
-    val shader: ShaderDeclaration,
-    val uniforms: UniformSupplier,
-    val transform: Transform = Transform(),
-    val bucket: Bucket = Bucket.OPAQUE
-)

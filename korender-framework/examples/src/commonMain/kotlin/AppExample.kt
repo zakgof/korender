@@ -22,6 +22,7 @@ fun AppExample() {
         Demo("Filter", "") { FilterExample() },
         Demo("Fire", "") { FireExample() },
         Demo("IBB", "") { InstancedBillboardsExample() },
+        Demo("IM", "") { InstancedMeshesExample() },
         Demo("Obj", "") { ObjFileExample() },
         Demo("Tex", "") { TexturingExample() }
 
