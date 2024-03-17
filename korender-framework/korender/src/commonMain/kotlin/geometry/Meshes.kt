@@ -32,6 +32,7 @@ object Meshes {
         when (declaration) {
             is MeshDeclaration.SphereDeclaration -> sphere(declaration.radius).build(gpu)
             is MeshDeclaration.CubeDeclaration -> cube(declaration.halfSide).build(gpu)
+            is MeshDeclaration.BillboardDeclaration -> billboard().build(gpu)
         }
 
     fun create(

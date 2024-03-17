@@ -11,5 +11,7 @@ sealed interface MeshDeclaration {
     data class CubeDeclaration(val halfSide: Float) : MeshDeclaration
 
     data class SphereDeclaration(val radius: Float) : MeshDeclaration
+
+    data object BillboardDeclaration : MeshDeclaration // TODO position scale and shit
 }
 
