@@ -3,6 +3,7 @@ package com.zakgof.korender.geometry
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.declaration.BillboardInstance
 import com.zakgof.korender.declaration.MeshDeclaration
+import com.zakgof.korender.declaration.RenderableInstance
 import com.zakgof.korender.geometry.Attributes.NORMAL
 import com.zakgof.korender.geometry.Attributes.PHI
 import com.zakgof.korender.geometry.Attributes.POS
@@ -15,7 +16,6 @@ import com.zakgof.korender.math.BoundingBox
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.FloatMath.cos
 import com.zakgof.korender.math.FloatMath.sin
-import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import de.javagl.obj.Obj
@@ -33,13 +33,21 @@ object Meshes {
 
     fun create(declaration: MeshDeclaration, gpu: Gpu): Mesh =
         when (declaration) {
-            is MeshDeclaration.SphereDeclaration -> sphere(declaration.radius).build(gpu)
-            is MeshDeclaration.CubeDeclaration -> cube(declaration.halfSide).build(gpu)
-            is MeshDeclaration.ObjDeclaration -> obj(declaration.objFile).build(gpu)
-            is MeshDeclaration.BillboardDeclaration -> billboard().build(gpu)
-            is MeshDeclaration.InstancedBillboardDeclaration -> multiBillboard(declaration.count).build(
-                gpu
-            )
+            is MeshDeclaration.InstancedRenderableDeclaration ->
+                builder(declaration.mesh).buildInstanced(gpu, declaration.count)
+            is MeshDeclaration.InstancedBillboardDeclaration ->
+                billboard().buildInstanced(gpu, declaration.count)
+            else ->
+                builder(declaration).build(gpu)
+        }
+
+    private fun builder(declaration: MeshDeclaration): MeshBuilder =
+        when (declaration) {
+            is MeshDeclaration.SphereDeclaration -> sphere(declaration.radius)
+            is MeshDeclaration.CubeDeclaration -> cube(declaration.halfSide)
+            is MeshDeclaration.ObjDeclaration -> obj(declaration.objFile)
+            is MeshDeclaration.BillboardDeclaration -> billboard()
+            else -> throw KorenderException("Unknown mesh declaration")
         }
 
     fun create(
@@ -48,23 +56,23 @@ object Meshes {
         vararg attrs: Attribute,
         block: MeshBuilder.() -> Unit
     ) =
-        MeshBuilder(vertexNumber, indexNumber, attrs).apply(block)
+        MeshBuilder(vertexNumber, indexNumber, attrs.toList()).apply(block)
 
     class MeshBuilder(
-        private val vertexNumber: Int,
-        private val indexNumber: Int,
-        private val attrs: Array<out Attribute>
+        val vertexNumber: Int,
+        val indexNumber: Int,
+        val attrs: List<Attribute>
     ) {
-        private val vertexBuffer: ByteBuffer
+        val vertexBuffer: ByteBuffer
         private var floatVertexBuffer: FloatBuffer
 
-        private val indexBuffer: ByteBuffer
+        val indexBuffer: ByteBuffer
         private val indexIntBuffer: IntBuffer?
         private val indexShortBuffer: ShortBuffer?
         private val indexConcreteBuffer: Buffer
         private var isLongIndex: Boolean
 
-        private val vertexSize: Int = attrs.sumOf { it.size } * 4
+        val vertexSize: Int = attrs.sumOf { it.size } * 4
 
         init {
             vertexBuffer = BufferUtils.createByteBuffer(vertexNumber * vertexSize)
@@ -95,20 +103,19 @@ object Meshes {
         private fun indexGet(): Int =
             if (isLongIndex) indexIntBuffer!!.get() else indexShortBuffer!!.get().toInt()
 
-        fun transformPos(function: (Vec3) -> Vec3): MeshBuilder {
-            val positionOffset = attrs.takeWhile { it != POS }.sumOf { it.size }
-            for (v in 0 until vertexNumber) {
-                floatVertexBuffer.position(v * vertexSize / 4 + positionOffset)
-                val x = floatVertexBuffer.get()
-                val y = floatVertexBuffer.get()
-                val z = floatVertexBuffer.get()
-                floatVertexBuffer.position(v * vertexSize / 4 + positionOffset)
-                vertices(function.invoke(Vec3(x, y, z)))
-            }
-            return this
+
+        fun updateVertex(vertexIndex: Int, block: (Vertex) -> Unit) {
+            val vertex = getVertex(vertexIndex)
+            block(vertex)
+            putVertex(vertexIndex, vertex)
         }
 
-        fun transformPos(transform: Transform) = transformPos { transform.mat4().project(it) }
+        fun putVertex(vertexIndex: Int, vertex: Vertex) =
+            putVertex(floatVertexBuffer, vertexIndex, vertex, vertexSize, attrs)
+
+        fun getVertex(vertexIndex: Int): Vertex =
+            getVertex(floatVertexBuffer, vertexIndex, vertexSize, attrs.toList())
+
 
         fun build(gpu: Gpu, isDynamic: Boolean = false): DefaultMesh {
 //            if (!isDynamic && floatVertexBuffer.position() != floatVertexBuffer.limit()) {
@@ -118,24 +125,22 @@ object Meshes {
 //                throw KorenderException("Index buffer not full: ${indexConcreteBuffer.position()}/${indexConcreteBuffer.limit()}")
 //            }
 
-            return DefaultMesh(
-                gpu,
-                vertexBuffer.rewind() as ByteBuffer,
-                indexBuffer.rewind() as ByteBuffer,
-                vertexNumber,
-                indexNumber,
-                attrs.toList(),
-                vertexSize,
-                isDynamic
-            )
+            return DefaultMesh(gpu, this, isDynamic)
         }
+
+        fun buildInstanced(gpu: Gpu, count: Int): Mesh =
+            InstancedMesh(gpu, instancing(count), this, count)
 
         fun instancing(
             instances: Int,
             transform: (Int, Vertex) -> Unit = { _, _ -> }
         ): MeshBuilder {
             val that = this
-            return create(vertexNumber * instances, indexNumber * instances, *attrs) {
+            return create(
+                vertexNumber * instances,
+                indexNumber * instances,
+                *attrs.toTypedArray()
+            ) {
                 for (i in 0 until instances) {
                     that.floatVertexBuffer.rewind()
                     that.indexIntBuffer?.rewind()
@@ -158,36 +163,31 @@ object Meshes {
                 }
             }
         }
+
     }
 
-    class DefaultMesh(
+    open class DefaultMesh(
         gpu: Gpu,
-        private val vb: ByteBuffer,
-        private val ib: ByteBuffer,
-        var vertices: Int,
-        var indices: Int,
-        private val attrs: List<Attribute>,
-        private val vertexSize: Int,
+        val data: MeshBuilder,
         isDynamic: Boolean = false
     ) : Mesh {
 
-        private val floatVertexBuffer = vb.asFloatBuffer()
+        private val floatVertexBuffer = data.vertexBuffer.asFloatBuffer()
 
-        override val gpuMesh: GpuMesh = gpu.createMesh(attrs, vertexSize, isDynamic)
+        final override val gpuMesh: GpuMesh = gpu.createMesh(data.attrs, data.vertexSize, isDynamic)
 
-        override val modelBoundingBox: BoundingBox?
+        final override val modelBoundingBox: BoundingBox?
         override fun close() = gpuMesh.close()
 
-
         init {
-            gpuMesh.update(vb, ib, vertices, indices)
-            modelBoundingBox = if (attrs.contains(POS)) BoundingBox(positions()) else null
+            updateGpu()
+            modelBoundingBox = if (data.attrs.contains(POS)) BoundingBox(positions()) else null
         }
 
         fun positions(): List<Vec3> {
-            val positionOffset = attrs.takeWhile { it != POS }.sumOf { it.size }
-            return (0 until vertices).map {
-                floatVertexBuffer.position(it * vertexSize / 4 + positionOffset)
+            val positionOffset = data.attrs.takeWhile { it != POS }.sumOf { it.size }
+            return (0 until data.vertexNumber).map {
+                floatVertexBuffer.position(it * data.vertexSize / 4 + positionOffset)
                 val x = floatVertexBuffer.get()
                 val y = floatVertexBuffer.get()
                 val z = floatVertexBuffer.get()
@@ -195,31 +195,77 @@ object Meshes {
             }
         }
 
-        fun updateGpu() = gpuMesh.update(vb, ib, vertices, indices)
+        fun updateGpu() =
+            gpuMesh.update(data.vertexBuffer, data.indexBuffer, data.vertexNumber, data.indexNumber)
 
-        fun updateVertex(vertexIndex: Int, block: (Vertex) -> Unit) {
-            val vertex = getVertex(vertexIndex)
-            block(vertex)
-            putVertex(vertexIndex, vertex)
+    }
+
+    class InstancedMesh(
+        private val gpu: Gpu,
+        data: MeshBuilder,
+        private val prototype: MeshBuilder,
+        count: Int
+    ) :
+        DefaultMesh(gpu, data, true) {
+        fun updateInstances(instances: List<RenderableInstance>) {
+            instances.indices.map {
+                val instance = instances[it]
+                for (v in 0..<prototype.vertexNumber) {
+                    data.updateVertex(prototype.vertexNumber * it + v) {
+                        it.pos = instance.transform.mat4().project(prototype.getVertex(v).pos!!)
+                        // TODO: normal
+                    }
+                }
+            }
+            gpuMesh.update(
+                data.vertexBuffer,
+                data.indexBuffer,
+                prototype.vertexNumber * instances.size,
+                prototype.indexNumber * instances.size
+            )
         }
-
-        fun putVertex(vertexIndex: Int, vertex: Vertex) =
-            putVertex(floatVertexBuffer, vertexIndex, vertex, vertexSize, attrs)
-
-        fun getVertex(vertexIndex: Int): Vertex =
-            getVertex(floatVertexBuffer, vertexIndex, vertexSize, attrs.toList())
 
         fun updateBillboardInstances(instances: List<BillboardInstance>) {
             instances.indices.map {
                 val instance = instances[it]
-                putVertex(it * 4 + 0, Vertex(pos = instance.pos, scale = instance.scale, phi = instance.phi, tex = Vec2(0f, 0f)))
-                putVertex(it * 4 + 1, Vertex(pos = instance.pos, scale = instance.scale, phi = instance.phi, tex = Vec2(0f, 1f)))
-                putVertex(it * 4 + 2, Vertex(pos = instance.pos, scale = instance.scale, phi = instance.phi, tex = Vec2(1f, 1f)))
-                putVertex(it * 4 + 3, Vertex(pos = instance.pos, scale = instance.scale, phi = instance.phi, tex = Vec2(1f, 0f)))
+                data.putVertex(
+                    it * 4 + 0,
+                    Vertex(
+                        pos = instance.pos,
+                        scale = instance.scale,
+                        phi = instance.phi,
+                        tex = Vec2(0f, 0f)
+                    )
+                )
+                data.putVertex(
+                    it * 4 + 1,
+                    Vertex(
+                        pos = instance.pos,
+                        scale = instance.scale,
+                        phi = instance.phi,
+                        tex = Vec2(0f, 1f)
+                    )
+                )
+                data.putVertex(
+                    it * 4 + 2,
+                    Vertex(
+                        pos = instance.pos,
+                        scale = instance.scale,
+                        phi = instance.phi,
+                        tex = Vec2(1f, 1f)
+                    )
+                )
+                data.putVertex(
+                    it * 4 + 3,
+                    Vertex(
+                        pos = instance.pos,
+                        scale = instance.scale,
+                        phi = instance.phi,
+                        tex = Vec2(1f, 0f)
+                    )
+                )
             }
-            vertices = instances.size * 4
-            indices = instances.size * 6
-            gpuMesh.update(vb, ib, vertices, indices)
+            gpuMesh.update(data.vertexBuffer, data.indexBuffer, instances.size * 4, instances.size * 6)
         }
     }
 

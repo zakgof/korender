@@ -3,7 +3,9 @@ package com.zakgof.korender
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.declaration.FilterDeclaration
 import com.zakgof.korender.declaration.InstancedBillboardsContext
+import com.zakgof.korender.declaration.InstancedRenderablesContext
 import com.zakgof.korender.declaration.MeshDeclaration
+import com.zakgof.korender.declaration.RenderableDeclaration
 import com.zakgof.korender.declaration.ShaderDeclaration
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.gl.VGL11
@@ -44,7 +46,12 @@ class Scene(sceneDeclaration: SceneDeclaration, inventory: Inventory, private va
             if (declaration.mesh.zSort) {
                 instances.sortBy { (camera.mat4() *  it.pos).z }
             }
-            (mesh as Meshes.DefaultMesh).updateBillboardInstances(instances)
+            (mesh as Meshes.InstancedMesh).updateBillboardInstances(instances)
+        }
+
+        if (declaration.mesh is MeshDeclaration.InstancedRenderableDeclaration) {
+            val instances = InstancedRenderablesContext().apply(declaration.mesh.block).instances
+            (mesh as Meshes.InstancedMesh).updateInstances(instances)
         }
 
         val shader = inventory.shader(declaration.shader)

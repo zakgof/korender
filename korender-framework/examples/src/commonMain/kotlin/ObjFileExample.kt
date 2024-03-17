@@ -4,7 +4,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.camera.DefaultCamera
-import com.zakgof.korender.declaration.MaterialDeclarations.standard
+import com.zakgof.korender.material.Materials.standard
 import com.zakgof.korender.declaration.MeshDeclarations.obj
 import com.zakgof.korender.math.FloatMath.PIdiv2
 import com.zakgof.korender.math.Transform

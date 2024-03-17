@@ -1,40 +1,16 @@
 package com.zakgof.korender.material
 
-import com.zakgof.korender.gpu.Gpu
-import com.zakgof.korender.gpu.GpuShader
+import com.zakgof.korender.declaration.MaterialDeclaration
+import com.zakgof.korender.declaration.ShaderDeclaration
 import com.zakgof.korender.gpu.GpuTexture
 import com.zakgof.korender.math.Color
 
 object Materials {
-
-    fun create(gpuShader: GpuShader, uniforms: UniformSupplier = UniformSupplier { null }) =
-        DirectMaterial(gpuShader, uniforms)
-
-    class DirectMaterial(
-        override val gpuShader: GpuShader,
-        override val uniforms: UniformSupplier
-    ) : Material
-
-//    fun standard(gpu: Gpu, vararg defs: String, block: StockUniforms.() -> Unit): Material = create(
-//        Shaders.standard(gpu, *defs),
-//        StockUniforms().apply(block)
-//    )
-
-    fun sky(gpu: Gpu, skyTextureFile: String) = create(
-        Shaders.create(gpu, "screen.vert", "texsky.frag"),
-        MapUniformSupplier("skyTexture" to Textures.create(skyTextureFile).build(gpu))
-    )
-
-    fun text(gpu: Gpu, fontTexture: GpuTexture, color: Color) = create(
-        Shaders.create(gpu, "font.vert", "font.frag"),
-        MapUniformSupplier("fontTexture" to fontTexture, "color" to color)
-    )
-
-    fun billboard(gpu: Gpu, block: StockUniforms.() -> Unit): Material = create(
-        Shaders.create(gpu, "billboard.vert", "standard.frag"),
-        StockUniforms().apply(block)
-    )
-
+    fun standard(vararg defs: String, block: StockUniforms.() -> Unit) =
+        MaterialDeclaration(
+            ShaderDeclaration("standard.vert", "standard.frag", setOf(*defs)),
+            StockUniforms().apply(block)
+        )
 }
 
 class StockUniforms : UniformSupplier {
