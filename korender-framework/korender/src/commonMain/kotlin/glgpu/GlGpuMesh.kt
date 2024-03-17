@@ -23,15 +23,13 @@ class GlGpuMesh(
         println("Create GPU mesh $vbHandle/$ibHandle")
     }
 
-    override fun render() {
-
+    override fun render() =
         VGL11.glDrawElements(
             VGL11.GL_TRIANGLES,
             indices,
             if (vertices > 32767) VGL11.GL_UNSIGNED_INT else VGL11.GL_UNSIGNED_SHORT,
             0
         )
-    }
 
     override fun bind() {
         VGL15.glBindBuffer(VGL15.GL_ARRAY_BUFFER, vbHandle)

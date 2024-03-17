@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.declaration.FilterDeclaration
+import com.zakgof.korender.declaration.InstancedBillboardsContext
 import com.zakgof.korender.declaration.MaterialDeclaration
 import com.zakgof.korender.declaration.MeshDeclaration
 import com.zakgof.korender.declaration.ShaderDeclaration
@@ -183,21 +184,26 @@ class SceneContext(val frameInfo: FrameInfo, private val sceneBuilder: SceneDecl
         RenderableDeclaration(mesh, material.shader, material.uniforms, transform)
     )
 
-    fun Billboard(fragment: String = "billboard.frag", uniforms: StockUniforms.() -> Unit) =
+    fun Billboard(fragment: String = "billboard.frag", material: StockUniforms.() -> Unit) =
         sceneBuilder.add(
             RenderableDeclaration(
                 MeshDeclaration.BillboardDeclaration,
                 ShaderDeclaration("billboard.vert", fragment, setOf()),
-                StockUniforms().apply(uniforms)
+                StockUniforms().apply(material)
             )
         ) // TODO Bucket
 
     fun Filter(fragment: String, uniforms: UniformSupplier = UniformSupplier { null }) =
+        sceneBuilder.add(FilterDeclaration(fragment, uniforms))
+
+    fun InstancedBillboards(id: Any, count: Int, fragment: String = "standard.frag", material: StockUniforms.() -> Unit, block: InstancedBillboardsContext.() -> Unit) =
         sceneBuilder.add(
-            FilterDeclaration(fragment, uniforms)
-        )
-
-
+            RenderableDeclaration(
+                MeshDeclaration.InstancedBillboardDeclaration(id, count, block),
+                ShaderDeclaration("billboard.vert", fragment, setOf()),
+                StockUniforms().apply(material)
+            )
+        ) // TODO Bucket
 }
 
 class SceneDeclaration {

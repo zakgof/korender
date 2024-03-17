@@ -3,13 +3,15 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
+import com.zakgof.korender.projection.FrustumProjection
+import kotlin.random.Random
 
 @Composable
 fun InstancedBillboardsExample() = Korender {
 
-    /*
     onResize = {
         projection =
             FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
@@ -20,18 +22,18 @@ fun InstancedBillboardsExample() = Korender {
 
     Scene {
         InstancedBillboards(
+            id = "particles",
             count = particleNum,
-            material = billboard {
+            material = {
                 colorFile = "/splat.png"
             }
         ) {
-            for (i in particles.indices) {
-                val particle = particles[i]
-                Instance {
-                    pos = particle.pos
-                    val scale = (5.0f - particle.ttl) * 0.3f
+            for (particle in particles) {
+                val scale = (5.0f - particle.ttl) * 0.3f
+                Instance(
+                    pos = particle.pos,
                     scale = Vec2(scale, scale)
-                }
+                )
             }
         }
     }
@@ -42,8 +44,6 @@ fun InstancedBillboardsExample() = Korender {
         }
         println("FPS=~${frameInfo.avgFps}")
     }
-
-     */
 }
 
 class Particle(initTtl: Float = 5.0f) {

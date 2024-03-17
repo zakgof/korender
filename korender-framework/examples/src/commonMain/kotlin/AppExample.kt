@@ -21,6 +21,7 @@ fun AppExample() {
         Demo("QS", "") { QuickStartExample() },
         Demo("Filter", "") { FilterExample() },
         Demo("Fire", "") { FireExample() },
+        Demo("IBB", "") { InstancedBillboardsExample() }
         // "Tex", "Obj", "Shadow", "Filter", "Fire", "BBB", "Sy", "Text")
     )
 

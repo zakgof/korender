@@ -1,6 +1,7 @@
 package com.zakgof.korender.geometry
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.declaration.BillboardInstance
 import com.zakgof.korender.declaration.MeshDeclaration
 import com.zakgof.korender.geometry.Attributes.NORMAL
 import com.zakgof.korender.geometry.Attributes.PHI
@@ -15,6 +16,7 @@ import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.FloatMath.cos
 import com.zakgof.korender.math.FloatMath.sin
 import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import de.javagl.obj.Obj
 import java.nio.Buffer
@@ -33,6 +35,9 @@ object Meshes {
             is MeshDeclaration.SphereDeclaration -> sphere(declaration.radius).build(gpu)
             is MeshDeclaration.CubeDeclaration -> cube(declaration.halfSide).build(gpu)
             is MeshDeclaration.BillboardDeclaration -> billboard().build(gpu)
+            is MeshDeclaration.InstancedBillboardDeclaration -> multiBillboard(declaration.count).build(
+                gpu
+            )
         }
 
     fun create(
@@ -201,6 +206,19 @@ object Meshes {
 
         fun getVertex(vertexIndex: Int): Vertex =
             getVertex(floatVertexBuffer, vertexIndex, vertexSize, attrs.toList())
+
+        fun updateBillboardInstances(instances: List<BillboardInstance>) {
+            instances.indices.map {
+                val instance = instances[it]
+                putVertex(it * 4 + 0, Vertex(pos = instance.pos, scale = instance.scale, phi = instance.phi, tex = Vec2(0f, 0f)))
+                putVertex(it * 4 + 1, Vertex(pos = instance.pos, scale = instance.scale, phi = instance.phi, tex = Vec2(0f, 1f)))
+                putVertex(it * 4 + 2, Vertex(pos = instance.pos, scale = instance.scale, phi = instance.phi, tex = Vec2(1f, 1f)))
+                putVertex(it * 4 + 3, Vertex(pos = instance.pos, scale = instance.scale, phi = instance.phi, tex = Vec2(1f, 0f)))
+            }
+            vertices = instances.size * 4
+            indices = instances.size * 6
+            gpuMesh.update(vb, ib, vertices, indices)
+        }
     }
 
     fun quad(halfSide: Float = 0.5f, block: MeshBuilder.() -> Unit = {}) =
@@ -426,6 +444,15 @@ object Meshes {
             indices(0, 2, 1, 0, 3, 2)
         }
 }
+
+fun multiBillboard(count: Int) =
+    Meshes.create(4 * count, 6 * count, POS, TEX, SCALE, PHI) {
+        for (i in 0 until count) {
+            val base = i * 4
+            indices(base + 0, base + 2, base + 1, base + 0, base + 3, base + 2)
+        }
+    }
+
 
 private fun getVertex(
     floatVertexBuffer: FloatBuffer,
