@@ -1,25 +1,27 @@
 # ![Korender](doc/korender32.png) korender
 
-Simple 3D graphics rendering engine based on Kotlin Multiplatform
-
+Kotlin Multiplatform 3D graphics rendering engine based on OpenGL / OpenGL ES
 
 ````kotlin
 @Composable
-fun App() = Korender() { 
-    add(Renderables.create(
-        mesh = Meshes.sphere(2f).build(gpu),
-        material = Materials.standard(gpu) {
-            colorFile = "/sand.jpg"
-        }
-    ))
+fun App() = Korender {
+    Scene { 
+        Renderable(
+            mesh = sphere(2.0f),
+            material = standard("COLOR") { 
+                color = Color(0.2f, 1.0f, 0.5f + 0.5f * sin(frameInfo.time))
+            },
+            transform = Transform().translate(sin(frameInfo.time).y)
+        )   
+    }
 }
 ````
 
 ![Korender](doc/quickstart.jpg)
 
 ### Supported platforms
-- Desktop (Windows)
-- Android
+- Desktop (Windows) - based on LWJGL 
+- Android - based on OpenGL ES
 
 ### Features
 - Rendering opaque and transparent objects
