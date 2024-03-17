@@ -39,6 +39,8 @@ class Scene(sceneDeclaration: SceneDeclaration, inventory: Inventory, private va
     }
 
     private fun create(inventory: Inventory, declaration: RenderableDeclaration): Renderable {
+
+        val new = !inventory.hasMesh(declaration.mesh)
         val mesh = inventory.mesh(declaration.mesh)
 
         if (declaration.mesh is MeshDeclaration.InstancedBillboardDeclaration) {
@@ -50,8 +52,11 @@ class Scene(sceneDeclaration: SceneDeclaration, inventory: Inventory, private va
         }
 
         if (declaration.mesh is MeshDeclaration.InstancedRenderableDeclaration) {
-            val instances = InstancedRenderablesContext().apply(declaration.mesh.block).instances
-            (mesh as Meshes.InstancedMesh).updateInstances(instances)
+            if (!declaration.mesh.static || new) {
+                val instances =
+                    InstancedRenderablesContext().apply(declaration.mesh.block).instances
+                (mesh as Meshes.InstancedMesh).updateInstances(instances)
+            }
         }
 
         val shader = inventory.shader(declaration.shader)

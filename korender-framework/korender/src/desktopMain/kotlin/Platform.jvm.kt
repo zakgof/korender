@@ -69,6 +69,7 @@ class JVMPlatform : Platform {
                 VGL30.gl = Lwjgl30()
 
                 val data = GLData()
+                data.swapInterval = 0
                 data.majorVersion = 3
                 data.minorVersion = 0
                 // TODO
