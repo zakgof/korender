@@ -22,16 +22,13 @@ sealed interface MeshDeclaration {
 
     data class InstancedBillboardDeclaration(
         val id: Any,
-        val count: Int
+        val count: Int,
+        val zSort: Boolean,
+        val block: InstancedBillboardsContext.() -> Unit
     ) : MeshDeclaration {
-        lateinit var block: InstancedBillboardsContext.() -> Unit
-
-        constructor(id: Any, count: Int, block: InstancedBillboardsContext.() -> Unit) : this(
-            id,
-            count
-        ) {
-            this.block = block
-        }
+        override fun equals(other: Any?): Boolean =
+            other is InstancedBillboardDeclaration && other.id == id
+        override fun hashCode(): Int = id.hashCode()
     }
 }
 

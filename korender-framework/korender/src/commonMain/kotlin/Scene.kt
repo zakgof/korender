@@ -12,7 +12,7 @@ import com.zakgof.korender.gpu.GpuMesh
 import com.zakgof.korender.material.MapUniformSupplier
 import com.zakgof.korender.material.UniformSupplier
 
-class Scene(decl: SceneDeclaration, inventory: Inventory) {
+class Scene(sceneDeclaration: SceneDeclaration, inventory: Inventory, private val camera: Camera) {
 
     private lateinit var filters: List<Filter>
 
@@ -23,7 +23,7 @@ class Scene(decl: SceneDeclaration, inventory: Inventory) {
 
     init {
         inventory.go {
-            decl.renderables.forEach {
+            sceneDeclaration.renderables.forEach {
                 val renderable = create(this, it)
                 when (it.bucket) {
                     Bucket.OPAQUE -> opaques.add(renderable)
@@ -32,9 +32,7 @@ class Scene(decl: SceneDeclaration, inventory: Inventory) {
                     Bucket.SCREEN -> screens.add(renderable)
                 }
             }
-            filters = decl.filters.map {
-                create(this, it)
-            }
+            filters = sceneDeclaration.filters.map { create(this, it) }
         }
     }
 
@@ -43,6 +41,9 @@ class Scene(decl: SceneDeclaration, inventory: Inventory) {
 
         if (declaration.mesh is MeshDeclaration.InstancedBillboardDeclaration) {
             val instances = InstancedBillboardsContext().apply(declaration.mesh.block).instances
+            if (declaration.mesh.zSort) {
+                instances.sortBy { (camera.mat4() *  it.pos).z }
+            }
             (mesh as Meshes.DefaultMesh).updateBillboardInstances(instances)
         }
 
@@ -62,7 +63,6 @@ class Scene(decl: SceneDeclaration, inventory: Inventory) {
     }
 
     fun renderAll(
-        camera: Camera,
         contextUniforms: UniformSupplier,
         filterFrameBuffers: List<GpuFrameBuffer>,
         filterScreenQuad: GpuMesh

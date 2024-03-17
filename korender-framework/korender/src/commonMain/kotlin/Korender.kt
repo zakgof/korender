@@ -108,7 +108,7 @@ class KorenderContext(var width: Int, var height: Int) {
         sceneBlock?.invoke(SceneContext(frameInfo, sd))
 
         updateFilterFramebuffers(sd.filters)
-        val scene = Scene(sd, inventory)
+        val scene = Scene(sd, inventory, camera)
 
         onFrame.invoke(this, frameInfo)
         renderShadowMap()
@@ -117,7 +117,7 @@ class KorenderContext(var width: Int, var height: Int) {
         VGL11.glEnable(VGL11.GL_CULL_FACE)
         VGL11.glCullFace(VGL11.GL_BACK)
         VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
-        scene.renderAll(camera, contextUniforms, filterFrameBuffers, filterScreenQuad)
+        scene.renderAll(contextUniforms, filterFrameBuffers, filterScreenQuad)
     }
 
     private fun updateFilterFramebuffers(declarations: List<FilterDeclaration>) {
@@ -196,10 +196,17 @@ class SceneContext(val frameInfo: FrameInfo, private val sceneBuilder: SceneDecl
     fun Filter(fragment: String, uniforms: UniformSupplier = UniformSupplier { null }) =
         sceneBuilder.add(FilterDeclaration(fragment, uniforms))
 
-    fun InstancedBillboards(id: Any, count: Int, fragment: String = "standard.frag", material: StockUniforms.() -> Unit, block: InstancedBillboardsContext.() -> Unit) =
+    fun InstancedBillboards(
+        id: Any,
+        count: Int,
+        zSort: Boolean = false,
+        fragment: String = "standard.frag",
+        material: StockUniforms.() -> Unit,
+        block: InstancedBillboardsContext.() -> Unit
+    ) =
         sceneBuilder.add(
             RenderableDeclaration(
-                MeshDeclaration.InstancedBillboardDeclaration(id, count, block),
+                MeshDeclaration.InstancedBillboardDeclaration(id, count, zSort, block),
                 ShaderDeclaration("billboard.vert", fragment, setOf()),
                 StockUniforms().apply(material)
             )
