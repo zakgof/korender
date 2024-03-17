@@ -16,7 +16,7 @@ fun FireExample() = Korender {
     Scene {
         Billboard (
             fragment = "fire.frag",
-            uniforms = {
+            material = {
                 xscale = 2.0f
                 yscale = 10.0f
                 static("strength", 4.0f)

@@ -2,7 +2,10 @@ package com.zakgof.korender
 
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.declaration.FilterDeclaration
+import com.zakgof.korender.declaration.InstancedBillboardsContext
+import com.zakgof.korender.declaration.MeshDeclaration
 import com.zakgof.korender.declaration.ShaderDeclaration
+import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.gl.VGL11
 import com.zakgof.korender.gpu.GpuFrameBuffer
 import com.zakgof.korender.gpu.GpuMesh
@@ -37,6 +40,12 @@ class Scene(decl: SceneDeclaration, inventory: Inventory) {
 
     private fun create(inventory: Inventory, declaration: RenderableDeclaration): Renderable {
         val mesh = inventory.mesh(declaration.mesh)
+
+        if (declaration.mesh is MeshDeclaration.InstancedBillboardDeclaration) {
+            val instances = InstancedBillboardsContext().apply(declaration.mesh.block).instances
+            (mesh as Meshes.DefaultMesh).updateBillboardInstances(instances)
+        }
+
         val shader = inventory.shader(declaration.shader)
         declaration.uniforms.boil {
             inventory.texture(it as String)
