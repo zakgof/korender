@@ -479,4 +479,9 @@ object VGL20 {
     fun glGetShaderi(shader: Int, pname: Int): Int {
         return gl!!.glGetShaderi(shader, pname)
     }
+
+    fun glDeleteShader(shader: Int) = gl!!.glDeleteShader(shader)
+
+    fun glDeleteProgram(program: Int) = gl!!.glDeleteProgram(program)
+
 }

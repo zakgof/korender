@@ -20,7 +20,7 @@ class GlGpuFrameBuffer(private val width: Int, private val height: Int, useDepth
     // TODO: multiple RTs !
     init {
 
-        println("Creating framebuffer ${width}x${height} : ${fbHandle}")
+        println("Create Framebuffer ${width}x${height} : $fbHandle")
 
         VGL30.glBindFramebuffer(VGL30.GL_FRAMEBUFFER, fbHandle)
         colorTexture = createTexture(false)
@@ -77,7 +77,7 @@ class GlGpuFrameBuffer(private val width: Int, private val height: Int, useDepth
 
 
     override fun close() {
-        println("Dispose FB $fbHandle ")
+        println("Dispose FrameBuffer $fbHandle ")
         VGL30.glDeleteFramebuffers(fbHandle)
         colorTexture.close()
         depthTexture?.close()

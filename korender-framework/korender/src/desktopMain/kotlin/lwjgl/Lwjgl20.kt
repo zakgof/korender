@@ -116,4 +116,8 @@ class Lwjgl20 : IGL20 {
     override fun glUniform1f(location: Int, v0: Float) {
         GL20.glUniform1f(location, v0)
     }
+
+    override fun glDeleteShader(shader: Int) = GL20.glDeleteShader(shader)
+
+    override fun glDeleteProgram(program: Int) = GL20.glDeleteProgram(program)
 }

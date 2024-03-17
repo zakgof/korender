@@ -8,4 +8,6 @@ interface IGL15 {
     fun glBufferData(target: Int, data: ByteBuffer, usage: Int)
 
     fun glGenBuffers(): Int
+
+    fun glDeleteBuffers(buffer: Int)
 }

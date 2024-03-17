@@ -62,4 +62,8 @@ interface IGL20 {
     fun glGetShaderi(shader: Int, pname: Int): Int
 
     fun glUniform1f(location: Int, v0: Float)
+
+    fun glDeleteShader(shader: Int)
+
+    fun glDeleteProgram(program: Int)
 }

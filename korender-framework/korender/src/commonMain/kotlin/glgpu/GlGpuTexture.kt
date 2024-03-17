@@ -44,6 +44,8 @@ class GlGpuTexture(val glHandle: Int) : GpuTexture {
         format: GpuTexture.Format = GpuTexture.Format.RGB
     ) : this(VGL11.glGenTextures()) {
 
+        println("Creating Texture $glHandle")
+
         VGL13.glActiveTexture(VGL13.GL_TEXTURE0)
         VGL11.glBindTexture(VGL11.GL_TEXTURE_2D, glHandle)
 
@@ -91,6 +93,7 @@ class GlGpuTexture(val glHandle: Int) : GpuTexture {
     }
 
     override fun close() {
+        println("Destroying Texture $glHandle")
         VGL11.glDeleteTextures(glHandle)
     }
 
