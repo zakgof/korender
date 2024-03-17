@@ -92,4 +92,19 @@ class StockUniforms : UniformSupplier {
             else -> static[key] ?: dynamic[key]?.let { it() }
         }
 
+    override fun boil(loader: (Any) -> Any) {
+        if (colorFile != null) {
+            colorTexture = loader(colorFile!!) as GpuTexture
+        }
+        if (normalFile != null) {
+            normalTexture = loader(normalFile!!) as GpuTexture
+        }
+        if (aperiodicFile != null) {
+            aperiodicTexture = loader(aperiodicFile!!) as GpuTexture
+        }
+        if (detailFile != null) {
+            detailTexture = loader(detailFile!!) as GpuTexture
+        }
+    }
+
 }

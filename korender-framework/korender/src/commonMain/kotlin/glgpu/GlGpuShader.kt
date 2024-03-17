@@ -126,7 +126,9 @@ class GlGpuShader(
 
     override fun close() {
         println("Destroy GPU shader $title : $programHandle")
-        // TODO
+        VGL20.glDeleteShader(vertexShaderHandle)
+        VGL20.glDeleteShader(fragmentShaderHandle)
+        VGL20.glDeleteProgram(programHandle)
     }
 
     override fun render(uniformSupplier: UniformSupplier, mesh: GpuMesh) {

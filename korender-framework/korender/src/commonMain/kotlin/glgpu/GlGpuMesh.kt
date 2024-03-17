@@ -48,6 +48,7 @@ class GlGpuMesh(
 
     override fun close() {
         println("Destroy GPU mesh $vbHandle/$ibHandle")
-        TODO("Not yet implemented")
+        VGL15.glDeleteBuffers(vbHandle)
+        VGL15.glDeleteBuffers(ibHandle)
     }
 }

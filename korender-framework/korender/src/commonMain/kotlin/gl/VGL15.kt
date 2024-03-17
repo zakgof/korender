@@ -132,7 +132,9 @@ object VGL15 {
      *
      * @see [Reference Page](http://docs.gl/gl4/glGenBuffers)
      */
-    fun glGenBuffers(): Int {
-        return gl!!.glGenBuffers()
-    }
+    fun glGenBuffers(): Int = gl!!.glGenBuffers()
+
+
+    fun glDeleteBuffers(buffer: Int) = gl!!.glDeleteBuffers(buffer)
+
 }
