@@ -1,5 +1,6 @@
 package com.zakgof.korender.material
 
+import com.zakgof.korender.declaration.ShaderDeclaration
 import com.zakgof.korender.gl.VGL11
 import com.zakgof.korender.gpu.Gpu
 import com.zakgof.korender.gpu.GpuShader
@@ -11,13 +12,16 @@ import java.util.Stack
 import java.util.regex.Pattern
 
 object Shaders {
+
+    fun create(declaration: ShaderDeclaration, gpu: Gpu) =
+        ShaderBuilder(declaration.vertFile, declaration.fragFile, declaration.defs).build(gpu)
     fun create(
         gpu: Gpu,
         vertexShaderFile: String,
         fragmentShaderFile: String,
         vararg defs: String
     ): GpuShader =
-        ShaderBuilder(vertexShaderFile, fragmentShaderFile, *defs).build(gpu)
+        ShaderBuilder(vertexShaderFile, fragmentShaderFile, setOf(*defs)).build(gpu)
 
     fun standard(gpu: Gpu, vararg defs: String): GpuShader =
         create(gpu, "standard.vert", "standard.frag", *defs)
@@ -26,7 +30,7 @@ object Shaders {
 private class ShaderBuilder(
     vertexShaderFile: String,
     fragmentShaderFile: String,
-    vararg defs: String
+    defs: Set<String>
 ) {
 
     private var fragDebugInfo: ShaderDebugInfo
@@ -43,7 +47,7 @@ private class ShaderBuilder(
             fragmentShaderFile.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         this.title = vfsplit[vfsplit.size - 1] + "/" + ffsplit[ffsplit.size - 1]
 
-        this.defs = defs.toSet() + VGL11.shaderEnv()
+        this.defs = defs + VGL11.shaderEnv()
         this.vertDebugInfo = ShaderDebugInfo(vertexShaderFile)
         this.fragDebugInfo = ShaderDebugInfo(fragmentShaderFile)
         this.vertCode = preprocessFile("", vertexShaderFile, this.defs, vertDebugInfo)

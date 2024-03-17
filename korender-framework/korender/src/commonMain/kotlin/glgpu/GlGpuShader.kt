@@ -82,6 +82,8 @@ class GlGpuShader(
             throw RuntimeException("Program linking warnings")
         }
 
+        println("Create GPU shader $title : $programHandle")
+
         uniformLocations = fetchUniforms()
         attributeLocations = fetchAttributes()
     }
@@ -122,8 +124,9 @@ class GlGpuShader(
 
     }
 
-    fun close() {
-        // TODO Auto-generated method stub
+    override fun close() {
+        println("Destroy GPU shader $title : $programHandle")
+        // TODO
     }
 
     override fun render(uniformSupplier: UniformSupplier, mesh: GpuMesh) {

@@ -3,13 +3,21 @@ package com.zakgof.korender
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
+import com.zakgof.korender.declaration.MaterialDeclaration
+import com.zakgof.korender.declaration.MeshDeclaration
+import com.zakgof.korender.declaration.ShaderDeclaration
+import com.zakgof.korender.geometry.Mesh
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.gl.VGL11
 import com.zakgof.korender.glgpu.GlGpu
 import com.zakgof.korender.gpu.Gpu
 import com.zakgof.korender.gpu.GpuFrameBuffer
 import com.zakgof.korender.gpu.GpuMesh
+import com.zakgof.korender.gpu.GpuShader
 import com.zakgof.korender.material.MapUniformSupplier
+import com.zakgof.korender.material.Shaders
+import com.zakgof.korender.material.UniformSupplier
+import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -29,6 +37,7 @@ fun Korender(block: KorenderContext.() -> Unit) {
     getPlatform().openGL(
         init = { w, h ->
             VGL11.glEnable(VGL11.GL_BLEND)
+            VGL11.glEnable(VGL11.GL_DEPTH_TEST)
             VGL11.glBlendFunc(VGL11.GL_SRC_ALPHA, VGL11.GL_ONE_MINUS_SRC_ALPHA)
             VGL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
             korender = KorenderContext(w, h)
@@ -42,13 +51,10 @@ fun Korender(block: KorenderContext.() -> Unit) {
 
 class KorenderContext(var width: Int, var height: Int) {
 
+    private var sceneBlock: (SceneContext.() -> Unit)? = null
+
     private val filters = mutableListOf<Filter>()
     private val filterFrameBuffers = mutableListOf<GpuFrameBuffer>()
-
-    private val opaques = mutableListOf<Renderable>()
-    private val transparents = mutableListOf<Renderable>()
-    private val skies = mutableListOf<Renderable>()
-    private val screens = mutableListOf<Renderable>()
 
     private val context = mutableMapOf<String, Any?>()
     private val contextUniforms = MapUniformSupplier(context)
@@ -58,7 +64,8 @@ class KorenderContext(var width: Int, var height: Int) {
     private var prevFrameNano: Long = nanoTime()
     private val frames: Queue<Long> = LinkedList()
 
-    val gpu: Gpu = GlGpu()
+    private val gpu: Gpu = GlGpu()
+    private val inventory = Inventory(gpu)
     private val filterScreenQuad: GpuMesh = Meshes.screenQuad().build(gpu).gpuMesh
 
     var shadower: Shadower = SimpleShadower(gpu)
@@ -77,21 +84,8 @@ class KorenderContext(var width: Int, var height: Int) {
         }
     var light = Vec3(1f, -1f, 0f).normalize()
 
-    fun add(renderable: Renderable, bucket: Bucket = Bucket.OPAQUE) {
-        when (bucket) {
-            Bucket.OPAQUE -> opaques.add(renderable)
-            Bucket.TRANSPARENT -> transparents.add(renderable)
-            Bucket.SKY -> skies.add(renderable)
-            Bucket.SCREEN -> screens.add(renderable)
-        }
-    }
-
-    init {
-        VGL11.glEnable(VGL11.GL_DEPTH_TEST)
-    }
-
     fun resize(w: Int, h: Int) {
-         if (width != w || height != h) {
+        if (width != w || height != h) {
             width = w
             height = h
             val bufferCount = filterFrameBuffers.size
@@ -107,18 +101,21 @@ class KorenderContext(var width: Int, var height: Int) {
     fun frame() {
         val frameInfo = updateFrameInfo()
         updateContext()
+
+        val scene = processScene(frameInfo)
+
         onFrame.invoke(this, frameInfo)
         renderShadowMap()
 
         if (filters.isEmpty()) {
-            render()
+            render(scene)
         } else {
             for (p in 0..filters.size) {
                 val frameBuffer = if (p == filters.size) null else filterFrameBuffers.get(p % 2)
                 renderTo(frameBuffer) {
                     if (p == 0) {
                         VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
-                        render()
+                        render(scene)
                     } else {
                         val filter = filters[p - 1]
                         VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
@@ -130,6 +127,7 @@ class KorenderContext(var width: Int, var height: Int) {
             }
         }
     }
+
 
     fun renderTo(fb: GpuFrameBuffer?, block: () -> Unit) {
         if (fb == null)
@@ -156,35 +154,12 @@ class KorenderContext(var width: Int, var height: Int) {
         return frameInfo
     }
 
-    private fun render() {
+    private fun render(scene: Scene) {
         VGL11.glViewport(0, 0, width, height)
         VGL11.glEnable(VGL11.GL_CULL_FACE)
         VGL11.glCullFace(VGL11.GL_BACK)
         VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
-
-        screens.forEach { it.render(contextUniforms) }
-        renderBucket(opaques, -1.0)
-        skies.forEach { it.render(contextUniforms) }
-        renderBucket(transparents, 1.0)
-
-        val err = VGL11.glGetError()
-        if (err != 0) {
-            throw KorenderException("Frame error $err")
-        }
-    }
-
-    private fun renderBucket(renderables: MutableList<Renderable>, sortFactor: Double) {
-        val visibleRenderables = renderables.filter { isVisible(it) }
-            .sortedBy { (camera.mat4() * it.worldBoundingBox!!.center()).z * sortFactor }
-        visibleRenderables.forEach { it.render(contextUniforms) }
-    }
-
-    private fun isVisible(renderable: Renderable): Boolean {
-        return if (renderable.worldBoundingBox == null) {
-            true
-        } else {
-            renderable.worldBoundingBox!!.isIn(projection.mat4() * camera.mat4())
-        }
+        scene.render(camera, contextUniforms)
     }
 
     private fun calcAverageFps(): Float {
@@ -212,4 +187,152 @@ class KorenderContext(var width: Int, var height: Int) {
         // TODO: resizing screensize framebuffers ?
     }
 
+    fun Scene(block: SceneContext.() -> Unit) {
+        if (sceneBlock != null) {
+            throw KorenderException("Only one Scene is allowed")
+        }
+        sceneBlock = block;
+    }
+
+
+    private fun processScene(frameInfo: FrameInfo): Scene {
+        val sd = SceneDeclaration()
+        sceneBlock?.invoke(SceneContext(frameInfo, sd))
+        return Scene(sd, inventory)
+    }
+
+    class SceneContext(val frameInfo: FrameInfo, private val sceneBuilder: SceneDeclaration) {
+        fun Renderable(
+            mesh: MeshDeclaration,
+            material: MaterialDeclaration,
+            transform: Transform
+        ) =
+            sceneBuilder.add(
+                RenderableDeclaration(
+                    mesh,
+                    material.shader,
+                    material.uniforms,
+                    transform
+                )
+            )
+    }
+
 }
+
+class SceneDeclaration {
+
+    val renderables = mutableListOf<RenderableDeclaration>()
+    fun add(renderable: RenderableDeclaration) {
+        renderables.add(renderable)
+    }
+}
+
+class Scene(decl: SceneDeclaration, inventory: Inventory) {
+
+    private val opaques = mutableListOf<Renderable>()
+    private val transparents = mutableListOf<Renderable>()
+    private val skies = mutableListOf<Renderable>()
+    private val screens = mutableListOf<Renderable>()
+
+    init {
+        inventory.go {
+            decl.renderables.forEach {
+                val renderable = create(this, it)
+                when (it.bucket) {
+                    Bucket.OPAQUE -> opaques.add(renderable)
+                    Bucket.TRANSPARENT -> transparents.add(renderable)
+                    Bucket.SKY -> skies.add(renderable)
+                    Bucket.SCREEN -> screens.add(renderable)
+                }
+            }
+        }
+    }
+
+    private fun create(inventory: Inventory, declaration: RenderableDeclaration): Renderable {
+        val mesh = inventory.mesh(declaration.mesh)
+        val shader = inventory.shader(declaration.shader)
+        val uniforms = declaration.uniforms
+        val transform = declaration.transform
+        return Renderable(mesh, shader, uniforms, transform)
+    }
+
+    fun render(camera: Camera, contextUniforms: UniformSupplier) {
+        screens.forEach { it.render(contextUniforms) }
+        renderBucket(opaques, -1.0, camera, contextUniforms)
+        skies.forEach { it.render(contextUniforms) }
+        renderBucket(transparents, 1.0, camera, contextUniforms)
+    }
+
+    private fun renderBucket(
+        renderables: MutableList<Renderable>,
+        sortFactor: Double,
+        camera: Camera,
+        contextUniforms: UniformSupplier
+    ) {
+//        val visibleRenderables = renderables.filter { isVisible(it) }
+//            .sortedBy {
+//                val worldBB = it.mesh.modelBoundingBox!!.transform(it.transform)
+//                (camera.mat4() * worldBB.center()).z * sortFactor
+//            }
+//        visibleRenderables.forEach { it.render(contextUniforms) }
+        // TODO
+        renderables.forEach { it.render(contextUniforms) }
+    }
+
+//    private fun isVisible(renderable: Renderable): Boolean {
+//        return if (renderable.worldBoundingBox == null) {
+//            true
+//        } else {
+//            renderable.worldBoundingBox!!.isIn(projection.mat4() * camera.mat4())
+//        }
+//    }
+
+
+}
+
+class Registry<D, R : AutoCloseable>(private val factory: (D) -> R) {
+
+    private val map = mutableMapOf<D, R>()
+    private var unusedKeys = mutableSetOf<D>()
+
+    fun begin() {
+        unusedKeys = HashSet(map.keys)
+    }
+
+    fun end() {
+        unusedKeys.forEach { map[it]!!.close() }
+    }
+
+    operator fun get(decl: D): R {
+        unusedKeys.remove(decl)
+        return map.computeIfAbsent(decl) { factory(it) }
+    }
+
+}
+
+class Inventory(private val gpu: Gpu) {
+
+    private val meshes = Registry<MeshDeclaration, Mesh> { Meshes.create(it, gpu) }
+    private val shaders = Registry<ShaderDeclaration, GpuShader> { Shaders.create(it, gpu) }
+
+    fun go(block: Inventory.() -> Unit) {
+        meshes.begin()
+        shaders.begin()
+        block.invoke(this)
+        meshes.end()
+        shaders.end()
+    }
+
+    fun mesh(decl: MeshDeclaration): Mesh = meshes[decl]
+
+    fun shader(decl: ShaderDeclaration): GpuShader = shaders[decl]
+
+}
+
+class RenderableDeclaration(
+    val mesh: MeshDeclaration,
+    val shader: ShaderDeclaration,
+    val uniforms: UniformSupplier,
+    val transform: Transform,
+    val bucket: Bucket = Bucket.OPAQUE
+)

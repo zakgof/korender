@@ -17,7 +17,11 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun AppExample() {
-    val options = listOf("QS", "Tex", "Obj", "Shadow", "Filter", "Fire", "BBB", "Sky", "Text")
+    val options = listOf(
+        Demo("QS", "") { QuickStartExample() },
+        // "Tex", "Obj", "Shadow", "Filter", "Fire", "BBB", "Sy", "Text")
+    )
+
     var option by remember { mutableStateOf(options[0]) }
     Column {
         val scrollState = rememberScrollState()
@@ -27,20 +31,12 @@ fun AppExample() {
         ) {
             options.map {
                 Button(onClick = { option = it }) {
-                    Text(it)
+                    Text(it.title)
                 }
             }
         }
-        when (option) {
-            "QS" -> QuickStartExample()
-            "Tex" -> TexturingExample()
-            "Obj" -> ObjFileExample()
-            "Shadow" -> ShadowExample()
-            "Filter" -> FilterExample()
-            "Fire" -> FireExample()
-            "BBB" -> BatchedBillboardsExample()
-            "Sky" -> SkyExample()
-            "Text" -> TextExample()
-        }
+        option.composable()
     }
 }
+
+class Demo(val title: String, val description: String, val composable: @Composable () -> Unit)

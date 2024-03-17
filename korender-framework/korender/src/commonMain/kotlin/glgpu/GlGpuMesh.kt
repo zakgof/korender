@@ -19,6 +19,10 @@ class GlGpuMesh(
     private var vertices: Int = -1
     private var indices: Int = -1
 
+    init {
+        println("Create GPU mesh $vbHandle/$ibHandle")
+    }
+
     override fun render() {
 
         VGL11.glDrawElements(
@@ -40,5 +44,10 @@ class GlGpuMesh(
         bind()
         VGL15.glBufferData(VGL15.GL_ARRAY_BUFFER, vb.rewind() as ByteBuffer, usage)
         VGL15.glBufferData(VGL15.GL_ELEMENT_ARRAY_BUFFER, ib.rewind() as ByteBuffer, usage)
+    }
+
+    override fun close() {
+        println("Destroy GPU mesh $vbHandle/$ibHandle")
+        TODO("Not yet implemented")
     }
 }

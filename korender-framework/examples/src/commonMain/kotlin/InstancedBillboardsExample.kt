@@ -3,18 +3,13 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.Renderables
-import com.zakgof.korender.geometry.Meshes
-import com.zakgof.korender.material.Materials
-import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
-import com.zakgof.korender.projection.FrustumProjection
-import kotlin.random.Random
 
 @Composable
-fun BatchedBillboardsExample() = Korender {
+fun InstancedBillboardsExample() = Korender {
 
+    /*
     onResize = {
         projection =
             FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
@@ -22,29 +17,33 @@ fun BatchedBillboardsExample() = Korender {
 
     val particleNum = 1000
     val particles = Array(particleNum) { Particle(Random.nextDouble(5.0).toFloat()) }
-    val mesh = Meshes.billboard().instancing(particleNum).build(gpu)
-    val material = Materials.billboard(gpu) { colorFile = "/splat.png" }
 
-    add(Renderables.create(mesh, material))
+    Scene {
+        InstancedBillboards(
+            count = particleNum,
+            material = billboard {
+                colorFile = "/splat.png"
+            }
+        ) {
+            for (i in particles.indices) {
+                val particle = particles[i]
+                Instance {
+                    pos = particle.pos
+                    val scale = (5.0f - particle.ttl) * 0.3f
+                    scale = Vec2(scale, scale)
+                }
+            }
+        }
+    }
 
     onFrame = { frameInfo ->
         particles.forEach {
             it.update(frameInfo.dt)
         }
-        particles.sortBy { (camera.mat4() * it.pos).z }
-        for (i in particles.indices) {
-            val particle = particles[i]
-            for (v in 0 until 4) {
-                mesh.updateVertex(i * 4 + v) {
-                    it.pos = particle.pos
-                    val scale = (5.0f - particle.ttl) * 0.3f
-                    it.scale = Vec2(scale, scale)
-                }
-            }
-        }
-        mesh.updateGpu()
         println("FPS=~${frameInfo.avgFps}")
     }
+
+     */
 }
 
 class Particle(initTtl: Float = 5.0f) {

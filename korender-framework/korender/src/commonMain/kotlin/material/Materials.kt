@@ -15,10 +15,10 @@ object Materials {
         override val uniforms: UniformSupplier
     ) : Material
 
-    fun standard(gpu: Gpu, vararg defs: String, block: StockUniforms.() -> Unit): Material = create(
-        Shaders.standard(gpu, *defs),
-        StockUniforms(gpu).apply(block)
-    )
+//    fun standard(gpu: Gpu, vararg defs: String, block: StockUniforms.() -> Unit): Material = create(
+//        Shaders.standard(gpu, *defs),
+//        StockUniforms().apply(block)
+//    )
 
     fun sky(gpu: Gpu, skyTextureFile: String) = create(
         Shaders.create(gpu, "screen.vert", "texsky.frag"),
@@ -32,12 +32,12 @@ object Materials {
 
     fun billboard(gpu: Gpu, block: StockUniforms.() -> Unit): Material = create(
         Shaders.create(gpu, "billboard.vert", "standard.frag"),
-        StockUniforms(gpu).apply(block)
+        StockUniforms().apply(block)
     )
 
 }
 
-class StockUniforms(private val gpu: Gpu) : UniformSupplier {
+class StockUniforms : UniformSupplier {
 
     private val static = mutableMapOf<String, Any>()
     private val dynamic = mutableMapOf<String, () -> Any>()
@@ -48,30 +48,9 @@ class StockUniforms(private val gpu: Gpu) : UniformSupplier {
     var shadowTexture: GpuTexture? = null
     var detailTexture: GpuTexture? = null
     var colorFile: String? = null
-        set(value) {
-            field = value
-            colorTexture = Textures.create(colorFile!!)
-                .build(gpu)
-        }
     var normalFile: String? = null
-        set(value) {
-            field = value
-            normalTexture = Textures.create(normalFile!!)
-                .build(gpu)
-        }
     var aperiodicFile: String? = null
-        set(value) {
-            field = value
-            aperiodicTexture = Textures.create(aperiodicFile!!)
-                .filter(TextureFilter.Nearest)
-                .build(gpu)
-        }
     var detailFile: String? = null
-        set(value) {
-            field = value
-            detailTexture = Textures.create(detailFile!!)
-                .build(gpu)
-        }
     var color = Color(0.5f, 0.5f, 0.5f);
     var triplanarScale = 1.0f
     var detailScale = 16.0f
@@ -86,10 +65,6 @@ class StockUniforms(private val gpu: Gpu) : UniformSupplier {
 
     fun static(key: String, value: Any) {
         static[key] = value
-    }
-
-    fun staticTex(key: String, textureFile: String) {
-        static[key] = Textures.create(textureFile).build(gpu)
     }
 
     fun dynamic(key: String, valueSupplier: () -> Any) {
