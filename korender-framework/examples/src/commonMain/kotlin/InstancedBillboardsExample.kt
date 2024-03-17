@@ -24,6 +24,7 @@ fun InstancedBillboardsExample() = Korender {
         InstancedBillboards(
             id = "particles",
             count = particleNum,
+            zSort = true,
             material = {
                 colorFile = "/splat.png"
             }
