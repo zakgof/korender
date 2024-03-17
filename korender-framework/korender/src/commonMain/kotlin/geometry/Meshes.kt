@@ -1,6 +1,7 @@
 package com.zakgof.korender.geometry
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.declaration.MeshDeclaration
 import com.zakgof.korender.geometry.Attributes.NORMAL
 import com.zakgof.korender.geometry.Attributes.PHI
 import com.zakgof.korender.geometry.Attributes.POS
@@ -26,6 +27,12 @@ import kotlin.math.max
 import kotlin.math.min
 
 object Meshes {
+
+    fun create(declaration: MeshDeclaration, gpu: Gpu): Mesh =
+        when (declaration) {
+            is MeshDeclaration.SphereDeclaration -> sphere(declaration.radius).build(gpu)
+            is MeshDeclaration.CubeDeclaration -> cube(declaration.halfSide).build(gpu)
+        }
 
     fun create(
         vertexNumber: Int,
@@ -161,6 +168,8 @@ object Meshes {
         override val gpuMesh: GpuMesh = gpu.createMesh(attrs, vertexSize, isDynamic)
 
         override val modelBoundingBox: BoundingBox?
+        override fun close() = gpuMesh.close()
+
 
         init {
             gpuMesh.update(vb, ib, vertices, indices)
