@@ -19,7 +19,8 @@ import androidx.compose.ui.unit.dp
 fun AppExample() {
     val options = listOf(
         Demo("QS", "") { QuickStartExample() },
-        Demo("Filt", "") { FilterExample() },
+        Demo("Filter", "") { FilterExample() },
+        Demo("Fire", "") { FireExample() },
         // "Tex", "Obj", "Shadow", "Filter", "Fire", "BBB", "Sy", "Text")
     )
 

@@ -18,6 +18,7 @@ import com.zakgof.korender.gpu.GpuShader
 import com.zakgof.korender.gpu.GpuTexture
 import com.zakgof.korender.material.MapUniformSupplier
 import com.zakgof.korender.material.Shaders
+import com.zakgof.korender.material.StockUniforms
 import com.zakgof.korender.material.Textures
 import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.Transform
@@ -182,10 +183,21 @@ class SceneContext(val frameInfo: FrameInfo, private val sceneBuilder: SceneDecl
         RenderableDeclaration(mesh, material.shader, material.uniforms, transform)
     )
 
+    fun Billboard(fragment: String = "billboard.frag", uniforms: StockUniforms.() -> Unit) =
+        sceneBuilder.add(
+            RenderableDeclaration(
+                MeshDeclaration.BillboardDeclaration,
+                ShaderDeclaration("billboard.vert", fragment, setOf()),
+                StockUniforms().apply(uniforms)
+            )
+        ) // TODO Bucket
+
     fun Filter(fragment: String, uniforms: UniformSupplier = UniformSupplier { null }) =
         sceneBuilder.add(
             FilterDeclaration(fragment, uniforms)
         )
+
+
 }
 
 class SceneDeclaration {
@@ -247,6 +259,6 @@ class RenderableDeclaration(
     val mesh: MeshDeclaration,
     val shader: ShaderDeclaration,
     val uniforms: UniformSupplier,
-    val transform: Transform,
+    val transform: Transform = Transform(),
     val bucket: Bucket = Bucket.OPAQUE
 )

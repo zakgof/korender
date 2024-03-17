@@ -22,8 +22,7 @@ fun FilterExample() = Korender {
                 colorFile = "/sand.jpg"
             }
         )
-        if (frameInfo.time.toInt() % 2 == 1)
-            Filter(fragment = "bw.frag")
+        Filter(fragment = "bw.frag")
     }
 
 }
