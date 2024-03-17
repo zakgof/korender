@@ -53,11 +53,12 @@ class SceneContext(val frameInfo: FrameInfo, private val sceneBuilder: SceneDecl
         count: Int,
         mesh: MeshDeclaration,
         material: MaterialDeclaration,
-        block: InstancedRenderablesContext.() -> Unit
+        static: Boolean = false,
+        block: InstancedRenderablesContext.() -> Unit,
     ) =
         sceneBuilder.add(
             RenderableDeclaration(
-                MeshDeclaration.InstancedRenderableDeclaration(id, count, mesh, material, block),
+                MeshDeclaration.InstancedRenderableDeclaration(id, count, mesh, material, static, block),
                 material.shader,
                 material.uniforms
             )

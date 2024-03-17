@@ -200,6 +200,8 @@ class Registry<D, R : AutoCloseable>(private val factory: (D) -> R) {
         return map.computeIfAbsent(decl) { factory(it) }
     }
 
+    fun has(decl: D): Boolean = map.containsKey(decl)
+
 }
 
 class Inventory(val gpu: Gpu) {
@@ -223,5 +225,8 @@ class Inventory(val gpu: Gpu) {
     fun shader(decl: ShaderDeclaration): GpuShader = shaders[decl]
 
     fun texture(decl: String): GpuTexture = textures[decl]
+    fun hasMesh(decl: MeshDeclaration): Boolean = meshes.has(decl)
+
+
 
 }

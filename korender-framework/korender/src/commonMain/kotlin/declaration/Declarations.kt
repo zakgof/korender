@@ -28,7 +28,8 @@ sealed interface MeshDeclaration {
         val count: Int,
         val mesh: MeshDeclaration,
         val material: MaterialDeclaration,
-        val block: InstancedRenderablesContext.() -> Unit
+        val static: Boolean,
+        val block: InstancedRenderablesContext.() -> Unit,
     ) : MeshDeclaration {
         override fun equals(other: Any?): Boolean =
             other is InstancedRenderableDeclaration && other.id == id

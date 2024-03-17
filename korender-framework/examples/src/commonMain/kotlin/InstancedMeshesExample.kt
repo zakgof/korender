@@ -24,7 +24,8 @@ fun InstancedMeshesExample() = Korender {
             mesh = cube(0.4f),
             material = standard {
                 colorFile = "/sand.jpg"
-            }
+            },
+            static = true
         ) {
             for (x in -10..10) {
                 for (y in -10..10) {
