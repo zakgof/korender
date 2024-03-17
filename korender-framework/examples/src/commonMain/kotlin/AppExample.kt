@@ -22,9 +22,10 @@ fun AppExample() {
         Demo("Filter", "") { FilterExample() },
         Demo("Fire", "") { FireExample() },
         Demo("IBB", "") { InstancedBillboardsExample() },
-        Demo("Obj", "") { ObjFileExample() }
+        Demo("Obj", "") { ObjFileExample() },
+        Demo("Tex", "") { TexturingExample() }
 
-        // "Tex", "Obj", "Shadow", "Filter", "Fire", "BBB", "Sy", "Text")
+        // "Tex", "Shadow", "Sky", "Text")
     )
 
     var option by remember { mutableStateOf(options[0]) }
