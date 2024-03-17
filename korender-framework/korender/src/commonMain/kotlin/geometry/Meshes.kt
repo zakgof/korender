@@ -19,6 +19,7 @@ import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import de.javagl.obj.Obj
+import de.javagl.obj.ObjReader
 import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
@@ -34,6 +35,7 @@ object Meshes {
         when (declaration) {
             is MeshDeclaration.SphereDeclaration -> sphere(declaration.radius).build(gpu)
             is MeshDeclaration.CubeDeclaration -> cube(declaration.halfSide).build(gpu)
+            is MeshDeclaration.ObjDeclaration -> obj(declaration.objFile).build(gpu)
             is MeshDeclaration.BillboardDeclaration -> billboard().build(gpu)
             is MeshDeclaration.InstancedBillboardDeclaration -> multiBillboard(declaration.count).build(
                 gpu
@@ -323,6 +325,11 @@ object Meshes {
             }
             block(this)
         }
+
+    private fun obj(objFile: String): MeshBuilder {
+        val obj = ObjReader.read(Meshes.javaClass.getResourceAsStream(objFile))
+        return create(obj)
+    }
 
     fun create(obj: Obj): MeshBuilder {
 

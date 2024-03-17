@@ -7,6 +7,7 @@ object MeshDeclarations {
 
     fun cube(halfSide: Float = 0.5f) = MeshDeclaration.CubeDeclaration(halfSide)
     fun sphere(radius: Float = 1.0f) = MeshDeclaration.SphereDeclaration(radius)
+    fun obj(objFile: String) = MeshDeclaration.ObjDeclaration(objFile)
 }
 
 sealed interface MeshDeclaration {
@@ -14,6 +15,8 @@ sealed interface MeshDeclaration {
     data class CubeDeclaration(val halfSide: Float) : MeshDeclaration
 
     data class SphereDeclaration(val radius: Float) : MeshDeclaration
+
+    data class ObjDeclaration(val objFile: String) : MeshDeclaration
 
     data object BillboardDeclaration : MeshDeclaration // TODO position scale and shit
 
