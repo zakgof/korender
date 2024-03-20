@@ -82,6 +82,10 @@ class Lwjgl20 : IGL20 {
         GL20.glUniform1i(location, v0)
     }
 
+    override fun glUniform2f(location: Int, v0: Float, v1: Float) {
+        GL20.glUniform2f(location, v0, v1)
+    }
+
     override fun glUniform3f(location: Int, v0: Float, v1: Float, v2: Float) {
         GL20.glUniform3f(location, v0, v1, v2)
     }

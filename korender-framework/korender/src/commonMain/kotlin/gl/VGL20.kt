@@ -390,16 +390,10 @@ object VGL20 {
         gl!!.glUniform1f(location, v0)
     }
 
-    /**
-     * Specifies the value of a vec3 uniform variable for the current program object.
-     *
-     * @param location the location of the uniform variable to be modified
-     * @param v0       the uniform x value
-     * @param v1       the uniform y value
-     * @param v2       the uniform z value
-     *
-     * @see [Reference Page](http://docs.gl/gl4/glUniform)
-     */
+    fun glUniform2f(location: Int, v0: Float, v1: Float) {
+        gl!!.glUniform2f(location, v0, v1)
+    }
+
     fun glUniform3f(location: Int, v0: Float, v1: Float, v2: Float) {
         gl!!.glUniform3f(location, v0, v1, v2)
     }

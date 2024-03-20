@@ -42,6 +42,7 @@ interface IGL20 {
 
     fun glUniform1i(location: Int, v0: Int)
 
+    fun glUniform2f(location: Int, v0: Float, v1: Float)
     fun glUniform3f(location: Int, v0: Float, v1: Float, v2: Float)
 
     fun glUniformMatrix2fv(location: Int, transpose: Boolean, value: FloatBuffer)

@@ -2,6 +2,7 @@ package com.zakgof.korender.declaration
 
 import com.zakgof.korender.Bucket
 import com.zakgof.korender.material.UniformSupplier
+import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
@@ -22,6 +23,7 @@ sealed interface MeshDeclaration {
     data class ObjDeclaration(val objFile: String) : MeshDeclaration
 
     data object BillboardDeclaration : MeshDeclaration // TODO position scale and shit
+    data object ImageQuadDeclaration : MeshDeclaration
 
     data class InstancedRenderableDeclaration(
         val id: Any,
@@ -89,3 +91,46 @@ class RenderableDeclaration(
     val transform: Transform = Transform(),
     val bucket: Bucket = Bucket.OPAQUE
 )
+
+class ContainerContext(private val declaration: ElementDeclaration.ContainerDeclaration) {
+    fun Row(block: ContainerContext.() -> Unit) {
+        val row = ElementDeclaration.ContainerDeclaration(Direction.Horizontal)
+        ContainerContext(row).apply(block)
+        declaration.add(row)
+    }
+
+    fun Column(block: ContainerContext.() -> Unit) {
+        val column = ElementDeclaration.ContainerDeclaration(Direction.Vertical)
+        ContainerContext(column).apply(block)
+        declaration.add(column)
+    }
+
+    fun Text(id: Any, fontResource: String, height: Int, text: String, color: Color) {
+        declaration.add(ElementDeclaration.TextDeclaration(id, fontResource, height, text, color))
+    }
+
+    fun Filler() {
+        declaration.add(ElementDeclaration.FillerDeclaration())
+    }
+
+    fun Image(imageResource: String, width: Int, height: Int) {
+        declaration.add(ElementDeclaration.ImageDeclaration(imageResource, width, height))
+    }
+}
+
+sealed class ElementDeclaration {
+
+    class FillerDeclaration: ElementDeclaration()
+    class TextDeclaration(val id: Any, val fontResource: String, val height: Int, val text: String, val color: Color) : ElementDeclaration()
+    class ImageDeclaration(val imageResource: String, val width: Int, val height: Int) : ElementDeclaration()
+    class ContainerDeclaration(val direction: Direction) : ElementDeclaration() {
+
+        val elements = mutableListOf<ElementDeclaration>()
+        fun add(element: ElementDeclaration) = elements.add(element)
+    }
+}
+
+enum class Direction {
+    Vertical,
+    Horizontal
+}

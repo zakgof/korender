@@ -1,25 +1,23 @@
 package com.zakgof.korender.font
 
-//
-//
-//import com.zakgof.korender.Renderable
-//import com.zakgof.korender.SimpleRenderable
-//import com.zakgof.korender.geometry.Attributes.SCREEN
-//import com.zakgof.korender.geometry.Attributes.TEX
-//import com.zakgof.korender.geometry.Meshes
-//import com.zakgof.korender.gpu.Gpu
-//import com.zakgof.korender.gpu.GpuTexture
-//import com.zakgof.korender.material.Materials
-//import com.zakgof.korender.math.BoundingBox
-//import com.zakgof.korender.math.Color
-//import com.zakgof.korender.math.Transform
-//import com.zakgof.korender.math.Vec2
-//
-//class Font(private val gpu: Gpu, val gpuTexture: GpuTexture, val widths: FloatArray) {
-//
+
+import com.zakgof.korender.gpu.Gpu
+import com.zakgof.korender.gpu.GpuTexture
+
+class Font(private val gpu: Gpu, val gpuTexture: GpuTexture, val widths: FloatArray) :
+    AutoCloseable {
+
+    override fun close() = gpuTexture.close()
+
+    fun textWidth(height: Int, text: String): Int =
+        text.toCharArray()
+            .map { widths[it.code] * height }
+            .sum()
+            .toInt()
+
 //    fun renderable(text: String, color: Color, height: Float, x: Float, y: Float): Renderable {
 //
-//        return SimpleRenderable(
+//        return Renderable(
 //            Meshes.create(text.length * 4, text.length * 6, TEX, SCREEN) {
 //                var xx = x
 //                for (c in text.chars()) {
@@ -35,10 +33,11 @@ package com.zakgof.korender.font
 //                    indices(i * 4 + 0, i * 4 + 1, i * 4 + 2, i * 4 + 0, i * 4 + 2, i * 4 + 3)
 //                }
 //            }.build(gpu),
+//            Shaders.f
 //            Materials.text(gpu, gpuTexture, color)
 //        )
 //    }
-//
+
 //    fun dynamic(gpu: Gpu, reservedLength: Int, color: Color): TextRenderable {
 //        val mesh = Meshes.create(reservedLength * 4, reservedLength * 6, TEX, SCREEN) {
 //            for (i in 0..<reservedLength) {
@@ -47,8 +46,8 @@ package com.zakgof.korender.font
 //        }.build(gpu, true)
 //        return TextRenderable(gpu, this, mesh, color)
 //    }
-//}
-//
+}
+
 //class TextRenderable(
 //    gpu: Gpu,
 //    private val font: Font,

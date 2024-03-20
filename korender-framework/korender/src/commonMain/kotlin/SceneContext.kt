@@ -1,5 +1,8 @@
 package com.zakgof.korender
 
+import com.zakgof.korender.declaration.ContainerContext
+import com.zakgof.korender.declaration.Direction
+import com.zakgof.korender.declaration.ElementDeclaration
 import com.zakgof.korender.declaration.FilterDeclaration
 import com.zakgof.korender.declaration.InstancedBillboardsContext
 import com.zakgof.korender.declaration.InstancedRenderablesContext
@@ -11,17 +14,17 @@ import com.zakgof.korender.material.StockUniforms
 import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.Transform
 
-class SceneContext(val frameInfo: FrameInfo, private val sceneBuilder: SceneDeclaration) {
+class SceneContext(val frameInfo: FrameInfo, private val sceneDeclaration: SceneDeclaration) {
     fun Renderable(
         mesh: MeshDeclaration,
         material: MaterialDeclaration,
         transform: Transform = Transform()
-    ) = sceneBuilder.add(
+    ) = sceneDeclaration.add(
         RenderableDeclaration(mesh, material.shader, material.uniforms, transform)
     )
 
     fun Billboard(fragment: String = "billboard.frag", material: StockUniforms.() -> Unit) =
-        sceneBuilder.add(
+        sceneDeclaration.add(
             RenderableDeclaration(
                 MeshDeclaration.BillboardDeclaration,
                 ShaderDeclaration("billboard.vert", fragment, setOf()),
@@ -30,7 +33,7 @@ class SceneContext(val frameInfo: FrameInfo, private val sceneBuilder: SceneDecl
         ) // TODO Bucket
 
     fun Filter(fragment: String, uniforms: UniformSupplier = UniformSupplier { null }) =
-        sceneBuilder.add(FilterDeclaration(fragment, uniforms))
+        sceneDeclaration.add(FilterDeclaration(fragment, uniforms))
 
     fun InstancedBillboards(
         id: Any,
@@ -40,7 +43,7 @@ class SceneContext(val frameInfo: FrameInfo, private val sceneBuilder: SceneDecl
         material: StockUniforms.() -> Unit,
         block: InstancedBillboardsContext.() -> Unit
     ) =
-        sceneBuilder.add(
+        sceneDeclaration.add(
             RenderableDeclaration(
                 MeshDeclaration.InstancedBillboardDeclaration(id, count, zSort, block),
                 ShaderDeclaration("billboard.vert", fragment, setOf()),
@@ -56,11 +59,18 @@ class SceneContext(val frameInfo: FrameInfo, private val sceneBuilder: SceneDecl
         static: Boolean = false,
         block: InstancedRenderablesContext.() -> Unit,
     ) =
-        sceneBuilder.add(
+        sceneDeclaration.add(
             RenderableDeclaration(
                 MeshDeclaration.InstancedRenderableDeclaration(id, count, mesh, material, static, block),
                 material.shader,
                 material.uniforms
             )
         ) // TODO Bucket
+
+    fun Gui(block: ContainerContext.() -> Unit) {
+        val gui = ElementDeclaration.ContainerDeclaration(Direction.Vertical)
+        sceneDeclaration.gui = gui
+        ContainerContext(gui).apply(block)
+    }
+
 }

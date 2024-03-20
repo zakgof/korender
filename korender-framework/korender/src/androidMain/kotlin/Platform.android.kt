@@ -3,6 +3,11 @@ package com.zakgof.korender
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.Typeface
 import android.opengl.GLSurfaceView
 import android.os.Build
 import android.view.View
@@ -28,11 +33,15 @@ import com.zakgof.korender.gles.Gles30
 import com.zakgof.korender.glgpu.BufferUtils
 import com.zakgof.korender.gpu.GpuTexture
 import com.zakgof.korender.material.Image
+import java.io.File
 import java.io.InputStream
 import java.nio.ByteBuffer
+import java.util.concurrent.atomic.AtomicReference
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
+import kotlin.math.max
 
+val androidContext = AtomicReference<Context>(null)
 
 class AndroidPlatform : Platform {
 
@@ -53,6 +62,10 @@ class AndroidPlatform : Platform {
 
     override fun loadImage(stream: InputStream): Image {
         val bitmap = BitmapFactory.decodeStream(stream)
+        return bitmapToImage(bitmap)
+    }
+
+    private fun bitmapToImage(bitmap: Bitmap): AndroidImage {
         val size = bitmap.rowBytes * bitmap.height
         val byteBuffer = BufferUtils.createByteBuffer(size)
         bitmap.copyPixelsToBuffer(byteBuffer)
@@ -75,18 +88,48 @@ class AndroidPlatform : Platform {
 
     private fun ARGBtoRGBA(data: ByteBuffer): ByteBuffer {
         val buffer = BufferUtils.createByteBuffer(data.limit())
-        for (i in 0 until data.limit() / 4) {
-            buffer.put(data[i * 4 + 0])
-                .put(data[i * 4 + 1])
-                .put(data[i * 4 + 2])
-                .put(data[i * 4 + 3])
-        }
+        buffer.put(data.rewind() as ByteBuffer)
         return buffer.flip() as ByteBuffer
     }
 
     override fun loadFont(stream: InputStream): FontDef {
-        // TODO
-        throw NotImplementedError()
+
+        val tmpDir: File = androidContext.get().cacheDir
+        val tmpFile = File.createTempFile("font-", ".ttf", tmpDir)
+        tmpFile.outputStream().use { fileOut ->
+            stream.copyTo(fileOut)
+        }
+
+        val cell = 64
+        val bitmap = Bitmap.createBitmap(cell * 16, cell * 16, Bitmap.Config.ARGB_8888);
+        val canvas = Canvas(bitmap)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        paint.typeface = Typeface.createFromFile(tmpFile)
+        paint.color = Color.WHITE
+        paint.textSize = 128f
+        val bounds = Rect()
+
+        val maxwidthheight =
+            (0 until 128).maxOf {
+                paint.getTextBounds("" + it.toChar(), 0, 1, bounds)
+                max(bounds.right, bounds.height() )
+            }
+        val fontSize = 128f * cell.toFloat() / maxwidthheight
+        paint.textSize = fontSize
+
+        val widths = FloatArray(128)
+        for (c in 0 until 128) {
+            val width = paint.measureText("" + c.toChar())
+            widths[c] = width / cell
+            canvas.drawText(
+                "" + c.toChar(),
+                ((c % 16) * cell).toFloat(),
+                ((c / 16) * cell + cell - paint.fontMetrics.descent),
+                paint
+            )
+        }
+        val image = bitmapToImage(bitmap)
+        return FontDef(image, widths)
     }
 }
 
@@ -108,6 +151,8 @@ class KorenderGLSurfaceView(
     private val renderer: KorenderGLRenderer
 
     init {
+
+        androidContext.set(context)
 
         layoutParams = LinearLayout.LayoutParams(
             MATCH_PARENT, MATCH_PARENT

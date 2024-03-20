@@ -11,6 +11,7 @@ import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Mat3
 import com.zakgof.korender.math.Mat4
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
@@ -172,6 +173,7 @@ class GlGpuShader(
         when (value) {
             is Int -> VGL20.glUniform1i(location, value)
             is Float -> VGL20.glUniform1f(location, value)
+            is Vec2 -> VGL20.glUniform2f(location, value.x, value.y)
             is Vec3 -> VGL20.glUniform3f(location, value.x, value.y, value.z)
             is Color -> VGL20.glUniform3f(location, value.r, value.g, value.b)
             is Mat4 -> VGL20.glUniformMatrix4fv(

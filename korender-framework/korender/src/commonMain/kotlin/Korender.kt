@@ -3,10 +3,13 @@ package com.zakgof.korender
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
+import com.zakgof.korender.declaration.ElementDeclaration
 import com.zakgof.korender.declaration.FilterDeclaration
 import com.zakgof.korender.declaration.MeshDeclaration
 import com.zakgof.korender.declaration.RenderableDeclaration
 import com.zakgof.korender.declaration.ShaderDeclaration
+import com.zakgof.korender.font.Font
+import com.zakgof.korender.font.Fonts
 import com.zakgof.korender.geometry.Mesh
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.gl.VGL11
@@ -104,7 +107,7 @@ class KorenderContext(var width: Int, var height: Int) {
         sceneBlock?.invoke(SceneContext(frameInfo, sd))
 
         updateFilterFramebuffers(sd.filters)
-        val scene = Scene(sd, inventory, camera)
+        val scene = Scene(sd, inventory, camera, width, height)
 
         onFrame.invoke(this, frameInfo)
         renderShadowMap()
@@ -173,6 +176,7 @@ class KorenderContext(var width: Int, var height: Int) {
 
 class SceneDeclaration {
 
+    var gui: ElementDeclaration.ContainerDeclaration? = null
     val renderables = mutableListOf<RenderableDeclaration>()
     val filters = mutableListOf<FilterDeclaration>()
     fun add(renderable: RenderableDeclaration) = renderables.add(renderable)
@@ -209,15 +213,21 @@ class Inventory(val gpu: Gpu) {
     private val meshes = Registry<MeshDeclaration, Mesh> { Meshes.create(it, gpu) }
     private val shaders = Registry<ShaderDeclaration, GpuShader> { Shaders.create(it, gpu) }
     private val textures = Registry<String, GpuTexture> { Textures.create(it).build(gpu) }
+    private val fonts = Registry<String, Font> { Fonts.load(gpu, it)}
+    private val fontMeshes = Registry<Any, Meshes.InstancedMesh> { Meshes.font(gpu, 256)}
 
     fun go(block: Inventory.() -> Unit) {
         meshes.begin()
         shaders.begin()
         textures.begin()
+        fonts.begin()
+        fontMeshes.begin()
         block.invoke(this)
         meshes.end()
         shaders.end()
         textures.end()
+        fonts.end()
+        fontMeshes.end()
     }
 
     fun mesh(decl: MeshDeclaration): Mesh = meshes[decl]
@@ -226,7 +236,8 @@ class Inventory(val gpu: Gpu) {
 
     fun texture(decl: String): GpuTexture = textures[decl]
     fun hasMesh(decl: MeshDeclaration): Boolean = meshes.has(decl)
-
+    fun font(fontResource: String): Font = fonts[fontResource]
+    fun fontMesh(id: Any): Meshes.InstancedMesh = fontMeshes[id]
 
 
 }

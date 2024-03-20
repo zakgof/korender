@@ -9,7 +9,8 @@ import java.nio.ByteBuffer
 class GlGpuMesh(
     val attrs: List<Attribute>,
     val vertexSize: Int,
-    isDynamic: Boolean = false
+    isDynamic: Boolean = false,
+    private val isLongIndex: Boolean = false
 ) : GpuMesh {
 
     private val vbHandle: Int = VGL15.glGenBuffers()
@@ -27,7 +28,7 @@ class GlGpuMesh(
         VGL11.glDrawElements(
             VGL11.GL_TRIANGLES,
             indices,
-            if (vertices > 32767) VGL11.GL_UNSIGNED_INT else VGL11.GL_UNSIGNED_SHORT,
+            if (isLongIndex) VGL11.GL_UNSIGNED_INT else VGL11.GL_UNSIGNED_SHORT,
             0
         )
 
