@@ -25,6 +25,8 @@ sealed interface MeshDeclaration {
     data object BillboardDeclaration : MeshDeclaration // TODO position scale and shit
     data object ImageQuadDeclaration : MeshDeclaration
 
+    data object SkyDeclaration : MeshDeclaration
+
     data class InstancedRenderableDeclaration(
         val id: Any,
         val count: Int,

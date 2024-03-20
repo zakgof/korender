@@ -25,9 +25,10 @@ fun AppExample() {
         Demo("IM", "") { InstancedMeshesExample() },
         Demo("Obj", "") { ObjFileExample() },
         Demo("Tex", "") { TexturingExample() },
-        Demo("GUI", "") { GuiExample() }
+        Demo("GUI", "") { GuiExample() },
+        Demo("Sky", "") { SkyExample() }
 
-        // "Tex", "Shadow", "Sky", "Text")
+        // "Shadow", "Sky")
     )
 
     var option by remember { mutableStateOf(options[0]) }

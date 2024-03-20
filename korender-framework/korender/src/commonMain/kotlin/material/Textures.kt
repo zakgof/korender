@@ -7,7 +7,7 @@ import com.zakgof.korender.gpu.GpuTexture
 object Textures {
 
     fun create(textureFile: String): TextureBuilder =
-        create(getPlatform().loadImage(Textures::class.java.getResourceAsStream(textureFile)))
+        create(getPlatform().loadImage(Textures::class.java.getResourceAsStream(textureFile)!!))
 
     fun create(image: Image): TextureBuilder = TextureBuilder(image)
 
