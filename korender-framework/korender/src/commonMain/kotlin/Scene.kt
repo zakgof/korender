@@ -47,21 +47,19 @@ class Scene(
                 }
             }
             filters = sceneDeclaration.filters.map { create(this, it) }
-            sceneDeclaration.gui?.let { layoutGui(this, 0, 0, width, height, it) }
+            sceneDeclaration.gui?.let { layoutGui(this, width, height, it) }
         }
     }
 
     private fun layoutGui(
         inventory: Inventory,
-        x: Int,
-        y: Int,
         width: Int,
         height: Int,
         container: ElementDeclaration.ContainerDeclaration
     ) {
         val sizes = mutableMapOf<ElementDeclaration, Size>()
         sizeEm(Direction.Vertical, container, sizes, inventory)
-        layoutContainer(sizes, inventory, x, y, width, height, container)
+        layoutContainer(sizes, inventory, 0, 0, width, height, container)
     }
 
     private fun layoutContainer(
@@ -84,7 +82,7 @@ class Scene(
                 val childWidth = if (declSize.width < 0) width else declSize.width
                 val childHeight = if (declSize.height < 0) fillerHeight else declSize.height
                 when (child) {
-                    is ElementDeclaration.TextDeclaration -> createText(child, inventory, x, currY, childWidth, childHeight)
+                    is ElementDeclaration.TextDeclaration -> createText(child, inventory, x, currY)
                     is ElementDeclaration.ImageDeclaration -> createImage(child, inventory, x, currY)
                     is ElementDeclaration.ContainerDeclaration ->
                         layoutContainer(sizes, inventory, x, currY, childWidth, childHeight, child)
@@ -104,7 +102,7 @@ class Scene(
                 val childWidth = if (declSize.width < 0) fillerWidth else declSize.width
                 val childHeight = if (declSize.height < 0) height else declSize.height
                 when (child) {
-                    is ElementDeclaration.TextDeclaration -> createText(child, inventory, currX, y, childWidth, childHeight)
+                    is ElementDeclaration.TextDeclaration -> createText(child, inventory, currX, y)
                     is ElementDeclaration.ImageDeclaration -> createImage(child, inventory, currX, y)
                     is ElementDeclaration.ContainerDeclaration ->
                         layoutContainer(sizes, inventory, x, currX, y, childHeight, child)
@@ -128,7 +126,7 @@ class Scene(
         ))
     }
 
-    private fun createText(declaration: ElementDeclaration.TextDeclaration, inventory: Inventory, x: Int, y: Int, w: Int, h: Int) {
+    private fun createText(declaration: ElementDeclaration.TextDeclaration, inventory: Inventory, x: Int, y: Int) {
         val mesh = inventory.fontMesh(declaration.id)
         val font = inventory.font(declaration.fontResource)
         mesh.updateFont(

@@ -73,4 +73,14 @@ class SceneContext(val frameInfo: FrameInfo, private val sceneDeclaration: Scene
         ContainerContext(gui).apply(block)
     }
 
+    fun Sky(preset: String) {
+        sceneDeclaration.add(
+            RenderableDeclaration(
+                MeshDeclaration.SkyDeclaration,
+                ShaderDeclaration("sky.vert", "${preset}sky.frag", setOf()),
+                {null}
+            )
+        )
+    }
+
 }

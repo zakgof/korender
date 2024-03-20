@@ -12,6 +12,11 @@ fun SkyExample() = Korender {
             FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
     }
     Scene {
-        // Sky (preset = "stars")
+        val preset = when ((frameInfo.time * 0.3).toInt() % 3) {
+            0 -> "star"
+            1 -> "cloud"
+            else -> "fastcloud"
+        }
+        Sky(preset = preset)
     }
 }
