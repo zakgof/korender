@@ -13,6 +13,8 @@ import java.util.regex.Pattern
 
 object Shaders {
 
+    val imageQuadDeclaration: ShaderDeclaration = ShaderDeclaration("image.vert", "image.frag", setOf())
+
     fun create(declaration: ShaderDeclaration, gpu: Gpu) =
         ShaderBuilder(declaration.vertFile, declaration.fragFile, declaration.defs).build(gpu)
     fun create(

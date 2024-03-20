@@ -14,8 +14,9 @@ class GlGpu : Gpu {
     override fun createMesh(
         attrs: List<Attribute>,
         vertexSize: Int,
-        isDynamic: Boolean
-    ): GpuMesh = GlGpuMesh(attrs, vertexSize, isDynamic)
+        isDynamic: Boolean,
+        isLongIndex: Boolean
+    ): GpuMesh = GlGpuMesh(attrs, vertexSize, isDynamic, isLongIndex)
 
     override fun createShader(
         title: String,

@@ -10,7 +10,7 @@ class Renderable(
     val mesh: Mesh,
     val shader: GpuShader,
     val uniforms: UniformSupplier,
-    val transform: Transform
+    val transform: Transform = Transform()
 ) {
     fun render(contextUniforms: UniformSupplier) =
         shader.render(

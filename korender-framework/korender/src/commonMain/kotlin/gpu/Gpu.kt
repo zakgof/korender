@@ -7,7 +7,7 @@ import com.zakgof.korender.material.TextureWrap
 import java.nio.ByteBuffer
 
 interface Gpu {
-    fun createMesh(attrs: List<Attribute>, vertexSize: Int, isDynamic: Boolean = false): GpuMesh
+    fun createMesh(attrs: List<Attribute>, vertexSize: Int, isDynamic: Boolean, isLongIndex: Boolean): GpuMesh
 
     fun createShader(
         title: String,

@@ -8,6 +8,7 @@ import com.zakgof.korender.geometry.Attributes.NORMAL
 import com.zakgof.korender.geometry.Attributes.PHI
 import com.zakgof.korender.geometry.Attributes.POS
 import com.zakgof.korender.geometry.Attributes.SCALE
+import com.zakgof.korender.geometry.Attributes.SCREEN
 import com.zakgof.korender.geometry.Attributes.TEX
 import com.zakgof.korender.glgpu.BufferUtils
 import com.zakgof.korender.gpu.Gpu
@@ -35,8 +36,10 @@ object Meshes {
         when (declaration) {
             is MeshDeclaration.InstancedRenderableDeclaration ->
                 builder(declaration.mesh).buildInstanced(gpu, declaration.count)
+
             is MeshDeclaration.InstancedBillboardDeclaration ->
                 billboard().buildInstanced(gpu, declaration.count)
+
             else ->
                 builder(declaration).build(gpu)
         }
@@ -47,6 +50,7 @@ object Meshes {
             is MeshDeclaration.CubeDeclaration -> cube(declaration.halfSide)
             is MeshDeclaration.ObjDeclaration -> obj(declaration.objFile)
             is MeshDeclaration.BillboardDeclaration -> billboard()
+            is MeshDeclaration.ImageQuadDeclaration -> imageQuad()
             else -> throw KorenderException("Unknown mesh declaration")
         }
 
@@ -70,7 +74,7 @@ object Meshes {
         private val indexIntBuffer: IntBuffer?
         private val indexShortBuffer: ShortBuffer?
         private val indexConcreteBuffer: Buffer
-        private var isLongIndex: Boolean
+        var isLongIndex: Boolean
 
         val vertexSize: Int = attrs.sumOf { it.size } * 4
 
@@ -100,8 +104,8 @@ object Meshes {
             }
         }
 
-        private fun indexGet(): Int =
-            if (isLongIndex) indexIntBuffer!!.get() else indexShortBuffer!!.get().toInt()
+        private fun indexGet(index: Int): Int =
+            if (isLongIndex) indexIntBuffer!![index] else indexShortBuffer!![index].toInt()
 
 
         fun updateVertex(vertexIndex: Int, block: (Vertex) -> Unit) {
@@ -128,7 +132,7 @@ object Meshes {
             return DefaultMesh(gpu, this, isDynamic)
         }
 
-        fun buildInstanced(gpu: Gpu, count: Int): Mesh =
+        fun buildInstanced(gpu: Gpu, count: Int): InstancedMesh =
             InstancedMesh(gpu, instancing(count), this, count)
 
         fun instancing(
@@ -158,7 +162,7 @@ object Meshes {
                         )
                     }
                     for (ind in 0 until that.indexNumber) {
-                        indices(that.indexGet() + i * that.vertexNumber)
+                        indices(that.indexGet(ind) + i * that.vertexNumber)
                     }
                 }
             }
@@ -174,7 +178,8 @@ object Meshes {
 
         private val floatVertexBuffer = data.vertexBuffer.asFloatBuffer()
 
-        final override val gpuMesh: GpuMesh = gpu.createMesh(data.attrs, data.vertexSize, isDynamic)
+        final override val gpuMesh: GpuMesh =
+            gpu.createMesh(data.attrs, data.vertexSize, isDynamic, data.isLongIndex)
 
         final override val modelBoundingBox: BoundingBox?
         override fun close() = gpuMesh.close()
@@ -265,7 +270,46 @@ object Meshes {
                     )
                 )
             }
-            gpuMesh.update(data.vertexBuffer, data.indexBuffer, instances.size * 4, instances.size * 6)
+            gpuMesh.update(
+                data.vertexBuffer,
+                data.indexBuffer,
+                instances.size * 4,
+                instances.size * 6
+            )
+        }
+
+        fun updateFont(
+            text: String,
+            height: Float,
+            aspect: Float,
+            x: Float,
+            y: Float,
+            widths: FloatArray
+        ) {
+            var xx = x
+            for (i in text.indices) {
+                val c = text[i].code
+                val ratio = widths[c]
+                val width = height * ratio * aspect
+                data.updateVertex(i * 4 + 0) {
+                    it.tex = Vec2((c % 16) / 16.0f, (c / 16) / 16.0f)
+                    it.screen = Vec2(xx, y)
+                }
+                data.updateVertex(i * 4 + 1) {
+                    it.tex = Vec2((c % 16 + ratio) / 16.0f, (c / 16) / 16.0f)
+                    it.screen = Vec2(xx + width, y)
+                }
+                data.updateVertex(i * 4 + 2) {
+                    it.tex = Vec2((c % 16 + ratio) / 16.0f, (c / 16 + 1f) / 16.0f)
+                    it.screen = Vec2(xx + width, y - height)
+                }
+                data.updateVertex(i * 4 + 3) {
+                    it.tex = Vec2((c % 16) / 16.0f, (c / 16 + 1f) / 16.0f)
+                    it.screen = Vec2(xx, y - height)
+                }
+                xx += width
+            }
+            gpuMesh.update(data.vertexBuffer, data.indexBuffer, text.length * 4, text.length * 6)
         }
     }
 
@@ -496,16 +540,21 @@ object Meshes {
             vertices(1f, 0f, scaleX, scaleY, phi)
             indices(0, 2, 1, 0, 3, 2)
         }
-}
 
-fun multiBillboard(count: Int) =
-    Meshes.create(4 * count, 6 * count, POS, TEX, SCALE, PHI) {
-        for (i in 0 until count) {
-            val base = i * 4
-            indices(base + 0, base + 2, base + 1, base + 0, base + 3, base + 2)
+    fun imageQuad() =
+        create(4, 6, TEX) {
+            vertices(0f, 0f)
+            vertices(0f, 1f)
+            vertices(1f, 1f)
+            vertices(1f, 0f)
+            indices(0, 2, 1, 0, 3, 2)
         }
-    }
 
+    fun font(gpu: Gpu, reservedLength: Int): InstancedMesh =
+        create(4, 6, TEX, SCREEN) {
+            indices(0, 2, 1, 0, 3, 2)
+        }.buildInstanced(gpu, reservedLength)
+}
 
 private fun getVertex(
     floatVertexBuffer: FloatBuffer,

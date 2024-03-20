@@ -16,4 +16,6 @@ object Gles15 : IGL15 {
         GLES20.glGenBuffers(1, array, 0)
         return array[0]
     }
+
+    override fun glDeleteBuffers(buffer: Int) = GLES20.glDeleteBuffers(1, intArrayOf(buffer), 0)
 }

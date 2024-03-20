@@ -17,8 +17,8 @@ vec2 hash(vec2 p) {
 }
 
 float noise(in vec2 p) {
-    const float K1 = 0.366025404; // (sqrt(3)-1)/2;
-    const float K2 = 0.211324865; // (3-sqrt(3))/6;
+    float K1 = 0.366025404; // (sqrt(3)-1)/2;
+    float K2 = 0.211324865; // (3-sqrt(3))/6;
     vec2 i = floor(p + (p.x + p.y) * K1);
     vec2 a = p - i + (i.x + i.y) * K2;
     vec2 o = (a.x > a.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);

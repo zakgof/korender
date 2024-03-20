@@ -75,6 +75,9 @@ object Gles20 : IGL20 {
         GLES20.glUniform1i(location, v0)
     }
 
+    override fun glUniform2f(location: Int, v0: Float, v1: Float) {
+        GLES20.glUniform2f(location, v0, v1)
+    }
     override fun glUniform3f(location: Int, v0: Float, v1: Float, v2: Float) {
         GLES20.glUniform3f(location, v0, v1, v2)
     }
@@ -110,5 +113,13 @@ object Gles20 : IGL20 {
 
     override fun glUniform1f(location: Int, v0: Float) {
         GLES20.glUniform1f(location, v0)
+    }
+
+    override fun glDeleteShader(shader: Int) {
+        GLES20.glDeleteShader(shader)
+    }
+
+    override fun glDeleteProgram(program: Int) {
+        GLES20.glDeleteProgram(program)
     }
 }
