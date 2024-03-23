@@ -3,54 +3,44 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.camera.DefaultCamera
+import com.zakgof.korender.declaration.MeshDeclarations.cube
+import com.zakgof.korender.declaration.MeshDeclarations.sphere
+import com.zakgof.korender.material.Materials.standard
+import com.zakgof.korender.material.Textures.texture
+import com.zakgof.korender.math.FloatMath.sin
+import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import com.zakgof.korender.projection.FrustumProjection
 
 @Composable
-fun ShadowExample() {
-    Korender() {
-        camera = DefaultCamera(Vec3(-2.0f, 3f, 20f), -1.z, 1.y)
-        light = Vec3(1f, -1f, 1f).normalize()
-        onResize = {
-            projection = FrustumProjection(
-                width = 5f * width / height,
-                height = 5f,
-                near = 10f,
-                far = 1000f
-            )
-        }
-        /*
+fun ShadowExample() =
+    Korender {
         val material = standard("SHADOW_RECEIVER", "PCSS") {
-            colorFile = "/sand.jpg"
+            colorTexture = texture("/sand.jpg")
         }
         Scene {
-            Renderable (
-                name = "plate",
-                mesh = cube(1f) {
-                    transformer = Transform().scale(8f, 1f, 5f).translate(-1.6f.y)
-                },
-                material = material
-            )
-            Renderable (
-                name = "rcube",
-                mesh = cube(1.5f) {
-                    transformer = Transform().scale(8f, 1f, 5f).translate(-1.6f.y)
-                },
+            Light(Vec3(1f, -1f, 1f).normalize())
+            Camera(DefaultCamera(Vec3(-2.0f, 3f, 20f), -1.z, 1.y))
+            Renderable(
+                mesh = cube(1f),
                 material = material,
-                transform = Transform().rotate(1.x, -FloatMath.PIdiv2).rotate(1.y, frameInfo.time * 0.1f),
-                shadowCaster = true
+                transform = Transform().scale(8f, 1f, 5f).translate(-2.y)
             )
-            Renderable (
-                name = "rsphere",
-                mesh = sphere(1.5f) {
-                    transformer = Transform().scale(8f, 1f, 5f).translate(-1.6f.y)
-                },
-                material = material,
-                transform = Transform().translate(Vec3(-4.0f, 2.0f + sin(frameInfo.time), 0.0f)),
-                shadowCaster = true
-            )
-        } */
+            Shadow(mapSize = 1024) {
+                Renderable(
+                    mesh = cube(1.0f),
+                    material = material,
+                    transform = Transform()
+                        .rotate(1.y, frameInfo.time * 0.1f),
+                )
+                Renderable(
+                    mesh = sphere(1.5f),
+                    material = material,
+                    transform = Transform()
+                        .translate(Vec3(-4.0f, 2.0f + sin(frameInfo.time), 0.0f)),
+                )
+            }
+
+        }
     }
-}

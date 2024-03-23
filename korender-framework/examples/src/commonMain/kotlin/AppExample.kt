@@ -25,6 +25,7 @@ fun AppExample() {
         Demo("IBB", "") { InstancedBillboardsExample() },
         Demo("IM", "") { InstancedMeshesExample() },
         Demo("Obj", "") { ObjFileExample() },
+        Demo("Shadow", "") { ShadowExample() },
         Demo("Tex", "") { TexturingExample() },
         Demo("GUI", "") { GuiExample() },
         Demo("Sky", "") { SkyExample() }

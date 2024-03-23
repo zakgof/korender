@@ -10,18 +10,11 @@ import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import com.zakgof.korender.projection.FrustumProjection
 
 @Composable
 fun TexturingExample(): Unit = Korender {
-
-    camera = DefaultCamera(position = 20.z, direction = -1.z, up = 1.y)
-    onResize = {
-        projection =
-            FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
-    }
-
     Scene {
+        Camera(DefaultCamera(position = 20.z, direction = -1.z, up = 1.y))
         Renderable(
             mesh = sphere(2f),
             material = standard {

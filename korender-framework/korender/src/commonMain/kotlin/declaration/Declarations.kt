@@ -27,7 +27,7 @@ sealed interface MeshDeclaration {
     data object BillboardDeclaration : MeshDeclaration // TODO position scale and shit
     data object ImageQuadDeclaration : MeshDeclaration
 
-    data object SkyDeclaration : MeshDeclaration
+    data object ScreenQuadDeclaration : MeshDeclaration
 
     data class InstancedRenderableDeclaration(
         val id: Any,
@@ -131,7 +131,7 @@ class ContainerContext(private val declaration: ElementDeclaration.ContainerDecl
 
 sealed class ElementDeclaration {
 
-    class FillerDeclaration: ElementDeclaration()
+    class FillerDeclaration : ElementDeclaration()
     class TextDeclaration(val id: Any, val fontResource: String, val height: Int, val text: String, val color: Color, val onTouch: TouchHandler) : ElementDeclaration()
     class ImageDeclaration(val imageResource: String, val width: Int, val height: Int, val onTouch: TouchHandler) : ElementDeclaration()
     class ContainerDeclaration(val direction: Direction) : ElementDeclaration() {
@@ -146,10 +146,19 @@ enum class Direction {
     Horizontal
 }
 
-fun onClick(touchEvent : TouchEvent, clickHandler: () -> Unit) {
+fun onClick(touchEvent: TouchEvent, clickHandler: () -> Unit) {
     if (touchEvent.type == TouchEvent.Type.DOWN) {
         clickHandler()
     }
 }
 
 data class TextureDeclaration(val textureResource: String) // TODO filter and wrap
+
+class ShadowDeclaration(val mapSize: Int) {
+
+    val renderables = mutableListOf<RenderableDeclaration>()
+    fun addRenderable(renderableDeclaration: RenderableDeclaration) =
+        renderables.add(renderableDeclaration)
+}
+
+data class FrameBufferDeclaration(val id: String, val width: Int, val height: Int, val withDepth: Boolean)

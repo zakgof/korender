@@ -1,9 +1,14 @@
-package com.zakgof.korender
+package com.zakgof.korender.engine
 
+import com.zakgof.korender.Bucket
+import com.zakgof.korender.Filter
+import com.zakgof.korender.SceneDeclaration
+import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.declaration.Direction
 import com.zakgof.korender.declaration.ElementDeclaration
 import com.zakgof.korender.declaration.FilterDeclaration
+import com.zakgof.korender.declaration.FrameBufferDeclaration
 import com.zakgof.korender.declaration.InstancedBillboardsContext
 import com.zakgof.korender.declaration.InstancedRenderablesContext
 import com.zakgof.korender.declaration.MeshDeclaration
@@ -14,16 +19,20 @@ import com.zakgof.korender.font.Fonts
 import com.zakgof.korender.geometry.Meshes
 import com.zakgof.korender.gl.VGL11
 import com.zakgof.korender.gpu.GpuFrameBuffer
-import com.zakgof.korender.gpu.GpuMesh
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.material.MapUniformSupplier
 import com.zakgof.korender.material.Shaders
 import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.Vec2
+import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.shadow.SimpleShadower
 import kotlin.math.max
 
-class Scene(sceneDeclaration: SceneDeclaration, private val inventory: Inventory, private val camera: Camera, private val width: Int, private val height: Int) {
+internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: Inventory, private val camera: Camera, private val width: Int, private val height: Int) {
+
+    private val shadower: SimpleShadower?
     private val filters: List<Filter>
+    private val filterFrameBuffers: List<GpuFrameBuffer>
 
     private val opaques = mutableListOf<Renderable>()
     private val transparents = mutableListOf<Renderable>()
@@ -36,6 +45,14 @@ class Scene(sceneDeclaration: SceneDeclaration, private val inventory: Inventory
     }
 
     init {
+        shadower = sceneDeclaration.shadow?.let {
+            val shadowCasters = mutableListOf<Renderable>()
+            it.renderables.forEach { rd ->
+                sceneDeclaration.renderables.add(rd)
+                shadowCasters.add(createRenderable(rd))
+            }
+            SimpleShadower(inventory, it, shadowCasters)
+        }
         sceneDeclaration.renderables.forEach {
             val renderable = createRenderable(it)
             when (it.bucket) {
@@ -46,6 +63,7 @@ class Scene(sceneDeclaration: SceneDeclaration, private val inventory: Inventory
             }
         }
         filters = sceneDeclaration.filters.map { createFilter(it) }
+        filterFrameBuffers = filterFrameBuffers()
         sceneDeclaration.gui?.let { layoutGui(width, height, it) }
     }
 
@@ -109,7 +127,7 @@ class Scene(sceneDeclaration: SceneDeclaration, private val inventory: Inventory
         touchBoxes.add(TouchBox(x, y, declaration.width, declaration.height, declaration.onTouch))
     }
 
-    private fun createText(declaration: ElementDeclaration.TextDeclaration,  x: Int, y: Int, w: Int) {
+    private fun createText(declaration: ElementDeclaration.TextDeclaration, x: Int, y: Int, w: Int) {
         println("Text ${declaration.text} at $x $y width $w")
         val mesh = inventory.fontMesh(declaration.id)
         val font = inventory.font(declaration.fontResource)
@@ -218,11 +236,14 @@ class Scene(sceneDeclaration: SceneDeclaration, private val inventory: Inventory
         return Filter(shader, declaration.uniforms)
     }
 
-    fun renderAll(
-        contextUniforms: UniformSupplier, filterFrameBuffers: List<GpuFrameBuffer>, filterScreenQuad: GpuMesh
-    ) {
+    fun render(context: MutableMap<String, Any?>, light: Vec3) {
+
+        shadower?.let {
+            context.putAll(it.render(light))
+        }
+
         if (filters.isEmpty()) {
-            render(camera, contextUniforms)
+            render(camera, context)
         } else {
             val prevFrameContext = mutableMapOf<String, Any?>()
             for (p in 0..filters.size) {
@@ -230,14 +251,13 @@ class Scene(sceneDeclaration: SceneDeclaration, private val inventory: Inventory
                 renderTo(frameBuffer) {
                     if (p == 0) {
                         VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
-                        render(camera, contextUniforms)
+                        render(camera, context)
                     } else {
                         val filter = filters[p - 1]
                         VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
                         filter.gpuShader.render(
-                            filter.uniforms + contextUniforms + MapUniformSupplier(
-                                prevFrameContext
-                            ), filterScreenQuad
+                            filter.uniforms + context + prevFrameContext,
+                            inventory.mesh(MeshDeclaration.ScreenQuadDeclaration).gpuMesh
                         )
                     }
                 }
@@ -247,11 +267,27 @@ class Scene(sceneDeclaration: SceneDeclaration, private val inventory: Inventory
         }
     }
 
-    private fun render(camera: Camera, contextUniforms: UniformSupplier) {
+    private fun filterFrameBuffers(): MutableList<GpuFrameBuffer> {
+        val filterFrameBuffers = mutableListOf<GpuFrameBuffer>()
+        if (filters.isNotEmpty()) {
+            filterFrameBuffers.add(inventory.frameBuffer(FrameBufferDeclaration("filter1", width, height, false)))
+        }
+        if (filters.size >= 2) {
+            filterFrameBuffers.add(inventory.frameBuffer(FrameBufferDeclaration("filter2", width, height, false)))
+        }
+        return filterFrameBuffers
+    }
+
+    private fun render(camera: Camera, context: Map<String, Any?>) {
+
+        VGL11.glViewport(0, 0, width, height)
+        VGL11.glEnable(VGL11.GL_CULL_FACE)
+        VGL11.glCullFace(VGL11.GL_BACK)
+        VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
 
         val uniformDecorator: (UniformSupplier) -> UniformSupplier = {
             UniformSupplier { key ->
-                var value = it[key] ?: contextUniforms[key]
+                var value = it[key] ?: context[key]
                 if (value is TextureDeclaration) {
                     value = inventory.texture(value.textureResource)
                 }

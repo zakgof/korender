@@ -18,8 +18,7 @@ fun ObjFileExample() {
     Korender() {
         OnTouch { orbitCamera.touch(it) }
         Scene {
-            projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
-            camera = orbitCamera.camera(this@Korender)
+            Camera(orbitCamera.camera(projection, width, height))
             Renderable(
                 mesh = obj("/cat-red.obj"),
                 material = standard {

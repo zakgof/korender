@@ -51,7 +51,7 @@ object Meshes {
             is MeshDeclaration.ObjDeclaration -> obj(declaration.objFile)
             is MeshDeclaration.BillboardDeclaration -> billboard()
             is MeshDeclaration.ImageQuadDeclaration -> imageQuad()
-            is MeshDeclaration.SkyDeclaration -> screenQuad()
+            is MeshDeclaration.ScreenQuadDeclaration -> screenQuad()
             else -> throw KorenderException("Unknown mesh declaration")
         }
 

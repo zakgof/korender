@@ -1,4 +1,4 @@
-package com.zakgof.korender
+package com.zakgof.korender.engine
 
 import com.zakgof.korender.geometry.Mesh
 import com.zakgof.korender.gpu.GpuShader

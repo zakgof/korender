@@ -6,7 +6,6 @@ import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.Korender
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.z
-import com.zakgof.korender.projection.FrustumProjection
 
 @Composable
 fun SkyExample() {
@@ -17,11 +16,8 @@ fun SkyExample() {
         OnTouch { freeCamera.touch(it) }
 
         Scene {
-            projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
-            camera = freeCamera.camera(korenderContext = korenderContext, 0f)
-
+            Camera(freeCamera.camera(projection, width, height, 0f))
             Sky(preset = preset(frameInfo))
-
             Gui {
                 Filler()
                 Text(id = "fps", fontResource = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0x66FF55))
