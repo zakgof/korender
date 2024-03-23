@@ -5,33 +5,41 @@ import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.declaration.MeshDeclarations.cube
 import com.zakgof.korender.material.Materials.standard
+import com.zakgof.korender.material.Textures
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.z
 import com.zakgof.korender.projection.FrustumProjection
 
 @Composable
 fun InstancedMeshesExample() = Korender {
-
-    onResize = {
-        projection =
-            FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
-    }
-
+    val freeCamera = FreeCamera(20.z, -1.z)
+    OnTouch { freeCamera.touch(it) }
     Scene {
+        projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
+        camera = freeCamera.camera(this@Korender, frameInfo.dt)
         InstancedRenderables(
             id = "particles",
             count = 21 * 21,
             mesh = cube(0.4f),
             material = standard {
-                colorFile = "/sand.jpg"
+                colorTexture = Textures.texture("/sand.jpg")
             },
             static = true
         ) {
             for (x in -10..10) {
                 for (y in -10..10) {
-                    Instance(
-                        transform = Transform().translate(Vec3(x.toFloat(), y.toFloat(), 0f))
-                    )
+                    Instance(transform = Transform().translate(Vec3(x.toFloat(), y.toFloat(), 0f)))
+                }
+            }
+        }
+        Gui {
+            Row {
+                Filler()
+                Column {
+                    Filler()
+                    Image(imageResource = "/accelerate.png", width = 128, height = 128, onTouch = { freeCamera.forward(it) })
+                    Image(imageResource = "/decelerate.png", width = 128, height = 128, onTouch = { freeCamera.backward(it) })
                 }
             }
         }

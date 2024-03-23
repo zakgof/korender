@@ -14,6 +14,7 @@ import com.zakgof.korender.gl.VGL20
 import com.zakgof.korender.gl.VGL30
 import com.zakgof.korender.glgpu.BufferUtils
 import com.zakgof.korender.gpu.GpuTexture
+import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.lwjgl.Lwjgl11
 import com.zakgof.korender.lwjgl.Lwjgl12
 import com.zakgof.korender.lwjgl.Lwjgl13
@@ -30,6 +31,9 @@ import java.awt.Font
 import java.awt.GraphicsEnvironment
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import java.awt.event.MouseMotionAdapter
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferByte
 import java.io.InputStream
@@ -45,7 +49,12 @@ class JVMPlatform : Platform {
     override val name: String = "Java ${System.getProperty("java.version")}"
 
     @Composable
-    override fun openGL(init: (Int, Int) -> Unit, frame: () -> Unit, resize: (Int, Int) -> Unit) {
+    override fun openGL(
+        init: (Int, Int) -> Unit,
+        frame: () -> Unit,
+        resize: (Int, Int) -> Unit,
+        touch: (touchEvent: TouchEvent) -> Unit
+    ) {
         val pixelRatio = detectDevicePixelRatio()
         SwingPanel(modifier = Modifier.fillMaxSize(),
             update = {
@@ -91,9 +100,23 @@ class JVMPlatform : Platform {
                         swapBuffers()
                     }
                 }
+                canvas.addMouseMotionListener(object : MouseMotionAdapter() {
+                    override fun mouseMoved(e: MouseEvent) =
+                        sendTouch(touch, canvas, pixelRatio, TouchEvent.Type.MOVE, e.x, e.y)
+
+                    override fun mouseDragged(e: MouseEvent) =
+                        sendTouch(touch, canvas, pixelRatio, TouchEvent.Type.MOVE, e.x, e.y)
+                })
+                canvas.addMouseListener(object : MouseAdapter() {
+                    override fun mousePressed(e: MouseEvent) =
+                        sendTouch(touch, canvas, pixelRatio, TouchEvent.Type.DOWN, e.x, e.y)
+
+                    override fun mouseReleased(e: MouseEvent) =
+                        sendTouch(touch, canvas, pixelRatio, TouchEvent.Type.UP, e.x, e.y)
+                })
+
                 canvas.addComponentListener(object : ComponentAdapter() {
                     override fun componentResized(e: ComponentEvent?) {
-                        println("componentResized ${canvas.size}")
                         canvas.runInContext {
                             resize(
                                 (canvas.size.width * pixelRatio[0]).toInt(),
@@ -105,6 +128,17 @@ class JVMPlatform : Platform {
                 canvas
             }
         )
+    }
+
+    private fun sendTouch(
+        touch: (touchEvent: TouchEvent) -> Unit,
+        canvas: AWTGLCanvas,
+        pixelRatio: List<Float>,
+        type: TouchEvent.Type,
+        ex: Int,
+        ey: Int
+    ) = canvas.runInContext {
+        touch(TouchEvent(type, ex * pixelRatio[0], ey * pixelRatio[1]))
     }
 
     private fun detectDevicePixelRatio(): List<Float> {
@@ -125,7 +159,7 @@ class JVMPlatform : Platform {
                 .put(data[i * 3 + 1])
                 .put(data[i * 3])
         }
-        return buffer.flip() as ByteBuffer;
+        return buffer.flip() as ByteBuffer
     }
 
     private fun loadGray(data: ByteArray): ByteBuffer {
@@ -147,18 +181,16 @@ class JVMPlatform : Platform {
 
     override fun loadFont(stream: InputStream): FontDef {
         val cell = 64
-        val originalFont = java.awt.Font.createFont(Font.TRUETYPE_FONT, stream)
-        val img = BufferedImage(cell * 16, cell * 16, BufferedImage.TYPE_3BYTE_BGR)
+        val originalFont = Font.createFont(Font.TRUETYPE_FONT, stream)
+        val img = BufferedImage(cell * 16, cell * 16, BufferedImage.TYPE_4BYTE_ABGR)
         val graphics = img.graphics
         graphics.font = originalFont
         val fmOriginal = graphics.fontMetrics
 
-        val width =
-            (0 until 128).maxOf { fmOriginal.getStringBounds("" + it.toChar(), graphics).width }
-        val height =
-            (0 until 128).maxOf { fmOriginal.getStringBounds("" + it.toChar(), graphics).height }
-
-        val fontSize = cell / max(width, height)
+        val maxwidthheight =
+            (0 until 128).map { fmOriginal.getStringBounds("" + it.toChar(), graphics) }
+                .maxOf { max(it.width, it.height) }
+        val fontSize = cell / maxwidthheight
 
         val font = originalFont.deriveFont(round(fontSize.toFloat()))
         graphics.font = font

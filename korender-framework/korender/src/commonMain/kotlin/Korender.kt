@@ -19,9 +19,11 @@ import com.zakgof.korender.gpu.GpuFrameBuffer
 import com.zakgof.korender.gpu.GpuMesh
 import com.zakgof.korender.gpu.GpuShader
 import com.zakgof.korender.gpu.GpuTexture
+import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.material.MapUniformSupplier
 import com.zakgof.korender.material.Shaders
 import com.zakgof.korender.material.Textures
+import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -50,12 +52,15 @@ fun Korender(block: KorenderContext.() -> Unit) {
             korender.onResize.invoke(korender)
         },
         frame = { korender.frame() },
-        resize = { w, h -> korender.resize(w, h) }
+        resize = { w, h -> korender.resize(w, h) },
+        touch = { e -> korender.touch(e) }
     )
 }
 
 class KorenderContext(var width: Int, var height: Int) {
 
+    private var sceneTouchHandler: TouchHandler? = null
+    private val touchHandlers = mutableListOf<TouchHandler>()
     private var sceneBlock: (SceneContext.() -> Unit)? = null
 
     private val context = mutableMapOf<String, Any?>()
@@ -99,24 +104,31 @@ class KorenderContext(var width: Int, var height: Int) {
         onResize.invoke(this)
     }
 
+    fun touch(e: TouchEvent) {
+        touchHandlers.forEach { it(e) }
+        sceneTouchHandler?.invoke(e)
+    }
+
     fun frame() {
         val frameInfo = updateFrameInfo()
         updateContext()
 
         val sd = SceneDeclaration()
-        sceneBlock?.invoke(SceneContext(frameInfo, sd))
+        sceneBlock?.invoke(SceneContext(frameInfo, sd, this))
 
         updateFilterFramebuffers(sd.filters)
-        val scene = Scene(sd, inventory, camera, width, height)
 
-        onFrame.invoke(this, frameInfo)
-        renderShadowMap()
-
-        VGL11.glViewport(0, 0, width, height)
-        VGL11.glEnable(VGL11.GL_CULL_FACE)
-        VGL11.glCullFace(VGL11.GL_BACK)
-        VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
-        scene.renderAll(contextUniforms, filterFrameBuffers, filterScreenQuad)
+        inventory.go {
+            val scene = Scene(sd, inventory, camera, width, height)
+            onFrame.invoke(this@KorenderContext, frameInfo)
+            renderShadowMap()
+            VGL11.glViewport(0, 0, width, height)
+            VGL11.glEnable(VGL11.GL_CULL_FACE)
+            VGL11.glCullFace(VGL11.GL_BACK)
+            VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
+            scene.renderAll(contextUniforms, filterFrameBuffers, filterScreenQuad)
+            sceneTouchHandler = scene.touchHandler
+        }
     }
 
     private fun updateFilterFramebuffers(declarations: List<FilterDeclaration>) {
@@ -133,8 +145,8 @@ class KorenderContext(var width: Int, var height: Int) {
     private fun renderShadowMap() {
         shadower.render(light)
         context["shadowTexture"] = shadower.texture
-        context["shadowProjection"] = shadower.projection?.mat4()
-        context["shadowView"] = shadower.camera?.mat4()
+        context["shadowProjection"] = shadower.projection?.mat4
+        context["shadowView"] = shadower.camera?.mat4
     }
 
     private fun updateFrameInfo(): FrameInfo {
@@ -156,9 +168,10 @@ class KorenderContext(var width: Int, var height: Int) {
     }
 
     private fun updateContext() {
-        context["view"] = camera.mat4()
-        context["projection"] = projection.mat4()
-        context["cameraPos"] = camera.position()
+        context["noiseTexture"] = texture("/noise.png")
+        context["view"] = camera.mat4
+        context["projection"] = projection.mat4
+        context["cameraPos"] = camera.position
         context["light"] = light
         context["screenWidth"] = width.toFloat()
         context["screenHeight"] = height.toFloat()
@@ -172,7 +185,11 @@ class KorenderContext(var width: Int, var height: Int) {
         sceneBlock = block;
     }
 
+    fun OnTouch(handler: (TouchEvent) -> Unit) = touchHandlers.add(handler)
+
 }
+
+typealias TouchHandler = (TouchEvent) -> Unit
 
 class SceneDeclaration {
 
@@ -213,8 +230,8 @@ class Inventory(val gpu: Gpu) {
     private val meshes = Registry<MeshDeclaration, Mesh> { Meshes.create(it, gpu) }
     private val shaders = Registry<ShaderDeclaration, GpuShader> { Shaders.create(it, gpu) }
     private val textures = Registry<String, GpuTexture> { Textures.create(it).build(gpu) }
-    private val fonts = Registry<String, Font> { Fonts.load(gpu, it)}
-    private val fontMeshes = Registry<Any, Meshes.InstancedMesh> { Meshes.font(gpu, 256)}
+    private val fonts = Registry<String, Font> { Fonts.load(gpu, it) }
+    private val fontMeshes = Registry<Any, Meshes.InstancedMesh> { Meshes.font(gpu, 256) }
 
     fun go(block: Inventory.() -> Unit) {
         meshes.begin()

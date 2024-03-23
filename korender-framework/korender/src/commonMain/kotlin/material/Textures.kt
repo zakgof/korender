@@ -1,10 +1,13 @@
 package com.zakgof.korender.material
 
+import com.zakgof.korender.declaration.TextureDeclaration
 import com.zakgof.korender.getPlatform
 import com.zakgof.korender.gpu.Gpu
 import com.zakgof.korender.gpu.GpuTexture
 
 object Textures {
+
+    fun texture(textureResource: String): TextureDeclaration = TextureDeclaration(textureResource)
 
     fun create(textureFile: String): TextureBuilder =
         create(getPlatform().loadImage(Textures::class.java.getResourceAsStream(textureFile)!!))

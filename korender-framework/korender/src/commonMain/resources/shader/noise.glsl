@@ -27,3 +27,13 @@ float fbm(vec2 n) {
     }
     return total;
 }
+
+float fbmTex(sampler2D noiseTexture, vec2 n) {
+    float total = 0.0, amplitude = 1.0;
+    for (int i = 0; i < 7; i++) {
+        total += (texture(noiseTexture, n).r-0.5) * amplitude;
+        n = msw * n;
+        amplitude *= 0.2;
+    }
+    return total;
+}

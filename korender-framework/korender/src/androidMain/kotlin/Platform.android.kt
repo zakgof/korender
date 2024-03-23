@@ -14,6 +14,9 @@ import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.LinearLayout
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.viewinterop.AndroidView
 import com.zakgof.korender.font.FontDef
 import com.zakgof.korender.gl.VGL11
@@ -32,6 +35,7 @@ import com.zakgof.korender.gles.Gles20
 import com.zakgof.korender.gles.Gles30
 import com.zakgof.korender.glgpu.BufferUtils
 import com.zakgof.korender.gpu.GpuTexture
+import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.material.Image
 import java.io.File
 import java.io.InputStream
@@ -48,7 +52,12 @@ class AndroidPlatform : Platform {
     override val name: String = "Android ${Build.VERSION.SDK_INT}"
 
     @Composable
-    override fun openGL(init: (Int, Int) -> Unit, frame: () -> Unit, resize: (Int, Int) -> Unit) {
+    override fun openGL(
+        init: (Int, Int) -> Unit,
+        frame: () -> Unit,
+        resize: (Int, Int) -> Unit,
+        touch: (touchEvent: TouchEvent) -> Unit
+    ) {
         AndroidView(factory = {
             LinearLayout(it).apply {
                 addView(KorenderGLSurfaceView(it, init, frame, resize))
@@ -56,6 +65,24 @@ class AndroidPlatform : Platform {
                     MATCH_PARENT,
                     MATCH_PARENT
                 )
+            }
+        }, modifier = Modifier.pointerInput(Unit) {
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent()
+                    if (event.changes.isNotEmpty()) {
+                        val position = event.changes[0].position
+                        if (event.type == PointerEventType.Press) {
+                            touch(TouchEvent(TouchEvent.Type.DOWN, position.x, position.y))
+                        }
+                        if (event.type == PointerEventType.Release) {
+                            touch(TouchEvent(TouchEvent.Type.UP, position.x, position.y))
+                        }
+                        if (event.type == PointerEventType.Move) {
+                            touch(TouchEvent(TouchEvent.Type.MOVE, position.x, position.y))
+                        }
+                    }
+                }
             }
         })
     }

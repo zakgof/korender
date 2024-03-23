@@ -4,6 +4,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.Button
 import androidx.compose.material.Text
@@ -35,8 +36,9 @@ fun AppExample() {
     Column {
         val scrollState = rememberScrollState()
         Row(
-            modifier = Modifier.horizontalScroll(scrollState),
-            horizontalArrangement = Arrangement.spacedBy(3.dp)
+            modifier = Modifier.horizontalScroll(scrollState)
+                .padding(horizontal = 3.dp),
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             options.map {
                 Button(onClick = { option = it }) {
