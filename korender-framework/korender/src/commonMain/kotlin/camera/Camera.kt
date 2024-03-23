@@ -4,7 +4,6 @@ import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec3
 
 interface Camera {
-
-    fun mat4(): Mat4
-    fun position(): Vec3
+    val position: Vec3
+    val mat4: Mat4
 }

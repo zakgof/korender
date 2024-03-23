@@ -1,6 +1,8 @@
 package com.zakgof.korender.declaration
 
 import com.zakgof.korender.Bucket
+import com.zakgof.korender.TouchHandler
+import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
@@ -107,24 +109,31 @@ class ContainerContext(private val declaration: ElementDeclaration.ContainerDecl
         declaration.add(column)
     }
 
-    fun Text(id: Any, fontResource: String, height: Int, text: String, color: Color) {
-        declaration.add(ElementDeclaration.TextDeclaration(id, fontResource, height, text, color))
+    fun Text(
+        id: Any,
+        fontResource: String,
+        height: Int,
+        text: String,
+        color: Color,
+        onTouch: TouchHandler = {}
+    ) {
+        declaration.add(ElementDeclaration.TextDeclaration(id, fontResource, height, text, color, onTouch))
     }
 
     fun Filler() {
         declaration.add(ElementDeclaration.FillerDeclaration())
     }
 
-    fun Image(imageResource: String, width: Int, height: Int) {
-        declaration.add(ElementDeclaration.ImageDeclaration(imageResource, width, height))
+    fun Image(imageResource: String, width: Int, height: Int, onTouch: TouchHandler = {}) {
+        declaration.add(ElementDeclaration.ImageDeclaration(imageResource, width, height, onTouch))
     }
 }
 
 sealed class ElementDeclaration {
 
     class FillerDeclaration: ElementDeclaration()
-    class TextDeclaration(val id: Any, val fontResource: String, val height: Int, val text: String, val color: Color) : ElementDeclaration()
-    class ImageDeclaration(val imageResource: String, val width: Int, val height: Int) : ElementDeclaration()
+    class TextDeclaration(val id: Any, val fontResource: String, val height: Int, val text: String, val color: Color, val onTouch: TouchHandler) : ElementDeclaration()
+    class ImageDeclaration(val imageResource: String, val width: Int, val height: Int, val onTouch: TouchHandler) : ElementDeclaration()
     class ContainerDeclaration(val direction: Direction) : ElementDeclaration() {
 
         val elements = mutableListOf<ElementDeclaration>()
@@ -136,3 +145,11 @@ enum class Direction {
     Vertical,
     Horizontal
 }
+
+fun onClick(touchEvent : TouchEvent, clickHandler: () -> Unit) {
+    if (touchEvent.type == TouchEvent.Type.DOWN) {
+        clickHandler()
+    }
+}
+
+data class TextureDeclaration(val textureResource: String) // TODO filter and wrap

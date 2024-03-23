@@ -6,15 +6,10 @@ import com.zakgof.korender.material.MapUniformSupplier
 import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.Transform
 
-class Renderable(
-    val mesh: Mesh,
-    val shader: GpuShader,
-    val uniforms: UniformSupplier,
-    val transform: Transform = Transform()
-) {
-    fun render(contextUniforms: UniformSupplier) =
+class Renderable(val mesh: Mesh, val shader: GpuShader, val uniforms: UniformSupplier, val transform: Transform = Transform()) {
+    fun render(uniformDecorator: (UniformSupplier) -> UniformSupplier) =
         shader.render(
-            uniforms + MapUniformSupplier("model" to transform.mat4()) + contextUniforms,
+            uniformDecorator(uniforms + MapUniformSupplier("model" to transform.mat4())),
             mesh.gpuMesh
         )
 }

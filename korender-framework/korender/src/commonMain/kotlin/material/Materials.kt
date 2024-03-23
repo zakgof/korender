@@ -2,7 +2,7 @@ package com.zakgof.korender.material
 
 import com.zakgof.korender.declaration.MaterialDeclaration
 import com.zakgof.korender.declaration.ShaderDeclaration
-import com.zakgof.korender.gpu.GpuTexture
+import com.zakgof.korender.declaration.TextureDeclaration
 import com.zakgof.korender.math.Color
 
 object Materials {
@@ -18,15 +18,12 @@ class StockUniforms : UniformSupplier {
     private val static = mutableMapOf<String, Any>()
     private val dynamic = mutableMapOf<String, () -> Any>()
 
-    var colorTexture: GpuTexture? = null
-    var normalTexture: GpuTexture? = null
-    var aperiodicTexture: GpuTexture? = null
-    var shadowTexture: GpuTexture? = null
-    var detailTexture: GpuTexture? = null
-    var colorFile: String? = null
-    var normalFile: String? = null
-    var aperiodicFile: String? = null
-    var detailFile: String? = null
+    var colorTexture: TextureDeclaration? = null
+    var normalTexture: TextureDeclaration? = null
+    var aperiodicTexture: TextureDeclaration? = null
+    var shadowTexture: TextureDeclaration? = null
+    var detailTexture: TextureDeclaration? = null
+
     var color = Color(0.5f, 0.5f, 0.5f);
     var triplanarScale = 1.0f
     var detailScale = 16.0f
@@ -67,20 +64,5 @@ class StockUniforms : UniformSupplier {
             "rotation" -> rotation
             else -> static[key] ?: dynamic[key]?.let { it() }
         }
-
-    override fun boil(loader: (Any) -> Any) {
-        if (colorFile != null) {
-            colorTexture = loader(colorFile!!) as GpuTexture
-        }
-        if (normalFile != null) {
-            normalTexture = loader(normalFile!!) as GpuTexture
-        }
-        if (aperiodicFile != null) {
-            aperiodicTexture = loader(aperiodicFile!!) as GpuTexture
-        }
-        if (detailFile != null) {
-            detailTexture = loader(detailFile!!) as GpuTexture
-        }
-    }
 
 }

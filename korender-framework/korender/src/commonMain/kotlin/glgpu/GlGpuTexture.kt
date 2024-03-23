@@ -93,7 +93,7 @@ class GlGpuTexture(val glHandle: Int) : GpuTexture {
     }
 
     override fun close() {
-        println("Destroying Texture $glHandle")
+        println("Destroying GPU Texture $glHandle")
         VGL11.glDeleteTextures(glHandle)
     }
 

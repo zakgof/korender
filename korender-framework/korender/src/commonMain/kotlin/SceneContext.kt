@@ -14,7 +14,7 @@ import com.zakgof.korender.material.StockUniforms
 import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.Transform
 
-class SceneContext(val frameInfo: FrameInfo, private val sceneDeclaration: SceneDeclaration) {
+class SceneContext(val frameInfo: FrameInfo, private val sceneDeclaration: SceneDeclaration, val korenderContext: KorenderContext) {
     fun Renderable(
         mesh: MeshDeclaration,
         material: MaterialDeclaration,

@@ -36,9 +36,9 @@ class SimpleShadower(gpu: Gpu, size: Int = 1024) : Shadower {
                     r.uniforms[it] ?: mapOf(
                         "light" to light,
                         "model" to r.transform.mat4(),
-                        "view" to camera!!.mat4(),
-                        "projection" to projection!!.mat4(),
-                        "cameraPos" to camera!!.position()
+                        "view" to camera!!.mat4,
+                        "projection" to projection!!.mat4,
+                        "cameraPos" to camera!!.position
                     )[it]
                 }, r.mesh.gpuMesh)
             }
