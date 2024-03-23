@@ -1,12 +1,12 @@
 package com.zakgof.korender.examples
 
-import com.zakgof.korender.KorenderContext
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.projection.FrustumProjection
+import com.zakgof.korender.projection.Projection
 
 class FreeCamera(initialPosition: Vec3, initialDirection: Vec3, private val velocity: Float = 3.0f) {
 
@@ -20,15 +20,15 @@ class FreeCamera(initialPosition: Vec3, initialDirection: Vec3, private val velo
 
     private var thrust = 0.0f
 
-    fun camera(korenderContext: KorenderContext, dt: Float): Camera {
+    fun camera(projection: Projection, width: Int, height: Int, dt: Float): Camera {
 
         if (startDirection != null) {
             val startRight = (startDirection!! % 1.y).normalize()
             val startUp = (startRight % startDirection!!).normalize()
-            val frustum =  korenderContext.projection as FrustumProjection // TODO !!!
+            val frustum =  projection as FrustumProjection // TODO !!!
             direction = (startDirection!! +
-                    startRight * (-deltaX / korenderContext.width * frustum.width / frustum.near) +
-                    startUp * (deltaY / korenderContext.height * frustum.height / frustum.near)).normalize()
+                    startRight * (-deltaX / width * frustum.width / frustum.near) +
+                    startUp * (deltaY / height * frustum.height / frustum.near)).normalize()
         }
         val right = (direction % 1.y).normalize()
         val up = (right % direction).normalize()

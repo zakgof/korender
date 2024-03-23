@@ -9,15 +9,13 @@ import com.zakgof.korender.material.Textures
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.z
-import com.zakgof.korender.projection.FrustumProjection
 
 @Composable
 fun InstancedMeshesExample() = Korender {
     val freeCamera = FreeCamera(20.z, -1.z)
     OnTouch { freeCamera.touch(it) }
     Scene {
-        projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
-        camera = freeCamera.camera(this@Korender, frameInfo.dt)
+        Camera(freeCamera.camera(projection, width, height, frameInfo.dt))
         InstancedRenderables(
             id = "particles",
             count = 21 * 21,

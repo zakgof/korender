@@ -1,5 +1,6 @@
 package com.zakgof.korender
 
+import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.declaration.ContainerContext
 import com.zakgof.korender.declaration.Direction
 import com.zakgof.korender.declaration.ElementDeclaration
@@ -10,11 +11,14 @@ import com.zakgof.korender.declaration.MaterialDeclaration
 import com.zakgof.korender.declaration.MeshDeclaration
 import com.zakgof.korender.declaration.RenderableDeclaration
 import com.zakgof.korender.declaration.ShaderDeclaration
+import com.zakgof.korender.declaration.ShadowDeclaration
 import com.zakgof.korender.material.StockUniforms
 import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.projection.Projection
 
-class SceneContext(val frameInfo: FrameInfo, private val sceneDeclaration: SceneDeclaration, val korenderContext: KorenderContext) {
+class SceneContext(val frameInfo: FrameInfo, private val sceneDeclaration: SceneDeclaration, val width: Int, val height: Int, var projection: Projection, var camera: Camera, var light: Vec3) {
     fun Renderable(
         mesh: MeshDeclaration,
         material: MaterialDeclaration,
@@ -76,11 +80,41 @@ class SceneContext(val frameInfo: FrameInfo, private val sceneDeclaration: Scene
     fun Sky(preset: String) {
         sceneDeclaration.add(
             RenderableDeclaration(
-                MeshDeclaration.SkyDeclaration,
+                MeshDeclaration.ScreenQuadDeclaration,
                 ShaderDeclaration("sky.vert", "${preset}sky.frag", setOf()),
-                {null}
+                { null }
             )
         )
     }
+
+    fun Shadow(mapSize: Int, block: ShadowContext.() -> Unit) {
+        val shadowDeclaration = ShadowDeclaration(mapSize)
+        ShadowContext(shadowDeclaration).apply(block)
+        sceneDeclaration.addShadow(shadowDeclaration)
+        shadowDeclaration.renderables.forEach { sceneDeclaration.add(it) }
+    }
+
+    fun Camera(camera: Camera) {
+        this.camera = camera
+    }
+
+    fun Projection(projection: Projection) {
+        this.projection = projection
+    }
+
+    fun Light(light: Vec3) {
+        this.light = light
+    }
+
+}
+
+class ShadowContext(private val shadowDeclaration: ShadowDeclaration) {
+    fun Renderable(
+        mesh: MeshDeclaration,
+        material: MaterialDeclaration,
+        transform: Transform = Transform()
+    ) = shadowDeclaration.addRenderable(
+        RenderableDeclaration(mesh, material.shader, material.uniforms, transform)
+    )
 
 }

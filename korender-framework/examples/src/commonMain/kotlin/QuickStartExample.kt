@@ -13,10 +13,6 @@ import com.zakgof.korender.projection.FrustumProjection
 
 @Composable
 fun QuickStartExample() = Korender {
-    onResize = {
-        projection =
-            FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
-    }
     Scene {
         Renderable(
             mesh = sphere(2.0f),

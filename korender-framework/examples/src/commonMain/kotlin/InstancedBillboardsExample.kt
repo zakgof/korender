@@ -7,16 +7,10 @@ import com.zakgof.korender.material.Textures
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
-import com.zakgof.korender.projection.FrustumProjection
 import kotlin.random.Random
 
 @Composable
 fun InstancedBillboardsExample() = Korender {
-
-    onResize = {
-        projection =
-            FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
-    }
 
     val particleNum = 1000
     val particles = Array(particleNum) { Particle(Random.nextDouble(5.0).toFloat()) }
@@ -31,6 +25,7 @@ fun InstancedBillboardsExample() = Korender {
             }
         ) {
             for (particle in particles) {
+                particle.update(frameInfo.dt)
                 val scale = (5.0f - particle.ttl) * 0.3f
                 Instance(
                     pos = particle.pos,
@@ -38,13 +33,6 @@ fun InstancedBillboardsExample() = Korender {
                 )
             }
         }
-    }
-
-    onFrame = { frameInfo ->
-        particles.forEach {
-            it.update(frameInfo.dt)
-        }
-        println("FPS=~${frameInfo.avgFps}")
     }
 }
 

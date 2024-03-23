@@ -1,12 +1,12 @@
 package com.zakgof.korender.examples
 
-import com.zakgof.korender.KorenderContext
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.projection.FrustumProjection
+import com.zakgof.korender.projection.Projection
 
 class OrbitCamera(initialPosition: Vec3, private val targetPosition: Vec3) {
 
@@ -19,16 +19,16 @@ class OrbitCamera(initialPosition: Vec3, private val targetPosition: Vec3) {
 
     private val r = (targetPosition - initialPosition).length()
 
-    fun camera(korenderContext: KorenderContext): Camera {
+    fun camera(projection: Projection, width: Int, height: Int): Camera {
         if (startPosition != null) {
             val startDirection = (targetPosition - startPosition!!).normalize()
             val startRight = (startDirection % 1.y).normalize()
             val startUp = (startRight % startDirection).normalize()
-            val frustum =  korenderContext.projection as FrustumProjection // TODO !!!
+            val frustum =  projection as FrustumProjection // TODO !!!
 
             position = startPosition!! +
-                    startRight * (-deltaX / korenderContext.width * frustum.width * 8.0f) +
-                    startUp * (deltaY / korenderContext.height * frustum.height * 8.0f)
+                    startRight * (-deltaX / width * frustum.width * 8.0f) +
+                    startUp * (deltaY / height * frustum.height * 8.0f)
 
             position = targetPosition + (position - targetPosition).normalize() * r
 
