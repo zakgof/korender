@@ -25,6 +25,7 @@ fun AppExample() {
         Demo("Obj", "") { ObjFileExample() },
         Demo("IBB", "") { InstancedBillboardsExample() },
         Demo("IM", "") { InstancedMeshesExample() },
+        Demo("HF", "") { HeightFieldExample() },
         Demo("Tex", "") { TexturingExample() },
         Demo("Shadow", "") { ShadowExample() },
         Demo("Filter", "") { FilterExample() },
