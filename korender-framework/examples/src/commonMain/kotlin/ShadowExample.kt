@@ -1,12 +1,12 @@
 package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
-import com.zakgof.korender.Korender
 import com.zakgof.korender.camera.DefaultCamera
+import com.zakgof.korender.declaration.Korender
 import com.zakgof.korender.declaration.Materials.standard
 import com.zakgof.korender.declaration.Meshes.cube
 import com.zakgof.korender.declaration.Meshes.sphere
-import com.zakgof.korender.material.Textures.texture
+import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.math.FloatMath.sin
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3

@@ -1,6 +1,6 @@
 package com.zakgof.korender.math
 
-import com.zakgof.korender.glgpu.BufferUtils
+import com.zakgof.korender.impl.glgpu.BufferUtils
 import java.nio.FloatBuffer
 
 class Mat4(

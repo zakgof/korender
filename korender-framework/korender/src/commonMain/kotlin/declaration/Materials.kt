@@ -1,7 +1,6 @@
 package com.zakgof.korender.declaration
 
-import com.zakgof.korender.material.StockUniforms
-import com.zakgof.korender.material.UniformSupplier
+import com.zakgof.korender.impl.material.StockUniforms
 
 object Materials {
     fun standard(vararg defs: String, block: StockUniforms.() -> Unit) =

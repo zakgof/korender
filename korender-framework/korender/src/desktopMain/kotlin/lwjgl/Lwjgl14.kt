@@ -1,5 +1,3 @@
 package com.zakgof.korender.lwjgl
 
-import com.zakgof.korender.gl.IGL14
-
-class Lwjgl14 : IGL14
+class Lwjgl14 : com.zakgof.korender.impl.gl.IGL14

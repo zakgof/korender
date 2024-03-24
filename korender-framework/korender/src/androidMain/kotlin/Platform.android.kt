@@ -18,14 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.viewinterop.AndroidView
-import com.zakgof.korender.font.FontDef
-import com.zakgof.korender.gl.VGL11
-import com.zakgof.korender.gl.VGL12
-import com.zakgof.korender.gl.VGL13
-import com.zakgof.korender.gl.VGL14
-import com.zakgof.korender.gl.VGL15
-import com.zakgof.korender.gl.VGL20
-import com.zakgof.korender.gl.VGL30
+import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.gles.Gles11
 import com.zakgof.korender.gles.Gles12
 import com.zakgof.korender.gles.Gles13
@@ -33,10 +26,9 @@ import com.zakgof.korender.gles.Gles14
 import com.zakgof.korender.gles.Gles15
 import com.zakgof.korender.gles.Gles20
 import com.zakgof.korender.gles.Gles30
-import com.zakgof.korender.glgpu.BufferUtils
 import com.zakgof.korender.gpu.GpuTexture
 import com.zakgof.korender.input.TouchEvent
-import com.zakgof.korender.material.Image
+import com.zakgof.korender.impl.material.Image
 import java.io.File
 import java.io.InputStream
 import java.nio.ByteBuffer
@@ -94,7 +86,7 @@ class AndroidPlatform : Platform {
 
     private fun bitmapToImage(bitmap: Bitmap): AndroidImage {
         val size = bitmap.rowBytes * bitmap.height
-        val byteBuffer = BufferUtils.createByteBuffer(size)
+        val byteBuffer = com.zakgof.korender.impl.glgpu.BufferUtils.createByteBuffer(size)
         bitmap.copyPixelsToBuffer(byteBuffer)
         val format = bitmap.config
         val gpuFormat = when (format) {
@@ -114,7 +106,7 @@ class AndroidPlatform : Platform {
     }
 
     private fun ARGBtoRGBA(data: ByteBuffer): ByteBuffer {
-        val buffer = BufferUtils.createByteBuffer(data.limit())
+        val buffer = com.zakgof.korender.impl.glgpu.BufferUtils.createByteBuffer(data.limit())
         buffer.put(data.rewind() as ByteBuffer)
         return buffer.flip() as ByteBuffer
     }
@@ -185,13 +177,13 @@ class KorenderGLSurfaceView(
             MATCH_PARENT, MATCH_PARENT
         )
 
-        VGL11.gl = Gles11
-        VGL12.gl = Gles12
-        VGL13.gl = Gles13
-        VGL14.gl = Gles14
-        VGL15.gl = Gles15
-        VGL20.gl = Gles20
-        VGL30.gl = Gles30
+        com.zakgof.korender.impl.gl.VGL11.gl = Gles11
+        com.zakgof.korender.impl.gl.VGL12.gl = Gles12
+        com.zakgof.korender.impl.gl.VGL13.gl = Gles13
+        com.zakgof.korender.impl.gl.VGL14.gl = Gles14
+        com.zakgof.korender.impl.gl.VGL15.gl = Gles15
+        com.zakgof.korender.impl.gl.VGL20.gl = Gles20
+        com.zakgof.korender.impl.gl.VGL30.gl = Gles30
 
         // Create an OpenGL ES 3.0 context
         setEGLContextClientVersion(3)

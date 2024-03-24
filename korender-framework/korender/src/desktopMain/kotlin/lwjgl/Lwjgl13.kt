@@ -1,9 +1,8 @@
 package com.zakgof.korender.lwjgl
 
-import com.zakgof.korender.gl.IGL13
 import org.lwjgl.opengl.GL13
 
-class Lwjgl13 : IGL13 {
+class Lwjgl13 : com.zakgof.korender.impl.gl.IGL13 {
     override fun glActiveTexture(texture: Int) {
         GL13.glActiveTexture(texture)
     }

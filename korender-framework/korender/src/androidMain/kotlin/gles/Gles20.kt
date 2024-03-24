@@ -1,11 +1,10 @@
 package com.zakgof.korender.gles
 
 import android.opengl.GLES20
-import com.zakgof.korender.gl.IGL20
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 
-object Gles20 : IGL20 {
+object Gles20 : com.zakgof.korender.impl.gl.IGL20 {
     override fun glCreateProgram(): Int = GLES20.glCreateProgram()
 
     override fun glCreateShader(type: Int) = GLES20.glCreateShader(type)

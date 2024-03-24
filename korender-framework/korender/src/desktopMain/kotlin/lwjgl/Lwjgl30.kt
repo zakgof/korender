@@ -1,9 +1,8 @@
 package com.zakgof.korender.lwjgl
 
-import com.zakgof.korender.gl.IGL30
 import org.lwjgl.opengl.GL30
 
-class Lwjgl30 : IGL30 {
+class Lwjgl30 : com.zakgof.korender.impl.gl.IGL30 {
     override fun glGenerateMipmap(target: Int) {
         GL30.glGenerateMipmap(target)
     }
