@@ -32,10 +32,6 @@ internal class SimpleShadower(private val inventory: Inventory, shadowDeclaratio
             "cameraPos" to camera.position
         )
 
-        VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
-        VGL11.glEnable(VGL11.GL_DEPTH_TEST)
-        VGL11.glCullFace(VGL11.GL_BACK)
-
         val uniformDecorator: (UniformSupplier) -> UniformSupplier = {
             UniformSupplier { key ->
                 var value = it[key] ?: casterUniforms[key]
@@ -46,6 +42,9 @@ internal class SimpleShadower(private val inventory: Inventory, shadowDeclaratio
             }
         }
         frameBuffer.exec {
+            VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
+            VGL11.glEnable(VGL11.GL_DEPTH_TEST)
+            VGL11.glCullFace(VGL11.GL_BACK)
             shadowCasters.forEach { r ->
                 casterShader.render(
                     uniformDecorator(r.uniforms + mapOf("model" to r.transform.mat4())),
@@ -80,7 +79,7 @@ internal class SimpleShadower(private val inventory: Inventory, shadowDeclaratio
                 up * ((ymin + ymax) * 0.5f) +
                 light * ((zmin + zmax) * 0.5f)
         val near = 5f
-        val far = near + (zmax - zmin) + 30.0f // TODO: this is crazy hack!
+        val far = near + (zmax - zmin) // TODO: this is crazy hack!
         val cameraPos = center - light * (near + (zmax - zmin) * 0.5f)
         val width = xmax - xmin
         val height = ymax - ymin
