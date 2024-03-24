@@ -19,18 +19,18 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun AppExample() {
     val options = listOf(
+
         Demo("QS", "") { QuickStartExample() },
-        Demo("Filter", "") { FilterExample() },
-        Demo("Fire", "") { FireExample() },
+        Demo("Mesh", "") { MeshesExample() },
+        Demo("Obj", "") { ObjFileExample() },
         Demo("IBB", "") { InstancedBillboardsExample() },
         Demo("IM", "") { InstancedMeshesExample() },
-        Demo("Obj", "") { ObjFileExample() },
-        Demo("Shadow", "") { ShadowExample() },
         Demo("Tex", "") { TexturingExample() },
+        Demo("Shadow", "") { ShadowExample() },
+        Demo("Filter", "") { FilterExample() },
+        Demo("Fire", "") { FireExample() },
         Demo("GUI", "") { GuiExample() },
         Demo("Sky", "") { SkyExample() }
-
-        // "Shadow", "Sky")
     )
 
     var option by remember { mutableStateOf(options[0]) }
