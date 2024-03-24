@@ -2,10 +2,10 @@ package com.zakgof.korender.examples
 
 
 import androidx.compose.runtime.Composable
-import com.zakgof.korender.Korender
+import com.zakgof.korender.declaration.Korender
 import com.zakgof.korender.declaration.Materials.standard
 import com.zakgof.korender.declaration.Meshes.obj
-import com.zakgof.korender.material.Textures
+import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.math.FloatMath
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
@@ -21,7 +21,7 @@ fun ObjFileExample() {
             Renderable(
                 mesh = obj("/cat-red.obj"),
                 material = standard {
-                    colorTexture = Textures.texture("/cat-red.jpg")
+                    colorTexture = texture("/cat-red.jpg")
                     ambient = 1.0f
                     diffuse = 1.0f
                     specular = 0.0f

@@ -1,7 +1,7 @@
 package com.zakgof.korender.declaration
 
-import com.zakgof.korender.geometry.Attribute
-import com.zakgof.korender.geometry.Vertex
+import com.zakgof.korender.impl.geometry.Attribute
+import com.zakgof.korender.impl.geometry.Vertex
 
 object Meshes {
 

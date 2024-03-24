@@ -1,9 +1,8 @@
 package com.zakgof.korender.gles
 
 import android.opengl.GLES30
-import com.zakgof.korender.gl.IGL30
 
-object Gles30 : IGL30 {
+object Gles30 : com.zakgof.korender.impl.gl.IGL30 {
 
     override fun glGenerateMipmap(target: Int) = GLES30.glGenerateMipmap(target)
 

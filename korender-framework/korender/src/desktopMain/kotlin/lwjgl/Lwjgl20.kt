@@ -1,11 +1,10 @@
 package com.zakgof.korender.lwjgl
 
-import com.zakgof.korender.gl.IGL20
 import org.lwjgl.opengl.GL20
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 
-class Lwjgl20 : IGL20 {
+class Lwjgl20 : com.zakgof.korender.impl.gl.IGL20 {
     override fun glCreateProgram(): Int {
         return GL20.glCreateProgram()
     }

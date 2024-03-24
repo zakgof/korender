@@ -1,10 +1,9 @@
 package com.zakgof.korender.lwjgl
 
-import com.zakgof.korender.gl.IGL11
 import org.lwjgl.opengl.GL11
 import java.nio.ByteBuffer
 
-class Lwjgl11 : IGL11 {
+class Lwjgl11 : com.zakgof.korender.impl.gl.IGL11 {
 
     override val shaderEnv = "OPENGL"
 

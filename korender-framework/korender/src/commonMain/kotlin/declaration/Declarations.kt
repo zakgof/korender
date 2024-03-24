@@ -1,9 +1,7 @@
 package com.zakgof.korender.declaration
 
-import com.zakgof.korender.Bucket
-import com.zakgof.korender.TouchHandler
+import com.zakgof.korender.impl.engine.Bucket
 import com.zakgof.korender.input.TouchEvent
-import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2

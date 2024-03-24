@@ -2,8 +2,8 @@ package com.zakgof.korender.examples
 
 
 import androidx.compose.runtime.Composable
-import com.zakgof.korender.Korender
-import com.zakgof.korender.material.Textures
+import com.zakgof.korender.declaration.Korender
+import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -21,7 +21,7 @@ fun InstancedBillboardsExample() = Korender {
             count = particleNum,
             zSort = true,
             material = {
-                colorTexture = Textures.texture("/splat.png")
+                colorTexture = texture("/splat.png")
             }
         ) {
             for (particle in particles) {

@@ -2,14 +2,14 @@ package com.zakgof.korender.examples
 
 
 import androidx.compose.runtime.Composable
-import com.zakgof.korender.Korender
+import com.zakgof.korender.declaration.Korender
 import com.zakgof.korender.declaration.Materials.standard
 import com.zakgof.korender.declaration.Meshes.mesh
-import com.zakgof.korender.geometry.Attributes.NORMAL
-import com.zakgof.korender.geometry.Attributes.POS
-import com.zakgof.korender.geometry.Attributes.TEX
-import com.zakgof.korender.geometry.Vertex
-import com.zakgof.korender.material.Textures.texture
+import com.zakgof.korender.declaration.Textures.texture
+import com.zakgof.korender.impl.geometry.Attributes.NORMAL
+import com.zakgof.korender.impl.geometry.Attributes.POS
+import com.zakgof.korender.impl.geometry.Attributes.TEX
+import com.zakgof.korender.impl.geometry.Vertex
 import com.zakgof.korender.math.FloatMath.sin
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3

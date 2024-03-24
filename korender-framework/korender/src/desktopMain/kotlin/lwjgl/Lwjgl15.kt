@@ -1,10 +1,9 @@
 package com.zakgof.korender.lwjgl
 
-import com.zakgof.korender.gl.IGL15
 import org.lwjgl.opengl.GL15
 import java.nio.ByteBuffer
 
-class Lwjgl15 : IGL15 {
+class Lwjgl15 : com.zakgof.korender.impl.gl.IGL15 {
     override fun glBindBuffer(target: Int, buffer: Int) = GL15.glBindBuffer(target, buffer)
 
     override fun glBufferData(target: Int, data: ByteBuffer, usage: Int) =

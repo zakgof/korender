@@ -2,7 +2,7 @@ package com.zakgof.korender.examples
 
 
 import androidx.compose.runtime.Composable
-import com.zakgof.korender.Korender
+import com.zakgof.korender.declaration.Korender
 import com.zakgof.korender.declaration.onClick
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.projection.FrustumProjection

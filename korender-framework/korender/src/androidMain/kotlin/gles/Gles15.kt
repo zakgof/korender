@@ -1,10 +1,9 @@
 package com.zakgof.korender.gles
 
 import android.opengl.GLES20
-import com.zakgof.korender.gl.IGL15
 import java.nio.ByteBuffer
 
-object Gles15 : IGL15 {
+object Gles15 : com.zakgof.korender.impl.gl.IGL15 {
 
     override fun glBindBuffer(target: Int, buffer: Int) = GLES20.glBindBuffer(target, buffer)
 

@@ -1,10 +1,9 @@
 package com.zakgof.korender.gles
 
 import android.opengl.GLES11
-import com.zakgof.korender.gl.IGL11
 import java.nio.ByteBuffer
 
-object Gles11 : IGL11 {
+object Gles11 : com.zakgof.korender.impl.gl.IGL11 {
 
     override val shaderEnv = "GLES"
 
