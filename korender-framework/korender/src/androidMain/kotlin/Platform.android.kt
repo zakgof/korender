@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.viewinterop.AndroidView
-import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.gles.Gles11
 import com.zakgof.korender.gles.Gles12
 import com.zakgof.korender.gles.Gles13
@@ -26,9 +25,10 @@ import com.zakgof.korender.gles.Gles14
 import com.zakgof.korender.gles.Gles15
 import com.zakgof.korender.gles.Gles20
 import com.zakgof.korender.gles.Gles30
-import com.zakgof.korender.gpu.GpuTexture
-import com.zakgof.korender.input.TouchEvent
+import com.zakgof.korender.impl.font.FontDef
+import com.zakgof.korender.impl.gpu.GpuTexture
 import com.zakgof.korender.impl.material.Image
+import com.zakgof.korender.input.TouchEvent
 import java.io.File
 import java.io.InputStream
 import java.nio.ByteBuffer
