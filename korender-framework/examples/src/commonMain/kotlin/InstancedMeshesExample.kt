@@ -3,8 +3,8 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.declaration.MeshDeclarations.cube
-import com.zakgof.korender.material.Materials.standard
+import com.zakgof.korender.declaration.Meshes.cube
+import com.zakgof.korender.declaration.Materials.standard
 import com.zakgof.korender.material.Textures
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3

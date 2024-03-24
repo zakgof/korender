@@ -30,7 +30,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-object Meshes {
+internal object Geometry {
 
     fun create(declaration: MeshDeclaration, gpu: Gpu): Mesh =
         when (declaration) {
@@ -418,7 +418,7 @@ object Meshes {
         }
 
     private fun obj(objFile: String): MeshBuilder {
-        val obj = ObjReader.read(Meshes.javaClass.getResourceAsStream(objFile))
+        val obj = ObjReader.read(Geometry.javaClass.getResourceAsStream(objFile))
         return create(obj)
     }
 
