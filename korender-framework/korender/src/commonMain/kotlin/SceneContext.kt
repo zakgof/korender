@@ -30,7 +30,7 @@ class SceneContext(val frameInfo: FrameInfo, private val sceneDeclaration: Scene
     fun Billboard(fragment: String = "billboard.frag", material: StockUniforms.() -> Unit) =
         sceneDeclaration.add(
             RenderableDeclaration(
-                MeshDeclaration.BillboardDeclaration,
+                MeshDeclaration.Billboard,
                 ShaderDeclaration("billboard.vert", fragment, setOf()),
                 StockUniforms().apply(material)
             )
@@ -49,7 +49,7 @@ class SceneContext(val frameInfo: FrameInfo, private val sceneDeclaration: Scene
     ) =
         sceneDeclaration.add(
             RenderableDeclaration(
-                MeshDeclaration.InstancedBillboardDeclaration(id, count, zSort, block),
+                MeshDeclaration.InstancedBillboard(id, count, zSort, block),
                 ShaderDeclaration("billboard.vert", fragment, setOf()),
                 StockUniforms().apply(material)
             )
@@ -65,7 +65,7 @@ class SceneContext(val frameInfo: FrameInfo, private val sceneDeclaration: Scene
     ) =
         sceneDeclaration.add(
             RenderableDeclaration(
-                MeshDeclaration.InstancedRenderableDeclaration(id, count, mesh, material, static, block),
+                MeshDeclaration.InstancedMesh(id, count, mesh, material, static, block),
                 material.shader,
                 material.uniforms
             )
@@ -80,7 +80,7 @@ class SceneContext(val frameInfo: FrameInfo, private val sceneDeclaration: Scene
     fun Sky(preset: String) {
         sceneDeclaration.add(
             RenderableDeclaration(
-                MeshDeclaration.ScreenQuadDeclaration,
+                MeshDeclaration.ScreenQuad,
                 ShaderDeclaration("sky.vert", "${preset}sky.frag", setOf()),
                 { null }
             )

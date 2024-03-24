@@ -3,6 +3,7 @@ package com.zakgof.korender.geometry
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.declaration.BillboardInstance
 import com.zakgof.korender.declaration.MeshDeclaration
+import com.zakgof.korender.declaration.MeshInitializer
 import com.zakgof.korender.declaration.RenderableInstance
 import com.zakgof.korender.geometry.Attributes.NORMAL
 import com.zakgof.korender.geometry.Attributes.PHI
@@ -34,10 +35,10 @@ internal object Geometry {
 
     fun create(declaration: MeshDeclaration, gpu: Gpu): Mesh =
         when (declaration) {
-            is MeshDeclaration.InstancedRenderableDeclaration ->
+            is MeshDeclaration.InstancedMesh ->
                 builder(declaration.mesh).buildInstanced(gpu, declaration.count)
 
-            is MeshDeclaration.InstancedBillboardDeclaration ->
+            is MeshDeclaration.InstancedBillboard ->
                 billboard().buildInstanced(gpu, declaration.count)
 
             else ->
@@ -46,12 +47,15 @@ internal object Geometry {
 
     private fun builder(declaration: MeshDeclaration): MeshBuilder =
         when (declaration) {
-            is MeshDeclaration.SphereDeclaration -> sphere(declaration.radius)
-            is MeshDeclaration.CubeDeclaration -> cube(declaration.halfSide)
-            is MeshDeclaration.ObjDeclaration -> obj(declaration.objFile)
-            is MeshDeclaration.BillboardDeclaration -> billboard()
-            is MeshDeclaration.ImageQuadDeclaration -> imageQuad()
-            is MeshDeclaration.ScreenQuadDeclaration -> screenQuad()
+            is MeshDeclaration.Sphere -> sphere(declaration.radius)
+            is MeshDeclaration.Cube -> cube(declaration.halfSide)
+            is MeshDeclaration.Obj -> obj(declaration.objFile)
+            is MeshDeclaration.Billboard -> billboard()
+            is MeshDeclaration.ImageQuad -> imageQuad()
+            is MeshDeclaration.ScreenQuad -> screenQuad()
+            is MeshDeclaration.Custom -> create(declaration.vertexCount, declaration.indexCount, *declaration.attributes) {
+                apply (declaration.block)
+            }
             else -> throw KorenderException("Unknown mesh declaration")
         }
 
@@ -67,13 +71,13 @@ internal object Geometry {
         val vertexNumber: Int,
         val indexNumber: Int,
         val attrs: List<Attribute>
-    ) {
+    ) : MeshInitializer {
         val vertexBuffer: ByteBuffer
-        private var floatVertexBuffer: FloatBuffer
+        var floatVertexBuffer: FloatBuffer
 
         val indexBuffer: ByteBuffer
-        private val indexIntBuffer: IntBuffer?
-        private val indexShortBuffer: ShortBuffer?
+        val indexIntBuffer: IntBuffer?
+        val indexShortBuffer: ShortBuffer?
         private val indexConcreteBuffer: Buffer
         var isLongIndex: Boolean
 
@@ -94,9 +98,11 @@ internal object Geometry {
 
         fun vertices(vararg values: Vec3) = values.forEach { vertices(it.x, it.y, it.z) }
 
-        fun vertices(vararg values: Float) = floatVertexBuffer.put(values)
+        override fun vertices(vararg values: Float) {
+            floatVertexBuffer.put(values)
+        }
 
-        fun indices(vararg values: Int) {
+        override fun indices(vararg values: Int) {
             for (value in values) {
                 if (isLongIndex)
                     indexIntBuffer!!.put(value)
@@ -120,6 +126,13 @@ internal object Geometry {
 
         fun getVertex(vertexIndex: Int): Vertex =
             getVertex(floatVertexBuffer, vertexIndex, vertexSize, attrs.toList())
+
+        fun putVertex(vertex: Vertex) {
+            for (attr in attrs) {
+                attr.writer(floatVertexBuffer, vertex)
+            }
+        }
+            
 
 
         fun build(gpu: Gpu, isDynamic: Boolean = false): DefaultMesh {
@@ -169,6 +182,10 @@ internal object Geometry {
             }
         }
 
+        override fun vertex(block: Vertex.() -> Unit) = putVertex(Vertex().apply(block))
+
+        override fun vertex(vertex: Vertex) = putVertex(vertex)
+
     }
 
     open class DefaultMesh(
@@ -203,6 +220,14 @@ internal object Geometry {
 
         fun updateGpu() =
             gpuMesh.update(data.vertexBuffer, data.indexBuffer, data.vertexNumber, data.indexNumber)
+
+        fun updateMesh(block: MeshInitializer.() -> Unit) {
+            data.floatVertexBuffer.rewind()
+            data.indexIntBuffer?.rewind()
+            data.indexShortBuffer?.rewind()
+            data.apply(block)
+            updateGpu()
+        }
 
     }
 
@@ -431,7 +456,7 @@ internal object Geometry {
         // Rewiring
         for (i in 0 until obj.numFaces) {
             val face = obj.getFace(i)
-            val newFaceIndices = mutableListOf<Int>()
+            val newFaceindices = mutableListOf<Int>()
             for (ii in 0 until face.numVertices) {
                 val vertexIndex = face.getVertexIndex(ii)
                 val normalIndex = face.getNormalIndex(ii)
@@ -455,26 +480,26 @@ internal object Geometry {
                         )
                     )
                     mapping[key] = vertices.size - 1
-                    newFaceIndices.add(vertices.size - 1)
+                    newFaceindices.add(vertices.size - 1)
                 } else {
-                    newFaceIndices.add(newVertIndex)
+                    newFaceindices.add(newVertIndex)
                 }
             }
 
-            val v1 = vertices[newFaceIndices[1]]
-            val v2 = vertices[newFaceIndices[2]]
+            val v1 = vertices[newFaceindices[1]]
+            val v2 = vertices[newFaceindices[2]]
             if (abs(v1[0] - v2[0]) > 1.0f)
                 println("Index buffer position: ${indices.size - 1} Delta x: ${v1[0] - v2[0]} Delta y: ${v1[1] - v2[1]} Delta z: ${v1[2] - v2[2]}")
 
-            indices.add(newFaceIndices[0])
-            indices.add(newFaceIndices[1])
-            indices.add(newFaceIndices[2])
-            if (newFaceIndices.size == 4) {
-                indices.add(newFaceIndices[0])
-                indices.add(newFaceIndices[2])
-                indices.add(newFaceIndices[3])
+            indices.add(newFaceindices[0])
+            indices.add(newFaceindices[1])
+            indices.add(newFaceindices[2])
+            if (newFaceindices.size == 4) {
+                indices.add(newFaceindices[0])
+                indices.add(newFaceindices[2])
+                indices.add(newFaceindices[3])
             }
-            if (newFaceIndices.size != 3 && newFaceIndices.size != 4) {
+            if (newFaceindices.size != 3 && newFaceindices.size != 4) {
                 throw KorenderException("Only triangles and quads supported in .obj files")
             }
         }

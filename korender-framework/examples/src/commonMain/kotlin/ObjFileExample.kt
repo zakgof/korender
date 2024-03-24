@@ -14,7 +14,7 @@ import com.zakgof.korender.math.x
 @Composable
 fun ObjFileExample() {
     val orbitCamera = OrbitCamera(Vec3(0f, 2f, 20f), Vec3(0f, 2f, 0f))
-    Korender() {
+    Korender {
         OnTouch { orbitCamera.touch(it) }
         Scene {
             Camera(orbitCamera.camera(projection, width, height))

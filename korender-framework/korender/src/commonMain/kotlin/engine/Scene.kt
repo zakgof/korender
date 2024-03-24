@@ -117,7 +117,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         println("Image at $x $y")
         screens.add(
             Renderable(
-                mesh = inventory.mesh(MeshDeclaration.ImageQuadDeclaration), shader = inventory.shader(Shaders.imageQuadDeclaration), uniforms = MapUniformSupplier(
+                mesh = inventory.mesh(MeshDeclaration.ImageQuad), shader = inventory.shader(Shaders.imageQuadDeclaration), uniforms = MapUniformSupplier(
                     Pair("pos", Vec2(x.toFloat() / width, 1.0f - (y.toFloat() + declaration.height.toFloat()) / height)),
                     Pair("size", Vec2(declaration.width.toFloat() / width, declaration.height.toFloat() / height)),
                     Pair("imageTexture", inventory.texture(declaration.imageResource))
@@ -210,7 +210,12 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         val new = !inventory.hasMesh(declaration.mesh)
         val mesh = inventory.mesh(declaration.mesh)
 
-        if (declaration.mesh is MeshDeclaration.InstancedBillboardDeclaration) {
+        if (declaration.mesh is MeshDeclaration.Custom && !declaration.mesh.static) {
+            (mesh as Geometry.DefaultMesh).updateMesh(declaration.mesh.block)
+        }
+
+        if (declaration.mesh is MeshDeclaration.InstancedBillboard) {
+            // TODO: static
             val instances = InstancedBillboardsContext().apply(declaration.mesh.block).instances
             if (declaration.mesh.zSort) {
                 instances.sortBy { (camera.mat4 * it.pos).z }
@@ -218,7 +223,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
             (mesh as Geometry.InstancedMesh).updateBillboardInstances(instances)
         }
 
-        if (declaration.mesh is MeshDeclaration.InstancedRenderableDeclaration) {
+        if (declaration.mesh is MeshDeclaration.InstancedMesh) {
             if (!declaration.mesh.static || new) {
                 val instances = InstancedRenderablesContext().apply(declaration.mesh.block).instances
                 (mesh as Geometry.InstancedMesh).updateInstances(instances)
@@ -257,7 +262,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
                         VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
                         filter.gpuShader.render(
                             filter.uniforms + context + prevFrameContext,
-                            inventory.mesh(MeshDeclaration.ScreenQuadDeclaration).gpuMesh
+                            inventory.mesh(MeshDeclaration.ScreenQuad).gpuMesh
                         )
                     }
                 }
