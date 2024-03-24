@@ -1,17 +1,7 @@
 package com.zakgof.korender.material
 
-import com.zakgof.korender.declaration.MaterialDeclaration
-import com.zakgof.korender.declaration.ShaderDeclaration
 import com.zakgof.korender.declaration.TextureDeclaration
 import com.zakgof.korender.math.Color
-
-object Materials {
-    fun standard(vararg defs: String, block: StockUniforms.() -> Unit) =
-        MaterialDeclaration(
-            ShaderDeclaration("standard.vert", "standard.frag", setOf(*defs)),
-            StockUniforms().apply(block)
-        )
-}
 
 class StockUniforms : UniformSupplier {
 

@@ -16,7 +16,7 @@ import com.zakgof.korender.declaration.RenderableDeclaration
 import com.zakgof.korender.declaration.ShaderDeclaration
 import com.zakgof.korender.declaration.TextureDeclaration
 import com.zakgof.korender.font.Fonts
-import com.zakgof.korender.geometry.Meshes
+import com.zakgof.korender.geometry.Geometry
 import com.zakgof.korender.gl.VGL11
 import com.zakgof.korender.gpu.GpuFrameBuffer
 import com.zakgof.korender.input.TouchEvent
@@ -215,13 +215,13 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
             if (declaration.mesh.zSort) {
                 instances.sortBy { (camera.mat4 * it.pos).z }
             }
-            (mesh as Meshes.InstancedMesh).updateBillboardInstances(instances)
+            (mesh as Geometry.InstancedMesh).updateBillboardInstances(instances)
         }
 
         if (declaration.mesh is MeshDeclaration.InstancedRenderableDeclaration) {
             if (!declaration.mesh.static || new) {
                 val instances = InstancedRenderablesContext().apply(declaration.mesh.block).instances
-                (mesh as Meshes.InstancedMesh).updateInstances(instances)
+                (mesh as Geometry.InstancedMesh).updateInstances(instances)
             }
         }
 
