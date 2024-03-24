@@ -11,9 +11,9 @@ import com.zakgof.korender.impl.geometry.Attributes.POS
 import com.zakgof.korender.impl.geometry.Attributes.SCALE
 import com.zakgof.korender.impl.geometry.Attributes.SCREEN
 import com.zakgof.korender.impl.geometry.Attributes.TEX
+import com.zakgof.korender.impl.glgpu.BufferUtils
 import com.zakgof.korender.impl.gpu.Gpu
 import com.zakgof.korender.impl.gpu.GpuMesh
-import com.zakgof.korender.impl.glgpu.BufferUtils
 import com.zakgof.korender.math.BoundingBox
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.FloatMath.cos
@@ -53,9 +53,10 @@ internal object Geometry {
             is MeshDeclaration.Billboard -> billboard()
             is MeshDeclaration.ImageQuad -> imageQuad()
             is MeshDeclaration.ScreenQuad -> screenQuad()
-            is MeshDeclaration.Custom -> create(declaration.vertexCount, declaration.indexCount, *declaration.attributes) {
+            is MeshDeclaration.Custom -> create(declaration.vertexCount, declaration.indexCount, *declaration.attributes.toTypedArray()) {
                 apply (declaration.block)
             }
+            is MeshDeclaration.HeightField -> heightMap(declaration.cellsX, declaration.cellsX, declaration.cellWidth, declaration.height)
             else -> throw KorenderException("Unknown mesh declaration")
         }
 
