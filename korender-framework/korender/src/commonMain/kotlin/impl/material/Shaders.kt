@@ -1,6 +1,6 @@
 package com.zakgof.korender.impl.material
 
-import com.zakgof.korender.declaration.ShaderDeclaration
+import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gpu.Gpu
 import com.zakgof.korender.impl.gpu.GpuShader
 import java.io.BufferedReader
@@ -10,7 +10,7 @@ import java.util.Scanner
 import java.util.Stack
 import java.util.regex.Pattern
 
-object Shaders {
+internal object Shaders {
 
     val imageQuadDeclaration: ShaderDeclaration = ShaderDeclaration("image.vert", "image.frag", setOf())
 

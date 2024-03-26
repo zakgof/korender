@@ -1,16 +1,14 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.declaration.FrameBufferDeclaration
 import com.zakgof.korender.declaration.MeshDeclaration
-import com.zakgof.korender.declaration.ShaderDeclaration
+import com.zakgof.korender.impl.font.Font
+import com.zakgof.korender.impl.font.Fonts
+import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.Mesh
 import com.zakgof.korender.impl.gpu.Gpu
 import com.zakgof.korender.impl.gpu.GpuFrameBuffer
 import com.zakgof.korender.impl.gpu.GpuShader
 import com.zakgof.korender.impl.gpu.GpuTexture
-import com.zakgof.korender.impl.font.Font
-import com.zakgof.korender.impl.font.Fonts
-import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.impl.material.Texturing
 

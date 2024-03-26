@@ -1,9 +1,12 @@
-package com.zakgof.korender.declaration
+package com.zakgof.korender
 
 import androidx.compose.runtime.Composable
-import com.zakgof.korender.KorenderException
+import com.zakgof.korender.declaration.SceneContext
+import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.Engine
-import com.zakgof.korender.getPlatform
+import com.zakgof.korender.impl.engine.FilterDeclaration
+import com.zakgof.korender.impl.engine.RenderableDeclaration
+import com.zakgof.korender.impl.engine.ShadowDeclaration
 import com.zakgof.korender.input.TouchEvent
 
 @Composable
@@ -40,9 +43,9 @@ class KorenderContext(private val sceneBlocks: MutableList<SceneContext.() -> Un
 
 typealias TouchHandler = (TouchEvent) -> Unit
 
-class SceneDeclaration {
+internal class SceneDeclaration {
 
-    var gui: ElementDeclaration.ContainerDeclaration? = null
+    var gui: ElementDeclaration.Container? = null
     var shadow: ShadowDeclaration? = null
     val renderables = mutableListOf<RenderableDeclaration>()
     val filters = mutableListOf<FilterDeclaration>()

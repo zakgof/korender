@@ -1,10 +1,10 @@
 package com.zakgof.korender.impl.geometry
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.declaration.BillboardInstance
 import com.zakgof.korender.declaration.MeshDeclaration
 import com.zakgof.korender.declaration.MeshInitializer
-import com.zakgof.korender.declaration.RenderableInstance
+import com.zakgof.korender.impl.engine.BillboardInstance
+import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.geometry.Attributes.NORMAL
 import com.zakgof.korender.impl.geometry.Attributes.PHI
 import com.zakgof.korender.impl.geometry.Attributes.POS
@@ -239,7 +239,7 @@ internal object Geometry {
         count: Int
     ) :
         DefaultMesh(gpu, data, true) {
-        fun updateInstances(instances: List<RenderableInstance>) {
+        fun updateInstances(instances: List<MeshInstance>) {
             instances.indices.map {
                 val instance = instances[it]
                 for (v in 0..<prototype.vertexNumber) {

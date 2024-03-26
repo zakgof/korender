@@ -1,9 +1,6 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.camera.DefaultCamera
-import com.zakgof.korender.declaration.FrameBufferDeclaration
-import com.zakgof.korender.declaration.ShaderDeclaration
-import com.zakgof.korender.declaration.ShadowDeclaration
 import com.zakgof.korender.declaration.TextureDeclaration
 import com.zakgof.korender.declaration.UniformSupplier
 import com.zakgof.korender.impl.gpu.GpuFrameBuffer

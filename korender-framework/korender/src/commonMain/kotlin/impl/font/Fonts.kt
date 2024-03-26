@@ -1,12 +1,12 @@
 package com.zakgof.korender.impl.font
 
-import com.zakgof.korender.declaration.ShaderDeclaration
-import com.zakgof.korender.impl.gpu.Gpu
 import com.zakgof.korender.getPlatform
+import com.zakgof.korender.impl.engine.ShaderDeclaration
+import com.zakgof.korender.impl.gpu.Gpu
 import com.zakgof.korender.impl.material.Texturing
 
 
-object Fonts {
+internal object Fonts {
 
     val shaderDeclaration = ShaderDeclaration("font.vert", "font.frag", setOf())
 

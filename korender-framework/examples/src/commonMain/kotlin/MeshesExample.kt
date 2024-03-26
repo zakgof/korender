@@ -2,7 +2,7 @@ package com.zakgof.korender.examples
 
 
 import androidx.compose.runtime.Composable
-import com.zakgof.korender.declaration.Korender
+import com.zakgof.korender.Korender
 import com.zakgof.korender.declaration.Materials.standard
 import com.zakgof.korender.declaration.Meshes.mesh
 import com.zakgof.korender.declaration.Textures.texture
@@ -29,9 +29,9 @@ fun MeshesExample() {
             Renderable(
                 mesh = mesh(id = "static", static = true, vertexCount = 3, indexCount = 3, POS, NORMAL, TEX) {
                     vertex(Vertex(pos = Vec3(-5f, 0f, 0f), normal = 1.z, tex = Vec2(0f, 0f)))
-                    vertex(Vertex(pos = Vec3( 0f, 0f, 0f), normal = 1.z, tex = Vec2(1f, 0f)))
-                    vertex(Vertex(pos = Vec3( 0f, 5f, 0f), normal = 1.z, tex = Vec2(1f, 1f)))
-                    indices (0, 1, 2)
+                    vertex(Vertex(pos = Vec3(0f, 0f, 0f), normal = 1.z, tex = Vec2(1f, 0f)))
+                    vertex(Vertex(pos = Vec3(0f, 5f, 0f), normal = 1.z, tex = Vec2(1f, 1f)))
+                    indices(0, 1, 2)
                 },
                 material = material
             )
@@ -40,10 +40,16 @@ fun MeshesExample() {
                     vertex(Vertex(pos = Vec3(1f, 0f, 0f), normal = 1.z, tex = Vec2(0f, 0f)))
                     vertex(Vertex(pos = Vec3(5f, 0f, 0f), normal = 1.z, tex = Vec2(1f, 0f)))
                     vertex(Vertex(pos = Vec3(5f, 5f + sin(frameInfo.time), 0f), normal = 1.z, tex = Vec2(1f, 1f)))
-                    indices (0, 1, 2)
+                    indices(0, 1, 2)
                 },
                 material = material
             )
+            Billboard(position = Vec3(0f, -1f, 0f), defs = arrayOf("NO_LIGHT")) {
+                colorTexture = texture("/oak.png")
+                xscale = 2.0f
+                yscale = 2.0f
+                rotation = frameInfo.time
+            }
         }
     }
 
