@@ -1,13 +1,19 @@
 package com.zakgof.korender.declaration
 
 import com.zakgof.korender.FrameInfo
+import com.zakgof.korender.SceneDeclaration
 import com.zakgof.korender.camera.Camera
+import com.zakgof.korender.impl.engine.ElementDeclaration
+import com.zakgof.korender.impl.engine.FilterDeclaration
+import com.zakgof.korender.impl.engine.RenderableDeclaration
+import com.zakgof.korender.impl.engine.ShaderDeclaration
+import com.zakgof.korender.impl.engine.ShadowDeclaration
 import com.zakgof.korender.impl.material.StockUniforms
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.Projection
 
-class SceneContext(val frameInfo: FrameInfo, private val sceneDeclaration: SceneDeclaration, val width: Int, val height: Int, var projection: Projection, var camera: Camera, var light: Vec3) {
+class SceneContext internal constructor(val frameInfo: FrameInfo, private val sceneDeclaration: SceneDeclaration, val width: Int, val height: Int, var projection: Projection, var camera: Camera, var light: Vec3) {
     fun Renderable(
         mesh: MeshDeclaration,
         material: MaterialDeclaration,
@@ -16,12 +22,13 @@ class SceneContext(val frameInfo: FrameInfo, private val sceneDeclaration: Scene
         RenderableDeclaration(mesh, material.shader, material.uniforms, transform)
     )
 
-    fun Billboard(fragment: String = "billboard.frag", material: StockUniforms.() -> Unit) =
+    fun Billboard(position: Vec3 = Vec3.ZERO, fragment: String = "standard.frag", vararg defs: String, material: StockUniforms.() -> Unit) =
         sceneDeclaration.add(
             RenderableDeclaration(
                 MeshDeclaration.Billboard,
-                ShaderDeclaration("billboard.vert", fragment, setOf()),
-                StockUniforms().apply(material)
+                ShaderDeclaration("billboard.vert", fragment, defs.toSet()),
+                StockUniforms().apply(material),
+                Transform().translate(position)
             )
         ) // TODO Bucket
 
@@ -61,7 +68,7 @@ class SceneContext(val frameInfo: FrameInfo, private val sceneDeclaration: Scene
         ) // TODO Bucket
 
     fun Gui(block: ContainerContext.() -> Unit) {
-        val gui = ElementDeclaration.ContainerDeclaration(Direction.Vertical)
+        val gui = ElementDeclaration.Container(Direction.Vertical)
         sceneDeclaration.gui = gui
         ContainerContext(gui).apply(block)
     }
@@ -97,7 +104,7 @@ class SceneContext(val frameInfo: FrameInfo, private val sceneDeclaration: Scene
 
 }
 
-class ShadowContext(private val shadowDeclaration: ShadowDeclaration) {
+class ShadowContext internal constructor(private val shadowDeclaration: ShadowDeclaration) {
     fun Renderable(
         mesh: MeshDeclaration,
         material: MaterialDeclaration,

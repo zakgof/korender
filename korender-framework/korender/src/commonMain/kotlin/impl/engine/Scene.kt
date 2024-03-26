@@ -1,22 +1,17 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.SceneDeclaration
+import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.declaration.Direction
-import com.zakgof.korender.declaration.ElementDeclaration
-import com.zakgof.korender.declaration.FilterDeclaration
-import com.zakgof.korender.declaration.FrameBufferDeclaration
 import com.zakgof.korender.declaration.InstancedBillboardsContext
 import com.zakgof.korender.declaration.InstancedRenderablesContext
 import com.zakgof.korender.declaration.MeshDeclaration
-import com.zakgof.korender.declaration.RenderableDeclaration
-import com.zakgof.korender.declaration.SceneDeclaration
-import com.zakgof.korender.declaration.ShaderDeclaration
 import com.zakgof.korender.declaration.TextureDeclaration
-import com.zakgof.korender.declaration.TouchHandler
 import com.zakgof.korender.declaration.UniformSupplier
-import com.zakgof.korender.impl.gpu.GpuFrameBuffer
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.geometry.Geometry
+import com.zakgof.korender.impl.gpu.GpuFrameBuffer
 import com.zakgof.korender.impl.material.MapUniformSupplier
 import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.input.TouchEvent
@@ -63,13 +58,13 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         sceneDeclaration.gui?.let { layoutGui(width, height, it) }
     }
 
-    private fun layoutGui(width: Int, height: Int, container: ElementDeclaration.ContainerDeclaration) {
+    private fun layoutGui(width: Int, height: Int, container: ElementDeclaration.Container) {
         val sizes = mutableMapOf<ElementDeclaration, Size>()
         sizeEm(Direction.Vertical, container, sizes)
         layoutContainer(sizes, 0, 0, width, height, container)
     }
 
-    private fun layoutContainer(sizes: MutableMap<ElementDeclaration, Size>, x: Int, y: Int, width: Int, height: Int, container: ElementDeclaration.ContainerDeclaration) {
+    private fun layoutContainer(sizes: MutableMap<ElementDeclaration, Size>, x: Int, y: Int, width: Int, height: Int, container: ElementDeclaration.Container) {
         if (container.direction == Direction.Vertical) {
             val fillers = container.elements.count { sizes[it]!!.height < 0 }
             val normalsHeight = container.elements.map { sizes[it]!!.height }.filter { it >= 0 }.sum()
@@ -80,10 +75,10 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
                 val childWidth = if (declSize.width < 0) width else declSize.width
                 val childHeight = if (declSize.height < 0) fillerHeight else declSize.height
                 when (child) {
-                    is ElementDeclaration.TextDeclaration -> createText(child, x, currY, childWidth)
-                    is ElementDeclaration.ImageDeclaration -> createImage(child, x, currY)
-                    is ElementDeclaration.ContainerDeclaration -> layoutContainer(sizes, x, currY, childWidth, childHeight, child)
-                    is ElementDeclaration.FillerDeclaration -> {}
+                    is ElementDeclaration.Text -> createText(child, x, currY, childWidth)
+                    is ElementDeclaration.Image -> createImage(child, x, currY)
+                    is ElementDeclaration.Container -> layoutContainer(sizes, x, currY, childWidth, childHeight, child)
+                    is ElementDeclaration.Filler -> {}
                 }
                 currY += childHeight
             }
@@ -98,10 +93,10 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
                 val childWidth = if (declSize.width < 0) fillerWidth else declSize.width
                 val childHeight = if (declSize.height < 0) height else declSize.height
                 when (child) {
-                    is ElementDeclaration.TextDeclaration -> createText(child, currX, y, childWidth)
-                    is ElementDeclaration.ImageDeclaration -> createImage(child, currX, y)
-                    is ElementDeclaration.ContainerDeclaration -> layoutContainer(sizes, currX, y, childWidth, childHeight, child)
-                    is ElementDeclaration.FillerDeclaration -> {
+                    is ElementDeclaration.Text -> createText(child, currX, y, childWidth)
+                    is ElementDeclaration.Image -> createImage(child, currX, y)
+                    is ElementDeclaration.Container -> layoutContainer(sizes, currX, y, childWidth, childHeight, child)
+                    is ElementDeclaration.Filler -> {
                     }
                 }
                 currX += childWidth
@@ -109,7 +104,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         }
     }
 
-    private fun createImage(declaration: ElementDeclaration.ImageDeclaration, x: Int, y: Int) {
+    private fun createImage(declaration: ElementDeclaration.Image, x: Int, y: Int) {
         println("Image at $x $y")
         screens.add(
             Renderable(
@@ -123,7 +118,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         touchBoxes.add(TouchBox(x, y, declaration.width, declaration.height, declaration.onTouch))
     }
 
-    private fun createText(declaration: ElementDeclaration.TextDeclaration, x: Int, y: Int, w: Int) {
+    private fun createText(declaration: ElementDeclaration.Text, x: Int, y: Int, w: Int) {
         println("Text ${declaration.text} at $x $y width $w")
         val mesh = inventory.fontMesh(declaration.id)
         val font = inventory.font(declaration.fontResource)
@@ -142,13 +137,13 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
 
     private fun sizeEm(parentDirection: Direction, element: ElementDeclaration, sizes: MutableMap<ElementDeclaration, Size>): Size {
         val size = when (element) {
-            is ElementDeclaration.TextDeclaration -> textSize(element, inventory)
-            is ElementDeclaration.ImageDeclaration -> Size(element.width, element.height)
-            is ElementDeclaration.FillerDeclaration -> {
+            is ElementDeclaration.Text -> textSize(element, inventory)
+            is ElementDeclaration.Image -> Size(element.width, element.height)
+            is ElementDeclaration.Filler -> {
                 if (parentDirection == Direction.Vertical) Size(0, -1) else Size(-1, 0)
             }
 
-            is ElementDeclaration.ContainerDeclaration -> {
+            is ElementDeclaration.Container -> {
                 if (element.direction == Direction.Vertical) {
                     var w = 0
                     var h = 0
@@ -191,7 +186,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     }
 
     private fun textSize(
-        textDeclaration: ElementDeclaration.TextDeclaration, inventory: Inventory
+        textDeclaration: ElementDeclaration.Text, inventory: Inventory
     ): Size {
         val font = inventory.font(textDeclaration.fontResource)
         return Size(
@@ -212,7 +207,8 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
 
         if (declaration.mesh is MeshDeclaration.InstancedBillboard) {
             // TODO: static
-            val instances = InstancedBillboardsContext().apply(declaration.mesh.block).instances
+            val instances = mutableListOf<BillboardInstance>();
+            InstancedBillboardsContext(instances).apply(declaration.mesh.block)
             if (declaration.mesh.zSort) {
                 instances.sortBy { (camera.mat4 * it.pos).z }
             }
@@ -221,7 +217,8 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
 
         if (declaration.mesh is MeshDeclaration.InstancedMesh) {
             if (!declaration.mesh.static || new) {
-                val instances = InstancedRenderablesContext().apply(declaration.mesh.block).instances
+                val instances = mutableListOf<MeshInstance>()
+                InstancedRenderablesContext(instances).apply(declaration.mesh.block)
                 (mesh as Geometry.InstancedMesh).updateInstances(instances)
             }
         }

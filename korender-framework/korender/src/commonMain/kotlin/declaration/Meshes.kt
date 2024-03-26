@@ -1,7 +1,12 @@
 package com.zakgof.korender.declaration
 
+import com.zakgof.korender.impl.engine.BillboardInstance
+import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.geometry.Attribute
 import com.zakgof.korender.impl.geometry.Vertex
+import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Vec2
+import com.zakgof.korender.math.Vec3
 
 object Meshes {
 
@@ -24,25 +29,31 @@ sealed interface MeshDeclaration {
     data object ImageQuad : MeshDeclaration
     data object ScreenQuad : MeshDeclaration
 
-    open class Ided(open val id: Any) {
-        override fun equals(other: Any?): Boolean =
-            other!!.javaClass == this.javaClass && (other as Ided).id == id
-        override fun hashCode(): Int = id.hashCode()
-    }
-
     data class InstancedMesh(
-        override val id: Any,
+        val id: Any,
         val count: Int,
         val mesh: MeshDeclaration,
         val material: MaterialDeclaration,
         val static: Boolean,
         val block: InstancedRenderablesContext.() -> Unit,
-    ) : MeshDeclaration, Ided(id)
+    ) : MeshDeclaration {
+        override fun equals(other: Any?): Boolean = (other is InstancedMesh && other.id == id)
+        override fun hashCode(): Int = id.hashCode()
+    }
 
+    data class InstancedBillboard(val id: Any, val count: Int, val zSort: Boolean, val block: InstancedBillboardsContext.() -> Unit) : MeshDeclaration {
+        override fun equals(other: Any?): Boolean = (other is InstancedBillboard && other.id == id)
+        override fun hashCode(): Int = id.hashCode()
+    }
+    data class Custom(val id: Any, val static: Boolean, val vertexCount: Int, val indexCount: Int, val attributes: List<Attribute>, val block: MeshInitializer.() -> Unit) : MeshDeclaration {
+        override fun equals(other: Any?): Boolean = (other is Custom && other.id == id)
+        override fun hashCode(): Int = id.hashCode()
+    }
 
-    data class InstancedBillboard(override val id: Any, val count: Int, val zSort: Boolean, val block: InstancedBillboardsContext.() -> Unit) : MeshDeclaration, Ided(id)
-    data class Custom(override val id: Any, val static: Boolean, val vertexCount: Int, val indexCount: Int, val attributes: List<Attribute>, val block: MeshInitializer.() -> Unit) : MeshDeclaration, Ided(id)
-    data class HeightField(override val id: Any, val cellsX: Int, val cellsZ: Int, val cellWidth: Float, val height: (Int, Int) -> Float) : MeshDeclaration, Ided(id)
+    data class HeightField(val id: Any, val cellsX: Int, val cellsZ: Int, val cellWidth: Float, val height: (Int, Int) -> Float) : MeshDeclaration {
+        override fun equals(other: Any?): Boolean = (other is HeightField && other.id == id)
+        override fun hashCode(): Int = id.hashCode()
+    }
 }
 
 interface MeshInitializer {
@@ -52,4 +63,18 @@ interface MeshInitializer {
 
     fun vertices(vararg float: Float)
     fun indices(vararg indexes: Int)
+}
+
+// TODO: extract interfaces
+class InstancedBillboardsContext internal constructor(private val instances: MutableList<BillboardInstance>) {
+
+    fun Instance(pos: Vec3, scale: Vec2 = Vec2.ZERO, phi: Float = 0f) =
+        instances.add(BillboardInstance(pos, scale, phi))
+}
+
+
+class InstancedRenderablesContext internal constructor(private val instances: MutableList<MeshInstance>) {
+
+    fun Instance(transform: Transform) =
+        instances.add(MeshInstance(transform))
 }

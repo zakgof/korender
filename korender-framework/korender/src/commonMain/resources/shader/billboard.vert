@@ -31,7 +31,7 @@ void main() {
     float angle = atan(up, right) + phi + rotation;
 
     vpos = center + cameraRight * l * cos(angle) + cameraUp * l * sin(angle);
-    vtex = tex;
+    vtex = vec2(tex.x, 1.0 - tex.y);
     vnormal = normalize(cameraPos - center);
 
     gl_Position = projection * view * vec4(vpos, 1);

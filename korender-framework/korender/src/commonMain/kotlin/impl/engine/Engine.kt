@@ -2,10 +2,10 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
-import com.zakgof.korender.declaration.KorenderContext
+import com.zakgof.korender.KorenderContext
 import com.zakgof.korender.declaration.SceneContext
-import com.zakgof.korender.declaration.SceneDeclaration
-import com.zakgof.korender.declaration.TouchHandler
+import com.zakgof.korender.SceneDeclaration
+import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.impl.glgpu.GlGpu
 import com.zakgof.korender.impl.material.Texturing
 import com.zakgof.korender.input.TouchEvent

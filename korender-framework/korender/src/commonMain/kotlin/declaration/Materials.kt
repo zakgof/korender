@@ -1,5 +1,6 @@
 package com.zakgof.korender.declaration
 
+import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.material.StockUniforms
 
 object Materials {
@@ -16,4 +17,4 @@ object Materials {
         )
 }
 
-class MaterialDeclaration internal constructor(val shader: ShaderDeclaration, val uniforms: UniformSupplier)
+class MaterialDeclaration internal constructor(internal val shader: ShaderDeclaration, internal val uniforms: UniformSupplier)
