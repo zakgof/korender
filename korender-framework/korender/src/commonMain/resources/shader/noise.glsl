@@ -33,11 +33,9 @@ float fbmTex(sampler2D noiseTexture, vec2 n) {
     float amplitude = 1.0;
     float freq = 1.0;
     for (int i = 0; i < 7; i++) {
-        total += (2.0 * texture(noiseTexture, n * freq).r - 1.0) * amplitude;
-
-        n = msw * n;
-        amplitude *= 0.2;
+        total += (texture(noiseTexture, n * freq).r - 0.5) * amplitude;
         freq *= 2.0;
+        amplitude *= 0.4;
     }
     return total;
 }
