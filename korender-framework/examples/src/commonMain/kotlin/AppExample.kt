@@ -1,5 +1,9 @@
 package com.zakgof.korender.examples
 
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,9 +16,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 @Composable
 fun AppExample() {
@@ -36,9 +42,19 @@ fun AppExample() {
 
     var option by remember { mutableStateOf(options[0]) }
     Column {
+        val coroutineScope = rememberCoroutineScope()
         val scrollState = rememberScrollState()
         Row(
-            modifier = Modifier.horizontalScroll(scrollState)
+            modifier = Modifier
+                .horizontalScroll(scrollState)
+                .draggable(
+                    orientation = Orientation.Horizontal,
+                    state = rememberDraggableState { delta ->
+                        coroutineScope.launch {
+                            scrollState.scrollBy(-delta)
+                        }
+                    }
+                )
                 .padding(horizontal = 3.dp),
             horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
