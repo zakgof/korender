@@ -25,17 +25,12 @@ class ContainerContext internal constructor(private val declaration: ElementDecl
         text: String,
         color: Color,
         onTouch: TouchHandler = {}
-    ) {
-        declaration.add(ElementDeclaration.Text(id, fontResource, height, text, color, onTouch))
-    }
+    ) = declaration.add(ElementDeclaration.Text(id, fontResource, height, text, color, onTouch))
 
-    fun Filler() {
-        declaration.add(ElementDeclaration.Filler())
-    }
+    fun Filler() = declaration.add(ElementDeclaration.Filler())
 
-    fun Image(imageResource: String, width: Int, height: Int, onTouch: TouchHandler = {}) {
-        declaration.add(ElementDeclaration.Image(imageResource, width, height, onTouch))
-    }
+    fun Image(imageResource: String, width: Int, height: Int, onTouch: TouchHandler = {}) = declaration.add(ElementDeclaration.Image(imageResource, width, height, onTouch))
+
 }
 
 enum class Direction {
