@@ -49,11 +49,11 @@ fun App() = Korender {
 
 ### Demo app
 
-- JVM Desktop Windows:
-- Android APK: 
+- JVM Desktop Windows: https://github.com/zakgof/korender/releases/download/0.0.3/korender-demo-0.0.3.apk
+- Android APK: https://github.com/zakgof/korender/releases/download/0.0.3/korender-demo-0.0.3.apk
 
 ### Examples
-Find [more advanced examples](https://github.com/zakgof/korender/tree/main/korender/src/examples/kotlin)
+Find [more advanced examples](https://github.com/zakgof/korender/tree/main/korender-framework/examples/src/commonMain/kotlin)
 
 ### Concepts
 - **KorenderContext** - your entry point to access engine features
