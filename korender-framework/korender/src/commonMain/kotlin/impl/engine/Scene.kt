@@ -105,7 +105,6 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     }
 
     private fun createImage(declaration: ElementDeclaration.Image, x: Int, y: Int) {
-        println("Image at $x $y")
         screens.add(
             Renderable(
                 mesh = inventory.mesh(MeshDeclaration.ImageQuad), shader = inventory.shader(Shaders.imageQuadDeclaration), uniforms = MapUniformSupplier(
@@ -119,7 +118,6 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     }
 
     private fun createText(declaration: ElementDeclaration.Text, x: Int, y: Int, w: Int) {
-        println("Text ${declaration.text} at $x $y width $w")
         val mesh = inventory.fontMesh(declaration.id)
         val font = inventory.font(declaration.fontResource)
         mesh.updateFont(

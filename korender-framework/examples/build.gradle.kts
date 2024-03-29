@@ -1,3 +1,4 @@
+
 import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
@@ -81,10 +82,14 @@ compose.desktop {
 
         jvmArgs("--add-exports", "java.desktop/sun.awt=ALL-UNNAMED")
 
+        nativeApplication {
+        }
+
         nativeDistributions {
             targetFormats(TargetFormat.Msi)
             packageName = "com.zakgof.korender"
-            packageVersion = "0.0.1"
+            packageVersion = "0.0.3"
+            modules("jdk.unsupported")
         }
     }
 }

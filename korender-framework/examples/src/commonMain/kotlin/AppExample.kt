@@ -25,19 +25,17 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppExample() {
     val options = listOf(
-
-        Demo("QS", "") { QuickStartExample() },
-        Demo("Mesh", "") { MeshesExample() },
-        Demo("Obj", "") { ObjFileExample() },
-        Demo("IBB", "") { InstancedBillboardsExample() },
-        Demo("IM", "") { InstancedMeshesExample() },
-        Demo("HF", "") { HeightFieldExample() },
-        Demo("Tex", "") { TexturingExample() },
-        Demo("Shadow", "") { ShadowExample() },
-        Demo("Filter", "") { FilterExample() },
-        Demo("Fire", "") { FireExample() },
-        Demo("GUI", "") { GuiExample() },
-        Demo("Sky", "") { SkyExample() }
+        Demo("QS", "QuickStart: simple sphere with dynamic color and position") { QuickStartExample() },
+        Demo("Mesh", "Demonstration of static and dynamic custom meshes") { MeshesExample() },
+        Demo("Obj", "Loading a textured obj file") { ObjFileExample() },
+        Demo("IBB", "Particles system using instanced billboards") { InstancedBillboardsExample() },
+        Demo("IM", "Instanced meshes") { InstancedMeshesExample() },
+        Demo("HF", "Heightfield") { HeightFieldExample() },
+        Demo("Shadow", "Shadow mapping") { ShadowExample() },
+        Demo("Filter", "Custom filter") { FilterExample() },
+        Demo("Fire", "Simple fire effect") { FireExample() },
+        Demo("GUI", "On-screen GUI") { GuiExample() },
+        Demo("Sky", "Simple sky") { SkyExample() }
     )
 
     var option by remember { mutableStateOf(options[0]) }
@@ -64,8 +62,9 @@ fun AppExample() {
                 }
             }
         }
+        Text(text = option.description)
         option.composable()
     }
 }
 
-class Demo(val title: String, val description: String, val composable: @Composable () -> Unit)
+private class Demo(val title: String, val description: String, val composable: @Composable () -> Unit)

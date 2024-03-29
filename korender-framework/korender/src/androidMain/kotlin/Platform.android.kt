@@ -119,7 +119,7 @@ class AndroidPlatform : Platform {
             stream.copyTo(fileOut)
         }
 
-        val cell = 64
+        val cell = 256
         val bitmap = Bitmap.createBitmap(cell * 16, cell * 16, Bitmap.Config.ARGB_8888);
         val canvas = Canvas(bitmap)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
