@@ -21,7 +21,7 @@ fun MeshesExample() {
     val orbitCamera = OrbitCamera(20.z, 2.y)
     Korender {
         OnTouch { orbitCamera.touch(it) }
-        val material = standard {
+        val material = standard ("NO_LIGHT"){
             colorTexture = texture("/sand.jpg")
         }
         Scene {
@@ -44,12 +44,6 @@ fun MeshesExample() {
                 },
                 material = material
             )
-            Billboard(position = Vec3(0f, -1f, 0f), defs = arrayOf("NO_LIGHT")) {
-                colorTexture = texture("/oak.png")
-                xscale = 2.0f
-                yscale = 2.0f
-                rotation = frameInfo.time
-            }
         }
     }
 

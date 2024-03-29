@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
+import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.gl.VGL11
 import com.zakgof.korender.impl.gl.VGL12
 import com.zakgof.korender.impl.gl.VGL13
@@ -11,9 +12,8 @@ import com.zakgof.korender.impl.gl.VGL14
 import com.zakgof.korender.impl.gl.VGL15
 import com.zakgof.korender.impl.gl.VGL20
 import com.zakgof.korender.impl.gl.VGL30
-import com.zakgof.korender.impl.gpu.GpuTexture
-import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.glgpu.BufferUtils
+import com.zakgof.korender.impl.gpu.GpuTexture
 import com.zakgof.korender.impl.material.Image
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.lwjgl.Lwjgl11
@@ -180,7 +180,7 @@ class JVMPlatform : Platform {
     }
 
     override fun loadFont(stream: InputStream): FontDef {
-        val cell = 64
+        val cell = 256
         val originalFont = Font.createFont(Font.TRUETYPE_FONT, stream)
         val img = BufferedImage(cell * 16, cell * 16, BufferedImage.TYPE_4BYTE_ABGR)
         val graphics = img.graphics

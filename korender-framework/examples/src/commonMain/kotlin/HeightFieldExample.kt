@@ -8,10 +8,11 @@ import com.zakgof.korender.declaration.Meshes.heightField
 import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.math.FloatMath.sin
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.y
 
 @Composable
 fun HeightFieldExample() {
-    val freeCamera = FreeCamera(Vec3(0f, 10f, 0f), Vec3(0f, -1f, -1f).normalize())
+    val freeCamera = FreeCamera(10.y, Vec3(0f, -1f, -1f).normalize())
     Korender {
         Scene {
             OnTouch { freeCamera.touch(it) }
