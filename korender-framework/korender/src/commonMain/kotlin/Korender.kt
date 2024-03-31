@@ -24,7 +24,7 @@ fun Korender(block: KorenderContext.() -> Unit) {
         },
         frame = { engine.frame() },
         resize = { w, h -> engine.resize(w, h) },
-        touch = { e -> engine.touch(e) }
+        touch = { e -> engine.pushTouch(e) }
     )
 }
 

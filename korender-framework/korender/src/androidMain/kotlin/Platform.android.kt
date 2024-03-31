@@ -1,5 +1,6 @@
 package com.zakgof.korender
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -169,6 +170,7 @@ class AndroidImage(
 
 actual fun getPlatform(): Platform = AndroidPlatform()
 
+@SuppressLint("ViewConstructor")
 class KorenderGLSurfaceView(
     context: Context,
     init: (Int, Int) -> Unit,

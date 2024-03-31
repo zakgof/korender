@@ -14,9 +14,11 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import com.zakgof.korender.projection.FrustumProjection
 import com.zakgof.korender.projection.Projection
+import java.util.concurrent.ConcurrentLinkedQueue
 
 internal class Engine(private var height: Int, private var width: Int, block: KorenderContext.() -> Unit) {
 
+    private val touchQueue = ConcurrentLinkedQueue<TouchEvent>()
     private val sceneBlocks = mutableListOf<SceneContext.() -> Unit>() // TODO: ref
     private val inventory = Inventory(GlGpu())
     private val frameInfoManager = FrameInfoManager(inventory)
@@ -37,6 +39,8 @@ internal class Engine(private var height: Int, private var width: Int, block: Ko
 
     fun frame() {
         val frameInfo = frameInfoManager.frame()
+
+        processTouches()
 
         val sd = SceneDeclaration()
         projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f) // TODO
@@ -65,9 +69,16 @@ internal class Engine(private var height: Int, private var width: Int, block: Ko
         context["time"] = (System.nanoTime() - frameInfoManager.startNanos) * 1e-9f
     }
 
-    fun touch(touchEvent: TouchEvent) {
-        touchHandlers.forEach { it(touchEvent) }
-        sceneTouchHandler?.invoke(touchEvent)
+    fun pushTouch(touchEvent: TouchEvent) = touchQueue.add(touchEvent)
+
+    private fun processTouches() {
+        do {
+            val event = touchQueue.poll()
+            event?.let { touchEvent ->
+                touchHandlers.forEach { it(touchEvent) }
+                sceneTouchHandler?.invoke(touchEvent)
+            }
+        } while (event != null)
     }
 
     fun resize(w: Int, h: Int) {
