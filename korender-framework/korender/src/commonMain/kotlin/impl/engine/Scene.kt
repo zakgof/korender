@@ -266,10 +266,10 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     private fun filterFrameBuffers(): MutableList<GpuFrameBuffer> {
         val filterFrameBuffers = mutableListOf<GpuFrameBuffer>()
         if (filters.isNotEmpty()) {
-            filterFrameBuffers.add(inventory.frameBuffer(FrameBufferDeclaration("filter1", width, height, false)))
+            filterFrameBuffers.add(inventory.frameBuffer(FrameBufferDeclaration("filter1", width, height, true)))
         }
         if (filters.size >= 2) {
-            filterFrameBuffers.add(inventory.frameBuffer(FrameBufferDeclaration("filter2", width, height, false)))
+            filterFrameBuffers.add(inventory.frameBuffer(FrameBufferDeclaration("filter2", width, height, true)))
         }
         return filterFrameBuffers
     }
