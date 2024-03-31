@@ -8,7 +8,7 @@ plugins {
     id("signing")
 }
 
-val libraryVersion = "0.0.3-SNAPSHOT"
+val libraryVersion = "0.0.6-SNAPSHOT"
 val libraryGroup = "com.github.zakgof"
 
 kotlin {
@@ -42,16 +42,8 @@ kotlin {
             implementation(libs.lwjgl.jawt)
             implementation(libs.lwjgl3.awt)
 
-            runtimeOnly("org.lwjgl:lwjgl:3.3.3") {
-                artifact {
-                    classifier = "natives-windows"
-                }
-            }
-            runtimeOnly("org.lwjgl:lwjgl-opengl:3.3.3") {
-                artifact {
-                    classifier = "natives-windows"
-                }
-            }
+            implementation("org.lwjgl:lwjgl:3.3.3:natives-windows")
+            implementation("org.lwjgl:lwjgl-opengl:3.3.3:natives-windows")
         }
     }
 }

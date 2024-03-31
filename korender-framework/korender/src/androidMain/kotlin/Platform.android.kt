@@ -98,6 +98,7 @@ class AndroidPlatform : Platform {
             else -> throw KorenderException("Unsupported image format $format")
         }
         return AndroidImage(
+            bitmap,
             bitmap.width,
             bitmap.height,
             gpuBytes,
@@ -153,9 +154,17 @@ class AndroidPlatform : Platform {
 }
 
 class AndroidImage(
-    override val width: Int, override val height: Int,
-    override val bytes: ByteBuffer, override val format: GpuTexture.Format
-) : Image
+    private val bitmap: Bitmap,
+    override val width: Int,
+    override val height: Int,
+    override val bytes: ByteBuffer,
+    override val format: GpuTexture.Format
+) : Image {
+    override fun pixel(x: Int, y: Int): com.zakgof.korender.math.Color {
+        val androidColor = bitmap.getColor(x, y)
+        return com.zakgof.korender.math.Color(androidColor.red(), androidColor.green(), androidColor.blue())
+    }
+}
 
 
 actual fun getPlatform(): Platform = AndroidPlatform()

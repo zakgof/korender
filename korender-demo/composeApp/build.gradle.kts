@@ -70,6 +70,7 @@ android {
 compose.desktop {
     application {
         mainClass = "MainKt"
+        jvmArgs("--add-exports", "java.desktop/sun.awt=ALL-UNNAMED")
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)

@@ -6,6 +6,7 @@ interface GpuTexture : AutoCloseable {
     enum class Format {
         RGB,
         RGBA,
-        Gray
+        Gray,
+        Gray16
     }
 }

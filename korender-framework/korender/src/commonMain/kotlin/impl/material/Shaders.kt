@@ -160,7 +160,7 @@ private class ShaderBuilder(
     }
 
     fun cpn(filename: String?): InputStream? =
-        ShaderBuilder::class.java.getClassLoader().getResourceAsStream(filename)
+        ShaderBuilder::class.java.getClassLoader()!!.getResourceAsStream(filename)
 
     fun build(gpu: Gpu) =
         gpu.createShader(title, vertCode, fragCode, vertDebugInfo, fragDebugInfo)

@@ -1,13 +1,13 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.KorenderContext
-import com.zakgof.korender.declaration.SceneContext
 import com.zakgof.korender.SceneDeclaration
 import com.zakgof.korender.TouchHandler
+import com.zakgof.korender.camera.Camera
+import com.zakgof.korender.camera.DefaultCamera
+import com.zakgof.korender.declaration.SceneContext
+import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.impl.glgpu.GlGpu
-import com.zakgof.korender.impl.material.Texturing
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -55,7 +55,7 @@ internal class Engine(private var height: Int, private var width: Int, block: Ko
     }
 
     private fun updateContext() {
-        context["noiseTexture"] = Texturing.texture("/noise.png")
+        context["noiseTexture"] = texture("/noise.png")
         context["view"] = camera.mat4
         context["projection"] = projection.mat4
         context["cameraPos"] = camera.position

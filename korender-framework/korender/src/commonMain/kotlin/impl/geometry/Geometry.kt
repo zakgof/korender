@@ -14,6 +14,7 @@ import com.zakgof.korender.impl.geometry.Attributes.TEX
 import com.zakgof.korender.impl.glgpu.BufferUtils
 import com.zakgof.korender.impl.gpu.Gpu
 import com.zakgof.korender.impl.gpu.GpuMesh
+import com.zakgof.korender.impl.resourceStream
 import com.zakgof.korender.math.BoundingBox
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.FloatMath.cos
@@ -444,7 +445,7 @@ internal object Geometry {
         }
 
     private fun obj(objFile: String): MeshBuilder {
-        val obj = ObjReader.read(Geometry.javaClass.getResourceAsStream(objFile))
+        val obj = ObjReader.read(resourceStream(objFile))
         return create(obj)
     }
 

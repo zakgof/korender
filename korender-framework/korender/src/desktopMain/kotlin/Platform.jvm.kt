@@ -36,6 +36,8 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseMotionAdapter
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferByte
+import java.awt.image.DataBufferUShort
+import java.awt.image.Raster
 import java.io.InputStream
 import java.nio.ByteBuffer
 import javax.imageio.ImageIO
@@ -142,7 +144,7 @@ class JVMPlatform : Platform {
     }
 
     private fun detectDevicePixelRatio(): List<Float> {
-        val device = GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice;
+        val device = GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice
         val scaleX = device::class.members.firstOrNull { it.name == "getDefaultScaleX" }
             ?.call(device) as Float?
         val scaleY = device::class.members.firstOrNull { it.name == "getDefaultScaleY" }
@@ -166,6 +168,14 @@ class JVMPlatform : Platform {
         val buffer = BufferUtils.createByteBuffer(data.size)
         buffer.put(data)
         return buffer.flip() as ByteBuffer
+    }
+
+    // TODO: test
+    private fun loadGray16(data: ShortArray): ByteBuffer {
+        val bb = BufferUtils.createByteBuffer(data.size * 2)
+        val buffer = bb.asShortBuffer()
+        buffer.put(data)
+        return bb.flip()
     }
 
     private fun loadAbgr(data: ByteArray): ByteBuffer {
@@ -218,15 +228,18 @@ class JVMPlatform : Platform {
             BufferedImage.TYPE_3BYTE_BGR -> loadBgr((raster.dataBuffer as DataBufferByte).data)
             BufferedImage.TYPE_4BYTE_ABGR -> loadAbgr((raster.dataBuffer as DataBufferByte).data)
             BufferedImage.TYPE_BYTE_GRAY -> loadGray((raster.dataBuffer as DataBufferByte).data)
+            BufferedImage.TYPE_USHORT_GRAY -> loadGray16((raster.dataBuffer as DataBufferUShort).data)
             else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
         }
         val format = when (bufferedImage.type) {
             BufferedImage.TYPE_3BYTE_BGR -> GpuTexture.Format.RGB
             BufferedImage.TYPE_4BYTE_ABGR -> GpuTexture.Format.RGBA
             BufferedImage.TYPE_BYTE_GRAY -> GpuTexture.Format.Gray
+            BufferedImage.TYPE_USHORT_GRAY -> GpuTexture.Format.Gray16
             else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
         }
         return JvmImage(
+            bufferedImage.raster,
             bufferedImage.width,
             bufferedImage.height,
             bytes,
@@ -239,7 +252,22 @@ class JVMPlatform : Platform {
 actual fun getPlatform(): Platform = JVMPlatform()
 
 class JvmImage(
-    override val width: Int, override val height: Int,
-    override val bytes: ByteBuffer, override val format: GpuTexture.Format
-) : Image
+    private val raster: Raster,
+    override val width: Int,
+    override val height: Int,
+    override val bytes: ByteBuffer,
+    override val format: GpuTexture.Format
+) : Image {
+
+    private val pixel = FloatArray(3) { 0f }
+
+    override fun pixel(x: Int, y: Int): com.zakgof.korender.math.Color {
+        raster.getPixel(x, y, pixel)
+        return when (format) {
+            // TODO
+            GpuTexture.Format.Gray16 -> com.zakgof.korender.math.Color(pixel[0] / 65535.0f, pixel[0] / 65535.0f, pixel[0] / 65535.0f)
+            else -> com.zakgof.korender.math.Color(pixel[0] / 255.0f, pixel[1] / 255.0f, pixel[2] / 255.0f)
+        }
+    }
+}
 
