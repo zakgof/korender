@@ -162,11 +162,11 @@ class AndroidImage(
     override val format: GpuTexture.Format
 ) : Image {
     override fun pixel(x: Int, y: Int): com.zakgof.korender.math.Color {
-        val androidColor = bitmap.getColor(x, y)
-        return com.zakgof.korender.math.Color(androidColor.red(), androidColor.green(), androidColor.blue())
+        // TODO: performance optimization
+        val androidColor = bitmap.getPixel(x, y)
+        return com.zakgof.korender.math.Color(androidColor)
     }
 }
-
 
 actual fun getPlatform(): Platform = AndroidPlatform()
 

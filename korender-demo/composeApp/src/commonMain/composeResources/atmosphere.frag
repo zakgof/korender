@@ -15,7 +15,7 @@ void main() {
     vec4 sunProj = (projection * view * vec4(-light, 0.));
     vec2 sunPos = (projection * view * vec4(-light, 0.)).xy; // TODO vertex shader or even CPU uniform
 
-    vec3 color = texture2D(filterColorTexture, vtex).rgb;
+    vec3 color = texture(filterColorTexture, vtex).rgb;
 
     vec2 csp = vec2(vtex * 2.0 - 1.0);
     vec4 direction = inverse(projection * view) * vec4(csp, 0.0, 1.0);
@@ -23,20 +23,19 @@ void main() {
 
     int samples = 6;
 
-    float depth = texture2D(filterDepthTexture, vtex).r;
+    float depth = texture(filterDepthTexture, vtex).r;
     float depthFactor = clamp((depth - 0.993) / (1.0 - 0.993), 0.0, 1.0);
-    float hazeRatio = 0.0;
 
-    if (sunProj.z > 0 && sunPos.x > -1.1 && sunPos.x < 1.1 && sunPos.y > -1.1 && sunPos.y < 1.1) {
+    if (sunProj.z > 0.0 && sunPos.x > -1.1 && sunPos.x < 1.1 && sunPos.y > -1.1 && sunPos.y < 1.1) {
         float averageSkyLumi = 0.;
         int visibles = 0;
         for (int i = 0; i < samples; i++) {
-            float phi = 2 * 3.1416 * i / float(samples);
+            float phi = 2.0 * 3.1416 * float(i) / float(samples);
             vec2 pt = sunPos + 0.08 * vec2(cos(phi), sin(phi));
             vec2 texpt = (pt + 1.0) * 0.5;
-            if (texture2D(filterDepthTexture, texpt).r > 0.999) {
+            if (texture(filterDepthTexture, texpt).r > 0.999) {
                 visibles += 1;
-                vec4 m = texture2D(filterColorTexture, texpt);
+                vec4 m = texture(filterColorTexture, texpt);
                 averageSkyLumi += (m.r+m.g+m.b);
             }
         }
@@ -44,18 +43,19 @@ void main() {
         float visibleSunRatio = float(visibles) / float(samples);
 
         vec2 keypt = sunPos + 0.08 * normalize(csp - sunPos);
-        if (texture2D(filterDepthTexture, (keypt + 1.0) * 0.5).r > 0.999) {
-            vec4 m = texture2D(filterColorTexture, (keypt + 1.0) * 0.5);
+        if (texture(filterDepthTexture, (keypt + 1.0) * 0.5).r > 0.999) {
+            vec4 m = texture(filterColorTexture, (keypt + 1.0) * 0.5);
             averageSkyLumi = (m.r+m.g+m.b);
         }
         visibleSunRatio *= averageSkyLumi * 0.33;
-        hazeRatio = clamp(4.0 * visibleSunRatio * clamp(0.2 / length(csp - sunPos), 0.0, 1.0), 0.0, 1.0);
+        float hazeRatio = visibleSunRatio * clamp(0.2 / length(csp - sunPos), 0.0, 1.0);
+        color = mix(color, vec3(1.6, 1.4, 1.0), hazeRatio);
     }
-    if (depth > 0.999) {
+
+    if (depth >= 0.9995) {
         depthFactor = 0.0;
     }
-    vec3 fogColor = mix(vec3(0.6, 0.6, 0.8), vec3(1.6, 1.4, 1.0), hazeRatio);
-    color = mix(color, fogColor, depthFactor);
-
+    depthFactor = clamp(depthFactor * depthFactor - 0.2, 0.0, 1.0);
+    color = mix(color, vec3(0.6, 0.6, 0.8), depthFactor * depthFactor);
     fragColor = vec4(color, 1.0);
 }

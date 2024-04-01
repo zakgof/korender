@@ -35,7 +35,7 @@ fun App() = Korender {
             }
         )
         Sky("fastcloud")
-        // Filter("atmosphere.frag")
+        Filter("atmosphere.frag")
         Gui {
             Row {
                 Column {
