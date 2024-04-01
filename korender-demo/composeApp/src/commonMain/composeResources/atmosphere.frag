@@ -24,7 +24,7 @@ void main() {
     int samples = 6;
 
     float depth = texture(filterDepthTexture, vtex).r;
-    float depthFactor = clamp((depth - 0.993) / (1.0 - 0.993), 0.0, 1.0);
+    // float depthFactor = clamp((depth - 0.993) / (1.0 - 0.993), 0.0, 1.0);
 
     if (sunProj.z > 0.0 && sunPos.x > -1.1 && sunPos.x < 1.1 && sunPos.y > -1.1 && sunPos.y < 1.1) {
         float averageSkyLumi = 0.;
@@ -48,14 +48,14 @@ void main() {
             averageSkyLumi = (m.r+m.g+m.b);
         }
         visibleSunRatio *= averageSkyLumi * 0.33;
-        float hazeRatio = visibleSunRatio * clamp(0.2 / length(csp - sunPos), 0.0, 1.0);
+        float hazeRatio = visibleSunRatio * clamp(0.2 / length((csp - sunPos)*vec2(1.0, projection[0][0]/projection[1][1])), 0.0, 1.0); // TODO: screen aspect !!!!
         color = mix(color, vec3(1.6, 1.4, 1.0), hazeRatio);
     }
 
-    if (depth >= 0.9995) {
-        depthFactor = 0.0;
-    }
-    depthFactor = clamp(depthFactor * depthFactor - 0.2, 0.0, 1.0);
-    color = mix(color, vec3(0.6, 0.6, 0.8), depthFactor * depthFactor);
+//    if (depth >= 0.9995) { // TODO: this does not work
+//        depthFactor = 0.0;
+//    }
+    float depthFactor = clamp(pow(depth, 200.0f) - 0.2, 0.0, 1.0);
+    color = mix(color, vec3(0.6, 0.6, 0.8), depthFactor);
     fragColor = vec4(color, 1.0);
 }
