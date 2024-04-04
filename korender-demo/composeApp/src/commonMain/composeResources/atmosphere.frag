@@ -48,7 +48,7 @@ void main() {
             averageSkyLumi = (m.r+m.g+m.b);
         }
         visibleSunRatio *= averageSkyLumi * 0.33;
-        float hazeRatio = visibleSunRatio * clamp(0.2 / length((csp - sunPos)*vec2(1.0, projection[0][0]/projection[1][1])), 0.0, 1.0); // TODO: screen aspect !!!!
+        float hazeRatio = visibleSunRatio * clamp(0.2 / length((csp - sunPos)*vec2(1.0, projection[0][0]/projection[1][1])), 0.0, 1.0);
         color = mix(color, vec3(1.6, 1.4, 1.0), hazeRatio);
     }
 

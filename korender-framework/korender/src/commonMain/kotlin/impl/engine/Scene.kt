@@ -11,6 +11,7 @@ import com.zakgof.korender.declaration.TextureDeclaration
 import com.zakgof.korender.declaration.UniformSupplier
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.geometry.Geometry
+import com.zakgof.korender.impl.gl.VGL11
 import com.zakgof.korender.impl.gpu.GpuFrameBuffer
 import com.zakgof.korender.impl.material.MapUniformSupplier
 import com.zakgof.korender.impl.material.Shaders
@@ -179,7 +180,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
                 }
             }
         }
-        sizes.put(element, size)
+        sizes[element] = size
         return size
     }
 
@@ -233,34 +234,42 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     }
 
     fun render(context: MutableMap<String, Any?>, light: Vec3) {
-
-        shadower?.let {
-            context.putAll(it.render(light))
-        }
-
-        if (filters.isEmpty()) {
-            render(camera, context)
-        } else {
-            val prevFrameContext = mutableMapOf<String, Any?>()
-            for (p in 0..filters.size) {
-                val frameBuffer = if (p == filters.size) null else filterFrameBuffers[p % 2]
-                renderTo(frameBuffer) {
-                    if (p == 0) {
-                        com.zakgof.korender.impl.gl.VGL11.glClear(com.zakgof.korender.impl.gl.VGL11.GL_COLOR_BUFFER_BIT or com.zakgof.korender.impl.gl.VGL11.GL_DEPTH_BUFFER_BIT)
-                        render(camera, context)
-                    } else {
-                        val filter = filters[p - 1]
-                        com.zakgof.korender.impl.gl.VGL11.glClear(com.zakgof.korender.impl.gl.VGL11.GL_COLOR_BUFFER_BIT or com.zakgof.korender.impl.gl.VGL11.GL_DEPTH_BUFFER_BIT)
-                        filter.gpuShader.render(
-                            filter.uniforms + context + prevFrameContext,
-                            inventory.mesh(MeshDeclaration.ScreenQuad).gpuMesh
-                        )
-                    }
+        shadower?.let { context.putAll(it.render(light)) }
+        val uniformDecorator: (UniformSupplier) -> UniformSupplier = {
+            UniformSupplier { key ->
+                var value = it[key] ?: context[key]
+                if (value is TextureDeclaration) {
+                    value = inventory.texture(value.textureResource)
                 }
-                prevFrameContext["filterColorTexture"] = frameBuffer?.colorTexture
-                prevFrameContext["filterDepthTexture"] = frameBuffer?.depthTexture
+                value
             }
         }
+        val prevFrameContext = mutableMapOf<String, Any?>()
+        for (p in 0..filters.size) {
+            val frameBuffer = if (p == filters.size) null else filterFrameBuffers[p % 2]
+            renderTo(frameBuffer) {
+                if (p == 0) {
+                    VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
+                    renderStage(camera, uniformDecorator)
+                } else {
+                    val filter = filters[p - 1]
+                    VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
+                    filter.gpuShader.render(
+                        filter.uniforms + context + prevFrameContext,
+                        inventory.mesh(MeshDeclaration.ScreenQuad).gpuMesh
+                    )
+                }
+                if (frameBuffer == null) {
+                    renderScreens(uniformDecorator)
+                }
+            }
+            prevFrameContext["filterColorTexture"] = frameBuffer?.colorTexture
+            prevFrameContext["filterDepthTexture"] = frameBuffer?.depthTexture
+        }
+    }
+
+    private fun renderScreens(uniformDecorator: (UniformSupplier) -> UniformSupplier) {
+        screens.forEach { it.render(uniformDecorator) }
     }
 
     private fun filterFrameBuffers(): MutableList<GpuFrameBuffer> {
@@ -274,27 +283,15 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         return filterFrameBuffers
     }
 
-    private fun render(camera: Camera, context: Map<String, Any?>) {
+    private fun renderStage(camera: Camera, uniformDecorator: (UniformSupplier) -> UniformSupplier) {
 
-        com.zakgof.korender.impl.gl.VGL11.glViewport(0, 0, width, height)
-        com.zakgof.korender.impl.gl.VGL11.glEnable(com.zakgof.korender.impl.gl.VGL11.GL_CULL_FACE)
-        com.zakgof.korender.impl.gl.VGL11.glCullFace(com.zakgof.korender.impl.gl.VGL11.GL_BACK)
-        com.zakgof.korender.impl.gl.VGL11.glClear(com.zakgof.korender.impl.gl.VGL11.GL_COLOR_BUFFER_BIT or com.zakgof.korender.impl.gl.VGL11.GL_DEPTH_BUFFER_BIT)
-
-        val uniformDecorator: (UniformSupplier) -> UniformSupplier = {
-            UniformSupplier { key ->
-                var value = it[key] ?: context[key]
-                if (value is TextureDeclaration) {
-                    value = inventory.texture(value.textureResource)
-                }
-                value
-            }
-        }
-
+        VGL11.glViewport(0, 0, width, height)
+        VGL11.glEnable(VGL11.GL_CULL_FACE)
+        VGL11.glCullFace(VGL11.GL_BACK)
+        VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
         renderBucket(opaques, -1.0, camera, uniformDecorator)
         skies.forEach { it.render(uniformDecorator) }
         renderBucket(transparents, 1.0, camera, uniformDecorator)
-        screens.forEach { it.render(uniformDecorator) } // TODO
     }
 
     private fun renderBucket(
