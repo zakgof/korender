@@ -9,7 +9,7 @@ import com.zakgof.korender.impl.resourceStream
 
 internal object Fonts {
 
-    val shaderDeclaration = ShaderDeclaration("font.vert", "font.frag", setOf())
+    val shaderDeclaration = ShaderDeclaration("gui/font.vert", "gui/font.frag", setOf())
 
     fun load(gpu: Gpu, fontResource: String): Font {
         val fontDef = getPlatform().loadFont(resourceStream(fontResource))

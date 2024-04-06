@@ -1,4 +1,4 @@
-#import "header.glsl"
+#import "lib/header.glsl"
 
 in vec3 pos;
 in vec3 normal;

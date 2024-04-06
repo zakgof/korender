@@ -77,7 +77,7 @@ class SceneContext internal constructor(val frameInfo: FrameInfo, private val sc
         sceneDeclaration.add(
             RenderableDeclaration(
                 MeshDeclaration.ScreenQuad,
-                ShaderDeclaration("sky.vert", "${preset}sky.frag", setOf()),
+                ShaderDeclaration("sky/sky.vert", "sky/${preset}sky.frag", setOf()),
                 { null }
             )
         )

@@ -1,6 +1,6 @@
-#import "header.glsl"
-#import "sky.glsl"
-#import "noise.glsl"
+#import "lib/header.glsl"
+#import "sky/sky.glsl"
+#import "lib/noise.glsl"
 
 
 in vec2 vtex;

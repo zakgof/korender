@@ -1,5 +1,5 @@
-#import "sky.glsl"
-#import "noise.glsl"
+#import "sky/sky.glsl"
+#import "lib/noise.glsl"
 
 // https://www.shadertoy.com/view/4tdSWr
 

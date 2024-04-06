@@ -1,5 +1,5 @@
-#import "header.glsl"
-#import "sky.glsl"
+#import "lib/header.glsl"
+#import "sky/sky.glsl"
 
 in vec2 vtex;
 

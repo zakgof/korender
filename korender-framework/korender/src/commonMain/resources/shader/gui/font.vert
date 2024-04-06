@@ -1,4 +1,4 @@
-#import "header.glsl"
+#import "lib/header.glsl"
 
 in vec2 tex;
 in vec2 screen;

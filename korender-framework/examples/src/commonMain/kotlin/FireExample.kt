@@ -8,7 +8,7 @@ import com.zakgof.korender.Korender
 fun FireExample() = Korender {
     Scene {
         Billboard (
-            fragment = "fire.frag",
+            fragment = "effect/fire.frag",
             material = {
                 xscale = 2.0f
                 yscale = 10.0f

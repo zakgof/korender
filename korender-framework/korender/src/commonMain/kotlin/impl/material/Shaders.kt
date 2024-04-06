@@ -12,7 +12,7 @@ import java.util.regex.Pattern
 
 internal object Shaders {
 
-    val imageQuadDeclaration: ShaderDeclaration = ShaderDeclaration("image.vert", "image.frag", setOf())
+    val imageQuadDeclaration: ShaderDeclaration = ShaderDeclaration("gui/image.vert", "gui/image.frag", setOf())
 
     fun create(declaration: ShaderDeclaration, gpu: Gpu) =
         ShaderBuilder(declaration.vertFile, declaration.fragFile, declaration.defs).build(gpu)

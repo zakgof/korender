@@ -1,5 +1,5 @@
-#import "header.glsl"
-#import "noise.glsl"
+#import "lib/header.glsl"
+#import "lib/noise.glsl"
 
 // Inspired by Xavier Benech https://www.shadertoy.com/view/XsXSWS
 

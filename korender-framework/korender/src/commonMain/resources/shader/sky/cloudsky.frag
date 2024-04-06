@@ -1,5 +1,5 @@
-#import "header.glsl"
-#import "cloudsky.glsl"
+#import "lib/header.glsl"
+#import "sky/cloudsky.glsl"
 
 in vec2 vtex;
 uniform float time;
