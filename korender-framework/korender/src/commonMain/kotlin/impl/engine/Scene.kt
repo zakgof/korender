@@ -111,7 +111,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
                 mesh = inventory.mesh(MeshDeclaration.ImageQuad), shader = inventory.shader(Shaders.imageQuadDeclaration), uniforms = MapUniformSupplier(
                     Pair("pos", Vec2(x.toFloat() / width, 1.0f - (y.toFloat() + declaration.height.toFloat()) / height)),
                     Pair("size", Vec2(declaration.width.toFloat() / width, declaration.height.toFloat() / height)),
-                    Pair("imageTexture", inventory.texture(declaration.imageResource))
+                    Pair("imageTexture", inventory.texture(TextureDeclaration(declaration.imageResource)))
                 )
             )
         )
@@ -239,7 +239,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
             UniformSupplier { key ->
                 var value = it[key] ?: context[key]
                 if (value is TextureDeclaration) {
-                    value = inventory.texture(value.textureResource)
+                    value = inventory.texture(value)
                 }
                 value
             }

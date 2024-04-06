@@ -1,4 +1,4 @@
-package com.zakgof.korender.examples
+package com.zakgof.korender.examples.camera
 
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera

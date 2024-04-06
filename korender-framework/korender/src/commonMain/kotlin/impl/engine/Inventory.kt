@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.declaration.MeshDeclaration
+import com.zakgof.korender.declaration.TextureDeclaration
 import com.zakgof.korender.impl.font.Font
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.geometry.Geometry
@@ -16,7 +17,7 @@ internal class Inventory(val gpu: Gpu) {
 
     private val meshes = Registry<MeshDeclaration, Mesh> { Geometry.create(it, gpu) }
     private val shaders = Registry<ShaderDeclaration, GpuShader> { Shaders.create(it, gpu) }
-    private val textures = Registry<String, GpuTexture> { Texturing.create(it).build(gpu) }
+    private val textures = Registry<TextureDeclaration, GpuTexture> { Texturing.create(it, gpu) }
     private val fonts = Registry<String, Font> { Fonts.load(gpu, it) }
     private val fontMeshes = Registry<Any, Geometry.InstancedMesh> { Geometry.font(gpu, 256) }
     private val frameBuffers = Registry<FrameBufferDeclaration, GpuFrameBuffer> { gpu.createFrameBuffer(it.width, it.height, it.withDepth) }
@@ -41,7 +42,7 @@ internal class Inventory(val gpu: Gpu) {
 
     fun shader(decl: ShaderDeclaration): GpuShader = shaders[decl]
 
-    fun texture(decl: String): GpuTexture = textures[decl]
+    fun texture(decl: TextureDeclaration): GpuTexture = textures[decl]
     fun hasMesh(decl: MeshDeclaration): Boolean = meshes.has(decl)
     fun font(fontResource: String): Font = fonts[fontResource]
     fun fontMesh(id: Any): Geometry.InstancedMesh = fontMeshes[id]

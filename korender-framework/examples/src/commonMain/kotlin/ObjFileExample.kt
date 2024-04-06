@@ -6,6 +6,7 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.declaration.Materials.standard
 import com.zakgof.korender.declaration.Meshes.obj
 import com.zakgof.korender.declaration.Textures.texture
+import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.math.FloatMath
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3

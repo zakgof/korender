@@ -30,7 +30,7 @@ internal class SimpleShadower(private val inventory: Inventory, shadowDeclaratio
             UniformSupplier { key ->
                 var value = it[key] ?: casterUniforms[key]
                 if (value is TextureDeclaration) {
-                    value = inventory.texture(value.textureResource)
+                    value = inventory.texture(value)
                 }
                 value
             }

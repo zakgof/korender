@@ -6,6 +6,7 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.declaration.Materials.standard
 import com.zakgof.korender.declaration.Meshes.mesh
 import com.zakgof.korender.declaration.Textures.texture
+import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.impl.geometry.Attributes.NORMAL
 import com.zakgof.korender.impl.geometry.Attributes.POS
 import com.zakgof.korender.impl.geometry.Attributes.TEX

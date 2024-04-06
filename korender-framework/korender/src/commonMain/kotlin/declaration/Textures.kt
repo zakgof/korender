@@ -1,9 +1,7 @@
 package com.zakgof.korender.declaration
 
 object Textures {
-
-    // TODO: wrap and filter
-    fun texture(textureResource: String): TextureDeclaration = TextureDeclaration(textureResource)
+    fun texture(textureResource: String, filter: TextureFilter = TextureFilter.MipMapLinearLinear, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): TextureDeclaration = TextureDeclaration(textureResource, filter, wrap, aniso)
 }
 
 enum class TextureFilter {
@@ -22,4 +20,4 @@ enum class TextureWrap {
     Repeat
 }
 
-data class TextureDeclaration(val textureResource: String) // TODO filter and wrap
+data class TextureDeclaration(val textureResource: String, val filter: TextureFilter = TextureFilter.MipMapLinearLinear, val wrap: TextureWrap = TextureWrap.Repeat, val aniso: Int = 1024)
