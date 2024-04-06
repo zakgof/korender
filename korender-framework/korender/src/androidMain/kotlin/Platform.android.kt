@@ -27,6 +27,7 @@ import com.zakgof.korender.gles.Gles15
 import com.zakgof.korender.gles.Gles20
 import com.zakgof.korender.gles.Gles30
 import com.zakgof.korender.impl.font.FontDef
+import com.zakgof.korender.impl.glgpu.BufferUtils
 import com.zakgof.korender.impl.gpu.GpuTexture
 import com.zakgof.korender.impl.material.Image
 import com.zakgof.korender.input.TouchEvent
@@ -87,7 +88,7 @@ class AndroidPlatform : Platform {
 
     private fun bitmapToImage(bitmap: Bitmap): AndroidImage {
         val size = bitmap.rowBytes * bitmap.height
-        val byteBuffer = com.zakgof.korender.impl.glgpu.BufferUtils.createByteBuffer(size)
+        val byteBuffer = BufferUtils.createByteBuffer(size)
         bitmap.copyPixelsToBuffer(byteBuffer)
         val format = bitmap.config
         val gpuFormat = when (format) {
@@ -108,7 +109,7 @@ class AndroidPlatform : Platform {
     }
 
     private fun ARGBtoRGBA(data: ByteBuffer): ByteBuffer {
-        val buffer = com.zakgof.korender.impl.glgpu.BufferUtils.createByteBuffer(data.limit())
+        val buffer = BufferUtils.createByteBuffer(data.limit())
         buffer.put(data.rewind() as ByteBuffer)
         return buffer.flip() as ByteBuffer
     }

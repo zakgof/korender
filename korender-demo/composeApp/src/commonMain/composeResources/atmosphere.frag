@@ -1,4 +1,4 @@
-#import "header.glsl"
+#import "lib/header.glsl"
 
 in vec2 vtex;
 uniform sampler2D filterColorTexture;
@@ -52,10 +52,9 @@ void main() {
         color = mix(color, vec3(1.6, 1.4, 1.0), hazeRatio);
     }
 
-//    if (depth >= 0.9995) { // TODO: this does not work
-//        depthFactor = 0.0;
-//    }
-    float depthFactor = clamp(pow(depth, 200.0f) - 0.2, 0.0, 1.0);
+    float depthFactor = clamp(pow(depth, 200.0) - 0.2, 0.0, 1.0);
     color = mix(color, vec3(0.6, 0.6, 0.8), depthFactor);
+
     fragColor = vec4(color, 1.0);
+    gl_FragDepth = depth;
 }

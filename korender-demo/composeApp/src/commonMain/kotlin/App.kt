@@ -11,8 +11,8 @@ import com.zakgof.korender.projection.FrustumProjection
 @Composable
 fun App() = Korender {
     val elevationRatio = 300.0f
-    val hfImage = image("/heightmap.png")
-    val hf = ImageHeightField(hfImage, 10.0f, elevationRatio)
+    val hfImage = image("/hf-rg16.png")
+    val hf = RgImageHeightField(hfImage, 10.0f, elevationRatio)
     val freeCamera = FreeCamera(
         initialPosition = Vec3(0f, hf.elevation(5f, 5f) + 25.0f, 0f),
         initialDirection = Vec3(0f, 0f, -1f),
@@ -28,10 +28,13 @@ fun App() = Korender {
                 cellsX = hfImage.width - 1,
                 cellsZ = hfImage.height - 1,
                 cellWidth = 10.0f,
-                height = { x, y -> hfImage.pixel(x, y).r * elevationRatio }
+                height = { x, y -> hf.pixel(x, y) * elevationRatio }
             ),
-            material = standard() {
+            material = standard("DETAIL") {
                 colorTexture = texture("/terrainbase.jpg")
+                detailTexture = texture("/sand.jpg")
+                detailScale = 800f
+                detailRatio = 0.5f
             }
         )
         Sky("fastcloud")

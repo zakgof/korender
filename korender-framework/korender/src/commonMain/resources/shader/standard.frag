@@ -94,18 +94,4 @@ void main() {
   #else
     fragColor = vec4(texColor.xyz * lighting, texColor.a);
   #endif
-
-//  #ifdef SHADOW_RECEIVER
-//
-//    if (vshadow.x > 0.0 && vshadow.x < 1.0 && vshadow.y > 0.0 && vshadow.y < 1.0) {
-//
-//      float shadowSample = texture(shadowTexture, vshadow.xy).r;
-//      float sh = (shadowSample > vshadow.z + 0.01) ? 1.0 : 0.0;
-//
-//
-//      fragColor = vec4(0.0, 0.0, vshadow.z, 1.0);
-//    }
-//  #endif
-
-
 }
