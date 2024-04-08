@@ -7,6 +7,9 @@ class Transform(private val matrix: Mat4 = Mat4.IDENTITY) {
 
     fun mat4(): Mat4 = matrix
 
+    fun rotate(q: Quaternion): Transform =
+        Transform(q.mat4() * matrix)
+
     fun rotate(u: Vec3, radians: Float): Transform {
         val cos = cos(radians)
         val sin = sin(radians)

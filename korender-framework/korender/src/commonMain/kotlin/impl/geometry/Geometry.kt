@@ -511,23 +511,23 @@ internal object Geometry {
         }
     }
 
-    fun heightMap(xsize: Int, ysize: Int, cell: Float, height: (Int, Int) -> Float) =
-        create((xsize + 1) * (ysize + 1), xsize * ysize * 6, POS, NORMAL, TEX) {
+    fun heightMap(xsize: Int, zsize: Int, cell: Float, height: (Int, Int) -> Float) =
+        create((xsize + 1) * (zsize + 1), xsize * zsize * 6, POS, NORMAL, TEX) {
             for (x in 0..xsize) {
-                for (y in 0..ysize) {
+                for (z in 0..zsize) {
                     vertices(
                         x * cell - 0.5f * cell * xsize,
-                        height(x, y),
-                        y * cell - 0.5f * cell * ysize
+                        height(x, z),
+                        z * cell - 0.5f * cell * zsize
                     )
-                    val n = normal(x, y, xsize, ysize, cell, height)
+                    val n = normal(x, z, xsize, zsize, cell, height)
                     vertices(n)
-                    vertices(x.toFloat() / (xsize + 1), y.toFloat() / (ysize + 1))
+                    vertices(x.toFloat() / xsize, z.toFloat() / zsize)
                 }
             }
             for (x in 0..<xsize) {
-                for (y in 0..<ysize) {
-                    val b = x + (xsize + 1) * y
+                for (z in 0..<zsize) {
+                    val b = x + (xsize + 1) * z
                     indices(b, b + 1, b + xsize + 1, b + xsize + 1, b + 1, b + xsize + 2)
                 }
             }

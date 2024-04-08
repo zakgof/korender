@@ -38,9 +38,10 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
 
     init {
         shadower = sceneDeclaration.shadow?.let {
+
+            // TODO test and optimize dis
             val shadowCasters = mutableListOf<Renderable>()
             it.renderables.forEach { rd ->
-                sceneDeclaration.renderables.add(rd)
                 shadowCasters.add(createRenderable(rd))
             }
             SimpleShadower(inventory, it, shadowCasters)

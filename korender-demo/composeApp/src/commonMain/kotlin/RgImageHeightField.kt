@@ -1,4 +1,3 @@
-
 import com.zakgof.korender.impl.material.Image
 import com.zakgof.korender.math.Vec3
 
@@ -9,22 +8,29 @@ import com.zakgof.korender.math.Vec3
 */
 class RgImageHeightField(private val image: Image, private val cell: Float, private val elevationRatio: Float) {
 
-    fun elevation(x: Float, y: Float): Float {
-        val xfr = (x / cell + image.width * 0.5f)
-        val yfr = (y / cell + image.height * 0.5f)
+    fun elevation(x: Float, z: Float): Float {
+        val xfr = (x / cell + (image.width - 1) * 0.5f)
+        val zfr = (z / cell + (image.height - 1) * 0.5f)
 
         val xx = xfr.toInt()
-        val yy = yfr.toInt()
-        val h0 = pixel(xx, yy)
-        val hx = pixel(xx + 1, yy)
-        val hy = pixel(xx, yy + 1)
+        val zz = zfr.toInt()
 
-        val h = h0 + (hx - h0) * (xfr - xx) + (hy - h0) * (yfr - yy)
-        return h * elevationRatio
+        val hx = pixel(xx + 1, zz)
+        val hz = pixel(xx, zz + 1)
+
+        return if ((xfr - xx) + (zfr - zz) < 1.0f) {
+            val h0 = pixel(xx, zz)
+            val h = h0 + (hx - h0) * (xfr - xx) + (hz - h0) * (zfr - zz)
+            h * elevationRatio
+        } else {
+            val h1 = pixel(xx + 1, zz + 1)
+            val h = h1 + (hx - h1) * (zz + 1 - zfr) + (hz - h1) * (xx + 1 - xfr)
+            h * elevationRatio
+        }
     }
 
-    fun pixel(xx: Int, yy: Int): Float {
-        val color = image.pixel(xx, yy)
+    fun pixel(xx: Int, zz: Int): Float {
+        val color = image.pixel(xx, zz)
         val r = color.r * 255f
         val g = color.g * 255f
         return (r * 256 + g) / 65535.0f
