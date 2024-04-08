@@ -6,9 +6,9 @@ import com.zakgof.korender.math.Vec3
 *   G: low byte
 *   B: 0
 */
-class RgImageHeightField(private val image: Image, private val cell: Float, private val elevationRatio: Float) {
+class RgImageHeightField(private val image: Image, private val cell: Float, private val elevationRatio: Float) : HeightField {
 
-    fun elevation(x: Float, z: Float): Float {
+    override fun elevation(x: Float, z: Float): Float {
         val xfr = (x / cell + (image.width - 1) * 0.5f)
         val zfr = (z / cell + (image.height - 1) * 0.5f)
 
@@ -36,7 +36,7 @@ class RgImageHeightField(private val image: Image, private val cell: Float, priv
         return (r * 256 + g) / 65535.0f
     }
 
-    fun normal(x: Float, y: Float): Vec3 {
+    override fun normal(x: Float, y: Float): Vec3 {
         val delta = cell * 0.5f
         val e0 = elevation(x, y)
         val ex = elevation(x + delta, y)

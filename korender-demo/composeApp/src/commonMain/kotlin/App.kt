@@ -8,38 +8,22 @@ import com.zakgof.korender.declaration.SceneContext
 import com.zakgof.korender.declaration.ShadowContext
 import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.image.Images.image
-import com.zakgof.korender.impl.gpu.GpuTexture
 import com.zakgof.korender.impl.material.Image
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.FloatMath.PIdiv2
+import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.projection.FrustumProjection
-import java.nio.ByteBuffer
 
 @Composable
 fun App() = Korender {
+
     val elevationRatio = 300.0f
-    val hfImage = image("/hf-rg16.png")
+    val hfImage = image("/hf-rg16-512.png")
 
-    val hfImage2 = object : Image {
-        override val bytes: ByteBuffer
-            get() = TODO("Not yet implemented")
-        override val format: GpuTexture.Format
-            get() = TODO("Not yet implemented")
-        override val height: Int = 2
-
-        override val width: Int = 2
-
-        override fun pixel(x: Int, y: Int): Color {
-            return Color(0f, (x+y).toFloat(), 0f)
-        }
-
-    }
-
-
-    val hf = RgImageHeightField(hfImage, 10.0f, elevationRatio)
+    val hf = RgImageHeightField(hfImage, 20.0f, elevationRatio)
 
     val bugPhysics = Physics(hf, Vec3(41f, hf.elevation(41f, -4f), -4f))
     val frozenCamera = FrozenCamera()
@@ -50,7 +34,7 @@ fun App() = Korender {
 
         Light(Vec3(0f, -1f, 8f).normalize())
         Projection(FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 10000f))
-        Camera(frozenCamera.camera(bugTransform))
+        Camera(frozenCamera.camera(bugTransform, projection, hf))
 
         terrain(hfImage, hf, elevationRatio)
         Shadow(mapSize = 1024) {
@@ -73,8 +57,21 @@ private fun SceneContext.gui(bugPhysics: Physics) {
             Filler()
             Column {
                 Filler()
-                Image(imageResource = "/accelerate.png", width = 128, height = 128, onTouch = { bugPhysics.forward(it) })
-                Image(imageResource = "/decelerate.png", width = 128, height = 128, onTouch = { bugPhysics.backward(it) })
+                Row {
+                    Column {
+                        Filler()
+                        Image(imageResource = "/left.png", width = 128, height = 128, onTouch = { bugPhysics.left(it) })
+                    }
+                    Column {
+                        Filler()
+                        Image(imageResource = "/accelerate.png", width = 128, height = 128, onTouch = { bugPhysics.forward(it) })
+                        Image(imageResource = "/decelerate.png", width = 128, height = 128, onTouch = { bugPhysics.backward(it) })
+                    }
+                    Column {
+                        Filler()
+                        Image(imageResource = "/right.png", width = 128, height = 128, onTouch = { bugPhysics.right(it) })
+                    }
+                }
             }
         }
     }
@@ -85,7 +82,7 @@ private fun SceneContext.terrain(hfImage: Image, hf: RgImageHeightField, elevati
         mesh = heightField(id = "terrain",
             cellsX = hfImage.width - 1,
             cellsZ = hfImage.height - 1,
-            cellWidth = 10.0f,
+            cellWidth = 20.0f,
             height = { x, y -> hf.pixel(x, y) * elevationRatio }
         ),
         material = standard("DETAIL", "SHADOW_RECEIVER", "PCSS") {

@@ -1,3 +1,4 @@
+
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
@@ -14,19 +15,18 @@ class Physics(private val hf: RgImageHeightField, initialPosition: Vec3) {
 
     var velocity: Vec3 = Vec3.ZERO
     var omega: Vec3 = Vec3.ZERO
+
     var throttle: Float = 0f
     var brake: Float = 0f
+    var steer: Float = 0f
 
     fun update(dt: Float): Transform {
 
-        val force = orientation * (throttleDirection * throttle * 10.0f) - 5.y - velocity * (brake * 4.0f + 0.1f)
+        val force = orientation * (throttleDirection * throttle * 10.0f) - 5.y - velocity * (brake * 2.0f + 0.3f)
         velocity += force * dt
-
-
         position += velocity * dt
-//        val rot = omega * dt
-//        val rl = r
-//        orientation = Quaternion.fromAxisAngle(rot.normalize(), rot.length()) * orientation
+
+        orientation = Quaternion.fromAxisAngle(1.y, -steer * 0.3f * dt) * orientation
 
         val surfaceY = hf.elevation(position.x, position.z)
         val deep = surfaceY - position.y
@@ -39,9 +39,7 @@ class Physics(private val hf: RgImageHeightField, initialPosition: Vec3) {
             position += normal * ((deep + 0.001f) * normal.y)
         }
 
-        // position = Vec3(position.x, hf.elevation(position.x, position.z), position.z)
-
-        return Transform().translate(position)
+        return Transform().rotate(orientation).translate(position)
     }
 
     fun forward(touch: TouchEvent) {
@@ -61,6 +59,24 @@ class Physics(private val hf: RgImageHeightField, initialPosition: Vec3) {
         }
         if (touch.type == TouchEvent.Type.UP) {
             brake = 0f
+        }
+    }
+
+    fun left(touch: TouchEvent) {
+        if (touch.type == TouchEvent.Type.DOWN) {
+            steer = -1f
+        }
+        if (touch.type == TouchEvent.Type.UP) {
+            steer = 0f
+        }
+    }
+
+    fun right(touch: TouchEvent) {
+        if (touch.type == TouchEvent.Type.DOWN) {
+            steer = 1f
+        }
+        if (touch.type == TouchEvent.Type.UP) {
+            steer = 0f
         }
     }
 

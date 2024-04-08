@@ -37,7 +37,7 @@ class Quaternion(val w: Float, val r: Vec3) {
     }
 
     fun mat4(): Mat4 = Mat4(
-        w * w + r.x * r.x - r.y * r.y - r.z * r.z, 2 * (r.x * r.y - w * r.z), 2 * (w * r.z + r.x * r.z), 0f,
+        w * w + r.x * r.x - r.y * r.y - r.z * r.z, 2 * (r.x * r.y - w * r.z), 2 * (w * r.y + r.x * r.z), 0f,
         2 * (r.x * r.y + w * r.z), w * w - r.x * r.x + r.y * r.y - r.z * r.z, 2 * (-w * r.x + r.y * r.z), 0f,
         2 * (-w * r.y + r.x * r.z), 2 * (w * r.x + r.y * r.z), w * w - r.x * r.x - r.y * r.y + r.z * r.z, 0f,
         0f, 0f, 0f, 1f
