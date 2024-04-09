@@ -34,6 +34,7 @@ fun AppExample() {
         Demo("Shadow", "Shadow mapping") { ShadowExample() },
         Demo("Filter", "Custom filter") { FilterExample() },
         Demo("Fire", "Simple fire effect") { FireExample() },
+        Demo("FBall", "Fireball effect") { FireBallExample() },
         Demo("GUI", "On-screen GUI") { GuiExample() },
         Demo("Sky", "Simple sky") { SkyExample() }
     )
