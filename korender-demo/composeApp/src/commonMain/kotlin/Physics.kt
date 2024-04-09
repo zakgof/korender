@@ -20,7 +20,7 @@ class Physics(private val hf: RgImageHeightField, initialPosition: Vec3) {
     var brake: Float = 0f
     var steer: Float = 0f
 
-    fun update(dt: Float): Transform {
+    fun update(dt: Float)  {
 
         val force = orientation * (throttleDirection * throttle * 10.0f) - 5.y - velocity * (brake * 2.0f + 0.3f)
         velocity += force * dt
@@ -38,9 +38,9 @@ class Physics(private val hf: RgImageHeightField, initialPosition: Vec3) {
             velocity -= normal * (velocity * normal)
             position += normal * ((deep + 0.001f) * normal.y)
         }
-
-        return Transform().rotate(orientation).translate(position)
     }
+
+    fun transform() = Transform().rotate(orientation).translate(position)
 
     fun forward(touch: TouchEvent) {
         if (touch.type == TouchEvent.Type.DOWN) {

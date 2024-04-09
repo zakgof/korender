@@ -1,4 +1,3 @@
-
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.declaration.Materials.standard
@@ -11,7 +10,6 @@ import com.zakgof.korender.image.Images.image
 import com.zakgof.korender.impl.material.Image
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.FloatMath.PIdiv2
-import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -27,10 +25,13 @@ fun App() = Korender {
 
     val bugPhysics = Physics(hf, Vec3(41f, hf.elevation(41f, -4f), -4f))
     val frozenCamera = FrozenCamera()
+    val missileManager = MissileManager(hf)
 
     Scene {
 
-        val bugTransform = bugPhysics.update(frameInfo.dt)
+        bugPhysics.update(frameInfo.dt)
+        missileManager.update(frameInfo.dt)
+        val bugTransform = bugPhysics.transform()
 
         Light(Vec3(0f, -1f, 8f).normalize())
         Projection(FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 10000f))
@@ -39,24 +40,23 @@ fun App() = Korender {
         terrain(hfImage, hf, elevationRatio)
         Shadow(mapSize = 1024) {
             bug(bugTransform)
+            missileManager.missiles().forEach {
+                missile(it)
+            }
         }
         Sky("fastcloud")
         Filter("atmosphere.frag")
-        gui(bugPhysics)
+        gui(bugPhysics, missileManager)
     }
 }
 
-private fun SceneContext.gui(bugPhysics: Physics) {
+private fun SceneContext.gui(bugPhysics: Physics, missileManager: MissileManager) {
     Gui {
+        Text(id = "coords", text = String.format("Eye: %.1f %.1f %.1f", camera.position.x, camera.position.y, camera.position.z), fontResource = "/ubuntu.ttf", height = 30, color = Color(0xFFFFFF))
+        Text(id = "fps", text = String.format("FPS: %.1f", frameInfo.avgFps), fontResource = "/ubuntu.ttf", height = 30, color = Color(0xFFFFFF))
+        Filler()
         Row {
             Column {
-                Filler()
-                Text(id = "coords", text = String.format("Eye: %.1f %.1f %.1f", camera.position.x, camera.position.y, camera.position.z), fontResource = "/ubuntu.ttf", height = 30, color = Color(0xFFFFFF))
-                Text(id = "fps", text = String.format("FPS: %.1f", frameInfo.avgFps), fontResource = "/ubuntu.ttf", height = 30, color = Color(0xFFFFFF))
-            }
-            Filler()
-            Column {
-                Filler()
                 Row {
                     Column {
                         Filler()
@@ -72,6 +72,11 @@ private fun SceneContext.gui(bugPhysics: Physics) {
                         Image(imageResource = "/right.png", width = 128, height = 128, onTouch = { bugPhysics.right(it) })
                     }
                 }
+            }
+            Filler()
+            Column {
+                Filler()
+                Image(imageResource = "/fire.png", width = 128, height = 128, onTouch = { missileManager.fire(frameInfo.time, it, bugPhysics.transform()) })
             }
         }
     }
@@ -99,5 +104,14 @@ fun ShadowContext.bug(bugTransform: Transform) = Renderable(
     material = standard {
         colorTexture = texture("/bug/bug.jpg")
     },
-    transform = Transform(bugTransform.mat4() * Transform().rotate(1.y, -PIdiv2).mat4())
+    // TODO: get rid of the mess
+    transform = Transform(bugTransform.mat4() * Transform().scale(2.0f).rotate(1.y, -PIdiv2).mat4())
+)
+
+fun ShadowContext.missile(missileTransform: Transform) = Renderable(
+    mesh = obj("/missile/missile.obj"),
+    material = standard {
+        colorTexture = texture("/missile/missile.jpg")
+    },
+    transform = Transform(missileTransform.mat4() * Transform().rotate(1.y, -PIdiv2).mat4())
 )
