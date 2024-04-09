@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
@@ -35,6 +36,7 @@ fun AppExample() {
         Demo("Filter", "Custom filter") { FilterExample() },
         Demo("Fire", "Simple fire effect") { FireExample() },
         Demo("FBall", "Fireball effect") { FireBallExample() },
+        Demo("Smoke", "Smoke effect") { SmokeExample() },
         Demo("GUI", "On-screen GUI") { GuiExample() },
         Demo("Sky", "Simple sky") { SkyExample() }
     )
@@ -63,7 +65,7 @@ fun AppExample() {
                 }
             }
         }
-        Text(text = option.description)
+        Text(text = option.description, color = Color.Cyan)
         option.composable()
     }
 }
