@@ -23,14 +23,14 @@ fun App() = Korender {
 
     val hf = RgImageHeightField(hfImage, 20.0f, elevationRatio)
 
-    val bugPhysics = Physics(hf, Vec3(41f, hf.elevation(41f, -4f), -4f))
+    val bugPhysics = Physics(hf, Vec3(0f, hf.elevation(0f, -0f), -0f))
     val frozenCamera = FrozenCamera()
     val missileManager = MissileManager(hf)
 
     Scene {
 
         bugPhysics.update(frameInfo.dt)
-        missileManager.update(frameInfo.dt)
+        missileManager.update(frameInfo.time, frameInfo.dt)
         val bugTransform = bugPhysics.transform()
 
         Light(Vec3(0f, -1f, 8f).normalize())
@@ -40,10 +40,9 @@ fun App() = Korender {
         terrain(hfImage, hf, elevationRatio)
         Shadow(mapSize = 1024) {
             bug(bugTransform)
-            missileManager.missiles().forEach {
-                missile(it)
-            }
+            missileManager.missiles().forEach { missile(it) }
         }
+        missileManager.explosions(frameInfo.time).forEach { explosion(it.first, it.second) }
         Sky("fastcloud")
         Filter("atmosphere.frag")
         gui(bugPhysics, missileManager)
@@ -76,7 +75,9 @@ private fun SceneContext.gui(bugPhysics: Physics, missileManager: MissileManager
             Filler()
             Column {
                 Filler()
-                Image(imageResource = "/fire.png", width = 128, height = 128, onTouch = { missileManager.fire(frameInfo.time, it, bugPhysics.transform()) })
+                if (missileManager.canFire(frameInfo.time)) {
+                    Image(imageResource = "/fire.png", width = 128, height = 128, onTouch = { missileManager.fire(frameInfo.time, it, bugPhysics.transform(), bugPhysics.velocity) })
+                }
             }
         }
     }
@@ -114,4 +115,14 @@ fun ShadowContext.missile(missileTransform: Transform) = Renderable(
         colorTexture = texture("/missile/missile.jpg")
     },
     transform = Transform(missileTransform.mat4() * Transform().rotate(1.y, -PIdiv2).mat4())
+)
+
+fun SceneContext.explosion(position: Vec3, phase: Float) = Billboard (
+    fragment = "effect/fireball.frag",
+    position = position,
+    material = {
+        xscale = 12f * phase
+        yscale = 12f * phase
+        static("power", phase)
+    }
 )

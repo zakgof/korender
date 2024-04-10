@@ -5,7 +5,9 @@ import com.zakgof.korender.declaration.TextureDeclaration
 import com.zakgof.korender.declaration.UniformSupplier
 import com.zakgof.korender.impl.gpu.GpuFrameBuffer
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
 import com.zakgof.korender.projection.OrthoProjection
 
 internal class SimpleShadower(private val inventory: Inventory, shadowDeclaration: ShadowDeclaration, private val shadowCasters: List<Renderable>) {
@@ -16,6 +18,7 @@ internal class SimpleShadower(private val inventory: Inventory, shadowDeclaratio
     val texture = frameBuffer.colorTexture
 
     fun render(light: Vec3): Map<String, Any?> {
+
         val matrices = updateShadowCamera(light)
         val camera = matrices.first
         val projection = matrices.second
@@ -55,6 +58,11 @@ internal class SimpleShadower(private val inventory: Inventory, shadowDeclaratio
     }
 
     private fun updateShadowCamera(light: Vec3): Pair<DefaultCamera, OrthoProjection> {
+
+        if (shadowCasters.isEmpty()) {
+            return Pair(DefaultCamera(0.x, 1.z, 1.y), OrthoProjection(1f,1f,1f,2f))
+        }
+
         val right = (light % 1.y).normalize()
         val up = (right % light).normalize()
         val corners = shadowCasters.flatMap { r ->

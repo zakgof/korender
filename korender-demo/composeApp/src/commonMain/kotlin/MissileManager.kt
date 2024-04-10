@@ -1,3 +1,4 @@
+
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
@@ -8,27 +9,40 @@ import com.zakgof.korender.math.z
 class MissileManager(private val hf: HeightField) {
 
     private val missiles = mutableListOf<Missile>()
+    private val explosions = mutableListOf<Explosion>()
     private var lastTime = Float.MIN_VALUE
-    fun update(dt: Float) {
+    fun update(time: Float, dt: Float) {
         missiles.forEach { it.update(dt) }
         missiles.removeIf {
-            it.position.y < hf.elevation(it.position.x, it.position.z) - 2.0f
+            if (it.position.y < hf.elevation(it.position.x, it.position.z)  - 0.1f) {
+                explosions.add(Explosion(hf.surface(it.position), time))
+                true
+            } else {
+                false
+            }
         }
     }
 
-    fun fire(time: Float, touchEvent: TouchEvent, transform: Transform) {
-        if ((time - lastTime > 1) && (touchEvent.type == TouchEvent.Type.DOWN)) {
+    fun fire(time: Float, touchEvent: TouchEvent, transform: Transform, launcherVelocity: Vec3) {
+        if (canFire(time) && (touchEvent.type == TouchEvent.Type.DOWN)) {
             lastTime = time
-            missiles.add(Missile(transform))
+            missiles.add(Missile(transform, launcherVelocity))
         }
     }
+
+    fun canFire(time: Float) = (time - lastTime > 1)
 
     fun missiles(): List<Transform> = missiles.map { it.transform() }
 
-    class Missile(transform: Transform) {
+    fun explosions(time: Float): List<Pair<Vec3, Float>> {
+        explosions.removeIf { time - it.startTime > 1f}
+        return explosions.map { Pair(it.position, time - it.startTime) }
+    }
 
-        private var velocity: Vec3 = 1.z + 10.y  // TODO extract orientation
-        internal var position: Vec3 = transform.mat4() * Vec3(0f, 0f, 0f)
+    class Missile(transform: Transform, launcherVelocity: Vec3) {
+
+        private var velocity: Vec3 = transform.applyToDirection(Vec3(0f, 6f, -30f)) + launcherVelocity
+        var position: Vec3 = transform.mat4() * Vec3(0f, 1f, 0f)
         fun update(dt: Float) {
             velocity += -5.y * dt
             position += velocity * dt
@@ -39,4 +53,6 @@ class MissileManager(private val hf: HeightField) {
             return Transform().rotate(orientation).translate(position)
         }
     }
+
+    class Explosion(val position: Vec3, val startTime: Float)
 }

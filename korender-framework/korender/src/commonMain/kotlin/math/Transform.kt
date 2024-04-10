@@ -63,4 +63,13 @@ class Transform(private val matrix: Mat4 = Mat4.IDENTITY) {
         ) * matrix
     )
 
+    operator fun times(v: Vec3) = matrix * v
+
+    operator fun times(that: Transform) = Transform(matrix * that.matrix)
+
+    fun project(v: Vec3) = matrix.project(v)
+
+    fun applyToDirection(v: Vec3) = matrix * v - matrix * Vec3.ZERO
+
+
 }
