@@ -15,6 +15,7 @@ import com.zakgof.korender.math.z
 import com.zakgof.korender.projection.FrustumProjection
 import com.zakgof.korender.projection.Projection
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.function.Predicate
 
 internal class Engine(private var height: Int, private var width: Int, block: KorenderContext.() -> Unit) {
 
@@ -29,7 +30,7 @@ internal class Engine(private var height: Int, private var width: Int, block: Ko
     private var light = Vec3(1f, -1f, 0f).normalize()
 
     private val context = mutableMapOf<String, Any?>()
-    private var sceneTouchHandler: TouchHandler? = null
+    private lateinit var sceneTouchBoxesHandler: Predicate<TouchEvent>
     private val touchHandlers = mutableListOf<TouchHandler>()
 
     init {
@@ -54,7 +55,7 @@ internal class Engine(private var height: Int, private var width: Int, block: Ko
         inventory.go {
             val scene = Scene(sd, inventory, camera, width, height)
             scene.render(context, light)
-            sceneTouchHandler = scene.touchHandler
+            sceneTouchBoxesHandler = scene.touchBoxesHandler
         }
     }
 
@@ -75,8 +76,10 @@ internal class Engine(private var height: Int, private var width: Int, block: Ko
         do {
             val event = touchQueue.poll()
             event?.let { touchEvent ->
-                touchHandlers.forEach { it(touchEvent) }
-                sceneTouchHandler?.invoke(touchEvent)
+                if (!sceneTouchBoxesHandler.test(touchEvent)) {
+                    touchHandlers.forEach { it(touchEvent) }
+                }
+
             }
         } while (event != null)
     }

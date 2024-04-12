@@ -12,7 +12,9 @@ import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.FloatMath.PIdiv2
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
 import com.zakgof.korender.projection.FrustumProjection
 
 @Composable
@@ -23,8 +25,9 @@ fun App() = Korender {
 
     val hf = RgImageHeightField(hfImage, 20.0f, elevationRatio)
 
-    val bugPhysics = Physics(hf, Vec3(0f, hf.elevation(0f, -0f), -0f))
-    val frozenCamera = FrozenCamera()
+    val bugPosition = hf.surface(Vec3.ZERO)
+    val bugPhysics = Physics(hf, bugPosition)
+    val chaseCamera = ChaseCamera(bugPhysics.transform())
     val missileManager = MissileManager(hf)
 
     Scene {
@@ -32,15 +35,18 @@ fun App() = Korender {
         bugPhysics.update(frameInfo.dt)
         missileManager.update(frameInfo.time, frameInfo.dt)
         val bugTransform = bugPhysics.transform()
+        OnTouch { chaseCamera.touch(it) }
 
         Light(Vec3(0f, -1f, 8f).normalize())
-        Projection(FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 10000f))
-        Camera(frozenCamera.camera(bugTransform, projection, hf))
+        Projection(FrustumProjection(width = 3f * width / height, height = 3f, near = 3f, far = 10000f))
+        Camera(chaseCamera.camera(bugTransform, projection, width, height, hf, frameInfo.dt))
 
         terrain(hfImage, hf, elevationRatio)
         Shadow(mapSize = 1024) {
             bug(bugTransform)
             missileManager.missiles().forEach { missile(it) }
+            alien(Transform().translate(hf.surface(-50.z)))
+            head(Transform().translate(hf.surface(-50.z - 10.x)))
         }
         missileManager.explosions(frameInfo.time).forEach { explosion(it.first, it.second) }
         Sky("fastcloud")
@@ -105,8 +111,7 @@ fun ShadowContext.bug(bugTransform: Transform) = Renderable(
     material = standard {
         colorTexture = texture("/bug/bug.jpg")
     },
-    // TODO: get rid of the mess
-    transform = Transform(bugTransform.mat4() * Transform().scale(2.0f).rotate(1.y, -PIdiv2).mat4())
+    transform = bugTransform * Transform().scale(2.0f).rotate(1.y, -PIdiv2)
 )
 
 fun ShadowContext.missile(missileTransform: Transform) = Renderable(
@@ -114,7 +119,23 @@ fun ShadowContext.missile(missileTransform: Transform) = Renderable(
     material = standard {
         colorTexture = texture("/missile/missile.jpg")
     },
-    transform = Transform(missileTransform.mat4() * Transform().rotate(1.y, -PIdiv2).mat4())
+    transform = missileTransform * Transform().rotate(1.y, -PIdiv2)
+)
+
+fun ShadowContext.alien(alienTransform: Transform) = Renderable(
+    mesh = obj("/alien/alien.obj"),
+    material = standard {
+        colorTexture = texture("/alien/alien.jpg")
+    },
+    transform = alienTransform * Transform().rotate(1.y, -PIdiv2).scale(10.0f).translate(4.y)
+)
+
+fun ShadowContext.head(alienTransform: Transform) = Renderable(
+    mesh = obj("/head/head-high.obj"),
+    material = standard {
+        colorTexture = texture("/head/head-high.jpg")
+    },
+    transform = alienTransform * Transform().rotate(1.y, -PIdiv2).scale(10.0f).translate(4.y)
 )
 
 fun SceneContext.explosion(position: Vec3, phase: Float) = Billboard (

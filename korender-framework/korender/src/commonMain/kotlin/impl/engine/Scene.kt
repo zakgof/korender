@@ -18,6 +18,7 @@ import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import java.util.function.Predicate
 import kotlin.math.max
 
 internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: Inventory, private val camera: Camera, private val width: Int, private val height: Int) {
@@ -32,8 +33,8 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     private val screens = mutableListOf<Renderable>()
 
     private val touchBoxes = mutableListOf<TouchBox>();
-    val touchHandler: (TouchEvent) -> Unit = { evt ->
-        touchBoxes.forEach { it.touch(evt) }
+    val touchBoxesHandler: Predicate<TouchEvent> = Predicate { evt ->
+        touchBoxes.any { it.touch(evt) }
     }
 
     init {
@@ -322,11 +323,13 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     }
 
     private class TouchBox(private val x: Int, private val y: Int, private val w: Int, private val h: Int, private val handler: TouchHandler) {
-        fun touch(touchEvent: TouchEvent) {
+        fun touch(touchEvent: TouchEvent): Boolean {
             // TODO: process drag-out as UP
             if (touchEvent.x > x && touchEvent.x < x + w && touchEvent.y > y && touchEvent.y < y + h) {
                 handler(touchEvent)
+                return true
             }
+            return false
         }
     }
 }

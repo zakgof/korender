@@ -64,12 +64,15 @@ class AndroidPlatform : Platform {
             awaitPointerEventScope {
                 while (true) {
                     val event = awaitPointerEvent()
+
+                    println("Event type ${event.type} Changes: ${event.changes}")
+
                     event.changes.forEach {
                         val position = it.position
-                        if (event.type == PointerEventType.Press) {
+                        if (event.type == PointerEventType.Press && it.pressed && !it.previousPressed) {
                             touch(TouchEvent(TouchEvent.Type.DOWN, position.x, position.y))
                         }
-                        if (event.type == PointerEventType.Release) {
+                        if (event.type == PointerEventType.Release && !it.pressed && it.previousPressed) {
                             touch(TouchEvent(TouchEvent.Type.UP, position.x, position.y))
                         }
                         if (event.type == PointerEventType.Move) {
