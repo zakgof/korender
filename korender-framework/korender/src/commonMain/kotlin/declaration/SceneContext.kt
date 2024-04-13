@@ -3,6 +3,7 @@ package com.zakgof.korender.declaration
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.SceneDeclaration
 import com.zakgof.korender.camera.Camera
+import com.zakgof.korender.impl.engine.Bucket
 import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.FilterDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
@@ -17,20 +18,22 @@ class SceneContext internal constructor(val frameInfo: FrameInfo, private val sc
     fun Renderable(
         mesh: MeshDeclaration,
         material: MaterialDeclaration,
-        transform: Transform = Transform()
+        transform: Transform = Transform(),
+        transparent: Boolean = false
     ) = sceneDeclaration.add(
-        RenderableDeclaration(mesh, material.shader, material.uniforms, transform)
+        RenderableDeclaration(mesh, material.shader, material.uniforms, transform, if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE)
     )
 
-    fun Billboard(position: Vec3 = Vec3.ZERO, fragment: String = "standard.frag", vararg defs: String, material: StockUniforms.() -> Unit) =
+    fun Billboard(position: Vec3 = Vec3.ZERO, fragment: String = "standard.frag", vararg defs: String, material: StockUniforms.() -> Unit, transparent: Boolean = false) =
         sceneDeclaration.add(
             RenderableDeclaration(
-                MeshDeclaration.Billboard,
-                ShaderDeclaration("billboard.vert", fragment, defs.toSet()),
-                StockUniforms().apply(material),
-                Transform().translate(position)
+                mesh = MeshDeclaration.Billboard,
+                shader = ShaderDeclaration("billboard.vert", fragment, defs.toSet()),
+                uniforms = StockUniforms().apply(material),
+                transform = Transform().translate(position),
+                bucket = if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE
             )
-        ) // TODO Bucket
+        )
 
     fun Filter(fragment: String, uniforms: UniformSupplier = UniformSupplier { null }) =
         sceneDeclaration.add(FilterDeclaration(fragment, uniforms))

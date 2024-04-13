@@ -9,16 +9,15 @@ import kotlin.math.min
 class Physics(private val hf: RgImageHeightField, initialPosition: Vec3) {
 
 
-    val throttleDirection = -1.z
-    var orientation: Quaternion = Quaternion.IDENTITY
-    var position: Vec3 = initialPosition
+    private val throttleDirection = -1.z
+    private var orientation: Quaternion = Quaternion.IDENTITY
+    private var position: Vec3 = initialPosition
 
     var velocity: Vec3 = Vec3.ZERO
-    var omega: Vec3 = Vec3.ZERO
 
-    var throttle: Float = 0f
-    var brake: Float = 0f
-    var steer: Float = 0f
+    private var throttle: Float = 0f
+    private var brake: Float = 0f
+    private var steer: Float = 0f
 
     fun update(dt: Float) {
 
@@ -41,20 +40,13 @@ class Physics(private val hf: RgImageHeightField, initialPosition: Vec3) {
         }
         velocity += force * dt
         position += velocity * dt
-        println("cp1 $orientation")
         orientation = Quaternion.fromAxisAngle(1.y, -steer * 0.3f * dt) * orientation
-        println("cp2 $orientation")
         if (deep > 0) {
             val bugNormal = orientation * 1.y
             orientation = Quaternion.shortestArc(bugNormal, normal) * orientation
-            println("cp3 $orientation $bugNormal $normal")
             position = hf.surface(position, -0.001f)
         }
-
-        println("cp4 $orientation")
         orientation = orientation.normalize()
-        println("cp5 $orientation")
-        println("Deep $deep   v=$velocity  q.l=${orientation.length()} force=$force")
     }
 
     fun transform() = Transform().rotate(orientation).translate(position)

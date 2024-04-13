@@ -145,5 +145,6 @@ fun SceneContext.explosion(position: Vec3, phase: Float) = Billboard (
         xscale = 12f * phase
         yscale = 12f * phase
         static("power", phase)
-    }
+    },
+    transparent = true
 )

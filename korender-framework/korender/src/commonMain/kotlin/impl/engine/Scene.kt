@@ -39,20 +39,15 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
 
     init {
         shadower = sceneDeclaration.shadow?.let {
-
-            // TODO test and optimize dis
-            val shadowCasters = mutableListOf<Renderable>()
-            it.renderables.forEach { rd ->
-                shadowCasters.add(createRenderable(rd))
-            }
+            val shadowCasters = it.renderables.map { rd -> createRenderable(rd) }
             SimpleShadower(inventory, it, shadowCasters)
         }
         sceneDeclaration.renderables.forEach {
             val renderable = createRenderable(it)
             when (it.bucket) {
                 Bucket.OPAQUE -> opaques.add(renderable)
-                Bucket.TRANSPARENT -> transparents.add(renderable)
                 Bucket.SKY -> skies.add(renderable)
+                Bucket.TRANSPARENT -> transparents.add(renderable)
                 Bucket.SCREEN -> screens.add(renderable)
             }
         }
