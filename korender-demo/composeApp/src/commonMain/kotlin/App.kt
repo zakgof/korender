@@ -25,7 +25,7 @@ fun App() = Korender {
 
     val hf = RgImageHeightField(hfImage, 20.0f, elevationRatio)
 
-    val bugPosition = hf.surface(Vec3.ZERO)
+    val bugPosition = hf.surface(Vec3.ZERO, -1.0f)
     val bugPhysics = Physics(hf, bugPosition)
     val chaseCamera = ChaseCamera(bugPhysics.transform())
     val missileManager = MissileManager(hf)
@@ -37,7 +37,7 @@ fun App() = Korender {
         val bugTransform = bugPhysics.transform()
         OnTouch { chaseCamera.touch(it) }
 
-        Light(Vec3(0f, -1f, 8f).normalize())
+        Light(Vec3(0f, -1f, 3f).normalize())
         Projection(FrustumProjection(width = 3f * width / height, height = 3f, near = 3f, far = 10000f))
         Camera(chaseCamera.camera(bugTransform, projection, width, height, hf, frameInfo.dt))
 
@@ -111,7 +111,7 @@ fun ShadowContext.bug(bugTransform: Transform) = Renderable(
     material = standard {
         colorTexture = texture("/bug/bug.jpg")
     },
-    transform = bugTransform * Transform().scale(2.0f).rotate(1.y, -PIdiv2)
+    transform = bugTransform * Transform().translate(0.2f.y).scale(2.0f).rotate(1.y, -PIdiv2)
 )
 
 fun ShadowContext.missile(missileTransform: Transform) = Renderable(

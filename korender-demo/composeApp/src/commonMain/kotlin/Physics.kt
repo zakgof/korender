@@ -1,10 +1,10 @@
-
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import kotlin.math.min
 
 class Physics(private val hf: RgImageHeightField, initialPosition: Vec3) {
 
@@ -20,24 +20,41 @@ class Physics(private val hf: RgImageHeightField, initialPosition: Vec3) {
     var brake: Float = 0f
     var steer: Float = 0f
 
-    fun update(dt: Float)  {
-
-        val force = orientation * (throttleDirection * throttle * 10.0f) - 5.y - velocity * (brake * 2.0f + 0.3f)
-        velocity += force * dt
-        position += velocity * dt
-
-        orientation = Quaternion.fromAxisAngle(1.y, -steer * 0.3f * dt) * orientation
+    fun update(dt: Float) {
 
         val surfaceY = hf.elevation(position.x, position.z)
         val deep = surfaceY - position.y
 
-        // println("Velocity: $velocity Deep $deep")
+        var force = -5.y
 
+        val normal = hf.normal(position.x, position.z)
         if (deep > 0) {
-            val normal = hf.normal(position.x, position.z)
             velocity -= normal * (velocity * normal)
-            position += normal * ((deep + 0.001f) * normal.y)
+            force += orientation * (throttleDirection * throttle * 10.0f)
+            val reaction = -(force * normal)
+            force += normal * reaction
+            if (velocity.lengthSquared() > 1e-4) {
+                force -= velocity.normalize() * ( reaction * 0.5f) + velocity * (brake * 10.0f + 0.3f)
+            } else if (force.lengthSquared() > 1e-4){
+                force -= force.normalize() * min(force.length(), reaction * 0.5f)
+            }
         }
+        velocity += force * dt
+        position += velocity * dt
+        println("cp1 $orientation")
+        orientation = Quaternion.fromAxisAngle(1.y, -steer * 0.3f * dt) * orientation
+        println("cp2 $orientation")
+        if (deep > 0) {
+            val bugNormal = orientation * 1.y
+            orientation = Quaternion.shortestArc(bugNormal, normal) * orientation
+            println("cp3 $orientation $bugNormal $normal")
+            position = hf.surface(position, -0.001f)
+        }
+
+        println("cp4 $orientation")
+        orientation = orientation.normalize()
+        println("cp5 $orientation")
+        println("Deep $deep   v=$velocity  q.l=${orientation.length()} force=$force")
     }
 
     fun transform() = Transform().rotate(orientation).translate(position)

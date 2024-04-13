@@ -37,7 +37,7 @@ class RgImageHeightField(private val image: Image, private val cell: Float, priv
     }
 
     override fun normal(x: Float, y: Float): Vec3 {
-        val delta = cell * 0.5f
+        val delta = cell * 0.1f
         val e0 = elevation(x, y)
         val ex = elevation(x + delta, y)
         val ey = elevation(x, y + delta)

@@ -5,6 +5,7 @@ import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
 import com.zakgof.korender.projection.FrustumProjection
 import com.zakgof.korender.projection.Projection
 import kotlin.math.min
@@ -21,7 +22,7 @@ class ChaseCamera (initialTarget: Transform) {
 
     fun camera(targetTransform: Transform, projection: Projection, width: Int, height: Int, hf: HeightField, dt: Float): Camera {
 
-        target = targetTransform * Vec3.ZERO
+        target = targetTransform * -2.z
         val frustum =  projection as FrustumProjection
 
         if (dragStartCamToTarget != null) {
