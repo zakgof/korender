@@ -8,7 +8,7 @@ import com.zakgof.korender.math.z
 
 class MissileManager(private val hf: HeightField) {
 
-    private val missiles = mutableListOf<Missile>()
+    val missiles = mutableListOf<Missile>()
     private val explosions = mutableListOf<Explosion>()
     private var lastTime = Float.MIN_VALUE
     fun update(time: Float, dt: Float) {
@@ -23,6 +23,11 @@ class MissileManager(private val hf: HeightField) {
         }
     }
 
+    fun missileHitEnemy(missile: MissileManager.Missile, time: Float) {
+        missiles.remove(missile)
+        explosions.add(Explosion(missile.position, time))
+    }
+
     fun fire(time: Float, touchEvent: TouchEvent, transform: Transform, launcherVelocity: Vec3) {
         if (canFire(time) && (touchEvent.type == TouchEvent.Type.DOWN)) {
             lastTime = time
@@ -31,8 +36,6 @@ class MissileManager(private val hf: HeightField) {
     }
 
     fun canFire(time: Float) = (time - lastTime > 1)
-
-    fun missiles(): List<Transform> = missiles.map { it.transform() }
 
     fun explosions(time: Float): List<Pair<Vec3, Float>> {
         explosions.removeIf { time - it.startTime > 1f}

@@ -6,9 +6,10 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import kotlin.math.min
 
-class Physics(private val hf: RgImageHeightField, initialPosition: Vec3) {
+class CharacterManager(private val hf: RgImageHeightField, initialPosition: Vec3) {
 
-
+    var score: Int = 0
+    var gameOver: Boolean = false
     private val throttleDirection = -1.z
     private var orientation: Quaternion = Quaternion.IDENTITY
     private var position: Vec3 = initialPosition
@@ -40,7 +41,7 @@ class Physics(private val hf: RgImageHeightField, initialPosition: Vec3) {
         }
         velocity += force * dt
         position += velocity * dt
-        orientation = Quaternion.fromAxisAngle(1.y, -steer * 0.3f * dt) * orientation
+        orientation = Quaternion.fromAxisAngle(1.y, -steer * 1.3f * dt) * orientation
         if (deep > 0) {
             val bugNormal = orientation * 1.y
             orientation = Quaternion.shortestArc(bugNormal, normal) * orientation
@@ -89,5 +90,12 @@ class Physics(private val hf: RgImageHeightField, initialPosition: Vec3) {
         }
     }
 
+    fun hit() {
+        gameOver = true
+    }
+
+    fun incrementScore(inc: Int) {
+        score += inc
+    }
 
 }
