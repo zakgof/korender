@@ -18,6 +18,7 @@ import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.projection.Projection
 import java.util.function.Predicate
 import kotlin.math.max
 
@@ -230,8 +231,8 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         return Filter(shader, declaration.uniforms)
     }
 
-    fun render(context: MutableMap<String, Any?>, light: Vec3) {
-        shadower?.let { context.putAll(it.render(light)) }
+    fun render(context: MutableMap<String, Any?>, projection: Projection, camera: Camera, light: Vec3) {
+        shadower?.let { context.putAll(it.render(projection, camera, light)) }
         val uniformDecorator: (UniformSupplier) -> UniformSupplier = {
             UniformSupplier { key ->
                 var value = it[key] ?: context[key]

@@ -54,7 +54,7 @@ internal class Engine(private var height: Int, private var width: Int, block: Ko
         updateContext()
         inventory.go {
             val scene = Scene(sd, inventory, camera, width, height)
-            scene.render(context, light)
+            scene.render(context, projection, camera, light)
             sceneTouchBoxesHandler = scene.touchBoxesHandler
         }
     }
