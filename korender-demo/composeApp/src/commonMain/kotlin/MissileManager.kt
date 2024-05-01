@@ -1,10 +1,8 @@
 
 import com.zakgof.korender.input.TouchEvent
-import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
-import com.zakgof.korender.math.z
 
 class MissileManager(private val hf: HeightField) {
 
@@ -51,10 +49,7 @@ class MissileManager(private val hf: HeightField) {
             position += velocity * dt
         }
 
-        fun transform(): Transform {
-            val orientation = Quaternion.shortestArc(1.z, velocity.normalize())
-            return Transform().rotate(orientation).translate(position)
-        }
+        fun transform(): Transform = Transform().rotate(-velocity.normalize(), 1.y).translate(position)
     }
 
     class Explosion(val position: Vec3, val startTime: Float)

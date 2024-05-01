@@ -35,6 +35,19 @@ class Transform(private val matrix: Mat4 = Mat4.IDENTITY) {
         )
     }
 
+    fun rotate(direction: Vec3, uptrend: Vec3): Transform {
+        val right = (direction % uptrend).normalize()
+        val up = (right % direction).normalize()
+        return Transform(
+            Mat4(
+                right.x, up.x, -direction.x, 0f,
+                right.y, up.y, -direction.y, 0f,
+                right.z, up.z, -direction.z, 0f,
+                0f, 0f, 0f, 1f
+            ) * matrix
+        )
+    }
+
     fun translate(offset: Vec3): Transform = Transform(
         Mat4(
             1f, 0f, 0f, offset.x,
