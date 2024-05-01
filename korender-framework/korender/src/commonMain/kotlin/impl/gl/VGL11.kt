@@ -629,7 +629,7 @@ object VGL11 {
     const val GL_T4F_C4F_N3F_V4F: Int = 0x2A2D
 
 
-    var gl: com.zakgof.korender.impl.gl.IGL11? = null
+    var gl: IGL11? = null
 
     /**
      * Constructs a sequence of geometric primitives by successively transferring elements for `count` vertices to the GL.
@@ -644,7 +644,7 @@ object VGL11 {
      * @see [Reference Page](http://docs.gl/gl4/glDrawElements)
      */
     fun glDrawElements(mode: Int, count: Int, type: Int, indices: Int) {
-        com.zakgof.korender.impl.gl.VGL11.gl!!.glDrawElements(mode, count, type, indices)
+        VGL11.gl!!.glDrawElements(mode, count, type, indices)
     }
 
     /**
@@ -655,7 +655,7 @@ object VGL11 {
      * @see [Reference Page](http://docs.gl/gl4/glEnable)
      */
     fun glEnable(target: Int) {
-        com.zakgof.korender.impl.gl.VGL11.gl!!.glEnable(target)
+        VGL11.gl!!.glEnable(target)
     }
 
     /**
@@ -672,7 +672,7 @@ object VGL11 {
      * @see [Reference Page](http://docs.gl/gl4/glBindTexture)
      */
     fun glBindTexture(target: Int, texture: Int) {
-        com.zakgof.korender.impl.gl.VGL11.gl!!.glBindTexture(target, texture)
+        VGL11.gl!!.glBindTexture(target, texture)
     }
 
     // --- [ glTexParameterf ] ---
@@ -686,7 +686,7 @@ object VGL11 {
      * @see [Reference Page](http://docs.gl/gl4/glTexParameterf)
      */
     fun glTexParameterf(target: Int, pname: Int, param: Float) {
-        com.zakgof.korender.impl.gl.VGL11.gl!!.glTexParameterf(target, pname, param)
+        VGL11.gl!!.glTexParameterf(target, pname, param)
     }
 
     /**
@@ -702,7 +702,7 @@ object VGL11 {
      * @see [Reference Page](http://docs.gl/gl4/glDeleteTextures)
      */
     fun glDeleteTextures(texture: Int) {
-        com.zakgof.korender.impl.gl.VGL11.gl!!.glDeleteTextures(texture)
+        VGL11.gl!!.glDeleteTextures(texture)
     }
 
     /**
@@ -714,7 +714,7 @@ object VGL11 {
      * @see [Reference Page](http://docs.gl/gl4/glPixelStorei)
      */
     fun glPixelStorei(pname: Int, param: Int) {
-        com.zakgof.korender.impl.gl.VGL11.gl!!.glPixelStorei(pname, param)
+        VGL11.gl!!.glPixelStorei(pname, param)
     }
 
     /**
@@ -724,7 +724,7 @@ object VGL11 {
      * @see [Reference Page](http://docs.gl/gl4/glGenTextures)
      */
     fun glGenTextures(): Int {
-        return com.zakgof.korender.impl.gl.VGL11.gl!!.glGenTextures()
+        return VGL11.gl!!.glGenTextures()
     }
 
     // --- [ glBlendFunc ] ---
@@ -737,7 +737,7 @@ object VGL11 {
      * @see [Reference Page](http://docs.gl/gl4/glBlendFunc)
      */
     fun glBlendFunc(sfactor: Int, dfactor: Int) {
-        com.zakgof.korender.impl.gl.VGL11.gl!!.glBlendFunc(sfactor, dfactor)
+        VGL11.gl!!.glBlendFunc(sfactor, dfactor)
     }
 
     /**
@@ -748,7 +748,7 @@ object VGL11 {
      * @see [Reference Page](http://docs.gl/gl4/glDepthMask)
      */
     fun glDepthMask(flag: Boolean) {
-        com.zakgof.korender.impl.gl.VGL11.gl!!.glDepthMask(flag)
+        VGL11.gl!!.glDepthMask(flag)
     }
 
     /**
@@ -761,7 +761,7 @@ object VGL11 {
      * @see [Reference Page](http://docs.gl/gl4/glCullFace)
      */
     fun glCullFace(mode: Int) {
-        com.zakgof.korender.impl.gl.VGL11.gl!!.glCullFace(mode)
+        VGL11.gl!!.glCullFace(mode)
     }
 
     /**
@@ -790,7 +790,7 @@ object VGL11 {
         type: Int,
         pixels: ByteBuffer?
     ) {
-        com.zakgof.korender.impl.gl.VGL11.gl!!.glTexImage2D(
+        VGL11.gl!!.glTexImage2D(
             target,
             level,
             internalformat,
@@ -804,7 +804,7 @@ object VGL11 {
     }
 
     fun glGetFloatv(pname: Int, params: FloatArray) {
-        com.zakgof.korender.impl.gl.VGL11.gl!!.glGetFloatv(pname, params)
+        VGL11.gl!!.glGetFloatv(pname, params)
     }
 
     /**
@@ -819,7 +819,7 @@ object VGL11 {
      * @see [Reference Page](http://docs.gl/gl4/glGetError)
      */
     fun glGetError(): Int {
-        return com.zakgof.korender.impl.gl.VGL11.gl!!.glGetError()
+        return VGL11.gl!!.glGetError()
     }
 
     /**
@@ -831,7 +831,7 @@ object VGL11 {
      * @see [Reference Page](http://docs.gl/gl4/glClear)
      */
     fun glClear(mask: Int) {
-        com.zakgof.korender.impl.gl.VGL11.gl!!.glClear(mask)
+        VGL11.gl!!.glClear(mask)
     }
 
 
@@ -859,7 +859,7 @@ object VGL11 {
      * @see [Reference Page](http://docs.gl/gl4/glViewport)
      */
     fun glViewport(x: Int, y: Int, w: Int, h: Int) {
-        com.zakgof.korender.impl.gl.VGL11.gl!!.glViewport(x, y, w, h)
+        VGL11.gl!!.glViewport(x, y, w, h)
     }
 
     // --- [ glTexParameteri ] ---
@@ -873,14 +873,18 @@ object VGL11 {
      * @see [Reference Page](http://docs.gl/gl4/glTexParameteri)
      */
     fun glTexParameteri(target: Int, pname: Int, param: Int) {
-        com.zakgof.korender.impl.gl.VGL11.gl!!.glTexParameteri(target, pname, param)
+        VGL11.gl!!.glTexParameteri(target, pname, param)
+    }
+
+    fun glTexParameterfv(target: Int, pname: Int, param: FloatArray) {
+        VGL11.gl!!.glTexParameterfv(target, pname, param)
     }
 
     fun glClearColor(fl: Float, fl1: Float, fl2: Float, fl3: Float) {
-        com.zakgof.korender.impl.gl.VGL11.gl!!.glClearColor(fl, fl1, fl2, fl3)
+        VGL11.gl!!.glClearColor(fl, fl1, fl2, fl3)
     }
 
-    fun shaderEnv() = com.zakgof.korender.impl.gl.VGL11.gl!!.shaderEnv
+    fun shaderEnv() = VGL11.gl!!.shaderEnv
 
 
 }

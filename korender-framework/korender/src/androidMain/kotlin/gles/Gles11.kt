@@ -58,4 +58,7 @@ object Gles11 : com.zakgof.korender.impl.gl.IGL11 {
     override fun glTexParameteri(target: Int, pname: Int, param: Int) =
         GLES11.glTexParameteri(target, pname, param)
 
+    override fun glTexParameterfv(target: Int, pname: Int, param: FloatArray) =
+        GLES11.glTexParameterfv(target, pname, param, 0)
+
 }

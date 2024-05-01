@@ -39,4 +39,6 @@ class Lwjgl11 : com.zakgof.korender.impl.gl.IGL11 {
     override fun glViewport(x: Int, y: Int, w: Int, h: Int) = GL11.glViewport(x, y, w, h)
     override fun glTexParameteri(target: Int, pname: Int, param: Int) = GL11.glTexParameteri(target, pname, param)
 
+    override fun glTexParameterfv(target: Int, pname: Int, param: FloatArray) = GL11.glTexParameterfv(target, pname, param)
+
 }

@@ -10,17 +10,8 @@ class Quaternion(val w: Float, val r: Vec3) {
         fun fromAxisAngle(axis: Vec3, angle: Float): Quaternion =
             Quaternion(cos(angle * 0.5f), axis * sin(angle * 0.5f))
 
-        fun shortestArc(v1: Vec3, v2: Vec3): Quaternion {
-            val n = (v1 % v2)
-            val nl = n.length()
-            if (nl < 1e-6)
-                return IDENTITY
-            val nn = n * (1/nl)
-            var c = v1 * v2
-            if (c > 1.0f) c = 1.0f
-            if (c < -1.0f) c = -1.0f
-            return Quaternion(sqrt((1.0f + c) * 0.5f), nn * sqrt((1.0f - c) * 0.5f))
-        }
+        fun shortestArc(v1: Vec3, v2: Vec3): Quaternion =
+            Quaternion(1.0f + v1 * v2, v1 % v2).normalize()
 
         val IDENTITY = Quaternion(1f, Vec3.ZERO)
     }

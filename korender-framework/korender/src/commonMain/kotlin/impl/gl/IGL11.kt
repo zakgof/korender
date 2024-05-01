@@ -48,5 +48,7 @@ interface IGL11 {
 
     fun glTexParameteri(target: Int, pname: Int, param: Int)
 
+    fun glTexParameterfv(target: Int, pname: Int, param: FloatArray)
+
     fun glClearColor(fl: Float, fl1: Float, fl2: Float, fl3: Float)
 }

@@ -2,7 +2,6 @@ package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.impl.gl.VGL11
-import com.zakgof.korender.impl.gl.VGL12
 import com.zakgof.korender.impl.gl.VGL13
 import com.zakgof.korender.impl.gl.VGL30
 import com.zakgof.korender.impl.gpu.GpuFrameBuffer
@@ -70,8 +69,9 @@ class GlGpuFrameBuffer(private val width: Int, private val height: Int, useDepth
         )
         VGL11.glTexParameteri(VGL11.GL_TEXTURE_2D, VGL11.GL_TEXTURE_MIN_FILTER, VGL11.GL_LINEAR)
         VGL11.glTexParameteri(VGL11.GL_TEXTURE_2D, VGL11.GL_TEXTURE_MAG_FILTER, VGL11.GL_LINEAR)
-        VGL11.glTexParameteri(VGL11.GL_TEXTURE_2D, VGL11.GL_TEXTURE_WRAP_S, VGL12.GL_CLAMP_TO_EDGE)
-        VGL11.glTexParameteri(VGL11.GL_TEXTURE_2D, VGL11.GL_TEXTURE_WRAP_T, VGL12.GL_CLAMP_TO_EDGE)
+        VGL11.glTexParameteri(VGL11.GL_TEXTURE_2D, VGL11.GL_TEXTURE_WRAP_S, VGL13.GL_CLAMP_TO_BORDER)
+        VGL11.glTexParameteri(VGL11.GL_TEXTURE_2D, VGL11.GL_TEXTURE_WRAP_T, VGL13.GL_CLAMP_TO_BORDER)
+        VGL11.glTexParameterfv(VGL11.GL_TEXTURE_2D, VGL11.GL_TEXTURE_BORDER_COLOR, floatArrayOf(0f, 0f, 0f, 0f))
         return GlGpuTexture(glHandle)
     }
 
