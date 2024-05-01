@@ -30,8 +30,14 @@ uniform float specularPower;
   uniform float detailScale;
   uniform float detailRatio;
 #endif
-#ifdef SHADOW_RECEIVER
-  uniform sampler2D shadowTexture;
+#ifdef SHADOW_RECEIVER0
+  uniform sampler2D shadowTexture0;
+#endif
+#ifdef SHADOW_RECEIVER1
+  uniform sampler2D shadowTexture1;
+#endif
+#ifdef SHADOW_RECEIVER2
+  uniform sampler2D shadowTexture2;
 #endif
 
 in vec3 mpos;
@@ -39,8 +45,14 @@ in vec3 mnormal;
 in vec3 vpos;
 in vec3 vnormal;
 in vec2 vtex;
-#ifdef SHADOW_RECEIVER
-  in vec3 vshadow;
+#ifdef SHADOW_RECEIVER0
+  in vec3 vshadow0;
+#endif
+#ifdef SHADOW_RECEIVER1
+  in vec3 vshadow1;
+#endif
+#ifdef SHADOW_RECEIVER1
+  in vec3 vshadow2;
 #endif
 
 out vec4 fragColor;
@@ -84,10 +96,19 @@ void main() {
     float lighting = lite(light, normal, look, ambient, diffuse, specular, specularPower);
   #endif
 
-  #ifdef SHADOW_RECEIVER
-    float shadowRatio = shadow(shadowTexture, vshadow);
-    lighting = mix(lighting, ambient, shadowRatio);
+  float shadowRatio = 0.0f;
+
+  #ifdef SHADOW_RECEIVER0
+    shadowRatio = max(shadowRatio, shadow(shadowTexture0, vshadow0));
   #endif
+  #ifdef SHADOW_RECEIVER1
+    shadowRatio = max(shadowRatio, shadow(shadowTexture1, vshadow1));
+  #endif
+  #ifdef SHADOW_RECEIVER2
+    shadowRatio = max(shadowRatio, shadow(shadowTexture2, vshadow2));
+  #endif
+
+  lighting = mix(lighting, ambient, shadowRatio);
 
   #ifdef SHADOW_CASTER
     fragColor = vec4(gl_FragCoord.z, gl_FragCoord.z, gl_FragCoord.z, 1.0);

@@ -32,7 +32,7 @@ fun App() = Korender {
         Camera(controller.chaseCamera.camera(bugTransform, projection, width, height, controller.hf, frameInfo.dt))
 
         terrain(controller.hfImage, controller.hf, controller.elevationRatio)
-        Shadow(mapSize = 1024) {
+        Shadow(mapSize = 1024, cascades = listOf(3f, 10f, 100f, 1000f)) {
             bug(bugTransform)
             controller.missileManager.missiles.forEach { missile(it.transform()) }
             controller.enemyManager.heads.forEach { head(it.transform()) }
@@ -96,7 +96,7 @@ private fun SceneContext.terrain(hfImage: Image, hf: RgImageHeightField, elevati
             cellWidth = 20.0f,
             height = { x, y -> hf.pixel(x, y) * elevationRatio }
         ),
-        material = standard("DETAIL", "SHADOW_RECEIVER", "PCSS") {
+        material = standard("DETAIL", "SHADOW_RECEIVER0", "SHADOW_RECEIVER1", "SHADOW_RECEIVER2", "PCSS") {
             colorTexture = texture("/terrainbase.jpg")
             detailTexture = texture("/sand.jpg")
             detailScale = 800f

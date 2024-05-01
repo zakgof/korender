@@ -1,8 +1,8 @@
 package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
-import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.Korender
+import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.declaration.Materials.standard
 import com.zakgof.korender.declaration.Meshes.cube
 import com.zakgof.korender.declaration.Meshes.sphere
@@ -16,7 +16,7 @@ import com.zakgof.korender.math.z
 @Composable
 fun ShadowExample() =
     Korender {
-        val material = standard("SHADOW_RECEIVER", "PCSS") {
+        val material = standard("SHADOW_RECEIVER0", "PCSS") {
             colorTexture = texture("/sand.jpg")
         }
         Scene {
@@ -27,7 +27,7 @@ fun ShadowExample() =
                 material = material,
                 transform = Transform().scale(8f, 1f, 8f)
             )
-            Shadow(mapSize = 1024) {
+            Shadow(mapSize = 1024, cascades = listOf(5.0f, 50.0f)) {
                 Renderable(
                     mesh = cube(1.0f),
                     material = material,

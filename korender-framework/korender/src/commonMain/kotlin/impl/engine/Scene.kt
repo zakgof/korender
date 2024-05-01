@@ -24,7 +24,7 @@ import kotlin.math.max
 
 internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: Inventory, private val camera: Camera, private val width: Int, private val height: Int) {
 
-    private val shadower: SimpleShadower?
+    private val shadower: Shadower?
     private val filters: List<Filter>
     private val filterFrameBuffers: List<GpuFrameBuffer>
 
@@ -41,7 +41,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     init {
         shadower = sceneDeclaration.shadow?.let {
             val shadowCasters = it.renderables.map { rd -> createRenderable(rd) }
-            SimpleShadower(inventory, it, shadowCasters)
+            createShadower(inventory, it, shadowCasters)
         }
         sceneDeclaration.renderables.forEach {
             val renderable = createRenderable(it)
@@ -56,6 +56,9 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         filterFrameBuffers = filterFrameBuffers()
         sceneDeclaration.gui?.let { layoutGui(width, height, it) }
     }
+
+    private fun createShadower(inventory: Inventory, shadowDecl: ShadowDeclaration, shadowCasters: List<Renderable>) : Shadower =
+        CascadeShadower(inventory, shadowDecl.mapSize, shadowDecl.cascades, shadowCasters)
 
     private fun layoutGui(width: Int, height: Int, container: ElementDeclaration.Container) {
         val sizes = mutableMapOf<ElementDeclaration, Size>()
@@ -232,10 +235,10 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     }
 
     fun render(context: MutableMap<String, Any?>, projection: Projection, camera: Camera, light: Vec3) {
-        shadower?.let { context.putAll(it.render(projection, camera, light)) }
+        val shadowUniforms: UniformSupplier = shadower?.render(projection, camera, light) ?: UniformSupplier {}
         val uniformDecorator: (UniformSupplier) -> UniformSupplier = {
             UniformSupplier { key ->
-                var value = it[key] ?: context[key]
+                var value = it[key] ?: context[key] ?: shadowUniforms[key]
                 if (value is TextureDeclaration) {
                     value = inventory.texture(value)
                 }

@@ -9,26 +9,38 @@ out vec3 mnormal;
 out vec3 vpos;
 out vec3 vnormal;
 out vec2 vtex;
-#ifdef SHADOW_RECEIVER
-out vec3 vshadow;
+#ifdef SHADOW_RECEIVER0
+out vec3 vshadow0;
+#endif
+#ifdef SHADOW_RECEIVER1
+out vec3 vshadow1;
+#endif
+#ifdef SHADOW_RECEIVER2
+out vec3 vshadow2;
 #endif
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-#ifdef SHADOW_RECEIVER
-  uniform mat4 shadowView;
-  uniform mat4 shadowProjection;
+#ifdef SHADOW_RECEIVER0
+  uniform mat4 shadowView0;
+  uniform mat4 shadowProjection0;
+#endif
+#ifdef SHADOW_RECEIVER1
+    uniform mat4 shadowView1;
+    uniform mat4 shadowProjection1;
+#endif
+#ifdef SHADOW_RECEIVER2
+    uniform mat4 shadowView2;
+    uniform mat4 shadowProjection2;
 #endif
 
-#ifdef SHADOW_RECEIVER
 const mat4 biasMatrix = mat4(
     0.5, 0.0, 0.0, 0.0,
     0.0, 0.5, 0.0, 0.0,
     0.0, 0.0, 0.5, 0.0,
     0.5, 0.5, 0.5, 1.0
 );
-#endif
 
 void main() {
 
@@ -40,8 +52,14 @@ void main() {
     vtex = tex;
     vnormal = mat3(transpose(inverse(model))) * normal;
 
-    #ifdef SHADOW_RECEIVER
-	  vshadow = (biasMatrix * shadowProjection * shadowView * worldPos).xyz;
+    #ifdef SHADOW_RECEIVER0
+	  vshadow0 = (biasMatrix * shadowProjection0 * shadowView0 * worldPos).xyz;
+    #endif
+    #ifdef SHADOW_RECEIVER1
+      vshadow1 = (biasMatrix * shadowProjection1 * shadowView1 * worldPos).xyz;
+    #endif
+    #ifdef SHADOW_RECEIVER2
+      vshadow2 = (biasMatrix * shadowProjection2 * shadowView2 * worldPos).xyz;
     #endif
 
     gl_Position = projection * (view * worldPos);

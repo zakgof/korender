@@ -86,8 +86,8 @@ class SceneContext internal constructor(val frameInfo: FrameInfo, private val sc
         )
     }
 
-    fun Shadow(mapSize: Int, block: ShadowContext.() -> Unit) {
-        val shadowDeclaration = ShadowDeclaration(mapSize)
+    fun Shadow(mapSize: Int, cascades: List<Float>, block: ShadowContext.() -> Unit) {
+        val shadowDeclaration = ShadowDeclaration(mapSize, cascades)
         ShadowContext(shadowDeclaration).apply(block)
         sceneDeclaration.addShadow(shadowDeclaration)
         shadowDeclaration.renderables.forEach { sceneDeclaration.add(it) }
