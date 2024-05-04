@@ -5,15 +5,14 @@ import com.zakgof.korender.declaration.UniformSupplier
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.Projection
 
-internal class CascadeShadower(private val inventory: Inventory, private val mapSize: Int, private val cascades: List<Float>, private val shadowCasters: List<Renderable>) : Shadower {
+internal class CascadeShadower(private val inventory: Inventory, private val cascades: List<CascadeDeclaration>) : Shadower {
 
     private val shadowers: List<SingleShadower> = createShadowers()
 
     private fun createShadowers(): List<SingleShadower> =
-        (1 until cascades.size)
-            .map { SingleShadower(it - 1, inventory, mapSize, cascades[it - 1], cascades[it], shadowCasters) }
+        cascades.indices.map { SingleShadower(it, inventory, cascades[it]) }
 
-    override fun render(projection: Projection, camera: Camera, light: Vec3): UniformSupplier =
-        shadowers.map { it.render(projection, camera, light) }
+    override fun render(projection: Projection, camera: Camera, light: Vec3, shadowCasters: List<Renderable>): UniformSupplier =
+        shadowers.map { it.render(projection, camera, light, shadowCasters) }
             .reduce { a, b -> a + b }
 }

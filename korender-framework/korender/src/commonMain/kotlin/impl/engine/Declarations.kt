@@ -40,9 +40,11 @@ internal sealed class ElementDeclaration {
 
 internal data class FrameBufferDeclaration(val id: String, val width: Int, val height: Int, val withDepth: Boolean)
 
-internal class ShadowDeclaration(val mapSize: Int, val cascades: List<Float>) {
+internal class ShadowDeclaration() {
 
-    internal val renderables = mutableListOf<RenderableDeclaration>()
-    fun addRenderable(renderableDeclaration: RenderableDeclaration) =
-        renderables.add(renderableDeclaration)
+    internal val cascades = mutableListOf<CascadeDeclaration>()
+    fun addCascade(cascadeDeclaration: CascadeDeclaration) =
+        cascades.add(cascadeDeclaration)
 }
+
+internal data class CascadeDeclaration(val mapSize: Int, val near: Float, var far: Float)

@@ -13,12 +13,12 @@ import com.zakgof.korender.projection.FrustumProjection
 import com.zakgof.korender.projection.OrthoProjection
 import com.zakgof.korender.projection.Projection
 
-internal class SingleShadower(private val index: Int, private val inventory: Inventory, mapSize: Int, private val near: Float, private val far: Float, private val shadowCasters: List<Renderable>) : Shadower {
+internal class SingleShadower(private val index: Int, private val inventory: Inventory, private val decl: CascadeDeclaration) : Shadower {
 
-    private val frameBuffer: GpuFrameBuffer = inventory.frameBuffer(FrameBufferDeclaration("shadow$index", mapSize, mapSize, false))
+    private val frameBuffer: GpuFrameBuffer = inventory.frameBuffer(FrameBufferDeclaration("shadow$index", decl.mapSize, decl.mapSize, false))
     private val casterShader = inventory.shader(ShaderDeclaration("standard.vert", "standard.frag", setOf("SHADOW_CASTER")))
 
-    override fun render(projection: Projection, camera: Camera, light: Vec3): UniformSupplier {
+    override fun render(projection: Projection, camera: Camera, light: Vec3, shadowCasters: List<Renderable>): UniformSupplier {
 
         val matrices = updateShadowCamera(projection, camera, light)
         val shadowCamera = matrices.first
@@ -62,7 +62,7 @@ internal class SingleShadower(private val index: Int, private val inventory: Inv
 
         val right = (light % 1.y).normalize()
         val up = (right % light).normalize()
-        val corners = frustumCorners(projection, camera, near, far)
+        val corners = frustumCorners(projection, camera, decl.near, decl.far)
         val xmin = corners.minOf { it * right }
         val ymin = corners.minOf { it * up }
         val zmin = corners.minOf { it * light }
@@ -92,15 +92,17 @@ internal class SingleShadower(private val index: Int, private val inventory: Inv
         val right = (camera.direction % camera.up).normalize() * projection.width
         val toNear = camera.direction * near
         val toFar = camera.direction * far
+        val upFar = up * (far / near)
+        val rightFar = right * (far / near)
         return listOf(
             camera.position + up + right + toNear,
             camera.position - up + right + toNear,
             camera.position - up - right + toNear,
             camera.position + up - right + toNear,
-            camera.position + up + right + toFar,
-            camera.position - up + right + toFar,
-            camera.position - up - right + toFar,
-            camera.position + up - right + toFar,
+            camera.position + upFar + rightFar + toFar,
+            camera.position - upFar + rightFar + toFar,
+            camera.position - upFar - rightFar + toFar,
+            camera.position + upFar - rightFar + toFar,
         )
     }
 

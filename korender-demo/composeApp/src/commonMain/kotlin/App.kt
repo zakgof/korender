@@ -5,7 +5,6 @@ import com.zakgof.korender.declaration.Materials.standard
 import com.zakgof.korender.declaration.Meshes.heightField
 import com.zakgof.korender.declaration.Meshes.obj
 import com.zakgof.korender.declaration.SceneContext
-import com.zakgof.korender.declaration.ShadowContext
 import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.impl.material.Image
 import com.zakgof.korender.math.Color
@@ -23,20 +22,22 @@ fun App() = Korender {
     Scene {
 
         controller.update(frameInfo)
-
         val bugTransform = controller.characterManager.transform()
         OnTouch { controller.chaseCamera.touch(it) }
 
         Light(Vec3(0f, -1f, 3f).normalize())
         Projection(FrustumProjection(width = 3f * width / height, height = 3f, near = 3f, far = 10000f))
         Camera(controller.chaseCamera.camera(bugTransform, projection, width, height, controller.hf, frameInfo.dt))
+        Shadow {
+            Cascade(1024, 3f, 20f)
+            Cascade(512, 20f, 200f)
+            Cascade(512, 200f, 5000f)
+        }
 
         terrain(controller.hfImage, controller.hf, controller.elevationRatio)
-        Shadow(mapSize = 1024, cascades = listOf(3f, 10f, 100f, 1000f)) {
-            bug(bugTransform)
-            controller.missileManager.missiles.forEach { missile(it.transform()) }
-            controller.enemyManager.heads.forEach { head(it.transform()) }
-        }
+        bug(bugTransform)
+        controller.missileManager.missiles.forEach { missile(it.transform()) }
+        controller.enemyManager.heads.forEach { head(it.transform()) }
         controller.missileManager.explosions(frameInfo.time).forEach { explosion(it.first, it.second) }
         Sky("fastcloud")
         Filter("atmosphere.frag")
@@ -105,7 +106,7 @@ private fun SceneContext.terrain(hfImage: Image, hf: RgImageHeightField, elevati
     )
 }
 
-fun ShadowContext.bug(bugTransform: Transform) = Renderable(
+fun SceneContext.bug(bugTransform: Transform) = Renderable(
     mesh = obj("/bug/bug.obj"),
     material = standard {
         colorTexture = texture("/bug/bug.jpg")
@@ -113,7 +114,7 @@ fun ShadowContext.bug(bugTransform: Transform) = Renderable(
     transform = bugTransform * Transform().translate(0.2f.y).scale(2.0f).rotate(1.y, -PIdiv2)
 )
 
-fun ShadowContext.missile(missileTransform: Transform) = Renderable(
+fun SceneContext.missile(missileTransform: Transform) = Renderable(
     mesh = obj("/missile/missile.obj"),
     material = standard {
         colorTexture = texture("/missile/missile.jpg")
@@ -121,7 +122,7 @@ fun ShadowContext.missile(missileTransform: Transform) = Renderable(
     transform = missileTransform * Transform().rotate(1.y, -PIdiv2)
 )
 
-fun ShadowContext.alien(alienTransform: Transform) = Renderable(
+fun SceneContext.alien(alienTransform: Transform) = Renderable(
     mesh = obj("/alien/alien.obj"),
     material = standard {
         colorTexture = texture("/alien/alien.jpg")
@@ -129,7 +130,7 @@ fun ShadowContext.alien(alienTransform: Transform) = Renderable(
     transform = alienTransform * Transform().rotate(1.y, -PIdiv2).scale(10.0f).translate(4.y)
 )
 
-fun ShadowContext.head(alienTransform: Transform) = Renderable(
+fun SceneContext.head(alienTransform: Transform) = Renderable(
     mesh = obj("/head/head-high.obj"),
     material = standard {
         colorTexture = texture("/head/head-high.jpg")

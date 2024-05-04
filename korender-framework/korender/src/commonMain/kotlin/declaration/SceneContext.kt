@@ -4,6 +4,7 @@ import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.SceneDeclaration
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.impl.engine.Bucket
+import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.FilterDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
@@ -86,11 +87,10 @@ class SceneContext internal constructor(val frameInfo: FrameInfo, private val sc
         )
     }
 
-    fun Shadow(mapSize: Int, cascades: List<Float>, block: ShadowContext.() -> Unit) {
-        val shadowDeclaration = ShadowDeclaration(mapSize, cascades)
+    fun Shadow(block: ShadowContext.() -> Unit) {
+        val shadowDeclaration = ShadowDeclaration()
         ShadowContext(shadowDeclaration).apply(block)
         sceneDeclaration.addShadow(shadowDeclaration)
-        shadowDeclaration.renderables.forEach { sceneDeclaration.add(it) }
     }
 
     fun Camera(camera: Camera) {
@@ -108,12 +108,6 @@ class SceneContext internal constructor(val frameInfo: FrameInfo, private val sc
 }
 
 class ShadowContext internal constructor(private val shadowDeclaration: ShadowDeclaration) {
-    fun Renderable(
-        mesh: MeshDeclaration,
-        material: MaterialDeclaration,
-        transform: Transform = Transform()
-    ) = shadowDeclaration.addRenderable(
-        RenderableDeclaration(mesh, material.shader, material.uniforms, transform)
-    )
-
+    fun Cascade(mapSize: Int, near: Float, far: Float) =
+        shadowDeclaration.addCascade(CascadeDeclaration(mapSize, near, far))
 }

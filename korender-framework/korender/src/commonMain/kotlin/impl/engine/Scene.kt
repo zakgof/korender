@@ -32,6 +32,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     private val transparents = mutableListOf<Renderable>()
     private val skies = mutableListOf<Renderable>()
     private val screens = mutableListOf<Renderable>()
+    private val shadowCasters = mutableListOf<Renderable>()
 
     private val touchBoxes = mutableListOf<TouchBox>();
     val touchBoxesHandler: Predicate<TouchEvent> = Predicate { evt ->
@@ -40,8 +41,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
 
     init {
         shadower = sceneDeclaration.shadow?.let {
-            val shadowCasters = it.renderables.map { rd -> createRenderable(rd) }
-            createShadower(inventory, it, shadowCasters)
+            createShadower(inventory, it)
         }
         sceneDeclaration.renderables.forEach {
             val renderable = createRenderable(it)
@@ -51,14 +51,21 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
                 Bucket.TRANSPARENT -> transparents.add(renderable)
                 Bucket.SCREEN -> screens.add(renderable)
             }
+            if (isShadowCaster(it)) {
+                shadowCasters.add(renderable)
+            }
         }
         filters = sceneDeclaration.filters.map { createFilter(it) }
         filterFrameBuffers = filterFrameBuffers()
         sceneDeclaration.gui?.let { layoutGui(width, height, it) }
     }
 
-    private fun createShadower(inventory: Inventory, shadowDecl: ShadowDeclaration, shadowCasters: List<Renderable>) : Shadower =
-        CascadeShadower(inventory, shadowDecl.mapSize, shadowDecl.cascades, shadowCasters)
+    private fun isShadowCaster(renderableDeclaration: RenderableDeclaration): Boolean {
+        return (renderableDeclaration.shader.fragFile == "standard.frag")
+    }
+
+    private fun createShadower(inventory: Inventory, shadowDecl: ShadowDeclaration) : Shadower =
+        CascadeShadower(inventory, shadowDecl.cascades)
 
     private fun layoutGui(width: Int, height: Int, container: ElementDeclaration.Container) {
         val sizes = mutableMapOf<ElementDeclaration, Size>()
@@ -234,8 +241,8 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         return Filter(shader, declaration.uniforms)
     }
 
-    fun render(context: MutableMap<String, Any?>, projection: Projection, camera: Camera, light: Vec3) {
-        val shadowUniforms: UniformSupplier = shadower?.render(projection, camera, light) ?: UniformSupplier {}
+    fun render(context: Map<String, Any?>, projection: Projection, camera: Camera, light: Vec3) {
+        val shadowUniforms: UniformSupplier = shadower?.render(projection, camera, light, shadowCasters) ?: UniformSupplier {}
         val uniformDecorator: (UniformSupplier) -> UniformSupplier = {
             UniformSupplier { key ->
                 var value = it[key] ?: context[key] ?: shadowUniforms[key]
