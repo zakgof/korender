@@ -34,15 +34,16 @@ float[25] kernel5 = float[](
 float shadow(sampler2D shadowTexture, vec3 vshadow) {
     float beavis = 0.01;
     #ifdef PCSS
-        float centerOccluderDepth = texture(shadowTexture, vshadow.xy).r;
-        float penumbraWidth = 0.03 * (vshadow.z - centerOccluderDepth) / centerOccluderDepth;
-        float cumulative = 0.0;
-        float weight = 0.0;
+        float centerSample = texture(shadowTexture, vshadow.xy).r;
+        float penumbraWidth = centerSample > 0.001 ?  0.03 * (vshadow.z - centerSample) / centerSample : 0.0;
+        float cumulative = 0.;
+        float weight = 0.;
         for (int x = -2; x <= 2; ++x) {
             for (int y = -2; y <= 2; ++y) {
                 float w = kernel5[(x+2)*5 + (y+2)];
-                float shadowSample = texture(shadowTexture, vshadow.xy + vec2(x, y) * penumbraWidth).r;
-                float val = (shadowSample > 0.001 && shadowSample > vshadow.z + beavis) ? 1.0 : 0.0;
+                vec2 uv = vshadow.xy + vec2(x, y) * penumbraWidth;
+                float shadowSample = texture(shadowTexture, uv).r;
+                float val = (shadowSample > 0.001 && shadowSample > vshadow.z + beavis && uv.x > 0. && uv.x < 1. && uv.y > 0. && uv.y < 1.) ? 1. : 0.;
                 cumulative += w * val;
                 weight += w;
             }

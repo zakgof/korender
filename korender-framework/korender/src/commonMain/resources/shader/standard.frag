@@ -115,9 +115,4 @@ void main() {
   #else
     fragColor = vec4(texColor.xyz * lighting, texColor.a);
   #endif
-
-//  #ifdef SHADOW_RECEIVER0
-//     // if (vshadow0.x > 0. && vshadow0.x < 1. && vshadow0.y > 0. && vshadow0.y < 1.)
-//     //   fragColor = vec4(vshadow0.xy, 0., 1.);
-//  #endif
 }

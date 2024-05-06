@@ -63,7 +63,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     }
 
     private fun isShadowCaster(renderableDeclaration: RenderableDeclaration): Boolean {
-        return (renderableDeclaration.shader is StandardShaderDeclaration) // TODO no shadow options
+        return (renderableDeclaration.shader is StandardShaderDeclaration && !renderableDeclaration.shader.options.contains(StandardMaterialOption.NoShadowCast)) // TODO no shadow options
     }
 
     private fun createShadower(inventory: Inventory, shadowDecl: ShadowDeclaration): Shadower =

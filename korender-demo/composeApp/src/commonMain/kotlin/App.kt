@@ -5,6 +5,7 @@ import com.zakgof.korender.declaration.Materials.standard
 import com.zakgof.korender.declaration.Meshes.heightField
 import com.zakgof.korender.declaration.Meshes.obj
 import com.zakgof.korender.declaration.SceneContext
+import com.zakgof.korender.declaration.StandardMaterialOption
 import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.impl.material.Image
 import com.zakgof.korender.math.Color
@@ -29,9 +30,9 @@ fun App() = Korender {
         Projection(FrustumProjection(width = 3f * width / height, height = 3f, near = 3f, far = 10000f))
         Camera(controller.chaseCamera.camera(bugTransform, projection, width, height, controller.hf, frameInfo.dt))
         Shadow {
-//            Cascade(1024, 3f, 20f)
-            Cascade(1024, 18f, 30f)
-//          Cascade(1024, 200f, 5000f)
+            Cascade(1024, 3f, 20f)
+            Cascade(512, 18f, 100f)
+            Cascade(256, 100f, 5000f)
         }
 
         terrain(controller.hfImage, controller.hf, controller.elevationRatio)
@@ -97,7 +98,7 @@ private fun SceneContext.terrain(hfImage: Image, hf: RgImageHeightField, elevati
             cellWidth = 20.0f,
             height = { x, y -> hf.pixel(x, y) * elevationRatio }
         ),
-        material = standard("DETAIL", "SHADOW_RECEIVER0", "SHADOW_RECEIVER-1", "SHADOW_RECEIVER-2", "PCSS") {
+        material = standard(StandardMaterialOption.Detail, StandardMaterialOption.Pcss, StandardMaterialOption.NoShadowCast) {
             colorTexture = texture("/terrainbase.jpg")
             detailTexture = texture("/sand.jpg")
             detailScale = 800f
@@ -108,7 +109,7 @@ private fun SceneContext.terrain(hfImage: Image, hf: RgImageHeightField, elevati
 
 fun SceneContext.bug(bugTransform: Transform) = Renderable(
     mesh = obj("/bug/bug.obj"),
-    material = standard {
+    material = standard() {
         colorTexture = texture("/bug/bug.jpg")
     },
     transform = bugTransform * Transform().translate(0.2f.y).scale(2.0f).rotate(1.y, -PIdiv2)
