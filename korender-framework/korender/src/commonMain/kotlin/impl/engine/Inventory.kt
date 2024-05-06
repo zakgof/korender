@@ -16,7 +16,7 @@ import com.zakgof.korender.impl.material.Texturing
 internal class Inventory(val gpu: Gpu) {
 
     private val meshes = Registry<MeshDeclaration, Mesh> { Geometry.create(it, gpu) }
-    private val shaders = Registry<ShaderDeclaration, GpuShader> { Shaders.create(it, gpu) }
+    private val shaders = Registry<CustomShaderDeclaration, GpuShader> { Shaders.create(it, gpu) }
     private val textures = Registry<TextureDeclaration, GpuTexture> { Texturing.create(it, gpu) }
     private val fonts = Registry<String, Font> { Fonts.load(gpu, it) }
     private val fontMeshes = Registry<Any, Geometry.InstancedMesh> { Geometry.font(gpu, 256) }
@@ -40,7 +40,7 @@ internal class Inventory(val gpu: Gpu) {
 
     fun mesh(decl: MeshDeclaration): Mesh = meshes[decl]
 
-    fun shader(decl: ShaderDeclaration): GpuShader = shaders[decl]
+    fun shader(decl: CustomShaderDeclaration): GpuShader = shaders[decl]
 
     fun texture(decl: TextureDeclaration): GpuTexture = textures[decl]
     fun hasMesh(decl: MeshDeclaration): Boolean = meshes.has(decl)

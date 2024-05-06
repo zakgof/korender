@@ -1,18 +1,21 @@
 package com.zakgof.korender.declaration
 
+import com.zakgof.korender.impl.engine.CustomShaderDeclaration
 import com.zakgof.korender.impl.engine.ShaderDeclaration
+import com.zakgof.korender.impl.engine.StandardShaderDeclaration
 import com.zakgof.korender.impl.material.StockUniforms
+import java.util.EnumSet
 
 object Materials {
-    fun standard(vararg defs: String, block: StockUniforms.() -> Unit) =
+    fun standard(vararg options: StandardMaterialOption, block: StockUniforms.() -> Unit) =
         MaterialDeclaration(
-            ShaderDeclaration("standard.vert", "standard.frag", setOf(*defs)),
+            StandardShaderDeclaration(if (options.isEmpty()) EnumSet.noneOf(StandardMaterialOption::class.java) else EnumSet.of(options[0], *options)),
             StockUniforms().apply(block)
         )
 
     fun custom(vertexFile: String, fragFile: String, vararg defs: String, uniforms: UniformSupplier = UniformSupplier { null }) =
         MaterialDeclaration(
-            ShaderDeclaration(vertexFile, fragFile, setOf(*defs)),
+            CustomShaderDeclaration(vertexFile, fragFile, setOf(*defs)),
             uniforms
         )
 }

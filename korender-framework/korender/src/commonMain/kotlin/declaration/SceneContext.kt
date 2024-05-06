@@ -5,10 +5,10 @@ import com.zakgof.korender.SceneDeclaration
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.impl.engine.Bucket
 import com.zakgof.korender.impl.engine.CascadeDeclaration
+import com.zakgof.korender.impl.engine.CustomShaderDeclaration
 import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.FilterDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
-import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.engine.ShadowDeclaration
 import com.zakgof.korender.impl.material.StockUniforms
 import com.zakgof.korender.math.Transform
@@ -29,7 +29,7 @@ class SceneContext internal constructor(val frameInfo: FrameInfo, private val sc
         sceneDeclaration.add(
             RenderableDeclaration(
                 mesh = MeshDeclaration.Billboard,
-                shader = ShaderDeclaration("billboard.vert", fragment, defs.toSet()),
+                shader = CustomShaderDeclaration("billboard.vert", fragment, defs.toSet()),
                 uniforms = StockUniforms().apply(material),
                 transform = Transform().translate(position),
                 bucket = if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE
@@ -50,7 +50,7 @@ class SceneContext internal constructor(val frameInfo: FrameInfo, private val sc
         sceneDeclaration.add(
             RenderableDeclaration(
                 MeshDeclaration.InstancedBillboard(id, count, zSort, block),
-                ShaderDeclaration("billboard.vert", fragment, setOf()),
+                CustomShaderDeclaration("billboard.vert", fragment),
                 StockUniforms().apply(material)
             )
         ) // TODO Bucket
@@ -81,7 +81,7 @@ class SceneContext internal constructor(val frameInfo: FrameInfo, private val sc
         sceneDeclaration.add(
             RenderableDeclaration(
                 MeshDeclaration.ScreenQuad,
-                ShaderDeclaration("sky/sky.vert", "sky/${preset}sky.frag", setOf()),
+                CustomShaderDeclaration("sky/sky.vert", "sky/${preset}sky.frag"),
                 { null }
             )
         )

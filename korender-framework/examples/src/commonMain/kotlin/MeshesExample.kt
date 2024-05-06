@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.declaration.Materials.standard
 import com.zakgof.korender.declaration.Meshes.mesh
+import com.zakgof.korender.declaration.StandardMaterialOption
 import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.impl.geometry.Attributes.NORMAL
@@ -22,7 +23,7 @@ fun MeshesExample() {
     val orbitCamera = OrbitCamera(20.z, 2.y)
     Korender {
         OnTouch { orbitCamera.touch(it) }
-        val material = standard ("NO_LIGHT"){
+        val material = standard (StandardMaterialOption.NoLight){
             colorTexture = texture("/sand.jpg")
         }
         Scene {

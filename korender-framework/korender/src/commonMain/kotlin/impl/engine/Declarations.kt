@@ -3,18 +3,24 @@ package com.zakgof.korender.impl.engine
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.declaration.Direction
 import com.zakgof.korender.declaration.MeshDeclaration
+import com.zakgof.korender.declaration.StandardMaterialOption
 import com.zakgof.korender.declaration.UniformSupplier
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import java.util.EnumSet
 
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
 
 internal class MeshInstance(val transform: Transform)
 
-internal data class ShaderDeclaration(val vertFile: String, val fragFile: String, val defs: Set<String>)
+internal sealed interface ShaderDeclaration
+
+internal data class CustomShaderDeclaration(val vertFile: String, val fragFile: String, val defs: Set<String> = setOf()) : ShaderDeclaration
+
+internal data class StandardShaderDeclaration(val options: EnumSet<StandardMaterialOption>) : ShaderDeclaration
 
 internal data class FilterDeclaration(val fragment: String, val uniforms: UniformSupplier)
 

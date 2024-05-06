@@ -29,9 +29,9 @@ fun App() = Korender {
         Projection(FrustumProjection(width = 3f * width / height, height = 3f, near = 3f, far = 10000f))
         Camera(controller.chaseCamera.camera(bugTransform, projection, width, height, controller.hf, frameInfo.dt))
         Shadow {
-            Cascade(1024, 3f, 20f)
-            Cascade(512, 20f, 200f)
-            Cascade(512, 200f, 5000f)
+//            Cascade(1024, 3f, 20f)
+            Cascade(1024, 18f, 30f)
+//          Cascade(1024, 200f, 5000f)
         }
 
         terrain(controller.hfImage, controller.hf, controller.elevationRatio)
@@ -97,7 +97,7 @@ private fun SceneContext.terrain(hfImage: Image, hf: RgImageHeightField, elevati
             cellWidth = 20.0f,
             height = { x, y -> hf.pixel(x, y) * elevationRatio }
         ),
-        material = standard("DETAIL", "SHADOW_RECEIVER0", "SHADOW_RECEIVER1", "SHADOW_RECEIVER2", "PCSS") {
+        material = standard("DETAIL", "SHADOW_RECEIVER0", "SHADOW_RECEIVER-1", "SHADOW_RECEIVER-2", "PCSS") {
             colorTexture = texture("/terrainbase.jpg")
             detailTexture = texture("/sand.jpg")
             detailScale = 800f

@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.material
 
-import com.zakgof.korender.impl.engine.ShaderDeclaration
+import com.zakgof.korender.impl.engine.CustomShaderDeclaration
+import com.zakgof.korender.impl.gl.VGL11
 import com.zakgof.korender.impl.gpu.Gpu
 import com.zakgof.korender.impl.gpu.GpuShader
 import java.io.BufferedReader
@@ -12,9 +13,9 @@ import java.util.regex.Pattern
 
 internal object Shaders {
 
-    val imageQuadDeclaration: ShaderDeclaration = ShaderDeclaration("gui/image.vert", "gui/image.frag", setOf())
+    val imageQuadDeclaration: CustomShaderDeclaration = CustomShaderDeclaration("gui/image.vert", "gui/image.frag", setOf())
 
-    fun create(declaration: ShaderDeclaration, gpu: Gpu) =
+    fun create(declaration: CustomShaderDeclaration, gpu: Gpu) =
         ShaderBuilder(declaration.vertFile, declaration.fragFile, declaration.defs).build(gpu)
     fun create(
         gpu: Gpu,
@@ -48,7 +49,7 @@ private class ShaderBuilder(
             fragmentShaderFile.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         this.title = vfsplit[vfsplit.size - 1] + "/" + ffsplit[ffsplit.size - 1]
 
-        this.defs = defs + com.zakgof.korender.impl.gl.VGL11.shaderEnv()
+        this.defs = defs + VGL11.shaderEnv()
         this.vertDebugInfo = ShaderDebugInfo(vertexShaderFile)
         this.fragDebugInfo = ShaderDebugInfo(fragmentShaderFile)
         this.vertCode = preprocessFile("", vertexShaderFile, this.defs, vertDebugInfo)

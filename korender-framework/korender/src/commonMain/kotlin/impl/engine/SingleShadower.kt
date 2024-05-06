@@ -15,8 +15,8 @@ import com.zakgof.korender.projection.Projection
 
 internal class SingleShadower(private val index: Int, private val inventory: Inventory, private val decl: CascadeDeclaration) : Shadower {
 
+    override val cascadeNumber = 1
     private val frameBuffer: GpuFrameBuffer = inventory.frameBuffer(FrameBufferDeclaration("shadow$index", decl.mapSize, decl.mapSize, false))
-    private val casterShader = inventory.shader(ShaderDeclaration("standard.vert", "standard.frag", setOf("SHADOW_CASTER")))
 
     override fun render(projection: Projection, camera: Camera, light: Vec3, shadowCasters: List<Renderable>): UniformSupplier {
 
@@ -44,6 +44,8 @@ internal class SingleShadower(private val index: Int, private val inventory: Inv
             VGL11.glEnable(VGL11.GL_DEPTH_TEST)
             VGL11.glCullFace(VGL11.GL_BACK)
             shadowCasters.forEach { r ->
+                // TODO: need to copy all the defs from the original shader
+                val casterShader = inventory.shader(CustomShaderDeclaration("standard.vert", "standard.frag", setOf("SHADOW_CASTER")))
                 casterShader.render(
                     uniformDecorator(r.uniforms + mapOf("model" to r.transform.mat4())),
                     r.mesh.gpuMesh

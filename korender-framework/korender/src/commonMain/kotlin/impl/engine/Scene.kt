@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.KorenderException
 import com.zakgof.korender.SceneDeclaration
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.camera.Camera
@@ -7,6 +8,7 @@ import com.zakgof.korender.declaration.Direction
 import com.zakgof.korender.declaration.InstancedBillboardsContext
 import com.zakgof.korender.declaration.InstancedRenderablesContext
 import com.zakgof.korender.declaration.MeshDeclaration
+import com.zakgof.korender.declaration.StandardMaterialOption
 import com.zakgof.korender.declaration.TextureDeclaration
 import com.zakgof.korender.declaration.UniformSupplier
 import com.zakgof.korender.impl.font.Fonts
@@ -19,6 +21,7 @@ import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.Projection
+import java.util.EnumSet
 import java.util.function.Predicate
 import kotlin.math.max
 
@@ -40,11 +43,10 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     }
 
     init {
-        shadower = sceneDeclaration.shadow?.let {
-            createShadower(inventory, it)
-        }
+        shadower = sceneDeclaration.shadow?.let { createShadower(inventory, it) }
+        val shadowCascades = shadower?.cascadeNumber ?: 0
         sceneDeclaration.renderables.forEach {
-            val renderable = createRenderable(it)
+            val renderable = createRenderable(it, shadowCascades)
             when (it.bucket) {
                 Bucket.OPAQUE -> opaques.add(renderable)
                 Bucket.SKY -> skies.add(renderable)
@@ -61,10 +63,10 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     }
 
     private fun isShadowCaster(renderableDeclaration: RenderableDeclaration): Boolean {
-        return (renderableDeclaration.shader.fragFile == "standard.frag")
+        return (renderableDeclaration.shader is StandardShaderDeclaration) // TODO no shadow options
     }
 
-    private fun createShadower(inventory: Inventory, shadowDecl: ShadowDeclaration) : Shadower =
+    private fun createShadower(inventory: Inventory, shadowDecl: ShadowDeclaration): Shadower =
         CascadeShadower(inventory, shadowDecl.cascades)
 
     private fun layoutGui(width: Int, height: Int, container: ElementDeclaration.Container) {
@@ -88,6 +90,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
                     is ElementDeclaration.Image -> createImage(child, x, currY)
                     is ElementDeclaration.Container -> layoutContainer(sizes, x, currY, childWidth, childHeight, child)
                     is ElementDeclaration.Filler -> {}
+                    else -> throw KorenderException("")
                 }
                 currY += childHeight
             }
@@ -105,8 +108,8 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
                     is ElementDeclaration.Text -> createText(child, currX, y, childWidth)
                     is ElementDeclaration.Image -> createImage(child, currX, y)
                     is ElementDeclaration.Container -> layoutContainer(sizes, currX, y, childWidth, childHeight, child)
-                    is ElementDeclaration.Filler -> {
-                    }
+                    is ElementDeclaration.Filler -> {}
+                    else -> throw KorenderException("")
                 }
                 currX += childWidth
             }
@@ -187,6 +190,8 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
                     Size(w, h)
                 }
             }
+
+            else -> throw KorenderException("")
         }
         sizes[element] = size
         return size
@@ -203,7 +208,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
 
     class Size(val width: Int, val height: Int)
 
-    private fun createRenderable(declaration: RenderableDeclaration): Renderable {
+    private fun createRenderable(declaration: RenderableDeclaration, shadowCascades: Int): Renderable {
 
         val new = !inventory.hasMesh(declaration.mesh)
         val mesh = inventory.mesh(declaration.mesh)
@@ -230,14 +235,45 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
             }
         }
 
-        val shader = inventory.shader(declaration.shader)
+        val shader = inventory.shader(toCustomShader(declaration.shader, shadowCascades))
         val uniforms = declaration.uniforms
         val transform = declaration.transform
         return Renderable(mesh, shader, uniforms, transform)
     }
 
+    private fun toCustomShader(shader: ShaderDeclaration, shadowCascades: Int): CustomShaderDeclaration {
+        return when (shader) {
+            is CustomShaderDeclaration -> shader
+            is StandardShaderDeclaration -> CustomShaderDeclaration("standard.vert", "standard.frag", convertShaderOptions(shader.options, shadowCascades))
+            else -> throw KorenderException("")
+        }
+    }
+
+    // TODO move this to standard shader classes or something
+    private fun convertShaderOptions(options: EnumSet<StandardMaterialOption>, shadowCascades: Int): Set<String> {
+        val set = mutableSetOf<String>()
+        if (!options.contains(StandardMaterialOption.NoShadowReceive)) {
+            for (s in 0..<shadowCascades) {
+                set.add("SHADOW_RECEIVER$s")
+            }
+        }
+        options.forEach {
+            when (it) {
+                StandardMaterialOption.Color -> set.add("COLOR")
+                StandardMaterialOption.Triplanar -> set.add("TRIPLANAR")
+                StandardMaterialOption.Aperiodic -> set.add("APERIODIC")
+                StandardMaterialOption.NormalMap -> set.add("NORMAL_MAP")
+                StandardMaterialOption.Detail -> set.add("DETAIL")
+                StandardMaterialOption.NoLight -> set.add("NO_LIGHT")
+                StandardMaterialOption.Pcss -> set.add("PCSS")
+                else -> {}
+            }
+        }
+        return set
+    }
+
     private fun createFilter(declaration: FilterDeclaration): Filter {
-        val shader = inventory.shader(ShaderDeclaration("screen.vert", declaration.fragment, setOf()))
+        val shader = inventory.shader(CustomShaderDeclaration("screen.vert", declaration.fragment, setOf()))
         return Filter(shader, declaration.uniforms)
     }
 

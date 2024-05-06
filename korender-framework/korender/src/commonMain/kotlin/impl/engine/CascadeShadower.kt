@@ -7,6 +7,8 @@ import com.zakgof.korender.projection.Projection
 
 internal class CascadeShadower(private val inventory: Inventory, private val cascades: List<CascadeDeclaration>) : Shadower {
 
+    override val cascadeNumber = cascades.size
+
     private val shadowers: List<SingleShadower> = createShadowers()
 
     private fun createShadowers(): List<SingleShadower> =
