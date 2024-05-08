@@ -39,7 +39,7 @@ fun App() = Korender {
         bug(bugTransform)
         controller.missileManager.missiles.forEach { missile(it.transform()) }
         controller.enemyManager.heads.forEach { head(it.transform()) }
-        controller.missileManager.explosions(frameInfo.time).forEach { explosion(it.first, it.second) }
+        controller.explosionManager.explosions.forEach { explosion(it) }
         Sky("fastcloud")
         Filter("atmosphere.frag")
         gui(controller.characterManager, controller.missileManager)
@@ -139,13 +139,13 @@ fun SceneContext.head(alienTransform: Transform) = Renderable(
     transform = alienTransform * Transform().rotate(1.y, -PIdiv2).scale(2.0f).translate(1.0f.y)
 )
 
-fun SceneContext.explosion(position: Vec3, phase: Float) = Billboard(
+fun SceneContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(
     fragment = "effect/fireball.frag",
-    position = position,
+    position = explosion.position,
     material = {
-        xscale = 12f * phase
-        yscale = 12f * phase
-        static("power", phase)
+        xscale = explosion.radius * explosion.phase
+        yscale = explosion.radius * explosion.phase
+        static("power", explosion.phase)
     },
     transparent = true
 )

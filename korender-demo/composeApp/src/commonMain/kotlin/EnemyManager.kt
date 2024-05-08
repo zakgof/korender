@@ -16,9 +16,7 @@ class EnemyManager(private val hf: HeightField) {
         heads.forEach { it.update(characterPosition, dt, hf) }
     }
 
-    fun hit(head: EnemyManager.Head) {
-        heads.remove(head)
-    }
+    fun hit(head: Head) = heads.remove(head)
 
     class Head(characterPosition: Vec3) {
 

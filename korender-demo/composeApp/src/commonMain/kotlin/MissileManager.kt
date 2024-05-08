@@ -4,16 +4,17 @@ import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 
-class MissileManager(private val hf: HeightField) {
+class MissileManager(private val hf: HeightField, private val explosionManager: ExplosionManager) {
 
     val missiles = mutableListOf<Missile>()
-    private val explosions = mutableListOf<Explosion>()
-    private var lastTime = Float.MIN_VALUE
+
+    private var lastFireTime = Float.MIN_VALUE
+
     fun update(time: Float, dt: Float) {
         missiles.forEach { it.update(dt) }
         missiles.removeIf {
             if (it.position.y < hf.elevation(it.position.x, it.position.z)  - 0.1f) {
-                explosions.add(Explosion(hf.surface(it.position), time))
+                explosionManager.boom(hf.surface(it.position), 12f, time)
                 true
             } else {
                 false
@@ -21,24 +22,19 @@ class MissileManager(private val hf: HeightField) {
         }
     }
 
-    fun missileHitEnemy(missile: MissileManager.Missile, time: Float) {
+    fun missileHitEnemy(missile: Missile, time: Float) {
         missiles.remove(missile)
-        explosions.add(Explosion(missile.position, time))
+        explosionManager.boom(missile.position, 24f, time)
     }
 
     fun fire(time: Float, touchEvent: TouchEvent, transform: Transform, launcherVelocity: Vec3) {
         if (canFire(time) && (touchEvent.type == TouchEvent.Type.DOWN)) {
-            lastTime = time
+            lastFireTime = time
             missiles.add(Missile(transform, launcherVelocity))
         }
     }
 
-    fun canFire(time: Float) = (time - lastTime > 1)
-
-    fun explosions(time: Float): List<Pair<Vec3, Float>> {
-        explosions.removeIf { time - it.startTime > 1f}
-        return explosions.map { Pair(it.position, time - it.startTime) }
-    }
+    fun canFire(time: Float) = (time - lastFireTime > 1)
 
     class Missile(transform: Transform, launcherVelocity: Vec3) {
 
@@ -52,5 +48,4 @@ class MissileManager(private val hf: HeightField) {
         fun transform(): Transform = Transform().rotate(-velocity.normalize(), 1.y).translate(position)
     }
 
-    class Explosion(val position: Vec3, val startTime: Float)
 }
