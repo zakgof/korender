@@ -23,7 +23,8 @@ fun SmokeExample() = Korender {
                     2f * phase * sin(phase * 0.4f),
                     phase * phase * 8f + phase * 2f - 4f,
                     i * 0.01f
-                )
+                ),
+                transparent = true
             )
         }
     }
