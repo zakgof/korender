@@ -32,7 +32,7 @@ fun FireBallExample() = Korender {
             material = standard {
                 colorTexture = Textures.texture("/sand.jpg")
             },
-            transform = Transform().scale(4f).translate(-4.y)
+            transform = Transform().scale(9f).translate(-9.y)
         )
     }
 }

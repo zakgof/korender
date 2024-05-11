@@ -15,12 +15,13 @@ uniform float yscale;
 uniform float rotation;
 
 out vec3 vpos;
+out vec2 vsize;
 out vec3 vnormal;
 out vec2 vtex;
 
 void main() {
 
-    vec3 center = (model * vec4(pos, 1)).xyz;
+    vec3 center = (model * vec4(pos, 1.0)).xyz;
     vec3 cameraRight = normalize(vec3(view[0][0], view[1][0], view[2][0]));
     vec3 cameraUp = normalize(vec3(view[0][1], view[1][1], view[2][1]));
 
@@ -31,8 +32,9 @@ void main() {
     float angle = atan(up, right) + phi + rotation;
 
     vpos = center + cameraRight * l * cos(angle) + cameraUp * l * sin(angle);
+    vsize = vec2(xscale * scale.x * model[0].x, yscale * scale.y * model[1].y);
     vtex = vec2(tex.x, 1.0 - tex.y);
     vnormal = normalize(cameraPos - center);
 
-    gl_Position = projection * view * vec4(vpos, 1);
+    gl_Position = projection * view * vec4(vpos, 1.0);
 }
