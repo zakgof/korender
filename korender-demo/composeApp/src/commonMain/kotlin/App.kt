@@ -88,28 +88,28 @@ private fun SceneContext.gui(characterManager: CharacterManager, missileManager:
                 Row {
                     Column {
                         Filler()
-                        Image(imageResource = "/left.png", width = 128, height = 128, onTouch = { characterManager.left(it) })
+                        Image(imageResource = "/icon/left.png", width = 128, height = 128, onTouch = { characterManager.left(it) })
                     }
                     Column {
                         Filler()
-                        Image(imageResource = "/accelerate.png", width = 128, height = 128, onTouch = { characterManager.forward(it) })
-                        Image(imageResource = "/decelerate.png", width = 128, height = 128, onTouch = { characterManager.backward(it) })
+                        Image(imageResource = "/icon/accelerate.png", width = 128, height = 128, onTouch = { characterManager.forward(it) })
+                        Image(imageResource = "/icon/decelerate.png", width = 128, height = 128, onTouch = { characterManager.backward(it) })
                     }
                     Column {
                         Filler()
-                        Image(imageResource = "/right.png", width = 128, height = 128, onTouch = { characterManager.right(it) })
+                        Image(imageResource = "/icon/right.png", width = 128, height = 128, onTouch = { characterManager.right(it) })
                     }
                 }
             }
             Filler()
             Column {
                 Filler()
-                Image(imageResource = "/angle-up.png", width = 128, height = 128, onTouch = { characterManager.cannonUp(it) })
-                Image(imageResource = "/minus.png", width = 64, height = 64, marginLeft = 32, marginTop = cannonTop, marginBottom = cannonBtm)
-                Image(imageResource = "/angle-down.png", width = 128, height = 128, marginBottom = if (missileManager.canFire(frameInfo.time)) 0 else 128 , onTouch = { characterManager.cannonDown(it) })
+                Image(imageResource = "/icon/angle-up.png", width = 128, height = 128, onTouch = { characterManager.cannonUp(it) })
+                Image(imageResource = "/icon/minus.png", width = 64, height = 64, marginLeft = 32, marginTop = cannonTop, marginBottom = cannonBtm)
+                Image(imageResource = "/icon/angle-down.png", width = 128, height = 128, marginBottom = if (missileManager.canFire(frameInfo.time)) 0 else 128 , onTouch = { characterManager.cannonDown(it) })
 
                 if (missileManager.canFire(frameInfo.time)) {
-                    Image(imageResource = "/fire.png", width = 128, height = 128, onTouch = { missileManager.fire(frameInfo.time, it, characterManager.transform(), characterManager.velocity, characterManager.cannonAngle) })
+                    Image(imageResource = "/icon/fire.png", width = 128, height = 128, onTouch = { missileManager.fire(frameInfo.time, it, characterManager.transform(), characterManager.velocity, characterManager.cannonAngle) })
                 }
             }
         }

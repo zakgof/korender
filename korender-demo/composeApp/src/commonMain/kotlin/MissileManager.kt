@@ -16,7 +16,7 @@ class MissileManager(private val hf: HeightField, private val explosionManager: 
         missiles.forEach { it.update(dt) }
         missiles.removeIf {
             if (it.position.y < hf.elevation(it.position.x, it.position.z)  - 0.1f) {
-                explosionManager.boom(hf.surface(it.position), 12f, time)
+                explosionManager.boom(hf.surface(it.position), 6f, time)
                 true
             } else {
                 false
@@ -26,7 +26,7 @@ class MissileManager(private val hf: HeightField, private val explosionManager: 
 
     fun missileHitEnemy(missile: Missile, time: Float) {
         missiles.remove(missile)
-        explosionManager.boom(missile.position, 24f, time)
+        explosionManager.boom(missile.position, 12f, time)
     }
 
     fun fire(time: Float, touchEvent: TouchEvent, transform: Transform, launcherVelocity: Vec3, cannonAngle: Float) {

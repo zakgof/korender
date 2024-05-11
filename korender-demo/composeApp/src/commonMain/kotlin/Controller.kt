@@ -31,7 +31,7 @@ class Controller {
         collisionDetector.detect(CharacterManager::class, EnemyManager.Head::class) {
             characterManager.hit()
             enemyManager.hit(it.second)
-            explosionManager.boom(it.second.transform().mat4() * Vec3.ZERO, 24f, frameInfo.time)
+            explosionManager.boom(it.second.transform().mat4() * Vec3.ZERO, 12f, frameInfo.time)
         }
         collisionDetector.detect(MissileManager.Missile::class, EnemyManager.Head::class) {
             enemyManager.hit(it.second)
