@@ -9,6 +9,7 @@ class Controller {
     val hf = RgImageHeightField(hfImage, 20.0f, elevationRatio)
     val characterManager = CharacterManager(hf, hf.surface(Vec3.ZERO, -1.0f))
     val enemyManager = EnemyManager(hf)
+    val skullManager = SkullManager()
     val explosionManager = ExplosionManager()
     val missileManager = MissileManager(hf, explosionManager)
     val chaseCamera = ChaseCamera(characterManager.transform())
@@ -20,6 +21,7 @@ class Controller {
         characterManager.update(frameInfo.dt)
         missileManager.update(frameInfo.time, frameInfo.dt)
         enemyManager.update(characterManager.transform() * Vec3.ZERO, frameInfo.time, frameInfo.dt)
+        skullManager.update(characterManager.transform() * Vec3.ZERO, frameInfo.time, frameInfo.dt)
 
         collisionDetector.clear()
         collisionDetector.update(CharacterManager::class, characterManager, CharacterManager::transform, 1f)

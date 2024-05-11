@@ -7,7 +7,7 @@ import com.zakgof.korender.impl.gl.VGL30
 import com.zakgof.korender.impl.gpu.GpuFrameBuffer
 import java.io.Closeable
 
-class GlGpuFrameBuffer(private val width: Int, private val height: Int, useDepthBuffer: Boolean) :
+class GlGpuFrameBuffer(private val name: String, private val width: Int, private val height: Int, useDepthBuffer: Boolean) :
     GpuFrameBuffer,
     Closeable {
 
@@ -19,7 +19,7 @@ class GlGpuFrameBuffer(private val width: Int, private val height: Int, useDepth
     // TODO: multiple RTs !
     init {
 
-        println("Create Framebuffer ${width}x${height} : $fbHandle")
+        println("Creating GPU Framebuffer [$name] ${width}x${height}: $fbHandle")
 
         VGL30.glBindFramebuffer(VGL30.GL_FRAMEBUFFER, fbHandle)
         colorTexture = createTexture(false)
@@ -72,12 +72,11 @@ class GlGpuFrameBuffer(private val width: Int, private val height: Int, useDepth
         VGL11.glTexParameteri(VGL11.GL_TEXTURE_2D, VGL11.GL_TEXTURE_WRAP_S, VGL13.GL_CLAMP_TO_BORDER)
         VGL11.glTexParameteri(VGL11.GL_TEXTURE_2D, VGL11.GL_TEXTURE_WRAP_T, VGL13.GL_CLAMP_TO_BORDER)
         VGL11.glTexParameterfv(VGL11.GL_TEXTURE_2D, VGL11.GL_TEXTURE_BORDER_COLOR, floatArrayOf(0f, 0f, 0f, 0f))
-        return GlGpuTexture(glHandle)
+        return GlGpuTexture("$name-tex", glHandle)
     }
 
-
     override fun close() {
-        println("Dispose FrameBuffer $fbHandle ")
+        println("Destroying GPU Framebuffer [$name] $fbHandle ")
         VGL30.glDeleteFramebuffers(fbHandle)
         colorTexture.close()
         depthTexture?.close()
@@ -100,8 +99,6 @@ class GlGpuFrameBuffer(private val width: Int, private val height: Int, useDepth
         VGL11.glViewport(0, 0, width, height)
     }
 
-    private fun unbind() {
-        VGL30.glBindFramebuffer(VGL30.GL_FRAMEBUFFER, 0)
-    }
+    private fun unbind() = VGL30.glBindFramebuffer(VGL30.GL_FRAMEBUFFER, 0)
 
 }

@@ -17,7 +17,7 @@ import java.nio.FloatBuffer
 import java.nio.IntBuffer
 
 class GlGpuShader(
-    private val title: String,
+    private val name: String,
     vertexShaderText: String,
     fragmentShaderText: String,
     vertDebugInfo: ShaderDebugInfo,
@@ -64,7 +64,7 @@ class GlGpuShader(
 
         val programLog: String = VGL20.glGetProgramInfoLog(programHandle)
         if (programLog.isNotEmpty()) {
-            System.err.println("\nProgram log $title\n\n$programLog")
+            System.err.println("\nProgram log $name\n\n$programLog")
         }
 
         if (VGL20.glGetShaderi(vertexShaderHandle, VGL20.GL_COMPILE_STATUS) == 0) {
@@ -83,7 +83,7 @@ class GlGpuShader(
             throw RuntimeException("Program linking warnings")
         }
 
-        println("Create GPU shader $title : $programHandle")
+        println("Creating GPU Shader [$name] : $programHandle")
 
         uniformLocations = fetchUniforms()
         attributeLocations = fetchAttributes()
@@ -126,7 +126,7 @@ class GlGpuShader(
     }
 
     override fun close() {
-        println("Destroy GPU shader $title : $programHandle")
+        println("Destroying GPU Shader [$name] : $programHandle")
         VGL20.glDeleteShader(vertexShaderHandle)
         VGL20.glDeleteShader(fragmentShaderHandle)
         VGL20.glDeleteProgram(programHandle)
@@ -198,5 +198,5 @@ class GlGpuShader(
         return value is GpuTexture
     }
 
-    override fun toString() = title
+    override fun toString() = name
 }

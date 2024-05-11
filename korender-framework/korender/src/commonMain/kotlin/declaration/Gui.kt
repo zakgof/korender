@@ -29,7 +29,11 @@ class ContainerContext internal constructor(private val declaration: ElementDecl
 
     fun Filler() = declaration.add(ElementDeclaration.Filler())
 
-    fun Image(imageResource: String, width: Int, height: Int, onTouch: TouchHandler = {}) = declaration.add(ElementDeclaration.Image(imageResource, width, height, onTouch))
+    fun Image(
+        imageResource: String, width: Int, height: Int,
+        marginTop: Int = 0, marginBottom: Int = 0, marginLeft: Int = 0, marginRight: Int = 0,
+        onTouch: TouchHandler = {}
+    ) = declaration.add(ElementDeclaration.Image(imageResource, width, height, marginTop, marginBottom, marginLeft, marginRight, onTouch))
 
 }
 

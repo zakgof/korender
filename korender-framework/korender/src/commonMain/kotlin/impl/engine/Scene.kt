@@ -62,9 +62,8 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         sceneDeclaration.gui?.let { layoutGui(width, height, it) }
     }
 
-    private fun isShadowCaster(renderableDeclaration: RenderableDeclaration): Boolean {
-        return (renderableDeclaration.shader is StandardShaderDeclaration && !renderableDeclaration.shader.options.contains(StandardMaterialOption.NoShadowCast)) // TODO no shadow options
-    }
+    private fun isShadowCaster(renderableDeclaration: RenderableDeclaration): Boolean =
+        (renderableDeclaration.shader is StandardShaderDeclaration && !renderableDeclaration.shader.options.contains(StandardMaterialOption.NoShadowCast))
 
     private fun createShadower(inventory: Inventory, shadowDecl: ShadowDeclaration): Shadower =
         CascadeShadower(inventory, shadowDecl.cascades)
@@ -120,13 +119,13 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         screens.add(
             Renderable(
                 mesh = inventory.mesh(MeshDeclaration.ImageQuad), shader = inventory.shader(Shaders.imageQuadDeclaration), uniforms = MapUniformSupplier(
-                    Pair("pos", Vec2(x.toFloat() / width, 1.0f - (y.toFloat() + declaration.height.toFloat()) / height)),
+                    Pair("pos", Vec2((x.toFloat() + declaration.marginLeft.toFloat()) / width, 1.0f - (y.toFloat() + declaration.marginTop.toFloat() + declaration.height.toFloat()) / height)),
                     Pair("size", Vec2(declaration.width.toFloat() / width, declaration.height.toFloat() / height)),
                     Pair("imageTexture", inventory.texture(TextureDeclaration(declaration.imageResource)))
                 )
             )
         )
-        touchBoxes.add(TouchBox(x, y, declaration.width, declaration.height, declaration.onTouch))
+        touchBoxes.add(TouchBox(x + declaration.marginLeft, y + declaration.marginTop, declaration.width, declaration.height, declaration.onTouch))
     }
 
     private fun createText(declaration: ElementDeclaration.Text, x: Int, y: Int, w: Int) {
@@ -148,7 +147,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     private fun sizeEm(parentDirection: Direction, element: ElementDeclaration, sizes: MutableMap<ElementDeclaration, Size>): Size {
         val size = when (element) {
             is ElementDeclaration.Text -> textSize(element, inventory)
-            is ElementDeclaration.Image -> Size(element.width, element.height)
+            is ElementDeclaration.Image -> Size(element.fullWidth, element.fullHeight)
             is ElementDeclaration.Filler -> {
                 if (parentDirection == Direction.Vertical) Size(0, -1) else Size(-1, 0)
             }
@@ -335,7 +334,9 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
         renderBucket(opaques, -1.0, camera, uniformDecorator)
         skies.forEach { it.render(uniformDecorator) }
+        VGL11.glDepthMask(false)
         renderBucket(transparents, 1.0, camera, uniformDecorator)
+        VGL11.glDepthMask(true)
     }
 
     private fun renderBucket(

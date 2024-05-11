@@ -5,6 +5,7 @@ import com.zakgof.korender.impl.gpu.GpuMesh
 import java.nio.ByteBuffer
 
 class GlGpuMesh(
+    private val name: String,
     val attrs: List<Attribute>,
     val vertexSize: Int,
     isDynamic: Boolean = false,
@@ -19,7 +20,7 @@ class GlGpuMesh(
     private var indices: Int = -1
 
     init {
-        println("Create GPU mesh $vbHandle/$ibHandle")
+        println("Creating GPU Mesh [$name] $vbHandle/$ibHandle")
     }
 
     override fun render() =
@@ -44,7 +45,7 @@ class GlGpuMesh(
     }
 
     override fun close() {
-        println("Destroy GPU mesh $vbHandle/$ibHandle")
+        println("Destroying GPU Mesh [$name] $vbHandle/$ibHandle")
         com.zakgof.korender.impl.gl.VGL15.glDeleteBuffers(vbHandle)
         com.zakgof.korender.impl.gl.VGL15.glDeleteBuffers(ibHandle)
     }

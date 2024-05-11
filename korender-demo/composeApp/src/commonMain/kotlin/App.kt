@@ -40,16 +40,38 @@ fun App() = Korender {
         controller.missileManager.missiles.forEach { missile(it.transform()) }
         controller.enemyManager.heads.forEach { head(it.transform()) }
         controller.explosionManager.explosions.forEach { explosion(it) }
+        controller.skullManager.skulls.forEach { skull(it, controller.hf) }
         Sky("fastcloud")
         Filter("atmosphere.frag")
         gui(controller.characterManager, controller.missileManager)
     }
 }
 
+fun SceneContext.skull(skull: SkullManager.Skull, hf: HeightField) {
+    Renderable(
+        mesh = obj("/obelisk/obelisk.obj"),
+        material = standard {
+            colorTexture = texture("/obelisk/obelisk.jpg")
+        },
+        transform = Transform().scale(5.0f, 8.0f, 5.0f).translate(hf.surface(skull.position, 4f))
+    )
+    if (!skull.destroyed) {
+        Renderable(
+            mesh = obj("/skull/skull.obj"),
+            material = standard {
+                colorTexture = texture("/skull/skull.jpg")
+            },
+            transform = Transform().rotate(1.y, -PIdiv2).rotate(skull.look, 1.y).scale(2.0f).translate(hf.surface(skull.position, 9.5f))
+        )
+    }
+}
+
 private fun SceneContext.gui(characterManager: CharacterManager, missileManager: MissileManager) {
+    val cannonBtm = (characterManager.cannonAngle * 256f).toInt() - 48
+    val cannonTop = 128 - cannonBtm
     Gui {
         Text(id = "points", text = String.format("SCORE: %d", characterManager.score), fontResource = "/ubuntu.ttf", height = 50, color = Color(0xFFFFFF))
-        Text(id = "fps", text = String.format("FPS: %.1f", frameInfo.avgFps), fontResource = "/ubuntu.ttf", height = 10, color = Color(0xFFFFFF))
+        Text(id = "fps", text = String.format("FPS: %.1f", frameInfo.avgFps), fontResource = "/ubuntu.ttf", height = 20, color = Color(0xFFFFFF))
 
         if (characterManager.gameOver) {
             Filler()
@@ -82,8 +104,12 @@ private fun SceneContext.gui(characterManager: CharacterManager, missileManager:
             Filler()
             Column {
                 Filler()
+                Image(imageResource = "/angle-up.png", width = 128, height = 128, onTouch = { characterManager.cannonUp(it) })
+                Image(imageResource = "/minus.png", width = 64, height = 64, marginLeft = 32, marginTop = cannonTop, marginBottom = cannonBtm)
+                Image(imageResource = "/angle-down.png", width = 128, height = 128, marginBottom = if (missileManager.canFire(frameInfo.time)) 0 else 128 , onTouch = { characterManager.cannonDown(it) })
+
                 if (missileManager.canFire(frameInfo.time)) {
-                    Image(imageResource = "/fire.png", width = 128, height = 128, onTouch = { missileManager.fire(frameInfo.time, it, characterManager.transform(), characterManager.velocity) })
+                    Image(imageResource = "/fire.png", width = 128, height = 128, onTouch = { missileManager.fire(frameInfo.time, it, characterManager.transform(), characterManager.velocity, characterManager.cannonAngle) })
                 }
             }
         }
@@ -98,7 +124,7 @@ private fun SceneContext.terrain(hfImage: Image, hf: RgImageHeightField, elevati
             cellWidth = 20.0f,
             height = { x, y -> hf.pixel(x, y) * elevationRatio }
         ),
-        material = standard(StandardMaterialOption.Detail, StandardMaterialOption.Pcss, StandardMaterialOption.NoShadowCast) {
+        material = standard(StandardMaterialOption.Detail, StandardMaterialOption.NoShadowCast) {
             colorTexture = texture("/terrainbase.jpg")
             detailTexture = texture("/sand.jpg")
             detailScale = 800f
@@ -131,12 +157,12 @@ fun SceneContext.alien(alienTransform: Transform) = Renderable(
     transform = alienTransform * Transform().rotate(1.y, -PIdiv2).scale(10.0f).translate(4.y)
 )
 
-fun SceneContext.head(alienTransform: Transform) = Renderable(
+fun SceneContext.head(headTransform: Transform) = Renderable(
     mesh = obj("/head/head-high.obj"),
     material = standard {
         colorTexture = texture("/head/head-high.jpg")
     },
-    transform = alienTransform * Transform().rotate(1.y, -PIdiv2).scale(2.0f).translate(1.0f.y)
+    transform = headTransform * Transform().rotate(1.y, -PIdiv2).scale(2.0f).translate(1.0f.y)
 )
 
 fun SceneContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(

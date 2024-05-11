@@ -13,7 +13,7 @@ internal object Fonts {
 
     fun load(gpu: Gpu, fontResource: String): Font {
         val fontDef = getPlatform().loadFont(resourceStream(fontResource))
-        val gpuTexture = Texturing.create(fontDef.image, gpu)
+        val gpuTexture = Texturing.create(fontResource, fontDef.image, gpu)
         return Font(gpuTexture, fontDef.widths)
     }
 }

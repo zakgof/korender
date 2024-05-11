@@ -20,7 +20,7 @@ internal class Inventory(val gpu: Gpu) {
     private val textures = Registry<TextureDeclaration, GpuTexture> { Texturing.create(it, gpu) }
     private val fonts = Registry<String, Font> { Fonts.load(gpu, it) }
     private val fontMeshes = Registry<Any, Geometry.InstancedMesh> { Geometry.font(gpu, 256) }
-    private val frameBuffers = Registry<FrameBufferDeclaration, GpuFrameBuffer> { gpu.createFrameBuffer(it.width, it.height, it.withDepth) }
+    private val frameBuffers = Registry<FrameBufferDeclaration, GpuFrameBuffer> { gpu.createFrameBuffer(it.id, it.width, it.height, it.withDepth) }
 
     fun go(block: Inventory.() -> Unit) {
         meshes.begin()

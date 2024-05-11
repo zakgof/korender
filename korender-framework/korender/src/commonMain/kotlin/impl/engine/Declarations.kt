@@ -36,7 +36,10 @@ internal sealed class ElementDeclaration {
 
     class Filler : ElementDeclaration()
     class Text(val id: Any, val fontResource: String, val height: Int, val text: String, val color: Color, val onTouch: TouchHandler) : ElementDeclaration()
-    class Image(val imageResource: String, val width: Int, val height: Int, val onTouch: TouchHandler) : ElementDeclaration()
+    class Image(val imageResource:String, val width: Int, val height: Int, val marginTop: Int, val marginBottom: Int, val marginLeft: Int, val marginRight: Int,val onTouch: TouchHandler) : ElementDeclaration() {
+        val fullWidth = width + marginLeft + marginRight
+        val fullHeight = height + marginTop + marginBottom
+    }
     class Container(val direction: Direction) : ElementDeclaration() {
 
         val elements = mutableListOf<ElementDeclaration>()

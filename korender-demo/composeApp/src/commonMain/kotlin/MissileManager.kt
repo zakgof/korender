@@ -3,6 +3,8 @@ import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
+import kotlin.math.cos
+import kotlin.math.sin
 
 class MissileManager(private val hf: HeightField, private val explosionManager: ExplosionManager) {
 
@@ -27,18 +29,18 @@ class MissileManager(private val hf: HeightField, private val explosionManager: 
         explosionManager.boom(missile.position, 24f, time)
     }
 
-    fun fire(time: Float, touchEvent: TouchEvent, transform: Transform, launcherVelocity: Vec3) {
+    fun fire(time: Float, touchEvent: TouchEvent, transform: Transform, launcherVelocity: Vec3, cannonAngle: Float) {
         if (canFire(time) && (touchEvent.type == TouchEvent.Type.DOWN)) {
             lastFireTime = time
-            missiles.add(Missile(transform, launcherVelocity))
+            missiles.add(Missile(transform, launcherVelocity, cannonAngle))
         }
     }
 
     fun canFire(time: Float) = (time - lastFireTime > 1)
 
-    class Missile(transform: Transform, launcherVelocity: Vec3) {
+    class Missile(transform: Transform, launcherVelocity: Vec3, cannonAngle: Float) {
 
-        private var velocity: Vec3 = transform.applyToDirection(Vec3(0f, 6f, -30f)) + launcherVelocity
+        private var velocity: Vec3 = transform.applyToDirection(Vec3(0f, 50f * sin(cannonAngle), -50f * cos(cannonAngle))) + launcherVelocity
         var position: Vec3 = transform.mat4() * Vec3(0f, 1f, 0f)
         fun update(dt: Float) {
             velocity += -5.y * dt

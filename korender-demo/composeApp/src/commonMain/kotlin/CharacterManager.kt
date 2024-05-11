@@ -4,6 +4,7 @@ import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import kotlin.math.max
 import kotlin.math.min
 
 class CharacterManager(private val hf: RgImageHeightField, initialPosition: Vec3) {
@@ -19,6 +20,9 @@ class CharacterManager(private val hf: RgImageHeightField, initialPosition: Vec3
     private var throttle: Float = 0f
     private var brake: Float = 0f
     private var steer: Float = 0f
+
+    var cannonAngle: Float = 0.3f
+    private var cannonVelocity: Float = 0f
 
     fun update(dt: Float) {
 
@@ -48,6 +52,10 @@ class CharacterManager(private val hf: RgImageHeightField, initialPosition: Vec3
             position = hf.surface(position, -0.001f)
         }
         orientation = orientation.normalize()
+
+        cannonAngle += cannonVelocity * dt
+        cannonAngle = max(cannonAngle, 0f)
+        cannonAngle = min(cannonAngle, 0.5f)
     }
 
     fun transform() = Transform().rotate(orientation).translate(position)
@@ -96,6 +104,24 @@ class CharacterManager(private val hf: RgImageHeightField, initialPosition: Vec3
 
     fun incrementScore(inc: Int) {
         score += inc
+    }
+
+    fun cannonUp(touch: TouchEvent) {
+        if (touch.type == TouchEvent.Type.DOWN) {
+            cannonVelocity = 1f
+        }
+        if (touch.type == TouchEvent.Type.UP) {
+            cannonVelocity = 0f
+        }
+    }
+
+    fun cannonDown(touch: TouchEvent) {
+        if (touch.type == TouchEvent.Type.DOWN) {
+            cannonVelocity = -1f
+        }
+        if (touch.type == TouchEvent.Type.UP) {
+            cannonVelocity = 0f
+        }
     }
 
 }

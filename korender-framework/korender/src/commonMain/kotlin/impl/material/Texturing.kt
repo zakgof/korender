@@ -11,18 +11,12 @@ import com.zakgof.korender.impl.resourceStream
 internal object Texturing {
     fun create(declaration: TextureDeclaration, gpu: Gpu): GpuTexture {
         val image = getPlatform().loadImage(resourceStream(declaration.textureResource))
-        return create(image, gpu, declaration.filter, declaration.wrap, declaration.aniso)
+        return create(declaration.textureResource, image, gpu, declaration.filter, declaration.wrap, declaration.aniso)
     }
 
-    fun create(image: Image, gpu: Gpu, filter: TextureFilter = TextureFilter.MipMapLinearLinear, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): GpuTexture {
+    fun create(name: String, image: Image, gpu: Gpu, filter: TextureFilter = TextureFilter.MipMapLinearLinear, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): GpuTexture {
         return gpu.createTexture(
-            image.width,
-            image.height,
-            image.bytes,
-            filter,
-            wrap,
-            aniso,
-            image.format
+            name, image.width, image.height, image.bytes, filter, wrap, aniso, image.format
         )
     }
 }

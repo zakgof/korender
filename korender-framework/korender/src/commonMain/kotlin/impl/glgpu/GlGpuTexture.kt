@@ -12,7 +12,7 @@ import com.zakgof.korender.impl.gl.VGLExt
 import com.zakgof.korender.impl.gpu.GpuTexture
 import java.nio.ByteBuffer
 
-class GlGpuTexture(val glHandle: Int) : GpuTexture {
+class GlGpuTexture(private val name: String, val glHandle: Int) : GpuTexture {
     companion object {
         val filterMap = mapOf(
             TextureFilter.Nearest to VGL11.GL_NEAREST,
@@ -35,6 +35,7 @@ class GlGpuTexture(val glHandle: Int) : GpuTexture {
     }
 
     constructor(
+        name: String,
         width: Int,
         height: Int,
         bytes: ByteBuffer,
@@ -42,9 +43,9 @@ class GlGpuTexture(val glHandle: Int) : GpuTexture {
         wrap: TextureWrap = TextureWrap.Repeat,
         aniso: Int = 1024,
         format: GpuTexture.Format = GpuTexture.Format.RGB
-    ) : this(VGL11.glGenTextures()) {
+    ) : this(name, VGL11.glGenTextures()) {
 
-        println("Creating Texture $glHandle")
+        println("Creating GPU Texture [$name] $glHandle")
 
         VGL13.glActiveTexture(VGL13.GL_TEXTURE0)
         VGL11.glBindTexture(VGL11.GL_TEXTURE_2D, glHandle)
@@ -93,7 +94,7 @@ class GlGpuTexture(val glHandle: Int) : GpuTexture {
     }
 
     override fun close() {
-        println("Destroying GPU Texture $glHandle")
+        println("Destroying GPU Texture [$name] $glHandle")
         VGL11.glDeleteTextures(glHandle)
     }
 

@@ -54,7 +54,7 @@ internal object Geometry {
             is MeshDeclaration.Billboard -> billboard()
             is MeshDeclaration.ImageQuad -> imageQuad()
             is MeshDeclaration.ScreenQuad -> screenQuad()
-            is MeshDeclaration.Custom -> create(declaration.vertexCount, declaration.indexCount, *declaration.attributes.toTypedArray()) {
+            is MeshDeclaration.Custom -> create(declaration.id.toString(), declaration.vertexCount, declaration.indexCount, *declaration.attributes.toTypedArray()) {
                 apply (declaration.block)
             }
             is MeshDeclaration.HeightField -> heightMap(declaration.cellsX, declaration.cellsX, declaration.cellWidth, declaration.height)
@@ -62,14 +62,16 @@ internal object Geometry {
         }
 
     fun create(
+        name: String,
         vertexNumber: Int,
         indexNumber: Int,
         vararg attrs: Attribute,
         block: MeshBuilder.() -> Unit
     ) =
-        MeshBuilder(vertexNumber, indexNumber, attrs.toList()).apply(block)
+        MeshBuilder(name, vertexNumber, indexNumber, attrs.toList()).apply(block)
 
     class MeshBuilder(
+        val name: String,
         val vertexNumber: Int,
         val indexNumber: Int,
         val attrs: List<Attribute>
@@ -134,8 +136,6 @@ internal object Geometry {
                 attr.writer(floatVertexBuffer, vertex)
             }
         }
-            
-
 
         fun build(gpu: Gpu, isDynamic: Boolean = false): DefaultMesh {
 //            if (!isDynamic && floatVertexBuffer.position() != floatVertexBuffer.limit()) {
@@ -145,11 +145,11 @@ internal object Geometry {
 //                throw KorenderException("Index buffer not full: ${indexConcreteBuffer.position()}/${indexConcreteBuffer.limit()}")
 //            }
 
-            return DefaultMesh(gpu, this, isDynamic)
+            return DefaultMesh(name, gpu, this, isDynamic)
         }
 
         fun buildInstanced(gpu: Gpu, count: Int): InstancedMesh =
-            InstancedMesh(gpu, instancing(count), this, count)
+            InstancedMesh(name, gpu, instancing(count), this, count)
 
         fun instancing(
             instances: Int,
@@ -157,6 +157,7 @@ internal object Geometry {
         ): MeshBuilder {
             val that = this
             return create(
+                name,
                 vertexNumber * instances,
                 indexNumber * instances,
                 *attrs.toTypedArray()
@@ -191,6 +192,7 @@ internal object Geometry {
     }
 
     open class DefaultMesh(
+        name: String,
         gpu: Gpu,
         val data: MeshBuilder,
         isDynamic: Boolean = false
@@ -199,7 +201,7 @@ internal object Geometry {
         private val floatVertexBuffer = data.vertexBuffer.asFloatBuffer()
 
         final override val gpuMesh: GpuMesh =
-            gpu.createMesh(data.attrs, data.vertexSize, isDynamic, data.isLongIndex)
+            gpu.createMesh(name, data.attrs, data.vertexSize, isDynamic, data.isLongIndex)
 
         final override val modelBoundingBox: BoundingBox?
         override fun close() = gpuMesh.close()
@@ -234,12 +236,13 @@ internal object Geometry {
     }
 
     class InstancedMesh(
-        private val gpu: Gpu,
+        name: String,
+        gpu: Gpu,
         data: MeshBuilder,
         private val prototype: MeshBuilder,
         count: Int
     ) :
-        DefaultMesh(gpu, data, true) {
+        DefaultMesh(name, gpu, data, true) {
         fun updateInstances(instances: List<MeshInstance>) {
             instances.indices.map {
                 val instance = instances[it]
@@ -342,7 +345,7 @@ internal object Geometry {
     }
 
     fun quad(halfSide: Float = 0.5f, block: MeshBuilder.() -> Unit = {}) =
-        create(4, 6, POS, NORMAL, TEX) {
+        create("quad",4, 6, POS, NORMAL, TEX) {
             vertices(-halfSide, -halfSide, 0f, 0f, 0f, 1f, 0f, 0f)
             vertices(-halfSide, halfSide, 0f, 0f, 0f, 1f, 0f, 1f)
             vertices(halfSide, halfSide, 0f, 0f, 0f, 1f, 1f, 1f)
@@ -352,7 +355,7 @@ internal object Geometry {
         }
 
     fun screenQuad() =
-        create(4, 6, TEX) {
+        create("screen-quad",4, 6, TEX) {
             vertices(0f, 0f)
             vertices(0f, 1f)
             vertices(1f, 1f)
@@ -362,7 +365,7 @@ internal object Geometry {
 
 
     fun cube(halfSide: Float = 0.5f, block: MeshBuilder.() -> Unit = {}) =
-        create(24, 36, POS, NORMAL, TEX) {
+        create("cube",24, 36, POS, NORMAL, TEX) {
             vertices(-halfSide, -halfSide, -halfSide, -1f, 0f, 0f, 0f, 0f)
             vertices(-halfSide, halfSide, -halfSide, -1f, 0f, 0f, 0f, 1f)
             vertices(-halfSide, halfSide, halfSide, -1f, 0f, 0f, 1f, 1f)
@@ -404,6 +407,7 @@ internal object Geometry {
         block: MeshBuilder.() -> Unit = {}
     ) =
         create(
+            "sphere",
             2 + (slices - 1) * sectors,
             sectors * 3 * 2 + (slices - 2) * sectors * 6,
             POS,
@@ -446,10 +450,10 @@ internal object Geometry {
 
     private fun obj(objFile: String): MeshBuilder {
         val obj = ObjReader.read(resourceStream(objFile))
-        return create(obj)
+        return create(objFile, obj)
     }
 
-    fun create(obj: Obj): MeshBuilder {
+    private fun create(name: String, obj: Obj): MeshBuilder {
 
         val mapping = mutableMapOf<String, Int>()
         val vertices = mutableListOf<FloatArray>()
@@ -505,14 +509,14 @@ internal object Geometry {
                 throw KorenderException("Only triangles and quads supported in .obj files")
             }
         }
-        return create(vertices.size, indices.size, POS, NORMAL, TEX) {
+        return create(name, vertices.size, indices.size, POS, NORMAL, TEX) {
             vertices.forEach() { vertices(*it) }
             indices(*indices.toIntArray())
         }
     }
 
     fun heightMap(xsize: Int, zsize: Int, cell: Float, height: (Int, Int) -> Float) =
-        create((xsize + 1) * (zsize + 1), xsize * zsize * 6, POS, NORMAL, TEX) {
+        create("heightmap",(xsize + 1) * (zsize + 1), xsize * zsize * 6, POS, NORMAL, TEX) {
             for (x in 0..xsize) {
                 for (z in 0..zsize) {
                     vertices(
@@ -557,7 +561,7 @@ internal object Geometry {
         scaleY: Float = 1.0f,
         phi: Float = 0.0f
     ) =
-        create(4, 6, POS, TEX, SCALE, PHI) {
+        create("billboard",4, 6, POS, TEX, SCALE, PHI) {
             vertices(position)
             vertices(0f, 0f, scaleX, scaleY, phi)
             vertices(position)
@@ -570,7 +574,7 @@ internal object Geometry {
         }
 
     fun imageQuad() =
-        create(4, 6, TEX) {
+        create("image-quad",4, 6, TEX) {
             vertices(0f, 0f)
             vertices(0f, 1f)
             vertices(1f, 1f)
@@ -579,7 +583,7 @@ internal object Geometry {
         }
 
     fun font(gpu: Gpu, reservedLength: Int): InstancedMesh =
-        create(4, 6, TEX, SCREEN) {
+        create("font",4, 6, TEX, SCREEN) {
             indices(0, 2, 1, 0, 3, 2)
         }.buildInstanced(gpu, reservedLength)
 }

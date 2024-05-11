@@ -24,7 +24,8 @@ fun FireBallExample() = Korender {
                 xscale = 8f * phase
                 yscale = 8f * phase
                 static("power", phase)
-            }
+            },
+            transparent = true
         )
         Renderable(
             mesh = Meshes.cube(1f),
