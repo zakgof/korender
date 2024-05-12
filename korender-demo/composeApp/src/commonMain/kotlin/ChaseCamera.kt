@@ -12,7 +12,7 @@ import kotlin.math.min
 
 class ChaseCamera (initialTarget: Transform) {
 
-    var target = initialTarget * Vec3.ZERO
+    private var target = initialTarget * Vec3.ZERO
     var position = initialTarget * Vec3(0f, 2f, 10f)
 
     private var deltaX: Float = 0f
@@ -38,7 +38,9 @@ class ChaseCamera (initialTarget: Transform) {
         } else {
             val expectedPosition = targetTransform * Vec3(0f, 2f, 10f)
             val expectedJump = expectedPosition - position
-            position += expectedJump.normalize() * min(expectedJump.length(), 50f * dt)
+            if (expectedJump.length() > 1e-6f) {
+                position += expectedJump.normalize() * min(expectedJump.length(), 50f * dt)
+            }
         }
 
         val r = frustum.near * 0.5f + (frustum.width*frustum.width+frustum.height*frustum.height) * 0.125f / frustum.near

@@ -1,3 +1,4 @@
+
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
@@ -7,10 +8,10 @@ import com.zakgof.korender.math.z
 import kotlin.math.max
 import kotlin.math.min
 
+
 class CharacterManager(private val hf: RgImageHeightField, initialPosition: Vec3) {
 
     var score: Int = 0
-    var gameOver: Boolean = false
     private val throttleDirection = -1.z
     private var orientation: Quaternion = Quaternion.IDENTITY
     private var position: Vec3 = initialPosition
@@ -21,7 +22,7 @@ class CharacterManager(private val hf: RgImageHeightField, initialPosition: Vec3
     private var brake: Float = 0f
     private var steer: Float = 0f
 
-    var cannonAngle: Float = 0.3f
+    var cannonAngle: Float = 0.2f
     private var cannonVelocity: Float = 0f
 
     fun update(dt: Float) {
@@ -38,17 +39,20 @@ class CharacterManager(private val hf: RgImageHeightField, initialPosition: Vec3
             val reaction = -(force * normal)
             force += normal * reaction
             if (velocity.lengthSquared() > 1e-4) {
-                force -= velocity.normalize() * ( reaction * 0.5f) + velocity * (brake * 10.0f + 0.3f)
-            } else if (force.lengthSquared() > 1e-4){
+                force -= velocity.normalize() * (reaction * 0.5f) + velocity * (brake * 10.0f + 0.3f)
+            } else if (force.lengthSquared() > 1e-4) {
                 force -= force.normalize() * min(force.length(), reaction * 0.5f)
             }
         }
         velocity += force * dt
         position += velocity * dt
-        orientation = Quaternion.fromAxisAngle(1.y, -steer * 1.3f * dt) * orientation
+
+        orientation = Quaternion.fromAxisAngle(orientation * 1.y, -steer * 1.3f * dt) * orientation
         if (deep > 0) {
-            val bugNormal = orientation * 1.y
-            orientation = Quaternion.shortestArc(bugNormal, normal) * orientation
+            val preferredDir = orientation * 1.z
+            val right = preferredDir % normal
+            val look = (normal % right).normalize()
+            orientation = Quaternion.lookAt(look, normal)
             position = hf.surface(position, -0.001f)
         }
         orientation = orientation.normalize()
@@ -58,7 +62,7 @@ class CharacterManager(private val hf: RgImageHeightField, initialPosition: Vec3
         cannonAngle = min(cannonAngle, 0.5f)
     }
 
-    fun transform() = Transform().rotate(orientation).translate(position)
+    fun transform()= Transform().rotate(orientation).translate(position)
 
     fun forward(touch: TouchEvent) {
         if (touch.type == TouchEvent.Type.DOWN) {
@@ -72,11 +76,11 @@ class CharacterManager(private val hf: RgImageHeightField, initialPosition: Vec3
 
     fun backward(touch: TouchEvent) {
         if (touch.type == TouchEvent.Type.DOWN) {
-            brake = 1f
-            throttle = 0f
+            throttle = -0.5f
         }
         if (touch.type == TouchEvent.Type.UP) {
             brake = 0f
+            throttle = 0f
         }
     }
 
@@ -98,17 +102,13 @@ class CharacterManager(private val hf: RgImageHeightField, initialPosition: Vec3
         }
     }
 
-    fun hit() {
-        gameOver = true
-    }
-
     fun incrementScore(inc: Int) {
         score += inc
     }
 
     fun cannonUp(touch: TouchEvent) {
         if (touch.type == TouchEvent.Type.DOWN) {
-            cannonVelocity = 1f
+            cannonVelocity = 0.8f
         }
         if (touch.type == TouchEvent.Type.UP) {
             cannonVelocity = 0f
@@ -117,7 +117,7 @@ class CharacterManager(private val hf: RgImageHeightField, initialPosition: Vec3
 
     fun cannonDown(touch: TouchEvent) {
         if (touch.type == TouchEvent.Type.DOWN) {
-            cannonVelocity = -1f
+            cannonVelocity = -0.8f
         }
         if (touch.type == TouchEvent.Type.UP) {
             cannonVelocity = 0f
@@ -125,3 +125,5 @@ class CharacterManager(private val hf: RgImageHeightField, initialPosition: Vec3
     }
 
 }
+
+

@@ -28,7 +28,7 @@ fun App() = Korender {
 
         Light(Vec3(0f, -1f, 3f).normalize())
         Projection(FrustumProjection(width = 3f * width / height, height = 3f, near = 3f, far = 10000f))
-        Camera(controller.chaseCamera.camera(bugTransform, projection, width, height, controller.hf, frameInfo.dt))
+        Camera(controller.camera(bugTransform, projection, width, height, frameInfo.dt, frameInfo.time))
         Shadow {
             Cascade(1024, 3f, 20f)
             Cascade(512, 18f, 100f)
@@ -43,7 +43,7 @@ fun App() = Korender {
         controller.skullManager.skulls.forEach { skull(it, controller.hf) }
         Sky("fastcloud")
         Filter("atmosphere.frag")
-        gui(controller.characterManager, controller.missileManager)
+        gui(controller)
     }
 }
 
@@ -66,18 +66,23 @@ fun SceneContext.skull(skull: SkullManager.Skull, hf: HeightField) {
     }
 }
 
-private fun SceneContext.gui(characterManager: CharacterManager, missileManager: MissileManager) {
-    val cannonBtm = (characterManager.cannonAngle * 256f).toInt() - 48
-    val cannonTop = 128 - cannonBtm
+private fun SceneContext.gui(controller: Controller) {
+    val cannonBtm = (controller.characterManager.cannonAngle * 256f).toInt() - 48
+    val cannonTop = 96 - cannonBtm
     Gui {
-        Text(id = "points", text = String.format("SCORE: %d", characterManager.score), fontResource = "/ubuntu.ttf", height = 50, color = Color(0xFFFFFF))
+        Text(id = "points", text = String.format("SCORE: %d", controller.characterManager.score), fontResource = "/ubuntu.ttf", height = 50, color = Color(0xFFFFFF))
         Text(id = "fps", text = String.format("FPS: %.1f", frameInfo.avgFps), fontResource = "/ubuntu.ttf", height = 20, color = Color(0xFFFFFF))
 
-        if (characterManager.gameOver) {
+        if (controller.gameOver) {
             Filler()
             Row {
                 Filler()
-                Text(id = "gameover", text = "GAME OVER", fontResource = "/ubuntu.ttf", height = 50, color = Color(0xFF1234))
+                Text(id = "gameover", text = "GAME OVER", fontResource = "/ubuntu.ttf", height = 100, color = Color(0xFF1234), onTouch = { controller.restart(it) })
+                Filler()
+            }
+            Row {
+                Filler()
+                Text(id = "restart", text = "click to start new game", fontResource = "/ubuntu.ttf", height = 50, color = Color(0x89FF34), onTouch = { controller.restart(it) })
                 Filler()
             }
         }
@@ -88,28 +93,32 @@ private fun SceneContext.gui(characterManager: CharacterManager, missileManager:
                 Row {
                     Column {
                         Filler()
-                        Image(imageResource = "/icon/left.png", width = 128, height = 128, onTouch = { characterManager.left(it) })
+                        Image(imageResource = "/icon/left.png", width = 128, height = 128, onTouch = { controller.characterManager.left(it) })
                     }
                     Column {
                         Filler()
-                        Image(imageResource = "/icon/accelerate.png", width = 128, height = 128, onTouch = { characterManager.forward(it) })
-                        Image(imageResource = "/icon/decelerate.png", width = 128, height = 128, onTouch = { characterManager.backward(it) })
+                        Image(imageResource = "/icon/accelerate.png", width = 128, height = 128, onTouch = { controller.characterManager.forward(it) })
+                        Image(imageResource = "/icon/decelerate.png", width = 128, height = 128, onTouch = { controller.characterManager.backward(it) })
                     }
                     Column {
                         Filler()
-                        Image(imageResource = "/icon/right.png", width = 128, height = 128, onTouch = { characterManager.right(it) })
+                        Image(imageResource = "/icon/right.png", width = 128, height = 128, onTouch = { controller.characterManager.right(it) })
                     }
                 }
             }
             Filler()
             Column {
                 Filler()
-                Image(imageResource = "/icon/angle-up.png", width = 128, height = 128, onTouch = { characterManager.cannonUp(it) })
+                Image(imageResource = "/icon/angle-up.png", width = 128, height = 128, onTouch = { controller.characterManager.cannonUp(it) })
                 Image(imageResource = "/icon/minus.png", width = 64, height = 64, marginLeft = 32, marginTop = cannonTop, marginBottom = cannonBtm)
-                Image(imageResource = "/icon/angle-down.png", width = 128, height = 128, marginBottom = if (missileManager.canFire(frameInfo.time)) 0 else 128 , onTouch = { characterManager.cannonDown(it) })
+                Image(imageResource = "/icon/angle-down.png", width = 128, height = 128, marginBottom = if (controller.missileManager.canFire(frameInfo.time)) 0 else 128, onTouch = { controller.characterManager.cannonDown(it) })
 
-                if (missileManager.canFire(frameInfo.time)) {
-                    Image(imageResource = "/icon/fire.png", width = 128, height = 128, onTouch = { missileManager.fire(frameInfo.time, it, characterManager.transform(), characterManager.velocity, characterManager.cannonAngle) })
+                if (controller.missileManager.canFire(frameInfo.time)) {
+                    Image(
+                        imageResource = "/icon/fire.png",
+                        width = 128,
+                        height = 128,
+                        onTouch = { controller.missileManager.fire(frameInfo.time, it, controller.characterManager.transform(), controller.characterManager.velocity, controller.characterManager.cannonAngle) })
                 }
             }
         }
@@ -138,7 +147,7 @@ fun SceneContext.bug(bugTransform: Transform) = Renderable(
     material = standard() {
         colorTexture = texture("/bug/bug.jpg")
     },
-    transform = bugTransform * Transform().translate(0.2f.y).scale(2.0f).rotate(1.y, -PIdiv2)
+    transform = bugTransform * Transform().rotate(1.y, -PIdiv2).scale(2.0f).translate(0.3f.y)
 )
 
 fun SceneContext.missile(missileTransform: Transform) = Renderable(

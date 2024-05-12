@@ -85,7 +85,7 @@ class Mat4(
         m10 * mat.m00 + m11 * mat.m10 + m12 * mat.m20 + m13 * mat.m30,
         m10 * mat.m01 + m11 * mat.m11 + m12 * mat.m21 + m13 * mat.m31,
         m10 * mat.m02 + m11 * mat.m12 + m12 * mat.m22 + m13 * mat.m32,
-        m10 * mat.m02 + m11 * mat.m13 + m12 * mat.m23 + m13 * mat.m33,
+        m10 * mat.m03 + m11 * mat.m13 + m12 * mat.m23 + m13 * mat.m33,
 
         m20 * mat.m00 + m21 * mat.m10 + m22 * mat.m20 + m23 * mat.m30,
         m20 * mat.m01 + m21 * mat.m11 + m22 * mat.m21 + m23 * mat.m31,
