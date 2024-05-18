@@ -10,8 +10,8 @@ import com.zakgof.korender.projection.FrustumProjection
 @Composable
 fun GuiExample() = Korender {
     var clicked = false
-    Scene {
-        projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f)
+    Frame {
+        Projection(FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f))
         Gui {
             Row {
                 Filler()

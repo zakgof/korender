@@ -1,11 +1,10 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.KorenderContext
-import com.zakgof.korender.SceneDeclaration
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
-import com.zakgof.korender.declaration.SceneContext
+import com.zakgof.korender.declaration.FrameContext
+import com.zakgof.korender.declaration.KorenderContext
 import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.impl.glgpu.GlGpu
 import com.zakgof.korender.input.TouchEvent
@@ -20,7 +19,7 @@ import java.util.function.Predicate
 internal class Engine(private var height: Int, private var width: Int, block: KorenderContext.() -> Unit) {
 
     private val touchQueue = ConcurrentLinkedQueue<TouchEvent>()
-    private val sceneBlocks = mutableListOf<SceneContext.() -> Unit>() // TODO: ref
+    private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
     private val inventory = Inventory(GlGpu())
     private val frameInfoManager = FrameInfoManager(inventory)
 
@@ -34,8 +33,14 @@ internal class Engine(private var height: Int, private var width: Int, block: Ko
     private val touchHandlers = mutableListOf<TouchHandler>()
 
     init {
-        val korenderContext = KorenderContext(sceneBlocks, touchHandlers)
-        block.invoke(korenderContext)
+        block.invoke(object : KorenderContext {
+            override fun Frame(block: FrameContext.() -> Unit) {
+                frameBlocks.add(block)
+            }
+            override fun OnTouch(handler: (TouchEvent) -> Unit) {
+                touchHandlers.add(handler)
+            }
+        })
     }
 
     fun frame() {
@@ -45,8 +50,8 @@ internal class Engine(private var height: Int, private var width: Int, block: Ko
 
         val sd = SceneDeclaration()
         projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f) // TODO
-        sceneBlocks.forEach {
-            val sc = SceneContext(frameInfo, sd, width, height, projection, camera, light).apply(it)
+        frameBlocks.forEach {
+            val sc = DefaultFrameContext(frameInfo, sd, width, height, projection, camera, light).apply(it)
             projection = sc.projection
             camera = sc.camera
             light = sc.light

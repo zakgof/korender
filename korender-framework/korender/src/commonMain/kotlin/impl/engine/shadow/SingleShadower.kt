@@ -1,9 +1,14 @@
-package com.zakgof.korender.impl.engine
+package com.zakgof.korender.impl.engine.shadow
 
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.declaration.TextureDeclaration
 import com.zakgof.korender.declaration.UniformSupplier
+import com.zakgof.korender.impl.engine.CascadeDeclaration
+import com.zakgof.korender.impl.engine.CustomShaderDeclaration
+import com.zakgof.korender.impl.engine.FrameBufferDeclaration
+import com.zakgof.korender.impl.engine.Inventory
+import com.zakgof.korender.impl.engine.Renderable
 import com.zakgof.korender.impl.gl.VGL11
 import com.zakgof.korender.impl.gpu.GpuFrameBuffer
 import com.zakgof.korender.impl.material.MapUniformSupplier

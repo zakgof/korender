@@ -1,11 +1,11 @@
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
+import com.zakgof.korender.declaration.FrameContext
 import com.zakgof.korender.declaration.Materials.standard
 import com.zakgof.korender.declaration.Meshes.heightField
 import com.zakgof.korender.declaration.Meshes.mesh
 import com.zakgof.korender.declaration.Meshes.obj
-import com.zakgof.korender.declaration.SceneContext
 import com.zakgof.korender.declaration.StandardMaterialOption
 import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.impl.geometry.Attributes
@@ -26,7 +26,7 @@ fun App() = Korender {
 
     val controller = Controller()
 
-    Scene {
+    Frame {
 
         controller.update(frameInfo)
         val bugTransform = controller.characterManager.transform()
@@ -54,7 +54,7 @@ fun App() = Korender {
     }
 }
 
-fun SceneContext.skull(skull: SkullManager.Skull, hf: HeightField) {
+fun FrameContext.skull(skull: SkullManager.Skull, hf: HeightField) {
     Renderable(
         mesh = obj("/obelisk/obelisk.obj"),
         material = standard {
@@ -73,7 +73,7 @@ fun SceneContext.skull(skull: SkullManager.Skull, hf: HeightField) {
     }
 }
 
-private fun SceneContext.gui(controller: Controller) {
+private fun FrameContext.gui(controller: Controller) {
     val cannonBtm = (controller.characterManager.cannonAngle * 256f).toInt() - 48
     val cannonTop = 96 - cannonBtm
     Gui {
@@ -132,7 +132,7 @@ private fun SceneContext.gui(controller: Controller) {
     }
 }
 
-private fun SceneContext.terrain(hfImage: Image, hf: RgImageHeightField, elevationRatio: Float) {
+private fun FrameContext.terrain(hfImage: Image, hf: RgImageHeightField, elevationRatio: Float) {
     Renderable(
         mesh = heightField(id = "terrain",
             cellsX = hfImage.width - 1,
@@ -149,7 +149,7 @@ private fun SceneContext.terrain(hfImage: Image, hf: RgImageHeightField, elevati
     )
 }
 
-fun SceneContext.bug(bugTransform: Transform) = Renderable(
+fun FrameContext.bug(bugTransform: Transform) = Renderable(
     mesh = obj("/bug/bug.obj"),
     material = standard() {
         colorTexture = texture("/bug/bug.jpg")
@@ -157,7 +157,7 @@ fun SceneContext.bug(bugTransform: Transform) = Renderable(
     transform = bugTransform * Transform().rotate(1.y, -PIdiv2).scale(2.0f).translate(0.3f.y)
 )
 
-fun SceneContext.missile(missileTransform: Transform) = Renderable(
+fun FrameContext.missile(missileTransform: Transform) = Renderable(
     mesh = obj("/missile/missile.obj"),
     material = standard {
         colorTexture = texture("/missile/missile.jpg")
@@ -165,7 +165,7 @@ fun SceneContext.missile(missileTransform: Transform) = Renderable(
     transform = missileTransform * Transform().rotate(1.y, -PIdiv2)
 )
 
-fun SceneContext.alien(alienTransform: Transform) = Renderable(
+fun FrameContext.alien(alienTransform: Transform) = Renderable(
     mesh = obj("/alien/alien.obj"),
     material = standard {
         colorTexture = texture("/alien/alien.jpg")
@@ -173,7 +173,7 @@ fun SceneContext.alien(alienTransform: Transform) = Renderable(
     transform = alienTransform * Transform().rotate(1.y, -PIdiv2).scale(10.0f).translate(4.y)
 )
 
-fun SceneContext.head(headTransform: Transform) = Renderable(
+fun FrameContext.head(headTransform: Transform) = Renderable(
     mesh = obj("/head/head-high.obj"),
     material = standard {
         colorTexture = texture("/head/head-high.jpg")
@@ -181,7 +181,7 @@ fun SceneContext.head(headTransform: Transform) = Renderable(
     transform = headTransform * Transform().rotate(1.y, -PIdiv2).scale(2.0f).translate(1.0f.y)
 )
 
-fun SceneContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(
+fun FrameContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(
     fragment = "effect/fireball.frag",
     position = explosion.position,
     material = {
@@ -192,7 +192,7 @@ fun SceneContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(
     transparent = true
 )
 
-fun SceneContext.splinters(explosionManager: ExplosionManager) = InstancedRenderables(
+fun FrameContext.splinters(explosionManager: ExplosionManager) = InstancedRenderables(
     id = "splinters",
     material = standard(StandardMaterialOption.Color) {
         color = Color(0x804040)

@@ -103,7 +103,7 @@ private class ShaderBuilder(
                 val ifdefMatcher =
                     Pattern.compile("#ifdef (.+)").matcher(line.trim { it <= ' ' })
                 if (ifdefMatcher.matches()) {
-                    val defname = ifdefMatcher.group(1)
+                    val defname = ifdefMatcher.group(1)!!
                     ifdefs.push(defname)
                     passes.push(passes.peek() && defs.contains(defname))
                     continue
@@ -111,7 +111,7 @@ private class ShaderBuilder(
                 val ifndefMatcher =
                     Pattern.compile("#ifndef (.+)").matcher(line.trim { it <= ' ' })
                 if (ifndefMatcher.matches()) {
-                    val defname = ifndefMatcher.group(1)
+                    val defname = ifndefMatcher.group(1)!!
                     ifdefs.push("-$defname")
                     passes.push(passes.peek() && !defs.contains(defname))
                     continue
@@ -145,7 +145,7 @@ private class ShaderBuilder(
                 val includeMatcher =
                     Pattern.compile("#import \"(.+)\"").matcher(line)
                 if (includeMatcher.matches()) {
-                    val inclfname = includeMatcher.group(1)
+                    val inclfname = includeMatcher.group(1)!!
                     val includeContent: String =
                         preprocessFile(currDir, inclfname, defs, debugInfo)
                     sb.append(includeContent)

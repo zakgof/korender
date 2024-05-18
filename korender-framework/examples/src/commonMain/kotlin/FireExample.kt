@@ -6,7 +6,7 @@ import com.zakgof.korender.Korender
 
 @Composable
 fun FireExample() = Korender {
-    Scene {
+    Frame {
         Billboard (
             fragment = "effect/fire.frag",
             material = {

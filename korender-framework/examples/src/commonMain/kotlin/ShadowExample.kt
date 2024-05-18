@@ -20,7 +20,7 @@ fun ShadowExample() =
         val material = standard(StandardMaterialOption.Pcss) {
             colorTexture = texture("/sand.jpg")
         }
-        Scene {
+        Frame {
             Light(Vec3(1f, -1f, 1f).normalize())
             Camera(DefaultCamera(Vec3(-2.0f, 3f, 20f), -1.z, 1.y))
             Shadow {

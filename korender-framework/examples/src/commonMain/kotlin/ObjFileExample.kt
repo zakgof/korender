@@ -17,7 +17,7 @@ fun ObjFileExample() {
     val orbitCamera = OrbitCamera(Vec3(0f, 2f, 20f), Vec3(0f, 2f, 0f))
     Korender {
         OnTouch { orbitCamera.touch(it) }
-        Scene {
+        Frame {
             Camera(orbitCamera.camera(projection, width, height))
             Renderable(
                 mesh = obj("/cat-red.obj"),

@@ -34,7 +34,7 @@ class ShaderDebugInfo(val file: String) {
         }
         if (matcher.matches()) {
             // int col = Integer.parseInt(matcher.group(1));
-            val row = matcher.group(2).toInt()
+            val row = matcher.group(2)!!.toInt()
             val entry = lines[row - 1]
             val info = entry.file + ":" + entry.srclineNo + "   " + entry.line
             return info

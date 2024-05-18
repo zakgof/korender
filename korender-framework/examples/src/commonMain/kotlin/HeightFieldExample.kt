@@ -15,7 +15,7 @@ import com.zakgof.korender.math.y
 fun HeightFieldExample() {
     val freeCamera = FreeCamera(10.y, Vec3(0f, -1f, -1f).normalize())
     Korender {
-        Scene {
+        Frame {
             OnTouch { freeCamera.touch(it) }
             Camera(freeCamera.camera(projection, width, height, frameInfo.dt))
             Renderable(

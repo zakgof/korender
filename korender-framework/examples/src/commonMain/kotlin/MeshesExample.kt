@@ -26,7 +26,7 @@ fun MeshesExample() {
         val material = standard (StandardMaterialOption.NoLight){
             colorTexture = texture("/sand.jpg")
         }
-        Scene {
+        Frame {
             Camera(orbitCamera.camera(projection, width, height))
             Renderable(
                 mesh = mesh(id = "static", static = true, vertexCount = 3, indexCount = 3, POS, NORMAL, TEX) {

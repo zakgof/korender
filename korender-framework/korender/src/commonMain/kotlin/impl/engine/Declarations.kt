@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.KorenderException
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.declaration.Direction
 import com.zakgof.korender.declaration.MeshDeclaration
 import com.zakgof.korender.declaration.StandardMaterialOption
 import com.zakgof.korender.declaration.UniformSupplier
@@ -11,6 +11,21 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import java.util.EnumSet
 
+internal class SceneDeclaration {
+
+    var gui: ElementDeclaration.Container? = null
+    var shadow: ShadowDeclaration? = null
+    val renderables = mutableListOf<RenderableDeclaration>()
+    val filters = mutableListOf<FilterDeclaration>()
+    fun add(renderable: RenderableDeclaration) = renderables.add(renderable)
+    fun add(filter: FilterDeclaration) = filters.add(filter)
+    fun addShadow(shadow: ShadowDeclaration) {
+        if (this.shadow != null) {
+            throw KorenderException("Only one Shadow declaration is allowed")
+        }
+        this.shadow = shadow
+    }
+}
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
 

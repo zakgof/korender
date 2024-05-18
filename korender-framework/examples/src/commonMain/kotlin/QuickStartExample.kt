@@ -13,7 +13,7 @@ import com.zakgof.korender.math.y
 
 @Composable
 fun QuickStartExample() = Korender {
-    Scene {
+    Frame {
         Renderable(
             mesh = sphere(2.0f),
             material = standard(StandardMaterialOption.Color) {

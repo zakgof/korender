@@ -1,16 +1,16 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.SceneDeclaration
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.declaration.Direction
 import com.zakgof.korender.declaration.InstancedBillboardsContext
 import com.zakgof.korender.declaration.InstancedRenderablesContext
 import com.zakgof.korender.declaration.MeshDeclaration
 import com.zakgof.korender.declaration.StandardMaterialOption
 import com.zakgof.korender.declaration.TextureDeclaration
 import com.zakgof.korender.declaration.UniformSupplier
+import com.zakgof.korender.impl.engine.shadow.CascadeShadower
+import com.zakgof.korender.impl.engine.shadow.Shadower
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.gl.VGL11
@@ -318,16 +318,19 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     private fun filterFrameBuffers(): MutableList<GpuFrameBuffer> {
         val filterFrameBuffers = mutableListOf<GpuFrameBuffer>()
         if (filters.isNotEmpty()) {
-            filterFrameBuffers.add(inventory.frameBuffer(FrameBufferDeclaration("filter1", width, height, true)))
+            filterFrameBuffers.add(inventory.frameBuffer(FrameBufferDeclaration("filter-1", width, height, true)))
         }
         if (filters.size >= 2) {
-            filterFrameBuffers.add(inventory.frameBuffer(FrameBufferDeclaration("filter2", width, height, true)))
+            filterFrameBuffers.add(inventory.frameBuffer(FrameBufferDeclaration("filter-2", width, height, true)))
         }
         return filterFrameBuffers
     }
 
     private fun renderStage(camera: Camera, uniformDecorator: (UniformSupplier) -> UniformSupplier) {
-
+        VGL11.glEnable(VGL11.GL_BLEND)
+        VGL11.glEnable(VGL11.GL_DEPTH_TEST)
+        VGL11.glBlendFunc(VGL11.GL_SRC_ALPHA, VGL11.GL_ONE_MINUS_SRC_ALPHA)
+        VGL11.glClearColor(0f, 0f, 0f, 0f)
         VGL11.glViewport(0, 0, width, height)
         VGL11.glEnable(VGL11.GL_CULL_FACE)
         VGL11.glCullFace(VGL11.GL_BACK)

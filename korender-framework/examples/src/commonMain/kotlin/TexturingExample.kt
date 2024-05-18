@@ -14,7 +14,7 @@ import com.zakgof.korender.math.z
 
 @Composable
 fun TexturingExample(): Unit = Korender {
-    Scene {
+    Frame {
         Camera(DefaultCamera(position = 20.z, direction = -1.z, up = 1.y))
         Renderable(
             mesh = sphere(2f),

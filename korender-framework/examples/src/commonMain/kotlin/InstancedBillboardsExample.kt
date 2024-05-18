@@ -15,7 +15,7 @@ fun InstancedBillboardsExample() = Korender {
     val particleNum = 1000
     val particles = Array(particleNum) { Particle(Random.nextDouble(5.0).toFloat()) }
 
-    Scene {
+    Frame {
         InstancedBillboards(
             id = "particles",
             count = particleNum,

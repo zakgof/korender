@@ -15,7 +15,7 @@ import kotlin.math.floor
 
 @Composable
 fun FireBallExample() = Korender {
-    Scene {
+    Frame {
         val phase = fract(frameInfo.time)
         Camera(DefaultCamera(Vec3(0f, 2f, 20f), -1.z, 1.y))
         Billboard (

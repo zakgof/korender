@@ -15,7 +15,7 @@ import com.zakgof.korender.math.z
 fun InstancedMeshesExample() = Korender {
     val freeCamera = FreeCamera(20.z, -1.z)
     OnTouch { freeCamera.touch(it) }
-    Scene {
+    Frame {
         Camera(freeCamera.camera(projection, width, height, frameInfo.dt))
         InstancedRenderables(
             id = "particles",

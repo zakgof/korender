@@ -16,7 +16,7 @@ fun SkyExample() {
         val freeCamera = FreeCamera(20.z, -1.z)
         OnTouch { freeCamera.touch(it) }
 
-        Scene {
+        Frame {
             Camera(freeCamera.camera(projection, width, height, 0f))
             Sky(preset = preset(frameInfo))
             Gui {

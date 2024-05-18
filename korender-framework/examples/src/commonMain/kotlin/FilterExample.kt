@@ -10,7 +10,7 @@ import com.zakgof.korender.math.Color
 
 @Composable
 fun FilterExample() = Korender {
-    Scene {
+    Frame {
         Renderable(
             mesh = sphere(2.2f),
             material = standard {

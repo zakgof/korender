@@ -8,7 +8,7 @@ import com.zakgof.korender.math.Vec3
 
 @Composable
 fun SmokeExample() = Korender {
-    Scene {
+    Frame {
         for (i in 1..20) {
             val phase = fract(frameInfo.time * 0.5f + 20f / i)
             Billboard(
