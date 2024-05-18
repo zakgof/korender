@@ -3,16 +3,22 @@ import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.declaration.Materials.standard
 import com.zakgof.korender.declaration.Meshes.heightField
+import com.zakgof.korender.declaration.Meshes.mesh
 import com.zakgof.korender.declaration.Meshes.obj
 import com.zakgof.korender.declaration.SceneContext
 import com.zakgof.korender.declaration.StandardMaterialOption
 import com.zakgof.korender.declaration.Textures.texture
+import com.zakgof.korender.impl.geometry.Attributes
+import com.zakgof.korender.impl.geometry.Attributes.POS
+import com.zakgof.korender.impl.geometry.Vertex
 import com.zakgof.korender.impl.material.Image
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.FloatMath.PIdiv2
 import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
 import com.zakgof.korender.projection.FrustumProjection
 
 @Composable
@@ -40,6 +46,7 @@ fun App() = Korender {
         controller.missileManager.missiles.forEach { missile(it.transform()) }
         controller.enemyManager.heads.forEach { head(it.transform()) }
         controller.explosionManager.explosions.forEach { explosion(it) }
+        splinters(controller.explosionManager)
         controller.skullManager.skulls.forEach { skull(it, controller.hf) }
         Sky("fastcloud")
         Filter("atmosphere.frag")
@@ -184,3 +191,26 @@ fun SceneContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(
     },
     transparent = true
 )
+
+fun SceneContext.splinters(explosionManager: ExplosionManager) = InstancedRenderables(
+    id = "splinters",
+    material = standard(StandardMaterialOption.Color) {
+        color = Color(0x804040)
+        colorTexture = texture("/sand.jpg")
+    },
+    count = 5000,
+    mesh = mesh(id = "splinter", static = true, vertexCount = 3, indexCount = 3, POS, Attributes.NORMAL, Attributes.TEX) {
+        vertex(Vertex(pos = Vec3(-0.1f, 0f, 0f), normal = 1.z, tex = Vec2(0f, 0f)))
+        vertex(Vertex(pos = Vec3(0f, 0f, 0f), normal = 1.z, tex = Vec2(1f, 0f)))
+        vertex(Vertex(pos = Vec3(0f, 0.2f, 0f), normal = 1.z, tex = Vec2(1f, 1f)))
+        indices(0, 1, 2)
+    }) {
+
+    explosionManager.splinters.forEach {
+        Instance(transform = Transform().rotate(it.orientation).translate(it.position))
+    }
+
+}
+
+
+
