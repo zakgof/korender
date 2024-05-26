@@ -38,7 +38,8 @@ fun AppExample() {
         Demo("FBall", "Fireball effect") { FireBallExample() },
         Demo("Smoke", "Smoke effect") { SmokeExample() },
         Demo("GUI", "On-screen GUI") { GuiExample() },
-        Demo("Sky", "Simple sky") { SkyExample() }
+        Demo("Sky", "Simple sky") { SkyExample() },
+        Demo("Plg", "Shader plugin") { ShaderPluginExample() }
     )
 
     var option by remember { mutableStateOf(options[0]) }

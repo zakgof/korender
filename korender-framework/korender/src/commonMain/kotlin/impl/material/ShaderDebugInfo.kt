@@ -52,9 +52,8 @@ class ShaderDebugInfo(val file: String) {
         srcLine++
     }
 
-    fun incDestLine(line: String?) {
+    fun incDestLine(line: String) {
         lines.add(DebugLineEntry(srcLine, fileStack.peek(), line))
-        // System.err.println(lines.size() + " " + fileStack.peek() + ":" + srcLine + " " + line);
     }
 
     fun finish(fname: String?) {
@@ -63,8 +62,8 @@ class ShaderDebugInfo(val file: String) {
     }
 
     private class DebugLineEntry(
-        internal val srclineNo: Int = 0,
-        internal val file: String? = null,
-        internal val line: String? = null
+        val srclineNo: Int,
+        val file: String,
+        val line: String
     )
 }

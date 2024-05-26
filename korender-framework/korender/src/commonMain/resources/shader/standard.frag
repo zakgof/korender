@@ -55,6 +55,10 @@ in vec2 vtex;
   in vec3 vshadow2;
 #endif
 
+#ifdef PLUGIN_TEXTURE
+  #import "$texture"
+#endif
+
 out vec4 fragColor;
 
 void main() {
@@ -66,22 +70,26 @@ void main() {
     normal = perturbNormal(normal, normalTexture, vtex, look);
   #endif
 
-  #ifdef TRIPLANAR
-     #ifdef APERIODIC
-         vec4 texColor = triplanarAperiodic(colorTexture, aperiodicTexture, mpos * triplanarScale, mnormal);
-     #else
-         vec4 texColor = triplanar(colorTexture, mpos * triplanarScale, mnormal);
-     #endif
+  #ifdef PLUGIN_TEXTURE
+    vec4 texColor = pluginTexture();
   #else
-     #ifdef APERIODIC
-	   vec4 texColor = aperiodic(colorTexture, aperiodicTexture, vtex);
-     #else
-       #ifdef COLOR
-         vec4 texColor = vec4(color, 1.0);
+    #ifdef TRIPLANAR
+       #ifdef APERIODIC
+         vec4 texColor = triplanarAperiodic(colorTexture, aperiodicTexture, mpos * triplanarScale, mnormal);
        #else
-         vec4 texColor = texture(colorTexture, vtex);
+         vec4 texColor = triplanar(colorTexture, mpos * triplanarScale, mnormal);
        #endif
-     #endif
+    #else
+       #ifdef APERIODIC
+         vec4 texColor = aperiodic(colorTexture, aperiodicTexture, vtex);
+       #else
+         #ifdef COLOR
+           vec4 texColor = vec4(color, 1.0);
+         #else
+           vec4 texColor = texture(colorTexture, vtex);
+         #endif
+       #endif
+    #endif
   #endif
   if (texColor.a < 0.01)
     discard;

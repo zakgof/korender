@@ -243,8 +243,9 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     private fun toCustomShader(shader: ShaderDeclaration, shadowCascades: Int): CustomShaderDeclaration {
         return when (shader) {
             is CustomShaderDeclaration -> shader
-            is StandardShaderDeclaration -> CustomShaderDeclaration("standard.vert", "standard.frag", convertShaderOptions(shader.options, shadowCascades))
-            else -> throw KorenderException("")
+            is StandardShaderDeclaration -> CustomShaderDeclaration("standard.vert", "standard.frag",
+                convertShaderOptions(shader.options, shadowCascades) + shader.plugins.keys.map { "PLUGIN_" + it.uppercase() },
+                shader.plugins)
         }
     }
 

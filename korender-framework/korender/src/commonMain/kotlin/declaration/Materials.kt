@@ -7,9 +7,9 @@ import com.zakgof.korender.impl.material.StockUniforms
 import java.util.EnumSet
 
 object Materials {
-    fun standard(vararg options: StandardMaterialOption, block: StockUniforms.() -> Unit) =
+    fun standard(vararg options: StandardMaterialOption, plugins: Map<String, String> = mapOf(), block: StockUniforms.() -> Unit) =
         MaterialDeclaration(
-            StandardShaderDeclaration(if (options.isEmpty()) EnumSet.noneOf(StandardMaterialOption::class.java) else EnumSet.of(options[0], *options)),
+            StandardShaderDeclaration(if (options.isEmpty()) EnumSet.noneOf(StandardMaterialOption::class.java) else EnumSet.of(options[0], *options), plugins),
             StockUniforms().apply(block)
         )
 

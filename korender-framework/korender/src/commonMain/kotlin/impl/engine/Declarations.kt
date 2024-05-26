@@ -33,9 +33,9 @@ internal class MeshInstance(val transform: Transform)
 
 internal sealed interface ShaderDeclaration
 
-internal data class CustomShaderDeclaration(val vertFile: String, val fragFile: String, val defs: Set<String> = setOf()) : ShaderDeclaration
+internal data class CustomShaderDeclaration(val vertFile: String, val fragFile: String, val defs: Set<String> = setOf(), val plugins: Map<String, String> = mapOf()) : ShaderDeclaration
 
-internal data class StandardShaderDeclaration(val options: EnumSet<StandardMaterialOption>) : ShaderDeclaration
+internal data class StandardShaderDeclaration(val options: EnumSet<StandardMaterialOption>, val plugins: Map<String, String>) : ShaderDeclaration
 
 internal data class FilterDeclaration(val fragment: String, val uniforms: UniformSupplier)
 
