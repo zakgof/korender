@@ -10,7 +10,7 @@ class Controller {
 
 
     val elevationRatio = 300.0f
-    val hfImage = Images.image("/hf-rg16-512.png")
+    val hfImage = Images.image("/terrain/hf-rg16-512.png")
     val hf = RgImageHeightField(hfImage, 20.0f, elevationRatio)
 
     // TODO : var is poor

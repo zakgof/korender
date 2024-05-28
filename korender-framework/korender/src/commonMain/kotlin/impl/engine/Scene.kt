@@ -89,7 +89,6 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
                     is ElementDeclaration.Image -> createImage(child, x, currY)
                     is ElementDeclaration.Container -> layoutContainer(sizes, x, currY, childWidth, childHeight, child)
                     is ElementDeclaration.Filler -> {}
-                    else -> throw KorenderException("")
                 }
                 currY += childHeight
             }
@@ -108,7 +107,6 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
                     is ElementDeclaration.Image -> createImage(child, currX, y)
                     is ElementDeclaration.Container -> layoutContainer(sizes, currX, y, childWidth, childHeight, child)
                     is ElementDeclaration.Filler -> {}
-                    else -> throw KorenderException("")
                 }
                 currX += childWidth
             }
@@ -189,8 +187,6 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
                     Size(w, h)
                 }
             }
-
-            else -> throw KorenderException("")
         }
         sizes[element] = size
         return size

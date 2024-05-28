@@ -5,17 +5,17 @@ Kotlin Multiplatform 3D graphics rendering engine based on OpenGL / OpenGL ES
 ````kotlin
 @Composable
 fun App() = Korender {
-    Scene { 
+    Frame {
         Renderable(
             mesh = sphere(2.0f),
-            material = standard("COLOR") { 
+            material = standard(StandardMaterialOption.Color) {
                 color = Color(0.2f, 1.0f, 0.5f + 0.5f * sin(frameInfo.time))
             },
             transform = Transform().translate(sin(frameInfo.time).y)
-        )   
+        )
     }
 }
-````
+```
 
 ![Korender](doc/quickstart.jpg)
 

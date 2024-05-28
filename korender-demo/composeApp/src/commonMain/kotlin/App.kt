@@ -140,18 +140,17 @@ private fun FrameContext.terrain(hfImage: Image, hf: RgImageHeightField, elevati
             cellWidth = 20.0f,
             height = { x, y -> hf.pixel(x, y) * elevationRatio }
         ),
-        material = standard(StandardMaterialOption.Detail, StandardMaterialOption.NoShadowCast) {
-            colorTexture = texture("/terrainbase.jpg")
-            detailTexture = texture("/sand.jpg")
-            detailScale = 800f
-            detailRatio = 0.5f
+        material = standard(StandardMaterialOption.NoShadowCast, plugins = mapOf("texture" to "terrain/texture-plugin.frag")) {
+            colorTexture = texture("/terrain/terrainbase.jpg")
+            static("tex1", texture("/sand.jpg"))
+            static("tex2", texture("/grass.jpg"))
         }
     )
 }
 
 fun FrameContext.bug(bugTransform: Transform) = Renderable(
     mesh = obj("/bug/bug.obj"),
-    material = standard() {
+    material = standard {
         colorTexture = texture("/bug/bug.jpg")
     },
     transform = bugTransform * Transform().rotate(1.y, -PIdiv2).scale(2.0f).translate(0.3f.y)
