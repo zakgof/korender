@@ -39,6 +39,7 @@ fun AppExample() {
         Demo("Smoke", "Smoke effect") { SmokeExample() },
         Demo("GUI", "On-screen GUI") { GuiExample() },
         Demo("Sky", "Simple sky") { SkyExample() },
+        Demo("Water", "Water effect") { WaterExample() },
         Demo("Plg", "Shader plugin") { ShaderPluginExample() }
     )
 

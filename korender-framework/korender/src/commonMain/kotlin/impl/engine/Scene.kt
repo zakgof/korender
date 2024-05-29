@@ -1,6 +1,5 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.KorenderException
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.declaration.InstancedBillboardsContext
@@ -295,7 +294,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
                     val filter = filters[p - 1]
                     VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
                     filter.gpuShader.render(
-                        filter.uniforms + context + prevFrameContext,
+                        uniformDecorator(filter.uniforms + context + prevFrameContext),
                         inventory.mesh(MeshDeclaration.ScreenQuad).gpuMesh
                     )
                 }

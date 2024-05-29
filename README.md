@@ -15,7 +15,7 @@ fun App() = Korender {
         )
     }
 }
-```
+````
 
 ![Korender](doc/quickstart.jpg)
 
@@ -30,7 +30,6 @@ fun App() = Korender {
 - Texturing:
   - uv mapped
   - triplanar
-  - aperiodic
   - detail
 - Bump mapping
 - Custom meshes
@@ -39,13 +38,13 @@ fun App() = Korender {
 - Batching (instancing)
 - Simple heightfield (terrain)
 - Textured or shader sky
-- On-screen text rendering (HUD)
+- On-screen basic GUI
 - Custom shaders support
 - Screen-space shaders (filters)
-- FXAA
 - Simple effects
   - smoke
   - fire
+  - water
 
 ### Demo app
 

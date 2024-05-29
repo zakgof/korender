@@ -72,7 +72,7 @@ class GlGpuFrameBuffer(private val name: String, private val width: Int, private
         VGL11.glTexParameteri(VGL11.GL_TEXTURE_2D, VGL11.GL_TEXTURE_WRAP_S, VGL13.GL_CLAMP_TO_BORDER)
         VGL11.glTexParameteri(VGL11.GL_TEXTURE_2D, VGL11.GL_TEXTURE_WRAP_T, VGL13.GL_CLAMP_TO_BORDER)
         VGL11.glTexParameterfv(VGL11.GL_TEXTURE_2D, VGL11.GL_TEXTURE_BORDER_COLOR, floatArrayOf(0f, 0f, 0f, 0f))
-        return GlGpuTexture("$name-tex", glHandle)
+        return GlGpuTexture("$name-${if (depth) "depth" else "tex"}", glHandle)
     }
 
     override fun close() {
