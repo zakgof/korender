@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.impl.engine.CustomShaderDeclaration
+import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gl.VGL11
 import com.zakgof.korender.impl.gpu.Gpu
 import java.io.BufferedReader
@@ -13,9 +13,9 @@ import java.util.regex.Pattern
 
 internal object Shaders {
 
-    val imageQuadDeclaration: CustomShaderDeclaration = CustomShaderDeclaration("gui/image.vert", "gui/image.frag", setOf())
+    val imageQuadDeclaration: ShaderDeclaration = ShaderDeclaration("gui/image.vert", "gui/image.frag")
 
-    fun create(declaration: CustomShaderDeclaration, gpu: Gpu) =
+    fun create(declaration: ShaderDeclaration, gpu: Gpu) =
         ShaderBuilder(declaration.vertFile, declaration.fragFile, declaration.defs, declaration.plugins).build(gpu)
 }
 

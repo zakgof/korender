@@ -18,7 +18,7 @@ fun SkyExample() {
 
         Frame {
             Camera(freeCamera.camera(projection, width, height, 0f))
-            Sky(preset = preset(frameInfo))
+            Sky(plugins = mapOf("sky" to "sky/${preset(frameInfo)}.plugin.frag"))
             Gui {
                 Filler()
                 Text(id = "fps", fontResource = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0x66FF55))

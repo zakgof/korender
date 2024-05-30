@@ -2,10 +2,10 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.camera.Camera
+import com.zakgof.korender.declaration.FilterDeclaration
 import com.zakgof.korender.declaration.InstancedBillboardsContext
 import com.zakgof.korender.declaration.InstancedRenderablesContext
 import com.zakgof.korender.declaration.MeshDeclaration
-import com.zakgof.korender.declaration.StandardMaterialOption
 import com.zakgof.korender.declaration.TextureDeclaration
 import com.zakgof.korender.declaration.UniformSupplier
 import com.zakgof.korender.impl.engine.shadow.CascadeShadower
@@ -20,7 +20,6 @@ import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.Projection
-import java.util.EnumSet
 import java.util.function.Predicate
 import kotlin.math.max
 
@@ -62,7 +61,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     }
 
     private fun isShadowCaster(renderableDeclaration: RenderableDeclaration): Boolean =
-        (renderableDeclaration.shader is StandardShaderDeclaration && !renderableDeclaration.shader.options.contains(StandardMaterialOption.NoShadowCast))
+        (renderableDeclaration.shader.fragFile == "standard.frag" && !renderableDeclaration.shader.defs.contains("NO_SHADOW_CAST"))
 
     private fun createShadower(inventory: Inventory, shadowDecl: ShadowDeclaration): Shadower =
         CascadeShadower(inventory, shadowDecl.cascades)
@@ -229,46 +228,17 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
             }
         }
 
-        val shader = inventory.shader(toCustomShader(declaration.shader, shadowCascades))
+        val shader = inventory.shader(shadowize(declaration.shader, shadowCascades))
         val uniforms = declaration.uniforms
         val transform = declaration.transform
         return Renderable(mesh, shader, uniforms, transform)
     }
 
-    private fun toCustomShader(shader: ShaderDeclaration, shadowCascades: Int): CustomShaderDeclaration {
-        return when (shader) {
-            is CustomShaderDeclaration -> shader
-            is StandardShaderDeclaration -> CustomShaderDeclaration("standard.vert", "standard.frag",
-                convertShaderOptions(shader.options, shadowCascades) + shader.plugins.keys.map { "PLUGIN_" + it.uppercase() },
-                shader.plugins)
-        }
-    }
-
-    // TODO move this to standard shader classes or something
-    private fun convertShaderOptions(options: EnumSet<StandardMaterialOption>, shadowCascades: Int): Set<String> {
-        val set = mutableSetOf<String>()
-        if (!options.contains(StandardMaterialOption.NoShadowReceive)) {
-            for (s in 0..<shadowCascades) {
-                set.add("SHADOW_RECEIVER$s")
-            }
-        }
-        options.forEach {
-            when (it) {
-                StandardMaterialOption.Color -> set.add("COLOR")
-                StandardMaterialOption.Triplanar -> set.add("TRIPLANAR")
-                StandardMaterialOption.Aperiodic -> set.add("APERIODIC")
-                StandardMaterialOption.NormalMap -> set.add("NORMAL_MAP")
-                StandardMaterialOption.Detail -> set.add("DETAIL")
-                StandardMaterialOption.NoLight -> set.add("NO_LIGHT")
-                StandardMaterialOption.Pcss -> set.add("PCSS")
-                else -> {}
-            }
-        }
-        return set
-    }
+    private fun shadowize(shaderDecl: ShaderDeclaration, shadowCascades: Int): ShaderDeclaration =
+        ShaderDeclaration(shaderDecl.vertFile, shaderDecl.fragFile, shaderDecl.defs + (0..<shadowCascades).map {"SHADOW_RECEIVER$it"}, shaderDecl.plugins)
 
     private fun createFilter(declaration: FilterDeclaration): Filter {
-        val shader = inventory.shader(CustomShaderDeclaration("screen.vert", declaration.fragment, setOf()))
+        val shader = inventory.shader(declaration.shader)
         return Filter(shader, declaration.uniforms)
     }
 

@@ -1,16 +1,6 @@
-#import "lib/header.glsl"
-#import "sky/sky.glsl"
-
-in vec2 vtex;
 uniform float time;
 uniform float screenWidth;
 uniform float screenHeight;
-
-uniform vec3 cameraPos;
-uniform mat4 view;
-uniform mat4 projection;
-
-out vec4 fragColor;
 
 // https://www.shadertoy.com/view/XlfGRj
 #define iterations 17
@@ -25,9 +15,9 @@ out vec4 fragColor;
 #define distfading 0.730
 #define saturation 0.850
 
-void main() {
+vec3 sky(vec3 look) {
 
-    vec2 uv = skydisk(vtex, cameraPos, projection * view, 1.5);
+    vec2 uv = skydiskfromlook(look, 1.5);
 
     vec3 dir = vec3(uv * zoom, 1.);
 
@@ -58,5 +48,5 @@ void main() {
         s+=stepsize;
     }
     v = mix(vec3(length(v)), v, saturation);//color adjust
-    fragColor = vec4(v * .01, 1.);
+    return vec3(v * .01);
 }

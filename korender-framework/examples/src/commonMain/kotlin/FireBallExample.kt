@@ -4,6 +4,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.camera.DefaultCamera
+import com.zakgof.korender.declaration.Materials.billboardStandard
 import com.zakgof.korender.declaration.Materials.standard
 import com.zakgof.korender.declaration.Meshes
 import com.zakgof.korender.declaration.Textures
@@ -18,9 +19,8 @@ fun FireBallExample() = Korender {
     Frame {
         val phase = fract(frameInfo.time)
         Camera(DefaultCamera(Vec3(0f, 2f, 20f), -1.z, 1.y))
-        Billboard (
-            fragment = "effect/fireball.frag",
-            material = {
+        Billboard(
+            material = billboardStandard(fragFile = "effect/fireball.frag") {
                 xscale = 8f * phase
                 yscale = 8f * phase
                 static("power", phase)

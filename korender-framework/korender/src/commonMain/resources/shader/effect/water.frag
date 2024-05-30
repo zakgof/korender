@@ -1,17 +1,17 @@
 #import "lib/header.glsl"
-#import "sky/cloudsky.glsl"
+#import "lib/sky.glsl"
 
 in vec2 vtex;
 uniform sampler2D filterColorTexture;
 uniform sampler2D filterDepthTexture;
-uniform sampler2D noiseTexture;
 uniform mat4 projection;
 uniform mat4 view;
 uniform vec3 cameraPos;
 uniform vec3 light;
-uniform float time;
 
 out vec4 fragColor;
+
+#import "$sky"
 
 void main() {
 
@@ -30,7 +30,7 @@ void main() {
         vec3 normal = normalize(vec3(0.3 * fbmTex(noiseTexture, surface.xz * 0.004 - 0.01 * time), 1.0f, 0.3 * fbmTex(noiseTexture, surface.xz * 0.003 + 0.01 * time)));
 
         vec3 reflecteddir = reflect(look, normal);
-        vec3 reflectedcolor = cloudsky(reflecteddir, time).rgb;
+        vec3 reflectedcolor = sky(reflecteddir).rgb;
 
         float R0 = 0.0222;
         float t = 1. - clamp(dot(-look, normal), 0., 1.);

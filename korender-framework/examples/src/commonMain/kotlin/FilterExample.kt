@@ -17,7 +17,7 @@ fun FilterExample() = Korender {
                 colorTexture = texture("/sand.jpg")
             }
         )
-        Filter(fragment = "bw.frag")
+        Filter("bw.frag")
         Gui {
             Filler()
             Text(id = "fps", fontResource = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0x66FF55))

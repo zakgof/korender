@@ -1,8 +1,9 @@
 #import "lib/header.glsl"
-#import "sky/cloudsky.glsl"
+#import "lib/sky.glsl"
+
+#import "$sky"
 
 in vec2 vtex;
-uniform float time;
 
 uniform vec3 cameraPos;
 uniform mat4 view;
@@ -12,5 +13,6 @@ out vec4 fragColor;
 
 void main() {
     vec3 look = screentolook(vtex, projection * view, cameraPos);
-    fragColor = cloudsky(look, time);
+    vec3 color = sky(look);
+    fragColor = vec4(color, 1.);
 }

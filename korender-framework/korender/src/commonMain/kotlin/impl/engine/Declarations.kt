@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.TouchHandler
+import com.zakgof.korender.declaration.FilterDeclaration
 import com.zakgof.korender.declaration.MeshDeclaration
 import com.zakgof.korender.declaration.StandardMaterialOption
 import com.zakgof.korender.declaration.UniformSupplier
@@ -9,7 +10,6 @@ import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
-import java.util.EnumSet
 
 internal class SceneDeclaration {
 
@@ -31,13 +31,30 @@ internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val
 
 internal class MeshInstance(val transform: Transform)
 
-internal sealed interface ShaderDeclaration
+internal data class ShaderDeclaration(val vertFile: String, val fragFile: String, val defs: Set<String> = setOf(), val plugins: Map<String, String> = mapOf()) {
+    constructor(vertFile: String, fragFile: String, stdOptions: Array<out StandardMaterialOption>, plugins: Map<String, String>) : this(vertFile, fragFile, stdOptionsToDefs(stdOptions, plugins), plugins)
+}
 
-internal data class CustomShaderDeclaration(val vertFile: String, val fragFile: String, val defs: Set<String> = setOf(), val plugins: Map<String, String> = mapOf()) : ShaderDeclaration
 
-internal data class StandardShaderDeclaration(val options: EnumSet<StandardMaterialOption>, val plugins: Map<String, String>) : ShaderDeclaration
+private fun stdOptionsToDefs(stdOptions: Array<out StandardMaterialOption>, plugins: Map<String, String>): Set<String> {
+    // TODO: this is ugly
+    val set = HashSet<String>()
+    stdOptions.forEach {
+        when (it) {
+            StandardMaterialOption.Color -> set.add("COLOR")
+            StandardMaterialOption.Triplanar -> set.add("TRIPLANAR")
+            StandardMaterialOption.Aperiodic -> set.add("APERIODIC")
+            StandardMaterialOption.NormalMap -> set.add("NORMAL_MAP")
+            StandardMaterialOption.Detail -> set.add("DETAIL")
+            StandardMaterialOption.NoLight -> set.add("NO_LIGHT")
+            StandardMaterialOption.Pcss -> set.add("PCSS")
+            StandardMaterialOption.NoShadowCast -> set.add("NO_SHADOW_CAST") // TODO: this is ugly
+            else -> {}
+        }
+    }
+    return set  + plugins.keys.map { "PLUGIN_" + it.uppercase() }
+}
 
-internal data class FilterDeclaration(val fragment: String, val uniforms: UniformSupplier)
 
 internal class RenderableDeclaration(
     val mesh: MeshDeclaration,
@@ -51,10 +68,11 @@ internal sealed class ElementDeclaration {
 
     class Filler : ElementDeclaration()
     class Text(val id: Any, val fontResource: String, val height: Int, val text: String, val color: Color, val onTouch: TouchHandler) : ElementDeclaration()
-    class Image(val imageResource:String, val width: Int, val height: Int, val marginTop: Int, val marginBottom: Int, val marginLeft: Int, val marginRight: Int,val onTouch: TouchHandler) : ElementDeclaration() {
+    class Image(val imageResource: String, val width: Int, val height: Int, val marginTop: Int, val marginBottom: Int, val marginLeft: Int, val marginRight: Int, val onTouch: TouchHandler) : ElementDeclaration() {
         val fullWidth = width + marginLeft + marginRight
         val fullHeight = height + marginTop + marginBottom
     }
+
     class Container(val direction: Direction) : ElementDeclaration() {
 
         val elements = mutableListOf<ElementDeclaration>()

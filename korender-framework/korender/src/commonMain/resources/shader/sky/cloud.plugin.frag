@@ -1,4 +1,3 @@
-#import "sky/sky.glsl"
 #import "lib/noise.glsl"
 
 // https://www.shadertoy.com/view/4tdSWr
@@ -13,8 +12,9 @@ const float skytint = 0.5;
 const vec3 skycolour1 = vec3(0.2, 0.4, 0.6);
 const vec3 skycolour2 = vec3(0.4, 0.7, 1.0);
 
+uniform float time;
 
-vec4 cloudsky(vec3 look, float time) {
+vec3 sky(vec3 look) {
 
     vec2 UV = skydiskfromlook(look, 2.5);
 
@@ -76,7 +76,5 @@ vec4 cloudsky(vec3 look, float time) {
 
     f = cloudcover + cloudalpha * f * r;
 
-    vec3 result = mix(skycolour, clamp(skytint * skycolour + cloudcolour, 0.0, 1.0), clamp(f + c, 0.0, 1.0));
-
-    return vec4(result, 1.0);
+    return mix(skycolour, clamp(skytint * skycolour + cloudcolour, 0.0, 1.0), clamp(f + c, 0.0, 1.0));
 }
