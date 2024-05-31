@@ -26,8 +26,9 @@ fun WaterExample() {
                     colorTexture = Textures.texture("/sand.jpg")
                 }
             )
-            Filter("effect/water.frag", plugins = mapOf("sky" to "sky/fastcloud.plugin.frag"))
-            Sky(plugins = mapOf("sky" to "sky/fastcloud.plugin.frag"))
+            val plugins = mapOf("sky" to "sky/fastcloud.plugin.frag")
+            Filter("effect/water.frag", plugins = plugins)
+            Sky(plugins = plugins)
         }
     }
 }

@@ -14,7 +14,7 @@ class Controller {
     val hf = RgImageHeightField(hfImage, 20.0f, elevationRatio)
 
     // TODO : var is poor
-    var characterManager = CharacterManager(hf, hf.surface(Vec3.ZERO, -1.0f))
+    var characterManager = CharacterManager(hf, hf.surface(Vec3(-230.0f * 20.0f, 0f, -230.0f * 20.0f), -1.0f))
     var enemyManager = EnemyManager(hf)
     var skullManager = SkullManager()
     var explosionManager = ExplosionManager()

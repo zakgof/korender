@@ -26,10 +26,13 @@ class RgImageHeightField(private val image: Image, private val cell: Float, priv
             val h1 = pixel(xx + 1, zz + 1)
             val h = h1 + (hx - h1) * (zz + 1 - zfr) + (hz - h1) * (xx + 1 - xfr)
             h * elevationRatio
-        }
+        } - 3.0f
     }
 
     fun pixel(xx: Int, zz: Int): Float {
+        if (xx < 0 || zz < 0 || xx >= image.width || zz >= image.height) {
+            return 0f
+        }
         val color = image.pixel(xx, zz)
         val r = color.r * 255f
         val g = color.g * 255f

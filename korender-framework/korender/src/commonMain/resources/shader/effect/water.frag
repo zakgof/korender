@@ -23,22 +23,22 @@ void main() {
     vec3 world = w4.xyz / w4.w;
     vec3 look = normalize(world - cameraPos);
 
-    if (world.y < 0.0) {
+    vec3 surface = cameraPos - look * cameraPos.y / look.y;
 
-        vec3 surface = cameraPos - look * cameraPos.y / look.y;
+    if (world.y < 0.4 * fbmTex(noiseTexture, surface.xz * 0.001 - 0.01 * time)) {
 
         vec3 normal = normalize(vec3(0.3 * fbmTex(noiseTexture, surface.xz * 0.004 - 0.01 * time), 1.0f, 0.3 * fbmTex(noiseTexture, surface.xz * 0.003 + 0.01 * time)));
 
         vec3 reflecteddir = reflect(look, normal);
         vec3 reflectedcolor = sky(reflecteddir).rgb;
 
-        float R0 = 0.0222;
+        float R0 = 0.222;
         float t = 1. - clamp(dot(-look, normal), 0., 1.);
         float reflectance = R0 + (1. - R0) * t * t * t * t * t;
 
         float waterDepth = length(world - surface);
         vec3 ownColor = vec3(0.1, 0.2, 0.3);
-        float ownRatio = clamp(waterDepth * 0.002, 0., 1.);
+        float ownRatio = clamp(waterDepth * 0.1, 0., 1.);
 
         ownColor = mix(color, ownColor, ownRatio);
 
@@ -48,4 +48,5 @@ void main() {
     }
 
     fragColor = vec4(color, 1.0);
+    gl_FragDepth = texture(filterDepthTexture, vtex).r;
 }

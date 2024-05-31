@@ -2,6 +2,7 @@
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.declaration.FrameContext
+import com.zakgof.korender.declaration.Materials.billboardStandard
 import com.zakgof.korender.declaration.Materials.standard
 import com.zakgof.korender.declaration.Meshes.heightField
 import com.zakgof.korender.declaration.Meshes.mesh
@@ -9,7 +10,9 @@ import com.zakgof.korender.declaration.Meshes.obj
 import com.zakgof.korender.declaration.StandardMaterialOption
 import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.impl.geometry.Attributes
+import com.zakgof.korender.impl.geometry.Attributes.NORMAL
 import com.zakgof.korender.impl.geometry.Attributes.POS
+import com.zakgof.korender.impl.geometry.Attributes.TEX
 import com.zakgof.korender.impl.geometry.Vertex
 import com.zakgof.korender.impl.material.Image
 import com.zakgof.korender.math.Color
@@ -48,7 +51,10 @@ fun App() = Korender {
         controller.explosionManager.explosions.forEach { explosion(it) }
         splinters(controller.explosionManager)
         controller.skullManager.skulls.forEach { skull(it, controller.hf) }
-        Sky("fastcloud")
+
+        val skyPlugins = mapOf("sky" to "sky/fastcloud.plugin.frag")
+        Sky(plugins = skyPlugins)
+        Filter("effect/water.frag", plugins = skyPlugins)
         Filter("atmosphere.frag")
         gui(controller)
     }
@@ -134,11 +140,26 @@ private fun FrameContext.gui(controller: Controller) {
 
 private fun FrameContext.terrain(hfImage: Image, hf: RgImageHeightField, elevationRatio: Float) {
     Renderable(
+        mesh = mesh("underterrain", true, 4, 6, POS, NORMAL, TEX) {
+            vertex(Vertex(pos = Vec3(-20480f, -3f, -20480f), normal = 1.y, tex = Vec2(0f, 0f)))
+            vertex(Vertex(pos = Vec3( 20480f, -3f, -20480f), normal = 1.y, tex = Vec2(1f, 0f)))
+            vertex(Vertex(pos = Vec3( 20480f, -3f,  20480f), normal = 1.y, tex = Vec2(1f, 1f)))
+            vertex(Vertex(pos = Vec3(-20480f, -3f,  20480f), normal = 1.y, tex = Vec2(0f, 1f)))
+            indices(0, 2, 1, 0, 3, 2)
+        },
+        material = standard(StandardMaterialOption.NoShadowCast, StandardMaterialOption.Detail) {
+            colorTexture = texture("/terrain/terrainbase.jpg")
+            detailTexture =  texture("/sand.jpg")
+            detailRatio = 1.0f
+            detailScale = 1600.0f
+        }
+    )
+    Renderable(
         mesh = heightField(id = "terrain",
             cellsX = hfImage.width - 1,
             cellsZ = hfImage.height - 1,
             cellWidth = 20.0f,
-            height = { x, y -> hf.pixel(x, y) * elevationRatio }
+            height = { x, y -> hf.pixel(x, y) * elevationRatio - 3.0f }
         ),
         material = standard(StandardMaterialOption.NoShadowCast, plugins = mapOf("texture" to "terrain/texture-plugin.frag")) {
             colorTexture = texture("/terrain/terrainbase.jpg")
@@ -181,13 +202,12 @@ fun FrameContext.head(headTransform: Transform) = Renderable(
 )
 
 fun FrameContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(
-    fragment = "effect/fireball.frag",
-    position = explosion.position,
-    material = {
+    billboardStandard(fragFile = "effect/fireball.frag") {
         xscale = explosion.radius * explosion.phase
         yscale = explosion.radius * explosion.phase
         static("power", explosion.phase)
     },
+    position = explosion.position,
     transparent = true
 )
 
