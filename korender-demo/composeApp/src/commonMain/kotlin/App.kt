@@ -41,7 +41,7 @@ fun App() = Korender {
         Shadow {
             Cascade(1024, 3f, 20f)
             Cascade(512, 18f, 100f)
-            Cascade(256, 100f, 5000f)
+            Cascade(256, 100f, 10000f)
         }
 
         terrain(controller.hfImage, controller.hf, controller.elevationRatio)
@@ -161,7 +161,7 @@ private fun FrameContext.terrain(hfImage: Image, hf: RgImageHeightField, elevati
             cellWidth = 20.0f,
             height = { x, y -> hf.pixel(x, y) * elevationRatio - 3.0f }
         ),
-        material = standard(StandardMaterialOption.NoShadowCast, plugins = mapOf("texture" to "terrain/texture-plugin.frag")) {
+        material = standard(StandardMaterialOption.NoShadowCast, plugins = mapOf("texture" to "terrain/texture.plugin.frag")) {
             colorTexture = texture("/terrain/terrainbase.jpg")
             static("tex1", texture("/sand.jpg"))
             static("tex2", texture("/grass.jpg"))

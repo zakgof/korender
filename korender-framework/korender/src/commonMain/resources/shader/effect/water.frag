@@ -32,7 +32,7 @@ void main() {
         vec3 reflecteddir = reflect(look, normal);
         vec3 reflectedcolor = sky(reflecteddir).rgb;
 
-        float R0 = 0.222;
+        float R0 = 0.0222;
         float t = 1. - clamp(dot(-look, normal), 0., 1.);
         float reflectance = R0 + (1. - R0) * t * t * t * t * t;
 

@@ -24,7 +24,6 @@ void main() {
     int samples = 6;
 
     float depth = texture(filterDepthTexture, vtex).r;
-    // float depthFactor = clamp((depth - 0.993) / (1.0 - 0.993), 0.0, 1.0);
 
     if (sunProj.z > 0.0 && sunPos.x > -1.1 && sunPos.x < 1.1 && sunPos.y > -1.1 && sunPos.y < 1.1) {
         float averageSkyLumi = 0.;
@@ -53,8 +52,11 @@ void main() {
     }
 
     float depthFactor = clamp(pow(depth, 200.0) - 0.2, 0.0, 1.0);
-    color = mix(color, vec3(0.6, 0.6, 0.8), depthFactor);
+    if (depth > 1.0 - 1.0 / 2000.0) { // 2002 sky is gray
+        depthFactor = 0.;
+    }
 
+    color = mix(color, vec3(0.6, 0.6, 0.7), depthFactor);
     fragColor = vec4(color, 1.0);
     gl_FragDepth = depth;
 }
