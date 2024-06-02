@@ -14,9 +14,9 @@ class Controller {
     val hf = RgImageHeightField(hfImage, 20.0f, elevationRatio)
 
     // TODO : var is poor
-    var characterManager = CharacterManager(hf, hf.surface(Vec3(-230.0f * 20.0f, 0f, -230.0f * 20.0f), -1.0f))
+    var characterManager = CharacterManager(hf, hf.surface(Vec3(-4600f, 0f, -4600f), -1.0f))
     var enemyManager = EnemyManager(hf)
-    var skullManager = SkullManager()
+    var skullManager = SkullManager(hf)
     var explosionManager = ExplosionManager()
     var missileManager = MissileManager(hf, explosionManager)
     var chaseCamera = ChaseCamera(characterManager.transform())
@@ -28,9 +28,9 @@ class Controller {
 
     fun restart(touchEvent: TouchEvent) {
         if (touchEvent.type == TouchEvent.Type.DOWN) {
-            characterManager = CharacterManager(hf, hf.surface(Vec3.ZERO, -1.0f))
+            characterManager = CharacterManager(hf, hf.surface(Vec3(-4600f, 0f, -4600f)))
             enemyManager = EnemyManager(hf)
-            skullManager = SkullManager()
+            skullManager = SkullManager(hf)
             explosionManager = ExplosionManager()
             missileManager = MissileManager(hf, explosionManager)
             chaseCamera = ChaseCamera(characterManager.transform())
@@ -42,13 +42,14 @@ class Controller {
         explosionManager.update(frameInfo.time, frameInfo.dt)
         characterManager.update(frameInfo.dt)
         missileManager.update(frameInfo.time, frameInfo.dt)
-        enemyManager.update(characterManager.transform() * Vec3.ZERO, frameInfo.time, frameInfo.dt)
+        enemyManager.update(characterManager.transform() * Vec3.ZERO, frameInfo.dt)
         skullManager.update(characterManager.transform() * Vec3.ZERO, frameInfo.time, frameInfo.dt)
 
         collisionDetector.clear()
         collisionDetector.update(CharacterManager::class, characterManager, CharacterManager::transform, 1f)
         enemyManager.heads.map { collisionDetector.update(EnemyManager.Head::class, it, EnemyManager.Head::transform, 1.5f) }
         missileManager.missiles.map { collisionDetector.update(MissileManager.Missile::class, it, MissileManager.Missile::transform) }
+        skullManager.skulls.map {collisionDetector.update(SkullManager.Skull::class, it, SkullManager.Skull::transform)}
 
         collisionDetector.detect(CharacterManager::class, EnemyManager.Head::class) {
             if (!gameOver) {
@@ -62,6 +63,11 @@ class Controller {
             enemyManager.hit(it.second)
             missileManager.missileHitEnemy(it.first, frameInfo.time)
             characterManager.incrementScore(10)
+        }
+        collisionDetector.detect(MissileManager.Missile::class, SkullManager.Skull::class) {
+            skullManager.hit(it.second)
+            missileManager.missileHitEnemy(it.first, frameInfo.time)
+            characterManager.incrementScore(100)
         }
         collisionDetector.go()
     }

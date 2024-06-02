@@ -15,8 +15,8 @@ out vec4 fragColor;
 
 void main() {
 
-    vec3 color = texture2D(filterColorTexture, vtex).rgb;
-    float depth = texture2D(filterDepthTexture, vtex).r;
+    vec3 color = texture(filterColorTexture, vtex).rgb;
+    float depth = texture(filterDepthTexture, vtex).r;
 
     vec2 csp = vec2(vtex * 2.0 - 1.0);
     vec4 w4 = inverse(projection * view) * vec4(csp, depth * 2.0 - 1.0, 1.0);
@@ -43,8 +43,6 @@ void main() {
         ownColor = mix(color, ownColor, ownRatio);
 
         color = mix(ownColor, reflectedcolor, reflectance);
-        // color = vec3(waterDepth * 0.0002, 0., 0.);
-
     }
 
     fragColor = vec4(color, 1.0);

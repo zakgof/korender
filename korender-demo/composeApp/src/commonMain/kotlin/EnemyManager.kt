@@ -9,11 +9,11 @@ class EnemyManager(private val hf: HeightField) {
     private val headsCount = 10
     val heads = mutableListOf<Head>()
 
-    fun update(characterPosition: Vec3, time: Float, dt: Float) {
+    fun update(characterPosition: Vec3, dt: Float) {
         if (heads.size < headsCount) {
             heads.add(Head(characterPosition))
         }
-        heads.forEach { it.update(characterPosition, dt, hf) }
+        heads.removeIf { !it.update(characterPosition, dt, hf) }
     }
 
     fun hit(head: Head) = heads.remove(head)
@@ -24,15 +24,16 @@ class EnemyManager(private val hf: HeightField) {
         private var velocity: Vec3 = Vec3.ZERO
         private var transform: Transform = Transform()
 
-        fun update(characterPosition: Vec3, dt: Float, hf: HeightField) {
+        fun update(characterPosition: Vec3, dt: Float, hf: HeightField) : Boolean {
             val diff = characterPosition - position
             val mainDir = diff.normalize()
             val normal = hf.normal(position.x, position.z)
             val altDir = (mainDir % normal).normalize()
             velocity = mainDir * 2.0f + altDir * 0.6f  * sin(diff.length())
             position += velocity * dt
-            position = hf.surface(position)
+            position = hf.surface(position, 1.0f)
             transform = Transform().rotate(-velocity.normalize(), normal).translate(position)
+            return (position - characterPosition).lengthSquared() < 200f * 200f
         }
 
         fun transform(): Transform = transform

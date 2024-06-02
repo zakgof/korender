@@ -7,6 +7,7 @@ import com.zakgof.korender.declaration.Materials
 import com.zakgof.korender.declaration.Meshes
 import com.zakgof.korender.declaration.Textures
 import com.zakgof.korender.examples.camera.FreeCamera
+import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.z
 
@@ -29,6 +30,10 @@ fun WaterExample() {
             val plugins = mapOf("sky" to "sky/fastcloud.plugin.frag")
             Filter("effect/water.frag", plugins = plugins)
             Sky(plugins = plugins)
+            Gui {
+                Filler()
+                Text(id = "fps", fontResource = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFF0000))
+            }
         }
     }
 }

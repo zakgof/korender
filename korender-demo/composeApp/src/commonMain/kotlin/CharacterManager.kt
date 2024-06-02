@@ -22,7 +22,7 @@ class CharacterManager(private val hf: RgImageHeightField, initialPosition: Vec3
     private var brake: Float = 0f
     private var steer: Float = 0f
 
-    var cannonAngle: Float = 0.2f
+    var cannonAngle: Float = 0f
     private var cannonVelocity: Float = 0f
 
     fun update(dt: Float) {

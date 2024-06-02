@@ -74,17 +74,17 @@ fun FrameContext.skull(skull: SkullManager.Skull, hf: HeightField) {
             material = standard {
                 colorTexture = texture("/skull/skull.jpg")
             },
-            transform = Transform().rotate(1.y, -PIdiv2).rotate(skull.look, 1.y).scale(2.0f).translate(hf.surface(skull.position, 9.5f))
+            transform = skull.transform * Transform().rotate(1.y, -PIdiv2)
         )
     }
 }
 
 private fun FrameContext.gui(controller: Controller) {
     val cannonBtm = (controller.characterManager.cannonAngle * 256f).toInt() - 48
-    val cannonTop = 96 - cannonBtm
+    val cannonTop = 52 - cannonBtm
     Gui {
         Text(id = "points", text = String.format("SCORE: %d", controller.characterManager.score), fontResource = "/ubuntu.ttf", height = 50, color = Color(0xFFFFFF))
-        Text(id = "fps", text = String.format("FPS: %.1f", frameInfo.avgFps), fontResource = "/ubuntu.ttf", height = 20, color = Color(0xFFFFFF))
+        Text(id = "fps", text = String.format("FPS: %.1f  ${controller.characterManager.transform() * Vec3.ZERO}", frameInfo.avgFps), fontResource = "/ubuntu.ttf", height = 30, color = Color(0xFFFFFF))
 
         if (controller.gameOver) {
             Filler()
@@ -101,37 +101,39 @@ private fun FrameContext.gui(controller: Controller) {
         }
 
         Filler()
-        Row {
-            Column {
-                Row {
-                    Column {
-                        Filler()
-                        Image(imageResource = "/icon/left.png", width = 128, height = 128, onTouch = { controller.characterManager.left(it) })
-                    }
-                    Column {
-                        Filler()
-                        Image(imageResource = "/icon/accelerate.png", width = 128, height = 128, onTouch = { controller.characterManager.forward(it) })
-                        Image(imageResource = "/icon/decelerate.png", width = 128, height = 128, onTouch = { controller.characterManager.backward(it) })
-                    }
-                    Column {
-                        Filler()
-                        Image(imageResource = "/icon/right.png", width = 128, height = 128, onTouch = { controller.characterManager.right(it) })
+        if (!controller.gameOver) {
+            Row {
+                Column {
+                    Row {
+                        Column {
+                            Filler()
+                            Image(imageResource = "/icon/left.png", width = 128, height = 128, onTouch = { controller.characterManager.left(it) })
+                        }
+                        Column {
+                            Filler()
+                            Image(imageResource = "/icon/accelerate.png", width = 128, height = 128, onTouch = { controller.characterManager.forward(it) })
+                            Image(imageResource = "/icon/decelerate.png", width = 128, height = 128, onTouch = { controller.characterManager.backward(it) })
+                        }
+                        Column {
+                            Filler()
+                            Image(imageResource = "/icon/right.png", width = 128, height = 128, onTouch = { controller.characterManager.right(it) })
+                        }
                     }
                 }
-            }
-            Filler()
-            Column {
                 Filler()
-                Image(imageResource = "/icon/angle-up.png", width = 128, height = 128, onTouch = { controller.characterManager.cannonUp(it) })
-                Image(imageResource = "/icon/minus.png", width = 64, height = 64, marginLeft = 32, marginTop = cannonTop, marginBottom = cannonBtm)
-                Image(imageResource = "/icon/angle-down.png", width = 128, height = 128, marginBottom = if (controller.missileManager.canFire(frameInfo.time)) 0 else 128, onTouch = { controller.characterManager.cannonDown(it) })
+                Column {
+                    Filler()
+                    Image(imageResource = "/icon/angle-up.png", width = 128, height = 128, onTouch = { controller.characterManager.cannonUp(it) })
+                    Image(imageResource = "/icon/minus.png", width = 64, height = 64, marginLeft = 32, marginTop = cannonTop, marginBottom = cannonBtm)
+                    Image(imageResource = "/icon/angle-down.png", width = 128, height = 128, marginBottom = if (controller.missileManager.canFire(frameInfo.time)) 0 else 128, onTouch = { controller.characterManager.cannonDown(it) })
 
-                if (controller.missileManager.canFire(frameInfo.time)) {
-                    Image(
-                        imageResource = "/icon/fire.png",
-                        width = 128,
-                        height = 128,
-                        onTouch = { controller.missileManager.fire(frameInfo.time, it, controller.characterManager.transform(), controller.characterManager.velocity, controller.characterManager.cannonAngle) })
+                    if (controller.missileManager.canFire(frameInfo.time)) {
+                        Image(
+                            imageResource = "/icon/fire.png",
+                            width = 128,
+                            height = 128,
+                            onTouch = { controller.missileManager.fire(frameInfo.time, it, controller.characterManager.transform(), controller.characterManager.velocity, controller.characterManager.cannonAngle) })
+                    }
                 }
             }
         }
@@ -198,7 +200,7 @@ fun FrameContext.head(headTransform: Transform) = Renderable(
     material = standard {
         colorTexture = texture("/head/head-high.jpg")
     },
-    transform = headTransform * Transform().rotate(1.y, -PIdiv2).scale(2.0f).translate(1.0f.y)
+    transform = headTransform * Transform().rotate(1.y, -PIdiv2).scale(2.0f)
 )
 
 fun FrameContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(
