@@ -66,6 +66,7 @@ internal class Engine(private var height: Int, private var width: Int, block: Ko
 
     private fun updateContext() {
         context["noiseTexture"] = texture("/noise.png")
+        context["fbmTexture"] = texture("/fbm.png")
         context["view"] = camera.mat4
         context["projection"] = projection.mat4
         context["cameraPos"] = camera.position
