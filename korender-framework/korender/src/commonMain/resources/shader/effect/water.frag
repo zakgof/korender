@@ -25,9 +25,14 @@ void main() {
 
     vec3 surface = cameraPos - look * cameraPos.y / look.y;
 
-    if (world.y < 0.4 * texture(fbmTexture, surface.xz * 0.01 - 0.01 * time).r) {
+    float fbmA = fbm2(surface.xz * 0.04 - 0.03 * time) - 0.5;
+    if (world.y < 0.4 * fbmA) {
 
-        vec3 normal = normalize(vec3(0.6 * texture(fbmTexture, surface.xz * 0.04 - 0.01 * time).r, 1.0f, 0.5 * texture(fbmTexture, surface.xz * 0.03 + 0.01 * time).r));
+        vec3 normal = normalize(vec3(
+            0.3 * fbmA,
+            1.0f,
+            0.3 * (fbm2(surface.xz * 0.03 + 0.04 * time) - 0.5)
+        ));
 
         vec3 reflecteddir = reflect(look, normal);
         vec3 reflectedcolor = sky(reflecteddir).rgb;

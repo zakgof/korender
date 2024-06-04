@@ -39,3 +39,9 @@ float fbmTex(sampler2D noiseTexture, vec2 n) {
     }
     return total;
 }
+
+uniform sampler2D fbmTexture;
+
+float fbm2(vec2 uv) {
+    return texture(fbmTexture, uv).r;
+}
