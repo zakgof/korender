@@ -658,6 +658,10 @@ object VGL11 {
         VGL11.gl!!.glEnable(target)
     }
 
+    fun glDisable(target: Int) {
+        VGL11.gl!!.glDisable(target)
+    }
+
     /**
      * Binds the a texture to a texture target.
      *

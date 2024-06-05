@@ -10,6 +10,8 @@ interface IGL11 {
 
     fun glEnable(target: Int)
 
+    fun glDisable(target: Int)
+
     fun glBindTexture(target: Int, texture: Int)
 
     fun glTexParameterf(target: Int, pname: Int, param: Float)

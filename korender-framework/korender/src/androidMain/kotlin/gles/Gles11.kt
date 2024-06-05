@@ -11,6 +11,8 @@ object Gles11 : com.zakgof.korender.impl.gl.IGL11 {
         GLES11.glDrawElements(mode, count, type, indices)
 
     override fun glEnable(target: Int) = GLES11.glEnable(target)
+
+    override fun glDisable(target: Int) = GLES11.glDisable(target)
     override fun glBindTexture(target: Int, texture: Int) = GLES11.glBindTexture(target, texture)
     override fun glTexParameterf(target: Int, pname: Int, param: Float) =
         GLES11.glTexParameterf(target, pname, param)

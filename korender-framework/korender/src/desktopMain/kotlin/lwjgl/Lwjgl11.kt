@@ -11,6 +11,8 @@ class Lwjgl11 : com.zakgof.korender.impl.gl.IGL11 {
         GL11.glDrawElements(mode, count, type, indices.toLong())
 
     override fun glEnable(target: Int) = GL11.glEnable(target)
+
+    override fun glDisable(target: Int) = GL11.glDisable(target)
     override fun glBindTexture(target: Int, texture: Int) = GL11.glBindTexture(target, texture)
     override fun glTexParameterf(target: Int, pname: Int, param: Float) = GL11.glTexParameterf(target, pname, param)
     override fun glDeleteTextures(texture: Int) = GL11.glDeleteTextures(texture)
