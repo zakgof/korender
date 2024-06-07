@@ -52,7 +52,7 @@ void main() {
     }
 
     float depthFactor = clamp(pow(depth, 200.0) - 0.2, 0.0, 1.0);
-    if (depth > 1.0 - 1.0 / 2000.0) { // 2002 sky is gray
+    if (depth >= 1.0 - 0.00001) { // 2002 sky is gray
         depthFactor = 0.;
     }
 

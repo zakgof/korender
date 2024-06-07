@@ -5,5 +5,5 @@ out vec2 vtex;
 
 void main() {
     vtex = tex;
-    gl_Position = vec4((tex * 2.0) - 1.0, 1.0 - 0.000001, 1.0);
+    gl_Position = vec4((tex * 2.0) - 1.0, 1.0 - 0.00001, 1.0);
 }
