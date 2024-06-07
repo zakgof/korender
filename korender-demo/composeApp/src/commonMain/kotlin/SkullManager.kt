@@ -18,9 +18,10 @@ class SkullManager(private val hf: HeightField) {
 
     fun hit(skull: Skull) {
         skull.hit()
+        skulls.remove(skull)
     }
 
-    class Skull(private val hf: HeightField, val position: Vec3) {
+    class Skull(private val hf: HeightField, private val position: Vec3) {
         var destroyed = false
         var transform = Transform()
         fun update(characterPosition: Vec3, time: Float) {
@@ -28,7 +29,7 @@ class SkullManager(private val hf: HeightField) {
             val main = Vec3(diff.x, 0f, diff.z).normalize()
             val alt = main % 1.y
             val look = (main + alt * 0.4f * sin(time * 10.0f + 0.001f * position.hashCode().toFloat())).normalize()
-            transform = Transform().rotate(look, 1.y).scale(2.0f).translate(hf.surface(position, 9.5f))
+            transform = Transform().rotate(look, 1.y).scale(8.0f).translate(hf.surface(position, 4.0f))
         }
 
         fun hit() {

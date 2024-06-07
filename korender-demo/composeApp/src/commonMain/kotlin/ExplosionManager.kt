@@ -13,9 +13,9 @@ class ExplosionManager {
         splinters.removeIf { !it.update(time, dt) }
     }
 
-    fun boom(position: Vec3, radius: Float, time: Float) {
-        explosions.add(Explosion(position, radius, time))
-        if (radius > 8f) {
+    fun boom(position: Vec3, startRadius: Float, finishRadius: Float, time: Float) {
+        explosions.add(Explosion(position, startRadius, finishRadius, time))
+        if (finishRadius > 8f) {
             for (i in 1..1000) {
                 if (splinters.size < 5000) {
                     splinters.add(Splinter(position, time))
@@ -24,11 +24,11 @@ class ExplosionManager {
         }
     }
 
-    class Explosion(val position: Vec3, val radius: Float, val startTime: Float) {
+    class Explosion(val position: Vec3, val startRadius: Float, val finishRadius: Float, val startTime: Float) {
         var phase: Float = 0f
 
         fun update(time: Float): Boolean {
-            phase = time - startTime
+            phase = (time - startTime) * (finishRadius - startRadius) / finishRadius + startRadius / finishRadius
             return phase < 1f
         }
     }

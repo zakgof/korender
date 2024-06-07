@@ -61,13 +61,6 @@ fun App() = Korender {
 }
 
 fun FrameContext.skull(skull: SkullManager.Skull, hf: HeightField) {
-    Renderable(
-        mesh = obj("/obelisk/obelisk.obj"),
-        material = standard {
-            colorTexture = texture("/obelisk/obelisk.jpg")
-        },
-        transform = Transform().scale(5.0f, 8.0f, 5.0f).translate(hf.surface(skull.position, 4f))
-    )
     if (!skull.destroyed) {
         Renderable(
             mesh = obj("/skull/skull.obj"),
@@ -205,8 +198,8 @@ fun FrameContext.head(headTransform: Transform) = Renderable(
 
 fun FrameContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(
     billboardStandard(fragFile = "effect/fireball.frag") {
-        xscale = explosion.radius * explosion.phase
-        yscale = explosion.radius * explosion.phase
+        xscale = explosion.finishRadius * explosion.phase
+        yscale = explosion.finishRadius * explosion.phase
         static("power", explosion.phase)
     },
     position = explosion.position,
