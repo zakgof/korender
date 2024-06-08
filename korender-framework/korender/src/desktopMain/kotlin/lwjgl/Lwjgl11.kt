@@ -19,6 +19,7 @@ class Lwjgl11 : com.zakgof.korender.impl.gl.IGL11 {
     override fun glPixelStorei(pname: Int, param: Int) = GL11.glPixelStorei(pname, param)
     override fun glGenTextures(): Int = GL11.glGenTextures()
     override fun glBlendFunc(sfactor: Int, dfactor: Int) = GL11.glBlendFunc(sfactor, dfactor)
+    override fun glDepthFunc(func: Int) = GL11.glDepthFunc(func)
     override fun glDepthMask(flag: Boolean) = GL11.glDepthMask(flag)
     override fun glCullFace(mode: Int) = GL11.glCullFace(mode)
     override fun glTexImage2D(

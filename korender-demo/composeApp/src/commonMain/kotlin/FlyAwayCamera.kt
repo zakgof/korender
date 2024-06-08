@@ -13,7 +13,6 @@ class FlyAwayCamera {
         val right = look % 1.y
         val up = (right % look).normalize()
         return DefaultCamera(cameraPos, look, up)
-
     }
 
 }

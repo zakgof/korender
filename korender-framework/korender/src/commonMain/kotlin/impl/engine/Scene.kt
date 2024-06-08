@@ -296,6 +296,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         VGL11.glEnable(VGL11.GL_BLEND)
         VGL11.glEnable(VGL11.GL_DEPTH_TEST)
         VGL11.glBlendFunc(VGL11.GL_SRC_ALPHA, VGL11.GL_ONE_MINUS_SRC_ALPHA)
+        VGL11.glDepthFunc(VGL11.GL_LEQUAL)
         VGL11.glClearColor(0f, 0f, 0f, 0f)
         VGL11.glViewport(0, 0, width, height)
         VGL11.glEnable(VGL11.GL_CULL_FACE)

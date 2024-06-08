@@ -24,6 +24,8 @@ interface IGL11 {
 
     fun glBlendFunc(sfactor: Int, dfactor: Int)
 
+    fun glDepthFunc(func: Int)
+
     fun glDepthMask(flag: Boolean)
 
     fun glCullFace(mode: Int)

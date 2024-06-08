@@ -744,6 +744,10 @@ object VGL11 {
         VGL11.gl!!.glBlendFunc(sfactor, dfactor)
     }
 
+    fun glDepthFunc(func: Int) {
+        VGL11.gl!!.glDepthFunc(func)
+    }
+
     /**
      * Masks the writing of depth values to the depth buffer. In the initial state, the depth buffer is enabled for writing.
      *

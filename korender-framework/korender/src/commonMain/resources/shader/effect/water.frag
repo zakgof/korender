@@ -47,7 +47,7 @@ void main() {
 
         ownColor = mix(color, ownColor, ownRatio);
 
-        color = mix(ownColor, reflectedcolor, reflectance);
+        color = mix(ownColor, reflectedcolor, reflectance * 0.7);
     }
 
     fragColor = vec4(color, 1.0);

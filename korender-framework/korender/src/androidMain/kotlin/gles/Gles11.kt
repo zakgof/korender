@@ -26,6 +26,7 @@ object Gles11 : com.zakgof.korender.impl.gl.IGL11 {
     }
 
     override fun glBlendFunc(sfactor: Int, dfactor: Int) = GLES11.glBlendFunc(sfactor, dfactor)
+    override fun glDepthFunc(func: Int) = GLES11.glDepthFunc(func)
     override fun glDepthMask(flag: Boolean) = GLES11.glDepthMask(flag)
     override fun glCullFace(mode: Int) = GLES11.glCullFace(mode)
     override fun glTexImage2D(
