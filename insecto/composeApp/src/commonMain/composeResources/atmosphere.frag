@@ -19,7 +19,8 @@ void main() {
 
     vec2 csp = vec2(vtex * 2.0 - 1.0);
     vec4 direction = inverse(projection * view) * vec4(csp, 0.0, 1.0);
-    vec3 look = normalize(direction.xyz / direction.w - cameraPos);
+    vec3 dist = direction.xyz / direction.w - cameraPos;
+    vec3 look = normalize(dist);
 
     int samples = 6;
 
@@ -51,7 +52,7 @@ void main() {
         color = mix(color, vec3(1.6, 1.4, 1.0), hazeRatio);
     }
 
-    float depthFactor = clamp(pow(depth, 200.0) - 0.2, 0.0, 1.0);
+    float depthFactor = 1. - exp(-0.04 * length(dist));
     if (depth >= 1.0) {
         depthFactor = 0.;
     }

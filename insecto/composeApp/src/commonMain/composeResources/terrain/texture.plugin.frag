@@ -10,6 +10,6 @@ vec4 pluginTexture() {
     vec4 color1 = texture(tex1, vtex * 800.0f);
     vec4 color2 = texture(tex2, vtex * 1600.0f);
 
-    vec4 detailColor = mix(color1, color2, sandRatio1 * sandRatio2);
-    return mix(detailColor, base, 0.2f);
+    vec4 detailColor = mix(color1, color2, min(sandRatio1, sandRatio2));
+    return mix(detailColor, base, 0.3f);
 }

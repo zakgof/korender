@@ -14,7 +14,7 @@ class Controller {
     val hf = RgImageHeightField(hfImage, 20.0f, elevationRatio)
 
     // TODO : var is poor
-    var characterManager = CharacterManager(hf, hf.surface(Vec3(-4600f, 0f, -4600f), -1.0f))
+    var characterManager = CharacterManager(hf, hf.surface(Vec3(3274f, 0f, 4596f)))
     var enemyManager = EnemyManager(hf)
     var skullManager = SkullManager(hf)
     var explosionManager = ExplosionManager()
@@ -28,7 +28,7 @@ class Controller {
 
     fun restart(touchEvent: TouchEvent) {
         if (touchEvent.type == TouchEvent.Type.DOWN) {
-            characterManager = CharacterManager(hf, hf.surface(Vec3(-4600f, 0f, -4600f)))
+            characterManager = CharacterManager(hf, hf.surface(Vec3(3274f, 0f, 4596f)))
             enemyManager = EnemyManager(hf)
             skullManager = SkullManager(hf)
             explosionManager = ExplosionManager()

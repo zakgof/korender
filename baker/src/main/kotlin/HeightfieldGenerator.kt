@@ -4,8 +4,8 @@ import java.io.File
 import javax.imageio.ImageIO
 
 fun main() {
-    val input = File("E:\\Business\\render2024\\heightmap.png")
-    val output = File("E:\\Business\\render2024\\korender\\korender-demo\\composeApp\\src\\commonMain\\composeResources\\hf-rg16.png")
+    val input = File("E:\\Business\\render2024\\lab\\heightmap-working.png")
+    val output = File("E:\\Business\\render2024\\korender\\insecto\\composeApp\\src\\commonMain\\composeResources\\terrain\\hf-rg16-512.png")
 
 
     val bi16 = ImageIO.read(input).raster
