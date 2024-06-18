@@ -1,12 +1,11 @@
 [versions]
-agp = "8.3.0"
+agp = "8.2.0"
 android-compileSdk = "34"
 android-minSdk = "29"
 android-targetSdk = "34"
-androidx-activityCompose = "1.8.2"
-compose = "1.6.4"
-compose-plugin = "1.6.0"
-kotlin = "1.9.22"
+androidx-activityCompose = "1.9.0"
+compose-plugin = "1.6.10"
+kotlin = "2.0.0"
 lwjgl3-awt = "0.1.8"
 lwjgl = "3.3.3"
 obj = "0.4.0"
@@ -14,10 +13,7 @@ obj = "0.4.0"
 [libraries]
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose" }
 lwjgl = { module = "org.lwjgl:lwjgl", version.ref = "lwjgl" }
-lwjgl-glfw = { module = "org.lwjgl:lwjgl-glfw", version.ref = "lwjgl" }
 lwjgl-jawt = { module = "org.lwjgl:lwjgl-jawt", version.ref = "lwjgl" }
 lwjgl-opengl = { module = "org.lwjgl:lwjgl-opengl", version.ref = "lwjgl" }
 lwjgl3-awt = { module = "org.lwjglx:lwjgl3-awt", version.ref = "lwjgl3-awt" }
@@ -27,4 +23,5 @@ obj = { module = "de.javagl:obj", version.ref = "obj" }
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
+composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
