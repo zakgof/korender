@@ -3,7 +3,8 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.declaration.Materials.standard
+import com.zakgof.korender.declaration.MaterialModifiers.fragment
+import com.zakgof.korender.declaration.MaterialModifiers.standardUniforms
 import com.zakgof.korender.declaration.Meshes.sphere
 import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.math.Color
@@ -11,16 +12,20 @@ import com.zakgof.korender.math.Color
 @Composable
 fun FilterExample() = Korender {
     Frame {
-        Renderable(
-            mesh = sphere(2.2f),
-            material = standard {
-                colorTexture = texture("/sand.jpg")
+        Pass {
+            Renderable(
+                standardUniforms {
+                    colorTexture = texture("/sand.jpg")
+                },
+                mesh = sphere(2.2f),
+            )
+        }
+        Pass {
+            Screen(fragment("bw.frag"))
+            Gui {
+                Filler()
+                Text(id = "fps", fontResource = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0x66FF55))
             }
-        )
-        Filter("bw.frag")
-        Gui {
-            Filler()
-            Text(id = "fps", fontResource = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0x66FF55))
         }
     }
 }

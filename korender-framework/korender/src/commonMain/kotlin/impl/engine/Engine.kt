@@ -51,10 +51,10 @@ internal class Engine(private var height: Int, private var width: Int, block: Ko
         val sd = SceneDeclaration()
         projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f) // TODO
         frameBlocks.forEach {
-            val sc = DefaultFrameContext(frameInfo, sd, width, height, projection, camera, light).apply(it)
-            projection = sc.projection
-            camera = sc.camera
-            light = sc.light
+            val frameBlock = DefaultFrameContext(sd, frameInfo, width, height, projection, camera, light).apply(it)
+            projection = frameBlock.projection
+            camera = frameBlock.camera
+            light = frameBlock.light
         }
         updateContext()
         inventory.go {

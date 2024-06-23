@@ -1,15 +1,15 @@
-
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.declaration.FrameContext
-import com.zakgof.korender.declaration.Materials.billboardStandard
-import com.zakgof.korender.declaration.Materials.standard
+import com.zakgof.korender.declaration.MaterialModifiers.fragment
+import com.zakgof.korender.declaration.MaterialModifiers.options
+import com.zakgof.korender.declaration.MaterialModifiers.plugin
+import com.zakgof.korender.declaration.MaterialModifiers.standardUniforms
 import com.zakgof.korender.declaration.Meshes.heightField
 import com.zakgof.korender.declaration.Meshes.mesh
 import com.zakgof.korender.declaration.Meshes.obj
+import com.zakgof.korender.declaration.PassContext
 import com.zakgof.korender.declaration.StandardMaterialOption
 import com.zakgof.korender.declaration.Textures.texture
-import com.zakgof.korender.impl.geometry.Attributes
 import com.zakgof.korender.impl.geometry.Attributes.NORMAL
 import com.zakgof.korender.impl.geometry.Attributes.POS
 import com.zakgof.korender.impl.geometry.Attributes.TEX
@@ -44,35 +44,40 @@ fun App() = Korender {
             Cascade(256, 100f, 10000f)
         }
 
-        terrain(controller.hfImage, controller.hf, controller.elevationRatio)
-        bug(bugTransform)
-        controller.missileManager.missiles.forEach { missile(it.transform()) }
-        controller.enemyManager.heads.forEach { head(it.transform()) }
-        controller.explosionManager.explosions.forEach { explosion(it) }
-        splinters(controller.explosionManager)
-        controller.skullManager.skulls.forEach { skull(it, controller.hf) }
-
-        val skyPlugins = mapOf("sky" to "sky/fastcloud.plugin.frag")
-        Sky(plugins = skyPlugins)
-        Filter("effect/water.frag", plugins = skyPlugins)
-        Filter("atmosphere.frag")
-        gui(controller)
+        val skyPlugin = plugin("sky", "sky/fastcloud.plugin.frag")
+        Pass {
+            terrain(controller.hfImage, controller.hf, controller.elevationRatio)
+            bug(bugTransform)
+            controller.missileManager.missiles.forEach { missile(it.transform()) }
+            controller.enemyManager.heads.forEach { head(it.transform()) }
+            controller.explosionManager.explosions.forEach { explosion(it) }
+            splinters(controller.explosionManager)
+            controller.skullManager.skulls.forEach { skull(it) }
+            Sky(skyPlugin)
+        }
+        Pass {
+            Screen(fragment("effect/water.frag"), skyPlugin)
+        }
+        Pass {
+            Screen(fragment("atmosphere.frag"))
+            gui(controller)
+        }
     }
 }
 
-fun FrameContext.skull(skull: SkullManager.Skull, hf: HeightField) {
+fun PassContext.skull(skull: SkullManager.Skull) {
     if (!skull.destroyed) {
         Renderable(
-            mesh = obj("/skull/skull.obj"),
-            material = standard {
+            standardUniforms {
                 colorTexture = texture("/skull/skull.jpg")
             },
+            mesh = obj("/skull/skull.obj"),
             transform = skull.transform * Transform().rotate(1.y, -PIdiv2)
         )
     }
 }
 
-private fun FrameContext.gui(controller: Controller) {
+private fun PassContext.gui(controller: Controller) {
     val cannonBtm = (controller.characterManager.cannonAngle * 256f).toInt() - 48
     val cannonTop = 52 - cannonBtm
     Gui {
@@ -133,71 +138,67 @@ private fun FrameContext.gui(controller: Controller) {
     }
 }
 
-private fun FrameContext.terrain(hfImage: Image, hf: RgImageHeightField, elevationRatio: Float) {
+private fun PassContext.terrain(hfImage: Image, hf: RgImageHeightField, elevationRatio: Float) {
     Renderable(
-        mesh = mesh("underterrain", true, 4, 6, POS, NORMAL, TEX) {
-            vertex(Vertex(pos = Vec3(-20480f, -3f, -20480f), normal = 1.y, tex = Vec2(0f, 0f)))
-            vertex(Vertex(pos = Vec3( 20480f, -3f, -20480f), normal = 1.y, tex = Vec2(1f, 0f)))
-            vertex(Vertex(pos = Vec3( 20480f, -3f,  20480f), normal = 1.y, tex = Vec2(1f, 1f)))
-            vertex(Vertex(pos = Vec3(-20480f, -3f,  20480f), normal = 1.y, tex = Vec2(0f, 1f)))
-            indices(0, 2, 1, 0, 3, 2)
-        },
-        material = standard(StandardMaterialOption.NoShadowCast, StandardMaterialOption.Detail) {
+        options(StandardMaterialOption.NoShadowCast, StandardMaterialOption.Detail),
+        standardUniforms {
             colorTexture = texture("/terrain/terrainbase.jpg")
-            detailTexture =  texture("/sand.jpg")
+            detailTexture = texture("/sand.jpg")
             detailRatio = 1.0f
             detailScale = 1600.0f
+        },
+        mesh = mesh("underterrain", true, 4, 6, POS, NORMAL, TEX) {
+            vertex(Vertex(pos = Vec3(-20480f, -3f, -20480f), normal = 1.y, tex = Vec2(0f, 0f)))
+            vertex(Vertex(pos = Vec3(20480f, -3f, -20480f), normal = 1.y, tex = Vec2(1f, 0f)))
+            vertex(Vertex(pos = Vec3(20480f, -3f, 20480f), normal = 1.y, tex = Vec2(1f, 1f)))
+            vertex(Vertex(pos = Vec3(-20480f, -3f, 20480f), normal = 1.y, tex = Vec2(0f, 1f)))
+            indices(0, 2, 1, 0, 3, 2)
         }
     )
     Renderable(
+        options(StandardMaterialOption.NoShadowCast),
+        plugin("texture", "terrain/texture.plugin.frag"),
+        standardUniforms {
+            colorTexture = texture("/terrain/terrainbase.jpg")
+            static("tex1", texture("/sand.jpg"))
+            static("tex2", texture("/grass.jpg"))
+        },
         mesh = heightField(id = "terrain",
             cellsX = hfImage.width - 1,
             cellsZ = hfImage.height - 1,
             cellWidth = 20.0f,
             height = { x, y -> hf.pixel(x, y) * elevationRatio - 3.0f }
-        ),
-        material = standard(StandardMaterialOption.NoShadowCast, plugins = mapOf("texture" to "terrain/texture.plugin.frag")) {
-            colorTexture = texture("/terrain/terrainbase.jpg")
-            static("tex1", texture("/sand.jpg"))
-            static("tex2", texture("/grass.jpg"))
-        }
+        )
     )
 }
 
-fun FrameContext.bug(bugTransform: Transform) = Renderable(
-    mesh = obj("/bug/bug.obj"),
-    material = standard {
+fun PassContext.bug(bugTransform: Transform) = Renderable(
+    standardUniforms {
         colorTexture = texture("/bug/bug.jpg")
     },
+    mesh = obj("/bug/bug.obj"),
     transform = bugTransform * Transform().rotate(1.y, -PIdiv2).scale(2.0f).translate(0.3f.y)
 )
 
-fun FrameContext.missile(missileTransform: Transform) = Renderable(
-    mesh = obj("/missile/missile.obj"),
-    material = standard {
+fun PassContext.missile(missileTransform: Transform) = Renderable(
+    standardUniforms {
         colorTexture = texture("/missile/missile.jpg")
     },
+    mesh = obj("/missile/missile.obj"),
     transform = missileTransform * Transform().rotate(1.y, -PIdiv2)
 )
 
-fun FrameContext.alien(alienTransform: Transform) = Renderable(
-    mesh = obj("/alien/alien.obj"),
-    material = standard {
-        colorTexture = texture("/alien/alien.jpg")
-    },
-    transform = alienTransform * Transform().rotate(1.y, -PIdiv2).scale(10.0f).translate(4.y)
-)
-
-fun FrameContext.head(headTransform: Transform) = Renderable(
-    mesh = obj("/head/head-high.obj"),
-    material = standard {
+fun PassContext.head(headTransform: Transform) = Renderable(
+    standardUniforms {
         colorTexture = texture("/head/head-high.jpg")
     },
+    mesh = obj("/head/head-high.obj"),
     transform = headTransform * Transform().rotate(1.y, -PIdiv2).scale(2.0f)
 )
 
-fun FrameContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(
-    billboardStandard(fragFile = "effect/fireball.frag") {
+fun PassContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(
+    fragment("effect/fireball.frag"),
+    standardUniforms {
         xscale = explosion.finishRadius * explosion.phase
         yscale = explosion.finishRadius * explosion.phase
         static("power", explosion.phase)
@@ -206,14 +207,15 @@ fun FrameContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(
     transparent = true
 )
 
-fun FrameContext.splinters(explosionManager: ExplosionManager) = InstancedRenderables(
-    id = "splinters",
-    material = standard(StandardMaterialOption.Color) {
+fun PassContext.splinters(explosionManager: ExplosionManager) = InstancedRenderables(
+    options(StandardMaterialOption.Color),
+    standardUniforms {
         color = Color(0x804040)
         colorTexture = texture("/sand.jpg")
     },
+    id = "splinters",
     count = 5000,
-    mesh = mesh(id = "splinter", static = true, vertexCount = 3, indexCount = 3, POS, Attributes.NORMAL, Attributes.TEX) {
+    mesh = mesh(id = "splinter", static = true, vertexCount = 3, indexCount = 3, POS, NORMAL, TEX) {
         vertex(Vertex(pos = Vec3(-0.1f, 0f, 0f), normal = 1.z, tex = Vec2(0f, 0f)))
         vertex(Vertex(pos = Vec3(0f, 0f, 0f), normal = 1.z, tex = Vec2(1f, 0f)))
         vertex(Vertex(pos = Vec3(0f, 0.2f, 0f), normal = 1.z, tex = Vec2(1f, 1f)))
@@ -225,6 +227,3 @@ fun FrameContext.splinters(explosionManager: ExplosionManager) = InstancedRender
     }
 
 }
-
-
-

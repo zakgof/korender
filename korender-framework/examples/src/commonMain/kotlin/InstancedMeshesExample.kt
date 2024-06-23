@@ -3,7 +3,7 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.declaration.Materials.standard
+import com.zakgof.korender.declaration.MaterialModifiers.standardUniforms
 import com.zakgof.korender.declaration.Meshes.cube
 import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.examples.camera.FreeCamera
@@ -18,12 +18,12 @@ fun InstancedMeshesExample() = Korender {
     Frame {
         Camera(freeCamera.camera(projection, width, height, frameInfo.dt))
         InstancedRenderables(
+            standardUniforms {
+                colorTexture = texture("/sand.jpg")
+            },
             id = "particles",
             count = 21 * 21,
             mesh = cube(0.4f),
-            material = standard {
-                colorTexture = texture("/sand.jpg")
-            },
             static = true
         ) {
             for (x in -10..10) {

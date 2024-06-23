@@ -4,6 +4,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.Korender
+import com.zakgof.korender.declaration.MaterialModifiers.plugin
 import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.z
@@ -18,7 +19,7 @@ fun SkyExample() {
 
         Frame {
             Camera(freeCamera.camera(projection, width, height, 0f))
-            Sky(plugins = mapOf("sky" to "sky/${preset(frameInfo)}.plugin.frag"))
+            Sky (plugin("sky", "sky/${preset(frameInfo)}.plugin.frag"))
             Gui {
                 Filler()
                 Text(id = "fps", fontResource = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0x66FF55))

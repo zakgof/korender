@@ -3,7 +3,9 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.declaration.Materials
+import com.zakgof.korender.declaration.MaterialModifiers.fragment
+import com.zakgof.korender.declaration.MaterialModifiers.plugin
+import com.zakgof.korender.declaration.MaterialModifiers.standardUniforms
 import com.zakgof.korender.declaration.Meshes
 import com.zakgof.korender.declaration.Textures
 import com.zakgof.korender.examples.camera.FreeCamera
@@ -20,19 +22,23 @@ fun WaterExample() {
         OnTouch { freeCamera.touch(it) }
 
         Frame {
+            val plugin = plugin("sky", "sky/fastcloud.plugin.frag")
             Camera(freeCamera.camera(projection, width, height, 0f))
-            Renderable(
-                mesh = Meshes.cube(2f),
-                material = Materials.standard {
-                    colorTexture = Textures.texture("/sand.jpg")
+            Pass {
+                Renderable(
+                    standardUniforms {
+                        colorTexture = Textures.texture("/sand.jpg")
+                    },
+                    mesh = Meshes.cube(2f),
+                )
+                Sky(plugin)
+            }
+            Pass {
+                Screen(fragment("effect/water.frag"), plugin)
+                Gui {
+                    Filler()
+                    Text(id = "fps", fontResource = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFF0000))
                 }
-            )
-            val plugins = mapOf("sky" to "sky/fastcloud.plugin.frag")
-            Filter("effect/water.frag", plugins = plugins)
-            Sky(plugins = plugins)
-            Gui {
-                Filler()
-                Text(id = "fps", fontResource = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFF0000))
             }
         }
     }

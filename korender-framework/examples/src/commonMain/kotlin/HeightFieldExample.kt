@@ -3,7 +3,7 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.declaration.Materials.standard
+import com.zakgof.korender.declaration.MaterialModifiers.standardUniforms
 import com.zakgof.korender.declaration.Meshes.heightField
 import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.examples.camera.FreeCamera
@@ -19,11 +19,11 @@ fun HeightFieldExample() {
             OnTouch { freeCamera.touch(it) }
             Camera(freeCamera.camera(projection, width, height, frameInfo.dt))
             Renderable(
+                standardUniforms {
+                    colorTexture = texture("/sand.jpg")
+                },
                 mesh = heightField(id = "terrain", 128, 128, 0.2f) { x, y ->
                     0.5f * (sin(x * 0.2f) + sin(y * 0.2f))
-                },
-                material = standard {
-                    colorTexture = texture("/sand.jpg")
                 }
             )
         }

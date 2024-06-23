@@ -1,12 +1,57 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.camera.Camera
+import com.zakgof.korender.declaration.InstancedBillboardsContext
+import com.zakgof.korender.declaration.InstancedRenderablesContext
+import com.zakgof.korender.declaration.MeshDeclaration
 import com.zakgof.korender.declaration.UniformSupplier
+import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.Mesh
 import com.zakgof.korender.impl.gpu.GpuShader
 import com.zakgof.korender.impl.material.MapUniformSupplier
 import com.zakgof.korender.math.Transform
 
 internal class Renderable(val mesh: Mesh, val shader: GpuShader, val uniforms: UniformSupplier, val transform: Transform = Transform()) {
+
+    companion object {
+        fun create(inventory: Inventory, declaration: RenderableDeclaration, camera: Camera, isShadowCaster: Boolean, shadowCascades: Int = 0): Renderable {
+            val new = !inventory.hasMesh(declaration.mesh)
+            val mesh = inventory.mesh(declaration.mesh)
+
+            if (declaration.mesh is MeshDeclaration.Custom && !declaration.mesh.static) {
+                (mesh as Geometry.DefaultMesh).updateMesh(declaration.mesh.block)
+            }
+
+            if (declaration.mesh is MeshDeclaration.InstancedBillboard) {
+                // TODO: static
+                val instances = mutableListOf<BillboardInstance>();
+                InstancedBillboardsContext(instances).apply(declaration.mesh.block)
+                if (declaration.mesh.zSort) {
+                    instances.sortBy { (camera.mat4 * it.pos).z }
+                }
+                (mesh as Geometry.InstancedMesh).updateBillboardInstances(instances)
+            }
+            if (declaration.mesh is MeshDeclaration.InstancedMesh) {
+                if (!declaration.mesh.static || new) {
+                    val instances = mutableListOf<MeshInstance>()
+                    InstancedRenderablesContext(instances).apply(declaration.mesh.block)
+                    (mesh as Geometry.InstancedMesh).updateInstances(instances)
+                }
+            }
+            val additionalShadowFlags = if (isShadowCaster) listOf("SHADOW_CASTER") else (0..<shadowCascades).map { "SHADOW_RECEIVER$it" }
+            val origShader = declaration.shader
+            val modifiedShader = ShaderDeclaration(
+                origShader.vertFile, origShader.fragFile, origShader.defs + additionalShadowFlags,
+                origShader.plugins
+            )
+            val shader = inventory.shader(modifiedShader)
+            val uniforms = declaration.uniforms
+            val transform = declaration.transform
+            return Renderable(mesh, shader, uniforms, transform)
+        }
+    }
+
+
     fun render(uniformDecorator: (UniformSupplier) -> UniformSupplier) =
         shader.render(
             uniformDecorator(uniforms + MapUniformSupplier("model" to transform.mat4())),

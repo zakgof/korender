@@ -193,8 +193,11 @@ class GlGpuShader(
                 VGL20.glUniform1i(location, currentTexUnit)
             }
 
-            else ->
-                throw KorenderException("Unsupported uniform value $value of type ${value::class.java}")
+            else -> {
+                val uniformName = uniformLocations.entries.first { it.value == location }.key
+                throw KorenderException("Unsupported uniform value $value of type ${value::class.java} for uniform $uniformName")
+            }
+
         }
         return value is GpuTexture
     }

@@ -3,7 +3,8 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.declaration.Materials.billboardStandard
+import com.zakgof.korender.declaration.MaterialModifiers.fragment
+import com.zakgof.korender.declaration.MaterialModifiers.standardUniforms
 import com.zakgof.korender.math.FloatMath.sin
 import com.zakgof.korender.math.Vec3
 
@@ -13,7 +14,8 @@ fun SmokeExample() = Korender {
         for (i in 1..20) {
             val phase = fract(frameInfo.time * 0.5f + 20f / i)
             Billboard(
-                billboardStandard("effect/smoke.frag") {
+                fragment("effect/smoke.frag"),
+                standardUniforms {
                     xscale = 5f * phase + 0.5f
                     yscale = 5f * phase + 0.5f
                     dynamic("seed") { i / 20f }

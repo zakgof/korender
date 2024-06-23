@@ -3,7 +3,8 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.declaration.Materials.standard
+import com.zakgof.korender.declaration.MaterialModifiers.options
+import com.zakgof.korender.declaration.MaterialModifiers.standardUniforms
 import com.zakgof.korender.declaration.Meshes.sphere
 import com.zakgof.korender.declaration.StandardMaterialOption
 import com.zakgof.korender.math.Color
@@ -15,10 +16,11 @@ import com.zakgof.korender.math.y
 fun QuickStartExample() = Korender {
     Frame {
         Renderable(
-            mesh = sphere(2.0f),
-            material = standard(StandardMaterialOption.Color) {
+            options(StandardMaterialOption.Color),
+            standardUniforms {
                 color = Color(0.2f, 1.0f, 0.5f + 0.5f * sin(frameInfo.time))
             },
+            mesh = sphere(2.0f),
             transform = Transform().translate(sin(frameInfo.time).y)
         )
     }

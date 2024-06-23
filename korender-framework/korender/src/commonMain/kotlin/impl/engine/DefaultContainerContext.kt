@@ -5,6 +5,7 @@ import com.zakgof.korender.declaration.GuiContainerContext
 import com.zakgof.korender.math.Color
 
 internal class DefaultContainerContext(private val declaration: ElementDeclaration.Container) : GuiContainerContext {
+
     override fun Row(block: GuiContainerContext.() -> Unit) {
         val row = ElementDeclaration.Container(Direction.Horizontal)
         DefaultContainerContext(row).apply(block)

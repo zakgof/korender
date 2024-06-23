@@ -2,87 +2,56 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.declaration.BillboardMaterialDeclaration
-import com.zakgof.korender.declaration.FilterDeclaration
 import com.zakgof.korender.declaration.FrameContext
 import com.zakgof.korender.declaration.GuiContainerContext
 import com.zakgof.korender.declaration.InstancedBillboardsContext
 import com.zakgof.korender.declaration.InstancedRenderablesContext
-import com.zakgof.korender.declaration.MaterialDeclaration
+import com.zakgof.korender.declaration.MaterialModifier
 import com.zakgof.korender.declaration.MeshDeclaration
+import com.zakgof.korender.declaration.PassContext
 import com.zakgof.korender.declaration.ShadowContext
-import com.zakgof.korender.declaration.UniformSupplier
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.Projection
 
 internal class DefaultFrameContext(
-    override val frameInfo: FrameInfo,
     private val sceneDeclaration: SceneDeclaration,
+    override val frameInfo: FrameInfo,
     override val width: Int,
     override val height: Int,
     override var projection: Projection,
     override var camera: Camera,
     override var light: Vec3
 ) : FrameContext {
-    override fun Renderable(mesh: MeshDeclaration, material: MaterialDeclaration, transform: Transform, transparent: Boolean) {
-        sceneDeclaration.add(RenderableDeclaration(mesh, material.shader, material.uniforms, transform, if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE))
+
+    private val defaultPassContext = DefaultPassContext(sceneDeclaration.defaultPass, frameInfo, width, height, projection, camera, light)
+
+    override fun Pass(block: PassContext.() -> Unit) {
+        val passDeclaration = PassDeclaration()
+        DefaultPassContext(passDeclaration, frameInfo, width, height, projection, camera, light).apply(block)
+        sceneDeclaration.addPass(passDeclaration)
     }
 
-    override fun Billboard(material: BillboardMaterialDeclaration, position: Vec3, transparent: Boolean) {
-        sceneDeclaration.add(
-            RenderableDeclaration(
-                mesh = MeshDeclaration.Billboard,
-                shader = material.shader,
-                uniforms = material.uniforms,
-                transform = Transform().translate(position),
-                bucket = if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE
-            )
-        )
-    }
+    override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean) =
+        defaultPassContext.Renderable(*materialModifiers, mesh = mesh, transform = transform, transparent = transparent)
 
-    override fun Filter(fragFile: String, vararg defs: String, plugins: Map<String, String>, uniforms: UniformSupplier) {
-        sceneDeclaration.add(
-            FilterDeclaration(
-                ShaderDeclaration("screen.vert", fragFile, setOf(*defs), plugins),
-                uniforms
-            )
-        )
-    }
+    override fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3, transparent: Boolean) =
+        defaultPassContext.Billboard(*materialModifiers, position = position, transparent = transparent)
 
-    override fun InstancedBillboards(id: Any, count: Int, material: BillboardMaterialDeclaration, zSort: Boolean, block: InstancedBillboardsContext.() -> Unit) {
-        sceneDeclaration.add(
-            RenderableDeclaration(
-                MeshDeclaration.InstancedBillboard(id, count, zSort, block),
-                material.shader,
-                material.uniforms
-            )
-        )
-    } // TODO Bucket
+    override fun Screen(vararg materialModifiers: MaterialModifier) =
+        defaultPassContext.Screen(*materialModifiers)
 
-    override fun InstancedRenderables(id: Any, count: Int, mesh: MeshDeclaration, material: MaterialDeclaration, static: Boolean, block: InstancedRenderablesContext.() -> Unit) {
-        sceneDeclaration.add(
-            RenderableDeclaration(
-                MeshDeclaration.InstancedMesh(id, count, mesh, material, static, block), material.shader, material.uniforms
-            )
-        )
-    } // TODO Bucket
+    override fun Sky(vararg materialModifiers: MaterialModifier) =
+        defaultPassContext.Sky(*materialModifiers)
 
-    override fun Gui(block: GuiContainerContext.() -> Unit) {
-        val gui = ElementDeclaration.Container(Direction.Vertical)
-        sceneDeclaration.gui = gui
-        DefaultContainerContext(gui).apply(block)
-    }
+    override fun Gui(block: GuiContainerContext.() -> Unit) =
+        defaultPassContext.Gui(block)
 
-    override fun Sky(vararg defs: String, plugins: Map<String, String>, uniforms: UniformSupplier) {
-        sceneDeclaration.add(
-            RenderableDeclaration(
-                MeshDeclaration.ScreenQuad,
-                ShaderDeclaration("sky/sky.vert", "sky/sky.frag", setOf(*defs), plugins),
-                uniforms
-            )
-        )
-    }
+    override fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: Any, count: Int, mesh: MeshDeclaration, static: Boolean, block: InstancedRenderablesContext.() -> Unit) =
+        defaultPassContext.InstancedRenderables(*materialModifiers, id = id, count = count, mesh = mesh, static = static, block = block)
+
+    override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, zSort: Boolean, block: InstancedBillboardsContext.() -> Unit) =
+        defaultPassContext.InstancedBillboards(*materialModifiers, id = id, count = count, zSort = zSort, block = block)
 
     override fun Shadow(block: ShadowContext.() -> Unit) {
         val shadowDeclaration = ShadowDeclaration()
