@@ -40,8 +40,8 @@ fun App() = Korender {
         Camera(controller.camera(bugTransform, projection, width, height, frameInfo.dt, frameInfo.time))
         Shadow {
             Cascade(1024, 3f, 20f)
-            Cascade(512, 18f, 100f)
-            Cascade(256, 100f, 10000f)
+            Cascade(512, 20f, 100f)
+            Cascade(512, 100f, 10000f)
         }
 
         val skyPlugin = plugin("sky", "sky/fastcloud.plugin.frag")

@@ -95,17 +95,17 @@ internal class SingleShadower(private val index: Int, private val inventory: Inv
     private fun frustumCorners(projection: Projection, camera: Camera, near: Float, far: Float): List<Vec3> {
         projection as FrustumProjection
         camera as DefaultCamera
-        val up = camera.up * projection.height
-        val right = (camera.direction % camera.up).normalize() * projection.width
+        val upNear = camera.up * (projection.height * 0.5f * near / projection.near)
+        val rightNear = (camera.direction % camera.up).normalize() * (projection.width * 0.5f * near / projection.near)
         val toNear = camera.direction * near
         val toFar = camera.direction * far
-        val upFar = up * (far / near)
-        val rightFar = right * (far / near)
+        val upFar = upNear * (far / near)
+        val rightFar = rightNear * (far / near)
         return listOf(
-            camera.position + up + right + toNear,
-            camera.position - up + right + toNear,
-            camera.position - up - right + toNear,
-            camera.position + up - right + toNear,
+            camera.position + upNear + rightNear + toNear,
+            camera.position - upNear + rightNear + toNear,
+            camera.position - upNear - rightNear + toNear,
+            camera.position + upNear - rightNear + toNear,
             camera.position + upFar + rightFar + toFar,
             camera.position - upFar + rightFar + toFar,
             camera.position - upFar - rightFar + toFar,
