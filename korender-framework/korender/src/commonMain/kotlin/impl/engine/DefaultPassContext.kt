@@ -49,14 +49,7 @@ internal class DefaultPassContext(
         passDeclaration.addGui(root)
     }
 
-    override fun InstancedRenderables(
-        vararg materialModifiers: MaterialModifier,
-        id: Any,
-        count: Int,
-        mesh: MeshDeclaration,
-        static: Boolean,
-        block: InstancedRenderablesContext.() -> Unit
-    ) {
+    override fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: Any, count: Int, mesh: MeshDeclaration, static: Boolean, block: InstancedRenderablesContext.() -> Unit) {
         val materialDeclaration = materialDeclaration(MaterialBuilder(), materialModifiers)
         passDeclaration.add(
             RenderableDeclaration(
@@ -67,13 +60,7 @@ internal class DefaultPassContext(
         )
     }
 
-    override fun InstancedBillboards(
-        vararg materialModifiers: MaterialModifier,
-        id: Any,
-        count: Int,
-        zSort: Boolean,
-        block: InstancedBillboardsContext.() -> Unit
-    ) {
+    override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, zSort: Boolean, block: InstancedBillboardsContext.() -> Unit) {
         val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "billboard.vert", fragShaderFile = "standard.frag"), materialModifiers)
         passDeclaration.add(
             RenderableDeclaration(

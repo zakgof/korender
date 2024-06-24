@@ -24,9 +24,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         sceneDeclaration.compilePasses()
         shadower = sceneDeclaration.shadow?.let { CascadeShadower(inventory, it.cascades) }
         val shadowCascades = shadower?.cascadeNumber ?: 0
-        shadowCasters =  if (sceneDeclaration.passes.isNotEmpty())
-            createShadowCasters(sceneDeclaration.passes[0].renderables)
-        else listOf()
+        shadowCasters = if (sceneDeclaration.passes.isNotEmpty()) createShadowCasters(sceneDeclaration.passes[0].renderables) else listOf()
 
         passes = sceneDeclaration.passes.map { ScenePass(inventory, camera, width, height, it, shadowCascades) }
 
