@@ -39,9 +39,9 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
             .map { Renderable.create(inventory, it, camera, true) }
 
     fun render(context: Map<String, Any?>, projection: Projection, camera: Camera, light: Vec3) {
-        val shadowUniforms: UniformSupplier = shadower?.render(projection, camera, light, shadowCasters) ?: UniformSupplier {null}
+        val shadowUniforms: UniformSupplier = shadower?.render(projection, camera, light, shadowCasters) ?: UniformSupplier { null }
 
-        val passFrameBuffers = passes.indices.take(2)
+        val passFrameBuffers = (0 until passes.size - 1)
             .map { inventory.frameBuffer(FrameBufferDeclaration("filter-$it", width, height, true)) }
 
         val prevFrameContext = mutableMapOf<String, Any?>()

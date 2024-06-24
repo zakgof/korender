@@ -1,7 +1,7 @@
-import java.util.Properties
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.composeCompiler)
@@ -47,6 +47,8 @@ kotlin {
 
             implementation("org.lwjgl:lwjgl:3.3.3:natives-windows")
             implementation("org.lwjgl:lwjgl-opengl:3.3.3:natives-windows")
+            implementation("org.lwjgl:lwjgl:3.3.3:natives-linux")
+            implementation("org.lwjgl:lwjgl-opengl:3.3.3:natives-linux")
         }
     }
 }

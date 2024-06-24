@@ -16,7 +16,7 @@ import com.zakgof.korender.projection.Projection
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.function.Predicate
 
-internal class Engine(private var height: Int, private var width: Int, block: KorenderContext.() -> Unit) {
+internal class Engine(private var width: Int, private var height: Int, block: KorenderContext.() -> Unit) {
 
     private val touchQueue = ConcurrentLinkedQueue<TouchEvent>()
     private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
@@ -33,6 +33,7 @@ internal class Engine(private var height: Int, private var width: Int, block: Ko
     private val touchHandlers = mutableListOf<TouchHandler>()
 
     init {
+        println("Engine:init $width:$height")
         block.invoke(object : KorenderContext {
             override fun Frame(block: FrameContext.() -> Unit) {
                 frameBlocks.add(block)
@@ -91,6 +92,7 @@ internal class Engine(private var height: Int, private var width: Int, block: Ko
     }
 
     fun resize(w: Int, h: Int) {
+        println("Engine:resize $w:$h")
         width = w
         height = h
     }

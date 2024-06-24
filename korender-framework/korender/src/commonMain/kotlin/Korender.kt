@@ -11,9 +11,7 @@ fun Korender(block: KorenderContext.() -> Unit) {
     lateinit var engine: Engine
 
     getPlatform().openGL(
-        init = { w, h ->
-            engine = Engine(w, h, block)
-        },
+        init = { w, h -> engine = Engine(w, h, block) },
         frame = { engine.frame() },
         resize = { w, h -> engine.resize(w, h) },
         touch = { e -> engine.pushTouch(e) }
