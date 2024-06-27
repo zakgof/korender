@@ -1,4 +1,4 @@
-rootProject.name = "korender"
+rootProject.name = "korender-root"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {

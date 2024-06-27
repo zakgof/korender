@@ -16,7 +16,6 @@ class GlGpuFrameBuffer(private val name: String, private val width: Int, private
     override val colorTexture:  GlGpuTexture
     override val depthTexture: GlGpuTexture?
 
-    // TODO: multiple RTs !
     init {
 
         println("Creating GPU Framebuffer [$name] ${width}x${height}: $fbHandle")
@@ -90,12 +89,6 @@ class GlGpuFrameBuffer(private val name: String, private val width: Int, private
 
     private fun bind() {
         VGL30.glBindFramebuffer(VGL30.GL_FRAMEBUFFER, fbHandle)
-
-        val err1 = VGL11.glGetError()
-        if (err1 != 0) {
-            throw KorenderException("Frame error $err1")
-        }
-
         VGL11.glViewport(0, 0, width, height)
     }
 

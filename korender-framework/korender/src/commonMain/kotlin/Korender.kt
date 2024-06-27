@@ -20,3 +20,9 @@ fun Korender(block: KorenderContext.() -> Unit) {
 
 typealias TouchHandler = (TouchEvent) -> Unit
 
+fun onClick(touchEvent: TouchEvent, clickHandler: () -> Unit) {
+    if (touchEvent.type == TouchEvent.Type.DOWN) {
+        clickHandler()
+    }
+}
+

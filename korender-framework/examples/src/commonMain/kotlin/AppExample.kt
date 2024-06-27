@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 fun AppExample() {
     val options = listOf(
         Demo("QS", "QuickStart: simple sphere with dynamic color and position") { QuickStartExample() },
+        Demo("Trans", "Transparent objects") { TransparencyExample() },
         Demo("Mesh", "Demonstration of static and dynamic custom meshes") { MeshesExample() },
         Demo("Obj", "Loading a textured obj file") { ObjFileExample() },
         Demo("IBB", "Particles system using instanced billboards") { InstancedBillboardsExample() },

@@ -1,8 +1,18 @@
 package com.zakgof.korender.impl.geometry
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.declaration.Billboard
+import com.zakgof.korender.declaration.Cube
+import com.zakgof.korender.declaration.CustomMesh
+import com.zakgof.korender.declaration.HeightField
+import com.zakgof.korender.declaration.ImageQuad
+import com.zakgof.korender.declaration.InstancedBillboard
+import com.zakgof.korender.declaration.InstancedMesh
 import com.zakgof.korender.declaration.MeshDeclaration
 import com.zakgof.korender.declaration.MeshInitializer
+import com.zakgof.korender.declaration.ObjMesh
+import com.zakgof.korender.declaration.ScreenQuad
+import com.zakgof.korender.declaration.Sphere
 import com.zakgof.korender.impl.engine.BillboardInstance
 import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.geometry.Attributes.NORMAL
@@ -36,10 +46,10 @@ internal object Geometry {
 
     fun create(declaration: MeshDeclaration, gpu: Gpu): Mesh =
         when (declaration) {
-            is MeshDeclaration.InstancedMesh ->
+            is InstancedMesh ->
                 builder(declaration.mesh).buildInstanced(gpu, declaration.count)
 
-            is MeshDeclaration.InstancedBillboard ->
+            is InstancedBillboard ->
                 billboard().buildInstanced(gpu, declaration.count)
 
             else ->
@@ -48,16 +58,16 @@ internal object Geometry {
 
     private fun builder(declaration: MeshDeclaration): MeshBuilder =
         when (declaration) {
-            is MeshDeclaration.Sphere -> sphere(declaration.radius)
-            is MeshDeclaration.Cube -> cube(declaration.halfSide)
-            is MeshDeclaration.Obj -> obj(declaration.objFile)
-            is MeshDeclaration.Billboard -> billboard()
-            is MeshDeclaration.ImageQuad -> imageQuad()
-            is MeshDeclaration.ScreenQuad -> screenQuad()
-            is MeshDeclaration.Custom -> create(declaration.id.toString(), declaration.vertexCount, declaration.indexCount, *declaration.attributes.toTypedArray()) {
+            is Sphere -> sphere(declaration.radius)
+            is Cube -> cube(declaration.halfSide)
+            is ObjMesh -> obj(declaration.objFile)
+            is Billboard -> billboard()
+            is ImageQuad -> imageQuad()
+            is ScreenQuad -> screenQuad()
+            is CustomMesh -> create(declaration.id.toString(), declaration.vertexCount, declaration.indexCount, *declaration.attributes.toTypedArray()) {
                 apply (declaration.block)
             }
-            is MeshDeclaration.HeightField -> heightMap(declaration.cellsX, declaration.cellsX, declaration.cellWidth, declaration.height)
+            is HeightField -> heightMap(declaration.cellsX, declaration.cellsX, declaration.cellWidth, declaration.height)
             else -> throw KorenderException("Unknown mesh declaration")
         }
 
@@ -148,8 +158,8 @@ internal object Geometry {
             return DefaultMesh(name, gpu, this, isDynamic)
         }
 
-        fun buildInstanced(gpu: Gpu, count: Int): InstancedMesh =
-            InstancedMesh(name, gpu, instancing(count), this, count)
+        fun buildInstanced(gpu: Gpu, count: Int): MultiMesh =
+            MultiMesh(name, gpu, instancing(count), this, count)
 
         fun instancing(
             instances: Int,
@@ -235,7 +245,7 @@ internal object Geometry {
 
     }
 
-    class InstancedMesh(
+    internal class MultiMesh(
         name: String,
         gpu: Gpu,
         data: MeshBuilder,
@@ -582,7 +592,7 @@ internal object Geometry {
             indices(0, 2, 1, 0, 3, 2)
         }
 
-    fun font(gpu: Gpu, reservedLength: Int): InstancedMesh =
+    fun font(gpu: Gpu, reservedLength: Int): MultiMesh =
         create("font",4, 6, TEX, SCREEN) {
             indices(0, 2, 1, 0, 3, 2)
         }.buildInstanced(gpu, reservedLength)

@@ -1,6 +1,6 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.declaration.MeshDeclaration
+import com.zakgof.korender.declaration.ImageQuad
 import com.zakgof.korender.declaration.TextureDeclaration
 import com.zakgof.korender.impl.engine.Scene.TouchBox
 import com.zakgof.korender.impl.font.Fonts
@@ -62,7 +62,7 @@ internal class GuiRenderer(private val inventory: Inventory, private val width: 
     private fun createImage(declaration: ElementDeclaration.Image, x: Int, y: Int) {
         renderables.add(
             Renderable(
-                mesh = inventory.mesh(MeshDeclaration.ImageQuad), shader = inventory.shader(Shaders.imageQuadDeclaration), uniforms = MapUniformSupplier(
+                mesh = inventory.mesh(ImageQuad), shader = inventory.shader(Shaders.imageQuadDeclaration), uniforms = MapUniformSupplier(
                     Pair("pos", Vec2((x.toFloat() + declaration.marginLeft.toFloat()) / width, 1.0f - (y.toFloat() + declaration.marginTop.toFloat() + declaration.height.toFloat()) / height)),
                     Pair("size", Vec2(declaration.width.toFloat() / width, declaration.height.toFloat() / height)),
                     Pair("imageTexture", inventory.texture(TextureDeclaration(declaration.imageResource)))

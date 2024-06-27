@@ -1,5 +1,6 @@
 package com.zakgof.korender.declaration
 
+import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.material.StockUniforms
 
@@ -30,8 +31,3 @@ object MaterialModifiers {
     fun uniforms(uniforms: UniformSupplier): MaterialModifier = MaterialModifier { it.uniforms = uniforms }
     fun standardUniforms(block: StockUniforms.() -> Unit): MaterialModifier = uniforms(StockUniforms().apply(block))
 }
-
-class MaterialDeclaration internal constructor(
-    internal val shader: ShaderDeclaration,
-    internal val uniforms: UniformSupplier
-)

@@ -18,7 +18,7 @@ fun QuickStartExample() = Korender {
         Renderable(
             options(StandardMaterialOption.Color),
             standardUniforms {
-                color = Color(0.2f, 1.0f, 0.5f + 0.5f * sin(frameInfo.time))
+                color = Color(1.0f, 0.2f, 1.0f, 0.5f + 0.5f * sin(frameInfo.time))
             },
             mesh = sphere(2.0f),
             transform = Transform().translate(sin(frameInfo.time).y)

@@ -20,4 +20,4 @@ enum class TextureWrap {
     Repeat
 }
 
-data class TextureDeclaration(val textureResource: String, val filter: TextureFilter = TextureFilter.MipMapLinearLinear, val wrap: TextureWrap = TextureWrap.Repeat, val aniso: Int = 1024)
+data class TextureDeclaration internal constructor(val textureResource: String, val filter: TextureFilter = TextureFilter.MipMapLinearLinear, val wrap: TextureWrap = TextureWrap.Repeat, val aniso: Int = 1024)

@@ -175,7 +175,7 @@ class GlGpuShader(
             is Float -> VGL20.glUniform1f(location, value)
             is Vec2 -> VGL20.glUniform2f(location, value.x, value.y)
             is Vec3 -> VGL20.glUniform3f(location, value.x, value.y, value.z)
-            is Color -> VGL20.glUniform3f(location, value.r, value.g, value.b)
+            is Color -> VGL20.glUniform4f(location, value.r, value.g, value.b, value.a)
             is Mat4 -> VGL20.glUniformMatrix4fv(
                 location,
                 false,

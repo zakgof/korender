@@ -15,7 +15,7 @@ class StockUniforms : UniformSupplier {
     var shadowTexture: TextureDeclaration? = null
     var detailTexture: TextureDeclaration? = null
 
-    var color = Color(0.5f, 0.5f, 0.5f);
+    var color = Color(1f, 0.5f, 0.5f, 0.5f);
     var triplanarScale = 1.0f
     var detailScale = 16.0f
     var detailRatio = 0.3f

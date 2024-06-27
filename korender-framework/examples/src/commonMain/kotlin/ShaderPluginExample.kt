@@ -17,8 +17,8 @@ fun ShaderPluginExample() = Korender {
         Renderable(
             plugin("texture", "checked.frag"),
             standardUniforms {
-                static("color1", Color(0xFFD0D0))
-                static("color2", Color(0x000020))
+                static("color1", Color(0xFFFFFF20))
+                static("color2", Color(0xFF8080FF))
             },
             mesh = sphere(2.0f),
             transform = Transform().translate(sin(frameInfo.time).y)

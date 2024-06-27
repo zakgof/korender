@@ -22,6 +22,7 @@ internal class SceneDeclaration {
         }
         this.shadow = shadow
     }
+
     fun compilePasses() {
         if (defaultPass.renderables.isNotEmpty() || defaultPass.guis.isNotEmpty()) {
             if (passes.isNotEmpty()) {
@@ -90,6 +91,11 @@ internal class RenderableDeclaration(
     val bucket: Bucket = Bucket.OPAQUE
 )
 
+internal class MaterialDeclaration(
+    val shader: ShaderDeclaration,
+    val uniforms: UniformSupplier
+)
+
 internal sealed class ElementDeclaration {
 
     class Filler : ElementDeclaration()
@@ -130,11 +136,9 @@ internal data class FrameBufferDeclaration(
     val withDepth: Boolean
 )
 
-internal class ShadowDeclaration() {
-
-    internal val cascades = mutableListOf<CascadeDeclaration>()
-    fun addCascade(cascadeDeclaration: CascadeDeclaration) =
-        cascades.add(cascadeDeclaration)
+internal class ShadowDeclaration {
+    val cascades = mutableListOf<CascadeDeclaration>()
+    fun addCascade(cascadeDeclaration: CascadeDeclaration) = cascades.add(cascadeDeclaration)
 }
 
 internal data class CascadeDeclaration(val mapSize: Int, val near: Float, var far: Float)

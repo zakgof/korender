@@ -264,9 +264,10 @@ class JvmImage(
     override fun pixel(x: Int, y: Int): com.zakgof.korender.math.Color {
         raster.getPixel(x, y, pixel)
         return when (format) {
-            // TODO
-            GpuTexture.Format.Gray16 -> com.zakgof.korender.math.Color(pixel[0] / 65535.0f, pixel[0] / 65535.0f, pixel[0] / 65535.0f)
-            else -> com.zakgof.korender.math.Color(pixel[0] / 255.0f, pixel[1] / 255.0f, pixel[2] / 255.0f)
+            // TODO support more formats
+            // TODO support transparency
+            GpuTexture.Format.Gray16 -> com.zakgof.korender.math.Color(1.0f, pixel[0] / 65535.0f, pixel[0] / 65535.0f, pixel[0] / 65535.0f)
+            else -> com.zakgof.korender.math.Color(1.0f, pixel[0] / 255.0f, pixel[1] / 255.0f, pixel[2] / 255.0f)
         }
     }
 }

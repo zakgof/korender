@@ -6,8 +6,8 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.declaration.MaterialModifiers.fragment
 import com.zakgof.korender.declaration.MaterialModifiers.standardUniforms
-import com.zakgof.korender.declaration.Meshes
-import com.zakgof.korender.declaration.Textures
+import com.zakgof.korender.declaration.Meshes.cube
+import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -30,9 +30,9 @@ fun FireBallExample() = Korender {
         )
         Renderable(
             standardUniforms {
-                colorTexture = Textures.texture("/sand.jpg")
+                colorTexture = texture("/sand.jpg")
             },
-            mesh = Meshes.cube(1f),
+            mesh = cube(1f),
             transform = Transform().scale(9f).translate(-9.y)
         )
     }

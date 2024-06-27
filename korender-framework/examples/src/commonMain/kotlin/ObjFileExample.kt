@@ -9,25 +9,22 @@ import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.math.FloatMath
 import com.zakgof.korender.math.Transform
-import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.math.x
+import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
 
 @Composable
 fun ObjFileExample() {
-    val orbitCamera = OrbitCamera(Vec3(0f, 2f, 20f), Vec3(0f, 2f, 0f))
+    val orbitCamera = OrbitCamera(20.z, 0.z)
     Korender {
         OnTouch { orbitCamera.touch(it) }
         Frame {
             Camera(orbitCamera.camera(projection, width, height))
             Renderable(
                 standardUniforms {
-                    colorTexture = texture("/cat-red.jpg")
-                    ambient = 1.0f
-                    diffuse = 1.0f
-                    specular = 0.0f
+                    colorTexture = texture("/head.jpg")
                 },
-                mesh = obj("/cat-red.obj"),
-                transform = Transform().scale(0.1f).rotate(1.x, -FloatMath.PIdiv2)
+                mesh = obj("/head.obj"),
+                transform = Transform().scale(7.0f).rotate(1.y, -FloatMath.PIdiv2)
             )
         }
     }

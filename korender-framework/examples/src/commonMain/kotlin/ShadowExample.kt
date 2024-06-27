@@ -5,8 +5,8 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.declaration.MaterialModifiers.options
 import com.zakgof.korender.declaration.MaterialModifiers.standardUniforms
-import com.zakgof.korender.declaration.Meshes
 import com.zakgof.korender.declaration.Meshes.cube
+import com.zakgof.korender.declaration.Meshes.sphere
 import com.zakgof.korender.declaration.StandardMaterialOption
 import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.math.FloatMath
@@ -40,7 +40,7 @@ fun ShadowExample() =
             )
             Renderable(
                 pcss, uniforms,
-                mesh = Meshes.sphere(1.5f),
+                mesh = sphere(1.5f),
                 transform = Transform().translate(Vec3(-5.0f, 3.5f + FloatMath.sin(frameInfo.time), 0.0f)),
             )
         }

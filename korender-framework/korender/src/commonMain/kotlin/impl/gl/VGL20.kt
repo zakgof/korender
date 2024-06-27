@@ -136,7 +136,7 @@ object VGL20 {
     const val GL_STENCIL_BACK_VALUE_MASK: Int = 0x8CA4
     const val GL_STENCIL_BACK_WRITEMASK: Int = 0x8CA5
 
-    var gl: com.zakgof.korender.impl.gl.IGL20? = null
+    var gl: IGL20? = null
 
     /**
      * Creates a program object.
@@ -144,7 +144,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glCreateProgram)
      */
     fun glCreateProgram(): Int {
-        return com.zakgof.korender.impl.gl.VGL20.gl!!.glCreateProgram()
+        return VGL20.gl!!.glCreateProgram()
     }
 
     /**
@@ -155,7 +155,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glCreateShader)
      */
     fun glCreateShader(type: Int): Int {
-        return com.zakgof.korender.impl.gl.VGL20.gl!!.glCreateShader(type)
+        return VGL20.gl!!.glCreateShader(type)
     }
 
     /**
@@ -180,7 +180,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glAttachShader)
      */
     fun glAttachShader(program: Int, shader: Int) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glAttachShader(program, shader)
+        VGL20.gl!!.glAttachShader(program, shader)
     }
 
     /**
@@ -191,7 +191,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glLinkProgram)
      */
     fun glLinkProgram(program: Int) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glLinkProgram(program)
+        VGL20.gl!!.glLinkProgram(program)
     }
 
     /**
@@ -202,7 +202,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glUseProgram)
      */
     fun glUseProgram(program: Int) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glUseProgram(program)
+        VGL20.gl!!.glUseProgram(program)
     }
 
     /**
@@ -213,7 +213,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glValidateProgram)
      */
     fun glValidateProgram(program: Int) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glValidateProgram(program)
+        VGL20.gl!!.glValidateProgram(program)
     }
 
     /**
@@ -225,7 +225,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glGetProgram)
      */
     fun glGetProgrami(program: Int, pname: Int): Int {
-        return com.zakgof.korender.impl.gl.VGL20.gl!!.glGetProgrami(program, pname)
+        return VGL20.gl!!.glGetProgrami(program, pname)
     }
 
     /**
@@ -236,7 +236,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glGetShaderInfoLog)
      */
     fun glGetShaderInfoLog(shader: Int): String {
-        return com.zakgof.korender.impl.gl.VGL20.gl!!.glGetShaderInfoLog(shader)
+        return VGL20.gl!!.glGetShaderInfoLog(shader)
     }
 
     /**
@@ -247,7 +247,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glGetProgramInfoLog)
      */
     fun glGetProgramInfoLog(program: Int): String {
-        return com.zakgof.korender.impl.gl.VGL20.gl!!.glGetProgramInfoLog(program)
+        return VGL20.gl!!.glGetProgramInfoLog(program)
     }
 
     /**
@@ -260,7 +260,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glGetProgram)
      */
     fun glGetProgramiv(program: Int, pname: Int, params: IntBuffer) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glGetProgramiv(program, pname, params)
+        VGL20.gl!!.glGetProgramiv(program, pname, params)
     }
 
     /**
@@ -274,7 +274,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glGetActiveUniform)
      */
     fun glGetActiveUniform(program: Int, index: Int, size: IntBuffer, type: IntBuffer): String {
-        return com.zakgof.korender.impl.gl.VGL20.gl!!.glGetActiveUniform(program, index, size, type)
+        return VGL20.gl!!.glGetActiveUniform(program, index, size, type)
     }
 
     /**
@@ -288,7 +288,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glGetActiveAttrib)
      */
     fun glGetActiveAttrib(program: Int, index: Int, size: IntBuffer, type: IntBuffer): String {
-        return com.zakgof.korender.impl.gl.VGL20.gl!!.glGetActiveAttrib(program, index, size, type)
+        return VGL20.gl!!.glGetActiveAttrib(program, index, size, type)
     }
 
     /**
@@ -304,7 +304,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glShaderSource)
      */
     fun glShaderSource(shader: Int, source: String) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glShaderSource(shader, source)
+        VGL20.gl!!.glShaderSource(shader, source)
     }
 
     /**
@@ -315,7 +315,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glCompileShader)
      */
     fun glCompileShader(shader: Int) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glCompileShader(shader)
+        VGL20.gl!!.glCompileShader(shader)
     }
 
     /**
@@ -328,7 +328,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glGetShader)
      */
     fun glGetShaderiv(shader: Int, pname: Int, params: IntBuffer) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glGetShaderiv(shader, pname, params)
+        VGL20.gl!!.glGetShaderiv(shader, pname, params)
     }
 
     /**
@@ -339,7 +339,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glEnableVertexAttribArray)
      */
     fun glEnableVertexAttribArray(index: Int) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glEnableVertexAttribArray(index)
+        VGL20.gl!!.glEnableVertexAttribArray(index)
     }
 
     /**
@@ -351,7 +351,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glGetUniformLocation)
      */
     fun glGetUniformLocation(program: Int, name: String): Int {
-        return com.zakgof.korender.impl.gl.VGL20.gl!!.glGetUniformLocation(program, name)
+        return VGL20.gl!!.glGetUniformLocation(program, name)
     }
 
     /**
@@ -363,7 +363,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glGetAttribLocation)
      */
     fun glGetAttribLocation(program: Int, name: String): Int {
-        return com.zakgof.korender.impl.gl.VGL20.gl!!.glGetAttribLocation(program, name)
+        return VGL20.gl!!.glGetAttribLocation(program, name)
     }
 
     /**
@@ -375,7 +375,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glUniform)
      */
     fun glUniform1i(location: Int, v0: Int) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glUniform1i(location, v0)
+        VGL20.gl!!.glUniform1i(location, v0)
     }
 
     /**
@@ -387,15 +387,19 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glUniform)
      */
     fun glUniform1f(location: Int, v0: Float) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glUniform1f(location, v0)
+        VGL20.gl!!.glUniform1f(location, v0)
     }
 
     fun glUniform2f(location: Int, v0: Float, v1: Float) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glUniform2f(location, v0, v1)
+        VGL20.gl!!.glUniform2f(location, v0, v1)
     }
 
     fun glUniform3f(location: Int, v0: Float, v1: Float, v2: Float) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glUniform3f(location, v0, v1, v2)
+        VGL20.gl!!.glUniform3f(location, v0, v1, v2)
+    }
+
+    fun glUniform4f(location: Int, v0: Float, v1: Float, v2: Float, v3: Float) {
+        VGL20.gl!!.glUniform4f(location, v0, v1, v2, v3)
     }
 
     /**
@@ -408,7 +412,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glUniform)
      */
     fun glUniformMatrix2fv(location: Int, transpose: Boolean, value: FloatBuffer) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glUniformMatrix2fv(location, transpose, value)
+        VGL20.gl!!.glUniformMatrix2fv(location, transpose, value)
     }
 
     /**
@@ -421,7 +425,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glUniform)
      */
     fun glUniformMatrix3fv(location: Int, transpose: Boolean, value: FloatBuffer) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glUniformMatrix3fv(location, transpose, value)
+        VGL20.gl!!.glUniformMatrix3fv(location, transpose, value)
     }
 
     /**
@@ -434,7 +438,7 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glUniform)
      */
     fun glUniformMatrix4fv(location: Int, transpose: Boolean, value: FloatBuffer) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glUniformMatrix4fv(location, transpose, value)
+        VGL20.gl!!.glUniformMatrix4fv(location, transpose, value)
     }
 
     /**
@@ -459,7 +463,7 @@ object VGL20 {
         stride: Int,
         pointer: Int
     ) {
-        com.zakgof.korender.impl.gl.VGL20.gl!!.glVertexAttribPointer(index, size, type, normalized, stride, pointer)
+        VGL20.gl!!.glVertexAttribPointer(index, size, type, normalized, stride, pointer)
     }
 
     /**
@@ -471,11 +475,11 @@ object VGL20 {
      * @see [Reference Page](http://docs.gl/gl4/glGetShader)
      */
     fun glGetShaderi(shader: Int, pname: Int): Int {
-        return com.zakgof.korender.impl.gl.VGL20.gl!!.glGetShaderi(shader, pname)
+        return VGL20.gl!!.glGetShaderi(shader, pname)
     }
 
-    fun glDeleteShader(shader: Int) = com.zakgof.korender.impl.gl.VGL20.gl!!.glDeleteShader(shader)
+    fun glDeleteShader(shader: Int) = VGL20.gl!!.glDeleteShader(shader)
 
-    fun glDeleteProgram(program: Int) = com.zakgof.korender.impl.gl.VGL20.gl!!.glDeleteProgram(program)
+    fun glDeleteProgram(program: Int) = VGL20.gl!!.glDeleteProgram(program)
 
 }

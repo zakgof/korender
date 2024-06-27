@@ -3,6 +3,7 @@ package com.zakgof.korender.impl.engine
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.declaration.UniformSupplier
 import com.zakgof.korender.impl.gl.VGL11
+import com.zakgof.korender.math.Vec3
 
 internal class ScenePass(private val inventory: Inventory, private val camera: Camera, private val width: Int, private val height: Int, passDeclaration: PassDeclaration, shadowCascades: Int) {
 
@@ -12,6 +13,7 @@ internal class ScenePass(private val inventory: Inventory, private val camera: C
     private val transparents = mutableListOf<Renderable>()
     private val skies = mutableListOf<Renderable>()
     private val screens = mutableListOf<Renderable>()
+
     init {
         passDeclaration.renderables.forEach {
             val renderable = Renderable.create(inventory, it, camera, false, shadowCascades)
@@ -37,34 +39,12 @@ internal class ScenePass(private val inventory: Inventory, private val camera: C
         VGL11.glEnable(VGL11.GL_CULL_FACE)
         VGL11.glCullFace(VGL11.GL_BACK)
         VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
-        renderBucket(opaques, -1.0, camera, uniformDecorator)
+        opaques.forEach { it.render(uniformDecorator) }
         skies.forEach { it.render(uniformDecorator) }
         VGL11.glDepthMask(false)
-        renderBucket(transparents, 1.0, camera, uniformDecorator)
+        transparents.sortedByDescending { (camera.mat4 * (it.transform.mat4() * Vec3.ZERO)).z }
+            .forEach { it.render(uniformDecorator) }
         VGL11.glDepthMask(true)
         screens.forEach { it.render(uniformDecorator) }
     }
-
-    private fun renderBucket(
-        renderables: MutableList<Renderable>, sortFactor: Double, camera: Camera, uniformDecorator: (UniformSupplier) -> UniformSupplier
-    ) {
-//        val visibleRenderables = renderables.filter { isVisible(it) }
-//            .sortedBy {
-//                val worldBB = it.mesh.modelBoundingBox!!.transform(it.transform)
-//                (camera.mat4() * worldBB.center()).z * sortFactor
-//            }
-//        visibleRenderables.forEach { it.render(contextUniforms) }
-        // TODO
-        renderables.forEach { it.render(uniformDecorator) }
-    }
-
-//    private fun isVisible(renderable: Renderable): Boolean {
-//        return if (renderable.worldBoundingBox == null) {
-//            true
-//        } else {
-//            renderable.worldBoundingBox!!.isIn(projection.mat4() * camera.mat4())
-//        }
-//    }
-//
-
 }

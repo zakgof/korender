@@ -22,7 +22,7 @@ fun SkyExample() {
             Sky (plugin("sky", "sky/${preset(frameInfo)}.plugin.frag"))
             Gui {
                 Filler()
-                Text(id = "fps", fontResource = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0x66FF55))
+                Text(id = "fps", fontResource = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFF66FF55))
             }
         }
     }

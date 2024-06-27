@@ -77,9 +77,12 @@ object Gles20 : com.zakgof.korender.impl.gl.IGL20 {
     override fun glUniform2f(location: Int, v0: Float, v1: Float) {
         GLES20.glUniform2f(location, v0, v1)
     }
-    override fun glUniform3f(location: Int, v0: Float, v1: Float, v2: Float) {
+    override fun glUniform3f(location: Int, v0: Float, v1: Float, v2: Float) =
         GLES20.glUniform3f(location, v0, v1, v2)
-    }
+
+    override fun glUniform4f(location: Int, v0: Float, v1: Float, v2: Float, v3: Float) =
+        GLES20.glUniform4f(location, v0, v1, v2, v3)
+
 
     override fun glUniformMatrix2fv(location: Int, transpose: Boolean, value: FloatBuffer) {
         GLES20.glUniformMatrix2fv(location, 1, transpose, value)

@@ -1,9 +1,9 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.declaration.InstancedBillboardsContext
-import com.zakgof.korender.declaration.InstancedRenderablesContext
-import com.zakgof.korender.declaration.MeshDeclaration
+import com.zakgof.korender.declaration.CustomMesh
+import com.zakgof.korender.declaration.InstancedBillboard
+import com.zakgof.korender.declaration.InstancedMesh
 import com.zakgof.korender.declaration.UniformSupplier
 import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.Mesh
@@ -18,24 +18,24 @@ internal class Renderable(val mesh: Mesh, val shader: GpuShader, val uniforms: U
             val new = !inventory.hasMesh(declaration.mesh)
             val mesh = inventory.mesh(declaration.mesh)
 
-            if (declaration.mesh is MeshDeclaration.Custom && !declaration.mesh.static) {
+            if (declaration.mesh is CustomMesh && !declaration.mesh.static) {
                 (mesh as Geometry.DefaultMesh).updateMesh(declaration.mesh.block)
             }
 
-            if (declaration.mesh is MeshDeclaration.InstancedBillboard) {
+            if (declaration.mesh is InstancedBillboard) {
                 // TODO: static
                 val instances = mutableListOf<BillboardInstance>();
-                InstancedBillboardsContext(instances).apply(declaration.mesh.block)
+                DefaultInstancedBillboardsContext(instances).apply(declaration.mesh.block)
                 if (declaration.mesh.zSort) {
                     instances.sortBy { (camera.mat4 * it.pos).z }
                 }
-                (mesh as Geometry.InstancedMesh).updateBillboardInstances(instances)
+                (mesh as Geometry.MultiMesh).updateBillboardInstances(instances)
             }
-            if (declaration.mesh is MeshDeclaration.InstancedMesh) {
+            if (declaration.mesh is InstancedMesh) {
                 if (!declaration.mesh.static || new) {
                     val instances = mutableListOf<MeshInstance>()
-                    InstancedRenderablesContext(instances).apply(declaration.mesh.block)
-                    (mesh as Geometry.InstancedMesh).updateInstances(instances)
+                    DefaultInstancedRenderablesContext(instances).apply(declaration.mesh.block)
+                    (mesh as Geometry.MultiMesh).updateInstances(instances)
                 }
             }
             val additionalShadowFlags = if (isShadowCaster) listOf("SHADOW_CASTER") else (0..<shadowCascades).map { "SHADOW_RECEIVER$it" }

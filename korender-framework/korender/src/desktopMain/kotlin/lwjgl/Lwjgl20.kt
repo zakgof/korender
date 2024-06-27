@@ -89,6 +89,10 @@ class Lwjgl20 : com.zakgof.korender.impl.gl.IGL20 {
         GL20.glUniform3f(location, v0, v1, v2)
     }
 
+    override fun glUniform4f(location: Int, v0: Float, v1: Float, v2: Float, v3: Float) =
+        GL20.glUniform4f(location, v0, v1, v2, v3)
+
+
     override fun glUniformMatrix2fv(location: Int, transpose: Boolean, value: FloatBuffer) {
         GL20.glUniformMatrix2fv(location, transpose, value)
     }

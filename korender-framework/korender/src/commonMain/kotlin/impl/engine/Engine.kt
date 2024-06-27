@@ -1,11 +1,13 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.KorenderException
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.declaration.FrameContext
 import com.zakgof.korender.declaration.KorenderContext
 import com.zakgof.korender.declaration.Textures.texture
+import com.zakgof.korender.impl.gl.VGL11
 import com.zakgof.korender.impl.glgpu.GlGpu
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Vec3
@@ -61,6 +63,10 @@ internal class Engine(private var width: Int, private var height: Int, block: Ko
         inventory.go {
             val scene = Scene(sd, inventory, camera, width, height)
             scene.render(context, projection, camera, light)
+            val error = VGL11.glGetError()
+            if (error != 0) {
+                throw KorenderException("Frame error $error")
+            }
             sceneTouchBoxesHandler = scene.touchBoxesHandler
         }
     }

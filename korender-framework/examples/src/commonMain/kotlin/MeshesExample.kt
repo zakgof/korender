@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.declaration.MaterialModifiers.options
 import com.zakgof.korender.declaration.MaterialModifiers.standardUniforms
-import com.zakgof.korender.declaration.Meshes.mesh
+import com.zakgof.korender.declaration.Meshes.customMesh
 import com.zakgof.korender.declaration.StandardMaterialOption
 import com.zakgof.korender.declaration.Textures.texture
 import com.zakgof.korender.examples.camera.OrbitCamera
@@ -32,7 +32,7 @@ fun MeshesExample() {
             Camera(orbitCamera.camera(projection, width, height))
             Renderable(
                 flags, uniforms,
-                mesh = mesh(id = "static", static = true, vertexCount = 3, indexCount = 3, POS, NORMAL, TEX) {
+                mesh = customMesh(id = "static", static = true, vertexCount = 3, indexCount = 3, POS, NORMAL, TEX) {
                     vertex(Vertex(pos = Vec3(-5f, 0f, 0f), normal = 1.z, tex = Vec2(0f, 0f)))
                     vertex(Vertex(pos = Vec3(0f, 0f, 0f), normal = 1.z, tex = Vec2(1f, 0f)))
                     vertex(Vertex(pos = Vec3(0f, 5f, 0f), normal = 1.z, tex = Vec2(1f, 1f)))
@@ -41,7 +41,7 @@ fun MeshesExample() {
             )
             Renderable(
                 flags, uniforms,
-                mesh = mesh(id = "dynamic", static = false, vertexCount = 3, indexCount = 3, POS, NORMAL, TEX) {
+                mesh = customMesh(id = "dynamic", static = false, vertexCount = 3, indexCount = 3, POS, NORMAL, TEX) {
                     vertex(Vertex(pos = Vec3(1f, 0f, 0f), normal = 1.z, tex = Vec2(0f, 0f)))
                     vertex(Vertex(pos = Vec3(5f, 0f, 0f), normal = 1.z, tex = Vec2(1f, 0f)))
                     vertex(Vertex(pos = Vec3(5f, 5f + sin(frameInfo.time), 0f), normal = 1.z, tex = Vec2(1f, 1f)))

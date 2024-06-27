@@ -3,7 +3,7 @@
 #import "lib/light.glsl"
 
 #ifdef COLOR
-  uniform vec3 color;
+  uniform vec4 color;
 #else
   uniform sampler2D colorTexture;
 #endif
@@ -84,7 +84,7 @@ void main() {
          vec4 texColor = aperiodic(colorTexture, aperiodicTexture, vtex);
        #else
          #ifdef COLOR
-           vec4 texColor = vec4(color, 1.0);
+           vec4 texColor = color;
          #else
            vec4 texColor = texture(colorTexture, vtex);
          #endif
