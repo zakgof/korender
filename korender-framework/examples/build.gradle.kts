@@ -89,14 +89,13 @@ compose.desktop {
         mainClass = "com.zakgof.korender.MainKt"
 
         jvmArgs("--add-exports", "java.desktop/sun.awt=ALL-UNNAMED")
-
         nativeApplication {
         }
 
         nativeDistributions {
             targetFormats(TargetFormat.Msi)
             packageName = "com.zakgof.korender"
-            packageVersion = "0.0.3"
+            packageVersion = "0.1.0"
             modules("jdk.unsupported")
         }
     }

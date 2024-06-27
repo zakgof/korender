@@ -12,7 +12,7 @@ plugins {
     id("signing")
 }
 
-val libraryVersion = "0.0.6-SNAPSHOT"
+val libraryVersion = "0.1.0"
 val libraryGroup = "com.github.zakgof"
 
 kotlin {
@@ -111,7 +111,10 @@ publishing {
     repositories {
         maven {
             name = "sonatype"
-            setUrl("https://oss.sonatype.org/content/repositories/snapshots/")
+            setUrl(if (libraryVersion.contains("SNAPSHOT"))
+                "https://oss.sonatype.org/content/repositories/snapshots/"
+            else
+                "https://oss.sonatype.org/service/local/staging/deploy/maven2")
             credentials {
                 username = getExtraString("ossrhUsername")
                 password = getExtraString("ossrhPassword")
