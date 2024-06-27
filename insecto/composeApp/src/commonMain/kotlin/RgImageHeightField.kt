@@ -1,4 +1,4 @@
-import com.zakgof.korender.impl.material.Image
+import com.zakgof.korender.image.Image
 import com.zakgof.korender.math.Vec3
 
 /*
