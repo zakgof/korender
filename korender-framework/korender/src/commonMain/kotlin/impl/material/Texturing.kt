@@ -1,9 +1,10 @@
 package com.zakgof.korender.impl.material
 
-import com.zakgof.korender.declaration.TextureDeclaration
-import com.zakgof.korender.declaration.TextureFilter
-import com.zakgof.korender.declaration.TextureWrap
+import com.zakgof.korender.material.TextureDeclaration
+import com.zakgof.korender.material.TextureFilter
+import com.zakgof.korender.material.TextureWrap
 import com.zakgof.korender.getPlatform
+import com.zakgof.korender.image.Image
 import com.zakgof.korender.impl.gpu.Gpu
 import com.zakgof.korender.impl.gpu.GpuTexture
 import com.zakgof.korender.impl.resourceStream

@@ -1,4 +1,4 @@
-package com.zakgof.korender.impl.material
+package com.zakgof.korender.image
 
 import com.zakgof.korender.impl.gpu.GpuTexture
 import com.zakgof.korender.math.Color

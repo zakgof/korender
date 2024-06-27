@@ -1,8 +1,8 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.declaration.TextureFilter
-import com.zakgof.korender.declaration.TextureWrap
+import com.zakgof.korender.material.TextureFilter
+import com.zakgof.korender.material.TextureWrap
 import com.zakgof.korender.impl.gl.VGL11
 import com.zakgof.korender.impl.gl.VGL12
 import com.zakgof.korender.impl.gl.VGL13

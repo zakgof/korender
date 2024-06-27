@@ -1,8 +1,9 @@
-package com.zakgof.korender.declaration
+package com.zakgof.korender.mesh
 
+import com.zakgof.korender.context.InstancedBillboardsContext
+import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.geometry.Attribute
-import com.zakgof.korender.impl.geometry.Vertex
 
 object Meshes {
 

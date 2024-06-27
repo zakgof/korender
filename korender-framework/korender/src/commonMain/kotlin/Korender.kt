@@ -1,7 +1,7 @@
 package com.zakgof.korender
 
 import androidx.compose.runtime.Composable
-import com.zakgof.korender.declaration.KorenderContext
+import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.input.TouchEvent
 

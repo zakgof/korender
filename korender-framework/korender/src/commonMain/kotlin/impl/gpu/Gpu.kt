@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.gpu
 
-import com.zakgof.korender.declaration.TextureFilter
-import com.zakgof.korender.declaration.TextureWrap
+import com.zakgof.korender.material.TextureFilter
+import com.zakgof.korender.material.TextureWrap
 import com.zakgof.korender.impl.geometry.Attribute
 import com.zakgof.korender.impl.material.ShaderDebugInfo
 import java.nio.ByteBuffer

@@ -1,5 +1,6 @@
-package com.zakgof.korender.impl.geometry
+package com.zakgof.korender.mesh
 
+import com.zakgof.korender.impl.geometry.Attribute
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import java.nio.FloatBuffer

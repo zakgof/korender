@@ -1,4 +1,4 @@
-package com.zakgof.korender.declaration
+package com.zakgof.korender.context
 
 interface FrameContext : PassContext {
     fun Shadow(block: ShadowContext.() -> Unit)

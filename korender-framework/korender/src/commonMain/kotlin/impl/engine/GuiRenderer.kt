@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.declaration.ImageQuad
-import com.zakgof.korender.declaration.TextureDeclaration
+import com.zakgof.korender.mesh.ImageQuad
+import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.impl.engine.Scene.TouchBox
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.material.MapUniformSupplier

@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.declaration.UniformSupplier
+import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.impl.gl.VGL11
 import com.zakgof.korender.math.Vec3
 

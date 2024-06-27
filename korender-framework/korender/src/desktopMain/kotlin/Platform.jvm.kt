@@ -14,7 +14,7 @@ import com.zakgof.korender.impl.gl.VGL20
 import com.zakgof.korender.impl.gl.VGL30
 import com.zakgof.korender.impl.glgpu.BufferUtils
 import com.zakgof.korender.impl.gpu.GpuTexture
-import com.zakgof.korender.impl.material.Image
+import com.zakgof.korender.image.Image
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.lwjgl.Lwjgl11
 import com.zakgof.korender.lwjgl.Lwjgl12

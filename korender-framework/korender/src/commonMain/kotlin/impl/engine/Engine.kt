@@ -4,9 +4,9 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
-import com.zakgof.korender.declaration.FrameContext
-import com.zakgof.korender.declaration.KorenderContext
-import com.zakgof.korender.declaration.Textures.texture
+import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.impl.gl.VGL11
 import com.zakgof.korender.impl.glgpu.GlGpu
 import com.zakgof.korender.input.TouchEvent

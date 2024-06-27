@@ -1,4 +1,4 @@
-package com.zakgof.korender.declaration
+package com.zakgof.korender.material
 
 import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.ShaderDeclaration

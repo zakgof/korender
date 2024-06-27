@@ -2,14 +2,14 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.declaration.FrameContext
-import com.zakgof.korender.declaration.GuiContainerContext
-import com.zakgof.korender.declaration.InstancedBillboardsContext
-import com.zakgof.korender.declaration.InstancedRenderablesContext
-import com.zakgof.korender.declaration.MaterialModifier
-import com.zakgof.korender.declaration.MeshDeclaration
-import com.zakgof.korender.declaration.PassContext
-import com.zakgof.korender.declaration.ShadowContext
+import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.context.GuiContainerContext
+import com.zakgof.korender.context.InstancedBillboardsContext
+import com.zakgof.korender.context.InstancedRenderablesContext
+import com.zakgof.korender.material.MaterialModifier
+import com.zakgof.korender.mesh.MeshDeclaration
+import com.zakgof.korender.context.PassContext
+import com.zakgof.korender.context.ShadowContext
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.Projection

@@ -1,4 +1,4 @@
-package com.zakgof.korender.declaration
+package com.zakgof.korender.material
 
 enum class StandardMaterialOption {
     Color,

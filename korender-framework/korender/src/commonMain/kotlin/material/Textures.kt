@@ -1,4 +1,4 @@
-package com.zakgof.korender.declaration
+package com.zakgof.korender.material
 
 object Textures {
     fun texture(textureResource: String, filter: TextureFilter = TextureFilter.MipMapLinearLinear, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): TextureDeclaration = TextureDeclaration(textureResource, filter, wrap, aniso)

@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.declaration.MeshDeclaration
-import com.zakgof.korender.declaration.TextureDeclaration
+import com.zakgof.korender.mesh.MeshDeclaration
+import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.impl.font.Font
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.geometry.Geometry

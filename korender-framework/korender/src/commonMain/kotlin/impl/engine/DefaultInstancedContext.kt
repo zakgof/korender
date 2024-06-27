@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.declaration.InstancedBillboardsContext
-import com.zakgof.korender.declaration.InstancedRenderablesContext
+import com.zakgof.korender.context.InstancedBillboardsContext
+import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3

@@ -3,16 +3,16 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.declaration.MaterialModifiers.options
-import com.zakgof.korender.declaration.MaterialModifiers.standardUniforms
-import com.zakgof.korender.declaration.Meshes.customMesh
-import com.zakgof.korender.declaration.StandardMaterialOption
-import com.zakgof.korender.declaration.Textures.texture
+import com.zakgof.korender.material.MaterialModifiers.options
+import com.zakgof.korender.material.MaterialModifiers.standardUniforms
+import com.zakgof.korender.mesh.Meshes.customMesh
+import com.zakgof.korender.material.StandardMaterialOption
+import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.examples.camera.OrbitCamera
-import com.zakgof.korender.impl.geometry.Attributes.NORMAL
-import com.zakgof.korender.impl.geometry.Attributes.POS
-import com.zakgof.korender.impl.geometry.Attributes.TEX
-import com.zakgof.korender.impl.geometry.Vertex
+import com.zakgof.korender.mesh.Attributes.NORMAL
+import com.zakgof.korender.mesh.Attributes.POS
+import com.zakgof.korender.mesh.Attributes.TEX
+import com.zakgof.korender.mesh.Vertex
 import com.zakgof.korender.math.FloatMath.sin
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3

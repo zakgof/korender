@@ -2,9 +2,9 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.declaration.MeshDeclaration
-import com.zakgof.korender.declaration.StandardMaterialOption
-import com.zakgof.korender.declaration.UniformSupplier
+import com.zakgof.korender.mesh.MeshDeclaration
+import com.zakgof.korender.material.StandardMaterialOption
+import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2

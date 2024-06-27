@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.material
 
-import com.zakgof.korender.declaration.TextureDeclaration
-import com.zakgof.korender.declaration.UniformSupplier
+import com.zakgof.korender.material.TextureDeclaration
+import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.Color
 
 class StockUniforms : UniformSupplier {

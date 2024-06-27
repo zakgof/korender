@@ -2,7 +2,7 @@ package com.zakgof.korender
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.impl.font.FontDef
-import com.zakgof.korender.impl.material.Image
+import com.zakgof.korender.image.Image
 import com.zakgof.korender.input.TouchEvent
 import java.io.InputStream
 

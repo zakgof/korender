@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.declaration.GuiContainerContext
+import com.zakgof.korender.context.GuiContainerContext
 import com.zakgof.korender.math.Color
 
 internal class DefaultContainerContext(private val declaration: ElementDeclaration.Container) : GuiContainerContext {

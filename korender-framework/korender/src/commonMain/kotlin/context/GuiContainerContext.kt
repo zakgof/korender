@@ -1,4 +1,4 @@
-package com.zakgof.korender.declaration
+package com.zakgof.korender.context
 
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.math.Color

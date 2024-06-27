@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.engine.shadow
 
 import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.declaration.UniformSupplier
+import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.Renderable

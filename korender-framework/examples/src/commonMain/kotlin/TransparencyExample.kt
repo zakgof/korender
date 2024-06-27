@@ -3,10 +3,10 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.declaration.MaterialModifiers.options
-import com.zakgof.korender.declaration.MaterialModifiers.standardUniforms
-import com.zakgof.korender.declaration.Meshes.cube
-import com.zakgof.korender.declaration.StandardMaterialOption
+import com.zakgof.korender.material.MaterialModifiers.options
+import com.zakgof.korender.material.MaterialModifiers.standardUniforms
+import com.zakgof.korender.mesh.Meshes.cube
+import com.zakgof.korender.material.StandardMaterialOption
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3

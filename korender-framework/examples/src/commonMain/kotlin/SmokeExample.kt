@@ -3,8 +3,8 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.declaration.MaterialModifiers.fragment
-import com.zakgof.korender.declaration.MaterialModifiers.standardUniforms
+import com.zakgof.korender.material.MaterialModifiers.fragment
+import com.zakgof.korender.material.MaterialModifiers.standardUniforms
 import com.zakgof.korender.math.FloatMath.sin
 import com.zakgof.korender.math.Vec3
 

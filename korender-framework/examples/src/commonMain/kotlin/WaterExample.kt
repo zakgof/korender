@@ -3,11 +3,11 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.declaration.MaterialModifiers.fragment
-import com.zakgof.korender.declaration.MaterialModifiers.plugin
-import com.zakgof.korender.declaration.MaterialModifiers.standardUniforms
-import com.zakgof.korender.declaration.Meshes.cube
-import com.zakgof.korender.declaration.Textures.texture
+import com.zakgof.korender.material.MaterialModifiers.fragment
+import com.zakgof.korender.material.MaterialModifiers.plugin
+import com.zakgof.korender.material.MaterialModifiers.standardUniforms
+import com.zakgof.korender.mesh.Meshes.cube
+import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Vec3

@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.declaration.UniformSupplier
+import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.impl.gl.VGL11
 import com.zakgof.korender.impl.gl.VGL20
 import com.zakgof.korender.impl.gpu.GpuMesh

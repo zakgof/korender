@@ -1,20 +1,17 @@
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.declaration.MaterialModifiers.fragment
-import com.zakgof.korender.declaration.MaterialModifiers.options
-import com.zakgof.korender.declaration.MaterialModifiers.plugin
-import com.zakgof.korender.declaration.MaterialModifiers.standardUniforms
-import com.zakgof.korender.declaration.Meshes.heightField
-import com.zakgof.korender.declaration.Meshes.mesh
-import com.zakgof.korender.declaration.Meshes.obj
-import com.zakgof.korender.declaration.PassContext
-import com.zakgof.korender.declaration.StandardMaterialOption
-import com.zakgof.korender.declaration.Textures.texture
-import com.zakgof.korender.impl.geometry.Attributes.NORMAL
-import com.zakgof.korender.impl.geometry.Attributes.POS
-import com.zakgof.korender.impl.geometry.Attributes.TEX
-import com.zakgof.korender.impl.geometry.Vertex
-import com.zakgof.korender.impl.material.Image
+import com.zakgof.korender.context.PassContext
+import com.zakgof.korender.image.Image
+import com.zakgof.korender.material.MaterialModifiers.fragment
+import com.zakgof.korender.material.MaterialModifiers.options
+import com.zakgof.korender.material.MaterialModifiers.plugin
+import com.zakgof.korender.material.MaterialModifiers.standardUniforms
+import com.zakgof.korender.material.StandardMaterialOption
+import com.zakgof.korender.material.Textures.texture
+
+import com.zakgof.korender.mesh.Attributes.NORMAL
+import com.zakgof.korender.mesh.Attributes.POS
+import com.zakgof.korender.mesh.Attributes.TEX
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.FloatMath.PIdiv2
 import com.zakgof.korender.math.Transform
@@ -22,6 +19,10 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import com.zakgof.korender.mesh.Meshes.customMesh
+import com.zakgof.korender.mesh.Meshes.heightField
+import com.zakgof.korender.mesh.Meshes.obj
+import com.zakgof.korender.mesh.Vertex
 import com.zakgof.korender.projection.FrustumProjection
 
 @Composable
@@ -147,7 +148,7 @@ private fun PassContext.terrain(hfImage: Image, hf: RgImageHeightField, elevatio
             detailRatio = 1.0f
             detailScale = 1600.0f
         },
-        mesh = mesh("underterrain", true, 4, 6, POS, NORMAL, TEX) {
+        mesh = customMesh("underterrain", true, 4, 6, POS, NORMAL, TEX) {
             vertex(Vertex(pos = Vec3(-20480f, -3f, -20480f), normal = 1.y, tex = Vec2(0f, 0f)))
             vertex(Vertex(pos = Vec3(20480f, -3f, -20480f), normal = 1.y, tex = Vec2(1f, 0f)))
             vertex(Vertex(pos = Vec3(20480f, -3f, 20480f), normal = 1.y, tex = Vec2(1f, 1f)))
@@ -215,7 +216,7 @@ fun PassContext.splinters(explosionManager: ExplosionManager) = InstancedRendera
     },
     id = "splinters",
     count = 5000,
-    mesh = mesh(id = "splinter", static = true, vertexCount = 3, indexCount = 3, POS, NORMAL, TEX) {
+    mesh = customMesh(id = "splinter", static = true, vertexCount = 3, indexCount = 3, POS, NORMAL, TEX) {
         vertex(Vertex(pos = Vec3(-0.1f, 0f, 0f), normal = 1.z, tex = Vec2(0f, 0f)))
         vertex(Vertex(pos = Vec3(0f, 0f, 0f), normal = 1.z, tex = Vec2(1f, 0f)))
         vertex(Vertex(pos = Vec3(0f, 0.2f, 0f), normal = 1.z, tex = Vec2(1f, 1f)))
