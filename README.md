@@ -1,31 +1,42 @@
 # ![Korender](doc/korender32.png) korender
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.zakgof/korender/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.zakgof/korender)
 
-Kotlin Multiplatform 3D graphics rendering engine based on OpenGL / OpenGL ES
+Kotlin Multiplatform 3D graphics rendering engine based on OpenGL / OpenGL ES.
 
+### Quick start
+
+- Generate a new KMP application using [Kotlin Multiplatform Wizard](https://kmp.jetbrains.com/). Select Android and Desktop platforms.
+- Add Korender dependency `com.github.zakgof:korender:0.1.0`
+- Add the following code to commonMain:
+ 
 ````kotlin
 @Composable
 fun App() = Korender {
     Frame {
         Renderable(
-            mesh = sphere(2.0f),
-            material = standard(StandardMaterialOption.Color) {
-                color = Color(0.2f, 1.0f, 0.5f + 0.5f * sin(frameInfo.time))
+            options(StandardMaterialOption.Color),
+            standardUniforms {
+                color = Color(1.0f, 0.2f, 1.0f, 0.5f + 0.5f * sin(frameInfo.time))
             },
+            mesh = sphere(2.0f),
             transform = Transform().translate(sin(frameInfo.time).y)
         )
     }
 }
 ````
+ - Run on desktop: `.\gradlew composeApp:run`
+
+Quickstart application code is also available at https://github.com/zakgof/korender/quickstart
 
 ![Korender](doc/quickstart.jpg)
 
 ### Supported platforms
-- Desktop (Windows) - based on LWJGL 
+- Desktop (Windows/Linux) - based on LWJGL 
 - Android - based on OpenGL ES
 
 ### Features
 - Rendering opaque and transparent objects
-- Diffuse, specular and ambient lighting (direction light)
+- Diffuse, specular and ambient lighting (directional light)
 - Projection shadow maps with percentage close soft shadows
 - Texturing:
   - uv mapped
@@ -53,6 +64,8 @@ fun App() = Korender {
 
 ### Examples
 Find [more advanced examples](https://github.com/zakgof/korender/tree/main/korender-framework/examples/src/commonMain/kotlin)
+
+### Wiki
 
 ### Concepts
 - **KorenderContext** - your entry point to access engine features
