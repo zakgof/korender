@@ -3,7 +3,41 @@
 
 Kotlin Multiplatform 3D graphics rendering engine based on OpenGL / OpenGL ES.
 
+Korender uses declarative approach that seamlessly integrates into Compose Multiplatform UI. 
+Same Korender code runs on all supported platforms.
+
+### Supported platforms
+- Desktop (Windows/Linux) - based on LWJGL
+- Android - based on OpenGL ES API
+
+### Features
+- Rendering opaque and transparent objects
+- Diffuse, specular and ambient lighting (directional light)
+- Projection shadow maps with percentage close soft shadows
+- Texturing:
+  - uv mapped
+  - triplanar
+  - detail
+- Bump mapping
+- Predefined and custom meshes
+- Wavefront .obj model file loading
+- Billboards (sprites)
+- Batching (instancing)
+- Simple heightfield (terrain)
+- Textured or shader sky
+- On-screen basic GUI
+- Custom shaders support
+- Multi-pass rendering and screen-space shaders (filters)
+- Simple effects
+  - smoke
+  - fire
+  - water
+
 ### Quick start
+
+- Check out QuickStart application available at https://github.com/zakgof/korender/tree/main/quickstart
+
+or, create an application from scratch:
 
 - Generate a new KMP application using [Kotlin Multiplatform Wizard](https://kmp.jetbrains.com/). Select Android and Desktop platforms.
 - Add Korender dependency `com.github.zakgof:korender:0.1.0`
@@ -25,52 +59,16 @@ fun App() = Korender {
 }
 ````
  - Run on desktop: `.\gradlew composeApp:run`
-
-Quickstart application code is also available at https://github.com/zakgof/korender/quickstart
+ - Result:
 
 ![Korender](doc/quickstart.jpg)
 
-### Supported platforms
-- Desktop (Windows/Linux) - based on LWJGL 
-- Android - based on OpenGL ES
+### Examples showcase app
 
-### Features
-- Rendering opaque and transparent objects
-- Diffuse, specular and ambient lighting (directional light)
-- Projection shadow maps with percentage close soft shadows
-- Texturing:
-  - uv mapped
-  - triplanar
-  - detail
-- Bump mapping
-- Custom meshes
-- Wavefront .obj model file loading
-- Billboards (sprites)
-- Batching (instancing)
-- Simple heightfield (terrain)
-- Textured or shader sky
-- On-screen basic GUI
-- Custom shaders support
-- Screen-space shaders (filters)
-- Simple effects
-  - smoke
-  - fire
-  - water
+- JVM Desktop Windows: https://github.com/zakgof/korender/releases/download/0.1.0/korender-demo-0.1.0.apk
+- Android APK: https://github.com/zakgof/korender/releases/download/0.1.0/korender-demo-0.1.0.apk
 
-### Demo app
+[Examples source code](https://github.com/zakgof/korender/tree/main/korender-framework/examples/src/commonMain/kotlin)
 
-- JVM Desktop Windows: https://github.com/zakgof/korender/releases/download/0.0.3/korender-demo-0.0.3.apk
-- Android APK: https://github.com/zakgof/korender/releases/download/0.0.3/korender-demo-0.0.3.apk
-
-### Examples
-Find [more advanced examples](https://github.com/zakgof/korender/tree/main/korender-framework/examples/src/commonMain/kotlin)
-
-### Wiki
-
-### Concepts
-- **KorenderContext** - your entry point to access engine features
-- **Renderable** - a primitive that can be rendered. A renderable's has a *Mesh* (geometry) and a *Material* (surface properties)
-- **Mesh** - is generally an indexed collection of vertices that form triangles. Each vertex has a set of *Attributes*, such as position, normal, texture coordinates, etc.
-- **Material** - defines a renderable's surface look; consist of a *Shader* and its *Uniforms* (properties)
-- **Shader** - compiled GPU program, consisting of vertex ang fragment shader code
-- **Uniforms** - shader's parameters
+### Further reading
+Explore the [Korender Wiki](https://github.com/zakgof/korender/wiki)

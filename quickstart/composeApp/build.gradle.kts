@@ -27,6 +27,8 @@ kotlin {
         }
         commonMain.dependencies {
             implementation(compose.ui)
+            implementation(compose.foundation)
+            implementation(compose.material)
             implementation(libs.korender)
         }
         desktopMain.dependencies {
