@@ -65,7 +65,7 @@ fun App() = Korender {
 
 ### Examples showcase app
 
-- JVM Desktop Windows: https://github.com/zakgof/korender/releases/download/0.1.0/korender-demo-0.1.0.apk
+- JVM Desktop Windows: https://github.com/zakgof/korender/releases/download/0.1.0/korender-demo-0.1.0.zip
 - Android APK: https://github.com/zakgof/korender/releases/download/0.1.0/korender-demo-0.1.0.apk
 
 [Examples source code](https://github.com/zakgof/korender/tree/main/korender-framework/examples/src/commonMain/kotlin)
