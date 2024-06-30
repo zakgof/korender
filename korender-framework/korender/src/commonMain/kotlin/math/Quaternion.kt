@@ -1,7 +1,7 @@
 package com.zakgof.korender.math
 
-import com.zakgof.korender.math.FloatMath.cos
-import com.zakgof.korender.math.FloatMath.sin
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 class Quaternion(val w: Float, val r: Vec3) {

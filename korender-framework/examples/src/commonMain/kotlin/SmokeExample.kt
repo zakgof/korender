@@ -5,8 +5,8 @@ import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.material.Effects.Smoke
 import com.zakgof.korender.material.MaterialModifiers.effect
-import com.zakgof.korender.math.FloatMath.sin
 import com.zakgof.korender.math.Vec3
+import kotlin.math.sin
 
 @Composable
 fun SmokeExample() = Korender {

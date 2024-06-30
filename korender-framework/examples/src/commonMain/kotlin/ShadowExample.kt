@@ -6,7 +6,6 @@ import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.material.StandartMaterialOption
 import com.zakgof.korender.material.Textures.texture
-import com.zakgof.korender.math.FloatMath
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
@@ -14,6 +13,7 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import com.zakgof.korender.mesh.Meshes.cube
 import com.zakgof.korender.mesh.Meshes.sphere
+import kotlin.math.sin
 
 @Composable
 fun ShadowExample() =
@@ -40,7 +40,7 @@ fun ShadowExample() =
             Renderable(
                 materialModifier,
                 mesh = sphere(1.5f),
-                transform = translate(Vec3(-5.0f, 3.5f + FloatMath.sin(frameInfo.time), 0.0f)),
+                transform = translate(Vec3(-5.0f, 3.5f + sin(frameInfo.time), 0.0f)),
             )
         }
     }

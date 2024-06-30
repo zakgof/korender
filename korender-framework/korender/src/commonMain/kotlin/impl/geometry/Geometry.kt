@@ -9,8 +9,6 @@ import com.zakgof.korender.impl.gpu.GpuMesh
 import com.zakgof.korender.impl.resourceStream
 import com.zakgof.korender.math.BoundingBox
 import com.zakgof.korender.math.FloatMath.PI
-import com.zakgof.korender.math.FloatMath.cos
-import com.zakgof.korender.math.FloatMath.sin
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.mesh.Attributes.NORMAL
@@ -40,8 +38,10 @@ import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import java.nio.ShortBuffer
 import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.sin
 
 internal object Geometry {
 

@@ -1,7 +1,7 @@
 package com.zakgof.korender.math
 
-import com.zakgof.korender.math.FloatMath.cos
-import com.zakgof.korender.math.FloatMath.sin
+import kotlin.math.cos
+import kotlin.math.sin
 
 class Transform(val mat4: Mat4 = Mat4.IDENTITY) {
 

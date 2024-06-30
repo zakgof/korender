@@ -7,7 +7,6 @@ import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.material.StandartMaterialOption
 import com.zakgof.korender.material.Textures.texture
-import com.zakgof.korender.math.FloatMath.sin
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -17,6 +16,7 @@ import com.zakgof.korender.mesh.Attributes.POS
 import com.zakgof.korender.mesh.Attributes.TEX
 import com.zakgof.korender.mesh.Meshes.customMesh
 import com.zakgof.korender.mesh.Vertex
+import kotlin.math.sin
 
 @Composable
 fun MeshesExample() {
