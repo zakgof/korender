@@ -50,8 +50,8 @@ internal class DefaultFrameContext(
     override fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: Any, count: Int, mesh: MeshDeclaration, static: Boolean, block: InstancedRenderablesContext.() -> Unit) =
         defaultPassContext.InstancedRenderables(*materialModifiers, id = id, count = count, mesh = mesh, static = static, block = block)
 
-    override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, zSort: Boolean, block: InstancedBillboardsContext.() -> Unit) =
-        defaultPassContext.InstancedBillboards(*materialModifiers, id = id, count = count, zSort = zSort, block = block)
+    override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, transparent: Boolean, block: InstancedBillboardsContext.() -> Unit) =
+        defaultPassContext.InstancedBillboards(*materialModifiers, id = id, count = count, transparent = transparent, block = block)
 
     override fun Shadow(block: ShadowContext.() -> Unit) {
         val shadowDeclaration = ShadowDeclaration()

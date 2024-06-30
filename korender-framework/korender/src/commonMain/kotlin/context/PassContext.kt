@@ -26,6 +26,6 @@ interface PassContext {
     fun Screen(vararg materialModifiers: MaterialModifier)
     fun Sky(vararg materialModifiers: MaterialModifier)
     fun Gui(block: GuiContainerContext.() -> Unit)
-    fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: Any, count: Int, mesh: MeshDeclaration, static: Boolean = false, block: InstancedRenderablesContext.() -> Unit)
-    fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, zSort: Boolean = false, block: InstancedBillboardsContext.() -> Unit)
+    fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: Any, count: Int, mesh: MeshDeclaration, static: Boolean = false, transparent: Boolean = false, block: InstancedRenderablesContext.() -> Unit)
+    fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, transparent: Boolean = false, block: InstancedBillboardsContext.() -> Unit)
 }

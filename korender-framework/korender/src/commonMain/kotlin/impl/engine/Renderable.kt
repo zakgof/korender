@@ -26,7 +26,7 @@ internal class Renderable(val mesh: Mesh, val shader: GpuShader, val uniforms: U
                 // TODO: static
                 val instances = mutableListOf<BillboardInstance>();
                 DefaultInstancedBillboardsContext(instances).apply(declaration.mesh.block)
-                if (declaration.mesh.zSort) {
+                if (declaration.mesh.transparent) {
                     instances.sortBy { (camera.mat4 * it.pos).z }
                 }
                 (mesh as Geometry.MultiMesh).updateBillboardInstances(instances)
@@ -35,6 +35,9 @@ internal class Renderable(val mesh: Mesh, val shader: GpuShader, val uniforms: U
                 if (!declaration.mesh.static || new) {
                     val instances = mutableListOf<MeshInstance>()
                     DefaultInstancedRenderablesContext(instances).apply(declaration.mesh.block)
+                    if (declaration.mesh.transparent) {
+                        instances.sortBy { (camera.mat4 * it.transform.offset()).z }
+                    }
                     (mesh as Geometry.MultiMesh).updateInstances(instances)
                 }
             }

@@ -28,12 +28,12 @@ internal data object Billboard : MeshDeclaration
 internal data object ImageQuad : MeshDeclaration
 internal data object ScreenQuad : MeshDeclaration
 
-internal data class InstancedMesh(val id: Any, val count: Int, val mesh: MeshDeclaration, val material: MaterialDeclaration, val static: Boolean, val block: InstancedRenderablesContext.() -> Unit) : MeshDeclaration {
+internal data class InstancedMesh(val id: Any, val count: Int, val mesh: MeshDeclaration, val material: MaterialDeclaration, val static: Boolean, val transparent: Boolean, val block: InstancedRenderablesContext.() -> Unit) : MeshDeclaration {
     override fun equals(other: Any?): Boolean = (other is InstancedMesh && other.id == id)
     override fun hashCode(): Int = id.hashCode()
 }
 
-internal data class InstancedBillboard(val id: Any, val count: Int, val zSort: Boolean, val block: InstancedBillboardsContext.() -> Unit) : MeshDeclaration {
+internal data class InstancedBillboard(val id: Any, val count: Int, val transparent: Boolean, val block: InstancedBillboardsContext.() -> Unit) : MeshDeclaration {
     override fun equals(other: Any?): Boolean = (other is InstancedBillboard && other.id == id)
     override fun hashCode(): Int = id.hashCode()
 }

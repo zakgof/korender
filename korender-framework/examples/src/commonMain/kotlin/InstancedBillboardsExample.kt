@@ -23,7 +23,7 @@ fun InstancedBillboardsExample() = Korender {
             },
             id = "particles",
             count = particleNum,
-            zSort = true
+            transparent = true
         ) {
             for (particle in particles) {
                 particle.update(frameInfo.dt)
