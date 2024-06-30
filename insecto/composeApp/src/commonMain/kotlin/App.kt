@@ -7,7 +7,9 @@ import com.zakgof.korender.material.Effects.Water
 import com.zakgof.korender.material.MaterialModifiers.effect
 import com.zakgof.korender.material.MaterialModifiers.fragment
 import com.zakgof.korender.material.MaterialModifiers.plugin
+import com.zakgof.korender.material.MaterialModifiers.sky
 import com.zakgof.korender.material.MaterialModifiers.standart
+import com.zakgof.korender.material.Skies.FastCloud
 import com.zakgof.korender.material.StandartMaterialOption
 import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.math.Color
@@ -47,7 +49,7 @@ fun App() = Korender {
             Cascade(512, 100f, 10000f)
         }
 
-        val skyPlugin = plugin("sky", "sky/fastcloud.plugin.frag")
+        val skyPlugin = sky(FastCloud)
         Pass {
             terrain(controller.hfImage, controller.hf, controller.elevationRatio)
             bug(bugTransform)

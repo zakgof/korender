@@ -25,6 +25,8 @@ class MaterialBuilder internal constructor(
 
 class Effect<U : UniformSupplier> internal constructor(internal val fragFile: String, internal val uniformFactory: () -> U)
 
+class Sky internal constructor(internal val pluginShaderFile: String)
+
 object MaterialModifiers {
     fun vertex(vertShaderFile: String): MaterialModifier = MaterialModifier { it.vertShaderFile = vertShaderFile }
     fun fragment(fragShaderFile: String): MaterialModifier = MaterialModifier { it.fragShaderFile = fragShaderFile }
@@ -41,5 +43,9 @@ object MaterialModifiers {
     fun <U : UniformSupplier> effect(effect: Effect<U>, block: U.() -> Unit = {}): MaterialModifier = MaterialModifier {
         it.fragShaderFile = effect.fragFile
         it.uniforms = effect.uniformFactory().apply(block)
+    }
+
+    fun sky(skyPreset: Sky): MaterialModifier = MaterialModifier {
+        it.plugins["sky"] = skyPreset.pluginShaderFile
     }
 }
