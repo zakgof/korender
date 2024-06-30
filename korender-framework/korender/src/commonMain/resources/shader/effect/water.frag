@@ -2,6 +2,12 @@
 #import "lib/sky.glsl"
 
 in vec2 vtex;
+
+uniform vec4 waterColor;
+uniform float transparency;
+uniform float waveScale;
+
+
 uniform sampler2D filterColorTexture;
 uniform sampler2D filterDepthTexture;
 uniform mat4 projection;
@@ -25,7 +31,7 @@ void main() {
 
     vec3 surface = cameraPos - look * cameraPos.y / look.y;
 
-    float fbmA = fbm2(surface.xz * 0.04 - 0.03 * time) - 0.5;
+    float fbmA = fbm2(surface.xz * waveScale - 0.03 * time) - 0.5;
     if (world.y < 0.4 * fbmA) {
 
         vec3 normal = normalize(vec3(
@@ -42,8 +48,8 @@ void main() {
         float reflectance = R0 + (1. - R0) * t * t * t * t * t;
 
         float waterDepth = length(world - surface);
-        vec3 ownColor = vec3(0.1, 0.2, 0.3);
-        float ownRatio = clamp(waterDepth * 0.1, 0., 1.);
+        vec3 ownColor = waterColor.rgb;
+        float ownRatio = clamp(waterDepth * transparency, 0., 1.);
 
         ownColor = mix(color, ownColor, ownRatio);
 

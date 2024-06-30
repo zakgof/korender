@@ -9,9 +9,9 @@ import com.zakgof.korender.impl.engine.Renderable
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gl.VGL11
 import com.zakgof.korender.impl.gpu.GpuFrameBuffer
-import com.zakgof.korender.impl.material.MapUniformSupplier
+import com.zakgof.korender.uniforms.MapUniformSupplier
 import com.zakgof.korender.material.TextureDeclaration
-import com.zakgof.korender.material.UniformSupplier
+import com.zakgof.korender.uniforms.UniformSupplier
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.projection.FrustumProjection

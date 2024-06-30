@@ -4,7 +4,8 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.FreeCamera
-import com.zakgof.korender.material.MaterialModifiers.fragment
+import com.zakgof.korender.material.Effects.Water
+import com.zakgof.korender.material.MaterialModifiers.effect
 import com.zakgof.korender.material.MaterialModifiers.plugin
 import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.material.Textures.texture
@@ -34,7 +35,7 @@ fun WaterExample() {
                 Sky(plugin)
             }
             Pass {
-                Screen(fragment("effect/water.frag"), plugin)
+                Screen(effect(Water), plugin)
                 Gui {
                     Filler()
                     Text(id = "fps", fontResource = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFFFF0000))

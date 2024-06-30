@@ -4,7 +4,7 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.mesh.MeshDeclaration
 import com.zakgof.korender.material.StandartMaterialOption
-import com.zakgof.korender.material.UniformSupplier
+import com.zakgof.korender.uniforms.UniformSupplier
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2

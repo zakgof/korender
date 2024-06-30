@@ -4,8 +4,8 @@ import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.Mesh
 import com.zakgof.korender.impl.gpu.GpuShader
-import com.zakgof.korender.impl.material.MapUniformSupplier
-import com.zakgof.korender.material.UniformSupplier
+import com.zakgof.korender.uniforms.MapUniformSupplier
+import com.zakgof.korender.uniforms.UniformSupplier
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.mesh.CustomMesh
 import com.zakgof.korender.mesh.InstancedBillboard

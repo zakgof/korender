@@ -1,9 +1,10 @@
-
-
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.context.PassContext
 import com.zakgof.korender.image.Image
+import com.zakgof.korender.material.Effects.FireBall
+import com.zakgof.korender.material.Effects.Water
+import com.zakgof.korender.material.MaterialModifiers.effect
 import com.zakgof.korender.material.MaterialModifiers.fragment
 import com.zakgof.korender.material.MaterialModifiers.plugin
 import com.zakgof.korender.material.MaterialModifiers.standart
@@ -58,7 +59,7 @@ fun App() = Korender {
             Sky(skyPlugin)
         }
         Pass {
-            Screen(fragment("effect/water.frag"), skyPlugin)
+            Screen(effect(Water), skyPlugin)
         }
         Pass {
             Screen(fragment("atmosphere.frag"))
@@ -158,7 +159,7 @@ private fun PassContext.terrain(hfImage: Image, hf: RgImageHeightField, elevatio
     )
     Renderable(
         plugin("texture", "terrain/texture.plugin.frag"),
-        standart(StandartMaterialOption.NoShadowCast){
+        standart(StandartMaterialOption.NoShadowCast) {
             colorTexture = texture("/terrain/terrainbase.jpg")
             static("tex1", texture("/sand.jpg"))
             static("tex2", texture("/grass.jpg"))
@@ -197,11 +198,10 @@ fun PassContext.head(headTransform: Transform) = Renderable(
 )
 
 fun PassContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(
-    fragment("effect/fireball.frag"),
-    standart {
+    effect(FireBall) {
         xscale = explosion.finishRadius * explosion.phase
         yscale = explosion.finishRadius * explosion.phase
-        static("power", explosion.phase)
+        power = explosion.phase
     },
     position = explosion.position,
     transparent = true

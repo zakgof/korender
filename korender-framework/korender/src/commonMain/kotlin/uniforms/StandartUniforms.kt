@@ -1,13 +1,9 @@
-package com.zakgof.korender.impl.material
+package com.zakgof.korender.uniforms
 
 import com.zakgof.korender.material.TextureDeclaration
-import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.Color
 
-class StandartUniforms : UniformSupplier {
-
-    private val static = mutableMapOf<String, Any>()
-    private val dynamic = mutableMapOf<String, () -> Any>()
+class StandartUniforms : BaseUniformSupplier() {
 
     var colorTexture: TextureDeclaration? = null
     var normalTexture: TextureDeclaration? = null
@@ -27,14 +23,6 @@ class StandartUniforms : UniformSupplier {
     var yscale = 1f
     var rotation = 0f
 
-    fun static(key: String, value: Any) {
-        static[key] = value
-    }
-
-    fun dynamic(key: String, valueSupplier: () -> Any) {
-        dynamic[key] = valueSupplier
-    }
-
     override operator fun get(key: String): Any? =
         when (key) {
             "color" -> color
@@ -53,7 +41,6 @@ class StandartUniforms : UniformSupplier {
             "xscale" -> xscale
             "yscale" -> yscale
             "rotation" -> rotation
-            else -> static[key] ?: dynamic[key]?.let { it() }
+            else -> super.get(key)
         }
-
 }

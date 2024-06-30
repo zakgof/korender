@@ -3,7 +3,7 @@ package com.zakgof.korender.impl.engine
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.material.TextureDeclaration
-import com.zakgof.korender.material.UniformSupplier
+import com.zakgof.korender.uniforms.UniformSupplier
 import com.zakgof.korender.impl.engine.shadow.CascadeShadower
 import com.zakgof.korender.impl.engine.shadow.Shadower
 import com.zakgof.korender.impl.gpu.GpuFrameBuffer
