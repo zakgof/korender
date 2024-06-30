@@ -23,7 +23,7 @@ fun FilterExample() = Korender {
             Screen(fragment("bw.frag"))
             Gui {
                 Filler()
-                Text(id = "fps", fontResource = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFF66FF55))
+                Text(id = "fps", font = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFF66FF55))
             }
         }
     }

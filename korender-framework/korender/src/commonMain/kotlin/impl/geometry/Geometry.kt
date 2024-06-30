@@ -68,7 +68,7 @@ internal object Geometry {
             is CustomMesh -> create(declaration.id.toString(), declaration.vertexCount, declaration.indexCount, *declaration.attributes.toTypedArray()) {
                 apply (declaration.block)
             }
-            is HeightField -> heightMap(declaration.cellsX, declaration.cellsX, declaration.cellWidth, declaration.height)
+            is HeightField -> heightMap(declaration.cellsX, declaration.cellsZ, declaration.cellWidth, declaration.height)
             else -> throw KorenderException("Unknown mesh declaration")
         }
 

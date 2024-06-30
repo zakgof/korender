@@ -40,10 +40,11 @@ internal class ScenePass(private val inventory: Inventory, private val camera: C
         VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
         opaques.forEach { it.render(uniformDecorator) }
         skies.forEach { it.render(uniformDecorator) }
+        screens.forEach { it.render(uniformDecorator) }
         VGL11.glDepthMask(false)
         transparents.sortedByDescending { (camera.mat4 * it.transform.offset()).z }
             .forEach { it.render(uniformDecorator) }
         VGL11.glDepthMask(true)
-        screens.forEach { it.render(uniformDecorator) }
+
     }
 }

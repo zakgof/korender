@@ -6,6 +6,35 @@ Kotlin Multiplatform 3D graphics rendering engine based on OpenGL / OpenGL ES.
 Korender uses declarative approach that seamlessly integrates 3D viewport into Compose Multiplatform UI. 
 Same Korender code runs on all supported platforms.
 
+````kotlin
+@Composable
+fun App() = Korender {
+  Frame {
+    Camera(DefaultCamera(Vec3(0f, 5f, 30f), -1.z, 1.y))
+    Pass {
+      Sky(sky(Skies.FastCloud))
+      Renderable(
+        standart(StandartMaterialOption.Color) { color = Green },
+        mesh = sphere(2f),
+        transform = translate(-0.5f.y)
+      )
+    }
+    Pass {
+      Screen(effect(Water), sky(Skies.FastCloud))
+      Billboard(
+        effect(Fire) { yscale = 10f; xscale = 2f },
+        position = 6.y,
+        transparent = true
+      )
+      Gui {
+        Filler()
+        Text(id = "fps", font = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Red)
+      }
+    }
+  }
+}
+````
+
 ### Supported platforms
 - Desktop (Windows/Linux) - based on LWJGL
 - Android - based on OpenGL ES API
@@ -41,25 +70,9 @@ or, create an application from scratch:
 
 - Generate a new KMP application using [Kotlin Multiplatform Wizard](https://kmp.jetbrains.com/). Select Android and Desktop platforms.
 - Add Korender dependency `com.github.zakgof:korender:0.1.0`
-- Add the following code to commonMain:
- 
-````kotlin
-@Composable
-fun App() = Korender {
-    Frame {
-        Renderable(
-            options(StandardMaterialOption.Color),
-            standardUniforms {
-                color = Color(1.0f, 0.2f, 1.0f, 0.5f + 0.5f * sin(frameInfo.time))
-            },
-            mesh = sphere(2.0f),
-            transform = Transform().translate(sin(frameInfo.time).y)
-        )
-    }
-}
-````
- - Run on desktop: `.\gradlew composeApp:run`
- - Result:
+- Add the above code to commonMain
+- Run on desktop: `.\gradlew composeApp:run`
+- Result:
 
 ![Korender](doc/quickstart.jpg)
 
