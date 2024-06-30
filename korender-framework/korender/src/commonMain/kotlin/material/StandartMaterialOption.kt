@@ -1,7 +1,7 @@
 package com.zakgof.korender.material
 
 enum class StandartMaterialOption {
-    Color,
+    FixedColor,
     Triplanar,
     Aperiodic,
     NormalMap,

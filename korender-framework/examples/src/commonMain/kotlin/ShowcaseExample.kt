@@ -9,8 +9,8 @@ import com.zakgof.korender.material.Effects.Water
 import com.zakgof.korender.material.MaterialModifiers.effect
 import com.zakgof.korender.material.MaterialModifiers.sky
 import com.zakgof.korender.material.MaterialModifiers.standart
-import com.zakgof.korender.material.Skies
-import com.zakgof.korender.material.StandartMaterialOption
+import com.zakgof.korender.material.Skies.FastCloud
+import com.zakgof.korender.material.StandartMaterialOption.FixedColor
 import com.zakgof.korender.math.Color.Companion.Green
 import com.zakgof.korender.math.Color.Companion.Red
 import com.zakgof.korender.math.Transform.Companion.translate
@@ -24,23 +24,15 @@ fun ShowcaseExample() = Korender {
     Frame {
         Camera(DefaultCamera(Vec3(0f, 5f, 30f), -1.z, 1.y))
         Pass {
-            Sky(sky(Skies.FastCloud))
-            Renderable(
-                standart(StandartMaterialOption.Color) { color = Green },
-                mesh = sphere(2f),
-                transform = translate(-0.5f.y)
-            )
+            Sky(sky(FastCloud))
+            Renderable(standart(FixedColor) { color = Green }, mesh = sphere(2f), transform = translate(-0.5f.y))
         }
         Pass {
-            Screen(effect(Water), sky(Skies.FastCloud))
-            Billboard(
-                effect(Fire) { yscale = 10f; xscale = 2f },
-                position = 6.y,
-                transparent = true
-            )
+            Screen(effect(Water), sky(FastCloud))
+            Billboard(effect(Fire) { yscale = 10f; xscale = 2f }, position = 6.y, transparent = true)
             Gui {
                 Filler()
-                Text(id = "fps", font = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Red)
+                Text(text = "FPS ${frameInfo.avgFps}", height = 50,  color = Red, font = "/ubuntu.ttf", id = "fps")
             }
         }
     }

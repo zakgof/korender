@@ -4,7 +4,8 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.material.MaterialModifiers.standart
-import com.zakgof.korender.material.StandartMaterialOption
+import com.zakgof.korender.material.StandartMaterialOption.FixedColor
+import com.zakgof.korender.material.StandartMaterialOption.NoLight
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
@@ -14,7 +15,7 @@ import com.zakgof.korender.mesh.Meshes.cube
 fun TransparencyExample() = Korender {
     Frame {
         fun semitransparent(color: Color, position: Vec3) = Renderable(
-            standart(StandartMaterialOption.Color, StandartMaterialOption.NoLight) {
+            standart(FixedColor, NoLight) {
                 this.color = color
             },
             mesh = cube(),

@@ -2,13 +2,13 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.mesh.MeshDeclaration
 import com.zakgof.korender.material.StandartMaterialOption
-import com.zakgof.korender.uniforms.UniformSupplier
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.mesh.MeshDeclaration
+import com.zakgof.korender.uniforms.UniformSupplier
 
 internal class SceneDeclaration {
     var shadow: ShadowDeclaration? = null
@@ -69,7 +69,7 @@ private fun stdOptionsToDefs(
     val set = HashSet<String>()
     stdOptions.forEach {
         when (it) {
-            StandartMaterialOption.Color -> set.add("COLOR")
+            StandartMaterialOption.FixedColor -> set.add("COLOR")
             StandartMaterialOption.Triplanar -> set.add("TRIPLANAR")
             StandartMaterialOption.Aperiodic -> set.add("APERIODIC")
             StandartMaterialOption.NormalMap -> set.add("NORMAL_MAP")
