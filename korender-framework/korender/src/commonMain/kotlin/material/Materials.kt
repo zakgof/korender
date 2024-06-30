@@ -9,9 +9,9 @@ fun interface MaterialModifier {
 }
 
 class MaterialBuilder internal constructor(
-    var vertShaderFile: String = "standard.vert",
-    var fragShaderFile: String = "standard.frag",
-    val options: MutableSet<StandardMaterialOption> = mutableSetOf(),
+    var vertShaderFile: String = "standart.vert",
+    var fragShaderFile: String = "standart.frag",
+    val options: MutableSet<StandartMaterialOption> = mutableSetOf(),
     val defs: MutableSet<String> = mutableSetOf(),
     val plugins: MutableMap<String, String> = mutableMapOf(),
     var uniforms: UniformSupplier = UniformSupplier { null }
@@ -25,9 +25,9 @@ class MaterialBuilder internal constructor(
 object MaterialModifiers {
     fun vertex(vertShaderFile: String): MaterialModifier = MaterialModifier { it.vertShaderFile = vertShaderFile }
     fun fragment(fragShaderFile: String): MaterialModifier = MaterialModifier { it.fragShaderFile = fragShaderFile }
-    fun options(vararg options: StandardMaterialOption): MaterialModifier = MaterialModifier { it.options += setOf(*options) }
+    fun options(vararg options: StandartMaterialOption): MaterialModifier = MaterialModifier { it.options += setOf(*options) }
     fun defs(vararg defs: String): MaterialModifier = MaterialModifier { it.defs += setOf(*defs) }
     fun plugin(name: String, shaderFile: String): MaterialModifier = MaterialModifier { it.plugins[name] = shaderFile }
     fun uniforms(uniforms: UniformSupplier): MaterialModifier = MaterialModifier { it.uniforms = uniforms }
-    fun standardUniforms(block: StockUniforms.() -> Unit): MaterialModifier = uniforms(StockUniforms().apply(block))
+    fun standartUniforms(block: StockUniforms.() -> Unit): MaterialModifier = uniforms(StockUniforms().apply(block))
 }

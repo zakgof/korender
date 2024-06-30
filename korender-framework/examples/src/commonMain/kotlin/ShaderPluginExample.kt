@@ -4,7 +4,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.material.MaterialModifiers.plugin
-import com.zakgof.korender.material.MaterialModifiers.standardUniforms
+import com.zakgof.korender.material.MaterialModifiers.standartUniforms
 import com.zakgof.korender.mesh.Meshes.sphere
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.FloatMath.sin
@@ -16,7 +16,7 @@ fun ShaderPluginExample() = Korender {
     Frame {
         Renderable(
             plugin("texture", "checked.frag"),
-            standardUniforms {
+            standartUniforms {
                 static("color1", Color(0xFFFFFF20))
                 static("color2", Color(0xFF8080FF))
             },

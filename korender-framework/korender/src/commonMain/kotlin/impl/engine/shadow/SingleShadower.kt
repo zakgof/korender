@@ -50,7 +50,7 @@ internal class SingleShadower(private val index: Int, private val inventory: Inv
             VGL11.glCullFace(VGL11.GL_BACK)
             shadowCasters.forEach { r ->
                 // TODO: need to copy all the defs and plugins from the original shader
-                val casterShader = inventory.shader(ShaderDeclaration("standard.vert", "standard.frag", setOf("SHADOW_CASTER")))
+                val casterShader = inventory.shader(ShaderDeclaration("standart.vert", "standart.frag", setOf("SHADOW_CASTER")))
                 casterShader.render(
                     uniformDecorator(r.uniforms + mapOf("model" to r.transform.mat4())),
                     r.mesh.gpuMesh

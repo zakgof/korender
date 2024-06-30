@@ -33,7 +33,7 @@ internal class DefaultPassContext(
     }
 
     override fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3, transparent: Boolean) {
-        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "billboard.vert", fragShaderFile = "standard.frag"), materialModifiers)
+        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "billboard.vert", fragShaderFile = "standart.frag"), materialModifiers)
         passDeclaration.add(RenderableDeclaration(Billboard, materialDeclaration.shader, materialDeclaration.uniforms, Transform().translate(position), if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE))
     }
 
@@ -65,7 +65,7 @@ internal class DefaultPassContext(
     }
 
     override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, zSort: Boolean, block: InstancedBillboardsContext.() -> Unit) {
-        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "billboard.vert", fragShaderFile = "standard.frag"), materialModifiers)
+        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "billboard.vert", fragShaderFile = "standart.frag"), materialModifiers)
         passDeclaration.add(
             RenderableDeclaration(
                 InstancedBillboard(id, count, zSort, block),

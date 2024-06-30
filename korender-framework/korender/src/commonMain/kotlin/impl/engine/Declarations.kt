@@ -3,7 +3,7 @@ package com.zakgof.korender.impl.engine
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.mesh.MeshDeclaration
-import com.zakgof.korender.material.StandardMaterialOption
+import com.zakgof.korender.material.StandartMaterialOption
 import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
@@ -55,28 +55,28 @@ internal data class ShaderDeclaration(
         vertFile: String,
         fragFile: String,
         defs: Set<String>,
-        stdOptions: Set<StandardMaterialOption>,
+        stdOptions: Set<StandartMaterialOption>,
         plugins: Map<String, String>
     ) : this(vertFile, fragFile, defs + stdOptionsToDefs(stdOptions, plugins), plugins)
 }
 
 
 private fun stdOptionsToDefs(
-    stdOptions: Set<StandardMaterialOption>,
+    stdOptions: Set<StandartMaterialOption>,
     plugins: Map<String, String>
 ): Set<String> {
     // TODO: this is ugly
     val set = HashSet<String>()
     stdOptions.forEach {
         when (it) {
-            StandardMaterialOption.Color -> set.add("COLOR")
-            StandardMaterialOption.Triplanar -> set.add("TRIPLANAR")
-            StandardMaterialOption.Aperiodic -> set.add("APERIODIC")
-            StandardMaterialOption.NormalMap -> set.add("NORMAL_MAP")
-            StandardMaterialOption.Detail -> set.add("DETAIL")
-            StandardMaterialOption.NoLight -> set.add("NO_LIGHT")
-            StandardMaterialOption.Pcss -> set.add("PCSS")
-            StandardMaterialOption.NoShadowCast -> set.add("NO_SHADOW_CAST") // TODO: this is ugly
+            StandartMaterialOption.Color -> set.add("COLOR")
+            StandartMaterialOption.Triplanar -> set.add("TRIPLANAR")
+            StandartMaterialOption.Aperiodic -> set.add("APERIODIC")
+            StandartMaterialOption.NormalMap -> set.add("NORMAL_MAP")
+            StandartMaterialOption.Detail -> set.add("DETAIL")
+            StandartMaterialOption.NoLight -> set.add("NO_LIGHT")
+            StandartMaterialOption.Pcss -> set.add("PCSS")
+            StandartMaterialOption.NoShadowCast -> set.add("NO_SHADOW_CAST") // TODO: this is ugly
             else -> {}
         }
     }

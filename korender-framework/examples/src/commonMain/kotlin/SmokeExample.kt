@@ -4,7 +4,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.material.MaterialModifiers.fragment
-import com.zakgof.korender.material.MaterialModifiers.standardUniforms
+import com.zakgof.korender.material.MaterialModifiers.standartUniforms
 import com.zakgof.korender.math.FloatMath.sin
 import com.zakgof.korender.math.Vec3
 
@@ -15,7 +15,7 @@ fun SmokeExample() = Korender {
             val phase = fract(frameInfo.time * 0.5f + 20f / i)
             Billboard(
                 fragment("effect/smoke.frag"),
-                standardUniforms {
+                standartUniforms {
                     xscale = 5f * phase + 0.5f
                     yscale = 5f * phase + 0.5f
                     dynamic("seed") { i / 20f }

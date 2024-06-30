@@ -3,7 +3,7 @@
 
 Kotlin Multiplatform 3D graphics rendering engine based on OpenGL / OpenGL ES.
 
-Korender uses declarative approach that seamlessly integrates into Compose Multiplatform UI. 
+Korender uses declarative approach that seamlessly integrates 3D viewport into Compose Multiplatform UI. 
 Same Korender code runs on all supported platforms.
 
 ### Supported platforms
