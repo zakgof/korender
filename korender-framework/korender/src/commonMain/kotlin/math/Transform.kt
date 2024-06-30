@@ -3,35 +3,69 @@ package com.zakgof.korender.math
 import com.zakgof.korender.math.FloatMath.cos
 import com.zakgof.korender.math.FloatMath.sin
 
-class Transform(private val matrix: Mat4 = Mat4.IDENTITY) {
+class Transform(val mat4: Mat4 = Mat4.IDENTITY) {
 
-    fun mat4(): Mat4 = matrix
+    companion object {
+        fun translate(offset: Vec3): Transform = Transform().translate(offset)
+        fun scale(s: Float): Transform = Transform().scale(s)
+        fun scale(xs: Float, ys: Float, zs: Float): Transform = Transform().scale(xs, ys, zs)
+        fun rotate(q: Quaternion): Transform = Transform().rotate(q)
+        fun rotate(axis: Vec3, angle: Float): Transform = Transform().rotate(axis, angle)
+        fun rotate(direction: Vec3, uptrend: Vec3): Transform = Transform().rotate(direction, uptrend)
+    }
+
+    fun translate(offset: Vec3): Transform = Transform(
+        Mat4(
+            1f, 0f, 0f, offset.x,
+            0f, 1f, 0f, offset.y,
+            0f, 0f, 1f, offset.z,
+            0f, 0f, 0f, 1f
+        ) * mat4
+    )
+
+    fun scale(s: Float): Transform = Transform(
+        Mat4(
+            s, 0f, 0f, 0f,
+            0f, s, 0f, 0f,
+            0f, 0f, s, 0f,
+            0f, 0f, 0f, 1f
+        ) * mat4
+    )
+
+    fun scale(xs: Float, ys: Float, zs: Float): Transform = Transform(
+        Mat4(
+            xs, 0f, 0f, 0f,
+            0f, ys, 0f, 0f,
+            0f, 0f, zs, 0f,
+            0f, 0f, 0f, 1f
+        ) * mat4
+    )
 
     fun rotate(q: Quaternion): Transform =
-        Transform(q.mat4() * matrix)
+        Transform(q.mat4 * mat4)
 
-    fun rotate(u: Vec3, radians: Float): Transform {
-        val cos = cos(radians)
-        val sin = sin(radians)
+    fun rotate(axis: Vec3, angle: Float): Transform {
+        val cos = cos(angle)
+        val sin = sin(angle)
         return Transform(
             Mat4(
-                cos + u.x * u.x * (1f - cos),
-                u.x * u.y * (1f - cos) - u.z * sin,
-                u.x * u.z * (1f - cos) + u.y * sin,
+                cos + axis.x * axis.x * (1f - cos),
+                axis.x * axis.y * (1f - cos) - axis.z * sin,
+                axis.x * axis.z * (1f - cos) + axis.y * sin,
                 0f,
-                u.y * u.x * (1f - cos) + u.z * sin,
-                cos + u.y * u.y * (1f - cos),
-                u.y * u.z * (1f - cos) - u.x * sin,
+                axis.y * axis.x * (1f - cos) + axis.z * sin,
+                cos + axis.y * axis.y * (1f - cos),
+                axis.y * axis.z * (1f - cos) - axis.x * sin,
                 0f,
-                u.z * u.x * (1f - cos) - u.y * sin,
-                u.z * u.y * (1f - cos) + u.x * sin,
-                cos + u.z * u.z * (1f - cos),
+                axis.z * axis.x * (1f - cos) - axis.y * sin,
+                axis.z * axis.y * (1f - cos) + axis.x * sin,
+                cos + axis.z * axis.z * (1f - cos),
                 0f,
                 0f,
                 0f,
                 0f,
                 1f
-            ) * matrix
+            ) * mat4
         )
     }
 
@@ -44,45 +78,18 @@ class Transform(private val matrix: Mat4 = Mat4.IDENTITY) {
                 right.y, up.y, -direction.y, 0f,
                 right.z, up.z, -direction.z, 0f,
                 0f, 0f, 0f, 1f
-            ) * matrix
+            ) * mat4
         )
     }
 
-    fun translate(offset: Vec3): Transform = Transform(
-        Mat4(
-            1f, 0f, 0f, offset.x,
-            0f, 1f, 0f, offset.y,
-            0f, 0f, 1f, offset.z,
-            0f, 0f, 0f, 1f
-        ) * matrix
-    )
+    operator fun times(v: Vec3) = mat4 * v
 
+    operator fun times(that: Transform) = Transform(mat4 * that.mat4)
 
-    fun scale(s: Float): Transform = Transform(
-        Mat4(
-            s, 0f, 0f, 0f,
-            0f, s, 0f, 0f,
-            0f, 0f, s, 0f,
-            0f, 0f, 0f, 1f
-        ) * matrix
-    )
+    fun project(v: Vec3) = mat4.project(v)
 
-    fun scale(xs: Float, ys: Float, zs: Float): Transform = Transform(
-        Mat4(
-            xs, 0f, 0f, 0f,
-            0f, ys, 0f, 0f,
-            0f, 0f, zs, 0f,
-            0f, 0f, 0f, 1f
-        ) * matrix
-    )
+    fun offset() = mat4 * Vec3.ZERO
 
-    operator fun times(v: Vec3) = matrix * v
-
-    operator fun times(that: Transform) = Transform(matrix * that.matrix)
-
-    fun project(v: Vec3) = matrix.project(v)
-
-    fun applyToDirection(v: Vec3) = matrix * v - matrix * Vec3.ZERO
-
+    fun applyToDirection(v: Vec3) = mat4 * v - offset()
 
 }

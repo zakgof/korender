@@ -9,6 +9,7 @@ import com.zakgof.korender.mesh.Meshes.cube
 import com.zakgof.korender.material.StandartMaterialOption
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 
 @Composable
@@ -20,7 +21,7 @@ fun TransparencyExample() = Korender {
                 this.color = color
             },
             mesh = cube(),
-            transform = Transform().scale(5.0f, 5.0f, 0.1f).translate(position),
+            transform = scale(5.0f, 5.0f, 0.1f).translate(position),
             transparent = true
         )
 

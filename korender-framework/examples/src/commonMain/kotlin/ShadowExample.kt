@@ -5,15 +5,16 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.material.MaterialModifiers.options
 import com.zakgof.korender.material.MaterialModifiers.standartUniforms
-import com.zakgof.korender.mesh.Meshes.cube
-import com.zakgof.korender.mesh.Meshes.sphere
 import com.zakgof.korender.material.StandartMaterialOption
 import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.math.FloatMath
-import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Transform.Companion.scale
+import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import com.zakgof.korender.mesh.Meshes.cube
+import com.zakgof.korender.mesh.Meshes.sphere
 
 @Composable
 fun ShadowExample() =
@@ -31,17 +32,17 @@ fun ShadowExample() =
             Renderable(
                 pcss, uniforms,
                 mesh = cube(1f),
-                transform = Transform().scale(8f, 1f, 8f)
+                transform = scale(8f, 1f, 8f)
             )
             Renderable(
                 pcss, uniforms,
                 mesh = cube(1.0f),
-                transform = Transform().translate(2.y).rotate(1.y, frameInfo.time * 0.1f),
+                transform = translate(2.y).rotate(1.y, frameInfo.time * 0.1f),
             )
             Renderable(
                 pcss, uniforms,
                 mesh = sphere(1.5f),
-                transform = Transform().translate(Vec3(-5.0f, 3.5f + FloatMath.sin(frameInfo.time), 0.0f)),
+                transform = translate(Vec3(-5.0f, 3.5f + FloatMath.sin(frameInfo.time), 0.0f)),
             )
         }
     }

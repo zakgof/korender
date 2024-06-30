@@ -5,11 +5,11 @@ import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.material.MaterialModifiers.plugin
 import com.zakgof.korender.material.MaterialModifiers.standartUniforms
-import com.zakgof.korender.mesh.Meshes.sphere
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.FloatMath.sin
-import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.y
+import com.zakgof.korender.mesh.Meshes.sphere
 
 @Composable
 fun ShaderPluginExample() = Korender {
@@ -21,7 +21,7 @@ fun ShaderPluginExample() = Korender {
                 static("color2", Color(0xFF8080FF))
             },
             mesh = sphere(2.0f),
-            transform = Transform().translate(sin(frameInfo.time).y)
+            transform = translate(sin(frameInfo.time).y)
         )
     }
 }

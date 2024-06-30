@@ -2,6 +2,7 @@
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -62,7 +63,7 @@ class CharacterManager(private val hf: RgImageHeightField, initialPosition: Vec3
         cannonAngle = min(cannonAngle, 0.5f)
     }
 
-    fun transform()= Transform().rotate(orientation).translate(position)
+    fun transform() = rotate(orientation).translate(position)
 
     fun forward(touch: TouchEvent) {
         if (touch.type == TouchEvent.Type.DOWN) {

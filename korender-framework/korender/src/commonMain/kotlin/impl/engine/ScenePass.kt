@@ -1,9 +1,8 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.impl.gl.VGL11
-import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.material.UniformSupplier
 
 internal class ScenePass(private val inventory: Inventory, private val camera: Camera, private val width: Int, private val height: Int, passDeclaration: PassDeclaration, shadowCascades: Int) {
 
@@ -42,7 +41,7 @@ internal class ScenePass(private val inventory: Inventory, private val camera: C
         opaques.forEach { it.render(uniformDecorator) }
         skies.forEach { it.render(uniformDecorator) }
         VGL11.glDepthMask(false)
-        transparents.sortedByDescending { (camera.mat4 * (it.transform.mat4() * Vec3.ZERO)).z }
+        transparents.sortedByDescending { (camera.mat4 * it.transform.offset()).z }
             .forEach { it.render(uniformDecorator) }
         VGL11.glDepthMask(true)
         screens.forEach { it.render(uniformDecorator) }

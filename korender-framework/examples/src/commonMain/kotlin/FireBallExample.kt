@@ -6,12 +6,12 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.material.MaterialModifiers.fragment
 import com.zakgof.korender.material.MaterialModifiers.standartUniforms
-import com.zakgof.korender.mesh.Meshes.cube
 import com.zakgof.korender.material.Textures.texture
-import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import com.zakgof.korender.mesh.Meshes.cube
 import kotlin.math.floor
 
 @Composable
@@ -33,7 +33,7 @@ fun FireBallExample() = Korender {
                 colorTexture = texture("/sand.jpg")
             },
             mesh = cube(1f),
-            transform = Transform().scale(9f).translate(-9.y)
+            transform = scale(9f).translate(-9.y)
         )
     }
 }
