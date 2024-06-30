@@ -3,15 +3,15 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
+import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.material.MaterialModifiers.fragment
 import com.zakgof.korender.material.MaterialModifiers.plugin
-import com.zakgof.korender.material.MaterialModifiers.standartUniforms
-import com.zakgof.korender.mesh.Meshes.cube
+import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.material.Textures.texture
-import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.z
+import com.zakgof.korender.mesh.Meshes.cube
 
 @Composable
 fun WaterExample() {
@@ -26,7 +26,7 @@ fun WaterExample() {
             Camera(freeCamera.camera(projection, width, height, 0f))
             Pass {
                 Renderable(
-                    standartUniforms {
+                    standart {
                         colorTexture = texture("/sand.jpg")
                     },
                     mesh = cube(2f),

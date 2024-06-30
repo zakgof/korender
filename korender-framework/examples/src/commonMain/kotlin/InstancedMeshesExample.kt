@@ -4,7 +4,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.FreeCamera
-import com.zakgof.korender.material.MaterialModifiers.standartUniforms
+import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
@@ -18,7 +18,7 @@ fun InstancedMeshesExample() = Korender {
     Frame {
         Camera(freeCamera.camera(projection, width, height, frameInfo.dt))
         InstancedRenderables(
-            standartUniforms {
+            standart {
                 colorTexture = texture("/sand.jpg")
             },
             id = "particles",

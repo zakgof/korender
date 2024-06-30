@@ -3,8 +3,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.camera.DefaultCamera
-import com.zakgof.korender.material.MaterialModifiers.options
-import com.zakgof.korender.material.MaterialModifiers.standartUniforms
+import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.material.StandartMaterialOption
 import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.math.FloatMath
@@ -19,8 +18,7 @@ import com.zakgof.korender.mesh.Meshes.sphere
 @Composable
 fun ShadowExample() =
     Korender {
-        val pcss = options(StandartMaterialOption.Pcss)
-        val uniforms = standartUniforms {
+        val materialModifier = standart(StandartMaterialOption.Pcss) {
             colorTexture = texture("/sand.jpg")
         }
         Frame {
@@ -30,17 +28,17 @@ fun ShadowExample() =
                 Cascade(mapSize = 1024, near = 5.0f, far = 15.0f)
             }
             Renderable(
-                pcss, uniforms,
+                materialModifier,
                 mesh = cube(1f),
                 transform = scale(8f, 1f, 8f)
             )
             Renderable(
-                pcss, uniforms,
+                materialModifier,
                 mesh = cube(1.0f),
                 transform = translate(2.y).rotate(1.y, frameInfo.time * 0.1f),
             )
             Renderable(
-                pcss, uniforms,
+                materialModifier,
                 mesh = sphere(1.5f),
                 transform = translate(Vec3(-5.0f, 3.5f + FloatMath.sin(frameInfo.time), 0.0f)),
             )

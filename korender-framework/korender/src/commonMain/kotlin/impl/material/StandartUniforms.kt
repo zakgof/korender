@@ -4,7 +4,7 @@ import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.math.Color
 
-class StockUniforms : UniformSupplier {
+class StandartUniforms : UniformSupplier {
 
     private val static = mutableMapOf<String, Any>()
     private val dynamic = mutableMapOf<String, () -> Any>()

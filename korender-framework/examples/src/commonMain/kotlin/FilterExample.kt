@@ -3,7 +3,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.material.MaterialModifiers.fragment
-import com.zakgof.korender.material.MaterialModifiers.standartUniforms
+import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.mesh.Meshes.sphere
@@ -13,7 +13,7 @@ fun FilterExample() = Korender {
     Frame {
         Pass {
             Renderable(
-                standartUniforms {
+                standart {
                     colorTexture = texture("/sand.jpg")
                 },
                 mesh = sphere(2.2f),

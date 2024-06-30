@@ -1,17 +1,14 @@
+
+
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.context.PassContext
 import com.zakgof.korender.image.Image
 import com.zakgof.korender.material.MaterialModifiers.fragment
-import com.zakgof.korender.material.MaterialModifiers.options
 import com.zakgof.korender.material.MaterialModifiers.plugin
-import com.zakgof.korender.material.MaterialModifiers.standartUniforms
+import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.material.StandartMaterialOption
 import com.zakgof.korender.material.Textures.texture
-
-import com.zakgof.korender.mesh.Attributes.NORMAL
-import com.zakgof.korender.mesh.Attributes.POS
-import com.zakgof.korender.mesh.Attributes.TEX
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.FloatMath.PIdiv2
 import com.zakgof.korender.math.Transform
@@ -20,6 +17,9 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import com.zakgof.korender.mesh.Attributes.NORMAL
+import com.zakgof.korender.mesh.Attributes.POS
+import com.zakgof.korender.mesh.Attributes.TEX
 import com.zakgof.korender.mesh.Meshes.customMesh
 import com.zakgof.korender.mesh.Meshes.heightField
 import com.zakgof.korender.mesh.Meshes.obj
@@ -70,7 +70,7 @@ fun App() = Korender {
 fun PassContext.skull(skull: SkullManager.Skull) {
     if (!skull.destroyed) {
         Renderable(
-            standartUniforms {
+            standart {
                 colorTexture = texture("/skull/skull.jpg")
             },
             mesh = obj("/skull/skull.obj"),
@@ -142,8 +142,7 @@ private fun PassContext.gui(controller: Controller) {
 
 private fun PassContext.terrain(hfImage: Image, hf: RgImageHeightField, elevationRatio: Float) {
     Renderable(
-        options(StandartMaterialOption.NoShadowCast, StandartMaterialOption.Detail),
-        standartUniforms {
+        standart(StandartMaterialOption.NoShadowCast, StandartMaterialOption.Detail) {
             colorTexture = texture("/terrain/terrainbase.jpg")
             detailTexture = texture("/sand.jpg")
             detailRatio = 1.0f
@@ -158,9 +157,8 @@ private fun PassContext.terrain(hfImage: Image, hf: RgImageHeightField, elevatio
         }
     )
     Renderable(
-        options(StandartMaterialOption.NoShadowCast),
         plugin("texture", "terrain/texture.plugin.frag"),
-        standartUniforms {
+        standart(StandartMaterialOption.NoShadowCast){
             colorTexture = texture("/terrain/terrainbase.jpg")
             static("tex1", texture("/sand.jpg"))
             static("tex2", texture("/grass.jpg"))
@@ -175,7 +173,7 @@ private fun PassContext.terrain(hfImage: Image, hf: RgImageHeightField, elevatio
 }
 
 fun PassContext.bug(bugTransform: Transform) = Renderable(
-    standartUniforms {
+    standart {
         colorTexture = texture("/bug/bug.jpg")
     },
     mesh = obj("/bug/bug.obj"),
@@ -183,7 +181,7 @@ fun PassContext.bug(bugTransform: Transform) = Renderable(
 )
 
 fun PassContext.missile(missileTransform: Transform) = Renderable(
-    standartUniforms {
+    standart {
         colorTexture = texture("/missile/missile.jpg")
     },
     mesh = obj("/missile/missile.obj"),
@@ -191,7 +189,7 @@ fun PassContext.missile(missileTransform: Transform) = Renderable(
 )
 
 fun PassContext.head(headTransform: Transform) = Renderable(
-    standartUniforms {
+    standart {
         colorTexture = texture("/head/head-high.jpg")
     },
     mesh = obj("/head/head-high.obj"),
@@ -200,7 +198,7 @@ fun PassContext.head(headTransform: Transform) = Renderable(
 
 fun PassContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(
     fragment("effect/fireball.frag"),
-    standartUniforms {
+    standart {
         xscale = explosion.finishRadius * explosion.phase
         yscale = explosion.finishRadius * explosion.phase
         static("power", explosion.phase)
@@ -210,9 +208,9 @@ fun PassContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(
 )
 
 fun PassContext.splinters(explosionManager: ExplosionManager) = InstancedRenderables(
-    options(StandartMaterialOption.Color),
-    standartUniforms {
+    standart(StandartMaterialOption.Color) {
         color = Color(0xFF804040)
+        // This is a bug
         colorTexture = texture("/sand.jpg")
     },
     id = "splinters",
@@ -225,7 +223,7 @@ fun PassContext.splinters(explosionManager: ExplosionManager) = InstancedRendera
     }) {
 
     explosionManager.splinters.forEach {
-        Instance(transform = Transform().rotate(it.orientation).translate(it.position))
+        Instance(rotate(it.orientation).translate(it.position))
     }
 
 }
