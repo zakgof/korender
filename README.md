@@ -34,6 +34,7 @@ fun App() = Korender {
   }
 }
 ````
+![Korender](doc/quickstart.jpg)
 
 ### Supported platforms
 - Desktop (Windows/Linux) - based on LWJGL
@@ -72,9 +73,7 @@ or, create an application from scratch:
 - Add Korender dependency `com.github.zakgof:korender:0.1.0`
 - Add the above code to commonMain
 - Run on desktop: `.\gradlew composeApp:run`
-- Result:
 
-![Korender](doc/quickstart.jpg)
 
 ### Examples showcase app
 
