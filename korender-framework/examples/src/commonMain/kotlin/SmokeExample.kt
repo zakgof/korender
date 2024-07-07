@@ -5,29 +5,29 @@ import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.material.Effects.Smoke
 import com.zakgof.korender.material.MaterialModifiers.effect
-import com.zakgof.korender.math.Vec3
-import kotlin.math.sin
+import com.zakgof.korender.material.MaterialModifiers.sky
+import com.zakgof.korender.material.Skies.FastCloud
+import com.zakgof.korender.math.y
 
 @Composable
 fun SmokeExample() = Korender {
     Frame {
-        for (i in 1..20) {
-            val phase = fract(frameInfo.time * 0.5f + 20f / i)
+        Sky(sky(FastCloud))
+        val n = 100
+        for (i in 1..n) {
+            val phase = fract(frameInfo.time * 0.5f + n.toFloat() / i)
             Billboard(
                 effect(Smoke) {
                     xscale = 5f * phase + 0.5f
                     yscale = 5f * phase + 0.5f
-                    seed = i / 20f
+                    seed = i / n.toFloat()
                     density = 1.0f - phase
                 },
-                position = Vec3(
-                    2f * phase * sin(phase * 0.4f),
-                    phase * phase * 8f + phase * 2f - 4f,
-                    i * 0.01f
-                ),
+                position = (phase * phase * 8f + phase * 2f - 4f).y,
                 transparent = true
             )
         }
+
     }
 }
 

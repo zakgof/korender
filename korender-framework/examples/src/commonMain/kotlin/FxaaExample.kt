@@ -6,7 +6,8 @@ import com.zakgof.korender.material.Effects.Fxaa
 import com.zakgof.korender.material.MaterialModifiers.effect
 import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.material.StandartMaterialOption.FixedColor
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.Color.Companion.Green
+import com.zakgof.korender.math.Color.Companion.Red
 import com.zakgof.korender.mesh.Meshes.sphere
 
 @Composable
@@ -15,7 +16,7 @@ fun FxaaExample() = Korender {
         Pass {
             Renderable(
                 standart(FixedColor) {
-                    color = Color.Green
+                    color = Green
                 },
                 mesh = sphere(4f),
             )
@@ -24,7 +25,7 @@ fun FxaaExample() = Korender {
             Pass {
                 Screen(effect(Fxaa))
                 Gui {
-                    Text(text = "FXAA", id = "fxaa", font = "/ubuntu.ttf", height = 50, color = Color.Red)
+                    Text(text = "FXAA", font = "/ubuntu.ttf", height = 50, color = Red, id = "fxaa")
                 }
             }
         }
