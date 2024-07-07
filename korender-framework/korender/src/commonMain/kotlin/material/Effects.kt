@@ -1,5 +1,6 @@
 package com.zakgof.korender.material
 
+import com.zakgof.korender.uniforms.AdjustUniforms
 import com.zakgof.korender.uniforms.FireBallUniforms
 import com.zakgof.korender.uniforms.FireUniforms
 import com.zakgof.korender.uniforms.SmokeUniforms
@@ -10,5 +11,5 @@ object Effects {
     val FireBall = Effect("effect/fireball.frag") { FireBallUniforms() }
     val Smoke = Effect("effect/smoke.frag") { SmokeUniforms() }
     val Water = Effect("effect/water.frag") { WaterUniforms() }
-//    Adjust("effects/adjust.frag"),
+    val Adjust = Effect("effect/adjust.frag") { AdjustUniforms() }
 }

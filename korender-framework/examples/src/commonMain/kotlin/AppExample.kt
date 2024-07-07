@@ -34,7 +34,7 @@ fun AppExample() {
         Demo("IM", "Instanced meshes") { InstancedMeshesExample() },
         Demo("HF", "Heightfield") { HeightFieldExample() },
         Demo("Shadow", "Shadow mapping") { ShadowExample() },
-        Demo("Filter", "Custom filter") { FilterExample() },
+        Demo("Filter", "Post processing filter") { FilterExample() },
         Demo("FBall", "Fireball effect") { FireBallExample() },
         Demo("Smoke", "Smoke effect") { SmokeExample() },
         Demo("GUI", "On-screen GUI") { GuiExample() },
