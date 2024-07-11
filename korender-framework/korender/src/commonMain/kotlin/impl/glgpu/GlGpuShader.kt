@@ -1,7 +1,6 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.uniforms.UniformSupplier
 import com.zakgof.korender.impl.gl.VGL11
 import com.zakgof.korender.impl.gl.VGL20
 import com.zakgof.korender.impl.gpu.GpuMesh
@@ -13,6 +12,7 @@ import com.zakgof.korender.math.Mat3
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.uniforms.UniformSupplier
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 
@@ -163,7 +163,7 @@ class GlGpuShader(
         var currentTexUnit = 0
         uniformLocations.forEach {
             val uniformValue =
-                requireNotNull(uniformSupplier[it.key]) { "Material does not provide value for the uniform ${it.key}" }
+                requireNotNull(uniformSupplier[it.key]) { "Material ${toString()} does not provide value for the uniform ${it.key}" }
             if (bind(uniformValue, it.value, currentTexUnit))
                 currentTexUnit++
         }
