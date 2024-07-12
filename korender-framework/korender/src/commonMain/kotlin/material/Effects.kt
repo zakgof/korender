@@ -1,6 +1,7 @@
 package com.zakgof.korender.material
 
 import com.zakgof.korender.uniforms.AdjustUniforms
+import com.zakgof.korender.uniforms.BlurUniforms
 import com.zakgof.korender.uniforms.FireBallUniforms
 import com.zakgof.korender.uniforms.FireUniforms
 import com.zakgof.korender.uniforms.SmokeUniforms
@@ -15,4 +16,6 @@ object Effects {
     val Water = Effect("effect/water.frag") { WaterUniforms() }
     val Adjust = Effect("effect/adjust.frag") { AdjustUniforms() }
     val Fxaa = Effect("effect/fxaa.frag") { UniformSupplier { null } }
+    val BlurHorz = Effect("effect/blurh.frag") { BlurUniforms() }
+    val BlurVert = Effect("effect/blurv.frag") { BlurUniforms() }
 }

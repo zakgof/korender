@@ -5,7 +5,6 @@ import com.zakgof.korender.math.Color
 class FastCloudSkyUniforms : BaseUniformSupplier() {
 
     var density = 3.0f     // 0..5
-    var marble = 2.0f      // 0..5
     var thickness = 10.0f  // 0..20
     var scale = 1.0f       // 0.1..10
     var rippleamount = 0.3f  // 0..1

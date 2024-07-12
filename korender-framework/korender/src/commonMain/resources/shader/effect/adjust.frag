@@ -17,4 +17,5 @@ void main() {
     float lumi = dot(color.rgb, vec3(0.299, 0.587, 0.114));
     color.rgb = mix(vec3(lumi), color.rgb, saturation);
     fragColor = color;
+    gl_FragDepth = texture(filterDepthTexture, vtex).r;
 }
