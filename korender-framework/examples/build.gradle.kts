@@ -96,7 +96,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi)
             packageName = "com.zakgof.korender"
-            packageVersion = "0.1.1"
+            packageVersion = "0.2.1"
             modules("jdk.unsupported")
             windows {
                 iconFile.set(project.file("korender32.ico"))
