@@ -20,7 +20,7 @@ fun SkyExample() {
         Frame {
             Camera(freeCamera.camera(projection, width, height, 0f))
             Sky(sky(FastCloud) {
-                marble2 = 2.0f + 2.0f * sin(frameInfo.time * 0.5f)
+                thickness = 10f + 10f * sin(frameInfo.time * 0.5f)
             })
             Gui {
                 Filler()
