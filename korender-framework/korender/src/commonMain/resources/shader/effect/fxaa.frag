@@ -10,6 +10,8 @@ uniform sampler2D filterColorTexture;
 uniform float screenWidth;
 uniform float screenHeight;
 
+out vec4 fragColor;
+
 void main() {
 
     vec2 rcpFrame = vec2(1. / screenWidth, 1. / screenHeight);
@@ -51,5 +53,5 @@ void main() {
     float lumaB = dot(rgbB, luma);
     
     vec3 color = ((lumaB < lumaMin) || (lumaB > lumaMax)) ? rgbA : rgbB;
-    gl_FragColor = vec4(color, 1.0);
+    fragColor = vec4(color, 1.0);
 }
