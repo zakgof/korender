@@ -89,6 +89,7 @@ compose.desktop {
         mainClass = "com.zakgof.korender.MainKt"
 
         jvmArgs("--add-exports", "java.desktop/sun.awt=ALL-UNNAMED")
+
         nativeApplication {
         }
 
@@ -97,6 +98,12 @@ compose.desktop {
             packageName = "com.zakgof.korender"
             packageVersion = "0.1.1"
             modules("jdk.unsupported")
+            windows {
+                iconFile.set(project.file("korender32.ico"))
+            }
+            linux {
+                iconFile.set(project.file("korender32.png"))
+            }
         }
     }
 }
