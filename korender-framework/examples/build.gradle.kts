@@ -56,7 +56,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.2.0"
     }
     packaging {
         resources {
@@ -95,7 +95,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi)
             packageName = "com.zakgof.korender"
-            packageVersion = "0.1.1"
+            packageVersion = "0.2.0"
             modules("jdk.unsupported")
         }
     }
