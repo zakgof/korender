@@ -11,7 +11,7 @@ uniform sampler2D filterDepthTexture;
 out vec4 fragColor;
 
 void main() {
-    vec4 color = texture2D(filterColorTexture, vtex);
+    vec4 color = texture(filterColorTexture, vtex);
     color.rgb += brightness;
     color.rgb = ((color.rgb - 0.5) * contrast) + 0.5;
     float lumi = dot(color.rgb, vec3(0.299, 0.587, 0.114));
