@@ -16,5 +16,5 @@ void main() {
     color.rgb = ((color.rgb - 0.5) * contrast) + 0.5;
     float lumi = dot(color.rgb, vec3(0.299, 0.587, 0.114));
     color.rgb = mix(vec3(lumi), color.rgb, saturation);
-    gl_FragColor = color;
+    fragColor = color;
 }
