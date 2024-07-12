@@ -1,6 +1,22 @@
 package com.zakgof.korender.impl.geometry
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.impl.engine.BillboardInstance
+import com.zakgof.korender.impl.engine.MeshInstance
+import com.zakgof.korender.impl.glgpu.BufferUtils
+import com.zakgof.korender.impl.gpu.Gpu
+import com.zakgof.korender.impl.gpu.GpuMesh
+import com.zakgof.korender.impl.resourceStream
+import com.zakgof.korender.math.BoundingBox
+import com.zakgof.korender.math.FloatMath.PI
+import com.zakgof.korender.math.Vec2
+import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.mesh.Attributes.NORMAL
+import com.zakgof.korender.mesh.Attributes.PHI
+import com.zakgof.korender.mesh.Attributes.POS
+import com.zakgof.korender.mesh.Attributes.SCALE
+import com.zakgof.korender.mesh.Attributes.SCREEN
+import com.zakgof.korender.mesh.Attributes.TEX
 import com.zakgof.korender.mesh.Billboard
 import com.zakgof.korender.mesh.Cube
 import com.zakgof.korender.mesh.CustomMesh
@@ -13,24 +29,6 @@ import com.zakgof.korender.mesh.MeshInitializer
 import com.zakgof.korender.mesh.ObjMesh
 import com.zakgof.korender.mesh.ScreenQuad
 import com.zakgof.korender.mesh.Sphere
-import com.zakgof.korender.impl.engine.BillboardInstance
-import com.zakgof.korender.impl.engine.MeshInstance
-import com.zakgof.korender.mesh.Attributes.NORMAL
-import com.zakgof.korender.mesh.Attributes.PHI
-import com.zakgof.korender.mesh.Attributes.POS
-import com.zakgof.korender.mesh.Attributes.SCALE
-import com.zakgof.korender.mesh.Attributes.SCREEN
-import com.zakgof.korender.mesh.Attributes.TEX
-import com.zakgof.korender.impl.glgpu.BufferUtils
-import com.zakgof.korender.impl.gpu.Gpu
-import com.zakgof.korender.impl.gpu.GpuMesh
-import com.zakgof.korender.impl.resourceStream
-import com.zakgof.korender.math.BoundingBox
-import com.zakgof.korender.math.FloatMath.PI
-import com.zakgof.korender.math.FloatMath.cos
-import com.zakgof.korender.math.FloatMath.sin
-import com.zakgof.korender.math.Vec2
-import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.mesh.Vertex
 import de.javagl.obj.Obj
 import de.javagl.obj.ObjReader
@@ -40,8 +38,10 @@ import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import java.nio.ShortBuffer
 import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.sin
 
 internal object Geometry {
 
@@ -68,7 +68,7 @@ internal object Geometry {
             is CustomMesh -> create(declaration.id.toString(), declaration.vertexCount, declaration.indexCount, *declaration.attributes.toTypedArray()) {
                 apply (declaration.block)
             }
-            is HeightField -> heightMap(declaration.cellsX, declaration.cellsX, declaration.cellWidth, declaration.height)
+            is HeightField -> heightMap(declaration.cellsX, declaration.cellsZ, declaration.cellWidth, declaration.height)
             else -> throw KorenderException("Unknown mesh declaration")
         }
 
@@ -259,7 +259,7 @@ internal object Geometry {
                 val instance = instances[it]
                 for (v in 0..<prototype.vertexNumber) {
                     data.updateVertex(prototype.vertexNumber * it + v) {
-                        it.pos = instance.transform.mat4().project(prototype.getVertex(v).pos!!)
+                        it.pos = instance.transform.mat4.project(prototype.getVertex(v).pos!!)
                         // TODO: normal
                     }
                 }

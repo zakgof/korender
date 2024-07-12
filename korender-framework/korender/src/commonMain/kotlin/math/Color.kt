@@ -10,9 +10,12 @@ data class Color(val a: Float, val r: Float, val g: Float, val b: Float) {
     )
 
     companion object {
-        val TRANSPARENT = Color(0f, 0f, 0f, 0f)
-        val BLACK = Color(1f, 0f, 0f, 0f)
-        val WHITE = Color(1f,1f, 1f, 1f)
+        val Transparent = Color(0f, 0f, 0f, 0f)
+        val Black = Color(1f, 0f, 0f, 0f)
+        val White = Color(1f,1f, 1f, 1f)
+        val Blue = Color(1f, 0f, 0f, 1f)
+        val Green = Color(1f,0f, 1f, 0f)
+        val Red = Color(1f,1f, 0f, 0f)
     }
 
     override fun toString(): String = "Color $a/$r,$g,$b"

@@ -6,12 +6,12 @@ import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.GuiContainerContext
 import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedRenderablesContext
-import com.zakgof.korender.material.MaterialModifier
-import com.zakgof.korender.mesh.MeshDeclaration
 import com.zakgof.korender.context.PassContext
 import com.zakgof.korender.context.ShadowContext
+import com.zakgof.korender.material.MaterialModifier
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.mesh.MeshDeclaration
 import com.zakgof.korender.projection.Projection
 
 internal class DefaultFrameContext(
@@ -47,11 +47,11 @@ internal class DefaultFrameContext(
     override fun Gui(block: GuiContainerContext.() -> Unit) =
         defaultPassContext.Gui(block)
 
-    override fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: Any, count: Int, mesh: MeshDeclaration, static: Boolean, block: InstancedRenderablesContext.() -> Unit) =
-        defaultPassContext.InstancedRenderables(*materialModifiers, id = id, count = count, mesh = mesh, static = static, block = block)
+    override fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: Any, count: Int, mesh: MeshDeclaration, static: Boolean, transparent: Boolean, block: InstancedRenderablesContext.() -> Unit) =
+        defaultPassContext.InstancedRenderables(*materialModifiers, id = id, count = count, mesh = mesh, static = static, transparent = transparent, block = block)
 
-    override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, zSort: Boolean, block: InstancedBillboardsContext.() -> Unit) =
-        defaultPassContext.InstancedBillboards(*materialModifiers, id = id, count = count, zSort = zSort, block = block)
+    override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, transparent: Boolean, block: InstancedBillboardsContext.() -> Unit) =
+        defaultPassContext.InstancedBillboards(*materialModifiers, id = id, count = count, transparent = transparent, block = block)
 
     override fun Shadow(block: ShadowContext.() -> Unit) {
         val shadowDeclaration = ShadowDeclaration()

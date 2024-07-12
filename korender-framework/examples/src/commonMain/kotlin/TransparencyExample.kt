@@ -3,24 +3,23 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.material.MaterialModifiers.options
-import com.zakgof.korender.material.MaterialModifiers.standardUniforms
-import com.zakgof.korender.mesh.Meshes.cube
-import com.zakgof.korender.material.StandardMaterialOption
+import com.zakgof.korender.material.MaterialModifiers.standart
+import com.zakgof.korender.material.StandartMaterialOption.FixedColor
+import com.zakgof.korender.material.StandartMaterialOption.NoLight
 import com.zakgof.korender.math.Color
-import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.mesh.Meshes.cube
 
 @Composable
 fun TransparencyExample() = Korender {
     Frame {
         fun semitransparent(color: Color, position: Vec3) = Renderable(
-            options(StandardMaterialOption.Color, StandardMaterialOption.NoLight),
-            standardUniforms {
+            standart(FixedColor, NoLight) {
                 this.color = color
             },
             mesh = cube(),
-            transform = Transform().scale(5.0f, 5.0f, 0.1f).translate(position),
+            transform = scale(5.0f, 5.0f, 0.1f).translate(position),
             transparent = true
         )
 

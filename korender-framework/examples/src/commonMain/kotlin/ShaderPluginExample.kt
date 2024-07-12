@@ -4,24 +4,24 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.material.MaterialModifiers.plugin
-import com.zakgof.korender.material.MaterialModifiers.standardUniforms
-import com.zakgof.korender.mesh.Meshes.sphere
+import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.math.Color
-import com.zakgof.korender.math.FloatMath.sin
-import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.y
+import com.zakgof.korender.mesh.Meshes.sphere
+import kotlin.math.sin
 
 @Composable
 fun ShaderPluginExample() = Korender {
     Frame {
         Renderable(
             plugin("texture", "checked.frag"),
-            standardUniforms {
+            standart {
                 static("color1", Color(0xFFFFFF20))
                 static("color2", Color(0xFF8080FF))
             },
             mesh = sphere(2.0f),
-            transform = Transform().translate(sin(frameInfo.time).y)
+            transform = translate(sin(frameInfo.time).y)
         )
     }
 }

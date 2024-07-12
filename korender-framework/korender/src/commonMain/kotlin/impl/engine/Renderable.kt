@@ -1,15 +1,15 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.mesh.CustomMesh
-import com.zakgof.korender.mesh.InstancedBillboard
-import com.zakgof.korender.mesh.InstancedMesh
-import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.Mesh
 import com.zakgof.korender.impl.gpu.GpuShader
-import com.zakgof.korender.impl.material.MapUniformSupplier
+import com.zakgof.korender.uniforms.MapUniformSupplier
+import com.zakgof.korender.uniforms.UniformSupplier
 import com.zakgof.korender.math.Transform
+import com.zakgof.korender.mesh.CustomMesh
+import com.zakgof.korender.mesh.InstancedBillboard
+import com.zakgof.korender.mesh.InstancedMesh
 
 internal class Renderable(val mesh: Mesh, val shader: GpuShader, val uniforms: UniformSupplier, val transform: Transform = Transform()) {
 
@@ -26,7 +26,7 @@ internal class Renderable(val mesh: Mesh, val shader: GpuShader, val uniforms: U
                 // TODO: static
                 val instances = mutableListOf<BillboardInstance>();
                 DefaultInstancedBillboardsContext(instances).apply(declaration.mesh.block)
-                if (declaration.mesh.zSort) {
+                if (declaration.mesh.transparent) {
                     instances.sortBy { (camera.mat4 * it.pos).z }
                 }
                 (mesh as Geometry.MultiMesh).updateBillboardInstances(instances)
@@ -35,6 +35,9 @@ internal class Renderable(val mesh: Mesh, val shader: GpuShader, val uniforms: U
                 if (!declaration.mesh.static || new) {
                     val instances = mutableListOf<MeshInstance>()
                     DefaultInstancedRenderablesContext(instances).apply(declaration.mesh.block)
+                    if (declaration.mesh.transparent) {
+                        instances.sortBy { (camera.mat4 * it.transform.offset()).z }
+                    }
                     (mesh as Geometry.MultiMesh).updateInstances(instances)
                 }
             }
@@ -54,7 +57,7 @@ internal class Renderable(val mesh: Mesh, val shader: GpuShader, val uniforms: U
 
     fun render(uniformDecorator: (UniformSupplier) -> UniformSupplier) =
         shader.render(
-            uniformDecorator(uniforms + MapUniformSupplier("model" to transform.mat4())),
+            uniformDecorator(uniforms + MapUniformSupplier("model" to transform.mat4)),
             mesh.gpuMesh
         )
 }

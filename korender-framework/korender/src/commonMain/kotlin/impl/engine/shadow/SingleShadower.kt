@@ -2,8 +2,6 @@ package com.zakgof.korender.impl.engine.shadow
 
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
-import com.zakgof.korender.material.TextureDeclaration
-import com.zakgof.korender.material.UniformSupplier
 import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.FrameBufferDeclaration
 import com.zakgof.korender.impl.engine.Inventory
@@ -11,7 +9,9 @@ import com.zakgof.korender.impl.engine.Renderable
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gl.VGL11
 import com.zakgof.korender.impl.gpu.GpuFrameBuffer
-import com.zakgof.korender.impl.material.MapUniformSupplier
+import com.zakgof.korender.uniforms.MapUniformSupplier
+import com.zakgof.korender.material.TextureDeclaration
+import com.zakgof.korender.uniforms.UniformSupplier
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.projection.FrustumProjection
@@ -50,9 +50,9 @@ internal class SingleShadower(private val index: Int, private val inventory: Inv
             VGL11.glCullFace(VGL11.GL_BACK)
             shadowCasters.forEach { r ->
                 // TODO: need to copy all the defs and plugins from the original shader
-                val casterShader = inventory.shader(ShaderDeclaration("standard.vert", "standard.frag", setOf("SHADOW_CASTER")))
+                val casterShader = inventory.shader(ShaderDeclaration("standart.vert", "standart.frag", setOf("SHADOW_CASTER")))
                 casterShader.render(
-                    uniformDecorator(r.uniforms + mapOf("model" to r.transform.mat4())),
+                    uniformDecorator(r.uniforms + mapOf("model" to r.transform.mat4)),
                     r.mesh.gpuMesh
                 )
             }

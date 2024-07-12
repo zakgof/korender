@@ -57,18 +57,18 @@ class Controller {
                 gameOverTime = frameInfo.time
             }
             enemyManager.hit(it.second)
-            explosionManager.boom(it.second.transform().mat4() * Vec3.ZERO, 1f,15f, frameInfo.time)
+            explosionManager.boom(it.second.transform().offset(), 1f,15f, frameInfo.time)
         }
         collisionDetector.detect(MissileManager.Missile::class, EnemyManager.Head::class) {
             enemyManager.hit(it.second)
             missileManager.destroyMissile(it.first)
-            explosionManager.boom(it.second.transform().mat4() * Vec3.ZERO, 1f,12f, frameInfo.time)
+            explosionManager.boom(it.second.transform().offset(), 1f,12f, frameInfo.time)
             characterManager.incrementScore(10)
         }
         collisionDetector.detect(MissileManager.Missile::class, SkullManager.Skull::class) {
             skullManager.hit(it.second)
             missileManager.destroyMissile(it.first)
-            explosionManager.boom(it.second.transform.mat4() * Vec3.ZERO, 8f,20f, frameInfo.time)
+            explosionManager.boom(it.second.transform.offset(), 8f,20f, frameInfo.time)
             characterManager.incrementScore(100)
         }
         collisionDetector.go()

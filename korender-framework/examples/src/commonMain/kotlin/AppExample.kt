@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppExample() {
     val options = listOf(
-        Demo("QS", "QuickStart: simple sphere with dynamic color and position") { QuickStartExample() },
+        Demo("Show", "Features showcase") { ShowcaseExample() },
         Demo("Trans", "Transparent objects") { TransparencyExample() },
         Demo("Mesh", "Demonstration of static and dynamic custom meshes") { MeshesExample() },
         Demo("Obj", "Loading a textured obj file") { ObjFileExample() },
@@ -34,13 +34,12 @@ fun AppExample() {
         Demo("IM", "Instanced meshes") { InstancedMeshesExample() },
         Demo("HF", "Heightfield") { HeightFieldExample() },
         Demo("Shadow", "Shadow mapping") { ShadowExample() },
-        Demo("Filter", "Custom filter") { FilterExample() },
-        Demo("Fire", "Simple fire effect") { FireExample() },
+        Demo("Filter", "Post processing saturation filter") { FilterExample() },
+        Demo("FXAA", "Post processing FXAA filter") { FxaaExample() },
         Demo("FBall", "Fireball effect") { FireBallExample() },
         Demo("Smoke", "Smoke effect") { SmokeExample() },
         Demo("GUI", "On-screen GUI") { GuiExample() },
         Demo("Sky", "Simple sky") { SkyExample() },
-        Demo("Water", "Water effect") { WaterExample() },
         Demo("Plg", "Shader plugin") { ShaderPluginExample() }
     )
 

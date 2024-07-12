@@ -12,7 +12,7 @@ plugins {
     id("signing")
 }
 
-val libraryVersion = "0.1.0"
+val libraryVersion = "0.1.1-SNAPSHOT"
 val libraryGroup = "com.github.zakgof"
 
 kotlin {

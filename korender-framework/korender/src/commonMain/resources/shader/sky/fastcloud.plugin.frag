@@ -1,19 +1,25 @@
 #import "lib/noise.glsl"
 
 uniform float time;
+uniform float thickness;
+uniform float density;
+uniform float scale;
+uniform float rippleamount;
+uniform float ripplescale;
+uniform vec4 lightblue;
+uniform vec4 darkblue;
 
 vec3 sky(vec3 look) {
 
-    float density = 1.0; // 0..2 TODO: uniform
-    vec2 uvorig = skydiskfromlook(look, 2.5) + time * 0.0005;
+    vec2 uv = skydiskfromlook(look, 2.5) + time * 0.001;
 
-    vec2 uv = uvorig - 0.02 * fbm2(uvorig * 1.5);
-    float f = fbm2(uv) - 0.5;
-    f = density-1.0 + 6.0*f + 6.0*f*f;
+    float f = thickness * ((fbm2(uv * scale) - 0.5) +
+              rippleamount * (fbm2(uv * scale * ripplescale) - 0.5)) +
+              density - 3.;
 
-    float g = clamp(fbm2(uvorig * 0.4 - time * 0.0003), 0., 1.);
-    vec3 cloud = mix(vec3(1.0, 1.0, 1.0), vec3(0.92, 0.92, 0.92), clamp(f*g, 0., 3.));
+    float g = clamp(fbm2(uv * 0.6 - time * 0.003) + 0.4, 0., 1.);
+    vec3 cloud = mix(vec3(1.0), vec3(0.9), clamp(f*g, 0., 3.));
 
-    vec3 blue = mix(vec3(0.4, 0.7, 1.0), vec3(0.2, 0.4, 0.6), -look.y); // TODO light direction
+    vec3 blue = mix(lightblue.rgb, darkblue.rgb, -look.y); // TODO light direction
     return mix(blue, cloud, clamp(f, 0., 1.));
 }

@@ -40,7 +40,7 @@ class MissileManager(private val hf: HeightField, private val explosionManager: 
     class Missile(transform: Transform, launcherVelocity: Vec3, cannonAngle: Float) {
 
         private var velocity: Vec3 = transform.applyToDirection(Vec3(0f, 50f * sin(cannonAngle), -50f * cos(cannonAngle))) + launcherVelocity
-        var position: Vec3 = transform.mat4() * Vec3(0f, 1f, 0f)
+        var position: Vec3 = transform.mat4 * Vec3(0f, 1f, 0f)
         fun update(dt: Float) {
             velocity += -5.y * dt
             position += velocity * dt

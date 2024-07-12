@@ -1,4 +1,4 @@
-package com.zakgof.korender.material
+package com.zakgof.korender.uniforms
 
 fun interface UniformSupplier {
     operator fun get(key: String): Any?

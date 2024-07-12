@@ -2,13 +2,13 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.material.MaterialModifiers.standardUniforms
-import com.zakgof.korender.mesh.Meshes.heightField
-import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.examples.camera.FreeCamera
-import com.zakgof.korender.math.FloatMath.sin
+import com.zakgof.korender.material.MaterialModifiers.standart
+import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
+import com.zakgof.korender.mesh.Meshes.heightField
+import kotlin.math.sin
 
 @Composable
 fun HeightFieldExample() {
@@ -18,7 +18,7 @@ fun HeightFieldExample() {
             OnTouch { freeCamera.touch(it) }
             Camera(freeCamera.camera(projection, width, height, frameInfo.dt))
             Renderable(
-                standardUniforms {
+                standart {
                     colorTexture = texture("/sand.jpg")
                 },
                 mesh = heightField(id = "terrain", 128, 128, 0.2f) { x, y ->

@@ -24,7 +24,7 @@ class BoundingBox(val corners: Set<Vec3>) {
     constructor(points: List<Vec3>) : this(toAABB(points))
 
     fun transform(transform: Transform): BoundingBox =
-        BoundingBox(corners.map { transform.mat4() * it })
+        BoundingBox(corners.map { transform.mat4 * it })
 
     fun isIn(mat4: Mat4): Boolean {
         val screenSpaceCorners = corners.map { mat4.project(it) }

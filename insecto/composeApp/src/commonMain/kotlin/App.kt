@@ -2,23 +2,27 @@ import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.context.PassContext
 import com.zakgof.korender.image.Image
+import com.zakgof.korender.material.Effects.FireBall
+import com.zakgof.korender.material.Effects.Water
+import com.zakgof.korender.material.MaterialModifiers.effect
 import com.zakgof.korender.material.MaterialModifiers.fragment
-import com.zakgof.korender.material.MaterialModifiers.options
 import com.zakgof.korender.material.MaterialModifiers.plugin
-import com.zakgof.korender.material.MaterialModifiers.standardUniforms
-import com.zakgof.korender.material.StandardMaterialOption
+import com.zakgof.korender.material.MaterialModifiers.sky
+import com.zakgof.korender.material.MaterialModifiers.standart
+import com.zakgof.korender.material.Skies.FastCloud
+import com.zakgof.korender.material.StandartMaterialOption
 import com.zakgof.korender.material.Textures.texture
-
-import com.zakgof.korender.mesh.Attributes.NORMAL
-import com.zakgof.korender.mesh.Attributes.POS
-import com.zakgof.korender.mesh.Attributes.TEX
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.FloatMath.PIdiv2
 import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import com.zakgof.korender.mesh.Attributes.NORMAL
+import com.zakgof.korender.mesh.Attributes.POS
+import com.zakgof.korender.mesh.Attributes.TEX
 import com.zakgof.korender.mesh.Meshes.customMesh
 import com.zakgof.korender.mesh.Meshes.heightField
 import com.zakgof.korender.mesh.Meshes.obj
@@ -45,7 +49,7 @@ fun App() = Korender {
             Cascade(512, 100f, 10000f)
         }
 
-        val skyPlugin = plugin("sky", "sky/fastcloud.plugin.frag")
+        val skyPlugin = sky(FastCloud)
         Pass {
             terrain(controller.hfImage, controller.hf, controller.elevationRatio)
             bug(bugTransform)
@@ -57,7 +61,7 @@ fun App() = Korender {
             Sky(skyPlugin)
         }
         Pass {
-            Screen(fragment("effect/water.frag"), skyPlugin)
+            Screen(effect(Water), skyPlugin)
         }
         Pass {
             Screen(fragment("atmosphere.frag"))
@@ -69,11 +73,11 @@ fun App() = Korender {
 fun PassContext.skull(skull: SkullManager.Skull) {
     if (!skull.destroyed) {
         Renderable(
-            standardUniforms {
+            standart {
                 colorTexture = texture("/skull/skull.jpg")
             },
             mesh = obj("/skull/skull.obj"),
-            transform = skull.transform * Transform().rotate(1.y, -PIdiv2)
+            transform = skull.transform * rotate(1.y, -PIdiv2)
         )
     }
 }
@@ -141,8 +145,7 @@ private fun PassContext.gui(controller: Controller) {
 
 private fun PassContext.terrain(hfImage: Image, hf: RgImageHeightField, elevationRatio: Float) {
     Renderable(
-        options(StandardMaterialOption.NoShadowCast, StandardMaterialOption.Detail),
-        standardUniforms {
+        standart(StandartMaterialOption.NoShadowCast, StandartMaterialOption.Detail) {
             colorTexture = texture("/terrain/terrainbase.jpg")
             detailTexture = texture("/sand.jpg")
             detailRatio = 1.0f
@@ -157,9 +160,8 @@ private fun PassContext.terrain(hfImage: Image, hf: RgImageHeightField, elevatio
         }
     )
     Renderable(
-        options(StandardMaterialOption.NoShadowCast),
         plugin("texture", "terrain/texture.plugin.frag"),
-        standardUniforms {
+        standart(StandartMaterialOption.NoShadowCast) {
             colorTexture = texture("/terrain/terrainbase.jpg")
             static("tex1", texture("/sand.jpg"))
             static("tex2", texture("/grass.jpg"))
@@ -174,44 +176,43 @@ private fun PassContext.terrain(hfImage: Image, hf: RgImageHeightField, elevatio
 }
 
 fun PassContext.bug(bugTransform: Transform) = Renderable(
-    standardUniforms {
+    standart {
         colorTexture = texture("/bug/bug.jpg")
     },
     mesh = obj("/bug/bug.obj"),
-    transform = bugTransform * Transform().rotate(1.y, -PIdiv2).scale(2.0f).translate(0.3f.y)
+    transform = bugTransform * rotate(1.y, -PIdiv2).scale(2.0f).translate(0.3f.y)
 )
 
 fun PassContext.missile(missileTransform: Transform) = Renderable(
-    standardUniforms {
+    standart {
         colorTexture = texture("/missile/missile.jpg")
     },
     mesh = obj("/missile/missile.obj"),
-    transform = missileTransform * Transform().rotate(1.y, -PIdiv2)
+    transform = missileTransform * rotate(1.y, -PIdiv2)
 )
 
 fun PassContext.head(headTransform: Transform) = Renderable(
-    standardUniforms {
+    standart {
         colorTexture = texture("/head/head-high.jpg")
     },
     mesh = obj("/head/head-high.obj"),
-    transform = headTransform * Transform().rotate(1.y, -PIdiv2).scale(2.0f)
+    transform = headTransform * rotate(1.y, -PIdiv2).scale(2.0f)
 )
 
 fun PassContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(
-    fragment("effect/fireball.frag"),
-    standardUniforms {
+    effect(FireBall) {
         xscale = explosion.finishRadius * explosion.phase
         yscale = explosion.finishRadius * explosion.phase
-        static("power", explosion.phase)
+        power = explosion.phase
     },
     position = explosion.position,
     transparent = true
 )
 
 fun PassContext.splinters(explosionManager: ExplosionManager) = InstancedRenderables(
-    options(StandardMaterialOption.Color),
-    standardUniforms {
+    standart(StandartMaterialOption.Color) {
         color = Color(0xFF804040)
+        // This is a bug
         colorTexture = texture("/sand.jpg")
     },
     id = "splinters",
@@ -224,7 +225,7 @@ fun PassContext.splinters(explosionManager: ExplosionManager) = InstancedRendera
     }) {
 
     explosionManager.splinters.forEach {
-        Instance(transform = Transform().rotate(it.orientation).translate(it.position))
+        Instance(rotate(it.orientation).translate(it.position))
     }
 
 }
