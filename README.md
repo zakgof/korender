@@ -1,5 +1,6 @@
 # ![Korender](doc/korender32.png) korender
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.zakgof/korender/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.zakgof/korender)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.0.0-278ec7.svg?logo=kotlin)](http://kotlinlang.org)
 ![android](https://img.shields.io/badge/android-136F63)
 ![windows](https://img.shields.io/badge/windows-3F88C5)
 ![linux](https://img.shields.io/badge/linux-FFBA08)
