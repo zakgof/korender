@@ -1,5 +1,8 @@
 # ![Korender](doc/korender32.png) korender
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.zakgof/korender/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.zakgof/korender)
+![badge][badge-android]
+![badge][badge-linux]
+![badge][badge-windows]
 
 Kotlin Multiplatform 3D graphics rendering engine based on OpenGL / OpenGL ES.
 
