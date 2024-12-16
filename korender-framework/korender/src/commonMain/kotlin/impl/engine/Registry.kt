@@ -18,7 +18,7 @@ internal class Registry<D, R : AutoCloseable>(private val factory: (D) -> R) {
 
     operator fun get(decl: D): R {
         unusedKeys.remove(decl)
-        return map.computeIfAbsent(decl) { factory(it) }
+        return map.getOrPut(decl) { factory(decl) }
     }
 
     fun has(decl: D): Boolean = map.containsKey(decl)

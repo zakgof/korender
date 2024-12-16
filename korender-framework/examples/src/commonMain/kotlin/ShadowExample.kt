@@ -19,7 +19,7 @@ import kotlin.math.sin
 fun ShadowExample() =
     Korender {
         val materialModifier = standart(StandartMaterialOption.Pcss) {
-            colorTexture = texture("/sand.jpg")
+            colorTexture = texture("sand.jpg")
         }
         Frame {
             Light(Vec3(1f, -1f, 1f).normalize())

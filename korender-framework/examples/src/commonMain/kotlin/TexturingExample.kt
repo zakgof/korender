@@ -18,14 +18,14 @@ fun TexturingExample(): Unit = Korender {
         Camera(DefaultCamera(position = 20.z, direction = -1.z, up = 1.y))
         Renderable(
             standart {
-                colorTexture = texture("/sand.jpg")
+                colorTexture = texture("sand.jpg")
             },
             mesh = sphere(2f),
             transform = rotate(1.y, frameInfo.time * 0.1f).translate(-2.1f.x)
         )
         Renderable(
             standart(StandartMaterialOption.Triplanar) {
-                colorTexture = texture("/sand.jpg")
+                colorTexture = texture("sand.jpg")
                 triplanarScale = 0.1f
             },
             mesh = sphere(2f),

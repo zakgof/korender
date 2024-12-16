@@ -26,20 +26,11 @@ import com.zakgof.korender.gles.Gles14
 import com.zakgof.korender.gles.Gles15
 import com.zakgof.korender.gles.Gles20
 import com.zakgof.korender.gles.Gles30
-import com.zakgof.korender.impl.font.FontDef
-import com.zakgof.korender.impl.gl.VGL11
-import com.zakgof.korender.impl.gl.VGL12
-import com.zakgof.korender.impl.gl.VGL13
-import com.zakgof.korender.impl.gl.VGL14
-import com.zakgof.korender.impl.gl.VGL15
-import com.zakgof.korender.impl.gl.VGL20
-import com.zakgof.korender.impl.gl.VGL30
-import com.zakgof.korender.impl.glgpu.BufferUtils
-import com.zakgof.korender.impl.gpu.GpuTexture
 import com.zakgof.korender.image.Image
+import com.zakgof.korender.impl.font.FontDef
+import com.zakgof.korender.impl.gpu.GpuTexture
 import com.zakgof.korender.input.TouchEvent
 import java.io.File
-import java.io.InputStream
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicReference
 import javax.microedition.khronos.egl.EGLConfig
@@ -53,7 +44,7 @@ class AndroidPlatform : Platform {
     override val name: String = "Android ${Build.VERSION.SDK_INT}"
 
     @Composable
-    override fun openGL(
+    override fun OpenGL(
         init: (Int, Int) -> Unit,
         frame: () -> Unit,
         resize: (Int, Int) -> Unit,
@@ -86,7 +77,8 @@ class AndroidPlatform : Platform {
         })
     }
 
-    override fun loadImage(stream: InputStream): Image = bitmapToImage(BitmapFactory.decodeStream(stream))
+    override fun loadImage(bytes: ByteArray): Image =
+        bitmapToImage(BitmapFactory.decodeByteArray(bytes, 0, bytes.size))
 
     private fun bitmapToImage(bitmap: Bitmap): AndroidImage {
         val size = bitmap.rowBytes * bitmap.height
@@ -116,11 +108,11 @@ class AndroidPlatform : Platform {
         return buffer.flip() as ByteBuffer
     }
 
-    override fun loadFont(stream: InputStream): FontDef {
+    override fun loadFont(bytes: ByteArray): FontDef {
 
         val tmpDir: File = androidContext.get().cacheDir
         val tmpFile = File.createTempFile("font-", ".ttf", tmpDir)
-        tmpFile.outputStream().use { stream.copyTo(it) }
+        tmpFile.writeBytes(bytes)
 
         val cell = 256
         val bitmap = Bitmap.createBitmap(cell * 16, cell * 16, Bitmap.Config.ARGB_8888);
@@ -172,7 +164,12 @@ class AndroidImage(
 actual fun getPlatform(): Platform = AndroidPlatform()
 
 @SuppressLint("ViewConstructor")
-class KorenderGLSurfaceView(context: Context, init: (Int, Int) -> Unit, frame: () -> Unit, resize: (Int, Int) -> Unit) : GLSurfaceView(context) {
+class KorenderGLSurfaceView(
+    context: Context,
+    init: (Int, Int) -> Unit,
+    frame: () -> Unit,
+    resize: (Int, Int) -> Unit
+) : GLSurfaceView(context) {
     init {
         androidContext.set(context)
         layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
@@ -188,7 +185,12 @@ class KorenderGLSurfaceView(context: Context, init: (Int, Int) -> Unit, frame: (
     }
 }
 
-class KorenderGLRenderer(private val init: (Int, Int) -> Unit, private val frame: () -> Unit, private val resize: (Int, Int) -> Unit, private val view: View) : GLSurfaceView.Renderer {
+class KorenderGLRenderer(
+    private val init: (Int, Int) -> Unit,
+    private val frame: () -> Unit,
+    private val resize: (Int, Int) -> Unit,
+    private val view: View
+) : GLSurfaceView.Renderer {
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) = init(view.width, view.height)
     override fun onDrawFrame(unused: GL10) = frame()
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) = resize(width, height)

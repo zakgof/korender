@@ -1,7 +1,5 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.mesh.MeshDeclaration
-import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.impl.font.Font
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.geometry.Geometry
@@ -12,6 +10,8 @@ import com.zakgof.korender.impl.gpu.GpuShader
 import com.zakgof.korender.impl.gpu.GpuTexture
 import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.impl.material.Texturing
+import com.zakgof.korender.material.TextureDeclaration
+import com.zakgof.korender.mesh.MeshDeclaration
 
 internal class Inventory(val gpu: Gpu) {
 
@@ -39,14 +39,10 @@ internal class Inventory(val gpu: Gpu) {
     }
 
     fun mesh(decl: MeshDeclaration): Mesh = meshes[decl]
-
     fun shader(decl: ShaderDeclaration): GpuShader = shaders[decl]
-
     fun texture(decl: TextureDeclaration): GpuTexture = textures[decl]
     fun hasMesh(decl: MeshDeclaration): Boolean = meshes.has(decl)
     fun font(fontResource: String): Font = fonts[fontResource]
     fun fontMesh(id: Any): Geometry.MultiMesh = fontMeshes[id]
     fun frameBuffer(decl: FrameBufferDeclaration): GpuFrameBuffer = frameBuffers[decl]
-
-
 }

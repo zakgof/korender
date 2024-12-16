@@ -32,7 +32,7 @@ fun ShowcaseExample() = Korender {
             Billboard(effect(Fire) { yscale = 10f; xscale = 2f }, position = 6.y, transparent = true)
             Gui {
                 Filler()
-                Text(text = "FPS ${frameInfo.avgFps}", height = 50,  color = Red, font = "/ubuntu.ttf", id = "fps")
+                Text(text = "FPS ${frameInfo.avgFps}", height = 50,  color = Red, font = "ubuntu.ttf", id = "fps")
             }
         }
     }

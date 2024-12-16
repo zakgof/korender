@@ -19,7 +19,7 @@ fun InstancedBillboardsExample() = Korender {
     Frame {
         InstancedBillboards(
             standart {
-                colorTexture = texture("/splat.png")
+                colorTexture = texture("splat.png")
             },
             id = "particles",
             count = particleNum,

@@ -7,11 +7,11 @@ import com.zakgof.korender.getPlatform
 import com.zakgof.korender.image.Image
 import com.zakgof.korender.impl.gpu.Gpu
 import com.zakgof.korender.impl.gpu.GpuTexture
-import com.zakgof.korender.impl.resourceStream
+import com.zakgof.korender.impl.resourceBytes
 
 internal object Texturing {
     fun create(declaration: TextureDeclaration, gpu: Gpu): GpuTexture {
-        val image = getPlatform().loadImage(resourceStream(declaration.textureResource))
+        val image = getPlatform().loadImage(resourceBytes(declaration.textureResource))
         return create(declaration.textureResource, image, gpu, declaration.filter, declaration.wrap, declaration.aniso)
     }
 

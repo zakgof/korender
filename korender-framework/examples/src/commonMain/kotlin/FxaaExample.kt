@@ -25,7 +25,7 @@ fun FxaaExample() = Korender {
             Pass {
                 Screen(effect(Fxaa))
                 Gui {
-                    Text(text = "FXAA", font = "/ubuntu.ttf", height = 50, color = Red, id = "fxaa")
+                    Text(text = "FXAA", font = "ubuntu.ttf", height = 50, color = Red, id = "fxaa")
                 }
             }
         }

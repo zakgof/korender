@@ -1,7 +1,23 @@
 package com.zakgof.korender.impl
 
-import com.zakgof.korender.KorenderException
-import com.zakgof.korender.impl.material.Texturing
-import java.io.InputStream
+import com.zakgof.korender.resources.Res
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import org.jetbrains.compose.resources.ExperimentalResourceApi
 
-fun resourceStream(resource: String) : InputStream = Texturing::class.java.getResourceAsStream(resource) ?: throw KorenderException("Resource $resource not found in the classpath")
+@OptIn(
+    ExperimentalResourceApi::class, DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class
+)
+fun resourceBytes(resource: String): ByteArray {
+    // TODO total rewrite required
+    val reader = GlobalScope.async {
+        // TODO try catch, propagate exception
+        Res.readBytes("files/$resource")
+    }
+    while (!reader.isCompleted) {
+    }
+
+    return reader.getCompleted()
+}

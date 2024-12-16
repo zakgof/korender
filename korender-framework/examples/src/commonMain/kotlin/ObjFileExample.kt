@@ -21,9 +21,9 @@ fun ObjFileExample() {
             Camera(orbitCamera.camera(projection, width, height))
             Renderable(
                 standart {
-                    colorTexture = texture("/head.jpg")
+                    colorTexture = texture("head.jpg")
                 },
-                mesh = obj("/head.obj"),
+                mesh = obj("head.obj"),
                 transform = scale(7.0f).rotate(1.y, -FloatMath.PIdiv2)
             )
         }

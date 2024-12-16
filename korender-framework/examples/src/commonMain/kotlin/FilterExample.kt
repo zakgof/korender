@@ -17,7 +17,7 @@ fun FilterExample() = Korender {
         Pass {
             Renderable(
                 standart(StandartMaterialOption.NoLight){
-                    colorTexture = texture("/sand.jpg")
+                    colorTexture = texture("sand.jpg")
                 },
                 mesh = sphere(4f),
             )
@@ -29,7 +29,7 @@ fun FilterExample() = Korender {
             })
             Gui {
                 Filler()
-                Text(text = "SATURATION $value", id = "saturation", font = "/ubuntu.ttf", height = 50, color = Color.Red)
+                Text(text = "SATURATION $value", id = "saturation", font = "ubuntu.ttf", height = 50, color = Color.Red)
             }
         }
     }

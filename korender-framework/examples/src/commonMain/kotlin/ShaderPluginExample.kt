@@ -15,7 +15,7 @@ import kotlin.math.sin
 fun ShaderPluginExample() = Korender {
     Frame {
         Renderable(
-            plugin("texture", "checked.frag"),
+            plugin("texture", "files/checked.frag"),
             standart {
                 static("color1", Color(0xFFFFFF20))
                 static("color2", Color(0xFF8080FF))

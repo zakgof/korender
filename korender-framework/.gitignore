@@ -1,5 +1,6 @@
 /.idea
 /.fleet
 .gradle
+.kotlin
 build
 local.properties

@@ -4,25 +4,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
-import com.zakgof.korender.impl.font.FontDef
-import com.zakgof.korender.impl.gl.VGL11
-import com.zakgof.korender.impl.gl.VGL12
-import com.zakgof.korender.impl.gl.VGL13
-import com.zakgof.korender.impl.gl.VGL14
-import com.zakgof.korender.impl.gl.VGL15
-import com.zakgof.korender.impl.gl.VGL20
-import com.zakgof.korender.impl.gl.VGL30
-import com.zakgof.korender.impl.glgpu.BufferUtils
-import com.zakgof.korender.impl.gpu.GpuTexture
+import com.zakgof.korender.buffer.BufferUtils
+import com.zakgof.korender.buffer.Byter
 import com.zakgof.korender.image.Image
+import com.zakgof.korender.impl.font.FontDef
+import com.zakgof.korender.impl.gpu.GpuTexture
 import com.zakgof.korender.input.TouchEvent
-import com.zakgof.korender.lwjgl.Lwjgl11
-import com.zakgof.korender.lwjgl.Lwjgl12
-import com.zakgof.korender.lwjgl.Lwjgl13
-import com.zakgof.korender.lwjgl.Lwjgl14
-import com.zakgof.korender.lwjgl.Lwjgl15
-import com.zakgof.korender.lwjgl.Lwjgl20
-import com.zakgof.korender.lwjgl.Lwjgl30
 import org.lwjgl.opengl.GL.createCapabilities
 import org.lwjgl.opengl.awt.AWTGLCanvas
 import org.lwjgl.opengl.awt.GLData
@@ -38,20 +25,18 @@ import java.awt.image.BufferedImage
 import java.awt.image.DataBufferByte
 import java.awt.image.DataBufferUShort
 import java.awt.image.Raster
-import java.io.InputStream
-import java.nio.ByteBuffer
+import java.io.ByteArrayInputStream
 import javax.imageio.ImageIO
 import javax.swing.SwingUtilities
 import kotlin.math.max
 import kotlin.math.round
-
 
 class JVMPlatform : Platform {
 
     override val name: String = "Java ${System.getProperty("java.version")}"
 
     @Composable
-    override fun openGL(
+    override fun OpenGL(
         init: (Int, Int) -> Unit,
         frame: () -> Unit,
         resize: (Int, Int) -> Unit,
@@ -70,15 +55,6 @@ class JVMPlatform : Platform {
                 SwingUtilities.invokeLater(renderLoop)
             },
             factory = {
-
-                VGL11.gl = Lwjgl11()
-                VGL12.gl = Lwjgl12()
-                VGL13.gl = Lwjgl13()
-                VGL14.gl = Lwjgl14()
-                VGL15.gl = Lwjgl15()
-                VGL20.gl = Lwjgl20()
-                VGL30.gl = Lwjgl30()
-
                 val data = GLData()
                 data.swapInterval = 0
                 data.majorVersion = 3
@@ -132,6 +108,8 @@ class JVMPlatform : Platform {
         )
     }
 
+    override fun nanoTime() = System.nanoTime()
+
     private fun sendTouch(
         touch: (touchEvent: TouchEvent) -> Unit,
         canvas: AWTGLCanvas,
@@ -152,46 +130,49 @@ class JVMPlatform : Platform {
         return listOf(scaleX ?: 1.0f, scaleY ?: 1.0f)
     }
 
-    override fun loadImage(stream: InputStream): Image = image(ImageIO.read(stream))
+    override fun loadImage(bytes: ByteArray): Image =
+        image(ImageIO.read(ByteArrayInputStream(bytes)))
 
-    private fun loadBgr(data: ByteArray): ByteBuffer {
+    private fun loadBgr(data: ByteArray): Byter {
         val buffer = BufferUtils.createByteBuffer(data.size)
         for (i in 0 until data.size / 3) {
-            buffer.put(data[i * 3 + 2])
+            buffer.byteBuffer.put(data[i * 3 + 2])
                 .put(data[i * 3 + 1])
                 .put(data[i * 3])
         }
-        return buffer.flip() as ByteBuffer
+        buffer.byteBuffer.flip()
+        return buffer
     }
 
-    private fun loadGray(data: ByteArray): ByteBuffer {
+    private fun loadGray(data: ByteArray): Byter {
         val buffer = BufferUtils.createByteBuffer(data.size)
-        buffer.put(data)
-        return buffer.flip() as ByteBuffer
+        buffer.byteBuffer.put(data).flip()
+        return buffer
     }
 
     // TODO: test
-    private fun loadGray16(data: ShortArray): ByteBuffer {
+    private fun loadGray16(data: ShortArray): Byter {
         val bb = BufferUtils.createByteBuffer(data.size * 2)
-        val buffer = bb.asShortBuffer()
-        buffer.put(data)
-        return bb.flip()
+        val buffer = bb.byteBuffer.asShortBuffer()
+        buffer.put(data).flip()
+        return bb
     }
 
-    private fun loadAbgr(data: ByteArray): ByteBuffer {
+    private fun loadAbgr(data: ByteArray): Byter {
         val buffer = BufferUtils.createByteBuffer(data.size)
         for (i in 0 until data.size / 4) {
-            buffer.put(data[i * 4 + 3])
+            buffer.byteBuffer.put(data[i * 4 + 3])
                 .put(data[i * 4 + 2])
                 .put(data[i * 4 + 1])
                 .put(data[i * 4])
         }
-        return buffer.flip() as ByteBuffer
+        buffer.byteBuffer.flip()
+        return buffer
     }
 
-    override fun loadFont(stream: InputStream): FontDef {
+    override fun loadFont(bytes: ByteArray): FontDef {
         val cell = 256
-        val originalFont = Font.createFont(Font.TRUETYPE_FONT, stream)
+        val originalFont = Font.createFont(Font.TRUETYPE_FONT, ByteArrayInputStream(bytes))
         val img = BufferedImage(cell * 16, cell * 16, BufferedImage.TYPE_4BYTE_ABGR)
         val graphics = img.graphics
         graphics.font = originalFont
@@ -255,7 +236,7 @@ class JvmImage(
     private val raster: Raster,
     override val width: Int,
     override val height: Int,
-    override val bytes: ByteBuffer,
+    override val bytes: Byter,
     override val format: GpuTexture.Format
 ) : Image {
 
@@ -266,8 +247,19 @@ class JvmImage(
         return when (format) {
             // TODO support more formats
             // TODO support transparency
-            GpuTexture.Format.Gray16 -> com.zakgof.korender.math.Color(1.0f, pixel[0] / 65535.0f, pixel[0] / 65535.0f, pixel[0] / 65535.0f)
-            else -> com.zakgof.korender.math.Color(1.0f, pixel[0] / 255.0f, pixel[1] / 255.0f, pixel[2] / 255.0f)
+            GpuTexture.Format.Gray16 -> com.zakgof.korender.math.Color(
+                1.0f,
+                pixel[0] / 65535.0f,
+                pixel[0] / 65535.0f,
+                pixel[0] / 65535.0f
+            )
+
+            else -> com.zakgof.korender.math.Color(
+                1.0f,
+                pixel[0] / 255.0f,
+                pixel[1] / 255.0f,
+                pixel[2] / 255.0f
+            )
         }
     }
 }

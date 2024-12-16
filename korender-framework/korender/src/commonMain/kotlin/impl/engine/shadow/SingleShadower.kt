@@ -2,21 +2,27 @@ package com.zakgof.korender.impl.engine.shadow
 
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
+import com.zakgof.korender.gl.GL.glClear
+import com.zakgof.korender.gl.GL.glCullFace
+import com.zakgof.korender.gl.GL.glEnable
+import com.zakgof.korender.gl.GLConstants.GL_BACK
+import com.zakgof.korender.gl.GLConstants.GL_COLOR_BUFFER_BIT
+import com.zakgof.korender.gl.GLConstants.GL_DEPTH_BUFFER_BIT
+import com.zakgof.korender.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.FrameBufferDeclaration
 import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.Renderable
 import com.zakgof.korender.impl.engine.ShaderDeclaration
-import com.zakgof.korender.impl.gl.VGL11
 import com.zakgof.korender.impl.gpu.GpuFrameBuffer
-import com.zakgof.korender.uniforms.MapUniformSupplier
 import com.zakgof.korender.material.TextureDeclaration
-import com.zakgof.korender.uniforms.UniformSupplier
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.projection.FrustumProjection
 import com.zakgof.korender.projection.OrthoProjection
 import com.zakgof.korender.projection.Projection
+import com.zakgof.korender.uniforms.MapUniformSupplier
+import com.zakgof.korender.uniforms.UniformSupplier
 
 internal class SingleShadower(private val index: Int, private val inventory: Inventory, private val decl: CascadeDeclaration) : Shadower {
 
@@ -45,9 +51,9 @@ internal class SingleShadower(private val index: Int, private val inventory: Inv
             }
         }
         frameBuffer.exec {
-            VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
-            VGL11.glEnable(VGL11.GL_DEPTH_TEST)
-            VGL11.glCullFace(VGL11.GL_BACK)
+            glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+            glEnable(GL_DEPTH_TEST)
+            glCullFace(GL_BACK)
             shadowCasters.forEach { r ->
                 // TODO: need to copy all the defs and plugins from the original shader
                 val casterShader = inventory.shader(ShaderDeclaration("standart.vert", "standart.frag", setOf("SHADOW_CASTER")))

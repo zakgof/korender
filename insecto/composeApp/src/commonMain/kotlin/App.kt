@@ -86,19 +86,19 @@ private fun PassContext.gui(controller: Controller) {
     val cannonBtm = (controller.characterManager.cannonAngle * 256f).toInt() - 48
     val cannonTop = 52 - cannonBtm
     Gui {
-        Text(id = "points", text = String.format("SCORE: %d", controller.characterManager.score), fontResource = "/ubuntu.ttf", height = 50, color = Color(0xFFFF8080))
-        Text(id = "fps", text = String.format("FPS: %.1f  ${controller.characterManager.transform() * Vec3.ZERO}", frameInfo.avgFps), fontResource = "/ubuntu.ttf", height = 30, color = Color(0xFFFF8080))
+        Text(id = "points", text = String.format("SCORE: %d", controller.characterManager.score), font = "/ubuntu.ttf", height = 50, color = Color(0xFFFF8080))
+        Text(id = "fps", text = String.format("FPS: %.1f  ${controller.characterManager.transform() * Vec3.ZERO}", frameInfo.avgFps), font = "/ubuntu.ttf", height = 30, color = Color(0xFFFF8080))
 
         if (controller.gameOver) {
             Filler()
             Row {
                 Filler()
-                Text(id = "gameover", text = "GAME OVER", fontResource = "/ubuntu.ttf", height = 100, color = Color(0xFFFF1234), onTouch = { controller.restart(it) })
+                Text(id = "gameover", text = "GAME OVER", font = "/ubuntu.ttf", height = 100, color = Color(0xFFFF1234), onTouch = { controller.restart(it) })
                 Filler()
             }
             Row {
                 Filler()
-                Text(id = "restart", text = "click to start new game", fontResource = "/ubuntu.ttf", height = 50, color = Color(0xFF89FF34), onTouch = { controller.restart(it) })
+                Text(id = "restart", text = "click to start new game", font = "/ubuntu.ttf", height = 50, color = Color(0xFF89FF34), onTouch = { controller.restart(it) })
                 Filler()
             }
         }
@@ -210,7 +210,7 @@ fun PassContext.explosion(explosion: ExplosionManager.Explosion) = Billboard(
 )
 
 fun PassContext.splinters(explosionManager: ExplosionManager) = InstancedRenderables(
-    standart(StandartMaterialOption.Color) {
+    standart(StandartMaterialOption.FixedColor) {
         color = Color(0xFF804040)
         // This is a bug
         colorTexture = texture("/sand.jpg")

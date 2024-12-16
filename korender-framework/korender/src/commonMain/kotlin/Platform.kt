@@ -1,27 +1,27 @@
 package com.zakgof.korender
 
 import androidx.compose.runtime.Composable
-import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.image.Image
+import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.input.TouchEvent
-import java.io.InputStream
 
 interface Platform {
 
     val name: String
 
-    fun loadImage(stream: InputStream) : Image
+    fun loadImage(bytes: ByteArray) : Image
 
-    fun loadFont(stream: InputStream): FontDef
+    fun loadFont(bytes: ByteArray): FontDef
 
     @Composable
-    fun openGL(
+    fun OpenGL(
         init: (Int, Int) -> Unit,
         frame: () -> Unit,
         resize: (Int, Int) -> Unit,
         touch: (touchEvent: TouchEvent) -> Unit
     )
 
+    fun nanoTime(): Long
 }
 
 expect fun getPlatform(): Platform

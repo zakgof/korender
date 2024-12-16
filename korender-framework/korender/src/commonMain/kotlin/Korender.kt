@@ -4,17 +4,21 @@ import androidx.compose.runtime.Composable
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.input.TouchEvent
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun Korender(block: KorenderContext.() -> Unit) {
 
     lateinit var engine: Engine
 
-    getPlatform().openGL(
+    getPlatform().OpenGL(
         init = { w, h -> engine = Engine(w, h, block) },
         frame = { engine.frame() },
         resize = { w, h -> engine.resize(w, h) },
-        touch = { e -> engine.pushTouch(e) }
+        touch = { e -> GlobalScope.launch { engine.pushTouch(e) } }
     )
 }
 

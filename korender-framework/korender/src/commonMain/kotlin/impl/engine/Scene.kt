@@ -2,15 +2,14 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.material.TextureDeclaration
-import com.zakgof.korender.uniforms.UniformSupplier
 import com.zakgof.korender.impl.engine.shadow.CascadeShadower
 import com.zakgof.korender.impl.engine.shadow.Shadower
 import com.zakgof.korender.impl.gpu.GpuFrameBuffer
 import com.zakgof.korender.input.TouchEvent
+import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.Projection
-import java.util.function.Predicate
+import com.zakgof.korender.uniforms.UniformSupplier
 
 internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: Inventory, private val camera: Camera, private val width: Int, private val height: Int) {
 
@@ -18,7 +17,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     private val passes: List<ScenePass>
     private val shadowCasters: List<Renderable>
     private val touchBoxes: List<TouchBox>
-    val touchBoxesHandler: Predicate<TouchEvent>
+    val touchBoxesHandler:(TouchEvent) -> Boolean
 
     init {
         sceneDeclaration.compilePasses()
@@ -29,7 +28,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         passes = sceneDeclaration.passes.map { ScenePass(inventory, camera, width, height, it, shadowCascades) }
 
         touchBoxes = passes.flatMap { it.touchBoxes }
-        touchBoxesHandler = Predicate { evt ->
+        touchBoxesHandler = { evt ->
             touchBoxes.any { it.touch(evt) }
         }
     }

@@ -6,21 +6,21 @@ import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
-import com.zakgof.korender.material.Textures.texture
-import com.zakgof.korender.impl.gl.VGL11
+import com.zakgof.korender.getPlatform
+import com.zakgof.korender.gl.GL.glGetError
 import com.zakgof.korender.impl.glgpu.GlGpu
 import com.zakgof.korender.input.TouchEvent
+import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import com.zakgof.korender.projection.FrustumProjection
 import com.zakgof.korender.projection.Projection
-import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.function.Predicate
+import kotlinx.coroutines.channels.Channel
 
 internal class Engine(private var width: Int, private var height: Int, block: KorenderContext.() -> Unit) {
 
-    private val touchQueue = ConcurrentLinkedQueue<TouchEvent>()
+    private val touchQueue = Channel<TouchEvent>(Channel.UNLIMITED)
     private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
     private val inventory = Inventory(GlGpu())
     private val frameInfoManager = FrameInfoManager(inventory)
@@ -31,7 +31,7 @@ internal class Engine(private var width: Int, private var height: Int, block: Ko
     private var light = Vec3(1f, -1f, 0f).normalize()
 
     private val context = mutableMapOf<String, Any?>()
-    private lateinit var sceneTouchBoxesHandler: Predicate<TouchEvent>
+    private lateinit var sceneTouchBoxesHandler: (TouchEvent) -> Boolean
     private val touchHandlers = mutableListOf<TouchHandler>()
 
     init {
@@ -63,7 +63,7 @@ internal class Engine(private var width: Int, private var height: Int, block: Ko
         inventory.go {
             val scene = Scene(sd, inventory, camera, width, height)
             scene.render(context, projection, camera, light)
-            val error = VGL11.glGetError()
+            val error = glGetError()
             if (error != 0) {
                 throw KorenderException("Frame error $error")
             }
@@ -72,27 +72,26 @@ internal class Engine(private var width: Int, private var height: Int, block: Ko
     }
 
     private fun updateContext() {
-        context["noiseTexture"] = texture("/noise.png")
-        context["fbmTexture"] = texture("/fbm.png")
+        context["noiseTexture"] = texture("noise.png")
+        context["fbmTexture"] = texture("fbm.png")
         context["view"] = camera.mat4
         context["projection"] = projection.mat4
         context["cameraPos"] = camera.position
         context["light"] = light
         context["screenWidth"] = width.toFloat()
         context["screenHeight"] = height.toFloat()
-        context["time"] = (System.nanoTime() - frameInfoManager.startNanos) * 1e-9f
+        context["time"] = (getPlatform().nanoTime() - frameInfoManager.startNanos) * 1e-9f
     }
 
-    fun pushTouch(touchEvent: TouchEvent) = touchQueue.add(touchEvent)
+    suspend fun pushTouch(touchEvent: TouchEvent) = touchQueue.send(touchEvent)
 
     private fun processTouches() {
         do {
-            val event = touchQueue.poll()
+            val event = touchQueue.tryReceive().getOrNull()
             event?.let { touchEvent ->
-                if (!sceneTouchBoxesHandler.test(touchEvent)) {
+                if (!sceneTouchBoxesHandler(touchEvent)) {
                     touchHandlers.forEach { it(touchEvent) }
                 }
-
             }
         } while (event != null)
     }

@@ -24,7 +24,7 @@ fun SkyExample() {
             })
             Gui {
                 Filler()
-                Text(id = "fps", font = "/ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFF66FF55))
+                Text(id = "fps", font = "ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFF66FF55))
             }
         }
     }
