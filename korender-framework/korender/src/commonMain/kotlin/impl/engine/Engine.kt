@@ -35,7 +35,7 @@ internal class Engine(private var width: Int, private var height: Int, block: Ko
     private val touchHandlers = mutableListOf<TouchHandler>()
 
     init {
-        println("Engine:init $width:$height")
+        println("Engine:init $this $width x $height")
         block.invoke(object : KorenderContext {
             override fun Frame(block: FrameContext.() -> Unit) {
                 frameBlocks.add(block)

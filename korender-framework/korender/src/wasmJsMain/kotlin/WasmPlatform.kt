@@ -55,11 +55,7 @@ internal class WasmPlatform : Platform {
             val gl2 = canvas.getContext("webgl2")
             if (gl2 == null) {
                 println("WebGL2 is not supported in this browser")
-            } else {
-                println("WebGL2 is just fain! $gl2")
             }
-
-            println(gl2!!::class)
 
             val gl = gl2 as WebGL2RenderingContext
 
@@ -87,28 +83,36 @@ internal class WasmPlatform : Platform {
                 "shader/screen.vert",
                 "shader/effect/adjust.frag"
             ) {
-                animate(window, frame)
+                animate(window, canvas, frame)
+            }
+
+            canvas.addEventListener("webglcontextlost") {
+                it.preventDefault();  // Prevent the default behavior of losing the context.
+                println("WebGL context lost !")
             }
 
             onDispose {
+                println("Destroying canvas")
+                canvas.remove()
             }
         }
     }
 
-    private fun animate(window: Window, frame: () -> Unit) {
+    private fun animate(window: Window, canvas: HTMLCanvasElement, frame: () -> Unit) {
         window.requestAnimationFrame {
-            println("starting frame $it")
             try {
-                frame()
-                println("ending frame")
-                animate(window, frame)
+                if (canvas.isConnected) {
+                    frame()
+                    animate(window, canvas, frame)
+                } else {
+                    println("Canvas not connected")
+                }
             } catch (e: Exception) {
                 println(e)
                 e.printStackTrace()
             }
         }
     }
-
 
     override fun nanoTime(): Long {
         return 1L

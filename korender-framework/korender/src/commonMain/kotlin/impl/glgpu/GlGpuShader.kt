@@ -120,9 +120,6 @@ class GlGpuShader(
 
         uniformLocations = fetchUniforms()
         attributeLocations = fetchAttributes()
-
-        println("uniformLocations [$uniformLocations]")
-        println("attributeLocations [$attributeLocations]")
     }
 
     private fun fetchUniforms(): Map<String, GLUniformLocation> {
@@ -162,7 +159,6 @@ class GlGpuShader(
     }
 
     override fun render(uniformSupplier: UniformSupplier, mesh: GpuMesh) {
-        println("Render mesh with program $programHandle")
         glUseProgram(programHandle)
         bindAttrs(mesh as GlGpuMesh)
         bindUniforms(uniformSupplier)
@@ -175,9 +171,6 @@ class GlGpuShader(
         var offset = 0
         for (attr in mesh.attrs) {
             attributeLocations[attr.name]?.let {
-
-                println("bindAttrs it=$it offset=$offset")
-
                 glEnableVertexAttribArray(it)
                 glVertexAttribPointer(
                     it, attr.size, GL_FLOAT, false, mesh.vertexSize, offset
@@ -197,9 +190,6 @@ class GlGpuShader(
     }
 
     private fun bind(value: Any, location: GLUniformLocation, currentTexUnit: Int): Boolean {
-
-        println("binding uniform value=$value location=$location texUnit=$currentTexUnit")
-
         when (value) {
             is Int -> glUniform1i(location, value)
             is Float -> glUniform1f(location, value)
