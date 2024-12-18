@@ -1,15 +1,15 @@
 package com.zakgof.korender.gl
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.WebGL2RenderingContext
 import com.zakgof.korender.buffer.BufferData
 import com.zakgof.korender.buffer.Byter
 import com.zakgof.korender.buffer.Floater
 import com.zakgof.korender.buffer.Inter
-import org.khronos.webgl.WebGLRenderingContext
 
 actual object GL {
 
-    internal var gl: WebGLRenderingContext? = null
+    internal var gl: WebGL2RenderingContext? = null
 
     actual val shaderEnv = "WEBGL"
 
@@ -109,7 +109,7 @@ actual object GL {
         gl!!.validateProgram(program.program)
 
     actual fun glGetProgrami(program: GLProgram, pname: Int): Int =
-        (gl!!.getProgramParameter(program.program, pname) as JsNumber).toInt()
+        boolOrInt(gl!!.getProgramParameter(program.program, pname))
 
     actual fun glGetShaderInfoLog(shader: GLShader): String =
         gl!!.getShaderInfoLog(shader.shader) ?: ""
@@ -174,9 +174,14 @@ actual object GL {
         index: Int, size: Int, type: Int, normalized: Boolean, stride: Int, pointer: Int
     ) = gl!!.vertexAttribPointer(index, size, type, normalized, stride, pointer)
 
-    actual fun glGetShaderi(shader: GLShader, pname: Int): Int =
-        (gl!!.getShaderParameter(shader.shader, pname)!! as JsNumber).toInt()
+    actual fun glGetShaderi(shader: GLShader, pname: Int): Int
+        = boolOrInt(gl!!.getShaderParameter(shader.shader, pname))
 
+    private fun boolOrInt(value: JsAny?): Int {
+        if (value is JsNumber) return value.toInt()
+        if (value is JsBoolean) return if (value.toBoolean()) 1 else 0
+        throw KorenderException("Unknown type for glGetShaderi result: $value")
+    }
 
     actual fun glDeleteShader(shader: GLShader) =
         gl!!.deleteShader(shader.shader)

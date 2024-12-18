@@ -20,13 +20,15 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     val touchBoxesHandler:(TouchEvent) -> Boolean
 
     init {
+        println("cp3.1")
         sceneDeclaration.compilePasses()
+        println("cp3.2")
         shadower = sceneDeclaration.shadow?.let { CascadeShadower(inventory, it.cascades) }
         val shadowCascades = shadower?.cascadeNumber ?: 0
         shadowCasters = if (sceneDeclaration.passes.isNotEmpty()) createShadowCasters(sceneDeclaration.passes[0].renderables) else listOf()
-
+        println("cp3.3")
         passes = sceneDeclaration.passes.map { ScenePass(inventory, camera, width, height, it, shadowCascades) }
-
+        println("cp3.4")
         touchBoxes = passes.flatMap { it.touchBoxes }
         touchBoxesHandler = { evt ->
             touchBoxes.any { it.touch(evt) }
@@ -38,11 +40,13 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
             .map { Renderable.create(inventory, it, camera, true) }
 
     fun render(context: Map<String, Any?>, projection: Projection, camera: Camera, light: Vec3) {
+        println("cp r.1")
         val shadowUniforms: UniformSupplier = shadower?.render(projection, camera, light, shadowCasters) ?: UniformSupplier { null }
-
+        println("cp r.2")
         val passFrameBuffers = (0 until passes.size - 1)
             .map { inventory.frameBuffer(FrameBufferDeclaration("filter-$it", width, height, true)) }
 
+        println("cp r.3")
         val prevFrameContext = mutableMapOf<String, Any?>()
         val uniformDecorator: (UniformSupplier) -> UniformSupplier = {
             UniformSupplier { key ->
@@ -55,6 +59,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         }
         for (p in passes.indices) {
             val frameBuffer = if (p == passes.size - 1) null else passFrameBuffers[p % 2]
+            println("cp r.4")
             renderTo(frameBuffer) {
                 passes[p].render(uniformDecorator)
             }

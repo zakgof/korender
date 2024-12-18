@@ -44,7 +44,7 @@ fun AppExample() {
         Demo("Plg", "Shader plugin") { ShaderPluginExample() }
     )
 
-    var option by remember { mutableStateOf(options[0]) }
+    var option by remember { mutableStateOf(options[1]) }
     Column {
         val coroutineScope = rememberCoroutineScope()
         val scrollState = rememberScrollState()

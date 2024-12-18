@@ -5,10 +5,16 @@ import androidx.compose.runtime.DisposableEffect
 import com.zakgof.korender.gl.GL
 import com.zakgof.korender.image.Image
 import com.zakgof.korender.impl.font.FontDef
+import com.zakgof.korender.impl.preReadResources
 import com.zakgof.korender.input.TouchEvent
 import kotlinx.browser.document
-import org.khronos.webgl.WebGLRenderingContext
+import kotlinx.browser.window
+import org.khronos.webgl.WebGLRenderingContext.Companion.RENDERER
+import org.khronos.webgl.WebGLRenderingContext.Companion.SHADING_LANGUAGE_VERSION
+import org.khronos.webgl.WebGLRenderingContext.Companion.VENDOR
+import org.khronos.webgl.WebGLRenderingContext.Companion.VERSION
 import org.w3c.dom.HTMLCanvasElement
+import org.w3c.dom.Window
 
 actual fun getPlatform(): Platform = WasmPlatform()
 
@@ -32,29 +38,66 @@ internal class WasmPlatform : Platform {
         touch: (touchEvent: TouchEvent) -> Unit
     ) {
         DisposableEffect(Unit) {
-            val parent = document.getElementsByTagName("canvas").item(0)
-            val canvas = parent as HTMLCanvasElement
-            val gl = canvas.getContext("webgl") as WebGLRenderingContext?
-            if (gl == null) {
-                println("WebGL is not supported in this browser")
+
+            val body = document.body!!
+            val canvas = document.createElement("canvas") as HTMLCanvasElement
+            canvas.width = 800
+            canvas.height = 600
+            canvas.style.apply {
+                position = "absolute"
+                left = "100px"
+                top = "100px"
+                background = "darkblue"
+                border = "1px solid blue"
             }
+            body.appendChild(canvas)
 
-            val canvas2 = document.createElement("canvas") as HTMLCanvasElement
-            canvas2.width = 800
-            canvas2.height = 600
-            document.body!!.appendChild(canvas2)
-
-            // Get WebGL context
-            val gl2 = canvas2.getContext("webgl") as WebGLRenderingContext?
+            val gl2 = canvas.getContext("webgl2")
             if (gl2 == null) {
-                println("WebGL 2 is not supported in this browser")
+                println("WebGL2 is not supported in this browser")
+            } else {
+                println("WebGL2 is just fain! $gl2")
             }
 
-            println(gl2)
+            println(gl2!!::class)
 
-            GL.gl = gl2
+            val gl = gl2 as WebGL2RenderingContext
+
+            println(gl)
+
+            println("Renderer: " +  gl.getParameter(RENDERER));
+            println("Vendor: " +  gl.getParameter(VENDOR));
+            println("Version: " +  gl.getParameter(VERSION));
+            println("GLSL version: " +  gl.getParameter(SHADING_LANGUAGE_VERSION));
+
+            GL.gl = gl
             init(800, 600)
+
+            preReadResources(
+                "shader/standart.vert",
+                "shader/standart.frag",
+                "shader/lib/header.glsl",
+                "shader/lib/texturing.glsl",
+                "shader/lib/light.glsl"
+            ) {
+                animate(window, frame)
+            }
+
             onDispose {
+            }
+        }
+    }
+
+    private fun animate(window: Window, frame: () -> Unit) {
+        window.requestAnimationFrame {
+            println("starting frame $it")
+            try {
+                frame()
+                println("ending frame")
+                animate(window, frame)
+            } catch (e: Exception) {
+                println(e)
+                e.printStackTrace()
             }
         }
     }
