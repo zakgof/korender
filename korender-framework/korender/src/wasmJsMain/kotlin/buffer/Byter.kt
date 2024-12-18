@@ -10,7 +10,10 @@ actual class Byter(capacity: Int) : BufferData<Byte> {
     override val array = Int8Array(capacity)
     internal var position = 0
 
-    actual fun put(values: ByteArray) = array.set(values.toInt8Array(), position)
+    actual fun put(values: ByteArray) {
+        array.set(values.toInt8Array(), position)
+        position += values.size
+    }
 
     override fun rewind() {
         position = 0
@@ -35,5 +38,7 @@ actual class Byter(capacity: Int) : BufferData<Byte> {
     override fun put(value: Byte) {
         array[position++] = value
     }
+
+    override fun toString() = array.toString()
 
 }

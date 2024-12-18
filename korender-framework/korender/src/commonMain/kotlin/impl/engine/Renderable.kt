@@ -54,7 +54,6 @@ internal class Renderable(val mesh: Mesh, val shader: GpuShader, val uniforms: U
         }
     }
 
-
     fun render(uniformDecorator: (UniformSupplier) -> UniformSupplier) =
         shader.render(
             uniformDecorator(uniforms + MapUniformSupplier("model" to transform.mat4)),

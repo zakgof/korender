@@ -59,7 +59,6 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         }
         for (p in passes.indices) {
             val frameBuffer = if (p == passes.size - 1) null else passFrameBuffers[p % 2]
-            println("cp r.4")
             renderTo(frameBuffer) {
                 passes[p].render(uniformDecorator)
             }

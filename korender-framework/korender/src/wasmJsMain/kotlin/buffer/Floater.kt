@@ -11,8 +11,8 @@ actual class Floater(capacity: Int) : BufferData<Float> {
     internal var position = 0
 
     actual fun put(values: FloatArray) {
-        val jsArray = values.toFloat32Array()
-        array.set(jsArray, position)
+        array.set(values.toFloat32Array(), position)
+        position += values.size
     }
 
     override fun rewind() {
@@ -38,5 +38,7 @@ actual class Floater(capacity: Int) : BufferData<Float> {
     override fun put(value: Float) {
         array[position++] = value
     }
+
+    override fun toString() = array.toString()
 
 }

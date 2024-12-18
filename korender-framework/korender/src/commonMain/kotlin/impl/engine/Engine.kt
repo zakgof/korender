@@ -48,11 +48,7 @@ internal class Engine(private var width: Int, private var height: Int, block: Ko
 
     fun frame() {
         val frameInfo = frameInfoManager.frame()
-
         processTouches()
-
-        println("cp1")
-
         val sd = SceneDeclaration()
         projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f) // TODO
         frameBlocks.forEach {
@@ -61,14 +57,10 @@ internal class Engine(private var width: Int, private var height: Int, block: Ko
             camera = frameBlock.camera
             light = frameBlock.light
         }
-        println("cp2")
         updateContext()
-        println("cp3")
         inventory.go {
             val scene = Scene(sd, inventory, camera, width, height)
-            println("cp4")
             scene.render(context, projection, camera, light)
-            println("cp5")
             val error = glGetError()
             if (error != 0) {
                 throw KorenderException("Frame error $error")

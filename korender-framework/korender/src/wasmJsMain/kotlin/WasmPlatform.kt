@@ -63,8 +63,6 @@ internal class WasmPlatform : Platform {
 
             val gl = gl2 as WebGL2RenderingContext
 
-            println(gl)
-
             println("Renderer: " +  gl.getParameter(RENDERER));
             println("Vendor: " +  gl.getParameter(VENDOR));
             println("Version: " +  gl.getParameter(VERSION));
@@ -78,7 +76,16 @@ internal class WasmPlatform : Platform {
                 "shader/standart.frag",
                 "shader/lib/header.glsl",
                 "shader/lib/texturing.glsl",
-                "shader/lib/light.glsl"
+                "shader/lib/light.glsl",
+                "shader/lib/sky.glsl",
+                "shader/lib/noise.glsl",
+                "shader/lib/blur.glsl",
+                "shader/sky/sky.vert",
+                "shader/sky/sky.frag",
+                "shader/sky/fastcloud.plugin.frag",
+                "shader/billboard.vert",
+                "shader/screen.vert",
+                "shader/effect/adjust.frag"
             ) {
                 animate(window, frame)
             }

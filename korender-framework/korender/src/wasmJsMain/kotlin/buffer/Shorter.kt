@@ -10,7 +10,10 @@ actual class Shorter(capacity: Int) : BufferData<Short> {
     override val array = Int16Array(capacity)
     internal var position = 0
 
-    actual fun put(values: ShortArray) = array.set(values.toInt16Array(), position)
+    actual fun put(values: ShortArray) {
+        array.set(values.toInt16Array(), position)
+        position += values.size
+    }
 
     override fun rewind() {
         position = 0
@@ -36,4 +39,5 @@ actual class Shorter(capacity: Int) : BufferData<Short> {
         array[position++] = value
     }
 
+    override fun toString() = array.toString()
 }

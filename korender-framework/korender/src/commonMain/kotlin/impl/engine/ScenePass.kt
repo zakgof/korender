@@ -1,9 +1,23 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.camera.Camera
+import com.zakgof.korender.gl.GL.glBlendFunc
 import com.zakgof.korender.gl.GL.glClear
+import com.zakgof.korender.gl.GL.glClearColor
+import com.zakgof.korender.gl.GL.glDepthFunc
+import com.zakgof.korender.gl.GL.glDepthMask
+import com.zakgof.korender.gl.GL.glEnable
+import com.zakgof.korender.gl.GL.glViewport
+import com.zakgof.korender.gl.GL.glCullFace
+import com.zakgof.korender.gl.GLConstants.GL_BACK
+import com.zakgof.korender.gl.GLConstants.GL_BLEND
 import com.zakgof.korender.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.gl.GLConstants.GL_DEPTH_BUFFER_BIT
+import com.zakgof.korender.gl.GLConstants.GL_DEPTH_TEST
+import com.zakgof.korender.gl.GLConstants.GL_SRC_ALPHA
+import com.zakgof.korender.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
+import com.zakgof.korender.gl.GLConstants.GL_LEQUAL
+import com.zakgof.korender.gl.GLConstants.GL_CULL_FACE
 import com.zakgof.korender.uniforms.UniformSupplier
 
 internal class ScenePass(private val inventory: Inventory, private val camera: Camera, private val width: Int, private val height: Int, passDeclaration: PassDeclaration, shadowCascades: Int) {
@@ -31,14 +45,12 @@ internal class ScenePass(private val inventory: Inventory, private val camera: C
     }
 
     fun render(uniformDecorator: (UniformSupplier) -> UniformSupplier) {
-        glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-        /*
+        glClearColor(0.8f, 0.6f, 0.4f, 0.2f)
+        glViewport(0, 0, width, height)
         glEnable(GL_BLEND)
         glEnable(GL_DEPTH_TEST)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glDepthFunc(GL_LEQUAL)
-        glClearColor(0f, 0f, 0f, 0f)
-        glViewport(0, 0, width, height)
         glEnable(GL_CULL_FACE)
         glCullFace(GL_BACK)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
@@ -49,7 +61,5 @@ internal class ScenePass(private val inventory: Inventory, private val camera: C
         transparents.sortedByDescending { (camera.mat4 * it.transform.offset()).z }
             .forEach { it.render(uniformDecorator) }
         glDepthMask(true)
-
-         */
     }
 }
