@@ -15,7 +15,6 @@ import kotlin.math.sin
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun SkyExample() {
-
     Korender(appResourceLoader = { Res.readBytes(it) }) {
         val freeCamera = FreeCamera(20.z, -1.z)
         OnTouch { freeCamera.touch(it) }

@@ -54,8 +54,6 @@ class GlGpuMesh(
         this.indices = indices
         bind()
 
-        println("updating mesh buffers $vb $ib $vertices $indices")
-
         glBufferData(GL_ARRAY_BUFFER, vb, usage)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib, usage)
     }

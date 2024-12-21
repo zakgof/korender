@@ -12,7 +12,7 @@ interface Platform {
 
     fun loadImage(bytes: ByteArray, type: String) : Deferred<Image>
 
-    fun loadFont(bytes: ByteArray): FontDef
+    fun loadFont(bytes: ByteArray): Deferred<FontDef>
 
     @Composable
     fun OpenGL(

@@ -52,6 +52,7 @@ kotlin {
         }
         commonMain.dependencies {
             implementation(compose.ui)
+            implementation(compose.material)
             implementation(compose.components.resources)
             implementation(libs.kotlinx.coroutines.core)
         }

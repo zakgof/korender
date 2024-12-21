@@ -1,13 +1,13 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.mesh.ImageQuad
-import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.impl.engine.Scene.TouchBox
-import com.zakgof.korender.impl.font.Font
 import com.zakgof.korender.impl.font.Fonts
-import com.zakgof.korender.uniforms.MapUniformSupplier
+import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.Shaders
+import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.math.Vec2
+import com.zakgof.korender.mesh.ImageQuad
+import com.zakgof.korender.uniforms.MapUniformSupplier
 import kotlin.math.max
 
 internal class GuiRenderer(private val inventory: Inventory, private val width: Int, private val height: Int, container: ElementDeclaration.Container) {
@@ -87,7 +87,7 @@ internal class GuiRenderer(private val inventory: Inventory, private val width: 
                         ),
                         Pair(
                             "imageTexture",
-                            inventory.texture(TextureDeclaration(declaration.imageResource))
+                            inventory.texture(TextureDeclaration(declaration.imageResource)) ?: NotYetLoadedTexture
                         )
                     )
                 )
