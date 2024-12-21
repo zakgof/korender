@@ -1,17 +1,23 @@
 package com.zakgof.korender.buffer
 
-import org.khronos.webgl.Int8Array
+import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.get
 import org.khronos.webgl.set
-import org.khronos.webgl.toInt8Array
+import org.khronos.webgl.toUint8Array
 
 actual class Byter(capacity: Int) : BufferData<Byte> {
 
-    override val array = Int8Array(capacity)
+    constructor(byteArray: ByteArray) : this(byteArray.size) {
+        put(byteArray)
+        rewind()
+    }
+
+    override val array = Uint8Array(capacity)
     internal var position = 0
 
+    @OptIn(ExperimentalUnsignedTypes::class)
     actual fun put(values: ByteArray) {
-        array.set(values.toInt8Array(), position)
+        array.set(values.asUByteArray().toUint8Array(), position)
         position += values.size
     }
 

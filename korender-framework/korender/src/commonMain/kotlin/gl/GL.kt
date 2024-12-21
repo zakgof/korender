@@ -45,7 +45,7 @@ expect object GL {
         pixels: Byter?
     )
 
-    fun glGetFloatv(pname: Int, params: FloatArray)
+    fun glGetFloatv(pname: Int) : Float?
 
     fun glGetError(): Int
 

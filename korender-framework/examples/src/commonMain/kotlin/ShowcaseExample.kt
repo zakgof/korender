@@ -18,6 +18,7 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import com.zakgof.korender.mesh.Meshes.sphere
+import com.zakgof.korender.resources.Res
 
 @Composable
 fun ShowcaseExample() = Korender {

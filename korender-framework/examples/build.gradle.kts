@@ -12,11 +12,11 @@ plugins {
     alias(libs.plugins.jetbrainsCompose)
 }
 
-//compose.resources {
-//    publicResClass = true
-//    packageOfResClass = "com.zakgof.korender.resources"
-//    generateResClass = auto
-//}
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "com.zakgof.app.resources"
+    generateResClass = auto
+}
 
 kotlin {
 

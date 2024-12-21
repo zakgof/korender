@@ -55,9 +55,9 @@ actual object GL {
         target, level, internalformat, width, height, border, format, type, pixels?.array
     )
 
-    // TODO: check this
-    actual fun glGetFloatv(pname: Int, params: FloatArray) {
-        params[0] = (gl!!.getParameter(pname) as JsNumber).toDouble().toFloat()
+    actual fun glGetFloatv(pname: Int) : Float? {
+        val paramValue = gl!!.getParameter(pname)
+        return (paramValue as JsNumber?)?.toDouble()?.toFloat()
     }
 
     actual fun glGetError() = gl!!.getError()

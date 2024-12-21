@@ -2,9 +2,12 @@ package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.gl.GL.shaderEnv
+import com.zakgof.korender.impl.ResourceLoader
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gpu.Gpu
+import com.zakgof.korender.impl.gpu.GpuShader
 import com.zakgof.korender.impl.resourceBytes
+import kotlinx.coroutines.DelicateCoroutinesApi
 
 internal fun <T> MutableList<T>.peek(): T = this.last()
 internal fun <T> MutableList<T>.pop(): T = this.removeAt(this.size - 1)
@@ -14,49 +17,40 @@ internal object Shaders {
     val imageQuadDeclaration: ShaderDeclaration =
         ShaderDeclaration("gui/image.vert", "gui/image.frag")
 
-    fun create(declaration: ShaderDeclaration, gpu: Gpu) =
-        ShaderBuilder(
-            declaration.vertFile,
-            declaration.fragFile,
-            declaration.defs,
-            declaration.plugins
-        ).build(gpu)
-}
+    suspend fun create(
+        declaration: ShaderDeclaration,
+        gpu: Gpu,
+        appResourceLoader: ResourceLoader
+    ): GpuShader {
+        val defs = declaration.defs + shaderEnv
+        val title = "${declaration.vertFile}/${declaration.fragFile}"
+        val vertDebugInfo = ShaderDebugInfo(declaration.vertFile)
+        val fragDebugInfo = ShaderDebugInfo(declaration.fragFile)
+        val vertCode =
+            preprocessFile(declaration.vertFile, defs, vertDebugInfo, declaration.plugins, appResourceLoader)
+        val fragCode =
+            preprocessFile(declaration.fragFile, defs, fragDebugInfo, declaration.plugins, appResourceLoader)
+        return gpu.createShader(title, vertCode, fragCode, vertDebugInfo, fragDebugInfo)
+    }
 
-private class ShaderBuilder(
-    vertexShaderFile: String,
-    fragmentShaderFile: String,
-    defs: Set<String>,
-    plugins: Map<String, String>
-) {
-
-    private val defs: Set<String> = defs + shaderEnv
-    private val title: String = "$vertexShaderFile/$fragmentShaderFile"
-    private val vertDebugInfo: ShaderDebugInfo = ShaderDebugInfo(vertexShaderFile)
-    private val fragDebugInfo: ShaderDebugInfo = ShaderDebugInfo(fragmentShaderFile)
-
-    private val vertCode: String =
-        preprocessFile(vertexShaderFile, this.defs, vertDebugInfo, plugins)
-    private val fragCode: String =
-        preprocessFile(fragmentShaderFile, this.defs, fragDebugInfo, plugins)
-
-    private fun preprocessFile(
+    private suspend fun preprocessFile(
         fname: String,
         defs: Set<String>,
         debugInfo: ShaderDebugInfo,
-        plugins: Map<String, String>
+        plugins: Map<String, String>,
+        appResourceLoader: ResourceLoader
     ): String {
-        val content = resourceBytes("shader/$fname")
-            .decodeToString()
-        return preprocess(content, defs, fname, debugInfo, plugins)
+        val content = resourceBytes(appResourceLoader, "shader/$fname").decodeToString()
+        return preprocess(content, defs, fname, debugInfo, plugins, appResourceLoader)
     }
 
-    fun preprocess(
+    private suspend fun preprocess(
         content: String,
         defs: Set<String>,
         fname: String,
         debugInfo: ShaderDebugInfo,
-        plugins: Map<String, String>
+        plugins: Map<String, String>,
+        appResourceLoader: ResourceLoader
     ): String {
         val outputLines = mutableListOf<String>()
         val ifdefs = mutableListOf<String>()
@@ -66,20 +60,21 @@ private class ShaderBuilder(
         content.lines().forEach { it ->
             val line = it.trim()
             debugInfo.incSourceLine()
-            preprocessLine(line, defs, ifdefs, passes, plugins, outputLines, debugInfo)
+            preprocessLine(line, defs, ifdefs, passes, plugins, outputLines, debugInfo, appResourceLoader)
         }
         debugInfo.finish(fname)
         return outputLines.joinToString("\n") // TODO check on Linux
     }
 
-    private fun preprocessLine(
+    private suspend fun preprocessLine(
         line: String,
         defs: Set<String>,
         ifdefs: MutableList<String>,
         passes: MutableList<Boolean>,
         plugins: Map<String, String>,
         outputLines: MutableList<String>,
-        debugInfo: ShaderDebugInfo
+        debugInfo: ShaderDebugInfo,
+        appResourceLoader: ResourceLoader
     ) {
         val ifdefMatcher = Regex("#ifdef (.+)").find(line)
         if (ifdefMatcher != null) {
@@ -127,7 +122,13 @@ private class ShaderBuilder(
         if (includeMatcher != null) {
             val include = includeMatcher.groups[1]!!.value
             val includeFname = includeToFile(include, plugins)
-            val includeContent = preprocessFile(includeFname, defs, debugInfo, plugins)
+            val includeContent = preprocessFile(
+                includeFname,
+                defs,
+                debugInfo,
+                plugins,
+                appResourceLoader
+            )
             outputLines.add(includeContent)
             return
         }
@@ -143,8 +144,5 @@ private class ShaderBuilder(
             include
         }
     }
-
-    fun build(gpu: Gpu) =
-        gpu.createShader(title, vertCode, fragCode, vertDebugInfo, fragDebugInfo)
 
 }

@@ -24,12 +24,31 @@ import com.zakgof.korender.projection.Projection
 import com.zakgof.korender.uniforms.MapUniformSupplier
 import com.zakgof.korender.uniforms.UniformSupplier
 
-internal class SingleShadower(private val index: Int, private val inventory: Inventory, private val decl: CascadeDeclaration) : Shadower {
+internal class SingleShadower(
+    private val index: Int,
+    private val inventory: Inventory,
+    private val decl: CascadeDeclaration
+) : Shadower {
 
     override val cascadeNumber = 1
-    private val frameBuffer: GpuFrameBuffer = inventory.frameBuffer(FrameBufferDeclaration("shadow$index", decl.mapSize, decl.mapSize, false))
+    private val frameBuffer: GpuFrameBuffer? = inventory.frameBuffer(
+        FrameBufferDeclaration(
+            "shadow$index",
+            decl.mapSize,
+            decl.mapSize,
+            false
+        )
+    )
 
-    override fun render(projection: Projection, camera: Camera, light: Vec3, shadowCasters: List<Renderable>): UniformSupplier {
+    override fun render(
+        projection: Projection,
+        camera: Camera,
+        light: Vec3,
+        shadowCasters: List<Renderable>
+    ): UniformSupplier {
+
+        if (frameBuffer == null)
+            return MapUniformSupplier()
 
         val matrices = updateShadowCamera(projection, camera, light)
         val shadowCamera = matrices.first
@@ -56,8 +75,14 @@ internal class SingleShadower(private val index: Int, private val inventory: Inv
             glCullFace(GL_BACK)
             shadowCasters.forEach { r ->
                 // TODO: need to copy all the defs and plugins from the original shader
-                val casterShader = inventory.shader(ShaderDeclaration("standart.vert", "standart.frag", setOf("SHADOW_CASTER")))
-                casterShader.render(
+                val casterShader = inventory.shader(
+                    ShaderDeclaration(
+                        "standart.vert",
+                        "standart.frag",
+                        setOf("SHADOW_CASTER")
+                    )
+                )
+                casterShader?.render(
                     uniformDecorator(r.uniforms + mapOf("model" to r.transform.mat4)),
                     r.mesh.gpuMesh
                 )
@@ -71,7 +96,11 @@ internal class SingleShadower(private val index: Int, private val inventory: Inv
         )
     }
 
-    private fun updateShadowCamera(projection: Projection, camera: Camera, light: Vec3): Pair<DefaultCamera, OrthoProjection> {
+    private fun updateShadowCamera(
+        projection: Projection,
+        camera: Camera,
+        light: Vec3
+    ): Pair<DefaultCamera, OrthoProjection> {
 
         val right = (light % 1.y).normalize()
         val up = (right % light).normalize()
@@ -93,16 +122,27 @@ internal class SingleShadower(private val index: Int, private val inventory: Inv
         val height = ymax - ymin
 
         val shadowCamera = DefaultCamera(position = cameraPos, direction = light, up = up)
-        val shadowProjection = OrthoProjection(width = width * 0.51f, height = height * 0.51f, near = near * 0.98f, far = far * 1.05f)
+        val shadowProjection = OrthoProjection(
+            width = width * 0.51f,
+            height = height * 0.51f,
+            near = near * 0.98f,
+            far = far * 1.05f
+        )
 
         return shadowCamera to shadowProjection
     }
 
-    private fun frustumCorners(projection: Projection, camera: Camera, near: Float, far: Float): List<Vec3> {
+    private fun frustumCorners(
+        projection: Projection,
+        camera: Camera,
+        near: Float,
+        far: Float
+    ): List<Vec3> {
         projection as FrustumProjection
         camera as DefaultCamera
         val upNear = camera.up * (projection.height * 0.5f * near / projection.near)
-        val rightNear = (camera.direction % camera.up).normalize() * (projection.width * 0.5f * near / projection.near)
+        val rightNear =
+            (camera.direction % camera.up).normalize() * (projection.width * 0.5f * near / projection.near)
         val toNear = camera.direction * near
         val toFar = camera.direction * far
         val upFar = upNear * (far / near)

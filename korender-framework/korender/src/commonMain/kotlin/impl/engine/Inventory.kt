@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.impl.ResourceLoader
 import com.zakgof.korender.impl.font.Font
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.geometry.Geometry
@@ -13,12 +14,12 @@ import com.zakgof.korender.impl.material.Texturing
 import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.mesh.MeshDeclaration
 
-internal class Inventory(val gpu: Gpu) {
+internal class Inventory(private val appResourceLoader: ResourceLoader, val gpu: Gpu) {
 
     private val meshes = Registry<MeshDeclaration, Mesh> { Geometry.create(it, gpu) }
-    private val shaders = Registry<ShaderDeclaration, GpuShader> { Shaders.create(it, gpu) }
-    private val textures = Registry<TextureDeclaration, GpuTexture> { Texturing.create(it, gpu) }
-    private val fonts = Registry<String, Font> { Fonts.load(gpu, it) }
+    private val shaders = Registry<ShaderDeclaration, GpuShader> { Shaders.create(it, gpu, appResourceLoader) }
+    private val textures = Registry<TextureDeclaration, GpuTexture> { Texturing.create(it, gpu, appResourceLoader) }
+    private val fonts = Registry<String, Font> { Fonts.load(gpu, appResourceLoader, it) }
     private val fontMeshes = Registry<Any, Geometry.MultiMesh> { Geometry.font(gpu, 256) }
     private val frameBuffers = Registry<FrameBufferDeclaration, GpuFrameBuffer> { gpu.createFrameBuffer(it.id, it.width, it.height, it.withDepth) }
 
@@ -38,11 +39,11 @@ internal class Inventory(val gpu: Gpu) {
         frameBuffers.end()
     }
 
-    fun mesh(decl: MeshDeclaration): Mesh = meshes[decl]
-    fun shader(decl: ShaderDeclaration): GpuShader = shaders[decl]
-    fun texture(decl: TextureDeclaration): GpuTexture = textures[decl]
+    fun mesh(decl: MeshDeclaration): Mesh? = meshes[decl]
+    fun shader(decl: ShaderDeclaration): GpuShader? = shaders[decl]
+    fun texture(decl: TextureDeclaration): GpuTexture? = textures[decl]
     fun hasMesh(decl: MeshDeclaration): Boolean = meshes.has(decl)
-    fun font(fontResource: String): Font = fonts[fontResource]
-    fun fontMesh(id: Any): Geometry.MultiMesh = fontMeshes[id]
-    fun frameBuffer(decl: FrameBufferDeclaration): GpuFrameBuffer = frameBuffers[decl]
+    fun font(fontResource: String): Font? = fonts[fontResource]
+    fun fontMesh(id: Any): Geometry.MultiMesh? = fontMeshes[id]
+    fun frameBuffer(decl: FrameBufferDeclaration): GpuFrameBuffer? = frameBuffers[decl]
 }

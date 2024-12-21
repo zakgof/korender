@@ -2,6 +2,7 @@ package com.zakgof.korender.examples
 
 
 import androidx.compose.runtime.Composable
+import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.material.MaterialModifiers.standart
@@ -16,21 +17,31 @@ import com.zakgof.korender.mesh.Attributes.POS
 import com.zakgof.korender.mesh.Attributes.TEX
 import com.zakgof.korender.mesh.Meshes.customMesh
 import com.zakgof.korender.mesh.Vertex
+import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.sin
 
+@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun MeshesExample() {
     val orbitCamera = OrbitCamera(20.z, 2.y)
-    Korender {
+    Korender(appResourceLoader = { Res.readBytes(it) }) {
         OnTouch { orbitCamera.touch(it) }
         val materialModifier = standart(StandartMaterialOption.NoLight) {
-            colorTexture = texture("sand.jpg")
+            colorTexture = texture("!sand.jpg")
         }
         Frame {
             Camera(orbitCamera.camera(projection, width, height))
             Renderable(
                 materialModifier,
-                mesh = customMesh(id = "static", static = true, vertexCount = 3, indexCount = 3, POS, NORMAL, TEX) {
+                mesh = customMesh(
+                    id = "static",
+                    static = true,
+                    vertexCount = 3,
+                    indexCount = 3,
+                    POS,
+                    NORMAL,
+                    TEX
+                ) {
                     vertex(Vertex(pos = Vec3(-5f, 0f, 0f), normal = 1.z, tex = Vec2(0f, 0f)))
                     vertex(Vertex(pos = Vec3(0f, 0f, 0f), normal = 1.z, tex = Vec2(1f, 0f)))
                     vertex(Vertex(pos = Vec3(0f, 5f, 0f), normal = 1.z, tex = Vec2(1f, 1f)))
@@ -39,10 +50,24 @@ fun MeshesExample() {
             )
             Renderable(
                 materialModifier,
-                mesh = customMesh(id = "dynamic", static = false, vertexCount = 3, indexCount = 3, POS, NORMAL, TEX) {
+                mesh = customMesh(
+                    id = "dynamic",
+                    static = false,
+                    vertexCount = 3,
+                    indexCount = 3,
+                    POS,
+                    NORMAL,
+                    TEX
+                ) {
                     vertex(Vertex(pos = Vec3(1f, 0f, 0f), normal = 1.z, tex = Vec2(0f, 0f)))
                     vertex(Vertex(pos = Vec3(5f, 0f, 0f), normal = 1.z, tex = Vec2(1f, 0f)))
-                    vertex(Vertex(pos = Vec3(5f, 5f + sin(frameInfo.time), 0f), normal = 1.z, tex = Vec2(1f, 1f)))
+                    vertex(
+                        Vertex(
+                            pos = Vec3(5f, 5f + sin(frameInfo.time), 0f),
+                            normal = 1.z,
+                            tex = Vec2(1f, 1f)
+                        )
+                    )
                     indices(0, 1, 2)
                 }
             )

@@ -42,6 +42,7 @@ import com.zakgof.korender.gl.GLUniformLocation
 import com.zakgof.korender.impl.gpu.GpuMesh
 import com.zakgof.korender.impl.gpu.GpuShader
 import com.zakgof.korender.impl.gpu.GpuTexture
+import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ShaderDebugInfo
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Mat3
@@ -207,6 +208,10 @@ class GlGpuShader(
             is GpuTexture -> {
                 value.bind(currentTexUnit)
                 glUniform1i(location, currentTexUnit)
+            }
+
+            is NotYetLoadedTexture -> {
+                println("Warning: texture not yet loaded")
             }
 
             else -> {

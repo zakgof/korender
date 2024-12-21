@@ -8,6 +8,7 @@ import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.getPlatform
 import com.zakgof.korender.gl.GL.glGetError
+import com.zakgof.korender.impl.ResourceLoader
 import com.zakgof.korender.impl.glgpu.GlGpu
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.material.Textures.texture
@@ -18,11 +19,16 @@ import com.zakgof.korender.projection.FrustumProjection
 import com.zakgof.korender.projection.Projection
 import kotlinx.coroutines.channels.Channel
 
-internal class Engine(private var width: Int, private var height: Int, block: KorenderContext.() -> Unit) {
+internal class Engine(
+    private var width: Int,
+    private var height: Int,
+    appResourceLoader: ResourceLoader,
+    block: KorenderContext.() -> Unit
+) {
 
     private val touchQueue = Channel<TouchEvent>(Channel.UNLIMITED)
     private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
-    private val inventory = Inventory(GlGpu())
+    private val inventory = Inventory(appResourceLoader, GlGpu())
     private val frameInfoManager = FrameInfoManager(inventory)
 
     private var camera: Camera = DefaultCamera(20.z, -1.z, 1.y)

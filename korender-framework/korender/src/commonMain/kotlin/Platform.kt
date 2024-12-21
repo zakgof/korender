@@ -4,12 +4,13 @@ import androidx.compose.runtime.Composable
 import com.zakgof.korender.image.Image
 import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.input.TouchEvent
+import kotlinx.coroutines.Deferred
 
 interface Platform {
 
     val name: String
 
-    fun loadImage(bytes: ByteArray) : Image
+    fun loadImage(bytes: ByteArray, type: String) : Deferred<Image>
 
     fun loadFont(bytes: ByteArray): FontDef
 

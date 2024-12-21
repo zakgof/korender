@@ -3,6 +3,7 @@ package com.zakgof.korender.impl.engine
 import com.zakgof.korender.mesh.ImageQuad
 import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.impl.engine.Scene.TouchBox
+import com.zakgof.korender.impl.font.Font
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.uniforms.MapUniformSupplier
 import com.zakgof.korender.impl.material.Shaders
@@ -60,37 +61,78 @@ internal class GuiRenderer(private val inventory: Inventory, private val width: 
     }
 
     private fun createImage(declaration: ElementDeclaration.Image, x: Int, y: Int) {
-        renderables.add(
-            Renderable(
-                mesh = inventory.mesh(ImageQuad), shader = inventory.shader(Shaders.imageQuadDeclaration), uniforms = MapUniformSupplier(
-                    Pair("pos", Vec2((x.toFloat() + declaration.marginLeft.toFloat()) / width, 1.0f - (y.toFloat() + declaration.marginTop.toFloat() + declaration.height.toFloat()) / height)),
-                    Pair("size", Vec2(declaration.width.toFloat() / width, declaration.height.toFloat() / height)),
-                    Pair("imageTexture", inventory.texture(TextureDeclaration(declaration.imageResource)))
+
+        val mesh = inventory.mesh(ImageQuad)
+        val shader = inventory.shader(Shaders.imageQuadDeclaration)
+
+        if (mesh != null && shader != null) {
+
+            renderables.add(
+                Renderable(
+                    mesh = mesh,
+                    shader  = shader,
+                    uniforms = MapUniformSupplier(
+                        Pair("pos",
+                            Vec2(
+                                (x.toFloat() + declaration.marginLeft.toFloat()) / width,
+                                1.0f - (y.toFloat() + declaration.marginTop.toFloat() + declaration.height.toFloat()) / height
+                            )
+                        ),
+                        Pair(
+                            "size",
+                            Vec2(
+                                declaration.width.toFloat() / width,
+                                declaration.height.toFloat() / height
+                            )
+                        ),
+                        Pair(
+                            "imageTexture",
+                            inventory.texture(TextureDeclaration(declaration.imageResource))
+                        )
+                    )
                 )
             )
-        )
-        touchBoxes.add(TouchBox(x + declaration.marginLeft, y + declaration.marginTop, declaration.width, declaration.height, declaration.onTouch))
+            touchBoxes.add(
+                TouchBox(
+                    x + declaration.marginLeft,
+                    y + declaration.marginTop,
+                    declaration.width,
+                    declaration.height,
+                    declaration.onTouch
+                )
+            )
+        }
     }
 
     private fun createText(declaration: ElementDeclaration.Text, x: Int, y: Int, w: Int) {
         val mesh = inventory.fontMesh(declaration.id)
         val font = inventory.font(declaration.fontResource)
-        mesh.updateFont(
-            declaration.text, declaration.height.toFloat() / height, height.toFloat() / width.toFloat(), x.toFloat() / width, 1.0f - y.toFloat() / height, font.widths
-        )
-        renderables.add(
-            Renderable(
-                mesh = mesh, shader = inventory.shader(Fonts.shaderDeclaration), uniforms = MapUniformSupplier(
-                    Pair("color", declaration.color), Pair("fontTexture", font.gpuTexture)
+        val shader = inventory.shader(Fonts.shaderDeclaration)
+        if (mesh != null && font != null && shader != null) {
+            mesh.updateFont(
+                declaration.text,
+                declaration.height.toFloat() / height,
+                height.toFloat() / width.toFloat(),
+                x.toFloat() / width,
+                1.0f - y.toFloat() / height,
+                font.widths
+            )
+            renderables.add(
+                Renderable(
+                    mesh = mesh,
+                    shader = shader,
+                    uniforms = MapUniformSupplier(
+                        Pair("color", declaration.color), Pair("fontTexture", font.gpuTexture)
+                    )
                 )
             )
-        )
-        touchBoxes.add(TouchBox(x, y, w, declaration.height, declaration.onTouch))
+            touchBoxes.add(TouchBox(x, y, w, declaration.height, declaration.onTouch))
+        }
     }
 
     private fun sizeEm(parentDirection: Direction, element: ElementDeclaration, sizes: MutableMap<ElementDeclaration, Size>): Size {
         val size = when (element) {
-            is ElementDeclaration.Text -> textSize(element, inventory)
+            is ElementDeclaration.Text -> textSize(element)
             is ElementDeclaration.Image -> Size(element.fullWidth, element.fullHeight)
             is ElementDeclaration.Filler -> {
                 if (parentDirection == Direction.Vertical) Size(0, -1) else Size(-1, 0)
@@ -139,11 +181,11 @@ internal class GuiRenderer(private val inventory: Inventory, private val width: 
     }
 
     private fun textSize(
-        textDeclaration: ElementDeclaration.Text, inventory: Inventory
+        textDeclaration: ElementDeclaration.Text
     ): Size {
         val font = inventory.font(textDeclaration.fontResource)
         return Size(
-            font.textWidth(textDeclaration.height, textDeclaration.text), textDeclaration.height
+            font?.textWidth(textDeclaration.height, textDeclaration.text) ?: 0, textDeclaration.height
         )
     }
 

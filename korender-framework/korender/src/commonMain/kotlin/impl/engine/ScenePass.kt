@@ -20,7 +20,14 @@ import com.zakgof.korender.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.gl.GLConstants.GL_CULL_FACE
 import com.zakgof.korender.uniforms.UniformSupplier
 
-internal class ScenePass(private val inventory: Inventory, private val camera: Camera, private val width: Int, private val height: Int, passDeclaration: PassDeclaration, shadowCascades: Int) {
+internal class ScenePass(
+    private val inventory: Inventory,
+    private val camera: Camera,
+    private val width: Int,
+    private val height: Int,
+    passDeclaration: PassDeclaration,
+    shadowCascades: Int
+) {
 
     val touchBoxes = mutableListOf<Scene.TouchBox>()
 
@@ -32,11 +39,13 @@ internal class ScenePass(private val inventory: Inventory, private val camera: C
     init {
         passDeclaration.renderables.forEach {
             val renderable = Renderable.create(inventory, it, camera, false, shadowCascades)
-            when (it.bucket) {
-                Bucket.OPAQUE -> opaques.add(renderable)
-                Bucket.SKY -> skies.add(renderable)
-                Bucket.TRANSPARENT -> transparents.add(renderable)
-                Bucket.SCREEN -> screens.add(renderable)
+            renderable?.let { r ->
+                when (it.bucket) {
+                    Bucket.OPAQUE -> opaques.add(r)
+                    Bucket.SKY -> skies.add(r)
+                    Bucket.TRANSPARENT -> transparents.add(r)
+                    Bucket.SCREEN -> screens.add(r)
+                }
             }
         }
         val guiRenderers = passDeclaration.guis.map { GuiRenderer(inventory, width, height, it) }

@@ -5,6 +5,7 @@ import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.impl.engine.shadow.CascadeShadower
 import com.zakgof.korender.impl.engine.shadow.Shadower
 import com.zakgof.korender.impl.gpu.GpuFrameBuffer
+import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.math.Vec3
@@ -33,7 +34,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
 
     private fun createShadowCasters(declarations: List<RenderableDeclaration>) =
         declarations.filter { it.shader.fragFile == "standart.frag" && !it.shader.defs.contains("NO_SHADOW_CAST") }
-            .map { Renderable.create(inventory, it, camera, true) }
+            .mapNotNull { Renderable.create(inventory, it, camera, true) }
 
     fun render(context: Map<String, Any?>, projection: Projection, camera: Camera, light: Vec3) {
         val shadowUniforms: UniformSupplier = shadower?.render(projection, camera, light, shadowCasters) ?: UniformSupplier { null }
@@ -45,7 +46,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
             UniformSupplier { key ->
                 var value = it[key] ?: context[key] ?: shadowUniforms[key] ?: prevFrameContext[key]
                 if (value is TextureDeclaration) {
-                    value = inventory.texture(value)
+                    value = inventory.texture(value) ?: NotYetLoadedTexture
                 }
                 value
             }
