@@ -131,6 +131,12 @@ internal class WasmPlatform : Platform {
             println("Vendor: " + gl.getParameter(VENDOR));
             println("Version: " + gl.getParameter(VERSION));
             println("GLSL version: " + gl.getParameter(SHADING_LANGUAGE_VERSION));
+            println("Supported extensions")
+
+            val exts = gl.getSupportedExtensions()!!
+            (0 until exts.length).map { exts[it] }.forEach {
+                println(" - " + it.toString())
+            }
 
             GL.gl = gl
             init(800, 600)

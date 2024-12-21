@@ -1,6 +1,7 @@
 package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
+import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.material.Effects.Adjust
 import com.zakgof.korender.material.MaterialModifiers.effect
@@ -9,14 +10,16 @@ import com.zakgof.korender.material.StandartMaterialOption
 import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.mesh.Meshes.sphere
+import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.sin
 
+@OptIn(ExperimentalResourceApi::class)
 @Composable
-fun FilterExample() = Korender {
+fun FilterExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
         Pass {
             Renderable(
-                standart(StandartMaterialOption.NoLight){
+                standart(StandartMaterialOption.NoLight) {
                     colorTexture = texture("sand.jpg")
                 },
                 mesh = sphere(4f),
@@ -29,7 +32,13 @@ fun FilterExample() = Korender {
             })
             Gui {
                 Filler()
-                Text(text = "SATURATION $value", id = "saturation", font = "ubuntu.ttf", height = 50, color = Color.Red)
+                Text(
+                    text = "SATURATION $value",
+                    id = "saturation",
+                    font = "!ubuntu.ttf",
+                    height = 50,
+                    color = Color.Red
+                )
             }
         }
     }
