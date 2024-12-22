@@ -9,6 +9,7 @@ import com.zakgof.korender.buffer.Inter
 
 actual object GL {
 
+    // TODO: Check with multiple Korender windows
     internal var gl: WebGL2RenderingContext? = null
 
     actual val shaderEnv = "WEBGL"
@@ -16,9 +17,11 @@ actual object GL {
     actual fun glDrawElements(mode: Int, count: Int, type: Int, indices: Int) =
         gl!!.drawElements(mode, count, type, indices)
 
-    actual fun glEnable(target: Int) = gl!!.enable(target)
+    actual fun glEnable(target: Int) =
+        gl!!.enable(target)
 
-    actual fun glDisable(target: Int) = gl!!.disable(target)
+    actual fun glDisable(target: Int) =
+        gl!!.disable(target)
 
     actual fun glBindTexture(target: Int, texture: GLTexture) =
         gl!!.bindTexture(target, texture.texture)
@@ -26,20 +29,26 @@ actual object GL {
     actual fun glTexParameterf(target: Int, pname: Int, param: Float) =
         gl!!.texParameterf(target, pname, param)
 
-    actual fun glDeleteTextures(texture: GLTexture) = gl!!.deleteTexture(texture.texture)
+    actual fun glDeleteTextures(texture: GLTexture) =
+        gl!!.deleteTexture(texture.texture)
 
-    actual fun glPixelStorei(pname: Int, param: Int) = gl!!.pixelStorei(param, param)
+    actual fun glPixelStorei(pname: Int, param: Int) =
+        gl!!.pixelStorei(param, param)
 
     actual fun glGenTextures(): GLTexture =
         GLTexture(gl!!.createTexture() ?: throw KorenderException("Failed to create WebGL texture"))
 
-    actual fun glBlendFunc(sfactor: Int, dfactor: Int) = gl!!.blendFunc(sfactor, dfactor)
+    actual fun glBlendFunc(sfactor: Int, dfactor: Int) =
+        gl!!.blendFunc(sfactor, dfactor)
 
-    actual fun glDepthFunc(func: Int) = gl!!.depthFunc(func)
+    actual fun glDepthFunc(func: Int) =
+        gl!!.depthFunc(func)
 
-    actual fun glDepthMask(flag: Boolean) = gl!!.depthMask(flag)
+    actual fun glDepthMask(flag: Boolean) =
+        gl!!.depthMask(flag)
 
-    actual fun glCullFace(mode: Int) = gl!!.cullFace(mode)
+    actual fun glCullFace(mode: Int) =
+        gl!!.cullFace(mode)
 
     actual fun glTexImage2D(
         target: Int,
@@ -64,7 +73,8 @@ actual object GL {
 
     actual fun glClear(mask: Int) = gl!!.clear(mask)
 
-    actual fun glViewport(x: Int, y: Int, w: Int, h: Int) = gl!!.viewport(x, y, w, h)
+    actual fun glViewport(x: Int, y: Int, w: Int, h: Int) =
+        gl!!.viewport(x, y, w, h)
 
     actual fun glTexParameteri(target: Int, pname: Int, param: Int) =
         gl!!.texParameteri(target, pname, param)
@@ -77,7 +87,8 @@ actual object GL {
 
     actual fun glActiveTexture(texture: Int) = gl!!.activeTexture(texture)
 
-    actual fun glBindBuffer(target: Int, buffer: GLBuffer) = gl!!.bindBuffer(target, buffer.buffer)
+    actual fun glBindBuffer(target: Int, buffer: GLBuffer) =
+        gl!!.bindBuffer(target, buffer.buffer)
 
     actual fun glBufferData(target: Int, data: BufferData<out Any>, usage: Int) =
         gl!!.bufferData(target, data.array, usage)
@@ -89,11 +100,13 @@ actual object GL {
         gl!!.deleteBuffer(buffer.buffer)
 
     actual fun glCreateProgram(): GLProgram =
-        GLProgram(gl!!.createProgram() ?: throw KorenderException("Failed to create WebGL program"))
+        GLProgram(gl!!.createProgram() ?:
+            throw KorenderException("Failed to create WebGL program")
+        )
 
     actual fun glCreateShader(type: Int): GLShader =
-        GLShader(
-            gl!!.createShader(type) ?: throw KorenderException("Failed to create WebGL shader")
+        GLShader(gl!!.createShader(type) ?:
+            throw KorenderException("Failed to create WebGL shader")
         )
 
     actual fun glAttachShader(program: GLProgram, shader: GLShader) =
@@ -121,7 +134,6 @@ actual object GL {
         params.put((gl!!.getProgramParameter(program.program, pname) as JsNumber).toInt())
     }
 
-    // TODO check
     actual fun glGetActiveUniform(program: GLProgram, index: Int, size: Inter, type: Inter) =
         gl!!.getActiveUniform(program.program, index)!!.name
 

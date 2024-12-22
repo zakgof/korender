@@ -148,7 +148,7 @@ internal object Geometry {
             DefaultMesh(name, this, isDynamic)
 
         fun buildInstanced(count: Int): MultiMesh =
-            MultiMesh(name, instancing(count), this, count)
+            MultiMesh(name, instancing(count), this)
 
         fun instancing(
             instances: Int,
@@ -245,9 +245,11 @@ internal object Geometry {
         name: String,
         data: MeshBuilder,
         private val prototype: MeshBuilder,
-        count: Int
     ) :
         DefaultMesh(name, data, true) {
+
+        private var initialized = false
+
         fun updateInstances(instances: List<MeshInstance>) {
             instances.indices.map {
                 val instance = instances[it]
@@ -264,6 +266,7 @@ internal object Geometry {
                 prototype.vertexNumber * instances.size,
                 prototype.indexNumber * instances.size
             )
+            initialized = true
         }
 
         fun updateBillboardInstances(instances: List<BillboardInstance>) {
@@ -312,6 +315,7 @@ internal object Geometry {
                 instances.size * 4,
                 instances.size * 6
             )
+            initialized = true
         }
 
         fun updateFont(
@@ -351,7 +355,10 @@ internal object Geometry {
                 text.length * 4,
                 text.length * 6
             )
+            initialized = true
         }
+
+        fun isInitialized() = initialized
     }
 
     fun quad(halfSide: Float = 0.5f, block: MeshBuilder.() -> Unit = {}) =

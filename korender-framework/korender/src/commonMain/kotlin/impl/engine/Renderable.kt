@@ -15,7 +15,6 @@ internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms:
 
     companion object {
         fun create(inventory: Inventory, declaration: RenderableDeclaration, camera: Camera, isShadowCaster: Boolean, shadowCascades: Int = 0): Renderable? {
-            val new = !inventory.hasMesh(declaration.mesh)
             val mesh = inventory.mesh(declaration.mesh) ?: return null
 
             val additionalShadowFlags = if (isShadowCaster) listOf("SHADOW_CASTER") else (0..<shadowCascades).map { "SHADOW_RECEIVER$it" }
@@ -25,7 +24,6 @@ internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms:
                 origShader.plugins
             )
             val shader = inventory.shader(modifiedShader) ?: return null
-
 
             if (declaration.mesh is CustomMesh && !declaration.mesh.static) {
                 (mesh as Geometry.DefaultMesh).updateMesh(declaration.mesh.block)
@@ -41,13 +39,14 @@ internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms:
                 (mesh as Geometry.MultiMesh).updateBillboardInstances(instances)
             }
             if (declaration.mesh is InstancedMesh) {
-                if (!declaration.mesh.static || new) {
+                mesh as Geometry.MultiMesh
+                if (!declaration.mesh.static || !mesh.isInitialized()) {
                     val instances = mutableListOf<MeshInstance>()
                     DefaultInstancedRenderablesContext(instances).apply(declaration.mesh.block)
                     if (declaration.mesh.transparent) {
                         instances.sortBy { (camera.mat4 * it.transform.offset()).z }
                     }
-                    (mesh as Geometry.MultiMesh).updateInstances(instances)
+                    mesh.updateInstances(instances)
                 }
             }
             val uniforms = declaration.uniforms
