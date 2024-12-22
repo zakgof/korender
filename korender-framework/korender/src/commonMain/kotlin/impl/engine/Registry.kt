@@ -1,13 +1,15 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.AsyncContext
 import com.zakgof.korender.impl.resultOrNull
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 
 @OptIn(DelicateCoroutinesApi::class)
-internal class Registry<D, R : AutoCloseable>(private val factory: suspend (D) -> R) {
+internal class Registry<D, R : AutoCloseable>(
+    private val asyncContext: AsyncContext,
+    private val factory: suspend (D) -> R
+) {
 
     private val map = mutableMapOf<D, Deferred<R>>()
     private var unusedKeys = mutableSetOf<D>()
@@ -26,7 +28,7 @@ internal class Registry<D, R : AutoCloseable>(private val factory: suspend (D) -
     operator fun get(decl: D): R? {
         unusedKeys.remove(decl)
         val deferred = map.getOrPut(decl) {
-            GlobalScope.async {
+            asyncContext.call {
                 factory(decl)
             }
         }

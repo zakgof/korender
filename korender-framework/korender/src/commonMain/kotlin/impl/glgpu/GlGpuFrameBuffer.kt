@@ -6,7 +6,6 @@ import com.zakgof.korender.gl.GL.glBindFramebuffer
 import com.zakgof.korender.gl.GL.glBindTexture
 import com.zakgof.korender.gl.GL.glCheckFramebufferStatus
 import com.zakgof.korender.gl.GL.glDeleteFramebuffers
-import com.zakgof.korender.gl.GL.glDrawBuffers
 import com.zakgof.korender.gl.GL.glFramebufferTexture2D
 import com.zakgof.korender.gl.GL.glGenFramebuffers
 import com.zakgof.korender.gl.GL.glGenTextures
@@ -63,8 +62,8 @@ class GlGpuFrameBuffer(private val name: String, private val width: Int, private
             0
         )
 
-        println("glDrawBuffers")
-        glDrawBuffers(GL_COLOR_ATTACHMENT0)
+        //println("glDrawBuffers")
+        //glDrawBuffers(GL_COLOR_ATTACHMENT0)
 
         if (useDepthBuffer) {
             println("createDepthTexture")
@@ -107,7 +106,6 @@ class GlGpuFrameBuffer(private val name: String, private val width: Int, private
         )
 
         println("CP1 $depth ${glGetError()}")
-
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)

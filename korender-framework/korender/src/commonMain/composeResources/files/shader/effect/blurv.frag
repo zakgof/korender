@@ -1,5 +1,5 @@
-#import "lib/header.glsl"
-#import "lib/blur.glsl"
+#import "shader/lib/header.glsl"
+#import "shader/lib/blur.glsl"
 
 in vec2 vtex;
 

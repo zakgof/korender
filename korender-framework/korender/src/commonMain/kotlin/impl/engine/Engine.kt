@@ -1,15 +1,14 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.AsyncContext
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.Platform
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
-import com.zakgof.korender.getPlatform
 import com.zakgof.korender.gl.GL.glGetError
-import com.zakgof.korender.impl.ResourceLoader
-import com.zakgof.korender.impl.glgpu.GlGpu
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.math.Vec3
@@ -22,13 +21,13 @@ import kotlinx.coroutines.channels.Channel
 internal class Engine(
     private var width: Int,
     private var height: Int,
-    appResourceLoader: ResourceLoader,
+    asyncContext: AsyncContext,
     block: KorenderContext.() -> Unit
 ) {
 
     private val touchQueue = Channel<TouchEvent>(Channel.UNLIMITED)
     private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
-    private val inventory = Inventory(appResourceLoader, GlGpu())
+    private val inventory = Inventory(asyncContext)
     private val frameInfoManager = FrameInfoManager(inventory)
 
     private var camera: Camera = DefaultCamera(20.z, -1.z, 1.y)
@@ -84,7 +83,7 @@ internal class Engine(
         context["light"] = light
         context["screenWidth"] = width.toFloat()
         context["screenHeight"] = height.toFloat()
-        context["time"] = (getPlatform().nanoTime() - frameInfoManager.startNanos) * 1e-9f
+        context["time"] = (Platform.nanoTime() - frameInfoManager.startNanos) * 1e-9f
     }
 
     suspend fun pushTouch(touchEvent: TouchEvent) = touchQueue.send(touchEvent)

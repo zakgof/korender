@@ -1,4 +1,4 @@
-#import "lib/noise.glsl"
+#import "shader/lib/noise.glsl"
 
 uniform float time;
 uniform float thickness;

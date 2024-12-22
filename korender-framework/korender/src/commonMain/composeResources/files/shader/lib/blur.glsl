@@ -3,7 +3,7 @@ vec3 blur(sampler2D tex, vec2 vtex, float radius, vec2 dir, float size) {
     vec3 color = vec3(0.0);
     vec2 step = dir * (radius / size);
     for (int i = -2; i <= 2; ++i) {
-        color += texture(tex, vtex + step * i).rgb * gaussian[i + 2];
+        color += texture(tex, vtex + step * float(i)).rgb * gaussian[i + 2];
     }
     return color;
 }

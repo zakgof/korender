@@ -1,13 +1,12 @@
 package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.gl.GL.shaderEnv
-import com.zakgof.korender.impl.ResourceLoader
 import com.zakgof.korender.impl.engine.ShaderDeclaration
-import com.zakgof.korender.impl.gpu.Gpu
+import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.gpu.GpuShader
 import com.zakgof.korender.impl.resourceBytes
-import kotlinx.coroutines.DelicateCoroutinesApi
 
 internal fun <T> MutableList<T>.peek(): T = this.last()
 internal fun <T> MutableList<T>.pop(): T = this.removeAt(this.size - 1)
@@ -15,22 +14,21 @@ internal fun <T> MutableList<T>.pop(): T = this.removeAt(this.size - 1)
 internal object Shaders {
 
     val imageQuadDeclaration: ShaderDeclaration =
-        ShaderDeclaration("gui/image.vert", "gui/image.frag")
+        ShaderDeclaration("shader/gui/image.vert", "shader/gui/image.frag")
 
     suspend fun create(
         declaration: ShaderDeclaration,
-        gpu: Gpu,
         appResourceLoader: ResourceLoader
     ): GpuShader {
         val defs = declaration.defs + shaderEnv
-        val title = "${declaration.vertFile}/${declaration.fragFile}"
+        val title = "${declaration.vertFile}:${declaration.fragFile}"
         val vertDebugInfo = ShaderDebugInfo(declaration.vertFile)
         val fragDebugInfo = ShaderDebugInfo(declaration.fragFile)
         val vertCode =
             preprocessFile(declaration.vertFile, defs, vertDebugInfo, declaration.plugins, appResourceLoader)
         val fragCode =
             preprocessFile(declaration.fragFile, defs, fragDebugInfo, declaration.plugins, appResourceLoader)
-        return gpu.createShader(title, vertCode, fragCode, vertDebugInfo, fragDebugInfo)
+        return GlGpuShader(title, vertCode, fragCode, vertDebugInfo, fragDebugInfo)
     }
 
     private suspend fun preprocessFile(
@@ -40,7 +38,7 @@ internal object Shaders {
         plugins: Map<String, String>,
         appResourceLoader: ResourceLoader
     ): String {
-        val content = resourceBytes(appResourceLoader, "shader/$fname").decodeToString()
+        val content = resourceBytes(appResourceLoader, fname).decodeToString()
         return preprocess(content, defs, fname, debugInfo, plugins, appResourceLoader)
     }
 

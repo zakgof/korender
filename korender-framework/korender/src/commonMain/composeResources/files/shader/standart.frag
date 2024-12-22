@@ -1,6 +1,6 @@
-#import "lib/header.glsl"
-#import "lib/texturing.glsl"
-#import "lib/light.glsl"
+#import "shader/lib/header.glsl"
+#import "shader/lib/texturing.glsl"
+#import "shader/lib/light.glsl"
 
 #ifdef COLOR
   uniform vec4 color;

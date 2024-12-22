@@ -5,9 +5,9 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.darkColors
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import com.zakgof.app.resources.Res
+import com.zakgof.app.resources.korender32
 import com.zakgof.korender.examples.AppExample
-import com.zakgof.korender.resources.Res
-import com.zakgof.korender.resources.korender32
 import org.jetbrains.compose.resources.painterResource
 
 fun main() = application {

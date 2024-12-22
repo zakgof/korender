@@ -48,18 +48,23 @@ actual object GL {
         target, level, internalformat, width, height, border, format, type, pixels?.byteBuffer
     )
 
-    actual fun glGetFloatv(pname: Int, params: FloatArray) = GLES11.glGetFloatv(pname, params, 0)
+    actual fun glGetFloatv(pname: Int): Float? {
+        val fa = FloatArray(1)
+        GLES11.glGetFloatv(pname, fa, 0)
+        return fa[0]
+    }
 
     actual fun glGetError(): Int = GLES11.glGetError()
+
     actual fun glClear(mask: Int) = GLES11.glClear(mask)
+
     actual fun glClearColor(fl: Float, fl1: Float, fl2: Float, fl3: Float) =
         GLES11.glClearColor(fl, fl1, fl2, fl3)
 
     actual fun glViewport(x: Int, y: Int, w: Int, h: Int) = GLES11.glViewport(x, y, w, h)
 
-    actual fun glTexParameteri(
-        target: Int, pname: Int, param: Int
-    ) = GLES11.glTexParameteri(target, pname, param)
+    actual fun glTexParameteri(target: Int, pname: Int, param: Int) =
+        GLES11.glTexParameteri(target, pname, param)
 
     actual fun glTexParameterfv(target: Int, pname: Int, param: FloatArray) =
         GLES11.glTexParameterfv(target, pname, param, 0)
@@ -69,7 +74,7 @@ actual object GL {
     actual fun glBindBuffer(target: Int, buffer: GLBuffer) =
         GLES20.glBindBuffer(target, buffer.buffer)
 
-    actual fun glBufferData(target: Int, data: BufferData<Any?>, usage: Int) =
+    actual fun glBufferData(target: Int, data: BufferData<out Any>, usage: Int) =
         GLES20.glBufferData(target, data.byteBuffer.remaining(), data.byteBuffer, usage)
 
     actual fun glGenBuffers() = GLBuffer(IntArray(1).also { GLES20.glGenBuffers(1, it, 0) }[0])
@@ -81,11 +86,8 @@ actual object GL {
 
     actual fun glCreateShader(type: Int) = GLShader(GLES20.glCreateShader(type))
 
-    actual fun glAttachShader(
-        program: GLProgram, shader: GLShader
-    ) = GLES20.glAttachShader(
-        program.program, shader.shader
-    )
+    actual fun glAttachShader(program: GLProgram, shader: GLShader) =
+        GLES20.glAttachShader(program.program, shader.shader)
 
     actual fun glLinkProgram(
         program: GLProgram
@@ -103,39 +105,30 @@ actual object GL {
         program.program
     )
 
-    actual fun glGetProgrami(
-        program: GLProgram, pname: Int
-    ) = GLES20.glGetProgrami(
-        program.program, pname
-    )
+    actual fun glGetProgrami(program: GLProgram, pname: Int): Int {
+        val ia = IntArray(1)
+        GLES20.glGetProgramiv(program.program, pname, ia, 0)
+        return ia[0]
+    }
 
-    actual fun glGetShaderInfoLog(
-        shader: GLShader
-    ) = GLES20.glGetShaderInfoLog(
-        shader.shader
-    )
+    actual fun glGetShaderInfoLog(shader: GLShader): String =
+        GLES20.glGetShaderInfoLog(shader.shader)
 
-    actual fun glGetProgramInfoLog(
-        program: GLProgram
-    ) = GLES20.glGetProgramInfoLog(
-        program.program
-    )
+    actual fun glGetProgramInfoLog(program: GLProgram): String =
+        GLES20.glGetProgramInfoLog(program.program)
 
-    actual fun glGetProgramiv(
-        program: GLProgram, pname: Int, params: Inter
-    ) = GLES20.glGetProgramiv(
-        program.program, pname, params.intBuffer
-    )
+    actual fun glGetProgramiv(program: GLProgram, pname: Int, params: Inter) =
+        GLES20.glGetProgramiv(program.program, pname, params.intBuffer)
 
     actual fun glGetActiveUniform(
         program: GLProgram, index: Int, size: Inter, type: Inter
-    ) = GLES20.glGetActiveUniform(
+    ): String = GLES20.glGetActiveUniform(
         program.program, index, size.intBuffer, type.intBuffer
     )
 
     actual fun glGetActiveAttrib(
         program: GLProgram, index: Int, size: Inter, type: Inter
-    ) = GLES20.glGetActiveAttrib(
+    ): String = GLES20.glGetActiveAttrib(
         program.program, index, size.intBuffer, type.intBuffer
     )
 
@@ -165,8 +158,10 @@ actual object GL {
 
     actual fun glGetUniformLocation(
         program: GLProgram, name: String
-    ) = GLES20.glGetUniformLocation(
-        program.program, name
+    ): GLUniformLocation = GLUniformLocation(
+        GLES20.glGetUniformLocation(
+            program.program, name
+        )
     )
 
     actual fun glGetAttribLocation(
@@ -176,64 +171,60 @@ actual object GL {
     )
 
     actual fun glUniform1i(
-        location: Int, v0: Int
+        location: GLUniformLocation, v0: Int
     ) = GLES20.glUniform1i(
-        location, v0
+        location.glHandle, v0
+    )
+
+
+    actual fun glUniform1f(
+        location: GLUniformLocation, v0: Float
+    ) = GLES20.glUniform1f(
+        location.glHandle, v0
     )
 
     actual fun glUniform2f(
-        location: Int, v0: Float, v1: Float
+        location: GLUniformLocation, v0: Float, v1: Float
     ) = GLES20.glUniform2f(
-        location, v0, v1
+        location.glHandle, v0, v1
     )
 
     actual fun glUniform3f(
-        location: Int, v0: Float, v1: Float, v2: Float
+        location: GLUniformLocation, v0: Float, v1: Float, v2: Float
     ) = GLES20.glUniform3f(
-        location, v0, v1, v2
+        location.glHandle, v0, v1, v2
     )
 
     actual fun glUniform4f(
-        location: Int, v0: Float, v1: Float, v2: Float, v3: Float
+        location: GLUniformLocation, v0: Float, v1: Float, v2: Float, v3: Float
     ) = GLES20.glUniform4f(
-        location, v0, v1, v2, v3
+        location.glHandle, v0, v1, v2, v3
     )
 
-    actual fun glUniformMatrix2fv(
-        location: Int, transpose: Boolean, value: Floater
-    ) = GLES20.glUniformMatrix2fv(
-        location, transpose, value.floatBuffer
-    )
+    actual fun glUniformMatrix2fv(location: GLUniformLocation, transpose: Boolean, value: Floater) =
+        GLES20.glUniformMatrix2fv(location.glHandle, 1, transpose, value.floatBuffer)
 
-    actual fun glUniformMatrix3fv(
-        location: Int, transpose: Boolean, value: Floater
-    ) = GLES20.glUniformMatrix3fv(
-        location, transpose, value.floatBuffer
-    )
+    actual fun glUniformMatrix3fv(location: GLUniformLocation, transpose: Boolean, value: Floater) =
+        GLES20.glUniformMatrix3fv(location.glHandle, 1, transpose, value.floatBuffer)
 
-    actual fun glUniformMatrix4fv(
-        location: Int, transpose: Boolean, value: Floater
-    ) = GLES20.glUniformMatrix4fv(
-        location, transpose, value.floatBuffer
-    )
+    actual fun glUniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, value: Floater) =
+        GLES20.glUniformMatrix4fv(location.glHandle, 1, transpose, value.floatBuffer)
 
     actual fun glVertexAttribPointer(
-        index: Int, size: Int, type: Int, normalized: Boolean, stride: Int, pointer: Int
-    ) = GLES20.glVertexAttribPointer(
-        index, size, type, normalized, stride, pointer.toLong()
-    )
+        index: Int,
+        size: Int,
+        type: Int,
+        normalized: Boolean,
+        stride: Int,
+        pointer: Int
+    ) =
+        GLES20.glVertexAttribPointer(index, size, type, normalized, stride, pointer)
 
-    actual fun glGetShaderi(
-        shader: GLShader, pname: Int
-    ) = GLES20.glGetShaderi(
-        shader.shader, pname
-    )
-
-    actual fun glUniform1f(
-        location: Int, v0: Float
-    ) = GLES20.glUniform1f(
-        location, v0
-    )
+    actual fun glGetShaderi(shader: GLShader, pname: Int): Int {
+        val ia = IntArray(1)
+        GLES20.glGetShaderiv(shader.shader, pname, ia, 0)
+        return ia[0]
+    }
 
     actual fun glDeleteShader(
         shader: GLShader
@@ -247,43 +238,23 @@ actual object GL {
         program.program
     )
 
-    actual fun glGenerateMipmap(
-        target: Int
-    ) = GL30.glGenerateMipmap(
-        target
-    )
+    actual fun glGenerateMipmap(target: Int) =
+        GLES20.glGenerateMipmap(target)
 
-    actual fun glGenFramebuffers(): GLFrameBuffer = GLFrameBuffer(
-        GL30.glGenFramebuffers()
-    )
+    private fun intViaArray(function: (IntArray) -> Unit) = IntArray(1).apply(function)[0]
 
-    actual fun glFramebufferTexture2D(
-        target: Int, attachment: Int, textarget: Int, texture: GLTexture, level: Int
-    ) = GL30.glFramebufferTexture2D(
-        target, attachment, textarget, texture.texture, level
-    )
+    actual fun glGenFramebuffers(): GLFrameBuffer =
+        GLFrameBuffer(intViaArray { GLES20.glGenFramebuffers(1, it, 0) })
 
-    actual fun glDrawBuffers(
-        buf: Int
-    ) = GL30.glDrawBuffer(
-        buf
-    )
+    actual fun glFramebufferTexture2D(target: Int, attachment: Int, textarget: Int, texture: GLTexture, level: Int) =
+        GLES20.glFramebufferTexture2D(target, attachment, textarget, texture.texture, level)
 
-    actual fun glDeleteFramebuffers(
-        framebuffer: GLFrameBuffer
-    ) = GL30.glDeleteFramebuffers(
-        framebuffer.frameBuffer
-    )
+    actual fun glDeleteFramebuffers(framebuffer: GLFrameBuffer) =
+        GLES20.glDeleteFramebuffers(1, intArrayOf(framebuffer.frameBuffer), 0)
 
-    actual fun glBindFramebuffer(
-        target: Int, framebuffer: GLFrameBuffer?
-    ) = GL30.glBindFramebuffer(
-        target, framebuffer?.frameBuffer ?: 0
-    )
+    actual fun glBindFramebuffer(target: Int, framebuffer: GLFrameBuffer?) =
+        GLES20.glBindFramebuffer(target, framebuffer?.frameBuffer ?: 0)
 
-    actual fun glCheckFramebufferStatus(
-        target: Int
-    ) = GL30.glCheckFramebufferStatus(
-        target
-    )
+    actual fun glCheckFramebufferStatus(target: Int) =
+        GLES20.glCheckFramebufferStatus(target)
 }

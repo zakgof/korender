@@ -33,7 +33,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     }
 
     private fun createShadowCasters(declarations: List<RenderableDeclaration>) =
-        declarations.filter { it.shader.fragFile == "standart.frag" && !it.shader.defs.contains("NO_SHADOW_CAST") }
+        declarations.filter { it.shader.fragFile == "shader/standart.frag" && !it.shader.defs.contains("NO_SHADOW_CAST") }
             .mapNotNull { Renderable.create(inventory, it, camera, true) }
 
     fun render(context: Map<String, Any?>, projection: Projection, camera: Camera, light: Vec3) {

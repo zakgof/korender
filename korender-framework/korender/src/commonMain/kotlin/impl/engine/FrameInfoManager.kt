@@ -1,17 +1,17 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.FrameInfo
-import com.zakgof.korender.getPlatform
+import com.zakgof.korender.Platform
 
 internal class FrameInfoManager(private val inventory: Inventory) {
 
-    val startNanos: Long = getPlatform().nanoTime()
+    val startNanos: Long = Platform.nanoTime()
 
     private var frameNumber = 0L
-    private var prevFrameNano: Long = getPlatform().nanoTime()
+    private var prevFrameNano: Long = Platform.nanoTime()
     private val frames = mutableListOf<Long>() // TODO: this needs optimization, linked list
     fun frame(): FrameInfo {
-        val now = getPlatform().nanoTime()
+        val now = Platform.nanoTime()
         val frameTime = now - prevFrameNano
         frames.add(frameTime)
         val frameInfo =

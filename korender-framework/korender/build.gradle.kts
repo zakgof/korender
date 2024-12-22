@@ -57,6 +57,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
         }
         desktopMain.dependencies {
+            implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.kotlin.reflect)
             implementation(compose.desktop.currentOs)
 

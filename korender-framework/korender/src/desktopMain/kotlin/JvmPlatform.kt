@@ -2,14 +2,27 @@ package com.zakgof.korender
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
 import com.zakgof.korender.buffer.BufferUtils
 import com.zakgof.korender.buffer.Byter
+import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.image.Image
+import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.gpu.GpuTexture
 import com.zakgof.korender.input.TouchEvent
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.lwjgl.opengl.GL.createCapabilities
 import org.lwjgl.opengl.awt.AWTGLCanvas
 import org.lwjgl.opengl.awt.GLData
@@ -31,107 +44,130 @@ import javax.swing.SwingUtilities
 import kotlin.math.max
 import kotlin.math.round
 
-class JVMPlatform : Platform {
+private fun detectDevicePixelRatio(): List<Float> {
+    val device = GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice
+    val scaleX = device::class.members.firstOrNull { it.name == "getDefaultScaleX" }
+        ?.call(device) as Float?
+    val scaleY = device::class.members.firstOrNull { it.name == "getDefaultScaleY" }
+        ?.call(device) as Float?
+    return listOf(scaleX ?: 1.0f, scaleY ?: 1.0f)
+}
 
-    override val name: String = "Java ${System.getProperty("java.version")}"
+@OptIn(DelicateCoroutinesApi::class)
+@Composable
+actual fun Korender(
+    appResourceLoader: ResourceLoader,
+    block: KorenderContext.() -> Unit
+) {
+    var engine: Engine? by remember { mutableStateOf(null) }
+    val pixelRatio by remember { mutableStateOf(detectDevicePixelRatio()) }
 
-    @Composable
-    override fun OpenGL(
-        init: (Int, Int) -> Unit,
-        frame: () -> Unit,
-        resize: (Int, Int) -> Unit,
-        touch: (touchEvent: TouchEvent) -> Unit
-    ) {
-        val pixelRatio = detectDevicePixelRatio()
-        SwingPanel(modifier = Modifier.fillMaxSize(),
-            update = {
-                val renderLoop: Runnable = object : Runnable {
-                    override fun run() {
-                        if (!it.isValid) return
-                        it.render()
-                        SwingUtilities.invokeLater(this)
-                    }
-                }
-                SwingUtilities.invokeLater(renderLoop)
-            },
-            factory = {
-                val data = GLData()
-                data.swapInterval = 0
-                data.majorVersion = 3
-                data.minorVersion = 0
-                // TODO
-                data.samples = 1
-
-                val canvas = object : AWTGLCanvas(data) {
-
-                    override fun initGL() {
-                        println("OpenGL version: ${effective.majorVersion}.${effective.minorVersion} (Profile: ${effective.profile})")
-                        createCapabilities()
-                        init(
-                            (this.size.width * pixelRatio[0]).toInt(),
-                            (this.size.height * pixelRatio[1]).toInt()
-                        )
-                    }
-
-                    override fun paintGL() {
-                        frame()
-                        swapBuffers()
-                    }
-                }
-                canvas.addMouseMotionListener(object : MouseMotionAdapter() {
-                    override fun mouseMoved(e: MouseEvent) =
-                        sendTouch(touch, canvas, pixelRatio, TouchEvent.Type.MOVE, e.x, e.y)
-
-                    override fun mouseDragged(e: MouseEvent) =
-                        sendTouch(touch, canvas, pixelRatio, TouchEvent.Type.MOVE, e.x, e.y)
-                })
-                canvas.addMouseListener(object : MouseAdapter() {
-                    override fun mousePressed(e: MouseEvent) =
-                        sendTouch(touch, canvas, pixelRatio, TouchEvent.Type.DOWN, e.x, e.y)
-
-                    override fun mouseReleased(e: MouseEvent) =
-                        sendTouch(touch, canvas, pixelRatio, TouchEvent.Type.UP, e.x, e.y)
-                })
-
-                canvas.addComponentListener(object : ComponentAdapter() {
-                    override fun componentResized(e: ComponentEvent?) {
-                        canvas.runInContext {
-                            resize(
-                                (canvas.size.width * pixelRatio[0]).toInt(),
-                                (canvas.size.height * pixelRatio[1]).toInt()
-                            )
-                        }
-                    }
-                })
-                canvas
-            }
-        )
-    }
-
-    override fun nanoTime() = System.nanoTime()
-
-    private fun sendTouch(
-        touch: (touchEvent: TouchEvent) -> Unit,
+    fun sendTouch(
         canvas: AWTGLCanvas,
-        pixelRatio: List<Float>,
         type: TouchEvent.Type,
         ex: Int,
         ey: Int
     ) = canvas.runInContext {
-        touch(TouchEvent(type, ex * pixelRatio[0], ey * pixelRatio[1]))
+        GlobalScope.launch {
+            engine?.pushTouch(TouchEvent(type, ex * pixelRatio[0], ey * pixelRatio[1]))
+        }
     }
 
-    private fun detectDevicePixelRatio(): List<Float> {
-        val device = GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice
-        val scaleX = device::class.members.firstOrNull { it.name == "getDefaultScaleX" }
-            ?.call(device) as Float?
-        val scaleY = device::class.members.firstOrNull { it.name == "getDefaultScaleY" }
-            ?.call(device) as Float?
-        return listOf(scaleX ?: 1.0f, scaleY ?: 1.0f)
+    SwingPanel(modifier = Modifier.fillMaxSize(),
+        update = {
+            val renderLoop: Runnable = object : Runnable {
+                override fun run() {
+                    if (!it.isValid) return
+                    it.render()
+                    SwingUtilities.invokeLater(this)
+                }
+            }
+            SwingUtilities.invokeLater(renderLoop)
+        },
+        factory = {
+            val data = GLData()
+            data.swapInterval = 0
+            data.majorVersion = 3
+            data.minorVersion = 0
+            // TODO
+            data.samples = 1
+
+            val canvas = object : AWTGLCanvas(data) {
+
+                private fun <R> asyncInContext(function: suspend () -> R): Deferred<R> =
+                    CompletableDeferred(runBlocking {
+                        function()
+                    })
+
+                override fun initGL() {
+                    println("OpenGL version: ${effective.majorVersion}.${effective.minorVersion} (Profile: ${effective.profile})")
+                    createCapabilities()
+
+                    val async = object : AsyncContext {
+                        override val appResourceLoader = appResourceLoader
+                        override fun <R> call(function: suspend () -> R): Deferred<R> =
+                            asyncInContext(function)
+                    }
+
+                    engine = Engine(
+                        (this.size.width * pixelRatio[0]).toInt(),
+                        (this.size.height * pixelRatio[1]).toInt(),
+                        async,
+                        block
+                    )
+                }
+
+                override fun paintGL() {
+                    engine?.frame()
+                    swapBuffers()
+                }
+            }
+            canvas.addMouseMotionListener(object : MouseMotionAdapter() {
+                override fun mouseMoved(e: MouseEvent) =
+                    sendTouch(canvas, TouchEvent.Type.MOVE, e.x, e.y)
+
+                override fun mouseDragged(e: MouseEvent) =
+                    sendTouch(canvas, TouchEvent.Type.MOVE, e.x, e.y)
+            })
+            canvas.addMouseListener(object : MouseAdapter() {
+                override fun mousePressed(e: MouseEvent) =
+                    sendTouch(canvas, TouchEvent.Type.DOWN, e.x, e.y)
+
+                override fun mouseReleased(e: MouseEvent) =
+                    sendTouch(canvas, TouchEvent.Type.UP, e.x, e.y)
+            })
+
+            canvas.addComponentListener(object : ComponentAdapter() {
+                override fun componentResized(e: ComponentEvent?) {
+                    canvas.runInContext {
+                        engine?.resize(
+                            (canvas.size.width * pixelRatio[0]).toInt(),
+                            (canvas.size.height * pixelRatio[1]).toInt()
+                        )
+                    }
+                }
+            })
+            canvas
+        }
+    )
+
+    DisposableEffect(null) {
+
+        onDispose {
+
+        }
     }
 
-    override fun loadImage(bytes: ByteArray): Image =
-        image(ImageIO.read(ByteArrayInputStream(bytes)))
+}
+
+actual object Platform {
+
+    actual val name: String = "Java ${System.getProperty("java.version")}"
+
+    actual fun nanoTime() = System.nanoTime()
+
+    actual fun loadImage(bytes: ByteArray, type: String): Deferred<Image> =
+        CompletableDeferred(image(ImageIO.read(ByteArrayInputStream(bytes))))
 
     private fun loadBgr(data: ByteArray): Byter {
         val buffer = BufferUtils.createByteBuffer(data.size)
@@ -170,7 +206,7 @@ class JVMPlatform : Platform {
         return buffer
     }
 
-    override fun loadFont(bytes: ByteArray): FontDef {
+    actual fun loadFont(bytes: ByteArray): Deferred<FontDef> {
         val cell = 256
         val originalFont = Font.createFont(Font.TRUETYPE_FONT, ByteArrayInputStream(bytes))
         val img = BufferedImage(cell * 16, cell * 16, BufferedImage.TYPE_4BYTE_ABGR)
@@ -200,7 +236,7 @@ class JVMPlatform : Platform {
         }
         graphics.dispose()
         val image = image(img)
-        return FontDef(image, widths)
+        return CompletableDeferred(FontDef(image, widths))
     }
 
     private fun image(bufferedImage: BufferedImage): Image {
@@ -229,8 +265,6 @@ class JVMPlatform : Platform {
     }
 
 }
-
-actual fun getPlatform(): Platform = JVMPlatform()
 
 class JvmImage(
     private val raster: Raster,
@@ -262,5 +296,7 @@ class JvmImage(
             )
         }
     }
+
+
 }
 

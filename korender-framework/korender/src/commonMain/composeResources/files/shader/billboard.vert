@@ -1,4 +1,4 @@
-#import "lib/header.glsl"
+#import "shader/lib/header.glsl"
 
 in vec3 pos;
 in vec2 tex;

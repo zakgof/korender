@@ -1,5 +1,6 @@
 package com.zakgof.korender
 
+import FontFace
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,16 +9,20 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.zakgof.korender.buffer.Byter
+import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.gl.GL
 import com.zakgof.korender.image.Image
+import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.gpu.GpuTexture
-import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Color
+import jsAddFont
+import jsLoadFont
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.CompletableDeferred
@@ -26,23 +31,24 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.await
-import org.khronos.webgl.Int8Array
 import org.khronos.webgl.Uint8ClampedArray
 import org.khronos.webgl.WebGLRenderingContext.Companion.RENDERER
 import org.khronos.webgl.WebGLRenderingContext.Companion.SHADING_LANGUAGE_VERSION
 import org.khronos.webgl.WebGLRenderingContext.Companion.VENDOR
 import org.khronos.webgl.WebGLRenderingContext.Companion.VERSION
+import org.khronos.webgl.WebGLRenderingContextBase
 import org.khronos.webgl.get
 import org.khronos.webgl.toInt8Array
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLImageElement
+import org.w3c.dom.RenderingContext
 import org.w3c.dom.Window
+import performanceNow
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
-import kotlin.js.Promise
 
-actual fun getPlatform(): Platform = WasmPlatform()
+abstract external class WebGL2RenderingContext : WebGLRenderingContextBase, RenderingContext, JsAny
 
 internal fun Byte.toClampedFloat(): Float = this.toInt().and(0xFF).toFloat()
 
@@ -50,7 +56,7 @@ internal class WasmImage(
     override val width: Int,
     override val height: Int,
     private val byteArray: ByteArray,
-    override val format: GpuTexture.Format
+    override val format: GpuTexture.Format = GpuTexture.Format.RGBA
 ) : Image {
     override val bytes = Byter(byteArray)
     override fun pixel(x: Int, y: Int): Color {
@@ -64,39 +70,12 @@ internal class WasmImage(
     }
 }
 
-fun jsLoadFont(fontArray: Int8Array): FontFace = js(
-    """
-        {
-            const fontBlob = new Blob([fontArray], { type: 'font/ttf' })
-            const fontUrl = URL.createObjectURL(fontBlob)
-            return new FontFace('KorenderFont', 'url(' + fontUrl + ')')
-        }
-    """
-)
+actual object Platform {
 
-fun jsAddFont(fontFace: FontFace): JsAny =
-    js(
-        """
-      {
-          console.log("d.f", document.fonts)
-          document.fonts.add(fontFace)
-          console.log("added", document.fonts)
-          return 0
-      }
-    """
-    )
-
-external class FontFace : JsAny {
-    fun load(): Promise<FontFace>
-}
-
-
-internal class WasmPlatform : Platform {
-
-    override val name: String = "Wasm"
+    actual val name: String = "Wasm"
 
     @OptIn(DelicateCoroutinesApi::class)
-    override fun loadFont(bytes: ByteArray): Deferred<FontDef> {
+    actual fun loadFont(bytes: ByteArray): Deferred<FontDef> {
         val ffLoader = jsLoadFont(bytes.toInt8Array())
         println("loadFont BP 1")
         return GlobalScope.async {
@@ -136,15 +115,14 @@ internal class WasmPlatform : Platform {
             val image = WasmImage(
                 ctx.canvas.width,
                 ctx.canvas.height,
-                byteArray,
-                GpuTexture.Format.RGBA
+                byteArray
             )
             FontDef(image, widths)
         }
     }
 
     @OptIn(ExperimentalEncodingApi::class)
-    override fun loadImage(bytes: ByteArray, type: String): Deferred<Image> {
+    actual fun loadImage(bytes: ByteArray, type: String): Deferred<Image> {
         println("Wasm start loading image from ${bytes.size} bytes")
         val result = CompletableDeferred<Image>()
 
@@ -177,114 +155,118 @@ internal class WasmPlatform : Platform {
                 WasmImage(
                     imageData.width,
                     imageData.height,
-                    byteArray,
-                    GpuTexture.Format.RGBA
+                    byteArray
                 )
             )
         }
         return result
     }
 
-    @Composable
-    override fun OpenGL(
-        init: (Int, Int) -> Unit,
-        frame: () -> Unit,
-        resize: (Int, Int) -> Unit,
-        touch: (touchEvent: TouchEvent) -> Unit
-    ) {
-
-        val canvas by remember { mutableStateOf(document.createElement("canvas") as HTMLCanvasElement) }
-
-        Column(
-            modifier = Modifier.onGloballyPositioned { coordinates ->
-                val crds = coordinates.boundsInWindow()
-
-                canvas.width = (crds.width / window.devicePixelRatio).toInt()
-                canvas.height = (crds.height / window.devicePixelRatio).toInt()
-                canvas.style.apply {
-                    position = "absolute"
-                    left = "${(crds.left / window.devicePixelRatio).toInt()}px"
-                    top = "${(crds.top / window.devicePixelRatio)}px"
-                    background = "black"
-                }
-                resize(
-                    (crds.width / window.devicePixelRatio).toInt(),
-                    (crds.height / window.devicePixelRatio).toInt()
-                )
-            }.fillMaxSize().background(color = androidx.compose.ui.graphics.Color.Magenta)
-        )
-        {
-        }
-
-        DisposableEffect(Unit) {
-            val body = document.body!!
-            canvas.width = 800
-            canvas.height = 600
-            canvas.style.apply {
-                position = "absolute"
-                left = "0px"
-                top = "0px"
-                background = "black"
-            }
-            body.appendChild(canvas)
-
-            val gl2 = canvas.getContext("webgl2")
-            if (gl2 == null) {
-                println("WebGL2 is not supported in this browser")
-            }
-
-            val gl = gl2 as WebGL2RenderingContext
-
-            println("Renderer: " + gl.getParameter(RENDERER));
-            println("Vendor: " + gl.getParameter(VENDOR));
-            println("Version: " + gl.getParameter(VERSION));
-            println("GLSL version: " + gl.getParameter(SHADING_LANGUAGE_VERSION));
-            println("Supported extensions")
-
-            val exts = gl.getSupportedExtensions()!!
-            (0 until exts.length).map { exts[it] }.forEach {
-                println(" - " + it.toString())
-            }
-
-            GL.gl = gl
-            init(800, 600)
-
-            animate(window, canvas, frame)
-
-
-            canvas.addEventListener("webglcontextlost") {
-                it.preventDefault();  // Prevent the default behavior of losing the context.
-                println("WebGL context lost !")
-            }
-
-            onDispose {
-                println("Destroying canvas")
-                canvas.remove()
-            }
-        }
-    }
-
-    private fun animate(window: Window, canvas: HTMLCanvasElement, frame: () -> Unit) {
-        window.requestAnimationFrame {
-            try {
-                if (canvas.isConnected) {
-                    println("------------")
-                    frame()
-                    animate(window, canvas, frame)
-                } else {
-                    println("Canvas not connected")
-                }
-            } catch (e: Throwable) {
-                println(e)
-                e.printStackTrace()
-            }
-        }
-    }
-
-    override fun nanoTime(): Long =
+    actual fun nanoTime(): Long =
         (performanceNow() * 1_000_000).toLong()
 
 }
 
-fun performanceNow(): Double = js("performance.now()")
+@OptIn(DelicateCoroutinesApi::class)
+@Composable
+actual fun Korender(
+    appResourceLoader: ResourceLoader,
+    block: KorenderContext.() -> Unit
+) {
+    var engine: Engine? by remember { mutableStateOf(null) }
+    val canvas by remember { mutableStateOf(document.createElement("canvas") as HTMLCanvasElement) }
+
+    Column(
+        modifier = Modifier.onGloballyPositioned { coordinates ->
+            val crds = coordinates.boundsInWindow()
+
+            canvas.width = (crds.width / window.devicePixelRatio).toInt()
+            canvas.height = (crds.height / window.devicePixelRatio).toInt()
+            canvas.style.apply {
+                position = "absolute"
+                left = "${(crds.left / window.devicePixelRatio).toInt()}px"
+                top = "${(crds.top / window.devicePixelRatio)}px"
+                background = "black"
+            }
+            engine?.resize(
+                (crds.width / window.devicePixelRatio).toInt(),
+                (crds.height / window.devicePixelRatio).toInt()
+            )
+        }.fillMaxSize().background(color = androidx.compose.ui.graphics.Color.Magenta)
+    )
+    {
+    }
+
+    DisposableEffect(Unit) {
+        val body = document.body!!
+        canvas.width = 800
+        canvas.height = 600
+        canvas.style.apply {
+            position = "absolute"
+            left = "0px"
+            top = "0px"
+            background = "black"
+        }
+        body.appendChild(canvas)
+
+        val gl2 = canvas.getContext("webgl2")
+        if (gl2 == null) {
+            println("WebGL2 is not supported in this browser")
+        }
+
+        val gl = gl2 as WebGL2RenderingContext
+
+        println("Renderer: " + gl.getParameter(RENDERER));
+        println("Vendor: " + gl.getParameter(VENDOR));
+        println("Version: " + gl.getParameter(VERSION));
+        println("GLSL version: " + gl.getParameter(SHADING_LANGUAGE_VERSION));
+        println("Supported extensions")
+
+        val exts = gl.getSupportedExtensions()!!
+        (0 until exts.length).map { exts[it] }.forEach {
+            println(" - " + it.toString())
+        }
+
+        GL.gl = gl
+
+        val async = object : AsyncContext {
+            override val appResourceLoader = appResourceLoader
+            override fun <R> call(function: suspend () -> R): Deferred<R> =
+                GlobalScope.async { function() }
+        }
+
+        engine = Engine(800, 600, async, block)
+
+        animate(window, canvas, engine!!)
+
+        canvas.addEventListener("webglcontextlost") {
+            it.preventDefault();  // Prevent the default behavior of losing the context.
+            println("WebGL context lost !")
+        }
+
+        onDispose {
+            println("Destroying canvas")
+            canvas.remove()
+        }
+    }
+
+
+}
+
+private fun animate(window: Window, canvas: HTMLCanvasElement, engine: Engine) {
+    window.requestAnimationFrame {
+        try {
+            if (canvas.isConnected) {
+                println("------------")
+                engine.frame()
+                animate(window, canvas, engine)
+            } else {
+                println("Canvas not connected")
+            }
+        } catch (e: Throwable) {
+            println(e)
+            e.printStackTrace()
+        }
+    }
+}
 

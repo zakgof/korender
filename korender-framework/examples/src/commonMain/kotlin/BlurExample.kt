@@ -40,7 +40,7 @@ fun BlurExample() = Korender (appResourceLoader = { Res.readBytes(it) }) {
             })
             Renderable(
                 standart(StandartMaterialOption.NoLight) {
-                    colorTexture = texture("sand.jpg")
+                    colorTexture = texture("!sand.jpg")
                 },
                 mesh = sphere(3f),
                 transform = translate(2.x)

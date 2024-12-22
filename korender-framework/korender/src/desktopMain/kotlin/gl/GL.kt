@@ -46,7 +46,12 @@ actual object GL {
         target, level, internalformat, width, height, border, format, type, pixels?.byteBuffer
     )
 
-    actual fun glGetFloatv(pname: Int, params: FloatArray) = GL11.glGetFloatv(pname, params)
+    actual fun glGetFloatv(pname: Int): Float? {
+        val fa = FloatArray(1)
+        GL11.glGetFloatv(pname, fa)
+        return fa[0]
+    }
+
     actual fun glGetError(): Int = GL11.glGetError()
     actual fun glClear(mask: Int) = GL11.glClear(mask)
     actual fun glClearColor(fl: Float, fl1: Float, fl2: Float, fl3: Float) =
@@ -141,8 +146,6 @@ actual object GL {
     actual fun glFramebufferTexture2D(
         target: Int, attachment: Int, textarget: Int, texture: GLTexture, level: Int
     ) = GL30.glFramebufferTexture2D(target, attachment, textarget, texture.texture, level)
-
-    actual fun glDrawBuffers(buf: Int) = GL30.glDrawBuffer(buf)
 
     actual fun glDeleteFramebuffers(framebuffer: GLFrameBuffer) =
         GL30.glDeleteFramebuffers(framebuffer.frameBuffer)

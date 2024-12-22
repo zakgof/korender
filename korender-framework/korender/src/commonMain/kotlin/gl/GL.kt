@@ -141,8 +141,6 @@ expect object GL {
         level: Int
     )
 
-    fun glDrawBuffers(buf: Int)
-
     fun glDeleteFramebuffers(framebuffer: GLFrameBuffer)
 
     fun glBindFramebuffer(target: Int, framebuffer: GLFrameBuffer?)

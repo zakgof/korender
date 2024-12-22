@@ -7,7 +7,7 @@ import com.zakgof.korender.buffer.Inter
 import com.zakgof.korender.buffer.Shorter
 import com.zakgof.korender.impl.engine.BillboardInstance
 import com.zakgof.korender.impl.engine.MeshInstance
-import com.zakgof.korender.impl.gpu.Gpu
+import com.zakgof.korender.impl.glgpu.GlGpuMesh
 import com.zakgof.korender.impl.gpu.GpuMesh
 import com.zakgof.korender.math.BoundingBox
 import com.zakgof.korender.math.FloatMath.PI
@@ -38,16 +38,16 @@ import kotlin.math.sin
 
 internal object Geometry {
 
-    fun create(declaration: MeshDeclaration, gpu: Gpu): Mesh =
+    fun create(declaration: MeshDeclaration): Mesh =
         when (declaration) {
             is InstancedMesh ->
-                builder(declaration.mesh).buildInstanced(gpu, declaration.count)
+                builder(declaration.mesh).buildInstanced(declaration.count)
 
             is InstancedBillboard ->
-                billboard().buildInstanced(gpu, declaration.count)
+                billboard().buildInstanced(declaration.count)
 
             else ->
-                builder(declaration).build(gpu)
+                builder(declaration).build()
         }
 
     private fun builder(declaration: MeshDeclaration): MeshBuilder =
@@ -143,19 +143,11 @@ internal object Geometry {
             }
         }
 
-        fun build(gpu: Gpu, isDynamic: Boolean = false): DefaultMesh {
-//            if (!isDynamic && floatVertexBuffer.position() != floatVertexBuffer.limit()) {
-//                throw KorenderException("Vertex buffer not full: ${floatVertexBuffer.position()}/${floatVertexBuffer.limit()}")
-//            }
-//            if (!isDynamic && indexConcreteBuffer.position() != indexConcreteBuffer.limit()) {
-//                throw KorenderException("Index buffer not full: ${indexConcreteBuffer.position()}/${indexConcreteBuffer.limit()}")
-//            }
+        fun build(isDynamic: Boolean = false): DefaultMesh =
+            DefaultMesh(name, this, isDynamic)
 
-            return DefaultMesh(name, gpu, this, isDynamic)
-        }
-
-        fun buildInstanced(gpu: Gpu, count: Int): MultiMesh =
-            MultiMesh(name, gpu, instancing(count), this, count)
+        fun buildInstanced(count: Int): MultiMesh =
+            MultiMesh(name, instancing(count), this, count)
 
         fun instancing(
             instances: Int,
@@ -201,7 +193,6 @@ internal object Geometry {
 
     open class DefaultMesh(
         name: String,
-        gpu: Gpu,
         val data: MeshBuilder,
         isDynamic: Boolean = false
     ) : Mesh {
@@ -209,7 +200,7 @@ internal object Geometry {
         private val floatVertexBuffer = data.vertexBuffer
 
         final override val gpuMesh: GpuMesh =
-            gpu.createMesh(name, data.attrs, data.vertexSize, isDynamic, data.isLongIndex)
+            GlGpuMesh(name, data.attrs, data.vertexSize, isDynamic, data.isLongIndex)
 
         final override val modelBoundingBox: BoundingBox?
         override fun close() = gpuMesh.close()
@@ -251,12 +242,11 @@ internal object Geometry {
 
     internal class MultiMesh(
         name: String,
-        gpu: Gpu,
         data: MeshBuilder,
         private val prototype: MeshBuilder,
         count: Int
     ) :
-        DefaultMesh(name, gpu, data, true) {
+        DefaultMesh(name, data, true) {
         fun updateInstances(instances: List<MeshInstance>) {
             instances.indices.map {
                 val instance = instances[it]
@@ -535,10 +525,10 @@ internal object Geometry {
             indices(0, 2, 1, 0, 3, 2)
         }
 
-    fun font(gpu: Gpu, reservedLength: Int): MultiMesh =
+    fun font(reservedLength: Int): MultiMesh =
         create("font", 4, 6, TEX, SCREEN) {
             indices(0, 2, 1, 0, 3, 2)
-        }.buildInstanced(gpu, reservedLength)
+        }.buildInstanced(reservedLength)
 }
 
 private fun getVertex(

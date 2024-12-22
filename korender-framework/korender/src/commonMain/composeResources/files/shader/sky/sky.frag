@@ -1,5 +1,5 @@
-#import "lib/header.glsl"
-#import "lib/sky.glsl"
+#import "shader/lib/header.glsl"
+#import "shader/lib/sky.glsl"
 
 #import "$sky"
 

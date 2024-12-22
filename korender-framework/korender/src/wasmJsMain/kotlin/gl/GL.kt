@@ -199,10 +199,6 @@ actual object GL {
         target: Int, attachment: Int, textarget: Int, texture: GLTexture, level: Int
     ) = gl!!.framebufferTexture2D(target, attachment, textarget, texture.texture, level)
 
-    // TODO !!!
-    actual fun glDrawBuffers(buf: Int) {
-    }
-
     actual fun glDeleteFramebuffers(framebuffer: GLFrameBuffer) =
         gl!!.deleteFramebuffer(framebuffer.frameBuffer)
 

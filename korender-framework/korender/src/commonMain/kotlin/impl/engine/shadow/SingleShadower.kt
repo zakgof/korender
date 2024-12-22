@@ -77,8 +77,8 @@ internal class SingleShadower(
                 // TODO: need to copy all the defs and plugins from the original shader
                 val casterShader = inventory.shader(
                     ShaderDeclaration(
-                        "standart.vert",
-                        "standart.frag",
+                        "shader/standart.vert",
+                        "shader/standart.frag",
                         setOf("SHADOW_CASTER")
                     )
                 )

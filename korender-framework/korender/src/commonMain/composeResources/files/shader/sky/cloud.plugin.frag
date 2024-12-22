@@ -1,4 +1,4 @@
-#import "lib/noise.glsl"
+#import "shader/lib/noise.glsl"
 
 // https://www.shadertoy.com/view/4tdSWr
 

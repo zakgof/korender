@@ -101,9 +101,11 @@ class GlGpuShader(
             println("\nProgram log $name\n\n$programLog")
         }
 
-        if (glGetShaderi(vertexShaderHandle, GL_COMPILE_STATUS) == 0) {
-            throw RuntimeException("Vertex shader compilation failure")
-        } else if (glGetShaderi(fragmentShaderHandle, GL_COMPILE_STATUS) == 0) {
+        val vertexCompileStatus = glGetShaderi(vertexShaderHandle, GL_COMPILE_STATUS)
+        if (vertexCompileStatus == 0)
+            throw RuntimeException("Vertex shader compilation failure $vertexCompileStatus")
+
+        if (glGetShaderi(fragmentShaderHandle, GL_COMPILE_STATUS) == 0) {
             throw RuntimeException("Fragment shader compilation failure")
         } else if (glGetProgrami(programHandle, GL_LINK_STATUS) == 0) {
             throw RuntimeException("Program linking failure")
