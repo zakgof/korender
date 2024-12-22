@@ -15,7 +15,7 @@ import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.image.Image
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
-import com.zakgof.korender.impl.gpu.GpuTexture
+import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.input.TouchEvent
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
@@ -249,10 +249,10 @@ actual object Platform {
             else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
         }
         val format = when (bufferedImage.type) {
-            BufferedImage.TYPE_3BYTE_BGR -> GpuTexture.Format.RGB
-            BufferedImage.TYPE_4BYTE_ABGR -> GpuTexture.Format.RGBA
-            BufferedImage.TYPE_BYTE_GRAY -> GpuTexture.Format.Gray
-            BufferedImage.TYPE_USHORT_GRAY -> GpuTexture.Format.Gray16
+            BufferedImage.TYPE_3BYTE_BGR -> GlGpuTexture.Format.RGB
+            BufferedImage.TYPE_4BYTE_ABGR -> GlGpuTexture.Format.RGBA
+            BufferedImage.TYPE_BYTE_GRAY -> GlGpuTexture.Format.Gray
+            BufferedImage.TYPE_USHORT_GRAY -> GlGpuTexture.Format.Gray16
             else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
         }
         return JvmImage(
@@ -271,7 +271,7 @@ class JvmImage(
     override val width: Int,
     override val height: Int,
     override val bytes: Byter,
-    override val format: GpuTexture.Format
+    override val format: GlGpuTexture.Format
 ) : Image {
 
     private val pixel = FloatArray(3) { 0f }
@@ -281,7 +281,7 @@ class JvmImage(
         return when (format) {
             // TODO support more formats
             // TODO support transparency
-            GpuTexture.Format.Gray16 -> com.zakgof.korender.math.Color(
+            GlGpuTexture.Format.Gray16 -> com.zakgof.korender.math.Color(
                 1.0f,
                 pixel[0] / 65535.0f,
                 pixel[0] / 65535.0f,

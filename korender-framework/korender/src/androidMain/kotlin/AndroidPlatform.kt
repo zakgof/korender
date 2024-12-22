@@ -28,7 +28,7 @@ import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.image.Image
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
-import com.zakgof.korender.impl.gpu.GpuTexture
+import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.input.TouchEvent
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
@@ -59,7 +59,7 @@ actual object Platform {
         bitmap.copyPixelsToBuffer(byteBuffer)
         val format = bitmap.config
         val gpuFormat = when (format) {
-            Bitmap.Config.ARGB_8888 -> GpuTexture.Format.RGBA
+            Bitmap.Config.ARGB_8888 -> GlGpuTexture.Format.RGBA
             else -> throw KorenderException("Unsupported image format $format")
         }
         val gpuBytes = when (format) {
@@ -127,7 +127,7 @@ class AndroidImage(
     override val width: Int,
     override val height: Int,
     override val bytes: Byter,
-    override val format: GpuTexture.Format
+    override val format: GlGpuTexture.Format
 ) : Image {
     override fun pixel(x: Int, y: Int): com.zakgof.korender.math.Color {
         // TODO: performance optimization

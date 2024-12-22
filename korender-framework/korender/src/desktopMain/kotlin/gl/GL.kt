@@ -66,13 +66,13 @@ actual object GL {
 
     actual fun glActiveTexture(texture: Int) = GL13.glActiveTexture(texture)
     actual fun glBindBuffer(target: Int, buffer: GLBuffer) =
-        GL15.glBindBuffer(target, buffer.buffer)
+        GL15.glBindBuffer(target, buffer.glHandle)
 
     actual fun glBufferData(target: Int, data: BufferData<out Any>, usage: Int) =
         GL15.glBufferData(target, data.byteBuffer, usage)
 
     actual fun glGenBuffers() = GLBuffer(GL15.glGenBuffers())
-    actual fun glDeleteBuffers(buffer: GLBuffer) = GL15.glDeleteBuffers(buffer.buffer)
+    actual fun glDeleteBuffers(buffer: GLBuffer) = GL15.glDeleteBuffers(buffer.glHandle)
     actual fun glCreateProgram() = GLProgram(GL20.glCreateProgram())
     actual fun glCreateShader(type: Int) = GLShader(GL20.glCreateShader(type))
     actual fun glAttachShader(program: GLProgram, shader: GLShader) =
