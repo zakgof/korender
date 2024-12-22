@@ -1,7 +1,6 @@
 package com.zakgof.korender
 
 import FontFace
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -20,6 +19,7 @@ import com.zakgof.korender.image.Image
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.gpu.GpuTexture
+import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Color
 import jsAddFont
 import jsLoadFont
@@ -31,6 +31,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.await
+import kotlinx.coroutines.launch
 import org.khronos.webgl.Uint8ClampedArray
 import org.khronos.webgl.WebGLRenderingContext.Companion.RENDERER
 import org.khronos.webgl.WebGLRenderingContext.Companion.SHADING_LANGUAGE_VERSION
@@ -44,6 +45,8 @@ import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLImageElement
 import org.w3c.dom.RenderingContext
 import org.w3c.dom.Window
+import org.w3c.dom.events.Event
+import org.w3c.dom.events.MouseEvent
 import performanceNow
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -192,15 +195,15 @@ actual fun Korender(
                 (crds.width / window.devicePixelRatio).toInt(),
                 (crds.height / window.devicePixelRatio).toInt()
             )
-        }.fillMaxSize().background(color = androidx.compose.ui.graphics.Color.Magenta)
+        }.fillMaxSize() // TODO
     )
     {
     }
 
     DisposableEffect(Unit) {
         val body = document.body!!
-        canvas.width = 800
-        canvas.height = 600
+        canvas.width = 0
+        canvas.height = 0
         canvas.style.apply {
             position = "absolute"
             left = "0px"
@@ -240,8 +243,27 @@ actual fun Korender(
         animate(window, canvas, engine!!)
 
         canvas.addEventListener("webglcontextlost") {
-            it.preventDefault();  // Prevent the default behavior of losing the context.
+            it.preventDefault()
             println("WebGL context lost !")
+        }
+
+        fun sendTouch(type: TouchEvent.Type, event: Event) {
+            val me = event as MouseEvent
+            val x = me.pageX - canvas.offsetLeft
+            val y = me.pageY - canvas.offsetTop
+            GlobalScope.launch {
+                engine?.pushTouch(TouchEvent(type, x.toFloat(), y.toFloat()))
+            }
+        }
+
+        canvas.addEventListener("mouseup") {
+            sendTouch(TouchEvent.Type.UP, it)
+        }
+        canvas.addEventListener("mousedown") {
+            sendTouch(TouchEvent.Type.DOWN, it)
+        }
+        canvas.addEventListener("mousemove") {
+            sendTouch(TouchEvent.Type.MOVE, it)
         }
 
         onDispose {
@@ -249,7 +271,6 @@ actual fun Korender(
             canvas.remove()
         }
     }
-
 
 }
 
