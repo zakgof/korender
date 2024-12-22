@@ -9,7 +9,6 @@ import com.zakgof.korender.buffer.Shorter
 import com.zakgof.korender.impl.engine.BillboardInstance
 import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.glgpu.GlGpuMesh
-import com.zakgof.korender.impl.gpu.GpuMesh
 import com.zakgof.korender.math.BoundingBox
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Vec2
@@ -201,7 +200,7 @@ internal object Geometry {
 
         private val floatVertexBuffer = data.vertexBuffer
 
-        final override val gpuMesh: GpuMesh =
+        final override val gpuMesh: GlGpuMesh =
             GlGpuMesh(name, data.attrs, data.vertexSize, isDynamic, data.isLongIndex)
 
         final override val modelBoundingBox: BoundingBox?

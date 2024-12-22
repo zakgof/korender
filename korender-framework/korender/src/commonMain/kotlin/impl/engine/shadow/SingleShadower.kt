@@ -14,7 +14,7 @@ import com.zakgof.korender.impl.engine.FrameBufferDeclaration
 import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.Renderable
 import com.zakgof.korender.impl.engine.ShaderDeclaration
-import com.zakgof.korender.impl.gpu.GpuFrameBuffer
+import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -31,7 +31,7 @@ internal class SingleShadower(
 ) : Shadower {
 
     override val cascadeNumber = 1
-    private val frameBuffer: GpuFrameBuffer? = inventory.frameBuffer(
+    private val frameBuffer: GlGpuFrameBuffer? = inventory.frameBuffer(
         FrameBufferDeclaration(
             "shadow$index",
             decl.mapSize,

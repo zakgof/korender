@@ -18,7 +18,7 @@ import com.zakgof.korender.gl.GL
 import com.zakgof.korender.image.Image
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
-import com.zakgof.korender.impl.gpu.GpuTexture
+import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.math.Color
 import jsAddFont
@@ -59,7 +59,7 @@ internal class WasmImage(
     override val width: Int,
     override val height: Int,
     private val byteArray: ByteArray,
-    override val format: GpuTexture.Format = GpuTexture.Format.RGBA
+    override val format: GlGpuTexture.Format = GlGpuTexture.Format.RGBA
 ) : Image {
     override val bytes = Byter(byteArray)
     override fun pixel(x: Int, y: Int): Color {

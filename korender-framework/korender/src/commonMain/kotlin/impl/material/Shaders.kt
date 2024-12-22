@@ -5,7 +5,6 @@ import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.gl.GL.shaderEnv
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.glgpu.GlGpuShader
-import com.zakgof.korender.impl.gpu.GpuShader
 import com.zakgof.korender.impl.resourceBytes
 
 internal fun <T> MutableList<T>.peek(): T = this.last()
@@ -19,7 +18,7 @@ internal object Shaders {
     suspend fun create(
         declaration: ShaderDeclaration,
         appResourceLoader: ResourceLoader
-    ): GpuShader {
+    ): GlGpuShader {
         val defs = declaration.defs + shaderEnv
         val title = "${declaration.vertFile}:${declaration.fragFile}"
         val vertDebugInfo = ShaderDebugInfo(declaration.vertFile)

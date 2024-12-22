@@ -39,9 +39,6 @@ import com.zakgof.korender.gl.GLConstants.GL_LINK_STATUS
 import com.zakgof.korender.gl.GLConstants.GL_VALIDATE_STATUS
 import com.zakgof.korender.gl.GLConstants.GL_VERTEX_SHADER
 import com.zakgof.korender.gl.GLUniformLocation
-import com.zakgof.korender.impl.gpu.GpuMesh
-import com.zakgof.korender.impl.gpu.GpuShader
-import com.zakgof.korender.impl.gpu.GpuTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ShaderDebugInfo
 import com.zakgof.korender.math.Color
@@ -51,13 +48,13 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.uniforms.UniformSupplier
 
-class GlGpuShader(
+internal class GlGpuShader(
     private val name: String,
     vertexShaderText: String,
     fragmentShaderText: String,
     vertDebugInfo: ShaderDebugInfo,
     fragDebugInfo: ShaderDebugInfo
-) : GpuShader {
+) : AutoCloseable {
     private val programHandle = glCreateProgram()
     private val vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER)
     private val fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER)
@@ -161,9 +158,9 @@ class GlGpuShader(
         glDeleteProgram(programHandle)
     }
 
-    override fun render(uniformSupplier: UniformSupplier, mesh: GpuMesh) {
+    fun render(uniformSupplier: UniformSupplier, mesh: GlGpuMesh) {
         glUseProgram(programHandle)
-        bindAttrs(mesh as GlGpuMesh)
+        bindAttrs(mesh)
         bindUniforms(uniformSupplier)
         mesh.render()
         glUseProgram(null)
@@ -207,7 +204,7 @@ class GlGpuShader(
                 location, false, value.asBuffer().apply { rewind() }
             )
 
-            is GpuTexture -> {
+            is GlGpuTexture -> {
                 value.bind(currentTexUnit)
                 glUniform1i(location, currentTexUnit)
             }
@@ -222,7 +219,7 @@ class GlGpuShader(
             }
 
         }
-        return value is GpuTexture
+        return value is GlGpuTexture
     }
 
     override fun toString() = name

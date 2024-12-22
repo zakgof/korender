@@ -4,7 +4,6 @@ import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.image.Image
 import com.zakgof.korender.image.Images
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.gpu.GpuTexture
 import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.material.TextureFilter
 import com.zakgof.korender.material.TextureWrap
@@ -13,7 +12,7 @@ object NotYetLoadedTexture
 
 internal object Texturing {
 
-    suspend fun create(declaration: TextureDeclaration, appResourceLoader: ResourceLoader): GpuTexture {
+    suspend fun create(declaration: TextureDeclaration, appResourceLoader: ResourceLoader): GlGpuTexture {
         val image = Images.image(appResourceLoader, declaration.textureResource).await()
         return create(declaration.textureResource, image, declaration.filter, declaration.wrap, declaration.aniso)
     }

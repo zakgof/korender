@@ -1,9 +1,9 @@
 package com.zakgof.korender.impl.geometry
 
-import com.zakgof.korender.impl.gpu.GpuMesh
+import com.zakgof.korender.impl.glgpu.GlGpuMesh
 import com.zakgof.korender.math.BoundingBox
 
-interface Mesh : AutoCloseable {
-    val gpuMesh: GpuMesh
+internal interface Mesh : AutoCloseable {
+    val gpuMesh: GlGpuMesh
     val modelBoundingBox: BoundingBox?
 }

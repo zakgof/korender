@@ -8,12 +8,14 @@ import com.zakgof.korender.gl.GL.glDeleteTextures
 import com.zakgof.korender.gl.GL.glGenTextures
 import com.zakgof.korender.gl.GL.glGenerateMipmap
 import com.zakgof.korender.gl.GL.glGetError
+import com.zakgof.korender.gl.GL.glGetFloatv
 import com.zakgof.korender.gl.GL.glTexImage2D
 import com.zakgof.korender.gl.GL.glTexParameteri
 import com.zakgof.korender.gl.GLConstants.GL_CLAMP_TO_EDGE
 import com.zakgof.korender.gl.GLConstants.GL_LINEAR
 import com.zakgof.korender.gl.GLConstants.GL_LINEAR_MIPMAP_LINEAR
 import com.zakgof.korender.gl.GLConstants.GL_LINEAR_MIPMAP_NEAREST
+import com.zakgof.korender.gl.GLConstants.GL_MAX_TEXTURE_MAX_ANISOTROPY
 import com.zakgof.korender.gl.GLConstants.GL_MIRRORED_REPEAT
 import com.zakgof.korender.gl.GLConstants.GL_NEAREST
 import com.zakgof.korender.gl.GLConstants.GL_NEAREST_MIPMAP_LINEAR
@@ -24,16 +26,26 @@ import com.zakgof.korender.gl.GLConstants.GL_RGBA
 import com.zakgof.korender.gl.GLConstants.GL_TEXTURE0
 import com.zakgof.korender.gl.GLConstants.GL_TEXTURE_2D
 import com.zakgof.korender.gl.GLConstants.GL_TEXTURE_MAG_FILTER
+import com.zakgof.korender.gl.GLConstants.GL_TEXTURE_MAX_ANISOTROPY
 import com.zakgof.korender.gl.GLConstants.GL_TEXTURE_MIN_FILTER
 import com.zakgof.korender.gl.GLConstants.GL_TEXTURE_WRAP_S
 import com.zakgof.korender.gl.GLConstants.GL_TEXTURE_WRAP_T
 import com.zakgof.korender.gl.GLConstants.GL_UNSIGNED_BYTE
 import com.zakgof.korender.gl.GLTexture
-import com.zakgof.korender.impl.gpu.GpuTexture
+import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.material.TextureFilter
 import com.zakgof.korender.material.TextureWrap
+import kotlin.math.min
 
-class GlGpuTexture(private val name: String, val glHandle: GLTexture) : GpuTexture {
+class GlGpuTexture(private val name: String, val glHandle: GLTexture) : AutoCloseable {
+
+    enum class Format {
+        RGB,
+        RGBA,
+        Gray,
+        Gray16
+    }
+
     companion object {
         val filterMap = mapOf(
             TextureFilter.Nearest to GL_NEAREST,
@@ -50,8 +62,8 @@ class GlGpuTexture(private val name: String, val glHandle: GLTexture) : GpuTextu
             TextureWrap.Repeat to GL_REPEAT
         )
         val formatMap = mapOf(
-            GpuTexture.Format.RGBA to GL_RGBA,
-            GpuTexture.Format.RGB to GL_RGB,
+            Format.RGBA to GL_RGBA,
+            Format.RGB to GL_RGB,
         )
     }
 
@@ -63,7 +75,7 @@ class GlGpuTexture(private val name: String, val glHandle: GLTexture) : GpuTextu
         filter: TextureFilter = TextureFilter.MipMapLinearLinear,
         wrap: TextureWrap = TextureWrap.Repeat,
         aniso: Int = 1024,
-        format: GpuTexture.Format = GpuTexture.Format.RGB
+        format: Format = Format.RGB
     ) : this(name, glGenTextures()) {
 
         println("Creating GPU Texture [$name] $glHandle")
@@ -102,33 +114,28 @@ class GlGpuTexture(private val name: String, val glHandle: GLTexture) : GpuTextu
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapMap[wrap]!!)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapMap[wrap]!!)
 
-        /*
-        TODO check if extension is available ? error 1280
-
         if (aniso > 0) {
-            val anisoMax = glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY) ?: 0f
-            if (anisoMax > 0) {
-                glTexParameteri(
-                    GL_TEXTURE_2D,
-                    GL_TEXTURE_MAX_ANISOTROPY,
-                    min(aniso, anisoMax.toInt())
-                )
+            ignoringGlError {
+                val anisoMax = glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY) ?: 0f
+                if (anisoMax > 0) {
+                    glTexParameteri(
+                        GL_TEXTURE_2D,
+                        GL_TEXTURE_MAX_ANISOTROPY,
+                        min(aniso, anisoMax.toInt())
+                    )
+                }
             }
         }
-        */
+    }
 
-        // TODO attention
-        // glBindTexture(GL_TEXTURE_2D, 0)
+    fun bind(unit: Int) {
+        glActiveTexture(GL_TEXTURE0 + unit)
+        glBindTexture(GL_TEXTURE_2D, glHandle)
     }
 
     override fun close() {
         println("Destroying GPU Texture [$name] $glHandle")
         glDeleteTextures(glHandle)
-    }
-
-    override fun bind(unit: Int) {
-        glActiveTexture(GL_TEXTURE0 + unit)
-        glBindTexture(GL_TEXTURE_2D, glHandle)
     }
 
 }

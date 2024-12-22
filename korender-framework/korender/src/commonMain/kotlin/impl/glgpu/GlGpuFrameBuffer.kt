@@ -9,7 +9,6 @@ import com.zakgof.korender.gl.GL.glDeleteFramebuffers
 import com.zakgof.korender.gl.GL.glFramebufferTexture2D
 import com.zakgof.korender.gl.GL.glGenFramebuffers
 import com.zakgof.korender.gl.GL.glGenTextures
-import com.zakgof.korender.gl.GL.glGetError
 import com.zakgof.korender.gl.GL.glTexImage2D
 import com.zakgof.korender.gl.GL.glTexParameterfv
 import com.zakgof.korender.gl.GL.glTexParameteri
@@ -23,6 +22,7 @@ import com.zakgof.korender.gl.GLConstants.GL_DEPTH_COMPONENT16
 import com.zakgof.korender.gl.GLConstants.GL_FRAMEBUFFER
 import com.zakgof.korender.gl.GLConstants.GL_FRAMEBUFFER_COMPLETE
 import com.zakgof.korender.gl.GLConstants.GL_LINEAR
+import com.zakgof.korender.gl.GLConstants.GL_NEAREST
 import com.zakgof.korender.gl.GLConstants.GL_RGB
 import com.zakgof.korender.gl.GLConstants.GL_TEXTURE0
 import com.zakgof.korender.gl.GLConstants.GL_TEXTURE_2D
@@ -34,26 +34,22 @@ import com.zakgof.korender.gl.GLConstants.GL_TEXTURE_WRAP_T
 import com.zakgof.korender.gl.GLConstants.GL_UNSIGNED_BYTE
 import com.zakgof.korender.gl.GLConstants.GL_UNSIGNED_SHORT
 import com.zakgof.korender.gl.GLFrameBuffer
-import com.zakgof.korender.impl.gpu.GpuFrameBuffer
+import com.zakgof.korender.impl.ignoringGlError
 
-class GlGpuFrameBuffer(private val name: String, private val width: Int, private val height: Int, useDepthBuffer: Boolean) :
-    GpuFrameBuffer {
+internal class GlGpuFrameBuffer(private val name: String, private val width: Int, private val height: Int, useDepthBuffer: Boolean) :
+    AutoCloseable {
 
     private val fbHandle: GLFrameBuffer = glGenFramebuffers()
 
-    override val colorTexture:  GlGpuTexture
-    override val depthTexture: GlGpuTexture?
+    val colorTexture:  GlGpuTexture
+    val depthTexture: GlGpuTexture?
 
     init {
 
         println("Creating GPU Framebuffer [$name] ${width}x${height}: $fbHandle")
 
         glBindFramebuffer(GL_FRAMEBUFFER, fbHandle)
-
-        println("Creating color texture")
         colorTexture = createTexture(false)
-
-        println("glFramebufferTexture2D")
         glFramebufferTexture2D(
             GL_FRAMEBUFFER,
             GL_COLOR_ATTACHMENT0,
@@ -62,14 +58,8 @@ class GlGpuFrameBuffer(private val name: String, private val width: Int, private
             0
         )
 
-        //println("glDrawBuffers")
-        //glDrawBuffers(GL_COLOR_ATTACHMENT0)
-
         if (useDepthBuffer) {
-            println("createDepthTexture")
             depthTexture = createTexture(true)
-
-            println("glFramebufferTexture2D")
             glFramebufferTexture2D(
                 GL_FRAMEBUFFER,
                 GL_DEPTH_ATTACHMENT,
@@ -84,8 +74,6 @@ class GlGpuFrameBuffer(private val name: String, private val width: Int, private
         if (err != GL_FRAMEBUFFER_COMPLETE) {
             throw KorenderException("Error creating framebuffer $err")
         }
-        // TODO: attention
-        // glBindFramebuffer(GL_FRAMEBUFFER, 0)
     }
 
 
@@ -105,17 +93,18 @@ class GlGpuFrameBuffer(private val name: String, private val width: Int, private
             null
         )
 
-        println("CP1 $depth ${glGetError()}")
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, floatArrayOf(0f, 0f, 0f, 0f))
-
-        @Suppress("ControlFlowWithEmptyBody")
-        while(glGetError() != 0) {}
-
+        if (depth && shaderEnv == "WEBGL") {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        } else {
+            ignoringGlError {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
+                glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, floatArrayOf(0f, 0f, 0f, 0f))
+            }
+        }
         return GlGpuTexture("$name-${if (depth) "depth" else "tex"}", glHandle)
     }
 
@@ -126,7 +115,7 @@ class GlGpuFrameBuffer(private val name: String, private val width: Int, private
         depthTexture?.close()
     }
 
-    override fun exec(block: () -> Unit) {
+    fun exec(block: () -> Unit) {
         bind()
         block.invoke()
         unbind()
@@ -138,5 +127,4 @@ class GlGpuFrameBuffer(private val name: String, private val width: Int, private
     }
 
     private fun unbind() = glBindFramebuffer(GL_FRAMEBUFFER, null)
-
 }

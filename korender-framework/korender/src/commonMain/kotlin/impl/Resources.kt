@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl
 
 import com.zakgof.korender.ResourceLoader
+import com.zakgof.korender.gl.GL.glGetError
 import com.zakgof.korender.resources.Res
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,4 +17,10 @@ internal suspend fun resourceBytes(appResourceLoader: ResourceLoader, resource: 
         return appResourceLoader.invoke("files/" + resource.replace("!", ""))
     }
     return Res.readBytes("files/$resource")
+}
+
+internal fun ignoringGlError(block: () -> Unit) {
+    block()
+    @Suppress("ControlFlowWithEmptyBody")
+    while(glGetError() != 0) {}
 }

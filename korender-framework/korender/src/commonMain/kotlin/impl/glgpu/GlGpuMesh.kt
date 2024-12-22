@@ -15,15 +15,14 @@ import com.zakgof.korender.gl.GLConstants.GL_TRIANGLES
 import com.zakgof.korender.gl.GLConstants.GL_UNSIGNED_INT
 import com.zakgof.korender.gl.GLConstants.GL_UNSIGNED_SHORT
 import com.zakgof.korender.impl.geometry.Attribute
-import com.zakgof.korender.impl.gpu.GpuMesh
 
-class GlGpuMesh(
+internal class GlGpuMesh(
     private val name: String,
     val attrs: List<Attribute>,
     val vertexSize: Int,
     isDynamic: Boolean = false,
     private val isLongIndex: Boolean = false
-) : GpuMesh {
+) : AutoCloseable {
 
     private val vbHandle = glGenBuffers()
     private val ibHandle = glGenBuffers()
@@ -36,7 +35,7 @@ class GlGpuMesh(
         println("Creating GPU Mesh [$name] $vbHandle/$ibHandle")
     }
 
-    override fun render() =
+    fun render() =
         glDrawElements(
             GL_TRIANGLES,
             indices,
@@ -44,12 +43,12 @@ class GlGpuMesh(
             0
         )
 
-    override fun bind() {
+    fun bind() {
         glBindBuffer(GL_ARRAY_BUFFER, vbHandle)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibHandle)
     }
 
-    override fun update(vb: Floater, ib: BufferData<out Any>, vertices: Int, indices: Int) {
+    fun update(vb: Floater, ib: BufferData<out Any>, vertices: Int, indices: Int) {
         this.vertices = vertices
         this.indices = indices
         bind()

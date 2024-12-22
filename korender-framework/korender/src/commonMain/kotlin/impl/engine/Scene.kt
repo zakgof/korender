@@ -4,7 +4,7 @@ import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.impl.engine.shadow.CascadeShadower
 import com.zakgof.korender.impl.engine.shadow.Shadower
-import com.zakgof.korender.impl.gpu.GpuFrameBuffer
+import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.input.TouchEvent
 import com.zakgof.korender.material.TextureDeclaration
@@ -61,7 +61,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         }
     }
 
-    private fun renderTo(fb: GpuFrameBuffer?, block: () -> Unit) {
+    private fun renderTo(fb: GlGpuFrameBuffer?, block: () -> Unit) {
         if (fb == null) block() else fb.exec { block() }
     }
 
