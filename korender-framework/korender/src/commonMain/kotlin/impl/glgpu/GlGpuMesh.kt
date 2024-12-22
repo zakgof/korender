@@ -1,8 +1,21 @@
 package com.zakgof.korender.impl.glgpu
 
+import com.zakgof.korender.buffer.BufferData
+import com.zakgof.korender.buffer.Floater
+import com.zakgof.korender.gl.GL.glBindBuffer
+import com.zakgof.korender.gl.GL.glBufferData
+import com.zakgof.korender.gl.GL.glDeleteBuffers
+import com.zakgof.korender.gl.GL.glDrawElements
+import com.zakgof.korender.gl.GL.glGenBuffers
+import com.zakgof.korender.gl.GLConstants.GL_ARRAY_BUFFER
+import com.zakgof.korender.gl.GLConstants.GL_DYNAMIC_DRAW
+import com.zakgof.korender.gl.GLConstants.GL_ELEMENT_ARRAY_BUFFER
+import com.zakgof.korender.gl.GLConstants.GL_STATIC_DRAW
+import com.zakgof.korender.gl.GLConstants.GL_TRIANGLES
+import com.zakgof.korender.gl.GLConstants.GL_UNSIGNED_INT
+import com.zakgof.korender.gl.GLConstants.GL_UNSIGNED_SHORT
 import com.zakgof.korender.impl.geometry.Attribute
 import com.zakgof.korender.impl.gpu.GpuMesh
-import java.nio.ByteBuffer
 
 class GlGpuMesh(
     private val name: String,
@@ -12,9 +25,9 @@ class GlGpuMesh(
     private val isLongIndex: Boolean = false
 ) : GpuMesh {
 
-    private val vbHandle: Int = com.zakgof.korender.impl.gl.VGL15.glGenBuffers()
-    private val ibHandle: Int = com.zakgof.korender.impl.gl.VGL15.glGenBuffers()
-    private val usage: Int = if (isDynamic) com.zakgof.korender.impl.gl.VGL15.GL_DYNAMIC_DRAW else com.zakgof.korender.impl.gl.VGL15.GL_STATIC_DRAW
+    private val vbHandle = glGenBuffers()
+    private val ibHandle = glGenBuffers()
+    private val usage: Int = if (isDynamic) GL_DYNAMIC_DRAW else GL_STATIC_DRAW
 
     private var vertices: Int = -1
     private var indices: Int = -1
@@ -24,29 +37,30 @@ class GlGpuMesh(
     }
 
     override fun render() =
-        com.zakgof.korender.impl.gl.VGL11.glDrawElements(
-            com.zakgof.korender.impl.gl.VGL11.GL_TRIANGLES,
+        glDrawElements(
+            GL_TRIANGLES,
             indices,
-            if (isLongIndex) com.zakgof.korender.impl.gl.VGL11.GL_UNSIGNED_INT else com.zakgof.korender.impl.gl.VGL11.GL_UNSIGNED_SHORT,
+            if (isLongIndex) GL_UNSIGNED_INT else GL_UNSIGNED_SHORT,
             0
         )
 
     override fun bind() {
-        com.zakgof.korender.impl.gl.VGL15.glBindBuffer(com.zakgof.korender.impl.gl.VGL15.GL_ARRAY_BUFFER, vbHandle)
-        com.zakgof.korender.impl.gl.VGL15.glBindBuffer(com.zakgof.korender.impl.gl.VGL15.GL_ELEMENT_ARRAY_BUFFER, ibHandle)
+        glBindBuffer(GL_ARRAY_BUFFER, vbHandle)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibHandle)
     }
 
-    override fun update(vb: ByteBuffer, ib: ByteBuffer, vertices: Int, indices: Int) {
+    override fun update(vb: Floater, ib: BufferData<out Any>, vertices: Int, indices: Int) {
         this.vertices = vertices
         this.indices = indices
         bind()
-        com.zakgof.korender.impl.gl.VGL15.glBufferData(com.zakgof.korender.impl.gl.VGL15.GL_ARRAY_BUFFER, vb.rewind() as ByteBuffer, usage)
-        com.zakgof.korender.impl.gl.VGL15.glBufferData(com.zakgof.korender.impl.gl.VGL15.GL_ELEMENT_ARRAY_BUFFER, ib.rewind() as ByteBuffer, usage)
+
+        glBufferData(GL_ARRAY_BUFFER, vb, usage)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib, usage)
     }
 
     override fun close() {
         println("Destroying GPU Mesh [$name] $vbHandle/$ibHandle")
-        com.zakgof.korender.impl.gl.VGL15.glDeleteBuffers(vbHandle)
-        com.zakgof.korender.impl.gl.VGL15.glDeleteBuffers(ibHandle)
+        glDeleteBuffers(vbHandle)
+        glDeleteBuffers(ibHandle)
     }
 }

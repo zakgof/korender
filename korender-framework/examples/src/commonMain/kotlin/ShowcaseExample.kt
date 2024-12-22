@@ -2,6 +2,7 @@ package com.zakgof.korender.examples
 
 
 import androidx.compose.runtime.Composable
+import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.material.Effects.Fire
@@ -18,9 +19,11 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import com.zakgof.korender.mesh.Meshes.sphere
+import org.jetbrains.compose.resources.ExperimentalResourceApi
 
+@OptIn(ExperimentalResourceApi::class)
 @Composable
-fun ShowcaseExample() = Korender {
+fun ShowcaseExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
         Camera(DefaultCamera(Vec3(0f, 5f, 30f), -1.z, 1.y))
         Pass {
@@ -32,7 +35,7 @@ fun ShowcaseExample() = Korender {
             Billboard(effect(Fire) { yscale = 10f; xscale = 2f }, position = 6.y, transparent = true)
             Gui {
                 Filler()
-                Text(text = "FPS ${frameInfo.avgFps}", height = 50,  color = Red, font = "/ubuntu.ttf", id = "fps")
+                Text(text = "FPS ${frameInfo.avgFps}", height = 50,  color = Red, font = "!ubuntu.ttf", id = "fps")
             }
         }
     }

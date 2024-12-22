@@ -2,15 +2,15 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.material.TextureDeclaration
-import com.zakgof.korender.uniforms.UniformSupplier
 import com.zakgof.korender.impl.engine.shadow.CascadeShadower
 import com.zakgof.korender.impl.engine.shadow.Shadower
 import com.zakgof.korender.impl.gpu.GpuFrameBuffer
+import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.input.TouchEvent
+import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.Projection
-import java.util.function.Predicate
+import com.zakgof.korender.uniforms.UniformSupplier
 
 internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: Inventory, private val camera: Camera, private val width: Int, private val height: Int) {
 
@@ -18,29 +18,26 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     private val passes: List<ScenePass>
     private val shadowCasters: List<Renderable>
     private val touchBoxes: List<TouchBox>
-    val touchBoxesHandler: Predicate<TouchEvent>
+    val touchBoxesHandler:(TouchEvent) -> Boolean
 
     init {
         sceneDeclaration.compilePasses()
         shadower = sceneDeclaration.shadow?.let { CascadeShadower(inventory, it.cascades) }
         val shadowCascades = shadower?.cascadeNumber ?: 0
         shadowCasters = if (sceneDeclaration.passes.isNotEmpty()) createShadowCasters(sceneDeclaration.passes[0].renderables) else listOf()
-
         passes = sceneDeclaration.passes.map { ScenePass(inventory, camera, width, height, it, shadowCascades) }
-
         touchBoxes = passes.flatMap { it.touchBoxes }
-        touchBoxesHandler = Predicate { evt ->
+        touchBoxesHandler = { evt ->
             touchBoxes.any { it.touch(evt) }
         }
     }
 
     private fun createShadowCasters(declarations: List<RenderableDeclaration>) =
-        declarations.filter { it.shader.fragFile == "standart.frag" && !it.shader.defs.contains("NO_SHADOW_CAST") }
-            .map { Renderable.create(inventory, it, camera, true) }
+        declarations.filter { it.shader.fragFile == "shader/standart.frag" && !it.shader.defs.contains("NO_SHADOW_CAST") }
+            .mapNotNull { Renderable.create(inventory, it, camera, true) }
 
     fun render(context: Map<String, Any?>, projection: Projection, camera: Camera, light: Vec3) {
         val shadowUniforms: UniformSupplier = shadower?.render(projection, camera, light, shadowCasters) ?: UniformSupplier { null }
-
         val passFrameBuffers = (0 until passes.size - 1)
             .map { inventory.frameBuffer(FrameBufferDeclaration("filter-$it", width, height, true)) }
 
@@ -49,7 +46,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
             UniformSupplier { key ->
                 var value = it[key] ?: context[key] ?: shadowUniforms[key] ?: prevFrameContext[key]
                 if (value is TextureDeclaration) {
-                    value = inventory.texture(value)
+                    value = inventory.texture(value) ?: NotYetLoadedTexture
                 }
                 value
             }

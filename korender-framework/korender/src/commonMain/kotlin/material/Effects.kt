@@ -9,13 +9,13 @@ import com.zakgof.korender.uniforms.UniformSupplier
 import com.zakgof.korender.uniforms.WaterUniforms
 
 object Effects {
-    val Identity = Effect("effect/identity.frag") { UniformSupplier { null } }
-    val Fire = Effect("effect/fire.frag") { FireUniforms() }
-    val FireBall = Effect("effect/fireball.frag") { FireBallUniforms() }
-    val Smoke = Effect("effect/smoke.frag") { SmokeUniforms() }
-    val Water = Effect("effect/water.frag") { WaterUniforms() }
-    val Adjust = Effect("effect/adjust.frag") { AdjustUniforms() }
-    val Fxaa = Effect("effect/fxaa.frag") { UniformSupplier { null } }
-    val BlurHorz = Effect("effect/blurh.frag") { BlurUniforms() }
-    val BlurVert = Effect("effect/blurv.frag") { BlurUniforms() }
+    val Identity = Effect("shader/effect/identity.frag") { UniformSupplier { null } }
+    val Fire = Effect("shader/effect/fire.frag") { FireUniforms() }
+    val FireBall = Effect("shader/effect/fireball.frag") { FireBallUniforms() }
+    val Smoke = Effect("shader/effect/smoke.frag") { SmokeUniforms() }
+    val Water = Effect("shader/effect/water.frag") { WaterUniforms() }
+    val Adjust = Effect("shader/effect/adjust.frag") { AdjustUniforms() }
+    val Fxaa = Effect("shader/effect/fxaa.frag") { UniformSupplier { null } }
+    val BlurHorz = Effect("shader/effect/blurh.frag") { BlurUniforms() }
+    val BlurVert = Effect("shader/effect/blurv.frag") { BlurUniforms() }
 }

@@ -1,9 +1,9 @@
 package com.zakgof.korender.mesh
 
+import com.zakgof.korender.buffer.Floater
 import com.zakgof.korender.impl.geometry.Attribute
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
-import java.nio.FloatBuffer
 
 object Attributes {
     val POS: Attribute = Attribute("pos", 3,
@@ -46,23 +46,30 @@ class Vertex(
     var phi: Float? = null
 )
 
-private fun readVec3(fvb: FloatBuffer): Vec3 {
+private fun readVec3(fvb: Floater): Vec3 {
     val x = fvb.get()
     val y = fvb.get()
     val z = fvb.get()
     return Vec3(x, y, z)
 }
 
-private fun readVec2(fvb: FloatBuffer): Vec2 {
+private fun readVec2(fvb: Floater): Vec2 {
     val x = fvb.get()
     val y = fvb.get()
     return Vec2(x, y)
 }
 
-private fun write(fvb: FloatBuffer, value: Vec3) {
-    fvb.put(value.x).put(value.y).put(value.z)
+private fun write(fvb: Floater, value: Vec3) {
+    fvb.apply{
+        put(value.x)
+        put(value.y)
+        put(value.z)
+    }
 }
 
-private fun write(fvb: FloatBuffer, value: Vec2) {
-    fvb.put(value.x).put(value.y)
+private fun write(fvb: Floater, value: Vec2) {
+    fvb.apply{
+        put(value.x)
+        put(value.y)
+    }
 }

@@ -1,6 +1,7 @@
 package com.zakgof.korender.math
 
-import java.nio.FloatBuffer
+import com.zakgof.korender.buffer.BufferUtils
+import com.zakgof.korender.buffer.Floater
 
 class Mat3(
     val m00: Float,
@@ -46,9 +47,7 @@ class Mat3(
         m02, m12, m22
     )
 
-    fun asBuffer(): FloatBuffer =
-        com.zakgof.korender.impl.glgpu.BufferUtils.createFloatBuffer(9).put(asArray())
-
+    fun asBuffer(): Floater = BufferUtils.createFloatBuffer(9).apply { put(asArray()) }
 
     operator fun times(mat: Mat3): Mat3 = Mat3(
         m00 * mat.m00 + m01 * mat.m10 + m02 * mat.m20,

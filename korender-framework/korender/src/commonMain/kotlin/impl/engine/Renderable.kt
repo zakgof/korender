@@ -14,9 +14,18 @@ import com.zakgof.korender.mesh.InstancedMesh
 internal class Renderable(val mesh: Mesh, val shader: GpuShader, val uniforms: UniformSupplier, val transform: Transform = Transform()) {
 
     companion object {
-        fun create(inventory: Inventory, declaration: RenderableDeclaration, camera: Camera, isShadowCaster: Boolean, shadowCascades: Int = 0): Renderable {
+        fun create(inventory: Inventory, declaration: RenderableDeclaration, camera: Camera, isShadowCaster: Boolean, shadowCascades: Int = 0): Renderable? {
             val new = !inventory.hasMesh(declaration.mesh)
-            val mesh = inventory.mesh(declaration.mesh)
+            val mesh = inventory.mesh(declaration.mesh) ?: return null
+
+            val additionalShadowFlags = if (isShadowCaster) listOf("SHADOW_CASTER") else (0..<shadowCascades).map { "SHADOW_RECEIVER$it" }
+            val origShader = declaration.shader
+            val modifiedShader = ShaderDeclaration(
+                origShader.vertFile, origShader.fragFile, origShader.defs + additionalShadowFlags,
+                origShader.plugins
+            )
+            val shader = inventory.shader(modifiedShader) ?: return null
+
 
             if (declaration.mesh is CustomMesh && !declaration.mesh.static) {
                 (mesh as Geometry.DefaultMesh).updateMesh(declaration.mesh.block)
@@ -41,19 +50,11 @@ internal class Renderable(val mesh: Mesh, val shader: GpuShader, val uniforms: U
                     (mesh as Geometry.MultiMesh).updateInstances(instances)
                 }
             }
-            val additionalShadowFlags = if (isShadowCaster) listOf("SHADOW_CASTER") else (0..<shadowCascades).map { "SHADOW_RECEIVER$it" }
-            val origShader = declaration.shader
-            val modifiedShader = ShaderDeclaration(
-                origShader.vertFile, origShader.fragFile, origShader.defs + additionalShadowFlags,
-                origShader.plugins
-            )
-            val shader = inventory.shader(modifiedShader)
             val uniforms = declaration.uniforms
             val transform = declaration.transform
             return Renderable(mesh, shader, uniforms, transform)
         }
     }
-
 
     fun render(uniformDecorator: (UniformSupplier) -> UniformSupplier) =
         shader.render(

@@ -1,10 +1,33 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.impl.gl.VGL11
+import com.zakgof.korender.gl.GL.glBlendFunc
+import com.zakgof.korender.gl.GL.glClear
+import com.zakgof.korender.gl.GL.glClearColor
+import com.zakgof.korender.gl.GL.glCullFace
+import com.zakgof.korender.gl.GL.glDepthFunc
+import com.zakgof.korender.gl.GL.glDepthMask
+import com.zakgof.korender.gl.GL.glEnable
+import com.zakgof.korender.gl.GL.glViewport
+import com.zakgof.korender.gl.GLConstants.GL_BACK
+import com.zakgof.korender.gl.GLConstants.GL_BLEND
+import com.zakgof.korender.gl.GLConstants.GL_COLOR_BUFFER_BIT
+import com.zakgof.korender.gl.GLConstants.GL_CULL_FACE
+import com.zakgof.korender.gl.GLConstants.GL_DEPTH_BUFFER_BIT
+import com.zakgof.korender.gl.GLConstants.GL_DEPTH_TEST
+import com.zakgof.korender.gl.GLConstants.GL_LEQUAL
+import com.zakgof.korender.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
+import com.zakgof.korender.gl.GLConstants.GL_SRC_ALPHA
 import com.zakgof.korender.uniforms.UniformSupplier
 
-internal class ScenePass(private val inventory: Inventory, private val camera: Camera, private val width: Int, private val height: Int, passDeclaration: PassDeclaration, shadowCascades: Int) {
+internal class ScenePass(
+    private val inventory: Inventory,
+    private val camera: Camera,
+    private val width: Int,
+    private val height: Int,
+    passDeclaration: PassDeclaration,
+    shadowCascades: Int
+) {
 
     val touchBoxes = mutableListOf<Scene.TouchBox>()
 
@@ -16,11 +39,13 @@ internal class ScenePass(private val inventory: Inventory, private val camera: C
     init {
         passDeclaration.renderables.forEach {
             val renderable = Renderable.create(inventory, it, camera, false, shadowCascades)
-            when (it.bucket) {
-                Bucket.OPAQUE -> opaques.add(renderable)
-                Bucket.SKY -> skies.add(renderable)
-                Bucket.TRANSPARENT -> transparents.add(renderable)
-                Bucket.SCREEN -> screens.add(renderable)
+            renderable?.let { r ->
+                when (it.bucket) {
+                    Bucket.OPAQUE -> opaques.add(r)
+                    Bucket.SKY -> skies.add(r)
+                    Bucket.TRANSPARENT -> transparents.add(r)
+                    Bucket.SCREEN -> screens.add(r)
+                }
             }
         }
         val guiRenderers = passDeclaration.guis.map { GuiRenderer(inventory, width, height, it) }
@@ -29,22 +54,21 @@ internal class ScenePass(private val inventory: Inventory, private val camera: C
     }
 
     fun render(uniformDecorator: (UniformSupplier) -> UniformSupplier) {
-        VGL11.glEnable(VGL11.GL_BLEND)
-        VGL11.glEnable(VGL11.GL_DEPTH_TEST)
-        VGL11.glBlendFunc(VGL11.GL_SRC_ALPHA, VGL11.GL_ONE_MINUS_SRC_ALPHA)
-        VGL11.glDepthFunc(VGL11.GL_LEQUAL)
-        VGL11.glClearColor(0f, 0f, 0f, 0f)
-        VGL11.glViewport(0, 0, width, height)
-        VGL11.glEnable(VGL11.GL_CULL_FACE)
-        VGL11.glCullFace(VGL11.GL_BACK)
-        VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
+        glViewport(0, 0, width, height)
+        glEnable(GL_BLEND)
+        glEnable(GL_DEPTH_TEST)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glDepthFunc(GL_LEQUAL)
+        glEnable(GL_CULL_FACE)
+        glCullFace(GL_BACK)
+        glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         opaques.forEach { it.render(uniformDecorator) }
         skies.forEach { it.render(uniformDecorator) }
         screens.forEach { it.render(uniformDecorator) }
-        VGL11.glDepthMask(false)
+        glDepthMask(false)
         transparents.sortedByDescending { (camera.mat4 * it.transform.offset()).z }
             .forEach { it.render(uniformDecorator) }
-        VGL11.glDepthMask(true)
-
+        glDepthMask(true)
     }
 }

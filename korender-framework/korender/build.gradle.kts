@@ -1,5 +1,5 @@
-
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
@@ -15,10 +15,21 @@ plugins {
 val libraryVersion = "0.2.1-SNAPSHOT"
 val libraryGroup = "com.github.zakgof"
 
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "com.zakgof.korender.resources"
+    generateResClass = always
+}
+
+@OptIn(ExperimentalKotlinGradlePluginApi::class)
 kotlin {
+
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
     androidTarget {
         publishLibraryVariants("release")
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
@@ -26,17 +37,27 @@ kotlin {
 
     jvm("desktop")
 
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        browser {
+        }
+    }
+
     sourceSets {
         val desktopMain by getting
+        val wasmJsMain by getting
 
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
             implementation(compose.ui)
-            implementation(libs.obj)
+            implementation(compose.material)
+            implementation(compose.components.resources)
+            implementation(libs.kotlinx.coroutines.core)
         }
         desktopMain.dependencies {
+            implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.kotlin.reflect)
             implementation(compose.desktop.currentOs)
 
@@ -49,6 +70,9 @@ kotlin {
             implementation("org.lwjgl:lwjgl-opengl:3.3.3:natives-windows")
             implementation("org.lwjgl:lwjgl:3.3.3:natives-linux")
             implementation("org.lwjgl:lwjgl-opengl:3.3.3:natives-linux")
+        }
+        wasmJsMain.dependencies {
+            implementation(libs.kotlinx.browser)
         }
     }
 }
@@ -111,10 +135,12 @@ publishing {
     repositories {
         maven {
             name = "sonatype"
-            setUrl(if (libraryVersion.contains("SNAPSHOT"))
-                "https://oss.sonatype.org/content/repositories/snapshots/"
-            else
-                "https://oss.sonatype.org/service/local/staging/deploy/maven2")
+            setUrl(
+                if (libraryVersion.contains("SNAPSHOT"))
+                    "https://oss.sonatype.org/content/repositories/snapshots/"
+                else
+                    "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            )
             credentials {
                 username = getExtraString("ossrhUsername")
                 password = getExtraString("ossrhPassword")

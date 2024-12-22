@@ -2,15 +2,18 @@ package com.zakgof.korender.examples
 
 
 import androidx.compose.runtime.Composable
+import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.material.Effects.Smoke
 import com.zakgof.korender.material.MaterialModifiers.effect
 import com.zakgof.korender.material.MaterialModifiers.sky
 import com.zakgof.korender.material.Skies.FastCloud
 import com.zakgof.korender.math.y
+import org.jetbrains.compose.resources.ExperimentalResourceApi
 
+@OptIn(ExperimentalResourceApi::class)
 @Composable
-fun SmokeExample() = Korender {
+fun SmokeExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
         Sky(sky(FastCloud))
         val n = 100

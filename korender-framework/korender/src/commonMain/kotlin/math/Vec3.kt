@@ -2,7 +2,6 @@ package com.zakgof.korender.math
 
 import kotlin.math.sqrt
 import kotlin.random.Random
-import kotlin.random.asJavaRandom
 
 class Vec3(val x: Float, val y: Float, val z: Float) {
 
@@ -12,10 +11,11 @@ class Vec3(val x: Float, val y: Float, val z: Float) {
         val Y = Vec3(0f, 1f, 0f)
         val Z = Vec3(0f, 0f, 1f)
 
+        // TODO optimize this using gaussian distribution
         fun random() = Vec3(
-            Random.asJavaRandom().nextGaussian().toFloat(),
-            Random.asJavaRandom().nextGaussian().toFloat(),
-            Random.asJavaRandom().nextGaussian().toFloat()
+            Random.nextFloat() - 0.5f,
+            Random.nextFloat() - 0.5f,
+            Random.nextFloat() - 0.5f,
         ).normalize()
 
     }

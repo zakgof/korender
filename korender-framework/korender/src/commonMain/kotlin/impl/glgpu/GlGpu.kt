@@ -1,14 +1,14 @@
 package com.zakgof.korender.impl.glgpu
 
-import com.zakgof.korender.material.TextureFilter
-import com.zakgof.korender.material.TextureWrap
+import com.zakgof.korender.buffer.Byter
 import com.zakgof.korender.impl.geometry.Attribute
 import com.zakgof.korender.impl.gpu.Gpu
 import com.zakgof.korender.impl.gpu.GpuMesh
 import com.zakgof.korender.impl.gpu.GpuShader
 import com.zakgof.korender.impl.gpu.GpuTexture
 import com.zakgof.korender.impl.material.ShaderDebugInfo
-import java.nio.ByteBuffer
+import com.zakgof.korender.material.TextureFilter
+import com.zakgof.korender.material.TextureWrap
 
 class GlGpu : Gpu {
     override fun createMesh(
@@ -32,7 +32,7 @@ class GlGpu : Gpu {
         name: String,
         width: Int,
         height: Int,
-        bytes: ByteBuffer,
+        bytes: Byter,
         filter: TextureFilter,
         wrap: TextureWrap,
         aniso: Int,

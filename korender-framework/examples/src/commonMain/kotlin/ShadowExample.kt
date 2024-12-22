@@ -1,6 +1,7 @@
 package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
+import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.material.MaterialModifiers.standart
@@ -13,13 +14,15 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import com.zakgof.korender.mesh.Meshes.cube
 import com.zakgof.korender.mesh.Meshes.sphere
+import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.sin
 
+@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun ShadowExample() =
-    Korender {
+    Korender(appResourceLoader = { Res.readBytes(it) }) {
         val materialModifier = standart(StandartMaterialOption.Pcss) {
-            colorTexture = texture("/sand.jpg")
+            colorTexture = texture("!sand.jpg")
         }
         Frame {
             Light(Vec3(1f, -1f, 1f).normalize())
