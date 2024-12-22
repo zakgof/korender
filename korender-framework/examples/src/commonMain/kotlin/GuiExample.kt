@@ -19,24 +19,24 @@ fun GuiExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             Row {
                 Filler()
                 Image(imageResource = "!korender32.png", width = 100, height = 100)
-                Text(id = "title", font = "!ubuntu.ttf", height = 100, text = "Korender Demo", color = Color(0xFF803456))
+                Text(id = "title", font = "!font/anta.ttf", height = 100, text = "Korender Demo", color = Color(0xFF803456))
                 Filler()
             }
             Row {
                 Filler()
                 if (clicked) {
-                    Text(id = "thanks", font = "!ubuntu.ttf", height = 30, text = "Thank you for clicking", color = Color(0xFF888888), onTouch = {
+                    Text(id = "thanks", font = "!font/orbitron.ttf", height = 30, text = "Thank you for clicking", color = Color(0xFF888888), onTouch = {
                         onClick(it) { clicked = false }
                     })
                 } else {
-                    Text(id = "clicker", font = "!ubuntu.ttf", height = 50, text = "CLICK ME", color = Color(0xFF8044FF), onTouch = {
+                    Text(id = "clicker", font = "!font/orbitron.ttf", height = 50, text = "CLICK ME", color = Color(0xFF8044FF), onTouch = {
                         onClick(it) { clicked = true }
                     })
                 }
                 Filler()
             }
             Filler()
-            Text(id = "fps", font = "!ubuntu.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFF66FF55))
+            Text(id = "fps", font = "!font/orbitron.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFF66FF55))
         }
     }
 }

@@ -16,7 +16,7 @@ expect object Platform {
 }
 
 internal interface AsyncContext {
-    val appResourceLoader: suspend (String) -> ByteArray
+    val appResourceLoader: ResourceLoader
     fun <R> call(function: suspend () -> R): Deferred<R>
 }
 

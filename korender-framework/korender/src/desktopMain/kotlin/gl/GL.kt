@@ -20,12 +20,12 @@ actual object GL {
     actual fun glEnable(target: Int) = GL11.glEnable(target)
     actual fun glDisable(target: Int) = GL11.glDisable(target)
     actual fun glBindTexture(target: Int, texture: GLTexture) =
-        GL11.glBindTexture(target, texture.texture)
+        GL11.glBindTexture(target, texture.glHandle)
 
     actual fun glTexParameterf(target: Int, pname: Int, param: Float) =
         GL11.glTexParameterf(target, pname, param)
 
-    actual fun glDeleteTextures(texture: GLTexture) = GL11.glDeleteTextures(texture.texture)
+    actual fun glDeleteTextures(texture: GLTexture) = GL11.glDeleteTextures(texture.glHandle)
     actual fun glPixelStorei(pname: Int, param: Int) = GL11.glPixelStorei(pname, param)
     actual fun glGenTextures(): GLTexture = GLTexture(GL11.glGenTextures())
     actual fun glBlendFunc(sfactor: Int, dfactor: Int) = GL11.glBlendFunc(sfactor, dfactor)
@@ -76,40 +76,40 @@ actual object GL {
     actual fun glCreateProgram() = GLProgram(GL20.glCreateProgram())
     actual fun glCreateShader(type: Int) = GLShader(GL20.glCreateShader(type))
     actual fun glAttachShader(program: GLProgram, shader: GLShader) =
-        GL20.glAttachShader(program.program, shader.shader)
+        GL20.glAttachShader(program.glHandle, shader.glHandle)
 
-    actual fun glLinkProgram(program: GLProgram) = GL20.glLinkProgram(program.program)
-    actual fun glUseProgram(program: GLProgram?) = GL20.glUseProgram(program?.program ?: 0)
-    actual fun glValidateProgram(program: GLProgram) = GL20.glValidateProgram(program.program)
+    actual fun glLinkProgram(program: GLProgram) = GL20.glLinkProgram(program.glHandle)
+    actual fun glUseProgram(program: GLProgram?) = GL20.glUseProgram(program?.glHandle ?: 0)
+    actual fun glValidateProgram(program: GLProgram) = GL20.glValidateProgram(program.glHandle)
     actual fun glGetProgrami(program: GLProgram, pname: Int) =
-        GL20.glGetProgrami(program.program, pname)
+        GL20.glGetProgrami(program.glHandle, pname)
 
-    actual fun glGetShaderInfoLog(shader: GLShader) = GL20.glGetShaderInfoLog(shader.shader)
-    actual fun glGetProgramInfoLog(program: GLProgram) = GL20.glGetProgramInfoLog(program.program)
+    actual fun glGetShaderInfoLog(shader: GLShader) = GL20.glGetShaderInfoLog(shader.glHandle)
+    actual fun glGetProgramInfoLog(program: GLProgram) = GL20.glGetProgramInfoLog(program.glHandle)
     actual fun glGetProgramiv(program: GLProgram, pname: Int, params: Inter) =
-        GL20.glGetProgramiv(program.program, pname, params.intBuffer)
+        GL20.glGetProgramiv(program.glHandle, pname, params.intBuffer)
 
     actual fun glGetActiveUniform(
         program: GLProgram, index: Int, size: Inter, type: Inter
-    ) = GL20.glGetActiveUniform(program.program, index, size.intBuffer, type.intBuffer)
+    ) = GL20.glGetActiveUniform(program.glHandle, index, size.intBuffer, type.intBuffer)
 
     actual fun glGetActiveAttrib(
         program: GLProgram, index: Int, size: Inter, type: Inter
-    ) = GL20.glGetActiveAttrib(program.program, index, size.intBuffer, type.intBuffer)
+    ) = GL20.glGetActiveAttrib(program.glHandle, index, size.intBuffer, type.intBuffer)
 
     actual fun glShaderSource(shader: GLShader, source: String) =
-        GL20.glShaderSource(shader.shader, source)
+        GL20.glShaderSource(shader.glHandle, source)
 
-    actual fun glCompileShader(shader: GLShader) = GL20.glCompileShader(shader.shader)
+    actual fun glCompileShader(shader: GLShader) = GL20.glCompileShader(shader.glHandle)
     actual fun glGetShaderiv(shader: GLShader, pname: Int, params: Inter) =
-        GL20.glGetShaderiv(shader.shader, pname, params.intBuffer)
+        GL20.glGetShaderiv(shader.glHandle, pname, params.intBuffer)
 
     actual fun glEnableVertexAttribArray(index: Int) = GL20.glEnableVertexAttribArray(index)
     actual fun glGetUniformLocation(program: GLProgram, name: String) =
-        GLUniformLocation(GL20.glGetUniformLocation(program.program, name))
+        GLUniformLocation(GL20.glGetUniformLocation(program.glHandle, name))
 
     actual fun glGetAttribLocation(program: GLProgram, name: String) =
-        GL20.glGetAttribLocation(program.program, name)
+        GL20.glGetAttribLocation(program.glHandle, name)
 
     actual fun glUniform1i(location: GLUniformLocation, v0: Int) = GL20.glUniform1i(location.glHandle, v0)
 
@@ -136,22 +136,22 @@ actual object GL {
         index: Int, size: Int, type: Int, normalized: Boolean, stride: Int, pointer: Int
     ) = GL20.glVertexAttribPointer(index, size, type, normalized, stride, pointer.toLong())
 
-    actual fun glGetShaderi(shader: GLShader, pname: Int) = GL20.glGetShaderi(shader.shader, pname)
+    actual fun glGetShaderi(shader: GLShader, pname: Int) = GL20.glGetShaderi(shader.glHandle, pname)
 
-    actual fun glDeleteShader(shader: GLShader) = GL20.glDeleteShader(shader.shader)
-    actual fun glDeleteProgram(program: GLProgram) = GL20.glDeleteProgram(program.program)
+    actual fun glDeleteShader(shader: GLShader) = GL20.glDeleteShader(shader.glHandle)
+    actual fun glDeleteProgram(program: GLProgram) = GL20.glDeleteProgram(program.glHandle)
 
     actual fun glGenerateMipmap(target: Int) = GL30.glGenerateMipmap(target)
     actual fun glGenFramebuffers(): GLFrameBuffer = GLFrameBuffer(GL30.glGenFramebuffers())
     actual fun glFramebufferTexture2D(
         target: Int, attachment: Int, textarget: Int, texture: GLTexture, level: Int
-    ) = GL30.glFramebufferTexture2D(target, attachment, textarget, texture.texture, level)
+    ) = GL30.glFramebufferTexture2D(target, attachment, textarget, texture.glHandle, level)
 
     actual fun glDeleteFramebuffers(framebuffer: GLFrameBuffer) =
-        GL30.glDeleteFramebuffers(framebuffer.frameBuffer)
+        GL30.glDeleteFramebuffers(framebuffer.glHandle)
 
     actual fun glBindFramebuffer(target: Int, framebuffer: GLFrameBuffer?) =
-        GL30.glBindFramebuffer(target, framebuffer?.frameBuffer ?: 0)
+        GL30.glBindFramebuffer(target, framebuffer?.glHandle ?: 0)
 
     actual fun glCheckFramebufferStatus(target: Int) = GL30.glCheckFramebufferStatus(target)
 }

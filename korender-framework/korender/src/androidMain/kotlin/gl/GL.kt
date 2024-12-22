@@ -87,7 +87,7 @@ actual object GL {
     actual fun glCreateShader(type: Int) = GLShader(GLES20.glCreateShader(type))
 
     actual fun glAttachShader(program: GLProgram, shader: GLShader) =
-        GLES20.glAttachShader(program.program, shader.shader)
+        GLES20.glAttachShader(program.program, shader.glHandle)
 
     actual fun glLinkProgram(
         program: GLProgram
@@ -106,7 +106,7 @@ actual object GL {
         intViaArray { GLES20.glGetProgramiv(program.program, pname, it, 0) }
 
     actual fun glGetShaderInfoLog(shader: GLShader): String =
-        GLES20.glGetShaderInfoLog(shader.shader)
+        GLES20.glGetShaderInfoLog(shader.glHandle)
 
     actual fun glGetProgramInfoLog(program: GLProgram): String =
         GLES20.glGetProgramInfoLog(program.program)
@@ -126,26 +126,17 @@ actual object GL {
     actual fun glShaderSource(
         shader: GLShader, source: String
     ) = GLES20.glShaderSource(
-        shader.shader, source
+        shader.glHandle, source
     )
 
-    actual fun glCompileShader(
-        shader: GLShader
-    ) = GLES20.glCompileShader(
-        shader.shader
-    )
+    actual fun glCompileShader(shader: GLShader) =
+        GLES20.glCompileShader(shader.glHandle)
 
-    actual fun glGetShaderiv(
-        shader: GLShader, pname: Int, params: Inter
-    ) = GLES20.glGetShaderiv(
-        shader.shader, pname, params.intBuffer
-    )
+    actual fun glGetShaderiv(shader: GLShader, pname: Int, params: Inter) =
+        GLES20.glGetShaderiv(shader.glHandle, pname, params.intBuffer)
 
-    actual fun glEnableVertexAttribArray(
-        index: Int
-    ) = GLES20.glEnableVertexAttribArray(
-        index
-    )
+    actual fun glEnableVertexAttribArray(index: Int) =
+        GLES20.glEnableVertexAttribArray(index)
 
     actual fun glGetUniformLocation(program: GLProgram, name: String): GLUniformLocation =
         GLUniformLocation(GLES20.glGetUniformLocation(program.program, name))
@@ -188,10 +179,10 @@ actual object GL {
         GLES20.glVertexAttribPointer(index, size, type, normalized, stride, pointer)
 
     actual fun glGetShaderi(shader: GLShader, pname: Int) : Int =
-        intViaArray { GLES20.glGetShaderiv(shader.shader, pname, it, 0) }
+        intViaArray { GLES20.glGetShaderiv(shader.glHandle, pname, it, 0) }
 
     actual fun glDeleteShader(shader: GLShader) =
-        GLES20.glDeleteShader(shader.shader)
+        GLES20.glDeleteShader(shader.glHandle)
 
     actual fun glDeleteProgram(program: GLProgram) =
         GLES20.glDeleteProgram(program.program)

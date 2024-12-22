@@ -16,7 +16,7 @@ import com.zakgof.korender.mesh.MeshDeclaration
 
 internal class Inventory(asyncContext: AsyncContext) {
 
-    private val meshes = Registry<MeshDeclaration, Mesh>(asyncContext) { Geometry.create(it) }
+    private val meshes = Registry<MeshDeclaration, Mesh>(asyncContext) { Geometry.create(it, asyncContext.appResourceLoader) }
     private val shaders = Registry<ShaderDeclaration, GpuShader>(asyncContext) { Shaders.create(it, asyncContext.appResourceLoader) }
     private val textures = Registry<TextureDeclaration, GpuTexture>(asyncContext) { Texturing.create(it, asyncContext.appResourceLoader) }
     private val fonts = Registry<String, Font>(asyncContext) { Fonts.load(it, asyncContext.appResourceLoader) }

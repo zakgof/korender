@@ -28,7 +28,7 @@ fun FxaaExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             Pass {
                 Screen(effect(Fxaa))
                 Gui {
-                    Text(text = "FXAA", font = "!ubuntu.ttf", height = 50, color = Red, id = "fxaa")
+                    Text(text = "FXAA", font = "!font/orbitron.ttf", height = 50, color = Red, id = "fxaa")
                 }
             }
         }

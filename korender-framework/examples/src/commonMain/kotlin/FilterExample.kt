@@ -35,7 +35,7 @@ fun FilterExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                 Text(
                     text = "SATURATION $value",
                     id = "saturation",
-                    font = "!ubuntu.ttf",
+                    font = "!font/orbitron.ttf",
                     height = 50,
                     color = Color.Red
                 )

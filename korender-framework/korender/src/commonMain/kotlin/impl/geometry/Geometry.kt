@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.geometry
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.buffer.BufferUtils
 import com.zakgof.korender.buffer.Floater
 import com.zakgof.korender.buffer.Inter
@@ -28,6 +29,7 @@ import com.zakgof.korender.mesh.InstancedBillboard
 import com.zakgof.korender.mesh.InstancedMesh
 import com.zakgof.korender.mesh.MeshDeclaration
 import com.zakgof.korender.mesh.MeshInitializer
+import com.zakgof.korender.mesh.ObjMesh
 import com.zakgof.korender.mesh.ScreenQuad
 import com.zakgof.korender.mesh.Sphere
 import com.zakgof.korender.mesh.Vertex
@@ -38,23 +40,23 @@ import kotlin.math.sin
 
 internal object Geometry {
 
-    fun create(declaration: MeshDeclaration): Mesh =
+    suspend fun create(declaration: MeshDeclaration, appResourceLoader: ResourceLoader): Mesh =
         when (declaration) {
             is InstancedMesh ->
-                builder(declaration.mesh).buildInstanced(declaration.count)
+                builder(declaration.mesh, appResourceLoader).buildInstanced(declaration.count)
 
             is InstancedBillboard ->
                 billboard().buildInstanced(declaration.count)
 
             else ->
-                builder(declaration).build()
+                builder(declaration, appResourceLoader).build()
         }
 
-    private fun builder(declaration: MeshDeclaration): MeshBuilder =
+    private suspend fun builder(declaration: MeshDeclaration, appResourceLoader: ResourceLoader): MeshBuilder =
         when (declaration) {
             is Sphere -> sphere(declaration.radius)
             is Cube -> cube(declaration.halfSide)
-            // is ObjMesh -> obj(declaration.objFile)
+            is ObjMesh -> obj(declaration.objFile, appResourceLoader)
             is Billboard -> billboard()
             is ImageQuad -> imageQuad()
             is ScreenQuad -> screenQuad()
@@ -408,6 +410,19 @@ internal object Geometry {
             indices(20, 22, 21, 20, 23, 22)
             block(this)
         }
+
+    private suspend fun obj(objFile: String, appResourceLoader: ResourceLoader): MeshBuilder {
+        val model: ObjModel = ObjLoader.load(objFile, appResourceLoader)
+        return create(objFile, model.vertices.size, model.indices.size, POS, NORMAL, TEX) {
+            model.vertices.forEach {
+                vertices(it.pos, it.normal)
+                vertices(it.tex.x, it.tex.y)
+            }
+            model.indices.forEach {
+                indices(it)
+            }
+        }
+    }
 
     fun sphere(
         radius: Float = 1.0f,

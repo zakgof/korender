@@ -1,3 +1,3 @@
 package com.zakgof.korender.gl
 
-actual class GLShader(internal val shader: Int)
+actual class GLShader(internal val glHandle: Int)

@@ -80,30 +80,25 @@ actual object Platform {
     @OptIn(DelicateCoroutinesApi::class)
     actual fun loadFont(bytes: ByteArray): Deferred<FontDef> {
         val ffLoader = jsLoadFont(bytes.toInt8Array())
-        println("loadFont BP 1")
         return GlobalScope.async {
-            println("Async BP 2")
             val fontFace = ffLoader.load().await<FontFace>()
-            println("Async BP 3 $fontFace")
             jsAddFont(fontFace)
-            println("Async BP 4")
             val canvas = document.createElement("canvas") as HTMLCanvasElement
             canvas.height = 16 * 256
             canvas.width = 16 * 256
             val ctx = canvas.getContext("2d") as CanvasRenderingContext2D
             ctx.font = "256px KorenderFont"
             ctx.fillStyle = "white".toJsString()
-            ctx.fillStyle = "white".toJsString()
             ctx.clearRect(0.0, 0.0, canvas.width.toDouble(), canvas.height.toDouble())
             val texts = (0 until 128).map { "" + it.toChar() }
             val metrics = texts.map { ctx.measureText(it) }
             val widths = metrics.map { it.width.toFloat() / 256.0f }.toFloatArray()
-            val maxDescent = metrics.maxOfOrNull { it.fontBoundingBoxDescent }!!
+            val maxDescent = metrics.maxOfOrNull { it.actualBoundingBoxDescent }!!
             texts.indices.forEach {
                 ctx.fillText(
                     texts[it],
                     (it % 16) * 256.0,
-                    (it / 16) * 256.0 + 256.0 - maxDescent - 1.0
+                    (it / 16) * 256.0 + 256.0 - maxDescent
                 )
             }
             val imageData = ctx.getImageData(
@@ -114,7 +109,6 @@ actual object Platform {
             )
             val uint8ClampedArray: Uint8ClampedArray = imageData.data
             val byteArray = ByteArray(uint8ClampedArray.length) { uint8ClampedArray[it] }
-            println("Font image byte array length is ${byteArray.size}")
             val image = WasmImage(
                 ctx.canvas.width,
                 ctx.canvas.height,
@@ -126,24 +120,20 @@ actual object Platform {
 
     @OptIn(ExperimentalEncodingApi::class)
     actual fun loadImage(bytes: ByteArray, type: String): Deferred<Image> {
-        println("Wasm start loading image from ${bytes.size} bytes")
         val result = CompletableDeferred<Image>()
-
         val base64Data = Base64.encode(bytes)
         val image = document.createElement("img") as HTMLImageElement
         image.src = "data:image/$type;base64,$base64Data"
-        println("Wasm loading image: ${image.src}")
         image.onerror = { a, b, c, d, e ->
             result.completeExceptionally(KorenderException("$a $b $c $d $e"))
             null
         }
+        println(image.src)
         image.onload = {
-            println("Wasm image loaded")
             val canvas = document.createElement("canvas") as HTMLCanvasElement
             val context = canvas.getContext("2d") as CanvasRenderingContext2D
             canvas.width = image.width
             canvas.height = image.height
-            println("Wasm canvas $canvas")
             context.drawImage(image, 0.0, 0.0)
             val imageData = context.getImageData(
                 0.0,
@@ -153,14 +143,7 @@ actual object Platform {
             )
             val uint8ClampedArray: Uint8ClampedArray = imageData.data
             val byteArray = ByteArray(uint8ClampedArray.length) { uint8ClampedArray[it] }
-            println("Image byte array length is ${byteArray.size}")
-            result.complete(
-                WasmImage(
-                    imageData.width,
-                    imageData.height,
-                    byteArray
-                )
-            )
+            result.complete(WasmImage(imageData.width, imageData.height, byteArray))
         }
         return result
     }
