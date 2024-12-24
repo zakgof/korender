@@ -11,10 +11,10 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun GltfExample() = Korender (appResourceLoader = { Res.readBytes(it) }) {
-    val orbitCamera = OrbitCamera(20.z, 2.y)
+    val orbitCamera = OrbitCamera(20.z, 0.y)
     OnTouch { orbitCamera.touch(it) }
     Frame {
         Camera(orbitCamera.camera(projection, width, height))
-        Scene(gltfResource = "!gltf/box/Box.gltf")
+        Scene(gltfResource = "!gltf/boombox/BoomBox.gltf")
     }
 }

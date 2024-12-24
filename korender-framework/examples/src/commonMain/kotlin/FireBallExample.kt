@@ -7,7 +7,6 @@ import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.material.Effects.FireBall
 import com.zakgof.korender.material.MaterialModifiers.effect
 import com.zakgof.korender.material.MaterialModifiers.standart
-import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y

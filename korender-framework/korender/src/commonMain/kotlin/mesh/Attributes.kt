@@ -7,7 +7,7 @@ import com.zakgof.korender.math.Vec3
 
 object Attributes {
 
-    fun byGltfName(name: String) = mapping[name]!!
+    fun byGltfName(name: String) = mapping[name]
 
     val POS: Attribute = Attribute("pos", 3, 0)
     val NORMAL: Attribute = Attribute("normal", 3, 1)
@@ -19,7 +19,7 @@ object Attributes {
     private val mapping = mapOf(
         "POSITION" to POS,
         "NORMAL" to NORMAL,
-        "TEX" to TEX
+        "TEXCOORD_0" to TEX
     )
 }
 

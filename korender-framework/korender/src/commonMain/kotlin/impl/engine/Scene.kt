@@ -5,9 +5,9 @@ import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.impl.engine.shadow.CascadeShadower
 import com.zakgof.korender.impl.engine.shadow.Shadower
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
+import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.input.TouchEvent
-import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.Projection
 import com.zakgof.korender.uniforms.UniformSupplier
@@ -45,7 +45,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         val uniformDecorator: (UniformSupplier) -> UniformSupplier = {
             UniformSupplier { key ->
                 var value = it[key] ?: context[key] ?: shadowUniforms[key] ?: prevFrameContext[key]
-                if (value is TextureDeclaration) {
+                if (value is InternalTexture) {
                     value = inventory.texture(value) ?: NotYetLoadedTexture
                 }
                 value

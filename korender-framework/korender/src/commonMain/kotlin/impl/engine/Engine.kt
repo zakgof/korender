@@ -9,8 +9,11 @@ import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.gl.GL.glGetError
+import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.input.TouchEvent
-import com.zakgof.korender.material.Textures.texture
+import com.zakgof.korender.material.TextureDeclaration
+import com.zakgof.korender.material.TextureFilter
+import com.zakgof.korender.material.TextureWrap
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -45,9 +48,18 @@ internal class Engine(
             override fun Frame(block: FrameContext.() -> Unit) {
                 frameBlocks.add(block)
             }
+
             override fun OnTouch(handler: (TouchEvent) -> Unit) {
                 touchHandlers.add(handler)
             }
+
+            override fun texture(
+                textureResource: String,
+                filter: TextureFilter,
+                wrap: TextureWrap,
+                aniso: Int
+            ): TextureDeclaration = ResourceTextureDeclaration(textureResource, filter, wrap, aniso)
+
         })
     }
 
@@ -55,9 +67,17 @@ internal class Engine(
         val frameInfo = frameInfoManager.frame()
         processTouches()
         val sd = SceneDeclaration()
-        projection = FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f) // TODO
+        projection = FrustumProjection(
+            width = 5f * width / height,
+            height = 5f,
+            near = 10f,
+            far = 1000f
+        ) // TODO
         frameBlocks.forEach {
-            val frameBlock = DefaultFrameContext(sd, frameInfo, width, height, projection, camera, light).apply(it)
+            val frameBlock =
+                DefaultFrameContext(sd, frameInfo, width, height, projection, camera, light).apply(
+                    it
+                )
             projection = frameBlock.projection
             camera = frameBlock.camera
             light = frameBlock.light
@@ -75,8 +95,8 @@ internal class Engine(
     }
 
     private fun updateContext() {
-        context["noiseTexture"] = texture("noise.png")
-        context["fbmTexture"] = texture("fbm.png")
+        context["noiseTexture"] = ResourceTextureDeclaration("noise.png")
+        context["fbmTexture"] = ResourceTextureDeclaration("fbm.png")
         context["view"] = camera.mat4
         context["projection"] = projection.mat4
         context["cameraPos"] = camera.position

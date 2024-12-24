@@ -30,7 +30,7 @@ class Gltf(
     @Serializable
     data class Accessor(
         val bufferView: Int? = null,
-        val byteOffset: Int,
+        val byteOffset: Int? = 0,
         val componentType: Int,
         val normalized: Boolean = false,
         val count: Int,

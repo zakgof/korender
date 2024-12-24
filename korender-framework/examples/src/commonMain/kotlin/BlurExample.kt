@@ -8,7 +8,6 @@ import com.zakgof.korender.material.Effects.BlurVert
 import com.zakgof.korender.material.MaterialModifiers.effect
 import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.material.StandartMaterialOption
-import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.x
 import com.zakgof.korender.mesh.Meshes.sphere

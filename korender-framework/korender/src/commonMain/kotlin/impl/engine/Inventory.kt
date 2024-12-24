@@ -10,16 +10,16 @@ import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.gltf.GltfLoaded
 import com.zakgof.korender.impl.gltf.GltfLoader
+import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.impl.material.Texturing
-import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.mesh.MeshDeclaration
 
 internal class Inventory(asyncContext: AsyncContext) {
 
     private val meshes = Registry<MeshDeclaration, Mesh>(asyncContext) { Geometry.create(it, asyncContext.appResourceLoader) }
     private val shaders = Registry<ShaderDeclaration, GlGpuShader>(asyncContext) { Shaders.create(it, asyncContext.appResourceLoader) }
-    private val textures = Registry<TextureDeclaration, GlGpuTexture>(asyncContext) { Texturing.create(it, asyncContext.appResourceLoader) }
+    private val textures = Registry<InternalTexture, GlGpuTexture>(asyncContext) { Texturing.create(it, asyncContext.appResourceLoader) }
     private val fonts = Registry<String, Font>(asyncContext) { Fonts.load(it, asyncContext.appResourceLoader) }
     private val fontMeshes = Registry<Any, Geometry.MultiMesh>(asyncContext) { Geometry.font(256) }
     private val frameBuffers = Registry<FrameBufferDeclaration, GlGpuFrameBuffer>(asyncContext) { GlGpuFrameBuffer(it.id, it.width, it.height, it.withDepth) }
@@ -45,7 +45,7 @@ internal class Inventory(asyncContext: AsyncContext) {
 
     fun mesh(decl: MeshDeclaration): Mesh? = meshes[decl]
     fun shader(decl: ShaderDeclaration): GlGpuShader? = shaders[decl]
-    fun texture(decl: TextureDeclaration): GlGpuTexture? = textures[decl]
+    fun texture(decl: InternalTexture): GlGpuTexture? = textures[decl]
     fun font(fontResource: String): Font? = fonts[fontResource]
     fun fontMesh(id: Any): Geometry.MultiMesh? = fontMeshes[id]
     fun frameBuffer(decl: FrameBufferDeclaration): GlGpuFrameBuffer? = frameBuffers[decl]

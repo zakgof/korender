@@ -1,7 +1,6 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.buffer.Byter
 import com.zakgof.korender.gl.GL.glActiveTexture
 import com.zakgof.korender.gl.GL.glBindTexture
 import com.zakgof.korender.gl.GL.glDeleteTextures
@@ -32,6 +31,7 @@ import com.zakgof.korender.gl.GLConstants.GL_TEXTURE_WRAP_S
 import com.zakgof.korender.gl.GLConstants.GL_TEXTURE_WRAP_T
 import com.zakgof.korender.gl.GLConstants.GL_UNSIGNED_BYTE
 import com.zakgof.korender.gl.GLTexture
+import com.zakgof.korender.image.Image
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.material.TextureFilter
 import com.zakgof.korender.material.TextureWrap
@@ -69,13 +69,10 @@ class GlGpuTexture(private val name: String, val glHandle: GLTexture) : AutoClos
 
     constructor(
         name: String,
-        width: Int,
-        height: Int,
-        bytes: Byter,
+        image: Image,
         filter: TextureFilter = TextureFilter.MipMapLinearLinear,
         wrap: TextureWrap = TextureWrap.Repeat,
         aniso: Int = 1024,
-        format: Format = Format.RGB
     ) : this(name, glGenTextures()) {
 
         println("Creating GPU Texture [$name] $glHandle")
@@ -86,13 +83,13 @@ class GlGpuTexture(private val name: String, val glHandle: GLTexture) : AutoClos
         glTexImage2D(
             GL_TEXTURE_2D,
             0,
-            formatMap[format]!!,
-            width,
-            height,
+            formatMap[image.format]!!,
+            image.width,
+            image.height,
             0,
-            formatMap[format]!!,
+            formatMap[image.format]!!,
             GL_UNSIGNED_BYTE,
-            bytes
+            image.bytes
         )
 
         val errcode = glGetError()

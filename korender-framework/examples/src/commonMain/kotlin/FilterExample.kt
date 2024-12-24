@@ -7,7 +7,6 @@ import com.zakgof.korender.material.Effects.Adjust
 import com.zakgof.korender.material.MaterialModifiers.effect
 import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.material.StandartMaterialOption
-import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.mesh.Meshes.sphere
 import org.jetbrains.compose.resources.ExperimentalResourceApi

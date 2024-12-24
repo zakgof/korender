@@ -7,7 +7,6 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.material.StandartMaterialOption
-import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import com.zakgof.korender.mesh.Attributes.NORMAL

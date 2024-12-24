@@ -5,13 +5,15 @@ import com.zakgof.korender.gl.GLConstants
 import com.zakgof.korender.impl.engine.Bucket
 import com.zakgof.korender.impl.engine.GltfDeclaration
 import com.zakgof.korender.impl.engine.Inventory
+import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
+import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
 import com.zakgof.korender.impl.parentResourceOf
 import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.material.MaterialBuilder
 import com.zakgof.korender.material.MaterialModifiers
-import com.zakgof.korender.material.StandartMaterialOption
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.material.TextureFilter
+import com.zakgof.korender.material.TextureWrap
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.mesh.Attributes
 import com.zakgof.korender.mesh.CustomMesh
@@ -49,24 +51,28 @@ internal object GltfLoader {
 
 internal class GltfSceneBuilder(
     val inventory: Inventory,
-    val resource: String,
-    val gltfLoaded: GltfLoaded
+    private val resource: String,
+    private val gltfLoaded: GltfLoaded
 ) {
 
-    val renderableDeclarations = mutableListOf<RenderableDeclaration>()
+    private val renderableDeclarations = mutableListOf<RenderableDeclaration>()
 
     fun build(): MutableList<RenderableDeclaration> {
         val model = gltfLoaded.model
         val scene = model.scenes!![model.scene]
         scene.nodes.map { model.nodes!![it] }
-            .forEach { processNode(Transform(), it) }
+            .forEach { processNode(Transform().scale(300.0f), it) } // TODO debug
+
+        model.materials?.map {
+            it.pbrMetallicRoughness?.baseColorTexture
+        }
 
         return renderableDeclarations
     }
 
     private fun processNode(transform: Transform, node: Gltf.Node) {
 
-        val mesh = node.mesh
+        node.mesh
             ?.let { gltfLoaded.model.meshes!![it] }
             ?.let { processMesh(transform, it, node.mesh) }
 
@@ -78,15 +84,8 @@ internal class GltfSceneBuilder(
         mesh.primitives.forEachIndexed { primitiveIndex, primitive ->
 
             val meshDeclaration = createMeshDeclaration(primitive, meshIndex, primitiveIndex)
-            val material = primitive.material?.let { gltfLoaded.model.materials!![it] }
+            val materialDeclaration = createMaterialDeclaration(primitive)
 
-            val materialDeclaration = MaterialBuilder().apply {
-                MaterialModifiers.standart(
-                    StandartMaterialOption.FixedColor
-                ) {
-                    color = Color.Red
-                }.applyTo(this)
-            }.toMaterialDeclaration()
 
             val renderableDeclaration = RenderableDeclaration(
                 meshDeclaration,
@@ -100,6 +99,35 @@ internal class GltfSceneBuilder(
         }
     }
 
+    private fun createMaterialDeclaration(primitive: Gltf.Mesh.Primitive): MaterialDeclaration {
+
+        val material = primitive.material?.let { gltfLoaded.model.materials!![it] }
+
+        val textureDeclaration = material?.pbrMetallicRoughness?.baseColorTexture?.index?.let {
+            // TODO null checks !!!
+            gltfLoaded.model.textures?.get(it)?.source?.let { src ->
+                gltfLoaded.model.images!![src]
+            }?.uri?.let { uri ->
+                val bytes = gltfLoaded.loadedUris[uri]!!
+                ByteArrayTextureDeclaration(
+                    uri,
+                    TextureFilter.MipMapLinearLinear,
+                    TextureWrap.Repeat,
+                    1024,
+                    bytes,
+                    uri.split(".").last()
+                )
+            }
+        }
+
+        return MaterialBuilder().apply {
+            MaterialModifiers.standart {
+                colorTexture = textureDeclaration
+            }.applyTo(this)
+        }.toMaterialDeclaration()
+
+    }
+
     private fun createMeshDeclaration(
         primitive: Gltf.Mesh.Primitive,
         meshIndex: Int,
@@ -107,21 +135,20 @@ internal class GltfSceneBuilder(
     ): MeshDeclaration {
         val indicesAccessor = primitive.indices?.let { gltfLoaded.model.accessors!![it] }
         val verticesAttributeAccessors = primitive.attributes
-            .map { Attributes.byGltfName(it.key) to gltfLoaded.model.accessors!![it.value] }
-            .toMap()
-
-        val attrs = verticesAttributeAccessors.keys.toList()
+            .mapNotNull { p ->
+                Attributes.byGltfName(p.key)?.let { it to gltfLoaded.model.accessors!![p.value] }
+            }
 
         return CustomMesh(
             "$resource:$meshIndex:$primitiveIndex",
-            verticesAttributeAccessors.entries.first().value.count,
+            verticesAttributeAccessors.first().second.count,
             indicesAccessor!!.count,
-            attrs,
+            verticesAttributeAccessors.map { it.first }.sortedBy { it.order },
             false
         ) {
             indexBytes(getAccessorBytes(indicesAccessor))
-            attrs.forEach {
-                attrBytes(it, getAccessorBytes(verticesAttributeAccessors[it]!!))
+            verticesAttributeAccessors.forEach {
+                attrBytes(it.first, getAccessorBytes(it.second))
             }
         }
     }
@@ -134,12 +161,13 @@ internal class GltfSceneBuilder(
         val bufferView = gltfLoaded.model.bufferViews!![accessor.bufferView!!]
         val buffer = gltfLoaded.model.buffers!![bufferView.buffer]
         val bufferBytes = gltfLoaded.loadedUris[buffer.uri]!!
+        val byteOffset = accessor.byteOffset ?: 0
 
         val stride = bufferView.byteStride ?: 0
         if (stride == 0) {
             return bufferBytes.copyOfRange(
-                bufferView.byteOffset + accessor.byteOffset,
-                bufferView.byteOffset + accessor.byteOffset + accessor.count * elementComponents * componentBytes
+                bufferView.byteOffset + byteOffset,
+                bufferView.byteOffset + byteOffset + accessor.count * elementComponents * componentBytes
             )
         } else {
             val accessorBytes = ByteArray(accessor.count * elementComponents * componentBytes)
@@ -147,8 +175,8 @@ internal class GltfSceneBuilder(
                 bufferBytes.copyInto(
                     accessorBytes,
                     element * elementComponents * componentBytes,
-                    bufferView.byteOffset + element * stride + accessor.byteOffset,
-                    bufferView.byteOffset + element * stride + accessor.byteOffset +
+                    bufferView.byteOffset + element * stride + byteOffset,
+                    bufferView.byteOffset + element * stride + byteOffset +
                             elementComponents * componentBytes
                 )
             }

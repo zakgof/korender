@@ -15,7 +15,7 @@ import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.Renderable
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
-import com.zakgof.korender.material.TextureDeclaration
+import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.projection.FrustumProjection
@@ -63,7 +63,7 @@ internal class SingleShadower(
         val uniformDecorator: (UniformSupplier) -> UniformSupplier = {
             UniformSupplier { key ->
                 var value = it[key] ?: casterUniforms[key]
-                if (value is TextureDeclaration) {
+                if (value is InternalTexture) {
                     value = inventory.texture(value)
                 }
                 value
