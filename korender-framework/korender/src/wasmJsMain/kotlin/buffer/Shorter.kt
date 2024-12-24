@@ -40,4 +40,6 @@ actual class Shorter(capacity: Int) : BufferData<Short> {
     }
 
     override fun toString() = array.toString()
+
+    override fun size() = array.length
 }

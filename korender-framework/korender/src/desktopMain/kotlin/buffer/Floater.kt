@@ -1,10 +1,11 @@
 package com.zakgof.korender.buffer
 
 import java.nio.ByteBuffer
+import java.nio.FloatBuffer
 
 actual class Floater(override val byteBuffer: ByteBuffer) : BufferData<Float> {
 
-    val floatBuffer = byteBuffer.asFloatBuffer()
+    val floatBuffer: FloatBuffer = byteBuffer.asFloatBuffer()
 
     override fun rewind() {
         floatBuffer.rewind()
@@ -32,4 +33,6 @@ actual class Floater(override val byteBuffer: ByteBuffer) : BufferData<Float> {
     actual fun put(values: FloatArray) {
         floatBuffer.put(values)
     }
+
+    override fun size() = floatBuffer.limit()
 }

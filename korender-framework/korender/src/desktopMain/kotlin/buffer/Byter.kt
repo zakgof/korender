@@ -30,4 +30,8 @@ actual class Byter(override val byteBuffer: ByteBuffer) : BufferData<Byte> {
     actual fun put(values: ByteArray) {
         byteBuffer.put(values)
     }
+
+    actual fun toFloater(): Floater = Floater(byteBuffer)
+
+    override fun size() = byteBuffer.limit()
 }

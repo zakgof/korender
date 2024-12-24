@@ -10,6 +10,9 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 @OptIn(ExperimentalCoroutinesApi::class)
 internal fun <T> Deferred<T>.resultOrNull() : T? = if (this.isCompleted) this.getCompleted() else null
 
+internal suspend fun resourceBytes(appResourceLoader: ResourceLoader, resource: String, parent: String): ByteArray =
+    resourceBytes(appResourceLoader, "$parent/$resource")
+
 @OptIn(ExperimentalResourceApi::class)
 internal suspend fun resourceBytes(appResourceLoader: ResourceLoader, resource: String): ByteArray {
     println("Loading resource $resource")
@@ -18,6 +21,10 @@ internal suspend fun resourceBytes(appResourceLoader: ResourceLoader, resource: 
     }
     return Res.readBytes("files/$resource")
 }
+
+fun parentResourceOf(resource: String) =
+    resource.split("/").dropLast(1).joinToString("/")
+
 
 internal fun ignoringGlError(block: () -> Unit) {
     block()

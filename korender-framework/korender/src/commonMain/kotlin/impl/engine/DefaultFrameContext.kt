@@ -53,6 +53,9 @@ internal class DefaultFrameContext(
     override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, transparent: Boolean, block: InstancedBillboardsContext.() -> Unit) =
         defaultPassContext.InstancedBillboards(*materialModifiers, id = id, count = count, transparent = transparent, block = block)
 
+    override fun Scene(gltfResource: String) =
+        defaultPassContext.Scene(gltfResource)
+
     override fun Shadow(block: ShadowContext.() -> Unit) {
         val shadowDeclaration = ShadowDeclaration()
         ShadowContext(shadowDeclaration).apply(block)

@@ -4,15 +4,13 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.buffer.BufferUtils
 import com.zakgof.korender.buffer.Inter
 import com.zakgof.korender.gl.GL.glAttachShader
+import com.zakgof.korender.gl.GL.glBindAttribLocation
 import com.zakgof.korender.gl.GL.glCompileShader
 import com.zakgof.korender.gl.GL.glCreateProgram
 import com.zakgof.korender.gl.GL.glCreateShader
 import com.zakgof.korender.gl.GL.glDeleteProgram
 import com.zakgof.korender.gl.GL.glDeleteShader
-import com.zakgof.korender.gl.GL.glEnableVertexAttribArray
-import com.zakgof.korender.gl.GL.glGetActiveAttrib
 import com.zakgof.korender.gl.GL.glGetActiveUniform
-import com.zakgof.korender.gl.GL.glGetAttribLocation
 import com.zakgof.korender.gl.GL.glGetProgramInfoLog
 import com.zakgof.korender.gl.GL.glGetProgrami
 import com.zakgof.korender.gl.GL.glGetShaderInfoLog
@@ -29,11 +27,8 @@ import com.zakgof.korender.gl.GL.glUniformMatrix3fv
 import com.zakgof.korender.gl.GL.glUniformMatrix4fv
 import com.zakgof.korender.gl.GL.glUseProgram
 import com.zakgof.korender.gl.GL.glValidateProgram
-import com.zakgof.korender.gl.GL.glVertexAttribPointer
-import com.zakgof.korender.gl.GLConstants.GL_ACTIVE_ATTRIBUTES
 import com.zakgof.korender.gl.GLConstants.GL_ACTIVE_UNIFORMS
 import com.zakgof.korender.gl.GLConstants.GL_COMPILE_STATUS
-import com.zakgof.korender.gl.GLConstants.GL_FLOAT
 import com.zakgof.korender.gl.GLConstants.GL_FRAGMENT_SHADER
 import com.zakgof.korender.gl.GLConstants.GL_LINK_STATUS
 import com.zakgof.korender.gl.GLConstants.GL_VALIDATE_STATUS
@@ -59,7 +54,6 @@ internal class GlGpuShader(
     private val vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER)
     private val fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER)
     private val uniformLocations: Map<String, GLUniformLocation>
-    private val attributeLocations: Map<String, Int>
 
     init {
 
@@ -119,7 +113,6 @@ internal class GlGpuShader(
         println("Creating GPU Shader [$name] : $programHandle")
 
         uniformLocations = fetchUniforms()
-        attributeLocations = fetchAttributes()
     }
 
     private fun fetchUniforms(): Map<String, GLUniformLocation> {
@@ -134,21 +127,6 @@ internal class GlGpuShader(
             val location = glGetUniformLocation(programHandle, name)
             name to location
         }
-    }
-
-    private fun fetchAttributes(): Map<String, Int> {
-        val params = BufferUtils.createIntBuffer(1)
-        val type = BufferUtils.createIntBuffer(1)
-
-        val numAttributes = glGetProgrami(programHandle, GL_ACTIVE_ATTRIBUTES)
-        return (0 until numAttributes).associate {
-            val name: String = glGetActiveAttrib(
-                programHandle, it, params.apply { clear() }, type.apply { clear() }
-            )
-            val location = glGetAttribLocation(programHandle, name);
-            name to location
-        }
-
     }
 
     override fun close() {
@@ -168,15 +146,8 @@ internal class GlGpuShader(
 
     private fun bindAttrs(mesh: GlGpuMesh) {
         mesh.bind()
-        var offset = 0
-        for (attr in mesh.attrs) {
-            attributeLocations[attr.name]?.let {
-                glEnableVertexAttribArray(it)
-                glVertexAttribPointer(
-                    it, attr.size, GL_FLOAT, false, mesh.vertexSize, offset
-                )
-            }
-            offset += attr.size * 4 // TODO others than float
+        mesh.attrs.forEachIndexed { index, attr ->
+            glBindAttribLocation(programHandle, index, attr.name)
         }
     }
 
@@ -210,7 +181,7 @@ internal class GlGpuShader(
             }
 
             is NotYetLoadedTexture -> {
-                println("Warning: texture not yet loaded")
+                // glUniform1i(location, -1)
             }
 
             else -> {

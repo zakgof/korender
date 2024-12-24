@@ -25,7 +25,7 @@ internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms:
             )
             val shader = inventory.shader(modifiedShader) ?: return null
 
-            if (declaration.mesh is CustomMesh && !declaration.mesh.static) {
+            if (declaration.mesh is CustomMesh && declaration.mesh.dynamic) {
                 (mesh as Geometry.DefaultMesh).updateMesh(declaration.mesh.block)
             }
 

@@ -32,7 +32,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.await
 import kotlinx.coroutines.launch
+import org.khronos.webgl.BufferDataSource
 import org.khronos.webgl.Uint8ClampedArray
+import org.khronos.webgl.WebGLObject
 import org.khronos.webgl.WebGLRenderingContext.Companion.RENDERER
 import org.khronos.webgl.WebGLRenderingContext.Companion.SHADING_LANGUAGE_VERSION
 import org.khronos.webgl.WebGLRenderingContext.Companion.VENDOR
@@ -51,7 +53,13 @@ import performanceNow
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-abstract external class WebGL2RenderingContext : WebGLRenderingContextBase, RenderingContext, JsAny
+abstract external class WebGL2RenderingContext : WebGLRenderingContextBase, RenderingContext, JsAny {
+    abstract fun createVertexArray(): WebGLVertexArray?
+    abstract fun deleteVertexArray(vertexArray: WebGLVertexArray)
+    abstract fun bindVertexArray(vertexArray: WebGLVertexArray?)
+}
+
+abstract external class WebGLVertexArray : WebGLObject, JsAny
 
 internal fun Byte.toClampedFloat(): Float = this.toInt().and(0xFF).toFloat()
 

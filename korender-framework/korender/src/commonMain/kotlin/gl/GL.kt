@@ -63,11 +63,19 @@ expect object GL {
 
     fun glBindBuffer(target: Int, buffer: GLBuffer)
 
+    fun glBindVertexArray(vertexArray: GLVertexArray?)
+
+    fun glBindAttribLocation(program: GLProgram, index: Int, attr: String)
+
     fun glBufferData(target: Int, data: BufferData<out Any>, usage: Int)
 
     fun glGenBuffers(): GLBuffer
 
+    fun glGenVertexArrays(): GLVertexArray
+
     fun glDeleteBuffers(buffer: GLBuffer)
+
+    fun glDeleteVertexArrays(vertexArray: GLVertexArray)
 
     fun glCreateProgram(): GLProgram
 

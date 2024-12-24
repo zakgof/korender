@@ -32,4 +32,6 @@ actual class Inter(override val byteBuffer: ByteBuffer) : BufferData<Int> {
     actual fun put(values: IntArray) {
         intBuffer.put(values)
     }
+
+    override fun size() = intBuffer.limit()
 }

@@ -3,7 +3,6 @@ package com.zakgof.korender.buffer
 import org.khronos.webgl.Int32Array
 import org.khronos.webgl.get
 import org.khronos.webgl.set
-import org.khronos.webgl.toFloat32Array
 import org.khronos.webgl.toInt32Array
 
 actual class Inter(capacity: Int) : BufferData<Int> {
@@ -42,4 +41,5 @@ actual class Inter(capacity: Int) : BufferData<Int> {
 
     override fun toString() = array.toString()
 
+    override fun size() = array.length
 }

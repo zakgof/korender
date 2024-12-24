@@ -6,6 +6,9 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
 object Attributes {
+
+    fun byName(name: String) = mapping[name]
+
     val POS: Attribute = Attribute("pos", 3,
         { b, v -> write(b, v.pos!!) },
         { b, v -> v.pos = readVec3(b) }
@@ -34,6 +37,12 @@ object Attributes {
     val PHI: Attribute = Attribute("phi", 1,
         { b, v -> b.put(v.phi!!) },
         { b, v -> v.phi = b.get() }
+    )
+
+    private val mapping= mapOf(
+        "POS" to POS,
+        "NORMAL" to NORMAL,
+        "TEX" to TEX
     )
 }
 

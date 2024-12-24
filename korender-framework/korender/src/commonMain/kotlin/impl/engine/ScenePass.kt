@@ -18,6 +18,7 @@ import com.zakgof.korender.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
 import com.zakgof.korender.gl.GLConstants.GL_SRC_ALPHA
+import com.zakgof.korender.impl.gltf.GltfSceneBuilder
 import com.zakgof.korender.uniforms.UniformSupplier
 
 internal class ScenePass(
@@ -37,6 +38,11 @@ internal class ScenePass(
     private val screens = mutableListOf<Renderable>()
 
     init {
+        passDeclaration.gltfs.forEach {
+            inventory.gltf(it)?.let { l ->
+                GltfSceneBuilder(inventory, it.gltfResource, l).build()
+            }
+        }
         passDeclaration.renderables.forEach {
             val renderable = Renderable.create(inventory, it, camera, false, shadowCascades)
             renderable?.let { r ->

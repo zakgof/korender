@@ -28,6 +28,10 @@ internal class DefaultPassContext(
     override var light: Vec3
 ) : PassContext {
 
+    override fun Scene(gltfResource: String) {
+        passDeclaration.add(GltfDeclaration(gltfResource))
+    }
+
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean) {
         val materialDeclaration = materialDeclaration(MaterialBuilder(), materialModifiers)
         passDeclaration.add(RenderableDeclaration(mesh, materialDeclaration.shader, materialDeclaration.uniforms, transform, if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE))

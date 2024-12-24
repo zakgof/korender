@@ -9,4 +9,5 @@ expect interface BufferData<E> {
     fun remaining(): Int
     fun clear()
     fun rewind()
+    fun size() : Int
 }

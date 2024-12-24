@@ -41,7 +41,8 @@ fun AppExample() {
         Demo("Smoke", "Smoke effect") { SmokeExample() },
         Demo("GUI", "On-screen GUI") { GuiExample() },
         Demo("Sky", "Simple sky") { SkyExample() },
-        Demo("Plg", "Shader plugin") { ShaderPluginExample() }
+        Demo("Plg", "Shader plugin") { ShaderPluginExample() },
+        Demo("Gltf", "Gltf scene loading") { GltfExample() }
     )
 
     var option by remember { mutableStateOf(options[1]) }
@@ -73,4 +74,8 @@ fun AppExample() {
     }
 }
 
-private class Demo(val title: String, val description: String, val composable: @Composable () -> Unit)
+private class Demo(
+    val title: String,
+    val description: String,
+    val composable: @Composable () -> Unit
+)

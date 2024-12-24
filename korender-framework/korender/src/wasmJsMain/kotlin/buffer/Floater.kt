@@ -5,9 +5,10 @@ import org.khronos.webgl.get
 import org.khronos.webgl.set
 import org.khronos.webgl.toFloat32Array
 
-actual class Floater(capacity: Int) : BufferData<Float> {
+actual class Floater(override val array : Float32Array) : BufferData<Float> {
 
-    override val array = Float32Array(capacity)
+    constructor(capacity: Int) : this(Float32Array(capacity))
+
     internal var position = 0
 
     actual fun put(values: FloatArray) {
@@ -41,4 +42,5 @@ actual class Floater(capacity: Int) : BufferData<Float> {
 
     override fun toString() = array.toString()
 
+    override fun size() = array.length
 }

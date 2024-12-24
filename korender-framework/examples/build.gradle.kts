@@ -63,7 +63,6 @@ kotlin {
             implementation(compose.material)
             implementation(compose.ui)
             implementation(compose.components.resources)
-            implementation(libs.obj)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

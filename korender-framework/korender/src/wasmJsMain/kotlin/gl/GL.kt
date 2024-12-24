@@ -90,14 +90,17 @@ actual object GL {
     actual fun glBindBuffer(target: Int, buffer: GLBuffer) =
         gl!!.bindBuffer(target, buffer.buffer)
 
-    actual fun glBufferData(target: Int, data: BufferData<out Any>, usage: Int) =
-        gl!!.bufferData(target, data.array, usage)
-
     actual fun glGenBuffers(): GLBuffer =
         GLBuffer(gl!!.createBuffer() ?: throw KorenderException("Failed to create WebGL buffer"))
 
+    actual fun glGenVertexArrays(): GLVertexArray =
+        GLVertexArray(gl!!.createVertexArray() ?: throw KorenderException("Failed to create WebGL vertex array"))
+
     actual fun glDeleteBuffers(buffer: GLBuffer) =
         gl!!.deleteBuffer(buffer.buffer)
+
+    actual fun glDeleteVertexArrays(vertexArray: GLVertexArray) =
+        gl!!.deleteVertexArray(vertexArray.vertexArray)
 
     actual fun glCreateProgram(): GLProgram =
         GLProgram(gl!!.createProgram() ?:
@@ -219,4 +222,13 @@ actual object GL {
 
     actual fun glCheckFramebufferStatus(target: Int): Int =
         gl!!.checkFramebufferStatus(target)
+
+    actual fun glBindVertexArray(vertexArray: GLVertexArray?) =
+        gl!!.bindVertexArray(vertexArray?.vertexArray)
+
+    actual fun glBindAttribLocation(program: GLProgram, index: Int, attr: String) =
+        gl!!.bindAttribLocation(program.program, index, attr)
+
+    actual fun glBufferData(target: Int, data: BufferData<out Any>, usage: Int) =
+        gl!!.bufferData(target, data.array, usage)
 }

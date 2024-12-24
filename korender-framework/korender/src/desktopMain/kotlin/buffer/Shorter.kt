@@ -32,4 +32,6 @@ actual class Shorter(override val byteBuffer: ByteBuffer) : BufferData<Short> {
     actual fun put(values: ShortArray) {
         shortBuffer.put(values)
     }
+
+    override fun size() = shortBuffer.limit()
 }

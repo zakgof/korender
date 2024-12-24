@@ -12,4 +12,5 @@ actual interface BufferData<E> {
     actual fun position(pos: Int)
     actual fun remaining(): Int
     actual fun clear()
+    actual fun size(): Int
 }

@@ -36,8 +36,10 @@ internal class SceneDeclaration {
 internal class PassDeclaration {
     val renderables = mutableListOf<RenderableDeclaration>()
     val guis = mutableListOf<ElementDeclaration.Container>()
+    val gltfs = mutableListOf<GltfDeclaration>()
 
     fun add(renderable: RenderableDeclaration) = renderables.add(renderable)
+    fun add(gltfDeclaration: GltfDeclaration) = gltfs.add(gltfDeclaration)
     fun addGui(gui: ElementDeclaration.Container) = guis.add(gui)
 }
 
@@ -142,3 +144,5 @@ internal class ShadowDeclaration {
 }
 
 internal data class CascadeDeclaration(val mapSize: Int, val near: Float, var far: Float)
+
+internal data class GltfDeclaration(val gltfResource: String)

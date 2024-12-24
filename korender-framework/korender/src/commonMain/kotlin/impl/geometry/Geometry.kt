@@ -51,7 +51,10 @@ internal object Geometry {
                 builder(declaration, appResourceLoader).build()
         }
 
-    private suspend fun builder(declaration: MeshDeclaration, appResourceLoader: ResourceLoader): MeshBuilder =
+    private suspend fun builder(
+        declaration: MeshDeclaration,
+        appResourceLoader: ResourceLoader
+    ): MeshBuilder =
         when (declaration) {
             is Sphere -> sphere(declaration.radius)
             is Cube -> cube(declaration.halfSide)
@@ -87,62 +90,84 @@ internal object Geometry {
     ) =
         MeshBuilder(name, vertexNumber, indexNumber, attrs.toList()).apply(block)
 
-    class MeshBuilder(
+    internal class MeshBuilder(
         val name: String,
         val vertexNumber: Int,
         val indexNumber: Int,
-        val attrs: List<Attribute>
+        val attrs: List<Attribute>,
+        val attributeBuffers: List<Floater>
     ) : MeshInitializer {
-        val vertexBuffer: Floater
+
         val indexInter: Inter?
         val indexShorter: Shorter?
-        var isLongIndex: Boolean
+        var isLongIndex = vertexNumber > 32767
+        val attrMap = attrs.indices.associate { attrs[it] to attributeBuffers[it] }
 
-        val vertexSize: Int = attrs.sumOf { it.size } * 4
+        constructor(
+            name: String,
+            vertexNumber: Int,
+            indexNumber: Int,
+            attrs: List<Attribute>
+        ) : this(
+            name,
+            vertexNumber,
+            indexNumber,
+            attrs,
+            attrs.map { BufferUtils.createFloatBuffer(vertexNumber * it.size) })
 
         init {
-            vertexBuffer = BufferUtils.createFloatBuffer(vertexNumber * vertexSize / 4) // TODO /4
-            isLongIndex = vertexNumber > 32767
             indexShorter = if (isLongIndex) null else BufferUtils.createShortBuffer(indexNumber)
             indexInter = if (isLongIndex) BufferUtils.createIntBuffer(indexNumber) else null
         }
 
-        fun vertices(vararg values: Vec3) = values.forEach { vertices(it.x, it.y, it.z) }
-
-        override fun vertices(vararg values: Float) {
-            vertexBuffer.put(values)
+        override fun attr(attr: Attribute, vararg v: Float): MeshInitializer {
+            v.forEach { attrMap[attr]!!.put(it) }
+            return this
         }
 
-        override fun indices(vararg values: Int) {
-            for (value in values) {
+        override fun pos(vararg position: Vec3): MeshInitializer {
+            position.forEach { pos(it.x, it.y, it.z) }
+            return this
+        }
+
+        override fun pos(vararg v: Float): MeshInitializer = attr(POS, *v)
+
+        override fun normal(vararg normal: Vec3): MeshInitializer {
+            normal.forEach { normal(it.x, it.y, it.z) }
+            return this
+        }
+
+        override fun normal(vararg v: Float): MeshInitializer = attr(NORMAL, *v)
+
+        override fun tex(vararg tex: Vec2): MeshInitializer {
+            tex.forEach { tex(it.x, it.y) }
+            return this
+        }
+
+        override fun tex(vararg v: Float): MeshInitializer = attr(TEX, *v)
+
+        override fun scale(vararg scale: Vec2): MeshInitializer {
+            scale.forEach { tex(it.x, it.y) }
+            return this
+        }
+
+        override fun scale(vararg v: Float): MeshInitializer = attr(SCALE, *v)
+
+        override fun phi(vararg v: Float): MeshInitializer = attr(PHI, *v)
+
+        override fun index(vararg indices: Int): MeshInitializer {
+            for (value in indices) {
                 if (isLongIndex)
                     indexInter!!.put(value)
                 else
                     indexShorter!!.put(value.toShort())
             }
+            return this
         }
 
         private fun indexGet(index: Int): Int =
             if (isLongIndex) indexInter!![index] else indexShorter!![index].toInt()
 
-
-        fun updateVertex(vertexIndex: Int, block: (Vertex) -> Unit) {
-            val vertex = getVertex(vertexIndex)
-            block(vertex)
-            putVertex(vertexIndex, vertex)
-        }
-
-        fun putVertex(vertexIndex: Int, vertex: Vertex) =
-            putVertex(vertexBuffer, vertexIndex, vertex, vertexSize, attrs)
-
-        fun getVertex(vertexIndex: Int): Vertex =
-            getVertex(vertexBuffer, vertexIndex, vertexSize, attrs.toList())
-
-        fun putVertex(vertex: Vertex) {
-            for (attr in attrs) {
-                attr.writer(vertexBuffer, vertex)
-            }
-        }
 
         fun build(isDynamic: Boolean = false): DefaultMesh =
             DefaultMesh(name, this, isDynamic)
@@ -150,43 +175,28 @@ internal object Geometry {
         fun buildInstanced(count: Int): MultiMesh =
             MultiMesh(name, instancing(count), this)
 
-        fun instancing(
-            instances: Int,
-            transform: (Int, Vertex) -> Unit = { _, _ -> }
-        ): MeshBuilder {
-            val that = this
+        private fun instancing(instances: Int): MeshBuilder {
+            val prototype = this
             return create(
                 name,
                 vertexNumber * instances,
                 indexNumber * instances,
                 *attrs.toTypedArray()
             ) {
+                // TODO optimize
                 for (i in 0 until instances) {
-                    that.vertexBuffer.rewind()
-                    that.indexInter?.rewind()
-                    that.indexShorter?.rewind()
-                    for (v in 0 until that.vertexNumber) {
-                        val vertex =
-                            getVertex(that.vertexBuffer, v, vertexSize, attrs.toList())
-                        transform(i * that.vertexNumber + v, vertex)
-                        putVertex(
-                            vertexBuffer,
-                            i * that.vertexNumber + v,
-                            vertex,
-                            vertexSize,
-                            attrs.toList()
-                        )
+                    prototype.attributeBuffers.forEachIndexed { index, prototypeAttrBuffer ->
+                        val multiAttrBuffer = attributeBuffers[index]
+                        for (v in 0 until prototypeAttrBuffer.size()){
+                            multiAttrBuffer.put(prototypeAttrBuffer[v])
+                        }
                     }
-                    for (ind in 0 until that.indexNumber) {
-                        indices(that.indexGet(ind) + i * that.vertexNumber)
+                    for (ind in 0 until prototype.indexNumber) {
+                        index(prototype.indexGet(ind) + i * prototype.vertexNumber)
                     }
                 }
             }
         }
-
-        override fun vertex(block: Vertex.() -> Unit) = putVertex(Vertex().apply(block))
-
-        override fun vertex(vertex: Vertex) = putVertex(vertex)
 
         fun indexBuffer() =
             if (isLongIndex) indexInter!! else indexShorter!!
@@ -198,10 +208,8 @@ internal object Geometry {
         isDynamic: Boolean = false
     ) : Mesh {
 
-        private val floatVertexBuffer = data.vertexBuffer
-
         final override val gpuMesh: GlGpuMesh =
-            GlGpuMesh(name, data.attrs, data.vertexSize, isDynamic, data.isLongIndex)
+            GlGpuMesh(name, data.attrs, isDynamic, data.isLongIndex)
 
         final override val modelBoundingBox: BoundingBox?
         override fun close() = gpuMesh.close()
@@ -211,20 +219,16 @@ internal object Geometry {
             modelBoundingBox = if (data.attrs.contains(POS)) BoundingBox(positions()) else null
         }
 
-        fun positions(): List<Vec3> {
-            val positionOffset = data.attrs.takeWhile { it != POS }.sumOf { it.size }
-            return (0 until data.vertexNumber).map {
-                floatVertexBuffer.position(it * data.vertexSize / 4 + positionOffset)
-                val x = floatVertexBuffer.get()
-                val y = floatVertexBuffer.get()
-                val z = floatVertexBuffer.get()
-                Vec3(x, y, z)
+        private fun positions(): List<Vec3> {
+            val posBuffer = data.attrMap[POS]!!
+            return (0..<data.vertexNumber).map {
+                Vec3(posBuffer[it * 3], posBuffer[it * 3 + 1], posBuffer[it * 3 + 2])
             }
         }
 
         private fun updateGpu() {
             gpuMesh.update(
-                data.vertexBuffer.apply { rewind() },
+                data.attributeBuffers.onEach { it.rewind() },
                 data.indexBuffer().apply { rewind() },
                 data.vertexNumber,
                 data.indexNumber
@@ -232,7 +236,7 @@ internal object Geometry {
         }
 
         fun updateMesh(block: MeshInitializer.() -> Unit) {
-            data.vertexBuffer.rewind()
+            data.attributeBuffers.forEach { it.rewind() }
             data.indexInter?.rewind()
             data.indexShorter?.rewind()
             data.apply(block)
@@ -251,17 +255,26 @@ internal object Geometry {
         private var initialized = false
 
         fun updateInstances(instances: List<MeshInstance>) {
+            val protoPosBuffer = prototype.attrMap[POS]!!
+            val dataPosBuffer = data.attrMap[POS]!!
+            dataPosBuffer.rewind()
             instances.indices.map {
                 val instance = instances[it]
                 for (v in 0..<prototype.vertexNumber) {
-                    data.updateVertex(prototype.vertexNumber * it + v) {
-                        it.pos = instance.transform.mat4.project(prototype.getVertex(v).pos!!)
-                        // TODO: normal
-                    }
+                    val protoPos = Vec3(
+                        protoPosBuffer[v * 3 + 0],
+                        protoPosBuffer[v * 3 + 1],
+                        protoPosBuffer[v * 3 + 2]
+                    )
+                    val newPos = instance.transform.mat4.project(protoPos)
+                    dataPosBuffer.put(newPos.x)
+                    dataPosBuffer.put(newPos.y)
+                    dataPosBuffer.put(newPos.z)
+                    // TODO: normal
                 }
             }
             gpuMesh.update(
-                data.vertexBuffer,
+                data.attributeBuffers,
                 if (data.isLongIndex) data.indexInter!! else data.indexShorter!!,
                 prototype.vertexNumber * instances.size,
                 prototype.indexNumber * instances.size
@@ -270,48 +283,52 @@ internal object Geometry {
         }
 
         fun updateBillboardInstances(instances: List<BillboardInstance>) {
+            val dataPosBuffer = data.attrMap[POS]!!
+            val dataScaleBuffer = data.attrMap[SCALE]!!
+            val dataPhiBuffer = data.attrMap[PHI]!!
+            val dataTexBuffer = data.attrMap[TEX]!!
+            dataPosBuffer.rewind()
+            dataScaleBuffer.rewind()
+            dataPhiBuffer.rewind()
+            dataTexBuffer.rewind()
             instances.indices.map {
                 val instance = instances[it]
-                data.putVertex(
-                    it * 4 + 0,
-                    Vertex(
-                        pos = instance.pos,
-                        scale = instance.scale,
-                        phi = instance.phi,
-                        tex = Vec2(0f, 0f)
-                    )
-                )
-                data.putVertex(
-                    it * 4 + 1,
-                    Vertex(
-                        pos = instance.pos,
-                        scale = instance.scale,
-                        phi = instance.phi,
-                        tex = Vec2(0f, 1f)
-                    )
-                )
-                data.putVertex(
-                    it * 4 + 2,
-                    Vertex(
-                        pos = instance.pos,
-                        scale = instance.scale,
-                        phi = instance.phi,
-                        tex = Vec2(1f, 1f)
-                    )
-                )
-                data.putVertex(
-                    it * 4 + 3,
-                    Vertex(
-                        pos = instance.pos,
-                        scale = instance.scale,
-                        phi = instance.phi,
-                        tex = Vec2(1f, 0f)
-                    )
-                )
+                dataPosBuffer.put(instance.pos.x)
+                dataPosBuffer.put(instance.pos.y)
+                dataPosBuffer.put(instance.pos.z)
+                dataScaleBuffer.put(instance.scale.x)
+                dataScaleBuffer.put(instance.scale.y)
+                dataPhiBuffer.put(instance.phi)
+                dataTexBuffer.put(0f)
+                dataTexBuffer.put(0f)
+                dataPosBuffer.put(instance.pos.x)
+                dataPosBuffer.put(instance.pos.y)
+                dataPosBuffer.put(instance.pos.z)
+                dataScaleBuffer.put(instance.scale.x)
+                dataScaleBuffer.put(instance.scale.y)
+                dataPhiBuffer.put(instance.phi)
+                dataTexBuffer.put(0f)
+                dataTexBuffer.put(1f)
+                dataPosBuffer.put(instance.pos.x)
+                dataPosBuffer.put(instance.pos.y)
+                dataPosBuffer.put(instance.pos.z)
+                dataScaleBuffer.put(instance.scale.x)
+                dataScaleBuffer.put(instance.scale.y)
+                dataPhiBuffer.put(instance.phi)
+                dataTexBuffer.put(1f)
+                dataTexBuffer.put(1f)
+                dataPosBuffer.put(instance.pos.x)
+                dataPosBuffer.put(instance.pos.y)
+                dataPosBuffer.put(instance.pos.z)
+                dataScaleBuffer.put(instance.scale.x)
+                dataScaleBuffer.put(instance.scale.y)
+                dataPhiBuffer.put(instance.phi)
+                dataTexBuffer.put(1f)
+                dataTexBuffer.put(0f)
             }
             gpuMesh.update(
-                data.vertexBuffer,
-                if (data.isLongIndex) data.indexInter!! else data.indexShorter!!, // TODO method DRY
+                data.attributeBuffers,
+                data.indexBuffer(),
                 instances.size * 4,
                 instances.size * 6
             )
@@ -326,32 +343,40 @@ internal object Geometry {
             y: Float,
             widths: FloatArray
         ) {
+            val dataTexBuffer = data.attrMap[TEX]!!
+            val dataScreenBuffer = data.attrMap[SCREEN]!!
+            dataTexBuffer.rewind()
+            dataScreenBuffer.rewind()
             var xx = x
             for (i in text.indices) {
                 val c = text[i].code
                 val ratio = widths[c]
                 val width = height * ratio * aspect
-                data.updateVertex(i * 4 + 0) {
-                    it.tex = Vec2((c % 16) / 16.0f, (c / 16) / 16.0f)
-                    it.screen = Vec2(xx, y)
-                }
-                data.updateVertex(i * 4 + 1) {
-                    it.tex = Vec2((c % 16 + ratio) / 16.0f, (c / 16) / 16.0f)
-                    it.screen = Vec2(xx + width, y)
-                }
-                data.updateVertex(i * 4 + 2) {
-                    it.tex = Vec2((c % 16 + ratio) / 16.0f, (c / 16 + 1f) / 16.0f)
-                    it.screen = Vec2(xx + width, y - height)
-                }
-                data.updateVertex(i * 4 + 3) {
-                    it.tex = Vec2((c % 16) / 16.0f, (c / 16 + 1f) / 16.0f)
-                    it.screen = Vec2(xx, y - height)
-                }
+                dataTexBuffer.put((c % 16) / 16.0f)
+                dataTexBuffer.put((c / 16) / 16.0f)
+                dataScreenBuffer.put(xx)
+                dataScreenBuffer.put(y)
+
+                dataTexBuffer.put((c % 16 + ratio) / 16.0f)
+                dataTexBuffer.put((c / 16) / 16.0f)
+                dataScreenBuffer.put(xx + width)
+                dataScreenBuffer.put(y)
+
+                dataTexBuffer.put((c % 16 + ratio) / 16.0f)
+                dataTexBuffer.put((c / 16 + 1f) / 16.0f)
+                dataScreenBuffer.put(xx + width)
+                dataScreenBuffer.put(y - height)
+
+                dataTexBuffer.put((c % 16) / 16.0f)
+                dataTexBuffer.put((c / 16 + 1f) / 16.0f)
+                dataScreenBuffer.put(xx)
+                dataScreenBuffer.put(y - height)
+
                 xx += width
             }
             gpuMesh.update(
-                data.vertexBuffer,
-                if (data.isLongIndex) data.indexInter!! else data.indexShorter!!,
+                data.attributeBuffers,
+                data.indexBuffer(),
                 text.length * 4,
                 text.length * 6
             )
@@ -363,57 +388,56 @@ internal object Geometry {
 
     fun quad(halfSide: Float = 0.5f, block: MeshBuilder.() -> Unit = {}) =
         create("quad", 4, 6, POS, NORMAL, TEX) {
-            vertices(-halfSide, -halfSide, 0f, 0f, 0f, 1f, 0f, 0f)
-            vertices(-halfSide, halfSide, 0f, 0f, 0f, 1f, 0f, 1f)
-            vertices(halfSide, halfSide, 0f, 0f, 0f, 1f, 1f, 1f)
-            vertices(halfSide, -halfSide, 0f, 0f, 0f, 1f, 1f, 0f)
-            indices(0, 2, 1, 0, 3, 2)
+            pos(-halfSide, -halfSide, 0f).normal(0f, 0f, 1f).tex(0f, 0f)
+            pos(-halfSide, halfSide, 0f).normal(0f, 0f, 1f).tex(0f, 1f)
+            pos(halfSide, halfSide, 0f).normal(0f, 0f, 1f).tex(1f, 1f)
+            pos(halfSide, -halfSide, 0f).normal(0f, 0f, 1f).tex(1f, 0f)
+            index(0, 2, 1, 0, 3, 2)
             block.invoke(this)
         }
 
     fun screenQuad() =
         create("screen-quad", 4, 6, TEX) {
-            vertices(0f, 0f)
-            vertices(0f, 1f)
-            vertices(1f, 1f)
-            vertices(1f, 0f)
-            indices(0, 2, 1, 0, 3, 2)
+            tex(0f, 0f)
+            tex(0f, 1f)
+            tex(1f, 1f)
+            tex(1f, 0f)
+            index(0, 2, 1, 0, 3, 2)
         }
-
 
     fun cube(halfSide: Float = 0.5f, block: MeshBuilder.() -> Unit = {}) =
         create("cube", 24, 36, POS, NORMAL, TEX) {
-            vertices(-halfSide, -halfSide, -halfSide, -1f, 0f, 0f, 0f, 0f)
-            vertices(-halfSide, halfSide, -halfSide, -1f, 0f, 0f, 0f, 1f)
-            vertices(-halfSide, halfSide, halfSide, -1f, 0f, 0f, 1f, 1f)
-            vertices(-halfSide, -halfSide, halfSide, -1f, 0f, 0f, 1f, 0f)
-            vertices(-halfSide, -halfSide, halfSide, 0f, 0f, 1f, 0f, 0f)
-            vertices(-halfSide, halfSide, halfSide, 0f, 0f, 1f, 0f, 1f)
-            vertices(halfSide, halfSide, halfSide, 0f, 0f, 1f, 1f, 1f)
-            vertices(halfSide, -halfSide, halfSide, 0f, 0f, 1f, 1f, 0f)
-            vertices(halfSide, -halfSide, halfSide, 1f, 0f, 0f, 0f, 0f)
-            vertices(halfSide, halfSide, halfSide, 1f, 0f, 0f, 0f, 1f)
-            vertices(halfSide, halfSide, -halfSide, 1f, 0f, 0f, 1f, 1f)
-            vertices(halfSide, -halfSide, -halfSide, 1f, 0f, 0f, 1f, 0f)
-            vertices(halfSide, -halfSide, -halfSide, 0f, 0f, -1f, 0f, 0f)
-            vertices(halfSide, halfSide, -halfSide, 0f, 0f, -1f, 0f, 1f)
-            vertices(-halfSide, halfSide, -halfSide, 0f, 0f, -1f, 1f, 1f)
-            vertices(-halfSide, -halfSide, -halfSide, 0f, 0f, -1f, 1f, 0f)
-            vertices(-halfSide, halfSide, halfSide, 0f, 1f, 0f, 0f, 0f)
-            vertices(-halfSide, halfSide, -halfSide, 0f, 1f, 0f, 0f, 1f)
-            vertices(halfSide, halfSide, -halfSide, 0f, 1f, 0f, 1f, 1f)
-            vertices(halfSide, halfSide, halfSide, 0f, 1f, 0f, 1f, 0f)
-            vertices(halfSide, -halfSide, halfSide, 0f, -1f, 0f, 0f, 0f)
-            vertices(halfSide, -halfSide, -halfSide, 0f, -1f, 0f, 0f, 1f)
-            vertices(-halfSide, -halfSide, -halfSide, 0f, -1f, 0f, 1f, 1f)
-            vertices(-halfSide, -halfSide, halfSide, 0f, -1f, 0f, 1f, 0f)
+            pos(-halfSide, -halfSide, -halfSide).normal(-1f, 0f, 0f).tex(0f, 0f)
+            pos(-halfSide, halfSide, -halfSide).normal(-1f, 0f, 0f).tex(0f, 1f)
+            pos(-halfSide, halfSide, halfSide).normal(-1f, 0f, 0f).tex(1f, 1f)
+            pos(-halfSide, -halfSide, halfSide).normal(-1f, 0f, 0f).tex(1f, 0f)
+            pos(-halfSide, -halfSide, halfSide).normal(0f, 0f, 1f).tex(0f, 0f)
+            pos(-halfSide, halfSide, halfSide).normal(0f, 0f, 1f).tex(0f, 1f)
+            pos(halfSide, halfSide, halfSide).normal(0f, 0f, 1f).tex(1f, 1f)
+            pos(halfSide, -halfSide, halfSide).normal(0f, 0f, 1f).tex(1f, 0f)
+            pos(halfSide, -halfSide, halfSide).normal(1f, 0f, 0f).tex(0f, 0f)
+            pos(halfSide, halfSide, halfSide).normal(1f, 0f, 0f).tex(0f, 1f)
+            pos(halfSide, halfSide, -halfSide).normal(1f, 0f, 0f).tex(1f, 1f)
+            pos(halfSide, -halfSide, -halfSide).normal(1f, 0f, 0f).tex(1f, 0f)
+            pos(halfSide, -halfSide, -halfSide).normal(0f, 0f, -1f).tex(0f, 0f)
+            pos(halfSide, halfSide, -halfSide).normal(0f, 0f, -1f).tex(0f, 1f)
+            pos(-halfSide, halfSide, -halfSide).normal(0f, 0f, -1f).tex(1f, 1f)
+            pos(-halfSide, -halfSide, -halfSide).normal(0f, 0f, -1f).tex(1f, 0f)
+            pos(-halfSide, halfSide, halfSide).normal(0f, 1f, 0f).tex(0f, 0f)
+            pos(-halfSide, halfSide, -halfSide).normal(0f, 1f, 0f).tex(0f, 1f)
+            pos(halfSide, halfSide, -halfSide).normal(0f, 1f, 0f).tex(1f, 1f)
+            pos(halfSide, halfSide, halfSide).normal(0f, 1f, 0f).tex(1f, 0f)
+            pos(halfSide, -halfSide, halfSide).normal(0f, -1f, 0f).tex(0f, 0f)
+            pos(halfSide, -halfSide, -halfSide).normal(0f, -1f, 0f).tex(0f, 1f)
+            pos(-halfSide, -halfSide, -halfSide).normal(0f, -1f, 0f).tex(1f, 1f)
+            pos(-halfSide, -halfSide, halfSide).normal(0f, -1f, 0f).tex(1f, 0f)
 
-            indices(0, 2, 1, 0, 3, 2)
-            indices(4, 6, 5, 4, 7, 6)
-            indices(8, 10, 9, 8, 11, 10)
-            indices(12, 14, 13, 12, 15, 14)
-            indices(16, 18, 17, 16, 19, 18)
-            indices(20, 22, 21, 20, 23, 22)
+            index(0, 2, 1, 0, 3, 2)
+            index(4, 6, 5, 4, 7, 6)
+            index(8, 10, 9, 8, 11, 10)
+            index(12, 14, 13, 12, 15, 14)
+            index(16, 18, 17, 16, 19, 18)
+            index(20, 22, 21, 20, 23, 22)
             block(this)
         }
 
@@ -421,11 +445,10 @@ internal object Geometry {
         val model: ObjModel = ObjLoader.load(objFile, appResourceLoader)
         return create(objFile, model.vertices.size, model.indices.size, POS, NORMAL, TEX) {
             model.vertices.forEach {
-                vertices(it.pos, it.normal)
-                vertices(it.tex.x, it.tex.y)
+                pos(it.pos).normal(it.normal).tex(it.tex.x, it.tex.y)
             }
             model.indices.forEach {
-                indices(it)
+                index(it)
             }
         }
     }
@@ -444,36 +467,35 @@ internal object Geometry {
             NORMAL,
             TEX
         ) {
-            vertices(0f, -radius, 0f, 0f, -1f, 0f, 0f, 0f)
+            pos(0f, -radius, 0f).normal(0f, -1f, 0f).tex(0f, 0f)
             for (slice in 1..<slices) {
                 for (sector in 0..<sectors) {
                     val theta = PI - PI * slice / slices
                     val phi = PI * 2f * sector / sectors
                     val normal = Vec3(sin(theta) * cos(phi), cos(theta), sin(theta) * sin(phi))
-                    vertices(
-                        radius * normal.x, radius * normal.y, radius * normal.z,
-                        normal.x, normal.y, normal.z,
-                        sector.toFloat() / sectors, slice.toFloat() / slices,
-                    )
+                    pos(normal * radius)
+                        .normal(normal)
+                        .tex(sector.toFloat() / sectors, slice.toFloat() / slices)
+
                 }
             }
-            vertices(0f, radius, 0f, 0f, 1f, 0f, 0f, 1f)
+            pos(0f, radius, 0f).normal( 0f, 1f, 0f).tex(0f, 1f)
 
             for (sector in 0 until sectors) {
-                indices(0, sector + 1, ((sector + 1) % sectors) + 1)
+                index(0, sector + 1, ((sector + 1) % sectors) + 1)
             }
             for (slice in 1..<slices - 1) {
                 val b = 1 + (slice - 1) * sectors
                 for (sector in 0..<sectors) {
                     val nextSector = (sector + 1) % sectors
-                    indices(b + sector, b + sector + sectors, b + nextSector + sectors)
-                    indices(b + nextSector + sectors, b + nextSector, b + sector)
+                    index(b + sector, b + sector + sectors, b + nextSector + sectors)
+                    index(b + nextSector + sectors, b + nextSector, b + sector)
                 }
             }
             val b = 1 + sectors * (slices - 2)
             val top = b + sectors
             for (sector in 0..<sectors) {
-                indices(b + sector, top, b + ((sector + 1) % sectors))
+                index(b + sector, top, b + ((sector + 1) % sectors))
             }
             block(this)
         }
@@ -483,20 +505,20 @@ internal object Geometry {
         create("heightmap", (xsize + 1) * (zsize + 1), xsize * zsize * 6, POS, NORMAL, TEX) {
             for (x in 0..xsize) {
                 for (z in 0..zsize) {
-                    vertices(
+                    pos(
                         x * cell - 0.5f * cell * xsize,
                         height(x, z),
                         z * cell - 0.5f * cell * zsize
                     )
                     val n = normal(x, z, xsize, zsize, cell, height)
-                    vertices(n)
-                    vertices(x.toFloat() / xsize, z.toFloat() / zsize)
+                    normal(n)
+                    tex(x.toFloat() / xsize, z.toFloat() / zsize)
                 }
             }
             for (x in 0..<xsize) {
                 for (z in 0..<zsize) {
                     val b = x + (xsize + 1) * z
-                    indices(b, b + 1, b + xsize + 1, b + xsize + 1, b + 1, b + xsize + 2)
+                    index(b, b + 1, b + xsize + 1, b + xsize + 1, b + 1, b + xsize + 2)
                 }
             }
         }
@@ -526,29 +548,29 @@ internal object Geometry {
         phi: Float = 0.0f
     ) =
         create("billboard", 4, 6, POS, TEX, SCALE, PHI) {
-            vertices(position)
-            vertices(0f, 0f, scaleX, scaleY, phi)
-            vertices(position)
-            vertices(0f, 1f, scaleX, scaleY, phi)
-            vertices(position)
-            vertices(1f, 1f, scaleX, scaleY, phi)
-            vertices(position)
-            vertices(1f, 0f, scaleX, scaleY, phi)
-            indices(0, 2, 1, 0, 3, 2)
+            pos(position)
+            tex(0f, 0f).scale(scaleX, scaleY).phi(phi)
+            pos(position)
+            tex(0f, 1f).scale(scaleX, scaleY).phi(phi)
+            pos(position)
+            tex(1f, 1f).scale(scaleX, scaleY).phi(phi)
+            pos(position)
+            tex(1f, 0f).scale(scaleX, scaleY).phi(phi)
+            index(0, 2, 1, 0, 3, 2)
         }
 
     fun imageQuad() =
         create("image-quad", 4, 6, TEX) {
-            vertices(0f, 0f)
-            vertices(0f, 1f)
-            vertices(1f, 1f)
-            vertices(1f, 0f)
-            indices(0, 2, 1, 0, 3, 2)
+            tex(0f, 0f)
+            tex(0f, 1f)
+            tex(1f, 1f)
+            tex(1f, 0f)
+            index(0, 2, 1, 0, 3, 2)
         }
 
     fun font(reservedLength: Int): MultiMesh =
         create("font", 4, 6, TEX, SCREEN) {
-            indices(0, 2, 1, 0, 3, 2)
+            index(0, 2, 1, 0, 3, 2)
         }.buildInstanced(reservedLength)
 }
 

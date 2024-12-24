@@ -8,15 +8,12 @@ import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.material.StandartMaterialOption
 import com.zakgof.korender.material.Textures.texture
-import com.zakgof.korender.math.Vec2
-import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import com.zakgof.korender.mesh.Attributes.NORMAL
 import com.zakgof.korender.mesh.Attributes.POS
 import com.zakgof.korender.mesh.Attributes.TEX
 import com.zakgof.korender.mesh.Meshes.customMesh
-import com.zakgof.korender.mesh.Vertex
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.sin
 
@@ -35,43 +32,33 @@ fun MeshesExample() {
                 materialModifier,
                 mesh = customMesh(
                     id = "static",
-                    static = true,
                     vertexCount = 3,
                     indexCount = 3,
                     POS,
                     NORMAL,
-                    TEX
+                    TEX,
                 ) {
-                    vertex(Vertex(pos = Vec3(-5f, 0f, 0f), normal = 1.z, tex = Vec2(0f, 0f)))
-                    vertex(Vertex(pos = Vec3(0f, 0f, 0f), normal = 1.z, tex = Vec2(1f, 0f)))
-                    vertex(Vertex(pos = Vec3(0f, 5f, 0f), normal = 1.z, tex = Vec2(1f, 1f)))
-                    indices(0, 1, 2)
+                    pos(-5f, 0f, 0f).normal(1.z).tex(0f, 0f)
+                    pos(0f, 0f, 0f).normal(1.z).tex(1f, 0f)
+                    pos(0f, 5f, 0f).normal(1.z).tex(1f, 1f)
+                    index(0, 1, 2)
                 }
             )
             Renderable(
                 materialModifier,
                 mesh = customMesh(
                     id = "dynamic",
-                    static = false,
                     vertexCount = 3,
                     indexCount = 3,
-                    POS,
-                    NORMAL,
-                    TEX
+                    POS, NORMAL, TEX,
+                    dynamic = true
                 ) {
-                    vertex(Vertex(pos = Vec3(1f, 0f, 0f), normal = 1.z, tex = Vec2(0f, 0f)))
-                    vertex(Vertex(pos = Vec3(5f, 0f, 0f), normal = 1.z, tex = Vec2(1f, 0f)))
-                    vertex(
-                        Vertex(
-                            pos = Vec3(5f, 5f + sin(frameInfo.time), 0f),
-                            normal = 1.z,
-                            tex = Vec2(1f, 1f)
-                        )
-                    )
-                    indices(0, 1, 2)
+                    pos(1f, 0f, 0f).normal(1.z).tex(0f, 0f)
+                    pos(5f, 0f, 0f).normal(1.z).tex(1f, 0f)
+                    pos(5f, 5f + sin(frameInfo.time), 0f).normal(1.z).tex(1f, 1f)
+                    index(0, 1, 2)
                 }
             )
         }
     }
-
 }

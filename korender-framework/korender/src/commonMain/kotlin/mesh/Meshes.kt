@@ -4,6 +4,8 @@ import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.geometry.Attribute
+import com.zakgof.korender.math.Vec2
+import com.zakgof.korender.math.Vec3
 
 object Meshes {
 
@@ -12,8 +14,8 @@ object Meshes {
     fun obj(objFile: String) : MeshDeclaration = ObjMesh(objFile)
     fun screenQuad() : MeshDeclaration = ScreenQuad
 
-    fun customMesh(id: Any, static: Boolean, vertexCount: Int, indexCount: Int, vararg attributes: Attribute, block: MeshInitializer.() -> Unit) : MeshDeclaration =
-        CustomMesh(id, static, vertexCount, indexCount, attributes.asList(), block)
+    fun customMesh(id: Any, vertexCount: Int, indexCount: Int, vararg attributes: Attribute, dynamic: Boolean = false, block: MeshInitializer.() -> Unit) : MeshDeclaration =
+        CustomMesh(id, vertexCount, indexCount, attributes.asList(), dynamic, block)
 
     fun heightField(id: Any, cellsX: Int, cellsZ: Int, cellWidth: Float, height: (Int, Int) -> Float) : MeshDeclaration =
         HeightField(id, cellsX, cellsZ, cellWidth, height)
@@ -38,7 +40,7 @@ internal data class InstancedBillboard(val id: Any, val count: Int, val transpar
     override fun hashCode(): Int = id.hashCode()
 }
 
-internal data class CustomMesh(val id: Any, val static: Boolean, val vertexCount: Int, val indexCount: Int, val attributes: List<Attribute>, val block: MeshInitializer.() -> Unit) : MeshDeclaration {
+internal data class CustomMesh(val id: Any, val vertexCount: Int, val indexCount: Int, val attributes: List<Attribute>, val dynamic: Boolean, val block: MeshInitializer.() -> Unit) : MeshDeclaration {
     override fun equals(other: Any?): Boolean = (other is CustomMesh && other.id == id)
     override fun hashCode(): Int = id.hashCode()
 }
@@ -49,8 +51,15 @@ internal data class HeightField(val id: Any, val cellsX: Int, val cellsZ: Int, v
 }
 
 interface MeshInitializer {
-    fun vertex(block: Vertex.() -> Unit)
-    fun vertex(vertex: Vertex)
-    fun vertices(vararg float: Float)
-    fun indices(vararg indexes: Int)
+    fun attr(attr: Attribute, vararg v: Float) : MeshInitializer
+    fun pos(vararg position: Vec3) : MeshInitializer
+    fun pos(vararg v: Float) : MeshInitializer
+    fun normal(vararg position: Vec3) : MeshInitializer
+    fun normal(vararg v: Float) : MeshInitializer
+    fun tex(vararg position: Vec2) : MeshInitializer
+    fun tex(vararg v: Float) : MeshInitializer
+    fun scale(vararg position: Vec2) : MeshInitializer
+    fun scale(vararg v: Float) : MeshInitializer
+    fun phi(vararg v: Float) : MeshInitializer
+    fun index(vararg indices: Int) : MeshInitializer
 }
