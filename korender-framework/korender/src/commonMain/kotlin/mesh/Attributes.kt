@@ -7,40 +7,17 @@ import com.zakgof.korender.math.Vec3
 
 object Attributes {
 
-    fun byName(name: String) = mapping[name]
+    fun byGltfName(name: String) = mapping[name]!!
 
-    val POS: Attribute = Attribute("pos", 3,
-        { b, v -> write(b, v.pos!!) },
-        { b, v -> v.pos = readVec3(b) }
-    )
+    val POS: Attribute = Attribute("pos", 3, 0)
+    val NORMAL: Attribute = Attribute("normal", 3, 1)
+    val TEX: Attribute = Attribute("tex", 2, 2)
+    val SCREEN: Attribute = Attribute("screen", 2, 3)
+    val SCALE: Attribute = Attribute("scale", 2, 4)
+    val PHI: Attribute = Attribute("phi", 1,5)
 
-    val NORMAL: Attribute = Attribute("normal", 3,
-        { b, v -> write(b, v.normal!!) },
-        { b, v -> v.normal = readVec3(b) }
-    )
-
-    val TEX: Attribute = Attribute("tex", 2,
-        { b, v -> write(b, v.tex!!) },
-        { b, v -> v.tex = readVec2(b) }
-    )
-
-    val SCREEN: Attribute = Attribute("screen", 2,
-        { b, v -> write(b, v.screen!!) },
-        { b, v -> v.screen = readVec2(b) }
-    )
-
-    val SCALE: Attribute = Attribute("scale", 2,
-        { b, v -> write(b, v.scale!!) },
-        { b, v -> v.scale = readVec2(b) }
-    )
-
-    val PHI: Attribute = Attribute("phi", 1,
-        { b, v -> b.put(v.phi!!) },
-        { b, v -> v.phi = b.get() }
-    )
-
-    private val mapping= mapOf(
-        "POS" to POS,
+    private val mapping = mapOf(
+        "POSITION" to POS,
         "NORMAL" to NORMAL,
         "TEX" to TEX
     )

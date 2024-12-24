@@ -62,4 +62,6 @@ interface MeshInitializer {
     fun scale(vararg v: Float) : MeshInitializer
     fun phi(vararg v: Float) : MeshInitializer
     fun index(vararg indices: Int) : MeshInitializer
+    fun indexBytes(rawBytes: ByteArray) : MeshInitializer
+    fun attrBytes(attr: Attribute, rawBytes: ByteArray) : MeshInitializer
 }

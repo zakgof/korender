@@ -45,7 +45,7 @@ fun AppExample() {
         Demo("Gltf", "Gltf scene loading") { GltfExample() }
     )
 
-    var option by remember { mutableStateOf(options[1]) }
+    var option by remember { mutableStateOf(options.last()) }
     Column {
         val coroutineScope = rememberCoroutineScope()
         val scrollState = rememberScrollState()

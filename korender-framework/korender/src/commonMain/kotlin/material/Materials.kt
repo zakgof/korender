@@ -19,34 +19,56 @@ class MaterialBuilder internal constructor(
 ) {
     internal fun toMaterialDeclaration(): MaterialDeclaration = MaterialDeclaration(
         shader = ShaderDeclaration(vertShaderFile, fragShaderFile, defs, options, plugins),
-        uniforms = {key -> uniforms.map{it[key]}.filterNotNull().firstOrNull()}
+        uniforms = { key -> uniforms.firstNotNullOfOrNull { it[key] } }
     )
 }
 
-class Effect<U : UniformSupplier> internal constructor(internal val fragFile: String, internal val uniformFactory: () -> U)
+class Effect<U : UniformSupplier> internal constructor(
+    internal val fragFile: String,
+    internal val uniformFactory: () -> U
+)
 
-class Sky<U : UniformSupplier> internal constructor(internal val pluginShaderFile: String, internal val uniformFactory: () -> U)
+class Sky<U : UniformSupplier> internal constructor(
+    internal val pluginShaderFile: String,
+    internal val uniformFactory: () -> U
+)
 
 object MaterialModifiers {
-    fun vertex(vertShaderFile: String): MaterialModifier = MaterialModifier { it.vertShaderFile = vertShaderFile }
-    fun fragment(fragShaderFile: String): MaterialModifier = MaterialModifier { it.fragShaderFile = fragShaderFile }
-    fun defs(vararg defs: String): MaterialModifier = MaterialModifier { it.defs += setOf(*defs) }
-    fun plugin(name: String, shaderFile: String): MaterialModifier = MaterialModifier { it.plugins[name] = shaderFile }
-    fun uniforms(uniforms: UniformSupplier): MaterialModifier = MaterialModifier { it.uniforms += uniforms }
+    fun vertex(vertShaderFile: String): MaterialModifier =
+        MaterialModifier { it.vertShaderFile = vertShaderFile }
 
-    fun options(vararg options: StandartMaterialOption): MaterialModifier = MaterialModifier { it.options += setOf(*options) }
-    fun standart(vararg options: StandartMaterialOption, block: StandartUniforms.() -> Unit): MaterialModifier = MaterialModifier {
+    fun fragment(fragShaderFile: String): MaterialModifier =
+        MaterialModifier { it.fragShaderFile = fragShaderFile }
+
+    fun defs(vararg defs: String): MaterialModifier = MaterialModifier { it.defs += setOf(*defs) }
+    fun plugin(name: String, shaderFile: String): MaterialModifier =
+        MaterialModifier { it.plugins[name] = shaderFile }
+
+    fun uniforms(uniforms: UniformSupplier): MaterialModifier =
+        MaterialModifier { it.uniforms += uniforms }
+
+    fun options(vararg options: StandartMaterialOption): MaterialModifier =
+        MaterialModifier { it.options += setOf(*options) }
+
+    fun standart(
+        vararg options: StandartMaterialOption,
+        block: StandartUniforms.() -> Unit
+    ): MaterialModifier = MaterialModifier {
         it.options += setOf(*options)
         it.uniforms += StandartUniforms().apply(block)
     }
 
-    fun <U : UniformSupplier> effect(effect: Effect<U>, block: U.() -> Unit = {}): MaterialModifier = MaterialModifier {
+    fun <U : UniformSupplier> effect(
+        effect: Effect<U>,
+        block: U.() -> Unit = {}
+    ): MaterialModifier = MaterialModifier {
         it.fragShaderFile = effect.fragFile
         it.uniforms += effect.uniformFactory().apply(block)
     }
 
-    fun <U : UniformSupplier> sky(sky: Sky<U>, block: U.() -> Unit = {}): MaterialModifier = MaterialModifier {
-        it.plugins["sky"] = sky.pluginShaderFile
-        it.uniforms += sky.uniformFactory().apply(block)
-    }
+    fun <U : UniformSupplier> sky(sky: Sky<U>, block: U.() -> Unit = {}): MaterialModifier =
+        MaterialModifier {
+            it.plugins["sky"] = sky.pluginShaderFile
+            it.uniforms += sky.uniformFactory().apply(block)
+        }
 }

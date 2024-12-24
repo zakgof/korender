@@ -24,7 +24,7 @@ internal class SceneDeclaration {
     }
 
     fun compilePasses() {
-        if (defaultPass.renderables.isNotEmpty() || defaultPass.guis.isNotEmpty()) {
+        if (defaultPass.renderables.isNotEmpty() || defaultPass.guis.isNotEmpty() || defaultPass.gltfs.isNotEmpty()) {
             if (passes.isNotEmpty()) {
                 throw KorenderException("It is not allowed to mix Passes and renderables in Frame context")
             }

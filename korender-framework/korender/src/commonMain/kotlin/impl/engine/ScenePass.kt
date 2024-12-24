@@ -40,7 +40,7 @@ internal class ScenePass(
     init {
         passDeclaration.gltfs.forEach {
             inventory.gltf(it)?.let { l ->
-                GltfSceneBuilder(inventory, it.gltfResource, l).build()
+                passDeclaration.renderables += GltfSceneBuilder(inventory, it.gltfResource, l).build()
             }
         }
         passDeclaration.renderables.forEach {

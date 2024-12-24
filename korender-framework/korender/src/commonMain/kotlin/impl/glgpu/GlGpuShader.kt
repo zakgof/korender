@@ -10,7 +10,9 @@ import com.zakgof.korender.gl.GL.glCreateProgram
 import com.zakgof.korender.gl.GL.glCreateShader
 import com.zakgof.korender.gl.GL.glDeleteProgram
 import com.zakgof.korender.gl.GL.glDeleteShader
+import com.zakgof.korender.gl.GL.glGetActiveAttrib
 import com.zakgof.korender.gl.GL.glGetActiveUniform
+import com.zakgof.korender.gl.GL.glGetAttribLocation
 import com.zakgof.korender.gl.GL.glGetProgramInfoLog
 import com.zakgof.korender.gl.GL.glGetProgrami
 import com.zakgof.korender.gl.GL.glGetShaderInfoLog
@@ -27,6 +29,7 @@ import com.zakgof.korender.gl.GL.glUniformMatrix3fv
 import com.zakgof.korender.gl.GL.glUniformMatrix4fv
 import com.zakgof.korender.gl.GL.glUseProgram
 import com.zakgof.korender.gl.GL.glValidateProgram
+import com.zakgof.korender.gl.GLConstants.GL_ACTIVE_ATTRIBUTES
 import com.zakgof.korender.gl.GLConstants.GL_ACTIVE_UNIFORMS
 import com.zakgof.korender.gl.GLConstants.GL_COMPILE_STATUS
 import com.zakgof.korender.gl.GLConstants.GL_FRAGMENT_SHADER
@@ -54,6 +57,7 @@ internal class GlGpuShader(
     private val vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER)
     private val fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER)
     private val uniformLocations: Map<String, GLUniformLocation>
+    private val attributes: List<String>
 
     init {
 
@@ -113,6 +117,7 @@ internal class GlGpuShader(
         println("Creating GPU Shader [$name] : $programHandle")
 
         uniformLocations = fetchUniforms()
+        attributes = fetchAttributes()
     }
 
     private fun fetchUniforms(): Map<String, GLUniformLocation> {
@@ -126,6 +131,21 @@ internal class GlGpuShader(
             )
             val location = glGetUniformLocation(programHandle, name)
             name to location
+        }
+    }
+
+    private fun fetchAttributes(): List<String> {
+        val params = BufferUtils.createIntBuffer(1)
+        val type = BufferUtils.createIntBuffer(1)
+
+        val numAttributes = glGetProgrami(programHandle, GL_ACTIVE_ATTRIBUTES)
+        return (0 until numAttributes).map {
+            val name = glGetActiveAttrib(programHandle, it, params.apply { clear() }, type.apply { clear() })
+            val loc = glGetAttribLocation(programHandle, name)
+
+            println("ATTRIB $name $loc")
+
+            name
         }
     }
 

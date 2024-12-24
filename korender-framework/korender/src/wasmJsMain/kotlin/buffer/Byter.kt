@@ -1,6 +1,8 @@
 package com.zakgof.korender.buffer
 
 import org.khronos.webgl.Float32Array
+import org.khronos.webgl.Int16Array
+import org.khronos.webgl.Int32Array
 import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.get
 import org.khronos.webgl.set
@@ -49,6 +51,10 @@ actual class Byter(capacity: Int) : BufferData<Byte> {
     override fun toString() = array.toString()
 
     actual fun toFloater() = Floater(Float32Array(array.buffer))
+
+    actual fun toInter() = Inter(Int32Array(array.buffer))
+
+    actual fun toShorter() = Shorter(Int16Array(array.buffer))
 
     override fun size() = array.length
 }

@@ -1,5 +1,5 @@
 #ifdef OPENGL
-    #version 140
+    #version 330
 #else
     #version 300 es
     precision highp float;

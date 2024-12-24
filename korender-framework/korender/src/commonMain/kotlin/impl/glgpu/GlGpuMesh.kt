@@ -59,10 +59,14 @@ internal class GlGpuMesh(
             glBufferData(GL_ARRAY_BUFFER, vb[index], usage)
             glEnableVertexAttribArray(index);
             glVertexAttribPointer(index, attr.size, GL_FLOAT, false, 0, 0)
+
+            println("Update attr data in GPU: ${attr.name} ${vb[index]}")
         }
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib, usage)
+
+        println("Update index data in GPU: $ib ")
 
         glBindVertexArray(null)
     }

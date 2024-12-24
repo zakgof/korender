@@ -1,7 +1,7 @@
 #import "shader/lib/header.glsl"
 
-in vec2 tex;
-in vec2 screen;
+layout(location = 0) in vec2 tex;
+layout(location = 1) in vec2 screen;
 
 out vec2 vtex;
 

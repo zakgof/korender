@@ -5,9 +5,10 @@ import org.khronos.webgl.get
 import org.khronos.webgl.set
 import org.khronos.webgl.toInt16Array
 
-actual class Shorter(capacity: Int) : BufferData<Short> {
+actual class Shorter(override val array : Int16Array) : BufferData<Short> {
 
-    override val array = Int16Array(capacity)
+    constructor(capacity: Int) : this(Int16Array(capacity))
+
     internal var position = 0
 
     actual fun put(values: ShortArray) {

@@ -1,9 +1,9 @@
 #import "shader/lib/header.glsl"
 
-in vec3 pos;
-in vec2 tex;
-in vec2 scale;
-in float phi;
+layout(location = 0) in vec3 pos;
+layout(location = 1) in vec2 tex;
+layout(location = 2) in vec2 scale;
+layout(location = 3) in float phi;
 
 uniform mat4 model;
 uniform mat4 view;

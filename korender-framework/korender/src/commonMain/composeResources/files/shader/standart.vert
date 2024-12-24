@@ -1,8 +1,8 @@
 #import "shader/lib/header.glsl"
 
-in vec3 pos;
-in vec3 normal;
-in vec2 tex;
+layout(location = 0) in vec3 pos;
+layout(location = 1) in vec3 normal;
+layout(location = 2) in vec2 tex;
 
 out vec3 mpos;
 out vec3 mnormal;

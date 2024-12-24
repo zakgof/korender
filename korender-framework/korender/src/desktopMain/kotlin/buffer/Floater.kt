@@ -35,4 +35,8 @@ actual class Floater(override val byteBuffer: ByteBuffer) : BufferData<Float> {
     }
 
     override fun size() = floatBuffer.limit()
+
+    override fun toString(): String {
+        return (0 until floatBuffer.limit()).joinToString(", ") { floatBuffer[it].toString() }
+    }
 }

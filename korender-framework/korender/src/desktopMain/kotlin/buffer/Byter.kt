@@ -33,5 +33,9 @@ actual class Byter(override val byteBuffer: ByteBuffer) : BufferData<Byte> {
 
     actual fun toFloater(): Floater = Floater(byteBuffer)
 
+    actual fun toShorter(): Shorter = Shorter(byteBuffer)
+
+    actual fun toInter(): Inter = Inter(byteBuffer)
+
     override fun size() = byteBuffer.limit()
 }

@@ -34,4 +34,8 @@ actual class Shorter(override val byteBuffer: ByteBuffer) : BufferData<Short> {
     }
 
     override fun size() = shortBuffer.limit()
+
+    override fun toString(): String {
+        return (0 until shortBuffer.limit()).joinToString(", ") { shortBuffer[it].toString() }
+    }
 }

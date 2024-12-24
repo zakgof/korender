@@ -31,7 +31,6 @@ import com.zakgof.korender.mesh.MeshInitializer
 import com.zakgof.korender.mesh.ObjMesh
 import com.zakgof.korender.mesh.ScreenQuad
 import com.zakgof.korender.mesh.Sphere
-import com.zakgof.korender.mesh.Vertex
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
@@ -88,7 +87,7 @@ internal object Geometry {
         vararg attrs: Attribute,
         block: MeshBuilder.() -> Unit
     ) =
-        MeshBuilder(name, vertexNumber, indexNumber, attrs.toList()).apply(block)
+        MeshBuilder(name, vertexNumber, indexNumber, attrs.toList().sortedBy { it.order }).apply(block)
 
     internal class MeshBuilder(
         val name: String,
@@ -165,6 +164,37 @@ internal object Geometry {
             return this
         }
 
+        // TODO optimize !!!
+        override fun indexBytes(rawBytes: ByteArray): MeshInitializer {
+            val byter = BufferUtils.createByteBuffer(rawBytes.size)
+            byter.put(rawBytes)
+            byter.rewind()
+            if (isLongIndex) {
+                val inter = byter.toInter()
+                for (i in 0 until inter.size()) {
+                    index(inter[i])
+                }
+            } else {
+                val shorter = byter.toShorter()
+                for (i in 0 until shorter.size()) {
+                    index(shorter[i].toInt())
+                }
+            }
+            return this
+        }
+
+        // TODO : optimize !!!!!
+        override fun attrBytes(attr: Attribute, rawBytes: ByteArray): MeshInitializer {
+            val byter = BufferUtils.createByteBuffer(rawBytes.size)
+            byter.put(rawBytes)
+            byter.rewind()
+            val floater = byter.toFloater()
+            for (i in 0 until floater.size()) {
+                attr(attr, floater[i])
+            }
+            return this
+        }
+
         private fun indexGet(index: Int): Int =
             if (isLongIndex) indexInter!![index] else indexShorter!![index].toInt()
 
@@ -187,7 +217,7 @@ internal object Geometry {
                 for (i in 0 until instances) {
                     prototype.attributeBuffers.forEachIndexed { index, prototypeAttrBuffer ->
                         val multiAttrBuffer = attributeBuffers[index]
-                        for (v in 0 until prototypeAttrBuffer.size()){
+                        for (v in 0 until prototypeAttrBuffer.size()) {
                             multiAttrBuffer.put(prototypeAttrBuffer[v])
                         }
                     }
@@ -386,16 +416,6 @@ internal object Geometry {
         fun isInitialized() = initialized
     }
 
-    fun quad(halfSide: Float = 0.5f, block: MeshBuilder.() -> Unit = {}) =
-        create("quad", 4, 6, POS, NORMAL, TEX) {
-            pos(-halfSide, -halfSide, 0f).normal(0f, 0f, 1f).tex(0f, 0f)
-            pos(-halfSide, halfSide, 0f).normal(0f, 0f, 1f).tex(0f, 1f)
-            pos(halfSide, halfSide, 0f).normal(0f, 0f, 1f).tex(1f, 1f)
-            pos(halfSide, -halfSide, 0f).normal(0f, 0f, 1f).tex(1f, 0f)
-            index(0, 2, 1, 0, 3, 2)
-            block.invoke(this)
-        }
-
     fun screenQuad() =
         create("screen-quad", 4, 6, TEX) {
             tex(0f, 0f)
@@ -479,7 +499,7 @@ internal object Geometry {
 
                 }
             }
-            pos(0f, radius, 0f).normal( 0f, 1f, 0f).tex(0f, 1f)
+            pos(0f, radius, 0f).normal(0f, 1f, 0f).tex(0f, 1f)
 
             for (sector in 0 until sectors) {
                 index(0, sector + 1, ((sector + 1) % sectors) + 1)
@@ -572,33 +592,6 @@ internal object Geometry {
         create("font", 4, 6, TEX, SCREEN) {
             index(0, 2, 1, 0, 3, 2)
         }.buildInstanced(reservedLength)
-}
-
-private fun getVertex(
-    vertexBuffer: Floater,
-    vertexIndex: Int,
-    vertexSize: Int,
-    attrs: List<Attribute>
-): Vertex {
-    val vertex = Vertex()
-    vertexBuffer.position(vertexIndex * vertexSize / 4)
-    for (attr in attrs) {
-        attr.reader(vertexBuffer, vertex)
-    }
-    return vertex
-}
-
-private fun putVertex(
-    floatVertexBuffer: Floater,
-    vertexIndex: Int,
-    vertex: Vertex,
-    vertexSize: Int,
-    attrs: List<Attribute>
-) {
-    floatVertexBuffer.position(vertexIndex * vertexSize / 4)
-    for (attr in attrs) {
-        attr.writer(floatVertexBuffer, vertex)
-    }
 }
 
 
