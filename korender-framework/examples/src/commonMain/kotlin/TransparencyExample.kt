@@ -5,7 +5,6 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.material.MaterialModifiers.standart
-import com.zakgof.korender.material.StandartMaterialOption.FixedColor
 import com.zakgof.korender.material.StandartMaterialOption.NoLight
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform.Companion.scale
@@ -18,8 +17,8 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 fun TransparencyExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
         fun semitransparent(color: Color, position: Vec3) = Renderable(
-            standart(FixedColor, NoLight) {
-                this.color = color
+            standart(NoLight) {
+                this.baseColor = color
             },
             mesh = cube(),
             transform = scale(5.0f, 5.0f, 0.1f).translate(position),

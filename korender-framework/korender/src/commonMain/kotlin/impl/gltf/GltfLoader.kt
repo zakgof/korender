@@ -12,8 +12,11 @@ import com.zakgof.korender.impl.parentResourceOf
 import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.material.MaterialBuilder
 import com.zakgof.korender.material.MaterialModifiers
+import com.zakgof.korender.material.StandartMaterialOption
+import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.material.TextureFilter
 import com.zakgof.korender.material.TextureWrap
+import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.mesh.Attributes
 import com.zakgof.korender.mesh.CustomMesh
@@ -61,7 +64,7 @@ internal class GltfSceneBuilder(
         val model = gltfLoaded.model
         val scene = model.scenes!![model.scene]
         scene.nodes.map { model.nodes!![it] }
-            .forEach { processNode(Transform().scale(300.0f), it) } // TODO debug
+            .forEach { processNode(Transform().scale(100.0f), it) } // TODO debug
 
         model.materials?.map {
             it.pbrMetallicRoughness?.baseColorTexture
@@ -103,26 +106,40 @@ internal class GltfSceneBuilder(
 
         val material = primitive.material?.let { gltfLoaded.model.materials!![it] }
 
-        val textureDeclaration = material?.pbrMetallicRoughness?.baseColorTexture?.index?.let {
-            // TODO null checks !!!
-            gltfLoaded.model.textures?.get(it)?.source?.let { src ->
-                gltfLoaded.model.images!![src]
-            }?.uri?.let { uri ->
-                val bytes = gltfLoaded.loadedUris[uri]!!
-                ByteArrayTextureDeclaration(
-                    uri,
-                    TextureFilter.MipMapLinearLinear,
-                    TextureWrap.Repeat,
-                    1024,
-                    bytes,
-                    uri.split(".").last()
-                )
-            }
-        }
+        val pbr = material?.pbrMetallicRoughness
 
-        return MaterialBuilder().apply {
-            MaterialModifiers.standart {
-                colorTexture = textureDeclaration
+        val metallic = pbr?.metallicFactor ?: 0.3f
+        val roughness = pbr?.roughnessFactor ?: 0.3f
+        val emissiveFactor = material?.emissiveFactor?.let { Color(1.0f, it[0], it[1], it[2]) } ?: Color.Black
+        val baseColor = pbr?.baseColorFactor?.let { Color(it[0], it[1], it[2], it[3]) } ?: Color.White
+        val albedoTexture = pbr?.baseColorTexture?.index?.let { getTexture(it) }
+        val metallicRoughnessTexture = pbr?.metallicRoughnessTexture?.index?.let { getTexture(it) }
+        val normalTexture = material?.normalTexture?.index?.let { getTexture(it) }
+        val occlusionTexture = material?.occlusionTexture?.index?.let { getTexture(it) }
+        val emissiveTexture = material?.emissiveTexture?.index?.let { getTexture(it) }
+
+        val flags = mapOf(
+            albedoTexture to StandartMaterialOption.AlbedoMap,
+            metallicRoughnessTexture to StandartMaterialOption.MetallicRoughnessMap,
+            normalTexture to StandartMaterialOption.NormalMap,
+            occlusionTexture to StandartMaterialOption.OcclusionMap,
+            emissiveTexture to StandartMaterialOption.EmissiveMap
+        ).filterKeys { it != null }
+            .values
+            .toTypedArray()
+
+            return MaterialBuilder().apply {
+            MaterialModifiers.standart(*flags) {
+                this.metallic = metallic
+                this.roughness = roughness
+                this.baseColor = baseColor
+                this.albedoTexture = albedoTexture
+                this.emissiveFactor = emissiveFactor
+                this.metallicRoughnessTexture = metallicRoughnessTexture
+                this.normalTexture = normalTexture
+                this.occlusionTexture = occlusionTexture
+                this.emissiveTexture = emissiveTexture
+
             }.applyTo(this)
         }.toMaterialDeclaration()
 
@@ -183,6 +200,24 @@ internal class GltfSceneBuilder(
             return accessorBytes
         }
     }
+
+    private fun getTexture(index: Int): TextureDeclaration? =
+        // TODO null checks !!!
+        gltfLoaded.model.textures?.get(index)?.source?.let { src ->
+            gltfLoaded.model.images!![src]
+        }?.uri?.let { uri ->
+            val bytes = gltfLoaded.loadedUris[uri]!!
+            ByteArrayTextureDeclaration(
+                uri,
+                TextureFilter.MipMapLinearLinear,
+                TextureWrap.Repeat,
+                1024,
+                bytes,
+                uri.split(".").last()
+            )
+        }
+
+
 }
 
 fun Gltf.Accessor.componentByteSize(): Int =

@@ -6,6 +6,7 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.material.MaterialModifiers.standart
+import com.zakgof.korender.material.StandartMaterialOption
 import com.zakgof.korender.math.FloatMath
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.y
@@ -22,8 +23,8 @@ fun ObjFileExample() {
         Frame {
             Camera(orbitCamera.camera(projection, width, height))
             Renderable(
-                standart {
-                    colorTexture = texture("!model/head.jpg")
+                standart(StandartMaterialOption.AlbedoMap) {
+                    albedoTexture = texture("!model/head.jpg")
                 },
                 mesh = obj("!model/head.obj"),
                 transform = scale(7.0f).rotate(1.y, -FloatMath.PIdiv2)

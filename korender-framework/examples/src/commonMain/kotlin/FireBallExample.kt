@@ -7,6 +7,7 @@ import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.material.Effects.FireBall
 import com.zakgof.korender.material.MaterialModifiers.effect
 import com.zakgof.korender.material.MaterialModifiers.standart
+import com.zakgof.korender.material.StandartMaterialOption
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -30,8 +31,8 @@ fun FireBallExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             transparent = true
         )
         Renderable(
-            standart {
-                colorTexture = texture("!sand.jpg")
+            standart(StandartMaterialOption.AlbedoMap) {
+                albedoTexture = texture("!sand.jpg")
             },
             mesh = cube(1f),
             transform = scale(9f).translate(-9.y)

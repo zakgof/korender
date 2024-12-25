@@ -125,10 +125,10 @@ class Gltf(
     ) {
         @Serializable
         data class PbrMetallicRoughness(
-            val baseColorFactor: List<Double> = listOf(1.0, 1.0, 1.0, 1.0),
+            val baseColorFactor: List<Float> = listOf(1.0f, 1.0f, 1.0f, 1.0f),
             val baseColorTexture: TextureInfo? = null,
-            val metallicFactor: Double = 1.0,
-            val roughnessFactor: Double = 1.0,
+            val metallicFactor: Float = 1.0f,
+            val roughnessFactor: Float = 1.0f,
             val metallicRoughnessTexture: TextureInfo? = null
         )
 
@@ -136,14 +136,14 @@ class Gltf(
         data class NormalTextureInfo(
             val index: Int,
             val texCoord: Int? = null,
-            val scale: Double = 1.0
+            val scale: Float = 1.0f
         )
 
         @Serializable
         data class OcclusionTextureInfo(
             val index: Int,
             val texCoord: Int? = null,
-            val strength: Double = 1.0,
+            val strength: Float = 1.0f,
         )
     }
 

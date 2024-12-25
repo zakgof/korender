@@ -5,6 +5,7 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.material.MaterialModifiers.standart
+import com.zakgof.korender.material.StandartMaterialOption
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.mesh.Meshes.heightField
@@ -20,8 +21,8 @@ fun HeightFieldExample() {
             OnTouch { freeCamera.touch(it) }
             Camera(freeCamera.camera(projection, width, height, frameInfo.dt))
             Renderable(
-                standart {
-                    colorTexture = texture("!sand.jpg")
+                standart(StandartMaterialOption.AlbedoMap) {
+                    albedoTexture = texture("!sand.jpg")
                 },
                 mesh = heightField(id = "terrain", 128, 128, 0.2f) { x, y ->
                     0.5f * (sin(x * 0.2f) + sin(y * 0.2f))

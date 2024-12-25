@@ -34,7 +34,7 @@ float[25] kernel5 = float[](
 float shadow(sampler2D shadowTexture, vec3 vshadow) {
     float beavis = 0.01;
     #ifdef PCSS
-        float centerSample = texture(shadowTexture, vshadow.xy).r;
+    float centerSample = texture(shadowTexture, vshadow.xy).r;
         float penumbraWidth = centerSample > 0.001 ?  0.03 * (vshadow.z - centerSample) / centerSample : 0.0;
         float cumulative = 0.;
         float weight = 0.;

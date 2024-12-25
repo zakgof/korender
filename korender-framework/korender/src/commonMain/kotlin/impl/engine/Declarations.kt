@@ -71,14 +71,20 @@ private fun stdOptionsToDefs(
     val set = HashSet<String>()
     stdOptions.forEach {
         when (it) {
-            StandartMaterialOption.FixedColor -> set.add("COLOR")
             StandartMaterialOption.Triplanar -> set.add("TRIPLANAR")
             StandartMaterialOption.Aperiodic -> set.add("APERIODIC")
             StandartMaterialOption.NormalMap -> set.add("NORMAL_MAP")
             StandartMaterialOption.Detail -> set.add("DETAIL")
-            StandartMaterialOption.NoLight -> set.add("NO_LIGHT")
             StandartMaterialOption.Pcss -> set.add("PCSS")
             StandartMaterialOption.NoShadowCast -> set.add("NO_SHADOW_CAST") // TODO: this is ugly
+
+            StandartMaterialOption.AlbedoMap -> set.add("ALBEDO_MAP")
+            StandartMaterialOption.MetallicRoughnessMap -> set.add("METALLIC_ROUGHNESS_MAP")
+            StandartMaterialOption.EmissiveMap -> set.add("EMISSIVE_MAP")
+            StandartMaterialOption.OcclusionMap -> set.add("OCCLUSION_MAP")
+
+            StandartMaterialOption.NoLight -> set.add("NO_LIGHT")
+
             else -> {}
         }
     }

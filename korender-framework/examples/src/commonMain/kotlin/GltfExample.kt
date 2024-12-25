@@ -15,6 +15,6 @@ fun GltfExample() = Korender (appResourceLoader = { Res.readBytes(it) }) {
     OnTouch { orbitCamera.touch(it) }
     Frame {
         Camera(orbitCamera.camera(projection, width, height))
-        Scene(gltfResource = "!gltf/boombox/BoomBox.gltf")
+        Scene(gltfResource = "!gltf/avocado/Avocado.gltf")
     }
 }

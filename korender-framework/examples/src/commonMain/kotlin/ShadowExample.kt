@@ -20,8 +20,8 @@ import kotlin.math.sin
 @Composable
 fun ShadowExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
-        val materialModifier = standart(StandartMaterialOption.Pcss) {
-            colorTexture = texture("!sand.jpg")
+        val materialModifier = standart(StandartMaterialOption.AlbedoMap, StandartMaterialOption.Pcss) {
+            albedoTexture = texture("!sand.jpg")
         }
         Frame {
             Light(Vec3(1f, -1f, 1f).normalize())

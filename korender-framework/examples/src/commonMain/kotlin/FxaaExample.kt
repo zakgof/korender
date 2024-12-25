@@ -6,7 +6,6 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.material.Effects.Fxaa
 import com.zakgof.korender.material.MaterialModifiers.effect
 import com.zakgof.korender.material.MaterialModifiers.standart
-import com.zakgof.korender.material.StandartMaterialOption.FixedColor
 import com.zakgof.korender.math.Color.Companion.Green
 import com.zakgof.korender.math.Color.Companion.Red
 import com.zakgof.korender.mesh.Meshes.sphere
@@ -18,8 +17,8 @@ fun FxaaExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
         Pass {
             Renderable(
-                standart(FixedColor) {
-                    color = Green
+                standart {
+                    baseColor = Green
                 },
                 mesh = sphere(4f),
             )

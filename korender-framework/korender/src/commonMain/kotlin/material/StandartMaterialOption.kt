@@ -1,12 +1,15 @@
 package com.zakgof.korender.material
 
 enum class StandartMaterialOption {
-    FixedColor,
+    NoLight,
+    AlbedoMap,
+    MetallicRoughnessMap,
+    EmissiveMap,
+    OcclusionMap,
     Triplanar,
     Aperiodic,
     NormalMap,
     Detail,
-    NoLight,
     NoShadowCast,
     NoShadowReceive,
     Pcss
