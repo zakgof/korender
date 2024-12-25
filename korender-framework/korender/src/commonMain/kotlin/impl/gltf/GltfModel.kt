@@ -134,17 +134,17 @@ class Gltf(
 
         @Serializable
         data class NormalTextureInfo(
-            val index: Int,
+            override val index: Int,
             val texCoord: Int? = null,
             val scale: Float = 1.0f
-        )
+        ) : TextureIndexProvider
 
         @Serializable
         data class OcclusionTextureInfo(
-            val index: Int,
+            override val index: Int,
             val texCoord: Int? = null,
             val strength: Float = 1.0f,
-        )
+        ) : TextureIndexProvider
     }
 
     @Serializable
@@ -208,9 +208,13 @@ class Gltf(
 
     @Serializable
     data class TextureInfo(
-        val index: Int,
+        override val index: Int,
         val texCoord: Int = 0
-    )
+    ) : TextureIndexProvider
+
+    interface TextureIndexProvider {
+        val index: Int
+    }
 
 
 }

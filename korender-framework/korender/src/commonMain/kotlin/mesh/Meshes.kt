@@ -14,8 +14,8 @@ object Meshes {
     fun obj(objFile: String) : MeshDeclaration = ObjMesh(objFile)
     fun screenQuad() : MeshDeclaration = ScreenQuad
 
-    fun customMesh(id: Any, vertexCount: Int, indexCount: Int, vararg attributes: Attribute, dynamic: Boolean = false, block: MeshInitializer.() -> Unit) : MeshDeclaration =
-        CustomMesh(id, vertexCount, indexCount, attributes.asList(), dynamic, block)
+    fun customMesh(id: Any, vertexCount: Int, indexCount: Int, vararg attributes: Attribute, dynamic: Boolean = false, forceLongIndex: Boolean = false, block: MeshInitializer.() -> Unit) : MeshDeclaration =
+        CustomMesh(id, vertexCount, indexCount, attributes.asList(), dynamic, forceLongIndex, block)
 
     fun heightField(id: Any, cellsX: Int, cellsZ: Int, cellWidth: Float, height: (Int, Int) -> Float) : MeshDeclaration =
         HeightField(id, cellsX, cellsZ, cellWidth, height)
@@ -40,7 +40,7 @@ internal data class InstancedBillboard(val id: Any, val count: Int, val transpar
     override fun hashCode(): Int = id.hashCode()
 }
 
-internal data class CustomMesh(val id: Any, val vertexCount: Int, val indexCount: Int, val attributes: List<Attribute>, val dynamic: Boolean, val block: MeshInitializer.() -> Unit) : MeshDeclaration {
+internal data class CustomMesh(val id: Any, val vertexCount: Int, val indexCount: Int, val attributes: List<Attribute>, val dynamic: Boolean, val forceLongIndex: Boolean, val block: MeshInitializer.() -> Unit) : MeshDeclaration {
     override fun equals(other: Any?): Boolean = (other is CustomMesh && other.id == id)
     override fun hashCode(): Int = id.hashCode()
 }

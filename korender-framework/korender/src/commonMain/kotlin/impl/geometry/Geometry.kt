@@ -65,7 +65,8 @@ internal object Geometry {
                 declaration.id.toString(),
                 declaration.vertexCount,
                 declaration.indexCount,
-                *declaration.attributes.toTypedArray()
+                attrs = declaration.attributes.toTypedArray(),
+                declaration.forceLongIndex
             ) {
                 apply(declaration.block)
             }
@@ -85,34 +86,38 @@ internal object Geometry {
         vertexNumber: Int,
         indexNumber: Int,
         vararg attrs: Attribute,
+        forceLongIndex: Boolean = false,
         block: MeshBuilder.() -> Unit
     ) =
-        MeshBuilder(name, vertexNumber, indexNumber, attrs.toList().sortedBy { it.order }).apply(block)
+        MeshBuilder(name, vertexNumber, indexNumber, attrs.toList().sortedBy { it.order }, forceLongIndex).apply(block)
 
     internal class MeshBuilder(
         val name: String,
         val vertexNumber: Int,
         val indexNumber: Int,
         val attrs: List<Attribute>,
-        val attributeBuffers: List<Floater>
+        val attributeBuffers: List<Floater>,
+        val forceLongIndex: Boolean
     ) : MeshInitializer {
 
         val indexInter: Inter?
         val indexShorter: Shorter?
-        var isLongIndex = vertexNumber > 32767
+        var isLongIndex = forceLongIndex || vertexNumber > 32767
         val attrMap = attrs.indices.associate { attrs[it] to attributeBuffers[it] }
 
         constructor(
             name: String,
             vertexNumber: Int,
             indexNumber: Int,
-            attrs: List<Attribute>
+            attrs: List<Attribute>,
+            forceLongIndex: Boolean
         ) : this(
             name,
             vertexNumber,
             indexNumber,
             attrs,
-            attrs.map { BufferUtils.createFloatBuffer(vertexNumber * it.size) })
+            attrs.map { BufferUtils.createFloatBuffer(vertexNumber * it.size) },
+            forceLongIndex)
 
         init {
             indexShorter = if (isLongIndex) null else BufferUtils.createShortBuffer(indexNumber)
@@ -211,7 +216,8 @@ internal object Geometry {
                 name,
                 vertexNumber * instances,
                 indexNumber * instances,
-                *attrs.toTypedArray()
+                attrs = attrs.toTypedArray(),
+                forceLongIndex
             ) {
                 // TODO optimize
                 for (i in 0 until instances) {

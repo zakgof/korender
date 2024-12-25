@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.gltf
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.gl.GLConstants
 import com.zakgof.korender.impl.engine.Bucket
 import com.zakgof.korender.impl.engine.GltfDeclaration
@@ -29,12 +30,82 @@ internal object GltfLoader {
         ignoreUnknownKeys = true
     }
 
+    enum class ChunkType(val value: Int) {
+        JSON(0x4E4F534A),
+        BIN(0x004E4942),
+        UNKNOWN(-1)
+    }
+
+    class GlbChunk(val type: ChunkType, val data: ByteArray)
+
     suspend fun load(
         declaration: GltfDeclaration,
-        appResourceLoader: suspend (String) -> ByteArray
+        appResourceLoader: ResourceLoader
     ): GltfLoaded {
-        val gltfCode = resourceBytes(appResourceLoader, declaration.gltfResource)
-            .decodeToString()
+        val extension = declaration.gltfResource.split(".").last().lowercase()
+        val resourceBytes = resourceBytes(appResourceLoader, declaration.gltfResource)
+        return when (extension) {
+            "gltf" -> loadGltf(resourceBytes, appResourceLoader, declaration.gltfResource)
+            "glb" -> loadGlb(resourceBytes, appResourceLoader, declaration.gltfResource)
+            else -> throw KorenderException("Unknown extension of gltf/glb resource: $extension")
+        }
+    }
+
+    private suspend fun loadGlb(
+        resourceBytes: ByteArray,
+        appResourceLoader: ResourceLoader,
+        resourceName: String
+    ): GltfLoaded {
+        val reader = ByteArrayReader(resourceBytes)
+
+        readGlbHeader(reader, resourceBytes)
+
+        val chunks = mutableListOf<GlbChunk>()
+        while (reader.hasRemaining()) {
+            val chunkLength = reader.readUInt32()
+            val chunkType = reader.readUInt32()
+            val chunkData = reader.readBytes(chunkLength)
+            val type = when (chunkType) {
+                ChunkType.JSON.value -> ChunkType.JSON
+                ChunkType.BIN.value -> ChunkType.BIN
+                else -> ChunkType.UNKNOWN
+            }
+            chunks.add(GlbChunk(type, chunkData))
+        }
+
+        val jsonChunk = chunks.find { it.type == ChunkType.JSON }
+            ?: throw KorenderException("Missing JSON chunk in GLB file")
+
+        return loadGltf(jsonChunk.data, appResourceLoader, resourceName).apply {
+            chunks.find { it.type == ChunkType.BIN }?.let {
+                loadedUris[""] = it.data
+            }
+        }
+    }
+
+    private fun readGlbHeader(reader: ByteArrayReader, resourceBytes: ByteArray) {
+        val magic = reader.readUInt32()
+        if (magic != 0x46546C67) { // ASCII "glTF"
+            throw KorenderException("Invalid GLB file magic: $magic")
+        }
+
+        val version = reader.readUInt32()
+        if (version != 2) {
+            throw KorenderException("Unsupported GLB version: $version")
+        }
+
+        val length = reader.readUInt32()
+        if (length != resourceBytes.size) {
+            throw KorenderException("GLB file length mismatch")
+        }
+    }
+
+    private suspend fun loadGltf(
+        resourceBytes: ByteArray,
+        appResourceLoader: ResourceLoader,
+        resourceName: String
+    ): GltfLoaded {
+        val gltfCode = resourceBytes.decodeToString()
         val model = json.decodeFromString<Gltf>(gltfCode)
         val loadedUris = listOfNotNull(
             model.buffers?.mapNotNull { it.uri },
@@ -45,10 +116,10 @@ internal object GltfLoader {
                 resourceBytes(
                     appResourceLoader,
                     it,
-                    parentResourceOf(declaration.gltfResource)
+                    parentResourceOf(resourceName)
                 )
             }
-        return GltfLoaded(model, loadedUris)
+        return GltfLoaded(model, loadedUris.toMutableMap())
     }
 }
 
@@ -64,7 +135,7 @@ internal class GltfSceneBuilder(
         val model = gltfLoaded.model
         val scene = model.scenes!![model.scene]
         scene.nodes.map { model.nodes!![it] }
-            .forEach { processNode(Transform().scale(100.0f), it) } // TODO debug
+            .forEach { processNode(Transform().scale(3.0f), it) } // TODO debug
 
         model.materials?.map {
             it.pbrMetallicRoughness?.baseColorTexture
@@ -110,13 +181,15 @@ internal class GltfSceneBuilder(
 
         val metallic = pbr?.metallicFactor ?: 0.3f
         val roughness = pbr?.roughnessFactor ?: 0.3f
-        val emissiveFactor = material?.emissiveFactor?.let { Color(1.0f, it[0], it[1], it[2]) } ?: Color.Black
-        val baseColor = pbr?.baseColorFactor?.let { Color(it[0], it[1], it[2], it[3]) } ?: Color.White
-        val albedoTexture = pbr?.baseColorTexture?.index?.let { getTexture(it) }
-        val metallicRoughnessTexture = pbr?.metallicRoughnessTexture?.index?.let { getTexture(it) }
-        val normalTexture = material?.normalTexture?.index?.let { getTexture(it) }
-        val occlusionTexture = material?.occlusionTexture?.index?.let { getTexture(it) }
-        val emissiveTexture = material?.emissiveTexture?.index?.let { getTexture(it) }
+        val emissiveFactor =
+            material?.emissiveFactor?.let { Color(1.0f, it[0], it[1], it[2]) } ?: Color.Black
+        val baseColor =
+            pbr?.baseColorFactor?.let { Color(it[0], it[1], it[2], it[3]) } ?: Color.White
+        val albedoTexture = pbr?.baseColorTexture?.let { getTexture(it) }
+        val metallicRoughnessTexture = pbr?.metallicRoughnessTexture?.let { getTexture(it) }
+        val normalTexture = material?.normalTexture?.let { getTexture(it) }
+        val occlusionTexture = material?.occlusionTexture?.let { getTexture(it) }
+        val emissiveTexture = material?.emissiveTexture?.let { getTexture(it) }
 
         val flags = mapOf(
             albedoTexture to StandartMaterialOption.AlbedoMap,
@@ -128,7 +201,7 @@ internal class GltfSceneBuilder(
             .values
             .toTypedArray()
 
-            return MaterialBuilder().apply {
+        return MaterialBuilder().apply {
             MaterialModifiers.standart(*flags) {
                 this.metallic = metallic
                 this.roughness = roughness
@@ -161,7 +234,8 @@ internal class GltfSceneBuilder(
             verticesAttributeAccessors.first().second.count,
             indicesAccessor!!.count,
             verticesAttributeAccessors.map { it.first }.sortedBy { it.order },
-            false
+            false,
+            accessorComponentTypeToLongIndex(indicesAccessor.componentType)
         ) {
             indexBytes(getAccessorBytes(indicesAccessor))
             verticesAttributeAccessors.forEach {
@@ -170,6 +244,13 @@ internal class GltfSceneBuilder(
         }
     }
 
+    private fun accessorComponentTypeToLongIndex(componentType: Int) =
+        when (componentType) {
+            GLConstants.GL_UNSIGNED_SHORT -> false
+            GLConstants.GL_UNSIGNED_INT -> true
+            else -> throw KorenderException("GLTF: Unsupported componentType for index: $componentType")
+        }
+
     private fun getAccessorBytes(accessor: Gltf.Accessor): ByteArray {
 
         val componentBytes = accessor.componentByteSize()
@@ -177,7 +258,7 @@ internal class GltfSceneBuilder(
 
         val bufferView = gltfLoaded.model.bufferViews!![accessor.bufferView!!]
         val buffer = gltfLoaded.model.buffers!![bufferView.buffer]
-        val bufferBytes = gltfLoaded.loadedUris[buffer.uri]!!
+        val bufferBytes = getBufferBytes(buffer)
         val byteOffset = accessor.byteOffset ?: 0
 
         val stride = bufferView.byteStride ?: 0
@@ -201,23 +282,45 @@ internal class GltfSceneBuilder(
         }
     }
 
-    private fun getTexture(index: Int): TextureDeclaration? =
-        // TODO null checks !!!
-        gltfLoaded.model.textures?.get(index)?.source?.let { src ->
-            gltfLoaded.model.images!![src]
-        }?.uri?.let { uri ->
-            val bytes = gltfLoaded.loadedUris[uri]!!
+    private fun getBufferBytes(buffer: Gltf.Buffer): ByteArray {
+        if (buffer.uri == null)
+            return gltfLoaded.loadedUris[""]!!
+        // TODO: support base64 inline data
+        return gltfLoaded.loadedUris[buffer.uri]!!
+    }
+
+    private fun getBufferViewBytes(bufferView: Gltf.BufferView): ByteArray {
+        val buffer = gltfLoaded.model.buffers!![bufferView.buffer]
+        val bufferBytes = getBufferBytes(buffer)
+        return bufferBytes.copyOfRange(bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength)
+    }
+
+    private fun getTexture(ti: Gltf.TextureIndexProvider): TextureDeclaration? {
+        val image = gltfLoaded.model.textures?.get(ti.index)?.source
+            ?.let { src -> gltfLoaded.model.images!![src] }
+
+       return image?.let { img ->
+            val bytes = getImageBytes(img)
             ByteArrayTextureDeclaration(
-                uri,
+                img.uri ?: "TODO ${ti.index}", // TODO !!!
                 TextureFilter.MipMapLinearLinear,
                 TextureWrap.Repeat,
                 1024,
                 bytes,
-                uri.split(".").last()
+                img.mimeType!!.split("/").last()
             )
         }
+    }
 
-
+    private fun getImageBytes(image: Gltf.Image): ByteArray {
+        if (image.uri != null)
+            return gltfLoaded.loadedUris[image.uri]!!
+        if (image.bufferView != null) {
+            val bufferView = gltfLoaded.model.bufferViews!![image.bufferView]
+            return getBufferViewBytes(bufferView)
+        }
+        throw KorenderException("GLTF: image without uri or bufferView")
+    }
 }
 
 fun Gltf.Accessor.componentByteSize(): Int =
@@ -226,6 +329,7 @@ fun Gltf.Accessor.componentByteSize(): Int =
         // TODO force SHORT/INT indexes into IB
         GLConstants.GL_UNSIGNED_BYTE -> 1
         GLConstants.GL_UNSIGNED_SHORT -> 2
+        GLConstants.GL_UNSIGNED_INT -> 4
         GLConstants.GL_FLOAT -> 4
         else -> throw KorenderException("GLTF: Not supported accessor componentType $componentType")
     }
