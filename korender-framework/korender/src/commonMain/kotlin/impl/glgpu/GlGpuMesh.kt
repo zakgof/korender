@@ -1,6 +1,6 @@
 package com.zakgof.korender.impl.glgpu
 
-import com.zakgof.korender.buffer.BufferData
+import com.zakgof.korender.buffer.NativeByteBuffer
 import com.zakgof.korender.gl.GL.glBindBuffer
 import com.zakgof.korender.gl.GL.glBindVertexArray
 import com.zakgof.korender.gl.GL.glBufferData
@@ -46,8 +46,8 @@ internal class GlGpuMesh(
     fun bind() = glBindVertexArray(vao)
 
     fun update(
-        vb: List<BufferData<out Any>>,
-        ib: BufferData<out Any>,
+        vb: List<NativeByteBuffer>,
+        ib: NativeByteBuffer,
         vertices: Int,
         indices: Int
     ) {

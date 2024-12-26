@@ -2,7 +2,6 @@ package com.zakgof.korender.impl.gltf
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.buffer.BufferUtils
 import com.zakgof.korender.gl.GLConstants
 import com.zakgof.korender.impl.engine.Bucket
 import com.zakgof.korender.impl.engine.GltfDeclaration
@@ -137,7 +136,7 @@ internal class GltfSceneBuilder(
         val model = gltfLoaded.model
         val scene = model.scenes!![model.scene]
         model.skins?.forEach { skin ->
-            skin.joints.associateWith {  }
+            skin.joints.associateWith { }
         }
         model.animations?.forEach { animation ->
             val samplerValues = animation.samplers.map { sampler -> getSamplerValue(sampler, time) }
@@ -153,13 +152,13 @@ internal class GltfSceneBuilder(
         return renderableDeclarations
     }
 
-    // TODO: this is crazy ineffective
-    private fun ByteArray.asNativeFloatList(): List<Float> {
-        val byter = BufferUtils.createByteBuffer(size)
-        byter.put(this)
-        byter.rewind()
-        val floater = byter.toFloater()
-        return List(floater.size()) { floater[it] }
+    private fun ByteArray.asNativeFloatList(): List<Float> = List<Float>(size / 4) {
+        Float.fromBits(
+            (this[it * 4 + 0].toInt() and 0xFF) or
+                    ((this[it * 4 + 1].toInt() and 0xFF) shl 8) or
+                    ((this[it * 4 + 2].toInt() and 0xFF) shl 16) or
+                    ((this[it * 4 + 3].toInt() and 0xFF) shl 24)
+        )
     }
 
     // TODO: PERF !! - preload add the samplers, no need to to each frame

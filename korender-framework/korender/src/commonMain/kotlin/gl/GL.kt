@@ -1,9 +1,6 @@
 package com.zakgof.korender.gl
 
-import com.zakgof.korender.buffer.BufferData
-import com.zakgof.korender.buffer.Byter
-import com.zakgof.korender.buffer.Floater
-import com.zakgof.korender.buffer.Inter
+import com.zakgof.korender.buffer.NativeByteBuffer
 
 expect object GL {
 
@@ -42,7 +39,7 @@ expect object GL {
         border: Int,
         format: Int,
         type: Int,
-        pixels: Byter?
+        pixels: NativeByteBuffer?
     )
 
     fun glGetFloatv(pname: Int) : Float?
@@ -67,7 +64,7 @@ expect object GL {
 
     fun glBindAttribLocation(program: GLProgram, index: Int, attr: String)
 
-    fun glBufferData(target: Int, data: BufferData<out Any>, usage: Int)
+    fun glBufferData(target: Int, data: NativeByteBuffer, usage: Int)
 
     fun glGenBuffers(): GLBuffer
 
@@ -95,17 +92,13 @@ expect object GL {
 
     fun glGetProgramInfoLog(program: GLProgram): String
 
-    fun glGetProgramiv(program: GLProgram, pname: Int, params: Inter)
+    fun glGetActiveUniform(program: GLProgram, index: Int): String
 
-    fun glGetActiveUniform(program: GLProgram, index: Int, size: Inter, type: Inter): String
-
-    fun glGetActiveAttrib(program: GLProgram, index: Int, size: Inter, type: Inter): String
+    fun glGetActiveAttrib(program: GLProgram, index: Int): String
 
     fun glShaderSource(shader: GLShader, source: String)
 
     fun glCompileShader(shader: GLShader)
-
-    fun glGetShaderiv(shader: GLShader, pname: Int, params: Inter)
 
     fun glEnableVertexAttribArray(index: Int)
 
@@ -118,9 +111,9 @@ expect object GL {
     fun glUniform2f(location: GLUniformLocation, v0: Float, v1: Float)
     fun glUniform3f(location: GLUniformLocation, v0: Float, v1: Float, v2: Float)
     fun glUniform4f(location: GLUniformLocation, v0: Float, v1: Float, v2: Float, v3: Float)
-    fun glUniformMatrix2fv(location: GLUniformLocation, transpose: Boolean, value: Floater)
-    fun glUniformMatrix3fv(location: GLUniformLocation, transpose: Boolean, value: Floater)
-    fun glUniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, value: Floater)
+    fun glUniformMatrix2fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray)
+    fun glUniformMatrix3fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray)
+    fun glUniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray)
 
     fun glVertexAttribPointer(
         index: Int,

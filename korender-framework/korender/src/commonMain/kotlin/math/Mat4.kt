@@ -1,8 +1,5 @@
 package com.zakgof.korender.math
 
-import com.zakgof.korender.buffer.BufferUtils
-import com.zakgof.korender.buffer.Floater
-
 class Mat4(
     val m00: Float,
     val m01: Float,
@@ -89,8 +86,6 @@ class Mat4(
         m02, m12, m22, m32,
         m03, m13, m23, m33
     )
-
-    fun asBuffer(): Floater = BufferUtils.createFloatBuffer(16).apply { put(asArray()) }
 
     operator fun times(mat: Mat4): Mat4 = Mat4(
         m00 * mat.m00 + m01 * mat.m10 + m02 * mat.m20 + m03 * mat.m30,

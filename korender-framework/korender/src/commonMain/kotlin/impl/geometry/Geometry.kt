@@ -2,11 +2,7 @@ package com.zakgof.korender.impl.geometry
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.buffer.BufferUtils
-import com.zakgof.korender.buffer.Byter
-import com.zakgof.korender.buffer.Floater
-import com.zakgof.korender.buffer.Inter
-import com.zakgof.korender.buffer.Shorter
+import com.zakgof.korender.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.BillboardInstance
 import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.glgpu.GlGpuMesh
@@ -116,14 +112,12 @@ internal object Geometry {
         val vertexNumber: Int,
         val indexNumber: Int,
         val attrs: List<Attribute>,
-        val attributeBuffers: List<Floater>,
+        val attributeBuffers: List<NativeByteBuffer>,
         indexType: Meshes.IndexType
     ) : MeshInitializer {
 
-        val indexInter: Inter?
-        val indexShorter: Shorter?
-        val indexByter: Byter?
         val realIndexType: Meshes.IndexType
+        val indexBuffer: NativeByteBuffer
         val attrMap = attrs.indices.associate { attrs[it] to attributeBuffers[it] }
 
         constructor(
@@ -137,18 +131,13 @@ internal object Geometry {
             vertexNumber,
             indexNumber,
             attrs,
-            attrs.map { BufferUtils.createFloatBuffer(vertexNumber * it.size) },
+            attrs.map { NativeByteBuffer(vertexNumber * it.size * 4) },
             indexType
         )
 
         init {
             realIndexType = convertIndexType(indexType, indexNumber)
-            indexByter =
-                if (realIndexType == Meshes.IndexType.Byte) BufferUtils.createByteBuffer(indexNumber) else null
-            indexShorter =
-                if (realIndexType == Meshes.IndexType.Short) BufferUtils.createShortBuffer(indexNumber) else null
-            indexInter =
-                if (realIndexType == Meshes.IndexType.Int) BufferUtils.createIntBuffer(indexNumber) else null
+            indexBuffer = NativeByteBuffer(indexNumber * realIndexType.size)
         }
 
         override fun attr(attr: Attribute, vararg v: Float): MeshInitializer {
@@ -189,58 +178,30 @@ internal object Geometry {
         override fun index(vararg indices: Int): MeshInitializer {
             for (value in indices) {
                 when (realIndexType) {
-                    Meshes.IndexType.Byte -> indexByter!!.put(value.toByte())
-                    Meshes.IndexType.Short -> indexShorter!!.put(value.toShort())
-                    Meshes.IndexType.Int -> indexInter!!.put(value.toInt())
+                    Meshes.IndexType.Byte -> indexBuffer.put(value.toByte())
+                    Meshes.IndexType.Short -> indexBuffer.put(value.toShort())
+                    Meshes.IndexType.Int -> indexBuffer.put(value)
                     else -> {}
                 }
             }
             return this
         }
 
-        // TODO optimize !!!
         override fun indexBytes(rawBytes: ByteArray): MeshInitializer {
-            val byter = BufferUtils.createByteBuffer(rawBytes.size)
-            byter.put(rawBytes)
-            byter.rewind()
-            when (realIndexType) {
-                Meshes.IndexType.Byte -> indexByter!!.put(rawBytes)
-                Meshes.IndexType.Short -> {
-                    val shorter = byter.toShorter()
-                    for (i in 0 until shorter.size()) {
-                        index(shorter[i].toInt())
-                    }
-                }
-
-                Meshes.IndexType.Int -> {
-                    val inter = byter.toInter()
-                    for (i in 0 until inter.size()) {
-                        index(inter[i])
-                    }
-                }
-
-                else -> {}
-            }
+            indexBuffer.put(rawBytes)
             return this
         }
 
-        // TODO : optimize !!!!!
         override fun attrBytes(attr: Attribute, rawBytes: ByteArray): MeshInitializer {
-            val byter = BufferUtils.createByteBuffer(rawBytes.size)
-            byter.put(rawBytes)
-            byter.rewind()
-            val floater = byter.toFloater()
-            for (i in 0 until floater.size()) {
-                attr(attr, floater[i])
-            }
+            attrMap[attr]!!.put(rawBytes)
             return this
         }
 
         private fun indexGet(index: Int): Int =
             when (realIndexType) {
-                Meshes.IndexType.Byte -> indexByter!![index].toInt()
-                Meshes.IndexType.Short -> indexShorter!![index].toInt()
-                Meshes.IndexType.Int -> indexInter!![index]
+                Meshes.IndexType.Byte -> indexBuffer.byte(index).toInt()
+                Meshes.IndexType.Short -> indexBuffer.short(index).toInt()
+                Meshes.IndexType.Int -> indexBuffer.int(index)
                 else -> -1
             }
 
@@ -257,15 +218,11 @@ internal object Geometry {
                 vertexNumber * instances,
                 indexNumber * instances,
                 attrs = attrs.toTypedArray(),
-                prototype.realIndexType
+                Meshes.IndexType.Auto
             ) {
-                // TODO optimize
                 for (i in 0 until instances) {
                     prototype.attributeBuffers.forEachIndexed { index, prototypeAttrBuffer ->
-                        val multiAttrBuffer = attributeBuffers[index]
-                        for (v in 0 until prototypeAttrBuffer.size()) {
-                            multiAttrBuffer.put(prototypeAttrBuffer[v])
-                        }
+                        attributeBuffers[index].rewind().put(prototypeAttrBuffer.rewind())
                     }
                     for (ind in 0 until prototype.indexNumber) {
                         index(prototype.indexGet(ind) + i * prototype.vertexNumber)
@@ -273,14 +230,6 @@ internal object Geometry {
                 }
             }
         }
-
-        fun indexBuffer() =
-            when (realIndexType) {
-                Meshes.IndexType.Byte -> indexByter!!
-                Meshes.IndexType.Short -> indexShorter!!
-                Meshes.IndexType.Int -> indexInter!!
-                else -> throw KorenderException("Internal error")
-            }
     }
 
     open class DefaultMesh(
@@ -302,15 +251,19 @@ internal object Geometry {
 
         private fun positions(): List<Vec3> {
             val posBuffer = data.attrMap[POS]!!
-            return (0..<data.vertexNumber).map {
-                Vec3(posBuffer[it * 3], posBuffer[it * 3 + 1], posBuffer[it * 3 + 2])
+            return (0 until data.vertexNumber).map {
+                Vec3(
+                    posBuffer.float(it * 3),
+                    posBuffer.float(it * 3 + 1),
+                    posBuffer.float(it * 3 + 2)
+                )
             }
         }
 
         private fun updateGpu() {
             gpuMesh.update(
                 data.attributeBuffers.onEach { it.rewind() },
-                data.indexBuffer().apply { rewind() },
+                data.indexBuffer.rewind(),
                 data.vertexNumber,
                 data.indexNumber
             )
@@ -318,8 +271,7 @@ internal object Geometry {
 
         fun updateMesh(block: MeshInitializer.() -> Unit) {
             data.attributeBuffers.forEach { it.rewind() }
-            data.indexInter?.rewind()
-            data.indexShorter?.rewind()
+            data.indexBuffer.rewind()
             data.apply(block)
             updateGpu()
         }
@@ -341,11 +293,11 @@ internal object Geometry {
             dataPosBuffer.rewind()
             instances.indices.map {
                 val instance = instances[it]
-                for (v in 0..<prototype.vertexNumber) {
+                for (v in 0 until prototype.vertexNumber) {
                     val protoPos = Vec3(
-                        protoPosBuffer[v * 3 + 0],
-                        protoPosBuffer[v * 3 + 1],
-                        protoPosBuffer[v * 3 + 2]
+                        protoPosBuffer.float(v * 3 + 0),
+                        protoPosBuffer.float(v * 3 + 1),
+                        protoPosBuffer.float(v * 3 + 2)
                     )
                     val newPos = instance.transform.mat4.project(protoPos)
                     dataPosBuffer.put(newPos.x)
@@ -355,8 +307,8 @@ internal object Geometry {
                 }
             }
             gpuMesh.update(
-                data.attributeBuffers,
-                data.indexBuffer(),
+                data.attributeBuffers.onEach { it.rewind() },
+                data.indexBuffer.rewind(),
                 prototype.vertexNumber * instances.size,
                 prototype.indexNumber * instances.size
             )
@@ -408,8 +360,8 @@ internal object Geometry {
                 dataTexBuffer.put(0f)
             }
             gpuMesh.update(
-                data.attributeBuffers,
-                data.indexBuffer(),
+                data.attributeBuffers.onEach { it.rewind() },
+                data.indexBuffer.rewind(),
                 instances.size * 4,
                 instances.size * 6
             )
@@ -456,8 +408,8 @@ internal object Geometry {
                 xx += width
             }
             gpuMesh.update(
-                data.attributeBuffers,
-                data.indexBuffer(),
+                data.attributeBuffers.onEach { it.rewind() },
+                data.indexBuffer.rewind(),
                 text.length * 4,
                 text.length * 6
             )

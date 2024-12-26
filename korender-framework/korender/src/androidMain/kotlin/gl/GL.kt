@@ -2,10 +2,6 @@ package com.zakgof.korender.gl
 
 import android.opengl.GLES11
 import android.opengl.GLES20
-import com.zakgof.korender.buffer.BufferData
-import com.zakgof.korender.buffer.Byter
-import com.zakgof.korender.buffer.Floater
-import com.zakgof.korender.buffer.Inter
 
 actual object GL {
 

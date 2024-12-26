@@ -9,8 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
-import com.zakgof.korender.buffer.BufferUtils
-import com.zakgof.korender.buffer.Byter
+import com.zakgof.korender.buffer.NativeByteBuffer
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.image.Image
 import com.zakgof.korender.impl.engine.Engine
@@ -169,8 +168,8 @@ actual object Platform {
     actual fun loadImage(bytes: ByteArray, type: String): Deferred<Image> =
         CompletableDeferred(image(ImageIO.read(ByteArrayInputStream(bytes))))
 
-    private fun loadBgr(data: ByteArray): Byter {
-        val buffer = BufferUtils.createByteBuffer(data.size)
+    private fun loadBgr(data: ByteArray): NativeByteBuffer {
+        val buffer = NativeByteBuffer(data.size)
         for (i in 0 until data.size / 3) {
             buffer.byteBuffer.put(data[i * 3 + 2])
                 .put(data[i * 3 + 1])
@@ -180,22 +179,22 @@ actual object Platform {
         return buffer
     }
 
-    private fun loadGray(data: ByteArray): Byter {
-        val buffer = BufferUtils.createByteBuffer(data.size)
+    private fun loadGray(data: ByteArray): NativeByteBuffer {
+        val buffer = NativeByteBuffer(data.size)
         buffer.byteBuffer.put(data).flip()
         return buffer
     }
 
     // TODO: test
-    private fun loadGray16(data: ShortArray): Byter {
-        val bb = BufferUtils.createByteBuffer(data.size * 2)
+    private fun loadGray16(data: ShortArray): NativeByteBuffer {
+        val bb = NativeByteBuffer(data.size * 2)
         val buffer = bb.byteBuffer.asShortBuffer()
         buffer.put(data).flip()
         return bb
     }
 
-    private fun loadAbgr(data: ByteArray): Byter {
-        val buffer = BufferUtils.createByteBuffer(data.size)
+    private fun loadAbgr(data: ByteArray): NativeByteBuffer {
+        val buffer = NativeByteBuffer(data.size)
         for (i in 0 until data.size / 4) {
             buffer.byteBuffer.put(data[i * 4 + 3])
                 .put(data[i * 4 + 2])
@@ -270,7 +269,7 @@ class JvmImage(
     private val raster: Raster,
     override val width: Int,
     override val height: Int,
-    override val bytes: Byter,
+    override val bytes: NativeByteBuffer,
     override val format: GlGpuTexture.Format
 ) : Image {
 

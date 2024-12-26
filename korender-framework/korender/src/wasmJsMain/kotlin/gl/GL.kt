@@ -2,10 +2,8 @@ package com.zakgof.korender.gl
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.WebGL2RenderingContext
-import com.zakgof.korender.buffer.BufferData
-import com.zakgof.korender.buffer.Byter
-import com.zakgof.korender.buffer.Floater
-import com.zakgof.korender.buffer.Inter
+import com.zakgof.korender.buffer.NativeByteBuffer
+import org.khronos.webgl.toFloat32Array
 
 actual object GL {
 
@@ -59,7 +57,7 @@ actual object GL {
         border: Int,
         format: Int,
         type: Int,
-        pixels: Byter?
+        pixels: NativeByteBuffer?
     ) = gl!!.texImage2D(
         target, level, internalformat, width, height, border, format, type, pixels?.array
     )
@@ -133,14 +131,10 @@ actual object GL {
     actual fun glGetProgramInfoLog(program: GLProgram): String =
         gl!!.getProgramInfoLog(program.program) ?: ""
 
-    actual fun glGetProgramiv(program: GLProgram, pname: Int, params: Inter) {
-        params.put((gl!!.getProgramParameter(program.program, pname) as JsNumber).toInt())
-    }
-
-    actual fun glGetActiveUniform(program: GLProgram, index: Int, size: Inter, type: Inter) =
+    actual fun glGetActiveUniform(program: GLProgram, index: Int) =
         gl!!.getActiveUniform(program.program, index)!!.name
 
-    actual fun glGetActiveAttrib(program: GLProgram, index: Int, size: Inter, type: Inter) =
+    actual fun glGetActiveAttrib(program: GLProgram, index: Int) =
         gl!!.getActiveAttrib(program.program, index)!!.name
 
     actual fun glShaderSource(shader: GLShader, source: String) =
@@ -148,9 +142,6 @@ actual object GL {
 
     actual fun glCompileShader(shader: GLShader) =
         gl!!.compileShader(shader.shader)
-
-    actual fun glGetShaderiv(shader: GLShader, pname: Int, params: Inter) =
-        params.put((gl!!.getShaderParameter(shader.shader, pname) as JsNumber).toInt())
 
     actual fun glEnableVertexAttribArray(index: Int) =
         gl!!.enableVertexAttribArray(index)
@@ -176,14 +167,14 @@ actual object GL {
     actual fun glUniform4f(location: GLUniformLocation, v0: Float, v1: Float, v2: Float, v3: Float) =
         gl!!.uniform4f(location.uniformLocation, v0, v1, v2, v3)
 
-    actual fun glUniformMatrix2fv(location: GLUniformLocation, transpose: Boolean, value: Floater) =
-        gl!!.uniformMatrix2fv(location.uniformLocation, transpose, value.array)
+    actual fun glUniformMatrix2fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray) =
+        gl!!.uniformMatrix2fv(location.uniformLocation, transpose, value.toFloat32Array())
 
-    actual fun glUniformMatrix3fv(location: GLUniformLocation, transpose: Boolean, value: Floater) =
-        gl!!.uniformMatrix3fv(location.uniformLocation, transpose, value.array)
+    actual fun glUniformMatrix3fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray) =
+        gl!!.uniformMatrix3fv(location.uniformLocation, transpose, value.toFloat32Array())
 
-    actual fun glUniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, value: Floater) =
-        gl!!.uniformMatrix4fv(location.uniformLocation, transpose, value.array)
+    actual fun glUniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray) =
+        gl!!.uniformMatrix4fv(location.uniformLocation, transpose, value.toFloat32Array())
 
     actual fun glVertexAttribPointer(
         index: Int, size: Int, type: Int, normalized: Boolean, stride: Int, pointer: Int
@@ -229,6 +220,6 @@ actual object GL {
     actual fun glBindAttribLocation(program: GLProgram, index: Int, attr: String) =
         gl!!.bindAttribLocation(program.program, index, attr)
 
-    actual fun glBufferData(target: Int, data: BufferData<out Any>, usage: Int) =
+    actual fun glBufferData(target: Int, data: NativeByteBuffer, usage: Int) =
         gl!!.bufferData(target, data.array, usage)
 }

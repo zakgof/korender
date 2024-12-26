@@ -1,8 +1,6 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.buffer.BufferUtils
-import com.zakgof.korender.buffer.Inter
 import com.zakgof.korender.gl.GL.glAttachShader
 import com.zakgof.korender.gl.GL.glBindAttribLocation
 import com.zakgof.korender.gl.GL.glCompileShader
@@ -12,7 +10,6 @@ import com.zakgof.korender.gl.GL.glDeleteProgram
 import com.zakgof.korender.gl.GL.glDeleteShader
 import com.zakgof.korender.gl.GL.glGetActiveAttrib
 import com.zakgof.korender.gl.GL.glGetActiveUniform
-import com.zakgof.korender.gl.GL.glGetAttribLocation
 import com.zakgof.korender.gl.GL.glGetProgramInfoLog
 import com.zakgof.korender.gl.GL.glGetProgrami
 import com.zakgof.korender.gl.GL.glGetShaderInfoLog
@@ -121,31 +118,18 @@ internal class GlGpuShader(
     }
 
     private fun fetchUniforms(): Map<String, GLUniformLocation> {
-        val params: Inter = BufferUtils.createIntBuffer(1)
-        val type: Inter = BufferUtils.createIntBuffer(1)
-
         val numUniforms = glGetProgrami(programHandle, GL_ACTIVE_UNIFORMS)
         return (0 until numUniforms).associate {
-            val name: String = glGetActiveUniform(
-                programHandle, it, params.apply { clear() }, type.apply { clear() }
-            )
+            val name: String = glGetActiveUniform(programHandle, it)
             val location = glGetUniformLocation(programHandle, name)
             name to location
         }
     }
 
     private fun fetchAttributes(): List<String> {
-        val params = BufferUtils.createIntBuffer(1)
-        val type = BufferUtils.createIntBuffer(1)
-
         val numAttributes = glGetProgrami(programHandle, GL_ACTIVE_ATTRIBUTES)
         return (0 until numAttributes).map {
-            val name = glGetActiveAttrib(programHandle, it, params.apply { clear() }, type.apply { clear() })
-            val loc = glGetAttribLocation(programHandle, name)
-
-            println("ATTRIB $name $loc")
-
-            name
+            glGetActiveAttrib(programHandle, it)
         }
     }
 
@@ -188,11 +172,11 @@ internal class GlGpuShader(
             is Vec3 -> glUniform3f(location, value.x, value.y, value.z)
             is Color -> glUniform4f(location, value.r, value.g, value.b, value.a)
             is Mat4 -> glUniformMatrix4fv(
-                location, false, value.asBuffer().apply { rewind() }
+                location, false, value.asArray()
             )
 
             is Mat3 -> glUniformMatrix3fv(
-                location, false, value.asBuffer().apply { rewind() }
+                location, false, value.asArray()
             )
 
             is GlGpuTexture -> {

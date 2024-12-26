@@ -12,7 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
-import com.zakgof.korender.buffer.Byter
+import com.zakgof.korender.buffer.NativeByteBuffer
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.gl.GL
 import com.zakgof.korender.image.Image
@@ -69,7 +69,7 @@ internal class WasmImage(
     private val byteArray: ByteArray,
     override val format: GlGpuTexture.Format = GlGpuTexture.Format.RGBA
 ) : Image {
-    override val bytes = Byter(byteArray)
+    override val bytes = NativeByteBuffer(byteArray)
     override fun pixel(x: Int, y: Int): Color {
         val base = (x + y * width) * 4
         return Color(

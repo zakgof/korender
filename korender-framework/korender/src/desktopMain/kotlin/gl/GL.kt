@@ -1,14 +1,12 @@
 package com.zakgof.korender.gl
 
-import com.zakgof.korender.buffer.BufferData
-import com.zakgof.korender.buffer.Byter
-import com.zakgof.korender.buffer.Floater
-import com.zakgof.korender.buffer.Inter
+import com.zakgof.korender.buffer.NativeByteBuffer
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL13
 import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
+import java.nio.ByteBuffer
 
 actual object GL {
 
@@ -41,7 +39,7 @@ actual object GL {
         border: Int,
         format: Int,
         type: Int,
-        pixels: Byter?
+        pixels: NativeByteBuffer?
     ) = GL11.glTexImage2D(
         target, level, internalformat, width, height, border, format, type, pixels?.byteBuffer
     )
@@ -83,23 +81,25 @@ actual object GL {
 
     actual fun glGetShaderInfoLog(shader: GLShader) = GL20.glGetShaderInfoLog(shader.glHandle)
     actual fun glGetProgramInfoLog(program: GLProgram) = GL20.glGetProgramInfoLog(program.glHandle)
-    actual fun glGetProgramiv(program: GLProgram, pname: Int, params: Inter) =
-        GL20.glGetProgramiv(program.glHandle, pname, params.intBuffer)
 
-    actual fun glGetActiveUniform(
-        program: GLProgram, index: Int, size: Inter, type: Inter
-    ) = GL20.glGetActiveUniform(program.glHandle, index, size.intBuffer, type.intBuffer)
+    actual fun glGetActiveUniform(program: GLProgram, index: Int): String {
+        val i1 = ByteBuffer.allocateDirect(4).asIntBuffer()
+        val i2 = ByteBuffer.allocateDirect(4).asIntBuffer()
+        return GL20.glGetActiveUniform(program.glHandle, index, i1, i2)
+    }
 
     actual fun glGetActiveAttrib(
-        program: GLProgram, index: Int, size: Inter, type: Inter
-    ) = GL20.glGetActiveAttrib(program.glHandle, index, size.intBuffer, type.intBuffer)
+        program: GLProgram, index: Int
+    ): String {
+        val i1 = ByteBuffer.allocateDirect(4).asIntBuffer()
+        val i2 = ByteBuffer.allocateDirect(4).asIntBuffer()
+        return GL20.glGetActiveAttrib(program.glHandle, index, i1, i2)
+    }
 
     actual fun glShaderSource(shader: GLShader, source: String) =
         GL20.glShaderSource(shader.glHandle, source)
 
     actual fun glCompileShader(shader: GLShader) = GL20.glCompileShader(shader.glHandle)
-    actual fun glGetShaderiv(shader: GLShader, pname: Int, params: Inter) =
-        GL20.glGetShaderiv(shader.glHandle, pname, params.intBuffer)
 
     actual fun glEnableVertexAttribArray(index: Int) = GL20.glEnableVertexAttribArray(index)
     actual fun glGetUniformLocation(program: GLProgram, name: String) =
@@ -129,14 +129,14 @@ actual object GL {
     ) =
         GL20.glUniform4f(location.glHandle, v0, v1, v2, v3)
 
-    actual fun glUniformMatrix2fv(location: GLUniformLocation, transpose: Boolean, value: Floater) =
-        GL20.glUniformMatrix2fv(location.glHandle, transpose, value.floatBuffer)
+    actual fun glUniformMatrix2fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray) =
+        GL20.glUniformMatrix2fv(location.glHandle, transpose, value)
 
-    actual fun glUniformMatrix3fv(location: GLUniformLocation, transpose: Boolean, value: Floater) =
-        GL20.glUniformMatrix3fv(location.glHandle, transpose, value.floatBuffer)
+    actual fun glUniformMatrix3fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray) =
+        GL20.glUniformMatrix3fv(location.glHandle, transpose, value)
 
-    actual fun glUniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, value: Floater) =
-        GL20.glUniformMatrix4fv(location.glHandle, transpose, value.floatBuffer)
+    actual fun glUniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray) =
+        GL20.glUniformMatrix4fv(location.glHandle, transpose, value)
 
     actual fun glVertexAttribPointer(
         index: Int, size: Int, type: Int, normalized: Boolean, stride: Int, pointer: Int
@@ -173,6 +173,7 @@ actual object GL {
     actual fun glDeleteVertexArrays(vertexArray: GLVertexArray) =
         GL30.glDeleteVertexArrays(vertexArray.glHandle)
 
-    actual fun glBufferData(target: Int, data: BufferData<out Any>, usage: Int) =
+    actual fun glBufferData(target: Int, data: NativeByteBuffer, usage: Int) =
         GL20.glBufferData(target, data.byteBuffer, usage)
+
 }

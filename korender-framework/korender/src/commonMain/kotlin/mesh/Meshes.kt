@@ -35,11 +35,11 @@ object Meshes {
     ): MeshDeclaration =
         HeightField(id, cellsX, cellsZ, cellWidth, height)
 
-    enum class IndexType {
-        Auto,
-        Byte,
-        Short,
-        Int
+    enum class IndexType(val size: kotlin.Int) {
+        Auto(-1),
+        Byte(1),
+        Short(2),
+        Int(4)
     }
 }
 
