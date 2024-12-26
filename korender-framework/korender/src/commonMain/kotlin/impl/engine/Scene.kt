@@ -12,7 +12,7 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.Projection
 import com.zakgof.korender.uniforms.UniformSupplier
 
-internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: Inventory, private val camera: Camera, private val width: Int, private val height: Int) {
+internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: Inventory, private val camera: Camera, private val width: Int, private val height: Int, time: Float) {
 
     private val shadower: Shadower?
     private val passes: List<ScenePass>
@@ -20,12 +20,13 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     private val touchBoxes: List<TouchBox>
     val touchBoxesHandler:(TouchEvent) -> Boolean
 
+
     init {
         sceneDeclaration.compilePasses()
         shadower = sceneDeclaration.shadow?.let { CascadeShadower(inventory, it.cascades) }
         val shadowCascades = shadower?.cascadeNumber ?: 0
         shadowCasters = if (sceneDeclaration.passes.isNotEmpty()) createShadowCasters(sceneDeclaration.passes[0].renderables) else listOf()
-        passes = sceneDeclaration.passes.map { ScenePass(inventory, camera, width, height, it, shadowCascades) }
+        passes = sceneDeclaration.passes.map { ScenePass(inventory, camera, width, height, it, shadowCascades, time) }
         touchBoxes = passes.flatMap { it.touchBoxes }
         touchBoxesHandler = { evt ->
             touchBoxes.any { it.touch(evt) }

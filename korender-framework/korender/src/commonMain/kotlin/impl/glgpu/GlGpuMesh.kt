@@ -17,16 +17,18 @@ import com.zakgof.korender.gl.GLConstants.GL_ELEMENT_ARRAY_BUFFER
 import com.zakgof.korender.gl.GLConstants.GL_FLOAT
 import com.zakgof.korender.gl.GLConstants.GL_STATIC_DRAW
 import com.zakgof.korender.gl.GLConstants.GL_TRIANGLES
+import com.zakgof.korender.gl.GLConstants.GL_UNSIGNED_BYTE
 import com.zakgof.korender.gl.GLConstants.GL_UNSIGNED_INT
 import com.zakgof.korender.gl.GLConstants.GL_UNSIGNED_SHORT
 import com.zakgof.korender.impl.geometry.Attribute
+import com.zakgof.korender.mesh.Meshes
 
 
 internal class GlGpuMesh(
     private val name: String,
     val attrs: List<Attribute>,
     isDynamic: Boolean = false,
-    private val isLongIndex: Boolean = false
+    private val indexType: Meshes.IndexType
 ) : AutoCloseable {
 
     private val vao = glGenVertexArrays()
@@ -76,7 +78,12 @@ internal class GlGpuMesh(
         glDrawElements(
             GL_TRIANGLES,
             indices,
-            if (isLongIndex) GL_UNSIGNED_INT else GL_UNSIGNED_SHORT,
+            when (indexType) {
+                Meshes.IndexType.Byte -> GL_UNSIGNED_BYTE
+                Meshes.IndexType.Short -> GL_UNSIGNED_SHORT
+                Meshes.IndexType.Int -> GL_UNSIGNED_INT
+                else -> 0
+            } ,
             0
         )
         glBindVertexArray(null)

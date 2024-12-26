@@ -7,6 +7,7 @@ class Gltf(
     val scene: Int,
     val asset: Asset,
     val accessors: List<Accessor>? = null,
+    val animations: List<Animation>? = null,
     val buffers: List<Buffer>? = null,
     val bufferViews: List<BufferView>? = null,
     val cameras: List<Camera>? = null,
@@ -16,6 +17,7 @@ class Gltf(
     val nodes: List<Node>? = null,
     val samplers: List<Sampler>? = null,
     val scenes: List<Scene>? = null,
+    val skins: List<Skin>? = null,
     val textures: List<Texture>? = null
 ) {
 
@@ -26,6 +28,31 @@ class Gltf(
         val version: String,
         val minVersion: String? = null
     )
+
+    @Serializable
+    data class Animation(
+        val channels: List<AnimationChannel>,
+        val samplers: List<AnimationSampler>,
+        val name: String? = null
+    ) {
+        @Serializable
+        data class AnimationChannel(
+            val sampler: Int,
+            val target: AnimationChannelTarget
+        )
+        @Serializable
+        data class AnimationSampler(
+            val input: Int,
+            val interpolation: String,
+            val output: Int
+        )
+
+        @Serializable
+        data class AnimationChannelTarget(
+            val node: Int? = null,
+            val path: String
+        )
+    }
 
     @Serializable
     data class Accessor(
@@ -170,16 +197,11 @@ class Gltf(
         val camera: Int? = null,
         val children: List<Int>? = null,
         val skin: Int? = null,
-        val matrix: List<Float>? = listOf(
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
-        ),
+        val matrix: List<Float>? = null,
         val mesh: Int? = null,
-        val rotation: List<Float>? = listOf(0.0f, 0.0f, 0.0f, 1.0f),
-        val scale: List<Float>? = listOf(1.0f, 1.0f, 1.0f),
-        val translation: List<Float>? = listOf(0.0f, 0.0f, 0.0f),
+        val rotation: List<Float>? = null,
+        val scale: List<Float>? = null,
+        val translation: List<Float>? = null,
         val weights: List<Float>? = null,
         val name: String? = null
     )
@@ -200,6 +222,14 @@ class Gltf(
     )
 
     @Serializable
+    data class Skin(
+        val inverseBindMatrices: Int? = null,
+        val skeleton: Int? = null,
+        val joints: List<Int>,
+        val name: String? = null
+    )
+
+    @Serializable
     data class Texture(
         val sampler: Int? = null,
         val source: Int? = null,
@@ -216,6 +246,4 @@ class Gltf(
         val index: Int
     }
 
-
 }
-

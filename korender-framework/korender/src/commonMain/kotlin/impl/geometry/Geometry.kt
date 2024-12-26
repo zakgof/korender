@@ -3,6 +3,7 @@ package com.zakgof.korender.impl.geometry
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.buffer.BufferUtils
+import com.zakgof.korender.buffer.Byter
 import com.zakgof.korender.buffer.Floater
 import com.zakgof.korender.buffer.Inter
 import com.zakgof.korender.buffer.Shorter
@@ -28,6 +29,7 @@ import com.zakgof.korender.mesh.InstancedBillboard
 import com.zakgof.korender.mesh.InstancedMesh
 import com.zakgof.korender.mesh.MeshDeclaration
 import com.zakgof.korender.mesh.MeshInitializer
+import com.zakgof.korender.mesh.Meshes
 import com.zakgof.korender.mesh.ObjMesh
 import com.zakgof.korender.mesh.ScreenQuad
 import com.zakgof.korender.mesh.Sphere
@@ -66,7 +68,7 @@ internal object Geometry {
                 declaration.vertexCount,
                 declaration.indexCount,
                 attrs = declaration.attributes.toTypedArray(),
-                declaration.forceLongIndex
+                declaration.indexType
             ) {
                 apply(declaration.block)
             }
@@ -86,10 +88,28 @@ internal object Geometry {
         vertexNumber: Int,
         indexNumber: Int,
         vararg attrs: Attribute,
-        forceLongIndex: Boolean = false,
+        indexType: Meshes.IndexType = Meshes.IndexType.Auto,
         block: MeshBuilder.() -> Unit
     ) =
-        MeshBuilder(name, vertexNumber, indexNumber, attrs.toList().sortedBy { it.order }, forceLongIndex).apply(block)
+        MeshBuilder(
+            name,
+            vertexNumber,
+            indexNumber,
+            attrs.toList().sortedBy { it.order },
+            indexType
+        ).apply(block)
+
+
+    private fun convertIndexType(indexType: Meshes.IndexType, indexNumber: Int): Meshes.IndexType {
+        if (indexType == Meshes.IndexType.Auto) {
+            if (indexNumber < 127)
+                return Meshes.IndexType.Byte
+            if (indexNumber < 32767)
+                return Meshes.IndexType.Short
+            return Meshes.IndexType.Int
+        }
+        return indexType
+    }
 
     internal class MeshBuilder(
         val name: String,
@@ -97,12 +117,13 @@ internal object Geometry {
         val indexNumber: Int,
         val attrs: List<Attribute>,
         val attributeBuffers: List<Floater>,
-        val forceLongIndex: Boolean
+        indexType: Meshes.IndexType
     ) : MeshInitializer {
 
         val indexInter: Inter?
         val indexShorter: Shorter?
-        var isLongIndex = forceLongIndex || vertexNumber > 32767
+        val indexByter: Byter?
+        val realIndexType: Meshes.IndexType
         val attrMap = attrs.indices.associate { attrs[it] to attributeBuffers[it] }
 
         constructor(
@@ -110,18 +131,24 @@ internal object Geometry {
             vertexNumber: Int,
             indexNumber: Int,
             attrs: List<Attribute>,
-            forceLongIndex: Boolean
+            indexType: Meshes.IndexType
         ) : this(
             name,
             vertexNumber,
             indexNumber,
             attrs,
             attrs.map { BufferUtils.createFloatBuffer(vertexNumber * it.size) },
-            forceLongIndex)
+            indexType
+        )
 
         init {
-            indexShorter = if (isLongIndex) null else BufferUtils.createShortBuffer(indexNumber)
-            indexInter = if (isLongIndex) BufferUtils.createIntBuffer(indexNumber) else null
+            realIndexType = convertIndexType(indexType, indexNumber)
+            indexByter =
+                if (realIndexType == Meshes.IndexType.Byte) BufferUtils.createByteBuffer(indexNumber) else null
+            indexShorter =
+                if (realIndexType == Meshes.IndexType.Short) BufferUtils.createShortBuffer(indexNumber) else null
+            indexInter =
+                if (realIndexType == Meshes.IndexType.Int) BufferUtils.createIntBuffer(indexNumber) else null
         }
 
         override fun attr(attr: Attribute, vararg v: Float): MeshInitializer {
@@ -161,10 +188,12 @@ internal object Geometry {
 
         override fun index(vararg indices: Int): MeshInitializer {
             for (value in indices) {
-                if (isLongIndex)
-                    indexInter!!.put(value)
-                else
-                    indexShorter!!.put(value.toShort())
+                when (realIndexType) {
+                    Meshes.IndexType.Byte -> indexByter!!.put(value.toByte())
+                    Meshes.IndexType.Short -> indexShorter!!.put(value.toShort())
+                    Meshes.IndexType.Int -> indexInter!!.put(value.toInt())
+                    else -> {}
+                }
             }
             return this
         }
@@ -174,16 +203,23 @@ internal object Geometry {
             val byter = BufferUtils.createByteBuffer(rawBytes.size)
             byter.put(rawBytes)
             byter.rewind()
-            if (isLongIndex) {
-                val inter = byter.toInter()
-                for (i in 0 until inter.size()) {
-                    index(inter[i])
+            when (realIndexType) {
+                Meshes.IndexType.Byte -> indexByter!!.put(rawBytes)
+                Meshes.IndexType.Short -> {
+                    val shorter = byter.toShorter()
+                    for (i in 0 until shorter.size()) {
+                        index(shorter[i].toInt())
+                    }
                 }
-            } else {
-                val shorter = byter.toShorter()
-                for (i in 0 until shorter.size()) {
-                    index(shorter[i].toInt())
+
+                Meshes.IndexType.Int -> {
+                    val inter = byter.toInter()
+                    for (i in 0 until inter.size()) {
+                        index(inter[i])
+                    }
                 }
+
+                else -> {}
             }
             return this
         }
@@ -201,8 +237,12 @@ internal object Geometry {
         }
 
         private fun indexGet(index: Int): Int =
-            if (isLongIndex) indexInter!![index] else indexShorter!![index].toInt()
-
+            when (realIndexType) {
+                Meshes.IndexType.Byte -> indexByter!![index].toInt()
+                Meshes.IndexType.Short -> indexShorter!![index].toInt()
+                Meshes.IndexType.Int -> indexInter!![index]
+                else -> -1
+            }
 
         fun build(isDynamic: Boolean = false): DefaultMesh =
             DefaultMesh(name, this, isDynamic)
@@ -217,7 +257,7 @@ internal object Geometry {
                 vertexNumber * instances,
                 indexNumber * instances,
                 attrs = attrs.toTypedArray(),
-                forceLongIndex
+                prototype.realIndexType
             ) {
                 // TODO optimize
                 for (i in 0 until instances) {
@@ -235,7 +275,12 @@ internal object Geometry {
         }
 
         fun indexBuffer() =
-            if (isLongIndex) indexInter!! else indexShorter!!
+            when (realIndexType) {
+                Meshes.IndexType.Byte -> indexByter!!
+                Meshes.IndexType.Short -> indexShorter!!
+                Meshes.IndexType.Int -> indexInter!!
+                else -> throw KorenderException("Internal error")
+            }
     }
 
     open class DefaultMesh(
@@ -245,7 +290,7 @@ internal object Geometry {
     ) : Mesh {
 
         final override val gpuMesh: GlGpuMesh =
-            GlGpuMesh(name, data.attrs, isDynamic, data.isLongIndex)
+            GlGpuMesh(name, data.attrs, isDynamic, data.realIndexType)
 
         final override val modelBoundingBox: BoundingBox?
         override fun close() = gpuMesh.close()
@@ -311,7 +356,7 @@ internal object Geometry {
             }
             gpuMesh.update(
                 data.attributeBuffers,
-                if (data.isLongIndex) data.indexInter!! else data.indexShorter!!,
+                data.indexBuffer(),
                 prototype.vertexNumber * instances.size,
                 prototype.indexNumber * instances.size
             )
@@ -599,6 +644,7 @@ internal object Geometry {
             index(0, 2, 1, 0, 3, 2)
         }.buildInstanced(reservedLength)
 }
+
 
 
 

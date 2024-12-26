@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.gltf
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.ResourceLoader
+import com.zakgof.korender.buffer.BufferUtils
 import com.zakgof.korender.gl.GLConstants
 import com.zakgof.korender.impl.engine.Bucket
 import com.zakgof.korender.impl.engine.GltfDeclaration
@@ -18,11 +19,16 @@ import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.material.TextureFilter
 import com.zakgof.korender.material.TextureWrap
 import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.Mat4
+import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.mesh.Attributes
 import com.zakgof.korender.mesh.CustomMesh
 import com.zakgof.korender.mesh.MeshDeclaration
+import com.zakgof.korender.mesh.Meshes
 import kotlinx.serialization.json.Json
+import kotlin.math.floor
 
 internal object GltfLoader {
 
@@ -112,13 +118,7 @@ internal object GltfLoader {
             model.images?.mapNotNull { it.uri }
         )
             .flatten()
-            .associateWith {
-                resourceBytes(
-                    appResourceLoader,
-                    it,
-                    parentResourceOf(resourceName)
-                )
-            }
+            .associateWith { resourceBytes(appResourceLoader, it, parentResourceOf(resourceName)) }
         return GltfLoaded(model, loadedUris.toMutableMap())
     }
 }
@@ -130,53 +130,125 @@ internal class GltfSceneBuilder(
 ) {
 
     private val renderableDeclarations = mutableListOf<RenderableDeclaration>()
+    private val nodeAnimations =
+        mutableMapOf<Int, MutableMap<String, List<Float>>>()
 
-    fun build(): MutableList<RenderableDeclaration> {
+    fun build(time: Float): MutableList<RenderableDeclaration> {
         val model = gltfLoaded.model
         val scene = model.scenes!![model.scene]
-        scene.nodes.map { model.nodes!![it] }
-            .forEach { processNode(Transform().scale(3.0f), it) } // TODO debug
-
-        model.materials?.map {
-            it.pbrMetallicRoughness?.baseColorTexture
+        model.skins?.forEach { skin ->
+            skin.joints.associateWith {  }
         }
-
+        model.animations?.forEach { animation ->
+            val samplerValues = animation.samplers.map { sampler -> getSamplerValue(sampler, time) }
+            animation.channels.forEach { channel ->
+                nodeAnimations.getOrPut(channel.target.node!!) {
+                    mutableMapOf()
+                }[channel.target.path] = samplerValues[channel.sampler]
+            }
+        }
+        scene.nodes.forEach { nodeIndex ->
+            processNode(Transform().scale(0.5f), nodeIndex, model.nodes!![nodeIndex]) // TODO debug
+        }
         return renderableDeclarations
     }
 
-    private fun processNode(transform: Transform, node: Gltf.Node) {
+    // TODO: this is crazy ineffective
+    private fun ByteArray.asNativeFloatList(): List<Float> {
+        val byter = BufferUtils.createByteBuffer(size)
+        byter.put(this)
+        byter.rewind()
+        val floater = byter.toFloater()
+        return List(floater.size()) { floater[it] }
+    }
 
+    // TODO: PERF !! - preload add the samplers, no need to to each frame
+    private fun getSamplerValue(
+        sampler: Gltf.Animation.AnimationSampler,
+        currentTime: Float
+    ): List<Float> {
+
+        val inputAccessor = gltfLoaded.model.accessors!![sampler.input]
+        val inputBytes = getAccessorBytes(inputAccessor)
+        val inputFloats = inputBytes.asNativeFloatList()
+
+        val outputAccessor = gltfLoaded.model.accessors[sampler.output]
+        val outputBytes = getAccessorBytes(outputAccessor)
+        val outputFloats = outputBytes.asNativeFloatList()
+        // TODO validate float input and output
+        val outputValues = getAccessorFloatBasedElements(outputFloats, outputAccessor.type)
+        // TODO validate same lengths
+
+        val max = inputFloats.last() * 2.0f
+        val timeOffset = currentTime - floor(currentTime / max) * max
+
+        var samplerPositionBefore =
+            inputFloats.indexOfLast { timeOffset > it } // TODO linear scan - ineffective!
+        if (samplerPositionBefore < 0) samplerPositionBefore = 0
+
+        // TODO this is STEP, implement other interpolations
+        val output = outputValues[samplerPositionBefore]
+        return output
+
+    }
+
+    private fun getAccessorFloatBasedElements(raw: List<Float>, type: String): List<List<Float>> =
+        when (type) {
+            "VEC4" -> List(raw.size / 4) { List(4) { i -> raw[i + it * 4] } }
+            "VEC3" -> List(raw.size / 3) { List(3) { i -> raw[i + it * 3] } }
+            else -> throw KorenderException("GLTF: Unknown accessor element type for sampler: $type")
+        }
+
+    private fun processNode(parentTransform: Transform, nodeIndex: Int, node: Gltf.Node) {
+        var transform = parentTransform
+
+        val na = nodeAnimations[nodeIndex]
+
+        val translation = na?.get("translation") ?: node.translation
+        val rotation = na?.get("rotation") ?: node.rotation
+        val scale = na?.get("scale") ?: node.scale
+
+
+        if (na != null)
+            println("node $nodeIndex rotation $rotation")
+
+        translation?.let { transform *= Transform.translate(Vec3(it[0], it[1], it[2])) }
+        rotation?.let {
+            transform *= Transform.rotate(
+                Quaternion(
+                    it[3],
+                    Vec3(it[0], it[1], it[2])
+                )
+            )
+        }
+        scale?.let { transform *= Transform.scale(it[0], it[1], it[2]) }
+
+        node.matrix?.let { transform *= Transform(Mat4(it.toFloatArray())) }
         node.mesh
             ?.let { gltfLoaded.model.meshes!![it] }
             ?.let { processMesh(transform, it, node.mesh) }
-
-        node.children?.map { gltfLoaded.model.nodes!![it] }
-            ?.forEach { processNode(transform, it) }
+        node.children?.forEach { childNodeIndex ->
+            processNode(transform, childNodeIndex, gltfLoaded.model.nodes!![childNodeIndex])
+        }
     }
 
     private fun processMesh(transform: Transform, mesh: Gltf.Mesh, meshIndex: Int) {
         mesh.primitives.forEachIndexed { primitiveIndex, primitive ->
-
             val meshDeclaration = createMeshDeclaration(primitive, meshIndex, primitiveIndex)
             val materialDeclaration = createMaterialDeclaration(primitive)
-
-
             val renderableDeclaration = RenderableDeclaration(
                 meshDeclaration,
                 materialDeclaration.shader,
                 materialDeclaration.uniforms,
                 transform,
-                Bucket.OPAQUE
+                Bucket.OPAQUE // TODO transparent mode
             )
-
             renderableDeclarations += renderableDeclaration
         }
     }
 
     private fun createMaterialDeclaration(primitive: Gltf.Mesh.Primitive): MaterialDeclaration {
-
         val material = primitive.material?.let { gltfLoaded.model.materials!![it] }
-
         val pbr = material?.pbrMetallicRoughness
 
         val metallic = pbr?.metallicFactor ?: 0.3f
@@ -184,7 +256,7 @@ internal class GltfSceneBuilder(
         val emissiveFactor =
             material?.emissiveFactor?.let { Color(1.0f, it[0], it[1], it[2]) } ?: Color.Black
         val baseColor =
-            pbr?.baseColorFactor?.let { Color(it[0], it[1], it[2], it[3]) } ?: Color.White
+            pbr?.baseColorFactor?.let { Color(it[3], it[0], it[1], it[2]) } ?: Color.White
         val albedoTexture = pbr?.baseColorTexture?.let { getTexture(it) }
         val metallicRoughnessTexture = pbr?.metallicRoughnessTexture?.let { getTexture(it) }
         val normalTexture = material?.normalTexture?.let { getTexture(it) }
@@ -212,7 +284,6 @@ internal class GltfSceneBuilder(
                 this.normalTexture = normalTexture
                 this.occlusionTexture = occlusionTexture
                 this.emissiveTexture = emissiveTexture
-
             }.applyTo(this)
         }.toMaterialDeclaration()
 
@@ -235,7 +306,7 @@ internal class GltfSceneBuilder(
             indicesAccessor!!.count,
             verticesAttributeAccessors.map { it.first }.sortedBy { it.order },
             false,
-            accessorComponentTypeToLongIndex(indicesAccessor.componentType)
+            accessorComponentTypeToIndexType(indicesAccessor.componentType)
         ) {
             indexBytes(getAccessorBytes(indicesAccessor))
             verticesAttributeAccessors.forEach {
@@ -244,10 +315,11 @@ internal class GltfSceneBuilder(
         }
     }
 
-    private fun accessorComponentTypeToLongIndex(componentType: Int) =
+    private fun accessorComponentTypeToIndexType(componentType: Int) =
         when (componentType) {
-            GLConstants.GL_UNSIGNED_SHORT -> false
-            GLConstants.GL_UNSIGNED_INT -> true
+            GLConstants.GL_UNSIGNED_BYTE -> Meshes.IndexType.Byte
+            GLConstants.GL_UNSIGNED_SHORT -> Meshes.IndexType.Short
+            GLConstants.GL_UNSIGNED_INT -> Meshes.IndexType.Int
             else -> throw KorenderException("GLTF: Unsupported componentType for index: $componentType")
         }
 
@@ -292,14 +364,17 @@ internal class GltfSceneBuilder(
     private fun getBufferViewBytes(bufferView: Gltf.BufferView): ByteArray {
         val buffer = gltfLoaded.model.buffers!![bufferView.buffer]
         val bufferBytes = getBufferBytes(buffer)
-        return bufferBytes.copyOfRange(bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength)
+        return bufferBytes.copyOfRange(
+            bufferView.byteOffset,
+            bufferView.byteOffset + bufferView.byteLength
+        )
     }
 
     private fun getTexture(ti: Gltf.TextureIndexProvider): TextureDeclaration? {
         val image = gltfLoaded.model.textures?.get(ti.index)?.source
             ?.let { src -> gltfLoaded.model.images!![src] }
 
-       return image?.let { img ->
+        return image?.let { img ->
             val bytes = getImageBytes(img)
             ByteArrayTextureDeclaration(
                 img.uri ?: "TODO ${ti.index}", // TODO !!!
@@ -325,8 +400,6 @@ internal class GltfSceneBuilder(
 
 fun Gltf.Accessor.componentByteSize(): Int =
     when (componentType) {
-        // TODO https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.schema.json
-        // TODO force SHORT/INT indexes into IB
         GLConstants.GL_UNSIGNED_BYTE -> 1
         GLConstants.GL_UNSIGNED_SHORT -> 2
         GLConstants.GL_UNSIGNED_INT -> 4
@@ -335,10 +408,11 @@ fun Gltf.Accessor.componentByteSize(): Int =
     }
 
 fun Gltf.Accessor.elementComponentSize(): Int =
+    // TODO enums
     when (type) {
-        // TODO https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.schema.json
         "SCALAR" -> 1
         "VEC2" -> 2
         "VEC3" -> 3
+        "VEC4" -> 4
         else -> throw KorenderException("GLTF: Not supported accessor type $type")
     }

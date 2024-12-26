@@ -84,7 +84,7 @@ internal class Engine(
         }
         updateContext()
         inventory.go {
-            val scene = Scene(sd, inventory, camera, width, height)
+            val scene = Scene(sd, inventory, camera, width, height, frameInfo.time)
             scene.render(context, projection, camera, light)
             val error = glGetError()
             if (error != 0) {

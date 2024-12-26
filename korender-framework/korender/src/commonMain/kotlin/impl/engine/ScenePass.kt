@@ -27,7 +27,8 @@ internal class ScenePass(
     private val width: Int,
     private val height: Int,
     passDeclaration: PassDeclaration,
-    shadowCascades: Int
+    shadowCascades: Int,
+    time: Float
 ) {
 
     val touchBoxes = mutableListOf<Scene.TouchBox>()
@@ -40,7 +41,7 @@ internal class ScenePass(
     init {
         passDeclaration.gltfs.forEach {
             inventory.gltf(it)?.let { l ->
-                passDeclaration.renderables += GltfSceneBuilder(inventory, it.gltfResource, l).build()
+                passDeclaration.renderables += GltfSceneBuilder(inventory, it.gltfResource, l).build(time)
             }
         }
         passDeclaration.renderables.forEach {
