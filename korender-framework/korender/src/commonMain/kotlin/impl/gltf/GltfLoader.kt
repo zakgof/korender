@@ -3,13 +3,13 @@ package com.zakgof.korender.impl.gltf
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.gl.GLConstants
+import com.zakgof.korender.impl.absolutizeResource
 import com.zakgof.korender.impl.engine.Bucket
 import com.zakgof.korender.impl.engine.GltfDeclaration
 import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
-import com.zakgof.korender.impl.parentResourceOf
 import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.material.MaterialBuilder
 import com.zakgof.korender.material.MaterialModifiers
@@ -24,12 +24,16 @@ import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.mesh.Attributes
 import com.zakgof.korender.mesh.CustomMesh
-import com.zakgof.korender.mesh.MeshDeclaration
 import com.zakgof.korender.mesh.Meshes
 import kotlinx.serialization.json.Json
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.math.floor
 
+class LoadedSkin(val inverseBindMatrices: List<Mat4>, var jointMatrices: List<Mat4>)
+
 internal object GltfLoader {
+
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -108,7 +112,7 @@ internal object GltfLoader {
     private suspend fun loadGltf(
         resourceBytes: ByteArray,
         appResourceLoader: ResourceLoader,
-        resourceName: String
+        gltfResource: String
     ): GltfLoaded {
         val gltfCode = resourceBytes.decodeToString()
         val model = json.decodeFromString<Gltf>(gltfCode)
@@ -117,8 +121,26 @@ internal object GltfLoader {
             model.images?.mapNotNull { it.uri }
         )
             .flatten()
-            .associateWith { resourceBytes(appResourceLoader, it, parentResourceOf(resourceName)) }
+            .associateWith { loadUriBytes(appResourceLoader, absolutizeResource(it, gltfResource)) }
         return GltfLoaded(model, loadedUris.toMutableMap())
+    }
+
+    @OptIn(ExperimentalEncodingApi::class)
+    private suspend fun loadUriBytes(
+        appResourceLoader: ResourceLoader,
+        resourceUri: String
+    ): ByteArray {
+        if (resourceUri.startsWith("data:")) {
+            val splitcomma = resourceUri.split(",")
+            val data = splitcomma[1]
+            val header = splitcomma[0].substring(5)
+            val splitsemi = header.split(";")
+            val isBase64 = splitsemi.size == 2 && splitsemi[1] == "base64"
+            val mediaType = splitsemi[0]
+            val bytes = if (isBase64) Base64.decode(data) else data.encodeToByteArray()
+            return bytes
+        }
+        return resourceBytes(appResourceLoader, resourceUri)
     }
 }
 
@@ -128,16 +150,25 @@ internal class GltfSceneBuilder(
     private val gltfLoaded: GltfLoaded
 ) {
 
+    private val nodeMatrices = mutableMapOf<Int, Transform>()
+    private val meshes = mutableListOf<Pair<Int, Int>>()
     private val renderableDeclarations = mutableListOf<RenderableDeclaration>()
     private val nodeAnimations =
         mutableMapOf<Int, MutableMap<String, List<Float>>>()
+    private val loadedSkins = mutableListOf<LoadedSkin>()
 
     fun build(time: Float): MutableList<RenderableDeclaration> {
         val model = gltfLoaded.model
         val scene = model.scenes!![model.scene]
-        model.skins?.forEach { skin ->
-            skin.joints.associateWith { }
-        }
+
+        // TODO preload it!
+        model.skins?.map { skin ->
+            // TODO validate accessor type map4
+            val inverseBindMatrices =
+                getAccessorBytes(gltfLoaded.model.accessors!![skin.inverseBindMatrices!!]).asNativeMat4List()
+            LoadedSkin(inverseBindMatrices, listOf()) // TODO separate these two things
+        }?.let { loadedSkins.addAll(it) }
+
         model.animations?.forEach { animation ->
             val samplerValues = animation.samplers.map { sampler -> getSamplerValue(sampler, time) }
             animation.channels.forEach { channel ->
@@ -146,19 +177,36 @@ internal class GltfSceneBuilder(
                 }[channel.target.path] = samplerValues[channel.sampler]
             }
         }
+
         scene.nodes.forEach { nodeIndex ->
-            processNode(Transform().scale(0.5f), nodeIndex, model.nodes!![nodeIndex]) // TODO debug
+            processNode(Transform(), nodeIndex, model.nodes!![nodeIndex]) // TODO debug scale
         }
+        model.skins?.mapIndexed { skinIndex, skin ->
+            loadedSkins[skinIndex].jointMatrices = skin.joints.map { nodeMatrices[it]!!.mat4 }
+        }
+        meshes.forEach {
+            val meshIndex = it.first
+            val nodeIndex = it.second
+            val nodeTransform = nodeMatrices[nodeIndex]!!
+            processMesh(nodeTransform, gltfLoaded.model.meshes!![meshIndex], meshIndex, gltfLoaded.model.nodes!![nodeIndex].skin)
+        } // TODO map instead
+
         return renderableDeclarations
     }
 
-    private fun ByteArray.asNativeFloatList(): List<Float> = List<Float>(size / 4) {
+    // TODO move me
+    private fun ByteArray.asNativeFloatList(): List<Float> = List(size / 4) {
         Float.fromBits(
             (this[it * 4 + 0].toInt() and 0xFF) or
                     ((this[it * 4 + 1].toInt() and 0xFF) shl 8) or
                     ((this[it * 4 + 2].toInt() and 0xFF) shl 16) or
                     ((this[it * 4 + 3].toInt() and 0xFF) shl 24)
         )
+    }
+
+    // TODO move me and optimize by avoiding copy
+    private fun ByteArray.asNativeMat4List(): List<Mat4> = List(size / 64) { m ->
+        Mat4(this.copyOfRange(m * 64, m * 64 + 64).asNativeFloatList().toFloatArray())
     }
 
     // TODO: PERF !! - preload add the samplers, no need to to each frame
@@ -199,6 +247,7 @@ internal class GltfSceneBuilder(
         }
 
     private fun processNode(parentTransform: Transform, nodeIndex: Int, node: Gltf.Node) {
+
         var transform = parentTransform
 
         val na = nodeAnimations[nodeIndex]
@@ -207,34 +256,36 @@ internal class GltfSceneBuilder(
         val rotation = na?.get("rotation") ?: node.rotation
         val scale = na?.get("scale") ?: node.scale
 
-
-        if (na != null)
-            println("node $nodeIndex rotation $rotation")
-
         translation?.let { transform *= Transform.translate(Vec3(it[0], it[1], it[2])) }
         rotation?.let {
             transform *= Transform.rotate(
-                Quaternion(
-                    it[3],
-                    Vec3(it[0], it[1], it[2])
-                )
+                Quaternion(it[3], Vec3(it[0], it[1], it[2]))
             )
         }
         scale?.let { transform *= Transform.scale(it[0], it[1], it[2]) }
 
         node.matrix?.let { transform *= Transform(Mat4(it.toFloatArray())) }
-        node.mesh
-            ?.let { gltfLoaded.model.meshes!![it] }
-            ?.let { processMesh(transform, it, node.mesh) }
+        nodeMatrices[nodeIndex] = transform
+
+        node.mesh?.let { meshes.add(it to nodeIndex) }
+
         node.children?.forEach { childNodeIndex ->
             processNode(transform, childNodeIndex, gltfLoaded.model.nodes!![childNodeIndex])
         }
     }
 
-    private fun processMesh(transform: Transform, mesh: Gltf.Mesh, meshIndex: Int) {
+    private fun processMesh(
+        transform: Transform,
+        mesh: Gltf.Mesh,
+        meshIndex: Int,
+        skinIndex: Int?
+    ) {
         mesh.primitives.forEachIndexed { primitiveIndex, primitive ->
             val meshDeclaration = createMeshDeclaration(primitive, meshIndex, primitiveIndex)
-            val materialDeclaration = createMaterialDeclaration(primitive)
+            val materialDeclaration = createMaterialDeclaration(
+                primitive,
+                skinIndex
+            )
             val renderableDeclaration = RenderableDeclaration(
                 meshDeclaration,
                 materialDeclaration.shader,
@@ -246,7 +297,10 @@ internal class GltfSceneBuilder(
         }
     }
 
-    private fun createMaterialDeclaration(primitive: Gltf.Mesh.Primitive): MaterialDeclaration {
+    private fun createMaterialDeclaration(
+        primitive: Gltf.Mesh.Primitive,
+        skinIndex: Int?
+    ): MaterialDeclaration {
         val material = primitive.material?.let { gltfLoaded.model.materials!![it] }
         val pbr = material?.pbrMetallicRoughness
 
@@ -270,10 +324,12 @@ internal class GltfSceneBuilder(
             emissiveTexture to StandartMaterialOption.EmissiveMap
         ).filterKeys { it != null }
             .values
-            .toTypedArray()
+            .toMutableList()
+        if (skinIndex != null)
+            flags += StandartMaterialOption.Skinning
 
         return MaterialBuilder().apply {
-            MaterialModifiers.standart(*flags) {
+            MaterialModifiers.standart(*flags.toTypedArray()) {
                 this.metallic = metallic
                 this.roughness = roughness
                 this.baseColor = baseColor
@@ -283,6 +339,22 @@ internal class GltfSceneBuilder(
                 this.normalTexture = normalTexture
                 this.occlusionTexture = occlusionTexture
                 this.emissiveTexture = emissiveTexture
+
+                if (skinIndex != null) {
+                    dynamic("jointMatrices[0]") {
+                        val x1 =
+                            loadedSkins[skinIndex].jointMatrices[0] * loadedSkins[skinIndex].inverseBindMatrices[0]
+                        val x2 =
+                            loadedSkins[skinIndex].jointMatrices[1] * loadedSkins[skinIndex].inverseBindMatrices[1]
+                        loadedSkins[skinIndex].jointMatrices
+                        // listOf(Mat4.IDENTITY, Mat4.IDENTITY)
+                    }
+                    dynamic("inverseBindMatrices[0]") {
+                        loadedSkins[skinIndex].inverseBindMatrices
+                        //  listOf(Mat4.IDENTITY, Mat4.IDENTITY)
+                    }
+                }
+
             }.applyTo(this)
         }.toMaterialDeclaration()
 
@@ -292,7 +364,7 @@ internal class GltfSceneBuilder(
         primitive: Gltf.Mesh.Primitive,
         meshIndex: Int,
         primitiveIndex: Int
-    ): MeshDeclaration {
+    ): CustomMesh {
         val indicesAccessor = primitive.indices?.let { gltfLoaded.model.accessors!![it] }
         val verticesAttributeAccessors = primitive.attributes
             .mapNotNull { p ->
@@ -333,7 +405,7 @@ internal class GltfSceneBuilder(
         val byteOffset = accessor.byteOffset ?: 0
 
         val stride = bufferView.byteStride ?: 0
-        if (stride == 0) {
+        if (stride == 0 || stride == elementComponents * componentBytes) {
             return bufferBytes.copyOfRange(
                 bufferView.byteOffset + byteOffset,
                 bufferView.byteOffset + byteOffset + accessor.count * elementComponents * componentBytes
@@ -353,10 +425,10 @@ internal class GltfSceneBuilder(
         }
     }
 
+    // TODO: redesign; uri is to big for key
     private fun getBufferBytes(buffer: Gltf.Buffer): ByteArray {
         if (buffer.uri == null)
             return gltfLoaded.loadedUris[""]!!
-        // TODO: support base64 inline data
         return gltfLoaded.loadedUris[buffer.uri]!!
     }
 
@@ -413,5 +485,7 @@ fun Gltf.Accessor.elementComponentSize(): Int =
         "VEC2" -> 2
         "VEC3" -> 3
         "VEC4" -> 4
+        "MAT3" -> 9
+        "MAT4" -> 16
         else -> throw KorenderException("GLTF: Not supported accessor type $type")
     }

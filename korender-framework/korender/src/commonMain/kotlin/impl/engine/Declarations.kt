@@ -84,6 +84,7 @@ private fun stdOptionsToDefs(
             StandartMaterialOption.OcclusionMap -> set.add("OCCLUSION_MAP")
 
             StandartMaterialOption.NoLight -> set.add("NO_LIGHT")
+            StandartMaterialOption.Skinning -> set.add("SKINNING")
 
             else -> {}
         }

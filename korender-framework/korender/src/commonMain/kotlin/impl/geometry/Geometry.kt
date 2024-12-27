@@ -34,6 +34,28 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
 
+fun NativeByteBuffer.put(v: Vec3) {
+    put(v.x)
+    put(v.y)
+    put(v.z)
+}
+
+fun NativeByteBuffer.vec3(index: Int): Vec3 {
+    val x = float(index * 3)
+    val y = float(index * 3 + 1)
+    val z = float(index * 3 + 2)
+    return Vec3(x, y, z)
+}
+
+fun NativeByteBuffer.debugFloats(): String =
+    (0 until size() / 4).take(1000).map { float(it) }.toString()
+
+fun NativeByteBuffer.debugInts(): String =
+    (0 until size() / 4).take(1000).map { int(it) }.toString()
+
+fun NativeByteBuffer.debugShorts(): String =
+    (0 until size() / 2).take(1000).map { short(it) }.toString()
+
 internal object Geometry {
 
     suspend fun create(declaration: MeshDeclaration, appResourceLoader: ResourceLoader): Mesh =
@@ -116,8 +138,8 @@ internal object Geometry {
         indexType: Meshes.IndexType
     ) : MeshInitializer {
 
-        val realIndexType: Meshes.IndexType
-        val indexBuffer: NativeByteBuffer
+        val realIndexType: Meshes.IndexType = convertIndexType(indexType, indexNumber)
+        val indexBuffer: NativeByteBuffer = NativeByteBuffer(indexNumber * realIndexType.size)
         val attrMap = attrs.indices.associate { attrs[it] to attributeBuffers[it] }
 
         constructor(
@@ -131,14 +153,9 @@ internal object Geometry {
             vertexNumber,
             indexNumber,
             attrs,
-            attrs.map { NativeByteBuffer(vertexNumber * it.size * 4) },
+            attrs.map { NativeByteBuffer(vertexNumber * it.primitiveSize * it.structSize) },
             indexType
         )
-
-        init {
-            realIndexType = convertIndexType(indexType, indexNumber)
-            indexBuffer = NativeByteBuffer(indexNumber * realIndexType.size)
-        }
 
         override fun attr(attr: Attribute, vararg v: Float): MeshInitializer {
             v.forEach { attrMap[attr]!!.put(it) }
@@ -251,13 +268,7 @@ internal object Geometry {
 
         private fun positions(): List<Vec3> {
             val posBuffer = data.attrMap[POS]!!
-            return (0 until data.vertexNumber).map {
-                Vec3(
-                    posBuffer.float(it * 3),
-                    posBuffer.float(it * 3 + 1),
-                    posBuffer.float(it * 3 + 2)
-                )
-            }
+            return (0 until data.vertexNumber).map { posBuffer.vec3(it) }
         }
 
         private fun updateGpu() {
@@ -294,15 +305,9 @@ internal object Geometry {
             instances.indices.map {
                 val instance = instances[it]
                 for (v in 0 until prototype.vertexNumber) {
-                    val protoPos = Vec3(
-                        protoPosBuffer.float(v * 3 + 0),
-                        protoPosBuffer.float(v * 3 + 1),
-                        protoPosBuffer.float(v * 3 + 2)
-                    )
+                    val protoPos = protoPosBuffer.vec3(v)
                     val newPos = instance.transform.mat4.project(protoPos)
-                    dataPosBuffer.put(newPos.x)
-                    dataPosBuffer.put(newPos.y)
-                    dataPosBuffer.put(newPos.z)
+                    dataPosBuffer.put(newPos)
                     // TODO: normal
                 }
             }
@@ -326,33 +331,25 @@ internal object Geometry {
             dataTexBuffer.rewind()
             instances.indices.map {
                 val instance = instances[it]
-                dataPosBuffer.put(instance.pos.x)
-                dataPosBuffer.put(instance.pos.y)
-                dataPosBuffer.put(instance.pos.z)
+                dataPosBuffer.put(instance.pos)
                 dataScaleBuffer.put(instance.scale.x)
                 dataScaleBuffer.put(instance.scale.y)
                 dataPhiBuffer.put(instance.phi)
                 dataTexBuffer.put(0f)
                 dataTexBuffer.put(0f)
-                dataPosBuffer.put(instance.pos.x)
-                dataPosBuffer.put(instance.pos.y)
-                dataPosBuffer.put(instance.pos.z)
+                dataPosBuffer.put(instance.pos)
                 dataScaleBuffer.put(instance.scale.x)
                 dataScaleBuffer.put(instance.scale.y)
                 dataPhiBuffer.put(instance.phi)
                 dataTexBuffer.put(0f)
                 dataTexBuffer.put(1f)
-                dataPosBuffer.put(instance.pos.x)
-                dataPosBuffer.put(instance.pos.y)
-                dataPosBuffer.put(instance.pos.z)
+                dataPosBuffer.put(instance.pos)
                 dataScaleBuffer.put(instance.scale.x)
                 dataScaleBuffer.put(instance.scale.y)
                 dataPhiBuffer.put(instance.phi)
                 dataTexBuffer.put(1f)
                 dataTexBuffer.put(1f)
-                dataPosBuffer.put(instance.pos.x)
-                dataPosBuffer.put(instance.pos.y)
-                dataPosBuffer.put(instance.pos.z)
+                dataPosBuffer.put(instance.pos)
                 dataScaleBuffer.put(instance.scale.x)
                 dataScaleBuffer.put(instance.scale.y)
                 dataPhiBuffer.put(instance.phi)

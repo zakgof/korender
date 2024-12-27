@@ -23,5 +23,7 @@ expect class NativeByteBuffer(size: Int) {
     fun rewind(): NativeByteBuffer
 
     fun put(other: NativeByteBuffer)
+
+    fun size(): Int
 }
 

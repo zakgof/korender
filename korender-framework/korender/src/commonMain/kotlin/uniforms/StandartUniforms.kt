@@ -2,6 +2,7 @@ package com.zakgof.korender.uniforms
 
 import com.zakgof.korender.material.TextureDeclaration
 import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.Mat4
 
 class StandartUniforms : BaseUniformSupplier() {
 
@@ -18,6 +19,9 @@ class StandartUniforms : BaseUniformSupplier() {
     var normalTexture: TextureDeclaration? = null
     var shadowTexture: TextureDeclaration? = null
 
+    var jointMatrices: List<Mat4>? = null
+    var inverseBindMatrices: List<Mat4>? = null
+
     // TODO var aperiodicTexture: TextureDeclaration? = null
     // TODO var detailTexture: TextureDeclaration? = null
 
@@ -30,6 +34,7 @@ class StandartUniforms : BaseUniformSupplier() {
     var rotation = 0f
 
     override operator fun get(key: String): Any? =
+        super.get(key) ?:
         when (key) {
             "baseColor" -> baseColor
             "metallic" -> metallic
@@ -51,6 +56,9 @@ class StandartUniforms : BaseUniformSupplier() {
             "xscale" -> xscale
             "yscale" -> yscale
             "rotation" -> rotation
-            else -> super.get(key)
+
+            "jointMatrices[0]" -> jointMatrices
+            "inverseBindMatrices[0]" -> inverseBindMatrices
+            else -> null
         }
 }

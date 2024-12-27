@@ -12,5 +12,6 @@ enum class StandartMaterialOption {
     Detail,
     NoShadowCast,
     NoShadowReceive,
-    Pcss
+    Pcss,
+    Skinning
 }

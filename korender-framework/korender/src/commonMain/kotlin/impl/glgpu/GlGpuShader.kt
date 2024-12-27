@@ -54,7 +54,6 @@ internal class GlGpuShader(
     private val vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER)
     private val fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER)
     private val uniformLocations: Map<String, GLUniformLocation>
-    private val attributes: List<String>
 
     init {
 
@@ -103,18 +102,18 @@ internal class GlGpuShader(
             throw RuntimeException("Program linking failure")
         } else if (glGetProgrami(programHandle, GL_VALIDATE_STATUS) == 0) {
             throw RuntimeException("Program validation failure")
-        } else if (vertexLog.isNotEmpty()) {
-            throw RuntimeException("Vertex shader compilation warnings")
-        } else if (fragmentLog.isNotEmpty()) {
-            throw RuntimeException("Fragment shader compilation warnings")
-        } else if (programLog.isNotEmpty()) {
-            throw RuntimeException("Program linking warnings")
         }
+//        } else if (vertexLog.isNotEmpty()) {
+//            throw RuntimeException("Vertex shader compilation warnings")
+//        } else if (fragmentLog.isNotEmpty()) {
+//            throw RuntimeException("Fragment shader compilation warnings")
+//        } else if (programLog.isNotEmpty()) {
+//            throw RuntimeException("Program linking warnings")
+//        }
 
         println("Creating GPU Shader [$name] : $programHandle")
 
         uniformLocations = fetchUniforms()
-        attributes = fetchAttributes()
     }
 
     private fun fetchUniforms(): Map<String, GLUniformLocation> {
@@ -142,16 +141,16 @@ internal class GlGpuShader(
 
     fun render(uniformSupplier: UniformSupplier, mesh: GlGpuMesh) {
         glUseProgram(programHandle)
-        bindAttrs(mesh)
         bindUniforms(uniformSupplier)
+        bindAttrs(mesh)
         mesh.render()
         glUseProgram(null)
     }
 
     private fun bindAttrs(mesh: GlGpuMesh) {
         mesh.bind()
-        mesh.attrs.forEachIndexed { index, attr ->
-            glBindAttribLocation(programHandle, index, attr.name)
+        mesh.attrs.forEach { attr ->
+            glBindAttribLocation(programHandle, attr.order, attr.name)
         }
     }
 
@@ -178,6 +177,13 @@ internal class GlGpuShader(
             is Mat3 -> glUniformMatrix3fv(
                 location, false, value.asArray()
             )
+
+            // TODO need some bettar dezign
+            is List<*> -> {
+                // TODO ineffective! use buffers?
+                val fa = (value as List<Mat4>).flatMap { it.asArray().asList() }.toFloatArray()
+                glUniformMatrix4fv(location, false, fa)
+            }
 
             is GlGpuTexture -> {
                 value.bind(currentTexUnit)

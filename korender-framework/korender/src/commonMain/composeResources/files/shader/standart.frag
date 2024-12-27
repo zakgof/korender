@@ -3,8 +3,6 @@
 #import "shader/lib/light.glsl"
 #import "shader/lib/pbr.glsl"
 
-in vec3 mpos;
-in vec3 mnormal;
 in vec3 vpos;
 in vec3 vnormal;
 in vec2 vtex;

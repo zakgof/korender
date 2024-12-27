@@ -142,6 +142,10 @@ actual object GL {
         index: Int, size: Int, type: Int, normalized: Boolean, stride: Int, pointer: Int
     ) = GL20.glVertexAttribPointer(index, size, type, normalized, stride, pointer.toLong())
 
+    actual fun glVertexAttribIPointer(
+        index: Int, size: Int, type: Int, stride: Int, pointer: Int
+    ) = GL30.glVertexAttribIPointer(index, size, type, stride, pointer.toLong())
+
     actual fun glGetShaderi(shader: GLShader, pname: Int) =
         GL20.glGetShaderi(shader.glHandle, pname)
 

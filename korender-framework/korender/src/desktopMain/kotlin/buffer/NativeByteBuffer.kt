@@ -64,7 +64,5 @@ actual class NativeByteBuffer(val byteBuffer: ByteBuffer) {
         return this
     }
 
-    override fun toString(): String =
-        (0 until byteBuffer.limit()/4).take(100).map { float(it) }.toString()
-
+    actual fun size(): Int = byteBuffer.limit()
 }

@@ -4,11 +4,15 @@ layout(location = 0) in vec3 pos;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 tex;
 
-out vec3 mpos;
-out vec3 mnormal;
+#ifdef SKINNING
+layout(location = 3) in uvec4 joints;
+layout(location = 4) in vec4 weights;
+#endif
+
 out vec3 vpos;
 out vec3 vnormal;
 out vec2 vtex;
+
 #ifdef SHADOW_RECEIVER0
 out vec3 vshadow0;
 #endif
@@ -34,6 +38,10 @@ uniform mat4 projection;
     uniform mat4 shadowView2;
     uniform mat4 shadowProjection2;
 #endif
+#ifdef SKINNING
+    uniform mat4 jointMatrices[64];
+    uniform mat4 inverseBindMatrices[64];
+#endif
 
 const mat4 biasMatrix = mat4(
     0.5, 0.0, 0.0, 0.0,
@@ -44,13 +52,24 @@ const mat4 biasMatrix = mat4(
 
 void main() {
 
+#ifdef SKINNING
+    uvec4 joints2 = uvec4(0, 1, 0, 0);
+    mat4 skinningMatrix = mat4(0.0);
+    for (int i = 0; i < 4; i++) {
+        uint jointIndex = joints[i];
+        mat4 jointMatrix = jointMatrices[jointIndex] * inverseBindMatrices[jointIndex];
+        skinningMatrix += weights[i] * jointMatrix;
+    }
+    vec4 worldPos =  (skinningMatrix * vec4(pos, 1.0));
+    vnormal = mat3(transpose(inverse( skinningMatrix))) * normal;
+#else
     vec4 worldPos = model * vec4(pos, 1.0);
+    vnormal = mat3(transpose(inverse(model))) * normal;
+#endif
 
-    mpos = pos;
-    mnormal = normal;
     vpos = worldPos.xyz;
     vtex = tex;
-    vnormal = mat3(transpose(inverse(model))) * normal;
+
 
     #ifdef SHADOW_RECEIVER0
 	  vshadow0 = (biasMatrix * shadowProjection0 * shadowView0 * worldPos).xyz;

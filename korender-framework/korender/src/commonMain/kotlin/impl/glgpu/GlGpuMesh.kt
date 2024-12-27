@@ -10,6 +10,7 @@ import com.zakgof.korender.gl.GL.glDrawElements
 import com.zakgof.korender.gl.GL.glEnableVertexAttribArray
 import com.zakgof.korender.gl.GL.glGenBuffers
 import com.zakgof.korender.gl.GL.glGenVertexArrays
+import com.zakgof.korender.gl.GL.glVertexAttribIPointer
 import com.zakgof.korender.gl.GL.glVertexAttribPointer
 import com.zakgof.korender.gl.GLConstants.GL_ARRAY_BUFFER
 import com.zakgof.korender.gl.GLConstants.GL_DYNAMIC_DRAW
@@ -59,8 +60,12 @@ internal class GlGpuMesh(
             val vbo = vbos[index]
             glBindBuffer(GL_ARRAY_BUFFER, vbo)
             glBufferData(GL_ARRAY_BUFFER, vb[index], usage)
-            glEnableVertexAttribArray(index);
-            glVertexAttribPointer(index, attr.size, GL_FLOAT, false, 0, 0)
+
+            if (attr.glPrimitive == GL_FLOAT)
+                glVertexAttribPointer(attr.order, attr.structSize, attr.glPrimitive, false, 0, 0)
+            else
+                glVertexAttribIPointer(attr.order, attr.structSize, attr.glPrimitive, 0, 0)
+            glEnableVertexAttribArray(attr.order)
 
             println("Update attr data in GPU: ${attr.name} ${vb[index]}")
         }

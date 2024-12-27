@@ -72,4 +72,6 @@ actual class NativeByteBuffer actual constructor(size: Int) {
         array.set(other.array, position)
     }
 
+    actual fun size(): Int = array.length
+
 }

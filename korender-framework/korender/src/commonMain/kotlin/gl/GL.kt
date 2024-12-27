@@ -124,6 +124,14 @@ expect object GL {
         pointer: Int
     )
 
+    fun glVertexAttribIPointer(
+        index: Int,
+        size: Int,
+        type: Int,
+        stride: Int,
+        pointer: Int
+    )
+
     fun glGetShaderi(shader: GLShader, pname: Int): Int
 
     fun glDeleteShader(shader: GLShader)

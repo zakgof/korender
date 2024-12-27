@@ -32,7 +32,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.await
 import kotlinx.coroutines.launch
-import org.khronos.webgl.BufferDataSource
 import org.khronos.webgl.Uint8ClampedArray
 import org.khronos.webgl.WebGLObject
 import org.khronos.webgl.WebGLRenderingContext.Companion.RENDERER
@@ -57,6 +56,7 @@ abstract external class WebGL2RenderingContext : WebGLRenderingContextBase, Rend
     abstract fun createVertexArray(): WebGLVertexArray?
     abstract fun deleteVertexArray(vertexArray: WebGLVertexArray)
     abstract fun bindVertexArray(vertexArray: WebGLVertexArray?)
+    abstract fun vertexAttribIPointer(index: Int, size: Int, type: Int, stride: Int, pointer: Int)
 }
 
 abstract external class WebGLVertexArray : WebGLObject, JsAny

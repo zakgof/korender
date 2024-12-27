@@ -22,8 +22,12 @@ internal suspend fun resourceBytes(appResourceLoader: ResourceLoader, resource: 
     return Res.readBytes("files/$resource")
 }
 
-fun parentResourceOf(resource: String) =
-    resource.split("/").dropLast(1).joinToString("/")
+fun absolutizeResource(resource: String, referrer: String) : String {
+    if (resource.startsWith("data:"))
+        return resource;
+    return referrer.split("/").dropLast(1).joinToString("/") + "/" + resource;
+}
+
 
 
 internal fun ignoringGlError(block: () -> Unit) {

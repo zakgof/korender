@@ -43,7 +43,7 @@ class Gltf(
         @Serializable
         data class AnimationSampler(
             val input: Int,
-            val interpolation: String,
+            val interpolation: String? = null,
             val output: Int
         )
 

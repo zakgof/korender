@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
+import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
@@ -16,5 +17,9 @@ fun GltfExample() = Korender (appResourceLoader = { Res.readBytes(it) }) {
     Frame {
         Camera(orbitCamera.camera(projection, width, height))
         Scene(gltfResource = "!gltf/rigged/rigged-simple.glb")
+        Gui {
+            Filler()
+            Text(id = "fps", font = "!font/orbitron.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFF66FF55))
+        }
     }
 }

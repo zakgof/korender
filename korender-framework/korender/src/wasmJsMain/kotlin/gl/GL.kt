@@ -180,6 +180,10 @@ actual object GL {
         index: Int, size: Int, type: Int, normalized: Boolean, stride: Int, pointer: Int
     ) = gl!!.vertexAttribPointer(index, size, type, normalized, stride, pointer)
 
+    actual fun glVertexAttribIPointer(
+        index: Int, size: Int, type: Int, stride: Int, pointer: Int
+    ) = gl!!.vertexAttribIPointer(index, size, type, stride, pointer)
+
     actual fun glGetShaderi(shader: GLShader, pname: Int): Int
         = boolOrInt(gl!!.getShaderParameter(shader.shader, pname))
 

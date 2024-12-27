@@ -1,6 +1,6 @@
 #import "shader/lib/header.glsl"
 
-layout(location = 0) in vec2 tex;
+layout(location = 2) in vec2 tex;
 out vec2 vtex;
 
 void main() {
