@@ -2,7 +2,7 @@ package com.zakgof.korender.context
 
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.material.MaterialModifier
+import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.MeshDeclaration

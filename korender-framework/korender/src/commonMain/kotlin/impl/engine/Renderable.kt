@@ -7,9 +7,10 @@ import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.Mesh
 import com.zakgof.korender.impl.glgpu.GlGpuShader
+import com.zakgof.korender.impl.material.CombinedUniformSupplier
+import com.zakgof.korender.impl.material.UniformSupplier
 import com.zakgof.korender.math.Transform
-import com.zakgof.korender.uniforms.MapUniformSupplier
-import com.zakgof.korender.uniforms.UniformSupplier
+import com.zakgof.korender.impl.material.MapUniformSupplier
 
 internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms: UniformSupplier, val transform: Transform = Transform()) {
 
@@ -55,9 +56,13 @@ internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms:
         }
     }
 
-    fun render(uniformDecorator: (UniformSupplier) -> UniformSupplier) =
+    fun render(contextUniforms: UniformSupplier, fixer: (Any?) -> Any?) {
+        val totalUniformSupplier = CombinedUniformSupplier(uniforms, contextUniforms, MapUniformSupplier("model" to transform.mat4))
+        totalUniformSupplier.update()
         shader.render(
-            uniformDecorator(uniforms + MapUniformSupplier("model" to transform.mat4)),
+            { fixer(totalUniformSupplier[it]) },
             mesh.gpuMesh
         )
+    }
+
 }

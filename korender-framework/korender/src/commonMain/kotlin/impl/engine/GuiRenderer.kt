@@ -7,7 +7,7 @@ import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.math.Vec2
-import com.zakgof.korender.uniforms.MapUniformSupplier
+import com.zakgof.korender.impl.material.MapUniformSupplier
 import kotlin.math.max
 
 internal class GuiRenderer(private val inventory: Inventory, private val width: Int, private val height: Int, container: ElementDeclaration.Container) {

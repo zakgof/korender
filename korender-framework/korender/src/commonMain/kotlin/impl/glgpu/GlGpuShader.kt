@@ -41,7 +41,6 @@ import com.zakgof.korender.math.Mat3
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.uniforms.UniformSupplier
 
 internal class GlGpuShader(
     private val name: String,
@@ -102,14 +101,13 @@ internal class GlGpuShader(
             throw RuntimeException("Program linking failure")
         } else if (glGetProgrami(programHandle, GL_VALIDATE_STATUS) == 0) {
             throw RuntimeException("Program validation failure")
+        } else if (vertexLog.isNotEmpty()) {
+            throw RuntimeException("Vertex shader compilation warnings")
+        } else if (fragmentLog.isNotEmpty()) {
+            throw RuntimeException("Fragment shader compilation warnings")
+        } else if (programLog.isNotEmpty()) {
+            throw RuntimeException("Program linking warnings")
         }
-//        } else if (vertexLog.isNotEmpty()) {
-//            throw RuntimeException("Vertex shader compilation warnings")
-//        } else if (fragmentLog.isNotEmpty()) {
-//            throw RuntimeException("Fragment shader compilation warnings")
-//        } else if (programLog.isNotEmpty()) {
-//            throw RuntimeException("Program linking warnings")
-//        }
 
         println("Creating GPU Shader [$name] : $programHandle")
 
@@ -139,9 +137,9 @@ internal class GlGpuShader(
         glDeleteProgram(programHandle)
     }
 
-    fun render(uniformSupplier: UniformSupplier, mesh: GlGpuMesh) {
+    fun render(uniforms: (String) -> Any?, mesh: GlGpuMesh) {
         glUseProgram(programHandle)
-        bindUniforms(uniformSupplier)
+        bindUniforms(uniforms)
         bindAttrs(mesh)
         mesh.render()
         glUseProgram(null)
@@ -154,11 +152,11 @@ internal class GlGpuShader(
         }
     }
 
-    private fun bindUniforms(uniformSupplier: UniformSupplier) {
+    private fun bindUniforms(uniforms: (String) -> Any?) {
         var currentTexUnit = 0
         uniformLocations.forEach {
             val uniformValue =
-                requireNotNull(uniformSupplier[it.key]) { "Material ${toString()} does not provide value for the uniform ${it.key}" }
+                requireNotNull(uniforms(it.key)) { "Material ${toString()} does not provide value for the uniform ${it.key}" }
             if (bind(uniformValue, it.value, currentTexUnit)) currentTexUnit++
         }
     }

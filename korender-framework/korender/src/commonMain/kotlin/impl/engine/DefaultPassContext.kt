@@ -11,8 +11,9 @@ import com.zakgof.korender.impl.geometry.Billboard
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.ScreenQuad
-import com.zakgof.korender.material.MaterialBuilder
-import com.zakgof.korender.material.MaterialModifier
+import com.zakgof.korender.impl.material.InternalMaterialModifier
+import com.zakgof.korender.impl.material.MaterialBuilder
+import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
@@ -81,8 +82,8 @@ internal class DefaultPassContext(
     }
 
     private fun materialDeclaration(builder: MaterialBuilder, materialModifiers: Array<out MaterialModifier>) =
-        materialModifiers.fold(builder) { acc: MaterialBuilder, mod: MaterialModifier ->
-            mod.applyTo(acc)
+        materialModifiers.fold(builder) { acc, mod ->
+            (mod as InternalMaterialModifier).applyTo(acc)
             acc
         }.toMaterialDeclaration()
 

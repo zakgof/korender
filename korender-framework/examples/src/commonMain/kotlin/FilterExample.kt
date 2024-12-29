@@ -3,10 +3,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.material.Effects.Adjust
-import com.zakgof.korender.material.MaterialModifiers.effect
-import com.zakgof.korender.material.MaterialModifiers.standart
-import com.zakgof.korender.material.StandartMaterialOption
+import com.zakgof.korender.StandartMaterialOption
 import com.zakgof.korender.math.Color
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.sin
@@ -25,7 +22,7 @@ fun FilterExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         }
         Pass {
             val value = 1f + sin(frameInfo.time)
-            Screen(effect(Adjust) {
+            Screen(adjust {
                 saturation = value
             })
             Gui {

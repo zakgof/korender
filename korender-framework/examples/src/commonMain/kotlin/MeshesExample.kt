@@ -8,8 +8,7 @@ import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
-import com.zakgof.korender.material.MaterialModifiers.standart
-import com.zakgof.korender.material.StandartMaterialOption
+import com.zakgof.korender.StandartMaterialOption
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi

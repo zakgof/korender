@@ -8,7 +8,7 @@ import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.PassContext
 import com.zakgof.korender.context.ShadowContext
-import com.zakgof.korender.material.MaterialModifier
+import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.MeshDeclaration

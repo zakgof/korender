@@ -23,7 +23,27 @@ import com.zakgof.korender.impl.geometry.ObjMesh
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.geometry.Sphere
 import com.zakgof.korender.impl.gl.GL.glGetError
+import com.zakgof.korender.impl.material.BaseParamUniforms
+import com.zakgof.korender.impl.material.InternalAdjustParams
+import com.zakgof.korender.impl.material.InternalBlurParams
+import com.zakgof.korender.impl.material.InternalFastCloudSkyParams
+import com.zakgof.korender.impl.material.InternalFireParams
+import com.zakgof.korender.impl.material.InternalFireballParams
+import com.zakgof.korender.impl.material.InternalMaterialModifier
+import com.zakgof.korender.impl.material.InternalSmokeParams
+import com.zakgof.korender.impl.material.InternalStandartParams
+import com.zakgof.korender.impl.material.InternalWaterParams
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
+import com.zakgof.korender.AdjustParams
+import com.zakgof.korender.BlurParams
+import com.zakgof.korender.FastCloudSkyParams
+import com.zakgof.korender.FireParams
+import com.zakgof.korender.FireballParams
+import com.zakgof.korender.MaterialModifier
+import com.zakgof.korender.SmokeParams
+import com.zakgof.korender.StandartMaterialOption
+import com.zakgof.korender.StandartParams
+import com.zakgof.korender.WaterParams
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -96,6 +116,82 @@ internal class Engine(
         ): MeshDeclaration =
             HeightField(id, cellsX, cellsZ, cellWidth, height)
 
+        override fun vertex(vertShaderFile: String): InternalMaterialModifier =
+            InternalMaterialModifier { it.vertShaderFile = vertShaderFile }
+
+        override fun fragment(fragShaderFile: String): InternalMaterialModifier =
+            InternalMaterialModifier { it.fragShaderFile = fragShaderFile }
+
+        override fun defs(vararg defs: String): InternalMaterialModifier =
+            InternalMaterialModifier { it.defs += setOf(*defs) }
+
+        override fun plugin(name: String, shaderFile: String): InternalMaterialModifier =
+            InternalMaterialModifier { it.plugins[name] = shaderFile }
+
+        override fun options(vararg options: StandartMaterialOption): InternalMaterialModifier =
+            InternalMaterialModifier { it.options += setOf(*options) }
+
+        override fun standart(vararg options: StandartMaterialOption, block: StandartParams.() -> Unit) =
+            InternalMaterialModifier {
+                it.options += setOf(*options)
+                it.uniforms += BaseParamUniforms(InternalStandartParams(), block)
+            }
+
+        override fun blurVert(block: BlurParams.() -> Unit) =
+            InternalMaterialModifier {
+                it.fragShaderFile = "!shader/effect/blurh.frag"
+                it.uniforms += BaseParamUniforms(InternalBlurParams(), block)
+            }
+
+        override fun adjust(block: AdjustParams.() -> Unit): MaterialModifier =
+            InternalMaterialModifier {
+                it.fragShaderFile = "!shader/effect/adjust.frag"
+                it.uniforms += BaseParamUniforms(InternalAdjustParams(), block)
+            }
+
+        override fun fire(block: FireParams.() -> Unit) =
+            InternalMaterialModifier {
+                it.vertShaderFile = "!shader/billboard.vert"
+                it.fragShaderFile = "!shader/effect/fire.frag"
+                it.uniforms += BaseParamUniforms(InternalFireParams(), block)
+            }
+
+        override fun fireball(block: FireballParams.() -> Unit) =
+            InternalMaterialModifier {
+                it.vertShaderFile = "!shader/billboard.vert"
+                it.fragShaderFile = "!shader/effect/fireball.frag"
+                it.uniforms += BaseParamUniforms(InternalFireballParams(), block)
+            }
+
+        override fun smoke(block: SmokeParams.() -> Unit) =
+            InternalMaterialModifier {
+                it.vertShaderFile = "!shader/billboard.vert"
+                it.fragShaderFile = "!shader/effect/smoke.frag"
+                it.uniforms += BaseParamUniforms(InternalSmokeParams(), block)
+            }
+
+        override fun water(block: WaterParams.() -> Unit) =
+            InternalMaterialModifier {
+                it.fragShaderFile = "!shader/effect/water.frag"
+                it.uniforms += BaseParamUniforms(InternalWaterParams(), block)
+            }
+
+        override fun fxaa() =
+            InternalMaterialModifier {
+                it.fragShaderFile = "!shader/effect/fxaa.frag"
+            }
+
+        override fun fastCloudSky(block: FastCloudSkyParams.() -> Unit) =
+            InternalMaterialModifier {
+                it.plugins["sky"] = "!shader/sky/fastcloud.plugin.frag"
+                it.uniforms += BaseParamUniforms(InternalFastCloudSkyParams(), block)
+            }
+
+        override fun blurHorz(block: BlurParams.() -> Unit) =
+            InternalMaterialModifier {
+                it.fragShaderFile = "!shader/effect/blurv.frag"
+                it.uniforms += BaseParamUniforms(InternalBlurParams(), block)
+            }
     }
 
     init {

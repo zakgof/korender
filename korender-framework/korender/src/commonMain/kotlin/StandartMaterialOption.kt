@@ -1,4 +1,4 @@
-package com.zakgof.korender.material
+package com.zakgof.korender
 
 enum class StandartMaterialOption {
     NoLight,

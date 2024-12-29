@@ -4,8 +4,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.material.MaterialModifiers.standart
-import com.zakgof.korender.material.StandartMaterialOption
+import com.zakgof.korender.StandartMaterialOption
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y

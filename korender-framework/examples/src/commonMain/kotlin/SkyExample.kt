@@ -5,8 +5,6 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.FreeCamera
-import com.zakgof.korender.material.MaterialModifiers.sky
-import com.zakgof.korender.material.Skies.FastCloud
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
@@ -21,7 +19,7 @@ fun SkyExample() {
 
         Frame {
             Camera(freeCamera.camera(projection, width, height, 0f))
-            Sky(sky(FastCloud) {
+            Sky(fastCloudSky() {
                 thickness = 10f + 10f * sin(frameInfo.time * 0.5f)
             })
             Gui {

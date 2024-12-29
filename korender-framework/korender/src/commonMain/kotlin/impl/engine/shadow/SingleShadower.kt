@@ -16,13 +16,13 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.material.InternalTexture
+import com.zakgof.korender.impl.material.MapUniformSupplier
+import com.zakgof.korender.impl.material.UniformSupplier
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.projection.FrustumProjection
 import com.zakgof.korender.projection.OrthoProjection
 import com.zakgof.korender.projection.Projection
-import com.zakgof.korender.uniforms.MapUniformSupplier
-import com.zakgof.korender.uniforms.UniformSupplier
 
 internal class SingleShadower(
     private val index: Int,
@@ -59,16 +59,6 @@ internal class SingleShadower(
             "projection" to shadowProjection.mat4,
             "cameraPos" to shadowCamera.position
         )
-
-        val uniformDecorator: (UniformSupplier) -> UniformSupplier = {
-            UniformSupplier { key ->
-                var value = it[key] ?: casterUniforms[key]
-                if (value is InternalTexture) {
-                    value = inventory.texture(value)
-                }
-                value
-            }
-        }
         frameBuffer.exec {
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             glEnable(GL_DEPTH_TEST)
@@ -82,8 +72,15 @@ internal class SingleShadower(
                         setOf("SHADOW_CASTER")
                     )
                 )
+                // TODO DRY !
                 casterShader?.render(
-                    uniformDecorator(r.uniforms + mapOf("model" to r.transform.mat4)),
+                    { key ->
+                        val value = r.uniforms[key] ?: mapOf("model" to r.transform.mat4)[key] ?: casterUniforms[key]
+                        if (value is InternalTexture) {
+                            inventory.texture(value)
+                        } else
+                            value
+                    },
                     r.mesh.gpuMesh
                 )
             }

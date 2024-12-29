@@ -6,11 +6,13 @@ import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.impl.engine.shadow.CascadeShadower
 import com.zakgof.korender.impl.engine.shadow.Shadower
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
+import com.zakgof.korender.impl.material.CombinedUniformSupplier
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
+import com.zakgof.korender.impl.material.UniformSupplier
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.Projection
-import com.zakgof.korender.uniforms.UniformSupplier
+import com.zakgof.korender.impl.material.MapUniformSupplier
 
 internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: Inventory, private val camera: Camera, private val width: Int, private val height: Int, time: Float) {
 
@@ -18,7 +20,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     private val passes: List<ScenePass>
     private val shadowCasters: List<Renderable>
     private val touchBoxes: List<TouchBox>
-    val touchBoxesHandler:(TouchEvent) -> Boolean
+    val touchBoxesHandler: (TouchEvent) -> Boolean
 
 
     init {
@@ -38,24 +40,25 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
             .mapNotNull { Renderable.create(inventory, it, camera, true) }
 
     fun render(context: Map<String, Any?>, projection: Projection, camera: Camera, light: Vec3) {
-        val shadowUniforms: UniformSupplier = shadower?.render(projection, camera, light, shadowCasters) ?: UniformSupplier { null }
+        val shadowUniforms: UniformSupplier = shadower?.render(projection, camera, light, shadowCasters) ?: MapUniformSupplier()
         val passFrameBuffers = (0 until passes.size - 1)
             .map { inventory.frameBuffer(FrameBufferDeclaration("filter-$it", width, height, true)) }
 
         val prevFrameContext = mutableMapOf<String, Any?>()
-        val uniformDecorator: (UniformSupplier) -> UniformSupplier = {
-            UniformSupplier { key ->
-                var value = it[key] ?: context[key] ?: shadowUniforms[key] ?: prevFrameContext[key]
-                if (value is InternalTexture) {
-                    value = inventory.texture(value) ?: NotYetLoadedTexture
-                }
+        val contextUniformSupplier = CombinedUniformSupplier(
+            MapUniformSupplier(context), shadowUniforms, MapUniformSupplier(prevFrameContext)
+        )
+        // TODO: ugly
+        val fixer = { value: Any? ->
+            if (value is InternalTexture) {
+                inventory.texture(value) ?: NotYetLoadedTexture
+            } else
                 value
-            }
         }
         for (p in passes.indices) {
             val frameBuffer = if (p == passes.size - 1) null else passFrameBuffers[p % 2]
             renderTo(frameBuffer) {
-                passes[p].render(uniformDecorator)
+                passes[p].render(contextUniformSupplier, fixer)
             }
             prevFrameContext["filterColorTexture"] = frameBuffer?.colorTexture
             prevFrameContext["filterDepthTexture"] = frameBuffer?.depthTexture

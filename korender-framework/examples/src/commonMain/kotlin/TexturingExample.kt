@@ -4,8 +4,7 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.camera.DefaultCamera
-import com.zakgof.korender.material.MaterialModifiers.standart
-import com.zakgof.korender.material.StandartMaterialOption
+import com.zakgof.korender.StandartMaterialOption
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y

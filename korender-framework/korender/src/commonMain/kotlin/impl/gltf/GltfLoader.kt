@@ -19,11 +19,12 @@ import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.gl.GLConstants
+import com.zakgof.korender.impl.material.BaseParamUniforms
 import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
+import com.zakgof.korender.impl.material.InternalStandartParams
+import com.zakgof.korender.impl.material.MaterialBuilder
 import com.zakgof.korender.impl.resourceBytes
-import com.zakgof.korender.material.MaterialBuilder
-import com.zakgof.korender.material.MaterialModifiers
-import com.zakgof.korender.material.StandartMaterialOption
+import com.zakgof.korender.StandartMaterialOption
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Quaternion
@@ -341,36 +342,26 @@ internal class GltfSceneBuilder(
         if (skinIndex != null)
             flags += StandartMaterialOption.Skinning
 
-        return MaterialBuilder().apply {
-            MaterialModifiers.standart(*flags.toTypedArray()) {
-                this.metallic = metallic
-                this.roughness = roughness
-                this.baseColor = baseColor
-                this.albedoTexture = albedoTexture
-                this.emissiveFactor = emissiveFactor
-                this.metallicRoughnessTexture = metallicRoughnessTexture
-                this.normalTexture = normalTexture
-                this.occlusionTexture = occlusionTexture
-                this.emissiveTexture = emissiveTexture
+        val standartUniforms = BaseParamUniforms(InternalStandartParams()) {
+            this.metallic = metallic
+            this.roughness = roughness
+            this.baseColor = baseColor
+            this.albedoTexture = albedoTexture
+            this.emissiveFactor = emissiveFactor
+            this.metallicRoughnessTexture = metallicRoughnessTexture
+            this.normalTexture = normalTexture
+            this.occlusionTexture = occlusionTexture
+            this.emissiveTexture = emissiveTexture
+            if (skinIndex != null) {
+                this.jointMatrices = loadedSkins[skinIndex].jointMatrices
+                this.inverseBindMatrices = loadedSkins[skinIndex].inverseBindMatrices
+            }
+        }
 
-                if (skinIndex != null) {
-                    dynamic("jointMatrices[0]") {
-                        val x1 =
-                            loadedSkins[skinIndex].jointMatrices[0] * loadedSkins[skinIndex].inverseBindMatrices[0]
-                        val x2 =
-                            loadedSkins[skinIndex].jointMatrices[1] * loadedSkins[skinIndex].inverseBindMatrices[1]
-                        loadedSkins[skinIndex].jointMatrices
-                        // listOf(Mat4.IDENTITY, Mat4.IDENTITY)
-                    }
-                    dynamic("inverseBindMatrices[0]") {
-                        loadedSkins[skinIndex].inverseBindMatrices
-                        //  listOf(Mat4.IDENTITY, Mat4.IDENTITY)
-                    }
-                }
-
-            }.applyTo(this)
-        }.toMaterialDeclaration()
-
+        val builder = MaterialBuilder()
+        builder.options += flags
+        builder.uniforms += standartUniforms
+        return builder.toMaterialDeclaration()
     }
 
     private fun createMeshDeclaration(

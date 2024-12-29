@@ -4,10 +4,9 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
+import com.zakgof.korender.StandartMaterialOption
 import com.zakgof.korender.examples.camera.OrbitCamera
-import com.zakgof.korender.material.MaterialModifiers.standart
-import com.zakgof.korender.material.StandartMaterialOption
-import com.zakgof.korender.math.FloatMath
+import com.zakgof.korender.math.FloatMath.PIdiv2
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -26,7 +25,7 @@ fun ObjFileExample() {
                     albedoTexture = texture("model/head.jpg")
                 },
                 mesh = obj("model/head.obj"),
-                transform = scale(7.0f).rotate(1.y, -FloatMath.PIdiv2)
+                transform = scale(7.0f).rotate(1.y, -PIdiv2)
             )
         }
     }
