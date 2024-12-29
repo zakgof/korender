@@ -2,7 +2,7 @@ package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.gl.GL.shaderEnv
+import com.zakgof.korender.impl.gl.GL.shaderEnv
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.resourceBytes

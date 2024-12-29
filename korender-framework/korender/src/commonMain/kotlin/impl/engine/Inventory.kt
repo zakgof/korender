@@ -13,7 +13,7 @@ import com.zakgof.korender.impl.gltf.GltfLoader
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.impl.material.Texturing
-import com.zakgof.korender.mesh.MeshDeclaration
+import com.zakgof.korender.MeshDeclaration
 
 internal class Inventory(asyncContext: AsyncContext) {
 

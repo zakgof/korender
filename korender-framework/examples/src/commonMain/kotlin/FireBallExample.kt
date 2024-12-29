@@ -12,7 +12,6 @@ import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import com.zakgof.korender.mesh.Meshes.cube
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.floor
 

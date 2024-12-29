@@ -12,14 +12,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
-import com.zakgof.korender.buffer.NativeByteBuffer
 import com.zakgof.korender.context.KorenderContext
-import com.zakgof.korender.gl.GL
-import com.zakgof.korender.image.Image
+import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
+import com.zakgof.korender.impl.gl.GL
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.input.TouchEvent
+import com.zakgof.korender.impl.image.Image
 import com.zakgof.korender.math.Color
 import jsAddFont
 import jsLoadFont
@@ -86,7 +85,7 @@ actual object Platform {
     actual val name: String = "Wasm"
 
     @OptIn(DelicateCoroutinesApi::class)
-    actual fun loadFont(bytes: ByteArray): Deferred<FontDef> {
+    internal actual fun loadFont(bytes: ByteArray): Deferred<FontDef> {
         val ffLoader = jsLoadFont(bytes.toInt8Array())
         return GlobalScope.async {
             val fontFace = ffLoader.load().await<FontFace>()
@@ -127,7 +126,7 @@ actual object Platform {
     }
 
     @OptIn(ExperimentalEncodingApi::class)
-    actual fun loadImage(bytes: ByteArray, type: String): Deferred<Image> {
+    internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<Image> {
         val result = CompletableDeferred<Image>()
         val base64Data = Base64.encode(bytes)
         val image = document.createElement("img") as HTMLImageElement

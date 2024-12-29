@@ -1,6 +1,6 @@
 package com.zakgof.korender.uniforms
 
-import com.zakgof.korender.material.TextureDeclaration
+import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Mat4
 

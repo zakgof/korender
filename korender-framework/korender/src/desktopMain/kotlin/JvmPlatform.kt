@@ -9,13 +9,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
-import com.zakgof.korender.buffer.NativeByteBuffer
 import com.zakgof.korender.context.KorenderContext
-import com.zakgof.korender.image.Image
+import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.input.TouchEvent
+import com.zakgof.korender.impl.image.Image
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -165,7 +164,7 @@ actual object Platform {
 
     actual fun nanoTime() = System.nanoTime()
 
-    actual fun loadImage(bytes: ByteArray, type: String): Deferred<Image> =
+    internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<Image> =
         CompletableDeferred(image(ImageIO.read(ByteArrayInputStream(bytes))))
 
     private fun loadBgr(data: ByteArray): NativeByteBuffer {
@@ -205,7 +204,7 @@ actual object Platform {
         return buffer
     }
 
-    actual fun loadFont(bytes: ByteArray): Deferred<FontDef> {
+    internal actual fun loadFont(bytes: ByteArray): Deferred<FontDef> {
         val cell = 256
         val originalFont = Font.createFont(Font.TRUETYPE_FONT, ByteArrayInputStream(bytes))
         val img = BufferedImage(cell * 16, cell * 16, BufferedImage.TYPE_4BYTE_ABGR)
@@ -265,7 +264,7 @@ actual object Platform {
 
 }
 
-class JvmImage(
+internal class JvmImage(
     private val raster: Raster,
     override val width: Int,
     override val height: Int,

@@ -5,9 +5,9 @@ import com.zakgof.korender.Platform
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.resourceBytes
-import com.zakgof.korender.material.TextureDeclaration
-import com.zakgof.korender.material.TextureFilter
-import com.zakgof.korender.material.TextureWrap
+import com.zakgof.korender.TextureDeclaration
+import com.zakgof.korender.TextureFilter
+import com.zakgof.korender.TextureWrap
 
 object NotYetLoadedTexture
 

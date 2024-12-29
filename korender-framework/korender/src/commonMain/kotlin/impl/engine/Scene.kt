@@ -7,7 +7,7 @@ import com.zakgof.korender.impl.engine.shadow.Shadower
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
-import com.zakgof.korender.input.TouchEvent
+import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.Projection
 import com.zakgof.korender.uniforms.UniformSupplier

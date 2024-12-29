@@ -11,8 +11,6 @@ import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import com.zakgof.korender.mesh.Meshes.cube
-import com.zakgof.korender.mesh.Meshes.sphere
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.sin
 

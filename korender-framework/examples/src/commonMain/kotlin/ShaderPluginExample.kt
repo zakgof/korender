@@ -9,7 +9,6 @@ import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.y
-import com.zakgof.korender.mesh.Meshes.sphere
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.sin
 

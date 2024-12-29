@@ -10,7 +10,6 @@ import com.zakgof.korender.material.StandartMaterialOption
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.z
-import com.zakgof.korender.mesh.Meshes.cube
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @OptIn(ExperimentalResourceApi::class)

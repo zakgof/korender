@@ -9,7 +9,6 @@ import com.zakgof.korender.material.StandartMaterialOption.NoLight
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.mesh.Meshes.cube
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @OptIn(ExperimentalResourceApi::class)

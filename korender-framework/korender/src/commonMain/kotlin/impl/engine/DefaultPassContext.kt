@@ -11,11 +11,11 @@ import com.zakgof.korender.material.MaterialModifier
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.mesh.Billboard
-import com.zakgof.korender.mesh.InstancedBillboard
-import com.zakgof.korender.mesh.InstancedMesh
-import com.zakgof.korender.mesh.MeshDeclaration
-import com.zakgof.korender.mesh.ScreenQuad
+import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.impl.geometry.InstancedBillboard
+import com.zakgof.korender.impl.geometry.Billboard
+import com.zakgof.korender.impl.geometry.InstancedMesh
+import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.projection.Projection
 
 internal class DefaultPassContext(

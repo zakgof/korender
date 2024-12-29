@@ -1,30 +1,34 @@
 package com.zakgof.korender.impl.gltf
 
+import com.zakgof.korender.Attributes.JOINTS_BYTE
+import com.zakgof.korender.Attributes.NORMAL
+import com.zakgof.korender.Attributes.POS
+import com.zakgof.korender.Attributes.TEX
+import com.zakgof.korender.Attributes.WEIGHTS
+import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.gl.GLConstants
+import com.zakgof.korender.TextureDeclaration
+import com.zakgof.korender.TextureFilter
+import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.impl.absolutizeResource
 import com.zakgof.korender.impl.engine.Bucket
 import com.zakgof.korender.impl.engine.GltfDeclaration
 import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
+import com.zakgof.korender.impl.geometry.CustomMesh
+import com.zakgof.korender.impl.gl.GLConstants
 import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
 import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.material.MaterialBuilder
 import com.zakgof.korender.material.MaterialModifiers
 import com.zakgof.korender.material.StandartMaterialOption
-import com.zakgof.korender.material.TextureDeclaration
-import com.zakgof.korender.material.TextureFilter
-import com.zakgof.korender.material.TextureWrap
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.mesh.Attributes
-import com.zakgof.korender.mesh.CustomMesh
-import com.zakgof.korender.mesh.Meshes
 import kotlinx.serialization.json.Json
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -179,7 +183,11 @@ internal class GltfSceneBuilder(
         }
 
         scene.nodes.forEach { nodeIndex ->
-            processNode(Transform().scale(0.03f), nodeIndex, model.nodes!![nodeIndex]) // TODO debug scale
+            processNode(
+                Transform().scale(0.03f),
+                nodeIndex,
+                model.nodes!![nodeIndex]
+            ) // TODO debug scale
         }
         model.skins?.mapIndexed { skinIndex, skin ->
             loadedSkins[skinIndex].jointMatrices = skin.joints.map { nodeMatrices[it]!!.mat4 }
@@ -188,7 +196,12 @@ internal class GltfSceneBuilder(
             val meshIndex = it.first
             val nodeIndex = it.second
             val nodeTransform = nodeMatrices[nodeIndex]!!
-            processMesh(nodeTransform, gltfLoaded.model.meshes!![meshIndex], meshIndex, gltfLoaded.model.nodes!![nodeIndex].skin)
+            processMesh(
+                nodeTransform,
+                gltfLoaded.model.meshes!![meshIndex],
+                meshIndex,
+                gltfLoaded.model.nodes!![nodeIndex].skin
+            )
         } // TODO map instead
 
         return renderableDeclarations
@@ -368,14 +381,14 @@ internal class GltfSceneBuilder(
         val indicesAccessor = primitive.indices?.let { gltfLoaded.model.accessors!![it] }
         val verticesAttributeAccessors = primitive.attributes
             .mapNotNull { p ->
-                Attributes.byGltfName(p.key)?.let { it to gltfLoaded.model.accessors!![p.value] }
+                attributeByGltfName(p.key)?.let { it to gltfLoaded.model.accessors!![p.value] }
             }
 
         return CustomMesh(
             "$resource:$meshIndex:$primitiveIndex",
             verticesAttributeAccessors.first().second.count,
             indicesAccessor!!.count,
-            verticesAttributeAccessors.map { it.first }.sortedBy { it.order },
+            verticesAttributeAccessors.map { it.first },
             false,
             accessorComponentTypeToIndexType(indicesAccessor.componentType)
         ) {
@@ -386,11 +399,20 @@ internal class GltfSceneBuilder(
         }
     }
 
+    private fun attributeByGltfName(key: String) = when (key) {
+        "POSITION" -> POS
+        "NORMAL" -> NORMAL
+        "TEXCOORD_0" -> TEX
+        "JOINTS_0" -> JOINTS_BYTE // TODO
+        "WEIGHTS_0" -> WEIGHTS
+        else -> null
+    }
+
     private fun accessorComponentTypeToIndexType(componentType: Int) =
         when (componentType) {
-            GLConstants.GL_UNSIGNED_BYTE -> Meshes.IndexType.Byte
-            GLConstants.GL_UNSIGNED_SHORT -> Meshes.IndexType.Short
-            GLConstants.GL_UNSIGNED_INT -> Meshes.IndexType.Int
+            GLConstants.GL_UNSIGNED_BYTE -> IndexType.Byte
+            GLConstants.GL_UNSIGNED_SHORT -> IndexType.Short
+            GLConstants.GL_UNSIGNED_INT -> IndexType.Int
             else -> throw KorenderException("GLTF: Unsupported componentType for index: $componentType")
         }
 

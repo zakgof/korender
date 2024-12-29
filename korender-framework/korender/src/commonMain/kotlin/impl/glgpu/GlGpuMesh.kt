@@ -1,35 +1,42 @@
 package com.zakgof.korender.impl.glgpu
 
-import com.zakgof.korender.buffer.NativeByteBuffer
-import com.zakgof.korender.gl.GL.glBindBuffer
-import com.zakgof.korender.gl.GL.glBindVertexArray
-import com.zakgof.korender.gl.GL.glBufferData
-import com.zakgof.korender.gl.GL.glDeleteBuffers
-import com.zakgof.korender.gl.GL.glDeleteVertexArrays
-import com.zakgof.korender.gl.GL.glDrawElements
-import com.zakgof.korender.gl.GL.glEnableVertexAttribArray
-import com.zakgof.korender.gl.GL.glGenBuffers
-import com.zakgof.korender.gl.GL.glGenVertexArrays
-import com.zakgof.korender.gl.GL.glVertexAttribIPointer
-import com.zakgof.korender.gl.GL.glVertexAttribPointer
-import com.zakgof.korender.gl.GLConstants.GL_ARRAY_BUFFER
-import com.zakgof.korender.gl.GLConstants.GL_DYNAMIC_DRAW
-import com.zakgof.korender.gl.GLConstants.GL_ELEMENT_ARRAY_BUFFER
-import com.zakgof.korender.gl.GLConstants.GL_FLOAT
-import com.zakgof.korender.gl.GLConstants.GL_STATIC_DRAW
-import com.zakgof.korender.gl.GLConstants.GL_TRIANGLES
-import com.zakgof.korender.gl.GLConstants.GL_UNSIGNED_BYTE
-import com.zakgof.korender.gl.GLConstants.GL_UNSIGNED_INT
-import com.zakgof.korender.gl.GLConstants.GL_UNSIGNED_SHORT
-import com.zakgof.korender.impl.geometry.Attribute
-import com.zakgof.korender.mesh.Meshes
+import com.zakgof.korender.AttributeType
+import com.zakgof.korender.IndexType
+import com.zakgof.korender.MeshAttribute
+import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.impl.gl.GL.glBindBuffer
+import com.zakgof.korender.impl.gl.GL.glBindVertexArray
+import com.zakgof.korender.impl.gl.GL.glBufferData
+import com.zakgof.korender.impl.gl.GL.glDeleteBuffers
+import com.zakgof.korender.impl.gl.GL.glDeleteVertexArrays
+import com.zakgof.korender.impl.gl.GL.glDrawElements
+import com.zakgof.korender.impl.gl.GL.glEnableVertexAttribArray
+import com.zakgof.korender.impl.gl.GL.glGenBuffers
+import com.zakgof.korender.impl.gl.GL.glGenVertexArrays
+import com.zakgof.korender.impl.gl.GL.glVertexAttribIPointer
+import com.zakgof.korender.impl.gl.GL.glVertexAttribPointer
+import com.zakgof.korender.impl.gl.GLConstants.GL_ARRAY_BUFFER
+import com.zakgof.korender.impl.gl.GLConstants.GL_DYNAMIC_DRAW
+import com.zakgof.korender.impl.gl.GLConstants.GL_ELEMENT_ARRAY_BUFFER
+import com.zakgof.korender.impl.gl.GLConstants.GL_FLOAT
+import com.zakgof.korender.impl.gl.GLConstants.GL_STATIC_DRAW
+import com.zakgof.korender.impl.gl.GLConstants.GL_TRIANGLES
+import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_BYTE
+import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_INT
+import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_SHORT
 
+internal fun AttributeType.toGL() : Int = when (this) {
+    AttributeType.Byte -> GL_UNSIGNED_BYTE
+    AttributeType.Short -> GL_UNSIGNED_SHORT
+    AttributeType.Int -> GL_UNSIGNED_INT
+    AttributeType.Float -> GL_FLOAT
+}
 
 internal class GlGpuMesh(
     private val name: String,
-    val attrs: List<Attribute>,
+    val attrs: List<MeshAttribute>,
     isDynamic: Boolean = false,
-    private val indexType: Meshes.IndexType
+    private val indexType: IndexType
 ) : AutoCloseable {
 
     private val vao = glGenVertexArrays()
@@ -61,11 +68,11 @@ internal class GlGpuMesh(
             glBindBuffer(GL_ARRAY_BUFFER, vbo)
             glBufferData(GL_ARRAY_BUFFER, vb[index], usage)
 
-            if (attr.glPrimitive == GL_FLOAT)
-                glVertexAttribPointer(attr.order, attr.structSize, attr.glPrimitive, false, 0, 0)
+            if (attr.primitiveType == AttributeType.Float)
+                glVertexAttribPointer(attr.location, attr.structSize, attr.primitiveType.toGL(), false, 0, 0)
             else
-                glVertexAttribIPointer(attr.order, attr.structSize, attr.glPrimitive, 0, 0)
-            glEnableVertexAttribArray(attr.order)
+                glVertexAttribIPointer(attr.location, attr.structSize, attr.primitiveType.toGL(), 0, 0)
+            glEnableVertexAttribArray(attr.location)
 
             println("Update attr data in GPU: ${attr.name} ${vb[index]}")
         }
@@ -84,10 +91,9 @@ internal class GlGpuMesh(
             GL_TRIANGLES,
             indices,
             when (indexType) {
-                Meshes.IndexType.Byte -> GL_UNSIGNED_BYTE
-                Meshes.IndexType.Short -> GL_UNSIGNED_SHORT
-                Meshes.IndexType.Int -> GL_UNSIGNED_INT
-                else -> 0
+                IndexType.Byte -> GL_UNSIGNED_BYTE
+                IndexType.Short -> GL_UNSIGNED_SHORT
+                IndexType.Int -> GL_UNSIGNED_INT
             } ,
             0
         )

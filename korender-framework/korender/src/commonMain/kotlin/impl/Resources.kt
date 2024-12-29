@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl
 
 import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.gl.GL.glGetError
+import com.zakgof.korender.impl.gl.GL.glGetError
 import com.zakgof.korender.resources.Res
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi

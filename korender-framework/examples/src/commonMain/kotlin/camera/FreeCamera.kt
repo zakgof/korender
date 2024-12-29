@@ -2,7 +2,7 @@ package com.zakgof.korender.examples.camera
 
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
-import com.zakgof.korender.input.TouchEvent
+import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.projection.FrustumProjection

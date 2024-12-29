@@ -1,8 +1,21 @@
 package com.zakgof.korender.impl.geometry
 
+import com.zakgof.korender.AttributeType
+import com.zakgof.korender.Attributes.NORMAL
+import com.zakgof.korender.Attributes.PHI
+import com.zakgof.korender.Attributes.POS
+import com.zakgof.korender.Attributes.SCALE
+import com.zakgof.korender.Attributes.SCREEN
+import com.zakgof.korender.Attributes.TEX
+import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.MeshAttribute
+import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.buffer.NativeByteBuffer
+import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.impl.buffer.put
+import com.zakgof.korender.impl.buffer.vec3
 import com.zakgof.korender.impl.engine.BillboardInstance
 import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.glgpu.GlGpuMesh
@@ -10,51 +23,23 @@ import com.zakgof.korender.math.BoundingBox
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.mesh.Attributes.NORMAL
-import com.zakgof.korender.mesh.Attributes.PHI
-import com.zakgof.korender.mesh.Attributes.POS
-import com.zakgof.korender.mesh.Attributes.SCALE
-import com.zakgof.korender.mesh.Attributes.SCREEN
-import com.zakgof.korender.mesh.Attributes.TEX
-import com.zakgof.korender.mesh.Billboard
-import com.zakgof.korender.mesh.Cube
-import com.zakgof.korender.mesh.CustomMesh
-import com.zakgof.korender.mesh.HeightField
-import com.zakgof.korender.mesh.ImageQuad
-import com.zakgof.korender.mesh.InstancedBillboard
-import com.zakgof.korender.mesh.InstancedMesh
-import com.zakgof.korender.mesh.MeshDeclaration
-import com.zakgof.korender.mesh.MeshInitializer
-import com.zakgof.korender.mesh.Meshes
-import com.zakgof.korender.mesh.ObjMesh
-import com.zakgof.korender.mesh.ScreenQuad
-import com.zakgof.korender.mesh.Sphere
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
 
-fun NativeByteBuffer.put(v: Vec3) {
-    put(v.x)
-    put(v.y)
-    put(v.z)
+fun IndexType.size() = when (this) {
+    IndexType.Byte -> 1
+    IndexType.Short -> 2
+    IndexType.Int -> 4
 }
 
-fun NativeByteBuffer.vec3(index: Int): Vec3 {
-    val x = float(index * 3)
-    val y = float(index * 3 + 1)
-    val z = float(index * 3 + 2)
-    return Vec3(x, y, z)
+fun AttributeType.size() = when (this) {
+    AttributeType.Byte -> 1
+    AttributeType.Short -> 2
+    AttributeType.Int -> 4
+    AttributeType.Float -> 4
 }
-
-fun NativeByteBuffer.debugFloats(): String =
-    (0 until size() / 4).take(1000).map { float(it) }.toString()
-
-fun NativeByteBuffer.debugInts(): String =
-    (0 until size() / 4).take(1000).map { int(it) }.toString()
-
-fun NativeByteBuffer.debugShorts(): String =
-    (0 until size() / 2).take(1000).map { short(it) }.toString()
 
 internal object Geometry {
 
@@ -105,26 +90,26 @@ internal object Geometry {
         name: String,
         vertexNumber: Int,
         indexNumber: Int,
-        vararg attrs: Attribute,
-        indexType: Meshes.IndexType = Meshes.IndexType.Auto,
+        vararg attrs: MeshAttribute,
+        indexType: IndexType? = null,
         block: MeshBuilder.() -> Unit
     ) =
         MeshBuilder(
             name,
             vertexNumber,
             indexNumber,
-            attrs.toList().sortedBy { it.order },
+            attrs.toList(),
             indexType
         ).apply(block)
 
 
-    private fun convertIndexType(indexType: Meshes.IndexType, indexNumber: Int): Meshes.IndexType {
-        if (indexType == Meshes.IndexType.Auto) {
+    private fun convertIndexType(indexType: IndexType?, indexNumber: Int): IndexType {
+        if (indexType == null) {
             if (indexNumber < 127)
-                return Meshes.IndexType.Byte
+                return IndexType.Byte
             if (indexNumber < 32767)
-                return Meshes.IndexType.Short
-            return Meshes.IndexType.Int
+                return IndexType.Short
+            return IndexType.Int
         }
         return indexType
     }
@@ -133,31 +118,31 @@ internal object Geometry {
         val name: String,
         val vertexNumber: Int,
         val indexNumber: Int,
-        val attrs: List<Attribute>,
+        val attrs: List<MeshAttribute>,
         val attributeBuffers: List<NativeByteBuffer>,
-        indexType: Meshes.IndexType
+        indexType: IndexType?
     ) : MeshInitializer {
 
-        val realIndexType: Meshes.IndexType = convertIndexType(indexType, indexNumber)
-        val indexBuffer: NativeByteBuffer = NativeByteBuffer(indexNumber * realIndexType.size)
+        val realIndexType: IndexType = convertIndexType(indexType, indexNumber)
+        val indexBuffer: NativeByteBuffer = NativeByteBuffer(indexNumber * realIndexType.size())
         val attrMap = attrs.indices.associate { attrs[it] to attributeBuffers[it] }
 
         constructor(
             name: String,
             vertexNumber: Int,
             indexNumber: Int,
-            attrs: List<Attribute>,
-            indexType: Meshes.IndexType
+            attrs: List<MeshAttribute>,
+            indexType: IndexType?
         ) : this(
             name,
             vertexNumber,
             indexNumber,
             attrs,
-            attrs.map { NativeByteBuffer(vertexNumber * it.primitiveSize * it.structSize) },
+            attrs.map { NativeByteBuffer(vertexNumber * it.primitiveType.size() * it.structSize) },
             indexType
         )
 
-        override fun attr(attr: Attribute, vararg v: Float): MeshInitializer {
+        override fun attr(attr: MeshAttribute, vararg v: Float): MeshInitializer {
             v.forEach { attrMap[attr]!!.put(it) }
             return this
         }
@@ -195,10 +180,9 @@ internal object Geometry {
         override fun index(vararg indices: Int): MeshInitializer {
             for (value in indices) {
                 when (realIndexType) {
-                    Meshes.IndexType.Byte -> indexBuffer.put(value.toByte())
-                    Meshes.IndexType.Short -> indexBuffer.put(value.toShort())
-                    Meshes.IndexType.Int -> indexBuffer.put(value)
-                    else -> {}
+                    IndexType.Byte -> indexBuffer.put(value.toByte())
+                    IndexType.Short -> indexBuffer.put(value.toShort())
+                    IndexType.Int -> indexBuffer.put(value)
                 }
             }
             return this
@@ -209,16 +193,16 @@ internal object Geometry {
             return this
         }
 
-        override fun attrBytes(attr: Attribute, rawBytes: ByteArray): MeshInitializer {
+        override fun attrBytes(attr: MeshAttribute, rawBytes: ByteArray): MeshInitializer {
             attrMap[attr]!!.put(rawBytes)
             return this
         }
 
         private fun indexGet(index: Int): Int =
             when (realIndexType) {
-                Meshes.IndexType.Byte -> indexBuffer.byte(index).toInt()
-                Meshes.IndexType.Short -> indexBuffer.short(index).toInt()
-                Meshes.IndexType.Int -> indexBuffer.int(index)
+                IndexType.Byte -> indexBuffer.byte(index).toInt()
+                IndexType.Short -> indexBuffer.short(index).toInt()
+                IndexType.Int -> indexBuffer.int(index)
                 else -> -1
             }
 
@@ -234,8 +218,7 @@ internal object Geometry {
                 name,
                 vertexNumber * instances,
                 indexNumber * instances,
-                attrs = attrs.toTypedArray(),
-                Meshes.IndexType.Auto
+                attrs = attrs.toTypedArray()
             ) {
                 for (i in 0 until instances) {
                     prototype.attributeBuffers.forEachIndexed { index, prototypeAttrBuffer ->

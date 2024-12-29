@@ -2,7 +2,6 @@ package com.zakgof.korender
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.context.KorenderContext
-import com.zakgof.korender.input.TouchEvent
 
 @Composable
 expect fun Korender(
@@ -12,11 +11,5 @@ expect fun Korender(
 
 typealias ResourceLoader = suspend (String) -> ByteArray
 
-typealias TouchHandler = (TouchEvent) -> Unit
-
-fun onClick(touchEvent: TouchEvent, clickHandler: () -> Unit) {
-    if (touchEvent.type == TouchEvent.Type.DOWN) {
-        clickHandler()
-    }
-}
+class KorenderException(message: String) : RuntimeException(message)
 

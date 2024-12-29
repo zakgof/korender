@@ -2,6 +2,12 @@ package com.zakgof.korender.gl
 
 import android.opengl.GLES11
 import android.opengl.GLES20
+import com.zakgof.korender.impl.gl.GLBuffer
+import com.zakgof.korender.impl.gl.GLFrameBuffer
+import com.zakgof.korender.impl.gl.GLProgram
+import com.zakgof.korender.impl.gl.GLShader
+import com.zakgof.korender.impl.gl.GLTexture
+import com.zakgof.korender.impl.gl.GLUniformLocation
 
 actual object GL {
 
@@ -23,7 +29,13 @@ actual object GL {
 
     actual fun glPixelStorei(pname: Int, param: Int) = GLES11.glPixelStorei(pname, param)
     actual fun glGenTextures(): GLTexture =
-        GLTexture(IntArray(1).also { GLES11.glGenTextures(1, it, 0) }[0])
+        com.zakgof.korender.impl.gl.GLTexture(IntArray(1).also {
+            GLES11.glGenTextures(
+                1,
+                it,
+                0
+            )
+        }[0])
 
     actual fun glBlendFunc(sfactor: Int, dfactor: Int) = GLES11.glBlendFunc(sfactor, dfactor)
 
@@ -73,14 +85,16 @@ actual object GL {
     actual fun glBufferData(target: Int, data: BufferData<out Any>, usage: Int) =
         GLES20.glBufferData(target, data.byteBuffer.remaining(), data.byteBuffer, usage)
 
-    actual fun glGenBuffers() = GLBuffer(IntArray(1).also { GLES20.glGenBuffers(1, it, 0) }[0])
+    actual fun glGenBuffers() =
+        com.zakgof.korender.impl.gl.GLBuffer(IntArray(1).also { GLES20.glGenBuffers(1, it, 0) }[0])
 
     actual fun glDeleteBuffers(buffer: GLBuffer) =
         GLES20.glDeleteBuffers(1, intArrayOf(buffer.buffer), 0)
 
-    actual fun glCreateProgram() = GLProgram(GLES20.glCreateProgram())
+    actual fun glCreateProgram() = com.zakgof.korender.impl.gl.GLProgram(GLES20.glCreateProgram())
 
-    actual fun glCreateShader(type: Int) = GLShader(GLES20.glCreateShader(type))
+    actual fun glCreateShader(type: Int) =
+        com.zakgof.korender.impl.gl.GLShader(GLES20.glCreateShader(type))
 
     actual fun glAttachShader(program: GLProgram, shader: GLShader) =
         GLES20.glAttachShader(program.program, shader.glHandle)
@@ -135,7 +149,12 @@ actual object GL {
         GLES20.glEnableVertexAttribArray(index)
 
     actual fun glGetUniformLocation(program: GLProgram, name: String): GLUniformLocation =
-        GLUniformLocation(GLES20.glGetUniformLocation(program.program, name))
+        com.zakgof.korender.impl.gl.GLUniformLocation(
+            GLES20.glGetUniformLocation(
+                program.program,
+                name
+            )
+        )
 
     actual fun glGetAttribLocation(program: GLProgram, name: String) =
         GLES20.glGetAttribLocation(program.program, name)
@@ -187,7 +206,13 @@ actual object GL {
         GLES20.glGenerateMipmap(target)
 
     actual fun glGenFramebuffers(): GLFrameBuffer =
-        GLFrameBuffer(intViaArray { GLES20.glGenFramebuffers(1, it, 0) })
+        com.zakgof.korender.impl.gl.GLFrameBuffer(intViaArray {
+            GLES20.glGenFramebuffers(
+                1,
+                it,
+                0
+            )
+        })
 
     actual fun glFramebufferTexture2D(target: Int, attachment: Int, textarget: Int, texture: GLTexture, level: Int) =
         GLES20.glFramebufferTexture2D(target, attachment, textarget, texture.texture, level)

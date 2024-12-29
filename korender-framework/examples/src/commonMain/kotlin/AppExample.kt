@@ -76,7 +76,7 @@ fun AppExample() {
                     modifier = Modifier
                         .background(color = if (option == selectedOption) selectColor else backgroundColor)
                         .clickable { selectedOption = option }
-                        .padding(4.dp, 8.dp),
+                        .padding(8.dp, 4.dp),
                     text = option.title,
                     fontSize = 12.sp,
                     color = textColor

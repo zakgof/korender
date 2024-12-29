@@ -2,13 +2,13 @@ package com.zakgof.korender.impl.engine.shadow
 
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
-import com.zakgof.korender.gl.GL.glClear
-import com.zakgof.korender.gl.GL.glCullFace
-import com.zakgof.korender.gl.GL.glEnable
-import com.zakgof.korender.gl.GLConstants.GL_BACK
-import com.zakgof.korender.gl.GLConstants.GL_COLOR_BUFFER_BIT
-import com.zakgof.korender.gl.GLConstants.GL_DEPTH_BUFFER_BIT
-import com.zakgof.korender.gl.GLConstants.GL_DEPTH_TEST
+import com.zakgof.korender.impl.gl.GL.glClear
+import com.zakgof.korender.impl.gl.GL.glCullFace
+import com.zakgof.korender.impl.gl.GL.glEnable
+import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
+import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
+import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
+import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.FrameBufferDeclaration
 import com.zakgof.korender.impl.engine.Inventory

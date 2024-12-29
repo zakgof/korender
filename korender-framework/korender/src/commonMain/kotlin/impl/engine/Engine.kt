@@ -1,19 +1,29 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.AsyncContext
+import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.MeshAttribute
+import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.Platform
+import com.zakgof.korender.TextureDeclaration
+import com.zakgof.korender.TextureFilter
+import com.zakgof.korender.TextureWrap
+import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
-import com.zakgof.korender.gl.GL.glGetError
+import com.zakgof.korender.impl.geometry.Cube
+import com.zakgof.korender.impl.geometry.CustomMesh
+import com.zakgof.korender.impl.geometry.HeightField
+import com.zakgof.korender.impl.geometry.ObjMesh
+import com.zakgof.korender.impl.geometry.ScreenQuad
+import com.zakgof.korender.impl.geometry.Sphere
+import com.zakgof.korender.impl.gl.GL.glGetError
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
-import com.zakgof.korender.input.TouchEvent
-import com.zakgof.korender.material.TextureDeclaration
-import com.zakgof.korender.material.TextureFilter
-import com.zakgof.korender.material.TextureWrap
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -42,25 +52,55 @@ internal class Engine(
     private lateinit var sceneTouchBoxesHandler: (TouchEvent) -> Boolean
     private val touchHandlers = mutableListOf<TouchHandler>()
 
+    inner class KorenderContextImpl : KorenderContext {
+        override fun Frame(block: FrameContext.() -> Unit) {
+            frameBlocks.add(block)
+        }
+
+        override fun OnTouch(handler: (TouchEvent) -> Unit) {
+            touchHandlers.add(handler)
+        }
+
+        override fun texture(
+            textureResource: String,
+            filter: TextureFilter,
+            wrap: TextureWrap,
+            aniso: Int
+        ): TextureDeclaration = ResourceTextureDeclaration(textureResource, filter, wrap, aniso)
+
+        override fun cube(halfSide: Float): MeshDeclaration = Cube(halfSide)
+
+        override fun sphere(radius: Float): MeshDeclaration = Sphere(radius)
+
+        override fun obj(objFile: String): MeshDeclaration = ObjMesh(objFile)
+
+        override fun screenQuad(): MeshDeclaration = ScreenQuad
+
+        override fun customMesh(
+            id: Any,
+            vertexCount: Int,
+            indexCount: Int,
+            vararg attributes: MeshAttribute,
+            dynamic: Boolean,
+            indexType: IndexType?,
+            block: MeshInitializer.() -> Unit
+        ): MeshDeclaration =
+            CustomMesh(id, vertexCount, indexCount, attributes.asList(), dynamic, indexType, block)
+
+        override fun heightField(
+            id: Any,
+            cellsX: Int,
+            cellsZ: Int,
+            cellWidth: Float,
+            height: (Int, Int) -> Float
+        ): MeshDeclaration =
+            HeightField(id, cellsX, cellsZ, cellWidth, height)
+
+    }
+
     init {
         println("Engine init $width x $height")
-        block.invoke(object : KorenderContext {
-            override fun Frame(block: FrameContext.() -> Unit) {
-                frameBlocks.add(block)
-            }
-
-            override fun OnTouch(handler: (TouchEvent) -> Unit) {
-                touchHandlers.add(handler)
-            }
-
-            override fun texture(
-                textureResource: String,
-                filter: TextureFilter,
-                wrap: TextureWrap,
-                aniso: Int
-            ): TextureDeclaration = ResourceTextureDeclaration(textureResource, filter, wrap, aniso)
-
-        })
+        block.invoke(KorenderContextImpl())
     }
 
     fun frame() {

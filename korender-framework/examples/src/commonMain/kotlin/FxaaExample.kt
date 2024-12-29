@@ -8,7 +8,6 @@ import com.zakgof.korender.material.MaterialModifiers.effect
 import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.math.Color.Companion.Green
 import com.zakgof.korender.math.Color.Companion.Red
-import com.zakgof.korender.mesh.Meshes.sphere
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @OptIn(ExperimentalResourceApi::class)

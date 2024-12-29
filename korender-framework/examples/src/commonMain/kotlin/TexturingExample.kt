@@ -10,7 +10,6 @@ import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import com.zakgof.korender.mesh.Meshes.sphere
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @OptIn(ExperimentalResourceApi::class)

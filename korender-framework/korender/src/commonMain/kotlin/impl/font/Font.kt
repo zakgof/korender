@@ -2,7 +2,7 @@ package com.zakgof.korender.impl.font
 
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 
-class Font(val gpuTexture: GlGpuTexture, val widths: FloatArray) : AutoCloseable {
+internal class Font(val gpuTexture: GlGpuTexture, val widths: FloatArray) : AutoCloseable {
 
     override fun close() = gpuTexture.close()
 

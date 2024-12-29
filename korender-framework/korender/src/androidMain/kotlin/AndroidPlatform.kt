@@ -24,11 +24,10 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.viewinterop.AndroidView
 import com.zakgof.korender.context.KorenderContext
-import com.zakgof.korender.image.Image
+import com.zakgof.korender.impl.image.Image
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.input.TouchEvent
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi

@@ -1,13 +1,13 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.camera.Camera
+import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.geometry.Geometry
+import com.zakgof.korender.impl.geometry.InstancedBillboard
+import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.Mesh
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.math.Transform
-import com.zakgof.korender.mesh.CustomMesh
-import com.zakgof.korender.mesh.InstancedBillboard
-import com.zakgof.korender.mesh.InstancedMesh
 import com.zakgof.korender.uniforms.MapUniformSupplier
 import com.zakgof.korender.uniforms.UniformSupplier
 

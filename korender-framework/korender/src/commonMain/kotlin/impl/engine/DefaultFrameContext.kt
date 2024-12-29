@@ -11,7 +11,7 @@ import com.zakgof.korender.context.ShadowContext
 import com.zakgof.korender.material.MaterialModifier
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.mesh.MeshDeclaration
+import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.projection.Projection
 
 internal class DefaultFrameContext(

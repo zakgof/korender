@@ -3,16 +3,15 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
+import com.zakgof.korender.Attributes.NORMAL
+import com.zakgof.korender.Attributes.POS
+import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.material.MaterialModifiers.standart
 import com.zakgof.korender.material.StandartMaterialOption
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import com.zakgof.korender.mesh.Attributes.NORMAL
-import com.zakgof.korender.mesh.Attributes.POS
-import com.zakgof.korender.mesh.Attributes.TEX
-import com.zakgof.korender.mesh.Meshes.customMesh
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.sin
 

@@ -1,39 +1,39 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.gl.GL.glAttachShader
-import com.zakgof.korender.gl.GL.glBindAttribLocation
-import com.zakgof.korender.gl.GL.glCompileShader
-import com.zakgof.korender.gl.GL.glCreateProgram
-import com.zakgof.korender.gl.GL.glCreateShader
-import com.zakgof.korender.gl.GL.glDeleteProgram
-import com.zakgof.korender.gl.GL.glDeleteShader
-import com.zakgof.korender.gl.GL.glGetActiveAttrib
-import com.zakgof.korender.gl.GL.glGetActiveUniform
-import com.zakgof.korender.gl.GL.glGetProgramInfoLog
-import com.zakgof.korender.gl.GL.glGetProgrami
-import com.zakgof.korender.gl.GL.glGetShaderInfoLog
-import com.zakgof.korender.gl.GL.glGetShaderi
-import com.zakgof.korender.gl.GL.glGetUniformLocation
-import com.zakgof.korender.gl.GL.glLinkProgram
-import com.zakgof.korender.gl.GL.glShaderSource
-import com.zakgof.korender.gl.GL.glUniform1f
-import com.zakgof.korender.gl.GL.glUniform1i
-import com.zakgof.korender.gl.GL.glUniform2f
-import com.zakgof.korender.gl.GL.glUniform3f
-import com.zakgof.korender.gl.GL.glUniform4f
-import com.zakgof.korender.gl.GL.glUniformMatrix3fv
-import com.zakgof.korender.gl.GL.glUniformMatrix4fv
-import com.zakgof.korender.gl.GL.glUseProgram
-import com.zakgof.korender.gl.GL.glValidateProgram
-import com.zakgof.korender.gl.GLConstants.GL_ACTIVE_ATTRIBUTES
-import com.zakgof.korender.gl.GLConstants.GL_ACTIVE_UNIFORMS
-import com.zakgof.korender.gl.GLConstants.GL_COMPILE_STATUS
-import com.zakgof.korender.gl.GLConstants.GL_FRAGMENT_SHADER
-import com.zakgof.korender.gl.GLConstants.GL_LINK_STATUS
-import com.zakgof.korender.gl.GLConstants.GL_VALIDATE_STATUS
-import com.zakgof.korender.gl.GLConstants.GL_VERTEX_SHADER
-import com.zakgof.korender.gl.GLUniformLocation
+import com.zakgof.korender.impl.gl.GL.glAttachShader
+import com.zakgof.korender.impl.gl.GL.glBindAttribLocation
+import com.zakgof.korender.impl.gl.GL.glCompileShader
+import com.zakgof.korender.impl.gl.GL.glCreateProgram
+import com.zakgof.korender.impl.gl.GL.glCreateShader
+import com.zakgof.korender.impl.gl.GL.glDeleteProgram
+import com.zakgof.korender.impl.gl.GL.glDeleteShader
+import com.zakgof.korender.impl.gl.GL.glGetActiveAttrib
+import com.zakgof.korender.impl.gl.GL.glGetActiveUniform
+import com.zakgof.korender.impl.gl.GL.glGetProgramInfoLog
+import com.zakgof.korender.impl.gl.GL.glGetProgrami
+import com.zakgof.korender.impl.gl.GL.glGetShaderInfoLog
+import com.zakgof.korender.impl.gl.GL.glGetShaderi
+import com.zakgof.korender.impl.gl.GL.glGetUniformLocation
+import com.zakgof.korender.impl.gl.GL.glLinkProgram
+import com.zakgof.korender.impl.gl.GL.glShaderSource
+import com.zakgof.korender.impl.gl.GL.glUniform1f
+import com.zakgof.korender.impl.gl.GL.glUniform1i
+import com.zakgof.korender.impl.gl.GL.glUniform2f
+import com.zakgof.korender.impl.gl.GL.glUniform3f
+import com.zakgof.korender.impl.gl.GL.glUniform4f
+import com.zakgof.korender.impl.gl.GL.glUniformMatrix3fv
+import com.zakgof.korender.impl.gl.GL.glUniformMatrix4fv
+import com.zakgof.korender.impl.gl.GL.glUseProgram
+import com.zakgof.korender.impl.gl.GL.glValidateProgram
+import com.zakgof.korender.impl.gl.GLConstants.GL_ACTIVE_ATTRIBUTES
+import com.zakgof.korender.impl.gl.GLConstants.GL_ACTIVE_UNIFORMS
+import com.zakgof.korender.impl.gl.GLConstants.GL_COMPILE_STATUS
+import com.zakgof.korender.impl.gl.GLConstants.GL_FRAGMENT_SHADER
+import com.zakgof.korender.impl.gl.GLConstants.GL_LINK_STATUS
+import com.zakgof.korender.impl.gl.GLConstants.GL_VALIDATE_STATUS
+import com.zakgof.korender.impl.gl.GLConstants.GL_VERTEX_SHADER
+import com.zakgof.korender.impl.gl.GLUniformLocation
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ShaderDebugInfo
 import com.zakgof.korender.math.Color
@@ -150,7 +150,7 @@ internal class GlGpuShader(
     private fun bindAttrs(mesh: GlGpuMesh) {
         mesh.bind()
         mesh.attrs.forEach { attr ->
-            glBindAttribLocation(programHandle, attr.order, attr.name)
+            glBindAttribLocation(programHandle, attr.location, attr.name)
         }
     }
 

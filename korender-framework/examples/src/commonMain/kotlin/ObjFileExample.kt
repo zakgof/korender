@@ -11,7 +11,6 @@ import com.zakgof.korender.math.FloatMath
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import com.zakgof.korender.mesh.Meshes.obj
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @OptIn(ExperimentalResourceApi::class)
