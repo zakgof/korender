@@ -2,6 +2,11 @@ package com.zakgof.korender.impl.engine.shadow
 
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.camera.DefaultCamera
+import com.zakgof.korender.impl.engine.CascadeDeclaration
+import com.zakgof.korender.impl.engine.FrameBufferDeclaration
+import com.zakgof.korender.impl.engine.Inventory
+import com.zakgof.korender.impl.engine.Renderable
+import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glCullFace
 import com.zakgof.korender.impl.gl.GL.glEnable
@@ -9,11 +14,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
-import com.zakgof.korender.impl.engine.CascadeDeclaration
-import com.zakgof.korender.impl.engine.FrameBufferDeclaration
-import com.zakgof.korender.impl.engine.Inventory
-import com.zakgof.korender.impl.engine.Renderable
-import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.math.Vec3
@@ -77,8 +77,8 @@ internal class SingleShadower(
                 // TODO: need to copy all the defs and plugins from the original shader
                 val casterShader = inventory.shader(
                     ShaderDeclaration(
-                        "shader/standart.vert",
-                        "shader/standart.frag",
+                        "!shader/standart.vert",
+                        "!shader/standart.frag",
                         setOf("SHADOW_CASTER")
                     )
                 )

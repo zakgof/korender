@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.impl.engine.shadow.CascadeShadower
@@ -7,7 +8,6 @@ import com.zakgof.korender.impl.engine.shadow.Shadower
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
-import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.Projection
 import com.zakgof.korender.uniforms.UniformSupplier
@@ -34,7 +34,7 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
     }
 
     private fun createShadowCasters(declarations: List<RenderableDeclaration>) =
-        declarations.filter { it.shader.fragFile == "shader/standart.frag" && !it.shader.defs.contains("NO_SHADOW_CAST") }
+        declarations.filter { it.shader.fragFile == "!shader/standart.frag" && !it.shader.defs.contains("NO_SHADOW_CAST") }
             .mapNotNull { Renderable.create(inventory, it, camera, true) }
 
     fun render(context: Map<String, Any?>, projection: Projection, camera: Camera, light: Vec3) {

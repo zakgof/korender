@@ -124,7 +124,7 @@ void main() {
 #ifdef NO_LIGHT
     vec3 radiance = albedo.rgb;
 #else
-    lightColor = lightColor * (1. - shadowRatio);
+    lightColor *= (1. - shadowRatio);
     vec3 ambient = ambientFactor * albedo.rgb * occlusion;
     vec3 radiance = ambient + emissive + lightColor * calculatePBR(N, V, L, F0, albedo.rgb, metal, rough, occlusion);
 #endif
