@@ -179,7 +179,7 @@ internal class GltfSceneBuilder(
         }
 
         scene.nodes.forEach { nodeIndex ->
-            processNode(Transform(), nodeIndex, model.nodes!![nodeIndex]) // TODO debug scale
+            processNode(Transform().scale(0.03f), nodeIndex, model.nodes!![nodeIndex]) // TODO debug scale
         }
         model.skins?.mapIndexed { skinIndex, skin ->
             loadedSkins[skinIndex].jointMatrices = skin.joints.map { nodeMatrices[it]!!.mat4 }
@@ -226,7 +226,7 @@ internal class GltfSceneBuilder(
         val outputValues = getAccessorFloatBasedElements(outputFloats, outputAccessor.type)
         // TODO validate same lengths
 
-        val max = inputFloats.last() * 2.0f
+        val max = inputFloats.last()
         val timeOffset = currentTime - floor(currentTime / max) * max
 
         var samplerPositionBefore =
