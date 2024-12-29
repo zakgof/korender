@@ -158,7 +158,7 @@ actual fun Korender(
 
 }
 
-actual object Platform {
+internal actual object Platform {
 
     actual val name: String = "Java ${System.getProperty("java.version")}"
 

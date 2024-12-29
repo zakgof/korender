@@ -1,6 +1,5 @@
 package com.zakgof.korender
 
-import FontFace
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -20,8 +19,6 @@ import com.zakgof.korender.impl.gl.GL
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.image.Image
 import com.zakgof.korender.math.Color
-import jsAddFont
-import jsLoadFont
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.CompletableDeferred
@@ -32,33 +29,20 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.await
 import kotlinx.coroutines.launch
 import org.khronos.webgl.Uint8ClampedArray
-import org.khronos.webgl.WebGLObject
 import org.khronos.webgl.WebGLRenderingContext.Companion.RENDERER
 import org.khronos.webgl.WebGLRenderingContext.Companion.SHADING_LANGUAGE_VERSION
 import org.khronos.webgl.WebGLRenderingContext.Companion.VENDOR
 import org.khronos.webgl.WebGLRenderingContext.Companion.VERSION
-import org.khronos.webgl.WebGLRenderingContextBase
 import org.khronos.webgl.get
 import org.khronos.webgl.toInt8Array
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLImageElement
-import org.w3c.dom.RenderingContext
 import org.w3c.dom.Window
 import org.w3c.dom.events.Event
 import org.w3c.dom.events.MouseEvent
-import performanceNow
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
-
-abstract external class WebGL2RenderingContext : WebGLRenderingContextBase, RenderingContext, JsAny {
-    abstract fun createVertexArray(): WebGLVertexArray?
-    abstract fun deleteVertexArray(vertexArray: WebGLVertexArray)
-    abstract fun bindVertexArray(vertexArray: WebGLVertexArray?)
-    abstract fun vertexAttribIPointer(index: Int, size: Int, type: Int, stride: Int, pointer: Int)
-}
-
-abstract external class WebGLVertexArray : WebGLObject, JsAny
 
 internal fun Byte.toClampedFloat(): Float = this.toInt().and(0xFF).toFloat()
 
@@ -80,7 +64,7 @@ internal class WasmImage(
     }
 }
 
-actual object Platform {
+internal actual object Platform {
 
     actual val name: String = "Wasm"
 

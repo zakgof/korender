@@ -75,3 +75,19 @@ interface FastCloudSkyParams {
     var darkblue: Color
     var lightblue: Color
 }
+
+enum class StandartMaterialOption {
+    NoLight,
+    AlbedoMap,
+    MetallicRoughnessMap,
+    EmissiveMap,
+    OcclusionMap,
+    Triplanar,
+    Aperiodic,
+    NormalMap,
+    Detail,
+    NoShadowCast,
+    NoShadowReceive,
+    Pcss,
+    Skinning
+}

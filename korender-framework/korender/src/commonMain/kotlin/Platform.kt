@@ -4,7 +4,7 @@ import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.image.Image
 import kotlinx.coroutines.Deferred
 
-expect object Platform {
+internal expect object Platform {
 
     val name: String
 
