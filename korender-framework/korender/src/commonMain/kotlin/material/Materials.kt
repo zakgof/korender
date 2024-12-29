@@ -10,8 +10,8 @@ fun interface MaterialModifier {
 }
 
 class MaterialBuilder internal constructor(
-    var vertShaderFile: String = "shader/standart.vert",
-    var fragShaderFile: String = "shader/standart.frag",
+    var vertShaderFile: String = "!shader/standart.vert",
+    var fragShaderFile: String = "!shader/standart.frag",
     val options: MutableSet<StandartMaterialOption> = mutableSetOf(),
     val defs: MutableSet<String> = mutableSetOf(),
     val plugins: MutableMap<String, String> = mutableMapOf(),

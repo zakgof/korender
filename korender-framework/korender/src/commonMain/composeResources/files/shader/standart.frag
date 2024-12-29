@@ -1,7 +1,7 @@
-#import "shader/lib/header.glsl"
-#import "shader/lib/texturing.glsl"
-#import "shader/lib/light.glsl"
-#import "shader/lib/pbr.glsl"
+#import "!shader/lib/header.glsl"
+#import "!shader/lib/texturing.glsl"
+#import "!shader/lib/light.glsl"
+#import "!shader/lib/pbr.glsl"
 
 in vec3 vpos;
 in vec3 vnormal;

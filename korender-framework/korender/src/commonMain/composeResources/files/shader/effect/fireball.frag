@@ -1,5 +1,5 @@
-#import "shader/lib/header.glsl"
-#import "shader/lib/noise.glsl"
+#import "!shader/lib/header.glsl"
+#import "!shader/lib/noise.glsl"
 
 in vec3 vpos;
 in vec2 vsize;

@@ -2,8 +2,8 @@ package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.impl.gl.GL.shaderEnv
 import com.zakgof.korender.impl.engine.ShaderDeclaration
+import com.zakgof.korender.impl.gl.GL.shaderEnv
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.resourceBytes
 
@@ -13,7 +13,7 @@ internal fun <T> MutableList<T>.pop(): T = this.removeAt(this.size - 1)
 internal object Shaders {
 
     val imageQuadDeclaration: ShaderDeclaration =
-        ShaderDeclaration("shader/gui/image.vert", "shader/gui/image.frag")
+        ShaderDeclaration("!shader/gui/image.vert", "!shader/gui/image.frag")
 
     suspend fun create(
         declaration: ShaderDeclaration,

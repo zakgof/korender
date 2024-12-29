@@ -1,4 +1,4 @@
-#import "../../../../../korender/src/commonMain/composeResourcesshader/lib/header.glsl"
+#import "lib/header.glsl"
 
 in vec2 vtex;
 uniform sampler2D filterColorTexture;

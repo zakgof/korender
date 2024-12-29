@@ -1,21 +1,21 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.FrameInfo
+import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.context.GuiContainerContext
 import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.PassContext
+import com.zakgof.korender.impl.geometry.Billboard
+import com.zakgof.korender.impl.geometry.InstancedBillboard
+import com.zakgof.korender.impl.geometry.InstancedMesh
+import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.material.MaterialBuilder
 import com.zakgof.korender.material.MaterialModifier
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.MeshDeclaration
-import com.zakgof.korender.impl.geometry.InstancedBillboard
-import com.zakgof.korender.impl.geometry.Billboard
-import com.zakgof.korender.impl.geometry.InstancedMesh
-import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.projection.Projection
 
 internal class DefaultPassContext(
@@ -38,17 +38,17 @@ internal class DefaultPassContext(
     }
 
     override fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3, transparent: Boolean) {
-        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "shader/billboard.vert", fragShaderFile = "shader/standart.frag"), materialModifiers)
+        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "!shader/billboard.vert", fragShaderFile = "!shader/standart.frag"), materialModifiers)
         passDeclaration.add(RenderableDeclaration(Billboard, materialDeclaration.shader, materialDeclaration.uniforms, translate(position), if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE))
     }
 
     override fun Screen(vararg materialModifiers: MaterialModifier) {
-        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "shader/screen.vert", fragShaderFile = "shader/screen.frag"), materialModifiers)
+        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "!shader/screen.vert", fragShaderFile = "!shader/screen.frag"), materialModifiers)
         passDeclaration.add(RenderableDeclaration(ScreenQuad, materialDeclaration.shader, materialDeclaration.uniforms, Transform(), Bucket.SCREEN))
     }
 
     override fun Sky(vararg materialModifiers: MaterialModifier) {
-        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "shader/sky/sky.vert", fragShaderFile = "shader/sky/sky.frag"), materialModifiers)
+        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "!shader/sky/sky.vert", fragShaderFile = "!shader/sky/sky.frag"), materialModifiers)
         passDeclaration.add(RenderableDeclaration(ScreenQuad, materialDeclaration.shader, materialDeclaration.uniforms, Transform(), Bucket.SKY))
     }
 
@@ -70,7 +70,7 @@ internal class DefaultPassContext(
     }
 
     override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, transparent: Boolean, block: InstancedBillboardsContext.() -> Unit) {
-        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "shader/billboard.vert", fragShaderFile = "shader/standart.frag"), materialModifiers)
+        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "!shader/billboard.vert", fragShaderFile = "!shader/standart.frag"), materialModifiers)
         passDeclaration.add(
             RenderableDeclaration(
                 InstancedBillboard(id, count, transparent, block),

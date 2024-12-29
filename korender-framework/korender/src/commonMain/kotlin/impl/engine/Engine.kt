@@ -135,8 +135,8 @@ internal class Engine(
     }
 
     private fun updateContext() {
-        context["noiseTexture"] = ResourceTextureDeclaration("noise.png")
-        context["fbmTexture"] = ResourceTextureDeclaration("fbm.png")
+        context["noiseTexture"] = ResourceTextureDeclaration("!noise.png")
+        context["fbmTexture"] = ResourceTextureDeclaration("!fbm.png")
         context["view"] = camera.mat4
         context["projection"] = projection.mat4
         context["cameraPos"] = camera.position

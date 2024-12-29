@@ -22,7 +22,7 @@ fun InstancedBillboardsExample() = Korender(appResourceLoader = { Res.readBytes(
     Frame {
         InstancedBillboards(
             standart(StandartMaterialOption.AlbedoMap) {
-                albedoTexture = texture("!splat.png")
+                albedoTexture = texture("splat.png")
             },
             id = "particles",
             count = particleNum,

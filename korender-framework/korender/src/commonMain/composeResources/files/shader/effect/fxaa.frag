@@ -1,4 +1,4 @@
-#import "shader/lib/header.glsl"
+#import "!shader/lib/header.glsl"
 
 #define FXAA_REDUCE_MIN   1.0/128.0
 #define FXAA_REDUCE_MUL   1.0/8.0

@@ -10,25 +10,20 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 @OptIn(ExperimentalCoroutinesApi::class)
 internal fun <T> Deferred<T>.resultOrNull() : T? = if (this.isCompleted) this.getCompleted() else null
 
-internal suspend fun resourceBytes(appResourceLoader: ResourceLoader, resource: String, parent: String): ByteArray =
-    resourceBytes(appResourceLoader, "$parent/$resource")
-
 @OptIn(ExperimentalResourceApi::class)
 internal suspend fun resourceBytes(appResourceLoader: ResourceLoader, resource: String): ByteArray {
     println("Loading resource $resource")
-    if (resource.contains("!")) {
-        return appResourceLoader.invoke("files/" + resource.replace("!", ""))
+    if (resource.startsWith("!")) {
+        return Res.readBytes("files/" + resource.substring(1))
     }
-    return Res.readBytes("files/$resource")
+    return appResourceLoader.invoke("files/$resource")
 }
 
-fun absolutizeResource(resource: String, referrer: String) : String {
+internal fun absolutizeResource(resource: String, referrer: String) : String {
     if (resource.startsWith("data:"))
         return resource;
     return referrer.split("/").dropLast(1).joinToString("/") + "/" + resource;
 }
-
-
 
 internal fun ignoringGlError(block: () -> Unit) {
     block()

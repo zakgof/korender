@@ -9,7 +9,7 @@ import com.zakgof.korender.impl.resourceBytes
 
 internal object Fonts {
 
-    val shaderDeclaration = ShaderDeclaration("shader/gui/font.vert", "shader/gui/font.frag")
+    val shaderDeclaration = ShaderDeclaration("!shader/gui/font.vert", "!shader/gui/font.frag")
 
     suspend fun load(fontResource: String, appResourceLoader: ResourceLoader): Font {
         val fontDef = Platform.loadFont(resourceBytes(appResourceLoader, fontResource)).await()

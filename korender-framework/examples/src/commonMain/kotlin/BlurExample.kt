@@ -20,7 +20,7 @@ fun BlurExample() = Korender (appResourceLoader = { Res.readBytes(it) }) {
         Pass {
             Renderable(
                 standart(StandartMaterialOption.AlbedoMap) {
-                    albedoTexture = texture("!sand.jpg")
+                    albedoTexture = texture("sand.jpg")
                 },
                 mesh = sphere(3f),
                 transform = translate(-2.x)
@@ -37,8 +37,8 @@ fun BlurExample() = Korender (appResourceLoader = { Res.readBytes(it) }) {
                 this.radius = radius
             })
             Renderable(
-                standart(StandartMaterialOption.NoLight, StandartMaterialOption.AlbedoMap) {
-                    albedoTexture = texture("!sand.jpg")
+                standart(StandartMaterialOption.AlbedoMap) {
+                    albedoTexture = texture("sand.jpg")
                 },
                 mesh = sphere(3f),
                 transform = translate(2.x)

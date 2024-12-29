@@ -1,4 +1,4 @@
-#import "shader/lib/header.glsl"
+#import "!shader/lib/header.glsl"
 
 in vec2 vtex;
 uniform vec4 color;

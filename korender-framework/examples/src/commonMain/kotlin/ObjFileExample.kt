@@ -23,9 +23,9 @@ fun ObjFileExample() {
             Camera(orbitCamera.camera(projection, width, height))
             Renderable(
                 standart(StandartMaterialOption.AlbedoMap) {
-                    albedoTexture = texture("!model/head.jpg")
+                    albedoTexture = texture("model/head.jpg")
                 },
-                mesh = obj("!model/head.obj"),
+                mesh = obj("model/head.obj"),
                 transform = scale(7.0f).rotate(1.y, -FloatMath.PIdiv2)
             )
         }

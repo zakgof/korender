@@ -1,4 +1,4 @@
-#import "shader/lib/header.glsl"
+#import "!shader/lib/header.glsl"
 
 layout(location = 2) in vec2 tex;
 layout(location = 5) in vec2 screen;
