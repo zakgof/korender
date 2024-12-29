@@ -85,5 +85,4 @@ vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 F0, vec3 albedo, float metallic, 
     // Final shading with occlusion
 
     return (kD * diffuse + specular) * NdotL * occlusion ;
-    return (kD * diffuse + specular) * NdotL * occlusion;
 }

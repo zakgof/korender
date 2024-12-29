@@ -28,6 +28,7 @@ import kotlinx.coroutines.launch
 fun AppExample() {
     val options = listOf(
         Demo("Feature showcase") { ShowcaseExample() },
+        Demo("PBR metallic/roughness") { MetallicRoughnessExample() },
         Demo("Transparency") { TransparencyExample() },
         Demo("Meshes") { MeshesExample() },
         Demo(".obj file") { ObjFileExample() },
