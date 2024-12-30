@@ -19,7 +19,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
-import com.zakgof.korender.impl.material.UniformSupplier
 
 internal class ScenePass(
     private val inventory: Inventory,
@@ -60,7 +59,7 @@ internal class ScenePass(
         touchBoxes.addAll(guiRenderers.flatMap { it.touchBoxes })
     }
 
-    fun render(contextUniformSupplier: UniformSupplier, fixer: (Any?) -> Any?) {
+    fun render(contextUniforms: Map<String, Any?>, fixer: (Any?) -> Any?) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
         glViewport(0, 0, width, height)
         glEnable(GL_BLEND)
@@ -70,12 +69,12 @@ internal class ScenePass(
         glEnable(GL_CULL_FACE)
         glCullFace(GL_BACK)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-        opaques.forEach { it.render(contextUniformSupplier, fixer) }
-        skies.forEach { it.render(contextUniformSupplier, fixer) }
-        screens.forEach { it.render(contextUniformSupplier, fixer) }
+        opaques.forEach { it.render(contextUniforms, fixer) }
+        skies.forEach { it.render(contextUniforms, fixer) }
+        screens.forEach { it.render(contextUniforms, fixer) }
         glDepthMask(false)
         transparents.sortedByDescending { (camera.mat4 * it.transform.offset()).z }
-            .forEach { it.render(contextUniformSupplier, fixer) }
+            .forEach { it.render(contextUniforms, fixer) }
         glDepthMask(true)
     }
 }

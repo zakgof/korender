@@ -7,10 +7,14 @@ import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.math.Vec2
-import com.zakgof.korender.impl.material.MapUniformSupplier
 import kotlin.math.max
 
-internal class GuiRenderer(private val inventory: Inventory, private val width: Int, private val height: Int, container: ElementDeclaration.Container) {
+internal class GuiRenderer(
+    private val inventory: Inventory,
+    private val width: Int,
+    private val height: Int,
+    container: ElementDeclaration.Container
+) {
 
     val renderables = mutableListOf<Renderable>()
     val touchBoxes = mutableListOf<TouchBox>()
@@ -21,10 +25,18 @@ internal class GuiRenderer(private val inventory: Inventory, private val width: 
         layoutContainer(sizes, 0, 0, width, height, container)
     }
 
-    private fun layoutContainer(sizes: MutableMap<ElementDeclaration, Size>, x: Int, y: Int, width: Int, height: Int, container: ElementDeclaration.Container) {
+    private fun layoutContainer(
+        sizes: MutableMap<ElementDeclaration, Size>,
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int,
+        container: ElementDeclaration.Container
+    ) {
         if (container.direction == Direction.Vertical) {
             val fillers = container.elements.count { sizes[it]!!.height < 0 }
-            val normalsHeight = container.elements.map { sizes[it]!!.height }.filter { it >= 0 }.sum()
+            val normalsHeight =
+                container.elements.map { sizes[it]!!.height }.filter { it >= 0 }.sum()
             val fillerHeight = if (fillers == 0) 0 else (height - normalsHeight) / fillers
             var currY = y
             for (child in container.elements) {
@@ -34,7 +46,15 @@ internal class GuiRenderer(private val inventory: Inventory, private val width: 
                 when (child) {
                     is ElementDeclaration.Text -> createText(child, x, currY, childWidth)
                     is ElementDeclaration.Image -> createImage(child, x, currY)
-                    is ElementDeclaration.Container -> layoutContainer(sizes, x, currY, childWidth, childHeight, child)
+                    is ElementDeclaration.Container -> layoutContainer(
+                        sizes,
+                        x,
+                        currY,
+                        childWidth,
+                        childHeight,
+                        child
+                    )
+
                     is ElementDeclaration.Filler -> {}
                 }
                 currY += childHeight
@@ -42,7 +62,8 @@ internal class GuiRenderer(private val inventory: Inventory, private val width: 
         }
         if (container.direction == Direction.Horizontal) {
             val fillers = container.elements.count { sizes[it]!!.width < 0 }
-            val normalsWidths = container.elements.map { sizes[it]!!.width }.filter { it >= 0 }.sum()
+            val normalsWidths =
+                container.elements.map { sizes[it]!!.width }.filter { it >= 0 }.sum()
             val fillerWidth = if (fillers == 0) 0 else (width - normalsWidths) / fillers
             var currX = x
             for (child in container.elements) {
@@ -52,7 +73,15 @@ internal class GuiRenderer(private val inventory: Inventory, private val width: 
                 when (child) {
                     is ElementDeclaration.Text -> createText(child, currX, y, childWidth)
                     is ElementDeclaration.Image -> createImage(child, currX, y)
-                    is ElementDeclaration.Container -> layoutContainer(sizes, currX, y, childWidth, childHeight, child)
+                    is ElementDeclaration.Container -> layoutContainer(
+                        sizes,
+                        currX,
+                        y,
+                        childWidth,
+                        childHeight,
+                        child
+                    )
+
                     is ElementDeclaration.Filler -> {}
                 }
                 currX += childWidth
@@ -70,26 +99,24 @@ internal class GuiRenderer(private val inventory: Inventory, private val width: 
             renderables.add(
                 Renderable(
                     mesh = mesh,
-                    shader  = shader,
-                    uniforms = MapUniformSupplier(
-                        Pair("pos",
-                            Vec2(
+                    shader = shader,
+                    uniforms = {
+                        mapOf<String, Any?>(
+                            "pos" to Vec2(
                                 (x.toFloat() + declaration.marginLeft.toFloat()) / width,
                                 1.0f - (y.toFloat() + declaration.marginTop.toFloat() + declaration.height.toFloat()) / height
-                            )
-                        ),
-                        Pair(
-                            "size",
-                            Vec2(
+                            ),
+                            "size" to Vec2(
                                 declaration.width.toFloat() / width,
                                 declaration.height.toFloat() / height
-                            )
-                        ),
-                        Pair(
-                            "imageTexture",
-                            inventory.texture(ResourceTextureDeclaration(declaration.imageResource)) ?: NotYetLoadedTexture
+                            ),
+                            "imageTexture" to (inventory.texture(
+                                ResourceTextureDeclaration(
+                                    declaration.imageResource
+                                )
+                            ) ?: NotYetLoadedTexture)
                         )
-                    )
+                    }
                 )
             )
             touchBoxes.add(
@@ -121,16 +148,23 @@ internal class GuiRenderer(private val inventory: Inventory, private val width: 
                 Renderable(
                     mesh = mesh,
                     shader = shader,
-                    uniforms = MapUniformSupplier(
-                        Pair("color", declaration.color), Pair("fontTexture", font.gpuTexture)
-                    )
+                    uniforms = {
+                        mapOf(
+                            "color" to declaration.color,
+                            "fontTexture" to font.gpuTexture
+                        )
+                    }
                 )
             )
             touchBoxes.add(TouchBox(x, y, w, declaration.height, declaration.onTouch))
         }
     }
 
-    private fun sizeEm(parentDirection: Direction, element: ElementDeclaration, sizes: MutableMap<ElementDeclaration, Size>): Size {
+    private fun sizeEm(
+        parentDirection: Direction,
+        element: ElementDeclaration,
+        sizes: MutableMap<ElementDeclaration, Size>
+    ): Size {
         val size = when (element) {
             is ElementDeclaration.Text -> textSize(element)
             is ElementDeclaration.Image -> Size(element.fullWidth, element.fullHeight)
@@ -185,7 +219,8 @@ internal class GuiRenderer(private val inventory: Inventory, private val width: 
     ): Size {
         val font = inventory.font(textDeclaration.fontResource)
         return Size(
-            font?.textWidth(textDeclaration.height, textDeclaration.text) ?: 0, textDeclaration.height
+            font?.textWidth(textDeclaration.height, textDeclaration.text) ?: 0,
+            textDeclaration.height
         )
     }
 

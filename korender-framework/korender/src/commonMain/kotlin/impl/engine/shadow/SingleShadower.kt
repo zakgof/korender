@@ -15,9 +15,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
-import com.zakgof.korender.impl.material.InternalTexture
-import com.zakgof.korender.impl.material.MapUniformSupplier
-import com.zakgof.korender.impl.material.UniformSupplier
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.projection.FrustumProjection
@@ -44,11 +41,12 @@ internal class SingleShadower(
         projection: Projection,
         camera: Camera,
         light: Vec3,
-        shadowCasters: List<Renderable>
-    ): UniformSupplier {
+        shadowCasters: List<Renderable>,
+        fixer: (Any?) -> Any?
+    ): Map<String, Any?> {
 
         if (frameBuffer == null)
-            return MapUniformSupplier()
+            return mapOf();
 
         val matrices = updateShadowCamera(projection, camera, light)
         val shadowCamera = matrices.first
@@ -63,7 +61,7 @@ internal class SingleShadower(
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             glEnable(GL_DEPTH_TEST)
             glCullFace(GL_BACK)
-            shadowCasters.forEach { r ->
+            shadowCasters.forEach { casterRenderable ->
                 // TODO: need to copy all the defs and plugins from the original shader
                 val casterShader = inventory.shader(
                     ShaderDeclaration(
@@ -72,21 +70,14 @@ internal class SingleShadower(
                         setOf("SHADOW_CASTER")
                     )
                 )
-                // TODO DRY !
-                casterShader?.render(
-                    { key ->
-                        val value = r.uniforms[key] ?: mapOf("model" to r.transform.mat4)[key] ?: casterUniforms[key]
-                        if (value is InternalTexture) {
-                            inventory.texture(value)
-                        } else
-                            value
-                    },
-                    r.mesh.gpuMesh
-                )
+
+                casterShader?.let {
+                    casterRenderable.render(casterUniforms, fixer, it)
+                }
             }
         }
 
-        return MapUniformSupplier(
+        return mapOf(
             "shadowTexture$index" to frameBuffer.colorTexture,
             "shadowProjection$index" to shadowProjection.mat4,
             "shadowView$index" to shadowCamera.mat4

@@ -7,12 +7,10 @@ import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.Mesh
 import com.zakgof.korender.impl.glgpu.GlGpuShader
-import com.zakgof.korender.impl.material.CombinedUniformSupplier
-import com.zakgof.korender.impl.material.UniformSupplier
+import com.zakgof.korender.impl.material.DynamicUniforms
 import com.zakgof.korender.math.Transform
-import com.zakgof.korender.impl.material.MapUniformSupplier
 
-internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms: UniformSupplier, val transform: Transform = Transform()) {
+internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms: DynamicUniforms, val transform: Transform = Transform()) {
 
     companion object {
         fun create(inventory: Inventory, declaration: RenderableDeclaration, camera: Camera, isShadowCaster: Boolean, shadowCascades: Int = 0): Renderable? {
@@ -56,10 +54,9 @@ internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms:
         }
     }
 
-    fun render(contextUniforms: UniformSupplier, fixer: (Any?) -> Any?) {
-        val totalUniformSupplier = CombinedUniformSupplier(uniforms, contextUniforms, MapUniformSupplier("model" to transform.mat4))
-        totalUniformSupplier.update()
-        shader.render(
+    fun render(contextUniforms: Map<String, Any?>, fixer: (Any?) -> Any?, shaderOverride: GlGpuShader = this.shader) {
+        val totalUniformSupplier = uniforms.invoke() + contextUniforms + mapOf("model" to transform.mat4)
+        shaderOverride.render(
             { fixer(totalUniformSupplier[it]) },
             mesh.gpuMesh
         )

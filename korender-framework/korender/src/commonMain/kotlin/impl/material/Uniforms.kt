@@ -1,6 +1,5 @@
 package com.zakgof.korender.impl.material
 
-import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.BaseParams
 import com.zakgof.korender.BillboardVertexParams
@@ -10,28 +9,30 @@ import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.StandartParams
+import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.WaterParams
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Mat4
 
+typealias DynamicUniforms = () -> Map<String, Any?>
+
 internal abstract class InternalBaseParams : BaseParams {
 
-    private val map = mutableMapOf<String, Any>()
+    val map = mutableMapOf<String, Any?>()
 
     override fun set(key: String, value: Any) {
         map[key] = value
     }
 
-    open operator fun get(key: String): Any? = map[key]
+    abstract fun collect()
 }
 
 internal class InternalBlurParams : BlurParams, InternalBaseParams() {
 
     override var radius = 1.0f
 
-    override operator fun get(key: String): Any? = when (key) {
-        "radius" -> radius
-        else -> super.get(key)
+    override fun collect() {
+        map["radius"] = radius
     }
 }
 
@@ -41,11 +42,10 @@ internal class InternalAdjustParams : AdjustParams, InternalBaseParams() {
     override var contrast: Float = 1f
     override var saturation: Float = 1f
 
-    override operator fun get(key: String): Any? = when (key) {
-        "brightness" -> brightness
-        "contrast" -> contrast
-        "saturation" -> saturation
-        else -> super.get(key)
+    override fun collect() {
+        map["brightness"] = brightness
+        map["contrast"] = contrast
+        map["saturation"] = saturation
     }
 }
 
@@ -55,11 +55,10 @@ internal open class InternalBillboardVertexParams : BillboardVertexParams, Inter
     override var yscale: Float = 1.0f
     override var rotation: Float = 0.0f
 
-    override operator fun get(key: String): Any? = when (key) {
-        "xscale" -> xscale
-        "yscale" -> yscale
-        "rotation" -> rotation
-        else -> super.get(key)
+    override fun collect() {
+        map["xscale"] = xscale
+        map["yscale"] = yscale
+        map["rotation"] = rotation
     }
 }
 
@@ -67,9 +66,9 @@ internal class InternalFireballParams : FireballParams, InternalBillboardVertexP
 
     override var power = 0.5f
 
-    override operator fun get(key: String): Any? = when (key) {
-        "power" -> power
-        else -> super.get(key)
+    override fun collect() {
+        map["power"] = power
+        super.collect()
     }
 }
 
@@ -77,9 +76,9 @@ internal class InternalFireParams : FireParams, InternalBillboardVertexParams() 
 
     override var strength = 3.0f
 
-    override operator fun get(key: String): Any? = when (key) {
-        "strength" -> strength
-        else -> super.get(key)
+    override fun collect() {
+        map["strength"] = strength
+        super.collect()
     }
 }
 
@@ -88,10 +87,10 @@ internal class InternalSmokeParams : SmokeParams, InternalBillboardVertexParams(
     override var density = 0.5f
     override var seed = 0f
 
-    override operator fun get(key: String): Any? = when (key) {
-        "density" -> density
-        "seed" -> seed
-        else -> super.get(key)
+    override fun collect() {
+        map["density"] = density
+        map["seed"] = seed
+        super.collect()
     }
 }
 
@@ -101,11 +100,10 @@ internal class InternalWaterParams : WaterParams, InternalBaseParams() {
     override var transparency: Float = 0.1f
     override var waveScale: Float = 0.04f
 
-    override operator fun get(key: String): Any? = when (key) {
-        "waterColor" -> waterColor
-        "transparency" -> transparency
-        "waveScale" -> waveScale
-        else -> super.get(key)
+    override fun collect() {
+        map["waterColor"] = waterColor
+        map["transparency"] = transparency
+        map["waveScale"] = waveScale
     }
 }
 
@@ -119,15 +117,14 @@ internal class InternalFastCloudSkyParams : FastCloudSkyParams, InternalBasePara
     override var darkblue = Color(1f, 0.2f, 0.4f, 0.6f)
     override var lightblue = Color(1f, 0.4f, 0.6f, 1.0f)
 
-    override operator fun get(key: String): Any? = when (key) {
-        "density" -> density
-        "thickness" -> thickness
-        "scale" -> scale
-        "darkblue" -> darkblue
-        "lightblue" -> lightblue
-        "rippleamount" -> rippleamount
-        "ripplescale" -> ripplescale
-        else -> super.get(key)
+    override fun collect() {
+        map["density"] = density
+        map["thickness"] = thickness
+        map["scale"] = scale
+        map["darkblue"] = darkblue
+        map["lightblue"] = lightblue
+        map["rippleamount"] = rippleamount
+        map["ripplescale"] = ripplescale
     }
 }
 
@@ -153,41 +150,37 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
     override var yscale = 1f
     override var rotation = 0f
 
-    override operator fun get(key: String): Any? = when (key) {
-        "baseColor" -> baseColor
-        "metallic" -> metallic
-        "roughness" -> roughness
-        "emissiveFactor" -> emissiveFactor
+    override fun collect() {
+        map["baseColor"] = baseColor
+        map["metallic"] = metallic
+        map["roughness"] = roughness
+        map["emissiveFactor"] = emissiveFactor
 
-        "albedoTexture" -> albedoTexture
-        "metallicRoughnessTexture" -> metallicRoughnessTexture
-        "emissiveTexture" -> emissiveTexture
-        "occlusionTexture" -> occlusionTexture
+        map["albedoTexture"] = albedoTexture
+        map["metallicRoughnessTexture"] = metallicRoughnessTexture
+        map["emissiveTexture"] = emissiveTexture
+        map["occlusionTexture"] = occlusionTexture
 
-        "normalTexture" -> normalTexture
-        "shadowTexture" -> shadowTexture
+        map["normalTexture"] = normalTexture
+        map["shadowTexture"] = shadowTexture
 
-        "jointMatrices[0]" -> jointMatrices
-        "inverseBindMatrices[0]" -> inverseBindMatrices
+        map["jointMatrices[0]"] = jointMatrices
+        map["inverseBindMatrices[0]"] = inverseBindMatrices
 
-        "xscale" -> xscale
-        "yscale" -> yscale
-        "rotation" -> rotation
-
-        else -> super.get(key)
+        map["xscale"] = xscale
+        map["yscale"] = yscale
+        map["rotation"] = rotation
     }
 }
 
-internal class BaseParamUniforms<P : BaseParams>(private val params: P, private val block: P.() -> Unit) : UniformSupplier {
+internal class BaseParamUniforms<P : InternalBaseParams>(
+    private val params: P,
+    private val block: P.() -> Unit
+) : DynamicUniforms {
 
-    init {
-        update()
+    override fun invoke(): Map<String, Any?> {
+        block.invoke(params)
+        params.collect()
+        return params.map
     }
-
-    override fun update() {
-        params.apply(block)
-    }
-
-    override fun get(key: String): Any? =
-        (params as InternalBaseParams)[key]
 }

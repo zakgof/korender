@@ -2,13 +2,13 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MeshDeclaration
-import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.StandartMaterialOption
+import com.zakgof.korender.TouchHandler
+import com.zakgof.korender.impl.material.DynamicUniforms
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.impl.material.UniformSupplier
 
 internal class SceneDeclaration {
     var shadow: ShadowDeclaration? = null
@@ -95,14 +95,14 @@ private fun stdOptionsToDefs(
 internal class RenderableDeclaration(
     val mesh: MeshDeclaration,
     val shader: ShaderDeclaration,
-    val uniforms: UniformSupplier,
+    val uniforms: DynamicUniforms,
     val transform: Transform = Transform(),
     val bucket: Bucket = Bucket.OPAQUE
 )
 
 internal class MaterialDeclaration(
     val shader: ShaderDeclaration,
-    val uniforms: UniformSupplier
+    val uniforms: DynamicUniforms
 )
 
 internal sealed class ElementDeclaration {

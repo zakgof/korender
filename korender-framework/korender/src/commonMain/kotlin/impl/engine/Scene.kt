@@ -6,13 +6,10 @@ import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.impl.engine.shadow.CascadeShadower
 import com.zakgof.korender.impl.engine.shadow.Shadower
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
-import com.zakgof.korender.impl.material.CombinedUniformSupplier
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
-import com.zakgof.korender.impl.material.UniformSupplier
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.projection.Projection
-import com.zakgof.korender.impl.material.MapUniformSupplier
 
 internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: Inventory, private val camera: Camera, private val width: Int, private val height: Int, time: Float) {
 
@@ -39,15 +36,8 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
         declarations.filter { it.shader.fragFile == "!shader/standart.frag" && !it.shader.defs.contains("NO_SHADOW_CAST") }
             .mapNotNull { Renderable.create(inventory, it, camera, true) }
 
-    fun render(context: Map<String, Any?>, projection: Projection, camera: Camera, light: Vec3) {
-        val shadowUniforms: UniformSupplier = shadower?.render(projection, camera, light, shadowCasters) ?: MapUniformSupplier()
-        val passFrameBuffers = (0 until passes.size - 1)
-            .map { inventory.frameBuffer(FrameBufferDeclaration("filter-$it", width, height, true)) }
+    fun render(contextUniforms: Map<String, Any?>, projection: Projection, camera: Camera, light: Vec3) {
 
-        val prevFrameContext = mutableMapOf<String, Any?>()
-        val contextUniformSupplier = CombinedUniformSupplier(
-            MapUniformSupplier(context), shadowUniforms, MapUniformSupplier(prevFrameContext)
-        )
         // TODO: ugly
         val fixer = { value: Any? ->
             if (value is InternalTexture) {
@@ -55,10 +45,19 @@ internal class Scene(sceneDeclaration: SceneDeclaration, private val inventory: 
             } else
                 value
         }
+
+        val shadowUniforms: Map<String, Any?> = shadower?.render(projection, camera, light, shadowCasters, fixer) ?: mapOf()
+        val passFrameBuffers = (0 until passes.size - 1)
+            .map { inventory.frameBuffer(FrameBufferDeclaration("filter-$it", width, height, true)) }
+
+        val prevFrameContext = mutableMapOf<String, Any?>()
+
         for (p in passes.indices) {
+            val totalContextUniforms = contextUniforms + shadowUniforms + prevFrameContext
+
             val frameBuffer = if (p == passes.size - 1) null else passFrameBuffers[p % 2]
             renderTo(frameBuffer) {
-                passes[p].render(contextUniformSupplier, fixer)
+                passes[p].render(totalContextUniforms, fixer)
             }
             prevFrameContext["filterColorTexture"] = frameBuffer?.colorTexture
             prevFrameContext["filterDepthTexture"] = frameBuffer?.depthTexture

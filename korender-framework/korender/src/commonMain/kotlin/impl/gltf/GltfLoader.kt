@@ -8,6 +8,7 @@ import com.zakgof.korender.Attributes.WEIGHTS
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.ResourceLoader
+import com.zakgof.korender.StandartMaterialOption
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -24,7 +25,6 @@ import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
 import com.zakgof.korender.impl.material.InternalStandartParams
 import com.zakgof.korender.impl.material.MaterialBuilder
 import com.zakgof.korender.impl.resourceBytes
-import com.zakgof.korender.StandartMaterialOption
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Quaternion
@@ -360,7 +360,7 @@ internal class GltfSceneBuilder(
 
         val builder = MaterialBuilder()
         builder.options += flags
-        builder.uniforms += standartUniforms
+        builder.shaderUniforms = standartUniforms
         return builder.toMaterialDeclaration()
     }
 
