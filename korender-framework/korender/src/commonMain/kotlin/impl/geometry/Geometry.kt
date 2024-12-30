@@ -220,9 +220,10 @@ internal object Geometry {
                 indexNumber * instances,
                 attrs = attrs.toTypedArray()
             ) {
+                attributeBuffers.forEach { it.rewind() }
                 for (i in 0 until instances) {
                     prototype.attributeBuffers.forEachIndexed { index, prototypeAttrBuffer ->
-                        attributeBuffers[index].rewind().put(prototypeAttrBuffer.rewind())
+                        attributeBuffers[index].put(prototypeAttrBuffer.rewind())
                     }
                     for (ind in 0 until prototype.indexNumber) {
                         index(prototype.indexGet(ind) + i * prototype.vertexNumber)
