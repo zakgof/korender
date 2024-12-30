@@ -3,7 +3,6 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.StandartMaterialOption
 import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
@@ -17,8 +16,9 @@ import kotlin.math.sin
 @Composable
 fun ShadowExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
-        val materialModifier = standart(StandartMaterialOption.AlbedoMap, StandartMaterialOption.Pcss) {
+        val materialModifier = standart {
             albedoTexture = texture("sand.jpg")
+            pcss = true
         }
         Frame {
             Light(Vec3(1f, -1f, 1f).normalize())

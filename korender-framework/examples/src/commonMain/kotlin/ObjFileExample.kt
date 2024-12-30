@@ -4,7 +4,6 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.StandartMaterialOption
 import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.math.FloatMath.PIdiv2
 import com.zakgof.korender.math.Transform.Companion.scale
@@ -21,7 +20,7 @@ fun ObjFileExample() {
         Frame {
             Camera(orbitCamera.camera(projection, width, height))
             Renderable(
-                standart(StandartMaterialOption.AlbedoMap) {
+                standart {
                     albedoTexture = texture("model/head.jpg")
                 },
                 mesh = obj("model/head.obj"),

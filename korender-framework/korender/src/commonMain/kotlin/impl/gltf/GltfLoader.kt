@@ -8,7 +8,6 @@ import com.zakgof.korender.Attributes.WEIGHTS
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.StandartMaterialOption
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -20,10 +19,10 @@ import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.gl.GLConstants
-import com.zakgof.korender.impl.material.BaseParamUniforms
 import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
 import com.zakgof.korender.impl.material.InternalStandartParams
 import com.zakgof.korender.impl.material.MaterialBuilder
+import com.zakgof.korender.impl.material.ParamUniforms
 import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Mat4
@@ -330,19 +329,7 @@ internal class GltfSceneBuilder(
         val occlusionTexture = material?.occlusionTexture?.let { getTexture(it) }
         val emissiveTexture = material?.emissiveTexture?.let { getTexture(it) }
 
-        val flags = mapOf(
-            albedoTexture to StandartMaterialOption.AlbedoMap,
-            metallicRoughnessTexture to StandartMaterialOption.MetallicRoughnessMap,
-            normalTexture to StandartMaterialOption.NormalMap,
-            occlusionTexture to StandartMaterialOption.OcclusionMap,
-            emissiveTexture to StandartMaterialOption.EmissiveMap
-        ).filterKeys { it != null }
-            .values
-            .toMutableList()
-        if (skinIndex != null)
-            flags += StandartMaterialOption.Skinning
-
-        val standartUniforms = BaseParamUniforms(InternalStandartParams()) {
+        val pu = ParamUniforms(InternalStandartParams()) {
             this.metallic = metallic
             this.roughness = roughness
             this.baseColor = baseColor
@@ -359,8 +346,8 @@ internal class GltfSceneBuilder(
         }
 
         val builder = MaterialBuilder()
-        builder.options += flags
-        builder.shaderUniforms = standartUniforms
+        builder.shaderDefs += pu.shaderDefs()
+        builder.shaderUniforms = pu
         return builder.toMaterialDeclaration()
     }
 

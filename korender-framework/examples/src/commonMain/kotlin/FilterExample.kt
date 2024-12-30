@@ -3,7 +3,6 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.StandartMaterialOption
 import com.zakgof.korender.math.Color
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.sin
@@ -14,7 +13,7 @@ fun FilterExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
         Pass {
             Renderable(
-                standart(StandartMaterialOption.AlbedoMap) {
+                standart {
                     albedoTexture = texture("sand.jpg")
                 },
                 mesh = sphere(4f),

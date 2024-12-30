@@ -5,7 +5,6 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.FreeCamera
-import com.zakgof.korender.StandartMaterialOption
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.z
@@ -19,7 +18,7 @@ fun InstancedMeshesExample() = Korender(appResourceLoader = { Res.readBytes(it) 
     Frame {
         Camera(freeCamera.camera(projection, width, height, frameInfo.dt))
         InstancedRenderables(
-            standart(StandartMaterialOption.AlbedoMap) {
+            standart {
                 albedoTexture = texture("sand.jpg")
             },
             id = "particles",

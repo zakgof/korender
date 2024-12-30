@@ -3,7 +3,6 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.StandartMaterialOption
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.x
 import org.jetbrains.compose.resources.ExperimentalResourceApi
@@ -15,7 +14,7 @@ fun BlurExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
         Pass {
             Renderable(
-                standart(StandartMaterialOption.AlbedoMap) {
+                standart {
                     albedoTexture = texture("sand.jpg")
                 },
                 mesh = sphere(3f),
@@ -33,7 +32,7 @@ fun BlurExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                 this.radius = radius
             })
             Renderable(
-                standart(StandartMaterialOption.AlbedoMap) {
+                standart {
                     albedoTexture = texture("sand.jpg")
                 },
                 mesh = sphere(3f),

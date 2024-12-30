@@ -19,7 +19,9 @@ internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms:
             val additionalShadowFlags = if (isShadowCaster) listOf("SHADOW_CASTER") else (0..<shadowCascades).map { "SHADOW_RECEIVER$it" }
             val origShader = declaration.shader
             val modifiedShader = ShaderDeclaration(
-                origShader.vertFile, origShader.fragFile, origShader.defs + additionalShadowFlags,
+                origShader.vertFile, origShader.fragFile,
+                origShader.defs + additionalShadowFlags,
+                setOf(),
                 origShader.plugins
             )
             val shader = inventory.shader(modifiedShader) ?: return null

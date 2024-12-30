@@ -8,7 +8,6 @@ import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
-import com.zakgof.korender.StandartMaterialOption
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
@@ -20,7 +19,8 @@ fun MeshesExample() {
     val orbitCamera = OrbitCamera(20.z, 2.y)
     Korender(appResourceLoader = { Res.readBytes(it) }) {
         OnTouch { orbitCamera.touch(it) }
-        val materialModifier = standart(StandartMaterialOption.AlbedoMap, StandartMaterialOption.NoLight) {
+        val materialModifier = standart {
+            noLight = true
             albedoTexture = texture("sand.jpg")
         }
         Frame {

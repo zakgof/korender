@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.camera.DefaultCamera
-import com.zakgof.korender.StandartMaterialOption
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
@@ -17,7 +16,7 @@ fun TexturingExample(): Unit = Korender(appResourceLoader = { Res.readBytes(it) 
     Frame {
         Camera(DefaultCamera(position = 20.z, direction = -1.z, up = 1.y))
         Renderable(
-            standart(StandartMaterialOption.AlbedoMap){
+            standart {
                 albedoTexture = texture("sand.jpg")
             },
             mesh = sphere(2f),

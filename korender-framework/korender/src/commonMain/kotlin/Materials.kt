@@ -45,6 +45,10 @@ interface AdjustParams {
 }
 
 interface StandartParams : BaseParams {
+
+    var noLight: Boolean
+    var pcss: Boolean
+
     var baseColor: Color
     var metallic: Float
     var roughness: Float
@@ -76,18 +80,6 @@ interface FastCloudSkyParams {
     var lightblue: Color
 }
 
-enum class StandartMaterialOption {
-    NoLight,
-    AlbedoMap,
-    MetallicRoughnessMap,
-    EmissiveMap,
-    OcclusionMap,
-    Triplanar,
-    Aperiodic,
-    NormalMap,
-    Detail,
-    NoShadowCast,
-    NoShadowReceive,
-    Pcss,
-    Skinning
+enum class RenderingOption {
+
 }

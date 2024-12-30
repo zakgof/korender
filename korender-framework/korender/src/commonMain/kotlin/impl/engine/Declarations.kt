@@ -2,7 +2,7 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MeshDeclaration
-import com.zakgof.korender.StandartMaterialOption
+import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.impl.material.DynamicUniforms
 import com.zakgof.korender.math.Color
@@ -51,46 +51,9 @@ internal data class ShaderDeclaration(
     val vertFile: String,
     val fragFile: String,
     val defs: Set<String> = setOf(),
+    val options: Set<RenderingOption> = setOf(),
     val plugins: Map<String, String> = mapOf()
-) {
-    constructor(
-        vertFile: String,
-        fragFile: String,
-        defs: Set<String>,
-        stdOptions: Set<StandartMaterialOption>,
-        plugins: Map<String, String>
-    ) : this(vertFile, fragFile, defs + stdOptionsToDefs(stdOptions, plugins), plugins)
-}
-
-
-private fun stdOptionsToDefs(
-    stdOptions: Set<StandartMaterialOption>,
-    plugins: Map<String, String>
-): Set<String> {
-    // TODO: this is ugly
-    val set = HashSet<String>()
-    stdOptions.forEach {
-        when (it) {
-            StandartMaterialOption.Triplanar -> set.add("TRIPLANAR")
-            StandartMaterialOption.Aperiodic -> set.add("APERIODIC")
-            StandartMaterialOption.NormalMap -> set.add("NORMAL_MAP")
-            StandartMaterialOption.Detail -> set.add("DETAIL")
-            StandartMaterialOption.Pcss -> set.add("PCSS")
-            StandartMaterialOption.NoShadowCast -> set.add("NO_SHADOW_CAST") // TODO: this is ugly
-
-            StandartMaterialOption.AlbedoMap -> set.add("ALBEDO_MAP")
-            StandartMaterialOption.MetallicRoughnessMap -> set.add("METALLIC_ROUGHNESS_MAP")
-            StandartMaterialOption.EmissiveMap -> set.add("EMISSIVE_MAP")
-            StandartMaterialOption.OcclusionMap -> set.add("OCCLUSION_MAP")
-
-            StandartMaterialOption.NoLight -> set.add("NO_LIGHT")
-            StandartMaterialOption.Skinning -> set.add("SKINNING")
-
-            else -> {}
-        }
-    }
-    return set + plugins.keys.map { "PLUGIN_" + it.uppercase() }
-}
+)
 
 internal class RenderableDeclaration(
     val mesh: MeshDeclaration,

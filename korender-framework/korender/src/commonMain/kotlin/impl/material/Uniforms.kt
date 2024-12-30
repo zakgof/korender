@@ -19,6 +19,7 @@ typealias DynamicUniforms = () -> Map<String, Any?>
 internal abstract class InternalBaseParams : BaseParams {
 
     val map = mutableMapOf<String, Any?>()
+    val defs = mutableSetOf<String>()
 
     override fun set(key: String, value: Any) {
         map[key] = value
@@ -130,6 +131,8 @@ internal class InternalFastCloudSkyParams : FastCloudSkyParams, InternalBasePara
 
 internal class InternalStandartParams : StandartParams, InternalBaseParams() {
 
+    override var noLight = false
+    override var pcss = false
     override var baseColor = Color(1f, 0.5f, 0.5f, 0.5f)
     override var metallic = 0.3f
     override var roughness = 0.3f
@@ -170,10 +173,23 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
         map["xscale"] = xscale
         map["yscale"] = yscale
         map["rotation"] = rotation
+
+        albedoTexture?.let { defs += "ALBEDO_MAP" }
+        metallicRoughnessTexture?.let { defs += "METALLIC_ROUGHNESS_MAP" }
+        normalTexture?.let { defs += "NORMAL_MAP" }
+        emissiveTexture?.let { defs += "EMISSIVE_MAP" }
+        occlusionTexture?.let { defs += "OCCLUSION_MAP" }
+        jointMatrices?.let { defs += "SKINNING" }
+        if (noLight) {
+            defs += "NO_LIGHT"
+        }
+        if (pcss) {
+            defs += "PCSS"
+        }
     }
 }
 
-internal class BaseParamUniforms<P : InternalBaseParams>(
+internal class ParamUniforms<P : InternalBaseParams>(
     private val params: P,
     private val block: P.() -> Unit
 ) : DynamicUniforms {
@@ -182,5 +198,11 @@ internal class BaseParamUniforms<P : InternalBaseParams>(
         block.invoke(params)
         params.collect()
         return params.map
+    }
+
+    fun shaderDefs(): Set<String> {
+        block.invoke(params)
+        params.collect()
+        return params.defs
     }
 }

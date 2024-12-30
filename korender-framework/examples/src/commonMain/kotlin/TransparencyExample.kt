@@ -5,7 +5,6 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
-import com.zakgof.korender.StandartMaterialOption.NoLight
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
@@ -22,8 +21,9 @@ fun TransparencyExample() {
         Frame {
             Camera(orbitCamera.camera(projection, width, height))
             fun semitransparent(color: Color, position: Vec3) = Renderable(
-                standart(NoLight) {
-                    this.baseColor = color
+                standart {
+                    noLight = true
+                    baseColor = color
                 },
                 mesh = cube(),
                 transform = scale(5.0f, 5.0f, 0.1f).translate(position),
