@@ -19,7 +19,8 @@ fun InstancedMeshesExample() = Korender(appResourceLoader = { Res.readBytes(it) 
         Camera(freeCamera.camera(projection, width, height, frameInfo.dt))
         InstancedRenderables(
             standart {
-                albedoTexture = texture("sand.jpg")
+                baseColorTexture = texture("sand.jpg")
+                pbr.metallic = 0.8f
             },
             id = "particles",
             count = 21 * 21,

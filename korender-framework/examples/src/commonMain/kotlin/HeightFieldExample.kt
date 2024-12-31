@@ -19,7 +19,8 @@ fun HeightFieldExample() {
             Camera(freeCamera.camera(projection, width, height, frameInfo.dt))
             Renderable(
                 standart {
-                    albedoTexture = texture("sand.jpg")
+                    baseColorTexture = texture("sand.jpg")
+                    pbr.metallic = 0.6f
                 },
                 mesh = heightField(id = "terrain", 128, 128, 0.2f) { x, y ->
                     0.5f * (sin(x * 0.2f) + sin(y * 0.2f))

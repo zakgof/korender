@@ -18,8 +18,8 @@ fun MetallicRoughnessExample() = Korender(appResourceLoader = { Res.readBytes(it
                 Renderable(
                     standart {
                         baseColor = Color.Red
-                        metallic =  0.1f + (m / 4.0f)
-                        roughness = 0.1f + (r / 4.0f)
+                        pbr.metallic =  0.1f + (m / 4.0f)
+                        pbr.roughness = 0.1f + (r / 4.0f)
                     },
                     mesh = sphere(0.5f),
                     transform = translate((m - 2) * 1.2f, (r - 2) * 1.2f, 0f)

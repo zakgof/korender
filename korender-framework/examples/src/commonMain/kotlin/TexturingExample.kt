@@ -17,14 +17,14 @@ fun TexturingExample(): Unit = Korender(appResourceLoader = { Res.readBytes(it) 
         Camera(DefaultCamera(position = 20.z, direction = -1.z, up = 1.y))
         Renderable(
             standart {
-                albedoTexture = texture("sand.jpg")
+                baseColorTexture = texture("sand.jpg")
             },
             mesh = sphere(2f),
             transform = rotate(1.y, frameInfo.time * 0.1f).translate(-2.1f.x)
         )
 //  TODO      Renderable(
 //            standart(StandartMaterialOption.Triplanar) {
-//                albedoTexture = texture("!sand.jpg")
+//                baseColorTexture = texture("!sand.jpg")
 //                triplanarScale = 0.1f
 //            },
 //            mesh = sphere(2f),

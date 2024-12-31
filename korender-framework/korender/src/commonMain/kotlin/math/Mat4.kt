@@ -109,3 +109,5 @@ class Mat4(
         m30 * mat.m03 + m31 * mat.m13 + m32 * mat.m23 + m33 * mat.m33
     )
 }
+
+class Mat4List(val matrices: List<Mat4>)

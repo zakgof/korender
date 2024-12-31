@@ -22,7 +22,6 @@ fun TransparencyExample() {
             Camera(orbitCamera.camera(projection, width, height))
             fun semitransparent(color: Color, position: Vec3) = Renderable(
                 standart {
-                    noLight = true
                     baseColor = color
                 },
                 mesh = cube(),

@@ -14,7 +14,7 @@ fun FilterExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         Pass {
             Renderable(
                 standart {
-                    albedoTexture = texture("sand.jpg")
+                    baseColorTexture = texture("sand.jpg")
                 },
                 mesh = sphere(4f),
             )

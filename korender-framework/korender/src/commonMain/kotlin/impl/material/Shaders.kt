@@ -20,7 +20,7 @@ internal object Shaders {
         appResourceLoader: ResourceLoader
     ): GlGpuShader {
         val defs = declaration.defs + shaderEnv
-        val title = "${declaration.vertFile}:${declaration.fragFile}"
+        val title = "${declaration.vertFile}:${declaration.fragFile} $defs"
         val vertDebugInfo = ShaderDebugInfo(declaration.vertFile)
         val fragDebugInfo = ShaderDebugInfo(declaration.fragFile)
         val vertCode =
@@ -54,7 +54,7 @@ internal object Shaders {
         val passes = mutableListOf<Boolean>()
         passes.add(true)
         debugInfo.start(fname)
-        content.lines().forEach { it ->
+        content.lines().forEach {
             val line = it.trim()
             debugInfo.incSourceLine()
             preprocessLine(line, defs, ifdefs, passes, plugins, outputLines, debugInfo, appResourceLoader)

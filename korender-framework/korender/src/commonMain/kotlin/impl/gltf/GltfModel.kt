@@ -1,6 +1,21 @@
 package com.zakgof.korender.impl.gltf
 
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.mapSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
 
 @Serializable
 class Gltf(
@@ -40,6 +55,7 @@ class Gltf(
             val sampler: Int,
             val target: AnimationChannelTarget
         )
+
         @Serializable
         data class AnimationSampler(
             val input: Int,
@@ -148,7 +164,10 @@ class Gltf(
         val emissiveFactor: List<Float>? = listOf(0.0f, 0.0f, 0.0f),
         val alphaMode: String? = "OPAQUE",
         val alphaCutoff: Float? = 0.5f,
-        val doubleSided: Boolean? = false
+        val doubleSided: Boolean? = false,
+
+        @Serializable(with = ExtensionsDeserializer::class)
+        val extensions: Map<String, @Contextual Any>? = null,
     ) {
         @Serializable
         data class PbrMetallicRoughness(
@@ -246,4 +265,38 @@ class Gltf(
         val index: Int
     }
 
+    @Serializable
+    data class KHRMaterialsPbrSpecularGlossiness(
+        val diffuseFactor: List<Float> = listOf(1.0f, 1.0f, 1.0f, 1.0f),
+        val diffuseTexture: TextureInfo? = null,
+        val specularFactor: List<Float> = listOf(1.0f, 1.0f, 1.0f),
+        val glossinessFactor: Float = 1.0f,
+        val specularGlossinessTexture: TextureInfo? = null,
+    )
+
+}
+
+object ExtensionsDeserializer : KSerializer<Map<String, Any>> {
+    @OptIn(ExperimentalSerializationApi::class)
+    override val descriptor: SerialDescriptor = mapSerialDescriptor(PrimitiveSerialDescriptor("key", PrimitiveKind.STRING), JsonElement.serializer().descriptor)
+
+    override fun deserialize(decoder: Decoder): Map<String, Any> {
+        val jsonDecoder = decoder as JsonDecoder
+        val jsonObject = jsonDecoder.decodeJsonElement() as? JsonObject
+            ?: throw SerializationException("Expected JsonObject for extensions")
+
+        val result = mutableMapOf<String, Any>()
+        jsonObject.forEach { (key, value) ->
+            result[key] = when (key) {
+                "KHR_materials_pbrSpecularGlossiness" ->
+                    Json.decodeFromJsonElement<Gltf.KHRMaterialsPbrSpecularGlossiness>(value)
+                else -> value
+            }
+        }
+        return result
+    }
+
+    override fun serialize(encoder: Encoder, value: Map<String, Any>) {
+        throw SerializationException("Serialization is not supported for extensions")
+    }
 }

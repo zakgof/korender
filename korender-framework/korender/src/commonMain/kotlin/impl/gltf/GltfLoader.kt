@@ -26,6 +26,7 @@ import com.zakgof.korender.impl.material.ParamUniforms
 import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Mat4
+import com.zakgof.korender.math.Mat4List
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
@@ -315,33 +316,54 @@ internal class GltfSceneBuilder(
         skinIndex: Int?
     ): MaterialDeclaration {
         val material = primitive.material?.let { gltfLoaded.model.materials!![it] }
-        val pbr = material?.pbrMetallicRoughness
+        val matPbr = material?.pbrMetallicRoughness
 
-        val metallic = pbr?.metallicFactor ?: 0.3f
-        val roughness = pbr?.roughnessFactor ?: 0.3f
+        val metallic = matPbr?.metallicFactor ?: 0.2f
+        val roughness = matPbr?.roughnessFactor ?: 0.3f
         val emissiveFactor =
             material?.emissiveFactor?.let { Color(1.0f, it[0], it[1], it[2]) } ?: Color.Black
         val baseColor =
-            pbr?.baseColorFactor?.let { Color(it[3], it[0], it[1], it[2]) } ?: Color.White
-        val albedoTexture = pbr?.baseColorTexture?.let { getTexture(it) }
-        val metallicRoughnessTexture = pbr?.metallicRoughnessTexture?.let { getTexture(it) }
+            matPbr?.baseColorFactor?.let { Color(it[3], it[0], it[1], it[2]) } ?: Color.White
+        val albedoTexture = matPbr?.baseColorTexture?.let { getTexture(it) }
+        val metallicRoughnessTexture = matPbr?.metallicRoughnessTexture?.let { getTexture(it) }
         val normalTexture = material?.normalTexture?.let { getTexture(it) }
         val occlusionTexture = material?.occlusionTexture?.let { getTexture(it) }
         val emissiveTexture = material?.emissiveTexture?.let { getTexture(it) }
 
+        val matSpecularGlossiness = material?.extensions?.get("KHR_materials_pbrSpecularGlossiness")
+                as? Gltf.KHRMaterialsPbrSpecularGlossiness
+        val diffuseFactor = matSpecularGlossiness?.diffuseFactor?.let { Color(it[3], it[0], it[1], it[2]) } ?: Color.White
+        val diffuseTexture = matSpecularGlossiness?.diffuseTexture?.let { getTexture(it) }
+        val specularFactor = matSpecularGlossiness?.specularFactor?.let { Color(1.0f, it[0], it[1], it[2]) } ?: Color.White
+        val glossinessFactor = matSpecularGlossiness?.glossinessFactor ?: 0.2f
+        val specularGlossinessTexture = matSpecularGlossiness?.specularGlossinessTexture?.let { getTexture(it) }
+
         val pu = ParamUniforms(InternalStandartParams()) {
-            this.metallic = metallic
-            this.roughness = roughness
+
             this.baseColor = baseColor
-            this.albedoTexture = albedoTexture
-            this.emissiveFactor = emissiveFactor
-            this.metallicRoughnessTexture = metallicRoughnessTexture
             this.normalTexture = normalTexture
-            this.occlusionTexture = occlusionTexture
-            this.emissiveTexture = emissiveTexture
+
+            if (matPbr != null) {
+                this.baseColorTexture = albedoTexture
+                this.pbr.metallic = metallic
+                this.pbr.roughness = roughness
+                this.pbr.emissiveFactor = emissiveFactor
+                this.pbr.metallicRoughnessTexture = metallicRoughnessTexture
+                this.pbr.occlusionTexture = occlusionTexture
+                this.pbr.emissiveTexture = emissiveTexture
+            }
+
+            if (matSpecularGlossiness != null) {
+                this.specularGlossiness.diffuseFactor = diffuseFactor
+                this.specularGlossiness.diffuseTexture = diffuseTexture
+                this.specularGlossiness.specularFactor = specularFactor
+                this.specularGlossiness.glossinessFactor = glossinessFactor
+                this.specularGlossiness.specularGlossinessTexture = specularGlossinessTexture
+            }
+
             if (skinIndex != null) {
-                this.jointMatrices = loadedSkins[skinIndex].jointMatrices
-                this.inverseBindMatrices = loadedSkins[skinIndex].inverseBindMatrices
+                this.jointMatrices = Mat4List(loadedSkins[skinIndex].jointMatrices)
+                this.inverseBindMatrices = Mat4List(loadedSkins[skinIndex].inverseBindMatrices)
             }
         }
 

@@ -15,6 +15,7 @@ fun FxaaExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             Renderable(
                 standart {
                     baseColor = Green
+                    pbr.metallic = 0.2f
                 },
                 mesh = sphere(4f),
             )

@@ -9,10 +9,12 @@ import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.StandartParams
+import com.zakgof.korender.StandartParams.Pbr
+import com.zakgof.korender.StandartParams.SpecularGlossiness
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.WaterParams
 import com.zakgof.korender.math.Color
-import com.zakgof.korender.math.Mat4
+import com.zakgof.korender.math.Mat4List
 
 typealias DynamicUniforms = () -> Map<String, Any?>
 
@@ -131,38 +133,70 @@ internal class InternalFastCloudSkyParams : FastCloudSkyParams, InternalBasePara
 
 internal class InternalStandartParams : StandartParams, InternalBaseParams() {
 
-    override var noLight = false
-    override var pcss = false
-    override var baseColor = Color(1f, 0.5f, 0.5f, 0.5f)
-    override var metallic = 0.3f
-    override var roughness = 0.3f
-    override var emissiveFactor = Color(1f, 1f, 1f, 1f)
+    private var _pbr: Pbr? = null
+    private var _specularGlossiness: SpecularGlossiness? = null
 
-    override var albedoTexture: TextureDeclaration? = null
-    override var metallicRoughnessTexture: TextureDeclaration? = null
-    override var emissiveTexture: TextureDeclaration? = null
-    override var occlusionTexture: TextureDeclaration? = null
+    override var pcss = false
+
+    override var baseColor = Color(1f, 0.5f, 0.5f, 0.5f)
+    override var baseColorTexture: TextureDeclaration? = null
+
+    override val pbr: Pbr
+        get() {
+            if (_pbr == null) {
+                _pbr = InternalPbr()
+            }
+            return _pbr!!
+        }
+    override val specularGlossiness: SpecularGlossiness
+        get() {
+            if (_specularGlossiness == null) {
+                _specularGlossiness = InternalSpecularGlossiness()
+            }
+            return _specularGlossiness!!
+        }
 
     override var normalTexture: TextureDeclaration? = null
     override var shadowTexture: TextureDeclaration? = null
 
-    override var jointMatrices: List<Mat4>? = null
-    override var inverseBindMatrices: List<Mat4>? = null
+    override var jointMatrices: Mat4List? = null
+    override var inverseBindMatrices: Mat4List? = null
 
     override var xscale = 1f
     override var yscale = 1f
     override var rotation = 0f
 
     override fun collect() {
-        map["baseColor"] = baseColor
-        map["metallic"] = metallic
-        map["roughness"] = roughness
-        map["emissiveFactor"] = emissiveFactor
 
-        map["albedoTexture"] = albedoTexture
-        map["metallicRoughnessTexture"] = metallicRoughnessTexture
-        map["emissiveTexture"] = emissiveTexture
-        map["occlusionTexture"] = occlusionTexture
+        // TODO ALBEDO map should be available without shading model
+
+        map["baseColor"] = baseColor
+        map["baseColorTexture"] = baseColorTexture
+
+        if (_pbr != null) {
+            map["metallic"] = _pbr!!.metallic
+            map["roughness"] = _pbr!!.roughness
+            map["emissiveFactor"] = _pbr!!.emissiveFactor
+            map["metallicRoughnessTexture"] = _pbr!!.metallicRoughnessTexture
+            map["emissiveTexture"] = _pbr!!.emissiveTexture
+            map["occlusionTexture"] = _pbr!!.occlusionTexture
+            defs += "PBR"
+            _pbr!!.metallicRoughnessTexture?.let { defs += "METALLIC_ROUGHNESS_MAP" }
+            _pbr!!.emissiveTexture?.let { defs += "EMISSIVE_MAP" }
+            _pbr!!.occlusionTexture?.let { defs += "OCCLUSION_MAP" }
+        }
+
+        if (_specularGlossiness != null) {
+            map["diffuseFactor"] = _specularGlossiness!!.diffuseFactor
+            map["diffuseTexture"] = _specularGlossiness!!.diffuseTexture
+            map["specularFactor"] = _specularGlossiness!!.specularFactor
+            map["glossinessFactor"] = _specularGlossiness!!.glossinessFactor
+            map["specularGlossinessTexture"] = _specularGlossiness!!.specularGlossinessTexture
+            defs += "SPECULAR_GLOSSINESS"
+
+            _specularGlossiness!!.diffuseTexture?.let { defs += "DIFFUSE_MAP" }
+            _specularGlossiness!!.specularGlossinessTexture?.let { defs += "SPECULAR_GLOSSINESS_MAP" }
+        }
 
         map["normalTexture"] = normalTexture
         map["shadowTexture"] = shadowTexture
@@ -174,18 +208,33 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
         map["yscale"] = yscale
         map["rotation"] = rotation
 
-        albedoTexture?.let { defs += "ALBEDO_MAP" }
-        metallicRoughnessTexture?.let { defs += "METALLIC_ROUGHNESS_MAP" }
+        baseColorTexture?.let { defs += "BASE_COLOR_MAP" }
         normalTexture?.let { defs += "NORMAL_MAP" }
-        emissiveTexture?.let { defs += "EMISSIVE_MAP" }
-        occlusionTexture?.let { defs += "OCCLUSION_MAP" }
         jointMatrices?.let { defs += "SKINNING" }
-        if (noLight) {
+
+        if (_pbr == null && _specularGlossiness == null) {
             defs += "NO_LIGHT"
         }
         if (pcss) {
             defs += "PCSS"
         }
+    }
+
+    internal class InternalPbr : Pbr {
+        override var metallic = 0.3f
+        override var roughness = 0.3f
+        override var emissiveFactor = Color(1f, 1f, 1f, 1f)
+        override var metallicRoughnessTexture: TextureDeclaration? = null
+        override var emissiveTexture: TextureDeclaration? = null
+        override var occlusionTexture: TextureDeclaration? = null
+    }
+
+    internal class InternalSpecularGlossiness : SpecularGlossiness {
+        override var diffuseFactor: Color = Color.White
+        override var diffuseTexture: TextureDeclaration? = null
+        override var specularFactor: Color = Color.White
+        override var glossinessFactor: Float = 0.2f
+        override var specularGlossinessTexture: TextureDeclaration? = null
     }
 }
 

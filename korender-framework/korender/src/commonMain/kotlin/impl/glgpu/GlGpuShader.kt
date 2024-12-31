@@ -39,6 +39,7 @@ import com.zakgof.korender.impl.material.ShaderDebugInfo
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Mat3
 import com.zakgof.korender.math.Mat4
+import com.zakgof.korender.math.Mat4List
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
@@ -56,6 +57,8 @@ internal class GlGpuShader(
 
     init {
 
+        println("Creating GPU Shader [$name] : $programHandle")
+
         glShaderSource(vertexShaderHandle, vertexShaderText)
         glCompileShader(vertexShaderHandle)
 
@@ -67,6 +70,8 @@ internal class GlGpuShader(
 
         glLinkProgram(programHandle)
         glValidateProgram(programHandle)
+
+        println(fragmentShaderText)
 
         val vertexLog: String = glGetShaderInfoLog(vertexShaderHandle)
         if (vertexLog.isNotEmpty()) {
@@ -176,10 +181,9 @@ internal class GlGpuShader(
                 location, false, value.asArray()
             )
 
-            // TODO need some bettar dezign
-            is List<*> -> {
+            is Mat4List -> {
                 // TODO ineffective! use buffers?
-                val fa = (value as List<Mat4>).flatMap { it.asArray().asList() }.toFloatArray()
+                val fa = value.matrices.flatMap { it.asArray().asList() }.toFloatArray()
                 glUniformMatrix4fv(location, false, fa)
             }
 

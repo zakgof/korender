@@ -17,7 +17,8 @@ import kotlin.math.sin
 fun ShadowExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
         val materialModifier = standart {
-            albedoTexture = texture("sand.jpg")
+            baseColorTexture = texture("sand.jpg")
+            pbr.metallic = 0.5f
             pcss = true
         }
         Frame {

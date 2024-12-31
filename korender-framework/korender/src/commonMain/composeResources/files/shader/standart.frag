@@ -1,7 +1,7 @@
 #import "!shader/lib/header.glsl"
 #import "!shader/lib/texturing.glsl"
 #import "!shader/lib/light.glsl"
-#import "!shader/lib/pbr.glsl"
+#import "!shader/lib/shading.glsl"
 
 in vec3 vpos;
 in vec3 vnormal;
@@ -20,24 +20,53 @@ in vec3 vshadow2;
 /////
 
 uniform vec4 baseColor;
-uniform float metallic;
-uniform float roughness;
-uniform vec4 emissiveFactor;
 
-#ifdef ALBEDO_MAP
-uniform sampler2D albedoTexture;
-#endif
-#ifdef METALLIC_ROUGHNESS_MAP
-uniform sampler2D metallicRoughnessTexture;
+#ifdef BASE_COLOR_MAP
+uniform sampler2D baseColorTexture;
 #endif
 #ifdef NORMAL_MAP
 uniform sampler2D normalTexture;
 #endif
-#ifdef EMISSIVE_MAP
-uniform sampler2D emissiveTexture;
+
+// PBR model
+
+#ifdef PBR
+
+    uniform float metallic;
+    uniform float roughness;
+    uniform vec4 emissiveFactor;
+
+    #ifdef METALLIC_ROUGHNESS_MAP
+    uniform sampler2D metallicRoughnessTexture;
+    #endif
+    #ifdef EMISSIVE_MAP
+    uniform sampler2D emissiveTexture;
+    #endif
+    #ifdef OCCLUSION_MAP
+    uniform sampler2D occlusionTexture;
+    #endif
+
+    #import "!shader/lib/pbr.glsl"
+
 #endif
-#ifdef OCCLUSION_MAP
-uniform sampler2D occlusionTexture;
+
+// Specular - glosiness model
+
+#ifdef SPECULAR_GLOSSINESS
+
+    uniform vec4 diffuseFactor;
+    uniform vec4 specularFactor;
+    uniform float glossinessFactor;
+
+    #ifdef DIFFUSE_MAP
+    uniform sampler2D diffuseTexture;
+    #endif
+    #ifdef SPECULAR_GLOSSINESS_MAP
+    uniform sampler2D specularGlossinessTexture;
+    #endif
+
+    #import "!shader/lib/sg.glsl"
+
 #endif
 
 // TODO TRIPLANAR AND APERIODIC FOR EVERYTHING
@@ -71,67 +100,53 @@ out vec4 fragColor;
 
 void main() {
 
-#ifdef ALBEDO_MAP
-    vec4 albedo = texture(albedoTexture, vtex) * baseColor;
+#ifdef BASE_COLOR_MAP
+    vec4 albedo = texture(baseColorTexture, vtex) * baseColor;
 #else
     vec4 albedo = baseColor;
 #endif
-#ifdef METALLIC_ROUGHNESS_MAP
-    vec4 mrtexel = texture(metallicRoughnessTexture, vtex);
-    float metal = mrtexel.b * metallic;
-    float rough = mrtexel.g * roughness;
-#else
-    float metal = metallic;
-    float rough = roughness;
-#endif
-#ifdef EMISSIVE_MAP
-    vec3 emissive = texture(emissiveTexture, vtex).rgb * emissiveFactor.rgb;
-#else
-    vec3 emissive = vec3(0.,0.,0.);
-#endif
-#ifdef OCCLUSION_MAP
-    float occlusion = texture(emissiveTexture, vtex).r;
-#else
-    float occlusion = 1.;
-#endif
 
-    vec3 F0 = mix(vec3(0.04), albedo.rgb, metal);
 
-#ifdef NORMAL_MAP
+#ifdef NO_LIGHT
+    vec3 color = albedo.rgb;
+#else
+
+    #ifdef NORMAL_MAP
     vec3 N = getNormalFromMap(normalTexture, vnormal, vtex, vpos);
-#else
+    #else
     vec3 N = normalize(vnormal);
-#endif
+    #endif
 
     vec3 V = normalize(cameraPos - vpos);
     vec3 L = normalize(-light);
 
-    vec3 lightColor = vec3(10.0, 10.0, 10.0);
-    float ambientFactor = 0.4;
+    vec3 lightColor = vec3(10.0, 10.0, 10.0); // TODO magic number
+    float ambientFactor = 0.4; // TODO magic number
 
     float shadowRatio = 0.;
-
-#ifdef SHADOW_RECEIVER0
+    #ifdef SHADOW_RECEIVER0
     shadowRatio = max(shadowRatio, shadow(shadowTexture0, vshadow0));
-#endif
-#ifdef SHADOW_RECEIVER1
+    #endif
+    #ifdef SHADOW_RECEIVER1
     shadowRatio = max(shadowRatio, shadow(shadowTexture1, vshadow1));
-#endif
-#ifdef SHADOW_RECEIVER2
+    #endif
+    #ifdef SHADOW_RECEIVER2
     shadowRatio = max(shadowRatio, shadow(shadowTexture2, vshadow2));
-#endif
-
-#ifdef NO_LIGHT
-    vec3 radiance = albedo.rgb;
-#else
+    #endif
     lightColor *= (1. - shadowRatio);
-    vec3 ambient = ambientFactor * albedo.rgb * occlusion;
-    vec3 radiance = ambient + emissive + lightColor * calculatePBR(N, V, L, F0, albedo.rgb, metal, rough, occlusion);
+
+    #ifdef PBR
+    vec3 color = doPbr(N, V, L, albedo.rgb, lightColor, ambientFactor);
+    #endif
+    #ifdef SPECULAR_GLOSSINESS
+    vec3 color = doSpecularGlosiness(N, V, L, albedo.rgb, lightColor, ambientFactor);
+    #endif
+
 #endif
 
 #ifdef SHADOW_CASTER
     fragColor = vec4(gl_FragCoord.z, gl_FragCoord.z, gl_FragCoord.z, 1.0);
 #else
-    fragColor = vec4(radiance, albedo.a);
+    fragColor = vec4(color, albedo.a);
 #endif
 }

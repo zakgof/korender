@@ -27,7 +27,7 @@ fun FireBallExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         )
         Renderable(
             standart {
-                albedoTexture = texture("sand.jpg")
+                baseColorTexture = texture("sand.jpg")
             },
             mesh = cube(1f),
             transform = scale(9f).translate(-9.y)

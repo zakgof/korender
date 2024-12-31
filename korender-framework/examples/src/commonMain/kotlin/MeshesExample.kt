@@ -20,8 +20,7 @@ fun MeshesExample() {
     Korender(appResourceLoader = { Res.readBytes(it) }) {
         OnTouch { orbitCamera.touch(it) }
         val materialModifier = standart {
-            noLight = true
-            albedoTexture = texture("sand.jpg")
+            baseColorTexture = texture("sand.jpg")
         }
         Frame {
             Camera(orbitCamera.camera(projection, width, height))

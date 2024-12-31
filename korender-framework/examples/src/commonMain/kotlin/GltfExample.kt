@@ -16,7 +16,7 @@ fun GltfExample() = Korender (appResourceLoader = { Res.readBytes(it) }) {
     OnTouch { orbitCamera.touch(it) }
     Frame {
         Camera(orbitCamera.camera(projection, width, height))
-        Scene(gltfResource = "gltf/ai/mixamo-own-by-3dviewer.glb")
+        Scene(gltfResource = "gltf/ai/swat.glb")
         Gui {
             Filler()
             Text(id = "fps", fontResource = "font/orbitron.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFF66FF55))
