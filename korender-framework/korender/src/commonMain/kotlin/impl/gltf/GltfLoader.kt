@@ -354,8 +354,8 @@ internal class GltfSceneBuilder(
             }
 
             if (matSpecularGlossiness != null) {
-                this.specularGlossiness.diffuseFactor = diffuseFactor
-                this.specularGlossiness.diffuseTexture = diffuseTexture
+                this.baseColor = diffuseFactor
+                this.baseColorTexture = diffuseTexture
                 this.specularGlossiness.specularFactor = specularFactor
                 this.specularGlossiness.glossinessFactor = glossinessFactor
                 this.specularGlossiness.specularGlossinessTexture = specularGlossinessTexture

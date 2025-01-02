@@ -74,8 +74,6 @@ interface StandartParams : BaseParams {
     }
 
     interface SpecularGlossiness {
-        var diffuseFactor: Color
-        var diffuseTexture: TextureDeclaration?
         var specularFactor: Color
         var glossinessFactor: Float
         var specularGlossinessTexture: TextureDeclaration?

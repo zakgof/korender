@@ -168,8 +168,6 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
 
     override fun collect() {
 
-        // TODO ALBEDO map should be available without shading model
-
         map["baseColor"] = baseColor
         map["baseColorTexture"] = baseColorTexture
 
@@ -187,14 +185,10 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
         }
 
         if (_specularGlossiness != null) {
-            map["diffuseFactor"] = _specularGlossiness!!.diffuseFactor
-            map["diffuseTexture"] = _specularGlossiness!!.diffuseTexture
             map["specularFactor"] = _specularGlossiness!!.specularFactor
             map["glossinessFactor"] = _specularGlossiness!!.glossinessFactor
             map["specularGlossinessTexture"] = _specularGlossiness!!.specularGlossinessTexture
             defs += "SPECULAR_GLOSSINESS"
-
-            _specularGlossiness!!.diffuseTexture?.let { defs += "DIFFUSE_MAP" }
             _specularGlossiness!!.specularGlossinessTexture?.let { defs += "SPECULAR_GLOSSINESS_MAP" }
         }
 
@@ -230,8 +224,6 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
     }
 
     internal class InternalSpecularGlossiness : SpecularGlossiness {
-        override var diffuseFactor: Color = Color.White
-        override var diffuseTexture: TextureDeclaration? = null
         override var specularFactor: Color = Color.White
         override var glossinessFactor: Float = 0.2f
         override var specularGlossinessTexture: TextureDeclaration? = null

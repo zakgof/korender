@@ -1,11 +1,6 @@
 
 vec3 doSpecularGlosiness(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, float ambientFactor) {
 
-#ifdef DIFFUSE_MAP
-    vec4 diffuse = texture(diffuseTexture, vtex) * diffuseFactor;
-#else
-    vec4 diffuse = diffuseFactor;
-#endif
 #ifdef SPECULAR_GLOSSINESS_MAP
     vec4 sgtexel = texture(specularGlossinessTexture, vtex);
     vec3 specular = sgtexel.rgb * specularFactor.rgb;
@@ -22,7 +17,7 @@ vec3 doSpecularGlosiness(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, f
     float NdotH = max(dot(N, H), 0.0);
     float VdotH = max(dot(V, H), 0.0);
 
-    vec3 c_diff = diffuse.rgb * albedo.rgb * (1. - max(max(specular.r, specular.g), specular.b));
+    vec3 c_diff = albedo.rgb * (1. - max(max(specular.r, specular.g), specular.b));
     vec3 F0 = specular;
     float roughness = 1. - glossiness;
 
@@ -35,5 +30,5 @@ vec3 doSpecularGlosiness(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, f
 
     vec3 material = (f_diffuse + f_specular) * NdotL * lightColor;
 
-    return material + ambientFactor * diffuse.rgb * albedo.rgb;
+    return material + ambientFactor * albedo.rgb;
 }
