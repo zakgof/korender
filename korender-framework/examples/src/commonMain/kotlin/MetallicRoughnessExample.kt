@@ -12,17 +12,17 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 @Composable
 fun MetallicRoughnessExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
-        Light(Vec3(1.0f, 1.0f, -1.0f).normalize())
+        Light(Vec3(1.0f, -1.0f, -1.0f).normalize())
         for (m in 0..4) {
             for (r in 0..4) {
                 Renderable(
                     standart {
-                        baseColor = Color.Red
-                        pbr.metallic =  0.1f + (m / 4.0f)
-                        pbr.roughness = 0.1f + (r / 4.0f)
+                        baseColor = Color.White
+                        pbr.metallic = (r / 4.0f)
+                        pbr.roughness = (m / 4.0f)
                     },
-                    mesh = sphere(0.5f),
-                    transform = translate((m - 2) * 1.2f, (r - 2) * 1.2f, 0f)
+                    mesh = sphere(0.8f),
+                    transform = translate((m - 2) * 1.7f, (r - 2) * 1.7f, 0f)
                 )
             }
         }

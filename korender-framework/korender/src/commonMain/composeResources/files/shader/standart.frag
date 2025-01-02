@@ -120,8 +120,8 @@ void main() {
     vec3 V = normalize(cameraPos - vpos);
     vec3 L = normalize(-light);
 
-    vec3 lightColor = vec3(10.0, 10.0, 10.0); // TODO magic number
-    float ambientFactor = 0.4; // TODO magic number
+    vec3 lightColor = vec3(3.0, 3.0, 3.0); // TODO magic number
+    float ambientFactor = 0.17; // TODO magic number
 
     float shadowRatio = 0.;
     #ifdef SHADOW_RECEIVER0

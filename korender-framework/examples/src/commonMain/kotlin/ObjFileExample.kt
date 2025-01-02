@@ -7,6 +7,7 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.math.FloatMath.PIdiv2
 import com.zakgof.korender.math.Transform.Companion.scale
+import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
@@ -18,11 +19,13 @@ fun ObjFileExample() {
     Korender(appResourceLoader = { Res.readBytes(it) }) {
         OnTouch { orbitCamera.touch(it) }
         Frame {
+            Light(Vec3(1.0f, -1.0f, -1.0f).normalize())
             Camera(orbitCamera.camera(projection, width, height))
             Renderable(
                 standart {
                     baseColorTexture = texture("model/head.jpg")
-                    pbr.metallic = 0.5f
+                    pbr.metallic = 0.1f
+                    pbr.roughness = 0.5f
                 },
                 mesh = obj("model/head.obj"),
                 transform = scale(7.0f).rotate(1.y, -PIdiv2)

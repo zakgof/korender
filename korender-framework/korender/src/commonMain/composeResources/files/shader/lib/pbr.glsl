@@ -1,32 +1,26 @@
-vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 F0, vec3 albedo, float metallic, float roughness, float occlusion) {
-    vec3 H = normalize(V + L); // Halfway vector
+vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 albedo, float metallic, float roughness,
+                  vec3 lightColor, float occlusion, vec3 emissive, float ambientLight) {
 
-    // Fresnel
+    vec3 H = normalize(V + L);
+
     float NdotV = max(dot(N, V), 0.0);
     float NdotL = max(dot(N, L), 0.0);
     float NdotH = max(dot(N, H), 0.0);
+    float VdotH = max(dot(V, H), 0.0);
 
-    vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
+    vec3 c_diff = mix(albedo, vec3(0.), metallic);
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
-    // Normal Distribution Function (NDF)
-    float D = distributionGGX(N, H, roughness);
+    vec3 F = F0 + (1. - F0) * pow(1. - VdotH, 5.);
+    vec3 f_diffuse = (1. - F) * (1. / PI) * c_diff;
 
-    // Geometry function
-    float G = geometrySmith(N, V, L, roughness);
+    float D = distributionGGX(NdotH, roughness);
+    float G = geometrySmith(NdotV, NdotL, roughness);
+    vec3 f_specular = F * D * G / max(4.0 * NdotV * NdotL, 0.000001);
 
-    // Specular BRDF
-    vec3 specular = (D * G * F) / max(4.0 * NdotV * NdotL, 0.001);
+    vec3 material = (f_diffuse + f_specular) * NdotL * lightColor;
 
-    // Diffuse BRDF (Lambertian)
-    vec3 kS = F;                   // Specular reflectance
-    vec3 kD = vec3(1.0) - kS;      // Diffuse reflectance
-    kD *= 1.0 - metallic;          // No diffuse for metals
-
-    vec3 diffuse = (albedo / PI);
-
-    // Final shading with occlusion
-
-    return (kD * diffuse + specular) * NdotL * occlusion ;
+    return material + ambientLight * albedo;
 }
 
 
@@ -46,14 +40,11 @@ vec3 doPbr(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, float ambientFa
     vec3 emissive = vec3(0.);
 #endif
 #ifdef OCCLUSION_MAP
-    float occlusion = texture(emissiveTexture, vtex).r;
+    float occlusion = texture(occlusionTexture, vtex).r;
 #else
     float occlusion = 1.;
 #endif
 
-    vec3 F0 = mix(vec3(0.04), albedo, metal);
-    vec3 ambient = ambientFactor * albedo * occlusion;
-    vec3 radiance = ambient + emissive + lightColor * calculatePBR(N, V, L, F0, albedo, metal, rough, occlusion);
-
+    vec3 radiance = calculatePBR(N, V, L, albedo, metal, rough, lightColor, occlusion, emissive, ambientFactor);
     return radiance;
 }

@@ -221,8 +221,8 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
     }
 
     internal class InternalPbr : Pbr {
-        override var metallic = 0.3f
-        override var roughness = 0.3f
+        override var metallic = 0.1f
+        override var roughness = 0.5f
         override var emissiveFactor = Color(1f, 1f, 1f, 1f)
         override var metallicRoughnessTexture: TextureDeclaration? = null
         override var emissiveTexture: TextureDeclaration? = null

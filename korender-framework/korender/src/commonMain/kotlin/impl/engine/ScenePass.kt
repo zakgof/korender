@@ -60,7 +60,7 @@ internal class ScenePass(
     }
 
     fun render(contextUniforms: Map<String, Any?>, fixer: (Any?) -> Any?) {
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
+        glClearColor(0.05f, 0.05f, 0.1f, 1.0f)
         glViewport(0, 0, width, height)
         glEnable(GL_BLEND)
         glEnable(GL_DEPTH_TEST)
