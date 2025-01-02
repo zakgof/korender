@@ -5,6 +5,7 @@ import com.zakgof.korender.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.FrameBufferDeclaration
 import com.zakgof.korender.impl.engine.Inventory
+import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.engine.Renderable
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gl.GL.glClear
@@ -38,9 +39,7 @@ internal class SingleShadower(
     )
 
     override fun render(
-        projection: Projection,
-        camera: Camera,
-        light: Vec3,
+        renderContext: RenderContext,
         shadowCasters: List<Renderable>,
         fixer: (Any?) -> Any?
     ): Map<String, Any?> {
@@ -48,11 +47,10 @@ internal class SingleShadower(
         if (frameBuffer == null)
             return mapOf();
 
-        val matrices = updateShadowCamera(projection, camera, light)
+        val matrices = updateShadowCamera(renderContext.projection, renderContext.camera, renderContext.lightDirection)
         val shadowCamera = matrices.first
         val shadowProjection = matrices.second
-        val casterUniforms = mapOf(
-            "light" to light,
+        val casterUniforms = renderContext.uniforms() + mapOf(
             "view" to shadowCamera.mat4,
             "projection" to shadowProjection.mat4,
             "cameraPos" to shadowCamera.position

@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
+import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.FloatMath.PIdiv2
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
@@ -18,8 +19,9 @@ fun ObjFileExample() {
     val orbitCamera = OrbitCamera(20.z, 0.z)
     Korender(appResourceLoader = { Res.readBytes(it) }) {
         OnTouch { orbitCamera.touch(it) }
+        Light(Vec3(1.0f, -1.0f, -1.0f).normalize(), Color(1.0f, 7.0f, 7.0f, 7.0f))
+        Ambient(Color(1.0f, 0.3f, 0.3f, 0.3f))
         Frame {
-            Light(Vec3(1.0f, -1.0f, -1.0f).normalize())
             Camera(orbitCamera.camera(projection, width, height))
             Renderable(
                 standart {

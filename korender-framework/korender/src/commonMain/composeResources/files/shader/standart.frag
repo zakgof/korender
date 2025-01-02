@@ -90,7 +90,9 @@ uniform sampler2D normalTexture;
 #endif
 
 uniform vec3 cameraPos;
-uniform vec3 light;
+uniform vec3 lightDir;
+uniform vec4 lightColor;
+uniform vec4 ambientColor;
 
 #ifdef PLUGIN_TEXTURE
   #import "$texture"
@@ -118,10 +120,7 @@ void main() {
     #endif
 
     vec3 V = normalize(cameraPos - vpos);
-    vec3 L = normalize(-light);
-
-    vec3 lightColor = vec3(3.0, 3.0, 3.0); // TODO magic number
-    float ambientFactor = 0.17; // TODO magic number
+    vec3 L = normalize(-lightDir);
 
     float shadowRatio = 0.;
     #ifdef SHADOW_RECEIVER0
@@ -133,13 +132,14 @@ void main() {
     #ifdef SHADOW_RECEIVER2
     shadowRatio = max(shadowRatio, shadow(shadowTexture2, vshadow2));
     #endif
-    lightColor *= (1. - shadowRatio);
+
+    vec3 lightValue = lightColor.rgb * (1. - shadowRatio);
 
     #ifdef PBR
-    vec3 color = doPbr(N, V, L, albedo.rgb, lightColor, ambientFactor);
+    vec3 color = doPbr(N, V, L, albedo.rgb, lightValue, ambientColor.rgb);
     #endif
     #ifdef SPECULAR_GLOSSINESS
-    vec3 color = doSpecularGlosiness(N, V, L, albedo.rgb, lightColor, ambientFactor);
+    vec3 color = doSpecularGlosiness(N, V, L, albedo.rgb, lightValue, ambientColor.rgb);
     #endif
 
 #endif

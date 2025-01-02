@@ -18,11 +18,21 @@ import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.WaterParams
+import com.zakgof.korender.camera.Camera
+import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.projection.Projection
 
 interface KorenderContext {
 
     fun Frame(block: FrameContext.() -> Unit)
     fun OnTouch(handler: (TouchEvent) -> Unit)
+
+    fun Camera(camera: Camera)
+    fun Projection(projection: Projection)
+    fun Light(direction: Vec3, color: Color = Color.White)
+    fun Ambient(color: Color)
+    fun Background(color: Color)
 
     fun texture(
         textureResource: String,

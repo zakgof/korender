@@ -1,5 +1,5 @@
 vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 albedo, float metallic, float roughness,
-                  vec3 lightColor, float occlusion, vec3 emissive, float ambientLight) {
+                  vec3 lightColor, float occlusion, vec3 emissive, vec3 ambientColor) {
 
     vec3 H = normalize(V + L);
 
@@ -20,11 +20,11 @@ vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 albedo, float metallic, float rou
 
     vec3 material = (f_diffuse + f_specular) * NdotL * lightColor;
 
-    return material + ambientLight * albedo;
+    return material + ambientColor * albedo;
 }
 
 
-vec3 doPbr(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, float ambientFactor) {
+vec3 doPbr(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, vec3 ambientColor) {
 
 #ifdef METALLIC_ROUGHNESS_MAP
     vec4 mrtexel = texture(metallicRoughnessTexture, vtex);
@@ -45,6 +45,6 @@ vec3 doPbr(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, float ambientFa
     float occlusion = 1.;
 #endif
 
-    vec3 radiance = calculatePBR(N, V, L, albedo, metal, rough, lightColor, occlusion, emissive, ambientFactor);
+    vec3 radiance = calculatePBR(N, V, L, albedo, metal, rough, lightColor, occlusion, emissive, ambientColor);
     return radiance;
 }

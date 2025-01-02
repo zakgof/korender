@@ -3,7 +3,7 @@ package com.zakgof.korender.impl.engine
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.Platform
 
-internal class FrameInfoManager(private val inventory: Inventory) {
+internal class FrameInfoManager() {
 
     val startNanos: Long = Platform.nanoTime()
 

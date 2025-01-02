@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.FrameInfo
+import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.context.GuiContainerContext
@@ -13,7 +14,6 @@ import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.MaterialBuilder
-import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
@@ -86,18 +86,4 @@ internal class DefaultPassContext(
             (mod as InternalMaterialModifier).applyTo(acc)
             acc
         }.toMaterialDeclaration()
-
-
-    override fun Camera(camera: Camera) {
-        this.camera = camera
-    }
-
-    override fun Projection(projection: Projection) {
-        this.projection = projection
-    }
-
-    override fun Light(light: Vec3) {
-        this.light = light
-    }
-
 }

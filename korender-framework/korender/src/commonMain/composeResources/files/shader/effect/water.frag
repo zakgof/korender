@@ -13,7 +13,8 @@ uniform sampler2D filterDepthTexture;
 uniform mat4 projection;
 uniform mat4 view;
 uniform vec3 cameraPos;
-uniform vec3 light;
+uniform vec3 lightDir;
+uniform vec4 lightColor;
 
 out vec4 fragColor;
 

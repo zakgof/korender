@@ -1,6 +1,5 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.impl.gl.GL.glBlendFunc
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glClearColor
@@ -22,9 +21,7 @@ import com.zakgof.korender.impl.gltf.GltfSceneBuilder
 
 internal class ScenePass(
     private val inventory: Inventory,
-    private val camera: Camera,
-    private val width: Int,
-    private val height: Int,
+    private val renderContext: RenderContext,
     passDeclaration: PassDeclaration,
     shadowCascades: Int,
     time: Float
@@ -44,7 +41,7 @@ internal class ScenePass(
             }
         }
         passDeclaration.renderables.forEach {
-            val renderable = Renderable.create(inventory, it, camera, false, shadowCascades)
+            val renderable = Renderable.create(inventory, it, renderContext.camera, false, shadowCascades)
             renderable?.let { r ->
                 when (it.bucket) {
                     Bucket.OPAQUE -> opaques.add(r)
@@ -54,14 +51,15 @@ internal class ScenePass(
                 }
             }
         }
-        val guiRenderers = passDeclaration.guis.map { GuiRenderer(inventory, width, height, it) }
+        val guiRenderers = passDeclaration.guis.map { GuiRenderer(inventory, renderContext.width, renderContext.height, it) }
         screens.addAll(guiRenderers.flatMap { it.renderables })
         touchBoxes.addAll(guiRenderers.flatMap { it.touchBoxes })
     }
 
     fun render(contextUniforms: Map<String, Any?>, fixer: (Any?) -> Any?) {
-        glClearColor(0.05f, 0.05f, 0.1f, 1.0f)
-        glViewport(0, 0, width, height)
+        val back = renderContext.backgroundColor
+        glClearColor(back.r, back.g, back.b, back.a)
+        glViewport(0, 0, renderContext.width, renderContext.height)
         glEnable(GL_BLEND)
         glEnable(GL_DEPTH_TEST)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -73,7 +71,7 @@ internal class ScenePass(
         skies.forEach { it.render(contextUniforms, fixer) }
         screens.forEach { it.render(contextUniforms, fixer) }
         glDepthMask(false)
-        transparents.sortedByDescending { (camera.mat4 * it.transform.offset()).z }
+        transparents.sortedByDescending { (renderContext.camera.mat4 * it.transform.offset()).z }
             .forEach { it.render(contextUniforms, fixer) }
         glDepthMask(true)
     }

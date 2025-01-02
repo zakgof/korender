@@ -1,6 +1,8 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.FrameInfo
+import com.zakgof.korender.MaterialModifier
+import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.GuiContainerContext
@@ -8,10 +10,8 @@ import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.PassContext
 import com.zakgof.korender.context.ShadowContext
-import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.projection.Projection
 
 internal class DefaultFrameContext(
@@ -19,9 +19,9 @@ internal class DefaultFrameContext(
     override val frameInfo: FrameInfo,
     override val width: Int,
     override val height: Int,
-    override var projection: Projection,
-    override var camera: Camera,
-    override var light: Vec3
+    override val projection: Projection,
+    override val camera: Camera,
+    override val light: Vec3
 ) : FrameContext {
 
     private val defaultPassContext = DefaultPassContext(sceneDeclaration.defaultPass, frameInfo, width, height, projection, camera, light)
@@ -61,17 +61,4 @@ internal class DefaultFrameContext(
         ShadowContext(shadowDeclaration).apply(block)
         sceneDeclaration.addShadow(shadowDeclaration)
     }
-
-    override fun Camera(camera: Camera) {
-        this.camera = camera
-    }
-
-    override fun Projection(projection: Projection) {
-        this.projection = projection
-    }
-
-    override fun Light(light: Vec3) {
-        this.light = light
-    }
-
 }
