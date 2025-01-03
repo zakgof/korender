@@ -53,14 +53,13 @@ const mat4 biasMatrix = mat4(
 void main() {
 
 #ifdef SKINNING
-    uvec4 joints2 = uvec4(0, 1, 0, 0);
-    mat4 skinningMatrix = mat4(0.0);
-    for (int i = 0; i < 4; i++) {
-        uint jointIndex = joints[i];
-        mat4 jointMatrix = jointMatrices[jointIndex] * inverseBindMatrices[jointIndex];
-        skinningMatrix += weights[i] * jointMatrix;
-    }
-    vec4 worldPos =  (skinningMatrix * vec4(pos, 1.0));
+    mat4 skinningMatrix =
+        weights.x * jointMatrices[joints.x] * inverseBindMatrices[joints.x] +
+        weights.y * jointMatrices[joints.y] * inverseBindMatrices[joints.y] +
+        weights.z * jointMatrices[joints.z] * inverseBindMatrices[joints.z] +
+        weights.w * jointMatrices[joints.w] * inverseBindMatrices[joints.w];
+
+vec4 worldPos =  (skinningMatrix * vec4(pos, 1.0));
     vnormal = mat3(transpose(inverse( skinningMatrix))) * normal;
 #else
     vec4 worldPos = model * vec4(pos, 1.0);
