@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.FreeCamera
+import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.z
@@ -13,14 +14,15 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun InstancedMeshesExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
-    val freeCamera = FreeCamera(20.z, -1.z)
+    val freeCamera = FreeCamera(this, 20.z, -1.z)
     OnTouch { freeCamera.touch(it) }
     Frame {
-        Camera(freeCamera.camera(projection, width, height, frameInfo.dt))
+        AmbientLight(Color.white(0.4f))
+        camera = freeCamera.camera(projection, width, height, frameInfo.dt)
         InstancedRenderables(
             standart {
                 baseColorTexture = texture("sand.jpg")
-                pbr.metallic = 0.8f
+                pbr.metallic = 0.1f
             },
             id = "particles",
             count = 21 * 21,

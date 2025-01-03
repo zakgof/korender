@@ -89,10 +89,22 @@ uniform sampler2D normalTexture;
   uniform sampler2D shadowTexture2;
 #endif
 
-uniform vec3 cameraPos;
-uniform vec3 lightDir;
-uniform vec4 lightColor;
-uniform vec4 ambientColor;
+#ifndef SHADOW_CASTER
+  uniform vec3 cameraPos;
+  uniform vec4 ambientColor;
+  struct DirectionalLight {
+    vec3 dir;
+    vec4 color;
+  };
+  struct PointLight {
+    vec3 pos;
+    vec4 color;
+  };
+  uniform DirectionalLight directionalLights[32];
+  uniform int numDirectionalLights;
+  uniform PointLight pointLights[32];
+  uniform int numPointLights;
+#endif
 
 #ifdef PLUGIN_TEXTURE
   #import "$texture"
@@ -120,7 +132,7 @@ void main() {
     #endif
 
     vec3 V = normalize(cameraPos - vpos);
-    vec3 L = normalize(-lightDir);
+
 
     float shadowRatio = 0.;
     #ifdef SHADOW_RECEIVER0
@@ -133,14 +145,33 @@ void main() {
     shadowRatio = max(shadowRatio, shadow(shadowTexture2, vshadow2));
     #endif
 
-    vec3 lightValue = lightColor.rgb * (1. - shadowRatio);
+    vec3 color = albedo.rgb * ambientColor.rgb;
 
-    #ifdef PBR
-    vec3 color = doPbr(N, V, L, albedo.rgb, lightValue, ambientColor.rgb);
-    #endif
-    #ifdef SPECULAR_GLOSSINESS
-    vec3 color = doSpecularGlosiness(N, V, L, albedo.rgb, lightValue, ambientColor.rgb);
-    #endif
+
+    // TODO: refactor this
+    for (int l=0; l<numDirectionalLights; l++) {
+        vec3 lightValue = directionalLights[l].color.rgb * (1. - shadowRatio);
+        vec3 L = normalize(-directionalLights[l].dir);
+        #ifdef PBR
+        color += doPbr(N, V, L, albedo.rgb, lightValue);
+        #endif
+        #ifdef SPECULAR_GLOSSINESS
+        color += doSpecularGlosiness(N, V, L, albedo.rgb, lightValue);
+        #endif
+    }
+    for (int l=0; l<numPointLights; l++) {
+        vec3 ftol = pointLights[l].pos - vpos;
+        float distance = length(ftol);
+        float att = max(2.0, 3.0 / distance);
+        vec3 lightValue = pointLights[l].color.rgb * (1. - shadowRatio) * att; // TODO quadratic; configurable attenuation ratio
+        vec3 L = normalize(ftol);
+        #ifdef PBR
+        color += doPbr(N, V, L, albedo.rgb, lightValue);
+        #endif
+        #ifdef SPECULAR_GLOSSINESS
+        color += doSpecularGlosiness(N, V, L, albedo.rgb, lightValue);
+        #endif
+    }
 
 #endif
 

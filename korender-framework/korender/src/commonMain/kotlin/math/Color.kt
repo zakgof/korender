@@ -10,9 +10,10 @@ data class Color(val a: Float, val r: Float, val g: Float, val b: Float) {
     )
 
     companion object {
+        fun white(intensity: Float) = Color(1f, intensity, intensity, intensity)
         val Transparent = Color(0f, 0f, 0f, 0f)
-        val Black = Color(1f, 0f, 0f, 0f)
-        val White = Color(1f,1f, 1f, 1f)
+        val Black = white(0f)
+        val White = white(1f)
         val Blue = Color(1f, 0f, 0f, 1f)
         val Green = Color(1f,0f, 1f, 0f)
         val Red = Color(1f,1f, 0f, 0f)

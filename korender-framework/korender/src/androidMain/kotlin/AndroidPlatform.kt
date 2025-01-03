@@ -24,10 +24,11 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.viewinterop.AndroidView
 import com.zakgof.korender.context.KorenderContext
-import com.zakgof.korender.impl.image.Image
+import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
+import com.zakgof.korender.impl.image.Image
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -44,11 +45,11 @@ import kotlin.math.max
 
 val androidContext = AtomicReference<Context>(null)
 
-actual object Platform {
+internal actual object Platform {
 
     actual val name: String = "Android ${Build.VERSION.SDK_INT}"
 
-    actual fun loadImage(bytes: ByteArray, type: String): Deferred<Image> =
+    internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<Image> =
         CompletableDeferred(bitmapToImage(BitmapFactory.decodeByteArray(bytes, 0, bytes.size)))
 
     private fun bitmapToImage(bitmap: Bitmap): AndroidImage {
@@ -68,7 +69,7 @@ actual object Platform {
             bitmap,
             bitmap.width,
             bitmap.height,
-            Byter(gpuBytes),
+            NativeByteBuffer(gpuBytes),
             gpuFormat
         )
     }
@@ -79,7 +80,7 @@ actual object Platform {
         return buffer.flip() as ByteBuffer
     }
 
-    actual fun loadFont(bytes: ByteArray): Deferred<FontDef> {
+    internal actual fun loadFont(bytes: ByteArray): Deferred<FontDef> {
 
         val tmpDir: File = androidContext.get().cacheDir
         val tmpFile = File.createTempFile("font-", ".ttf", tmpDir)
@@ -120,11 +121,11 @@ actual object Platform {
     actual fun nanoTime() = System.nanoTime()
 }
 
-class AndroidImage(
+internal class AndroidImage(
     private val bitmap: Bitmap,
     override val width: Int,
     override val height: Int,
-    override val bytes: Byter,
+    override val bytes: NativeByteBuffer,
     override val format: GlGpuTexture.Format
 ) : Image {
     override fun pixel(x: Int, y: Int): com.zakgof.korender.math.Color {

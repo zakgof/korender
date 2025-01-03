@@ -34,13 +34,12 @@ internal class SceneDeclaration {
 }
 
 internal class PassDeclaration {
+    val pointLights = mutableListOf<PointLightDeclaration>()
+    val directionalLights = mutableListOf<DirectionalLightDeclaration>()
+    var ambientLightColor = Color(1.0f, 0.15f, 0.15f, 0.15f)
     val renderables = mutableListOf<RenderableDeclaration>()
     val guis = mutableListOf<ElementDeclaration.Container>()
     val gltfs = mutableListOf<GltfDeclaration>()
-
-    fun add(renderable: RenderableDeclaration) = renderables.add(renderable)
-    fun add(gltfDeclaration: GltfDeclaration) = gltfs.add(gltfDeclaration)
-    fun addGui(gui: ElementDeclaration.Container) = guis.add(gui)
 }
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
@@ -116,3 +115,7 @@ internal class ShadowDeclaration {
 internal data class CascadeDeclaration(val mapSize: Int, val near: Float, var far: Float)
 
 internal data class GltfDeclaration(val gltfResource: String)
+
+internal class PointLightDeclaration(val position: Vec3, val color: Color)
+
+internal class DirectionalLightDeclaration(val direction: Vec3, val color: Color)

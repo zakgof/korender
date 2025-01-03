@@ -14,11 +14,10 @@ import kotlin.math.sin
 @Composable
 fun SkyExample() {
     Korender(appResourceLoader = { Res.readBytes(it) }) {
-        val freeCamera = FreeCamera(20.z, -1.z)
+        val freeCamera = FreeCamera(this, 20.z, -1.z)
         OnTouch { freeCamera.touch(it) }
-
         Frame {
-            Camera(freeCamera.camera(projection, width, height, 0f))
+            camera = freeCamera.camera(projection, width, height, 0f)
             Sky(fastCloudSky() {
                 thickness = 10f + 10f * sin(frameInfo.time * 0.5f)
             })

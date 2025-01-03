@@ -2,14 +2,18 @@ package com.zakgof.korender.context
 
 import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.BlurParams
+import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
+import com.zakgof.korender.FrustumProjectionDeclaration
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
+import com.zakgof.korender.OrthoProjectionDeclaration
+import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.StandartParams
@@ -18,21 +22,20 @@ import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.WaterParams
-import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.projection.Projection
 
 interface KorenderContext {
 
     fun Frame(block: FrameContext.() -> Unit)
     fun OnTouch(handler: (TouchEvent) -> Unit)
 
-    fun Camera(camera: Camera)
-    fun Projection(projection: Projection)
-    fun Light(direction: Vec3, color: Color = Color.White)
-    fun Ambient(color: Color)
-    fun Background(color: Color)
+    var camera: CameraDeclaration
+    var projection: ProjectionDeclaration
+    var background: Color
+
+    val width: Int
+    val height: Int
 
     fun texture(
         textureResource: String,
@@ -81,4 +84,7 @@ interface KorenderContext {
     fun fxaa(): MaterialModifier
     fun fastCloudSky(block: FastCloudSkyParams.() -> Unit = {}): MaterialModifier
 
+    fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration
+    fun ortho(width: Float, height: Float, near: Float, far: Float): OrthoProjectionDeclaration
+    fun camera(position: Vec3, direction: Vec3, up: Vec3): CameraDeclaration
 }

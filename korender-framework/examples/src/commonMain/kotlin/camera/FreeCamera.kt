@@ -1,14 +1,14 @@
 package com.zakgof.korender.examples.camera
 
-import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.camera.DefaultCamera
+import com.zakgof.korender.CameraDeclaration
+import com.zakgof.korender.FrustumProjectionDeclaration
+import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.TouchEvent
+import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
-import com.zakgof.korender.projection.FrustumProjection
-import com.zakgof.korender.projection.Projection
 
-class FreeCamera(initialPosition: Vec3, initialDirection: Vec3, private val velocity: Float = 3.0f) {
+class FreeCamera(private val context: KorenderContext, initialPosition: Vec3, initialDirection: Vec3, private val velocity: Float = 3.0f) {
 
     private var deltaX: Float = 0f
     private var deltaY: Float = 0f
@@ -20,12 +20,12 @@ class FreeCamera(initialPosition: Vec3, initialDirection: Vec3, private val velo
 
     private var thrust = 0.0f
 
-    fun camera(projection: Projection, width: Int, height: Int, dt: Float): Camera {
+    fun camera(projection: ProjectionDeclaration, width: Int, height: Int, dt: Float): CameraDeclaration {
 
         if (startDirection != null) {
             val startRight = (startDirection!! % 1.y).normalize()
             val startUp = (startRight % startDirection!!).normalize()
-            val frustum =  projection as FrustumProjection // TODO !!!
+            val frustum =  projection as FrustumProjectionDeclaration // TODO !!!
             direction = (startDirection!! +
                     startRight * (-deltaX / width * frustum.width / frustum.near) +
                     startUp * (deltaY / height * frustum.height / frustum.near)).normalize()
@@ -35,7 +35,7 @@ class FreeCamera(initialPosition: Vec3, initialDirection: Vec3, private val velo
 
         position += direction * (velocity * dt * thrust)
 
-        return DefaultCamera(position, direction, up)
+        return context.camera(position, direction, up)
     }
 
     fun touch(touchEvent: TouchEvent) {

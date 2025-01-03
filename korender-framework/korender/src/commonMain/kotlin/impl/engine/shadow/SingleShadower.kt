@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.engine.shadow
 
-import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.camera.DefaultCamera
+import com.zakgof.korender.impl.camera.Camera
+import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.FrameBufferDeclaration
 import com.zakgof.korender.impl.engine.Inventory
@@ -16,11 +16,11 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
+import com.zakgof.korender.impl.projection.FrustumProjection
+import com.zakgof.korender.impl.projection.OrthoProjection
+import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
-import com.zakgof.korender.projection.FrustumProjection
-import com.zakgof.korender.projection.OrthoProjection
-import com.zakgof.korender.projection.Projection
 
 internal class SingleShadower(
     private val index: Int,
@@ -40,6 +40,7 @@ internal class SingleShadower(
 
     override fun render(
         renderContext: RenderContext,
+        lightDirection: Vec3,
         shadowCasters: List<Renderable>,
         fixer: (Any?) -> Any?
     ): Map<String, Any?> {
@@ -47,7 +48,7 @@ internal class SingleShadower(
         if (frameBuffer == null)
             return mapOf();
 
-        val matrices = updateShadowCamera(renderContext.projection, renderContext.camera, renderContext.lightDirection)
+        val matrices = updateShadowCamera(renderContext.projection, renderContext.camera, lightDirection)
         val shadowCamera = matrices.first
         val shadowProjection = matrices.second
         val casterUniforms = renderContext.uniforms() + mapOf(
@@ -65,7 +66,7 @@ internal class SingleShadower(
                     ShaderDeclaration(
                         "!shader/standart.vert",
                         "!shader/standart.frag",
-                        setOf("SHADOW_CASTER")
+                        setOf("SHADOW_CASTER", "NO_LIGHT")
                     )
                 )
 
@@ -144,6 +145,5 @@ internal class SingleShadower(
             camera.position + upFar - rightFar + toFar,
         )
     }
-
 
 }

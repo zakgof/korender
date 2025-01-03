@@ -6,7 +6,6 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.onClick
-import com.zakgof.korender.projection.FrustumProjection
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @OptIn(ExperimentalResourceApi::class)
@@ -14,7 +13,6 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 fun GuiExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     var clicked = false
     Frame {
-        Projection(FrustumProjection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f))
         Gui {
             Row {
                 Filler()

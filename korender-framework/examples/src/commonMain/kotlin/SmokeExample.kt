@@ -4,14 +4,15 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
+import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.y
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun SmokeExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+    background = Color(0xFF8090A0)
     Frame {
-        Sky(fastCloudSky())
         val n = 100
         for (i in 1..n) {
             val phase = fract(frameInfo.time * 0.5f + n.toFloat() / i)

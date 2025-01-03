@@ -16,22 +16,26 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun ObjFileExample() {
-    val orbitCamera = OrbitCamera(20.z, 0.z)
     Korender(appResourceLoader = { Res.readBytes(it) }) {
+        val orbitCamera = OrbitCamera(this, 20.z, 0.z)
         OnTouch { orbitCamera.touch(it) }
-        Light(Vec3(1.0f, -1.0f, -1.0f).normalize(), Color(1.0f, 7.0f, 7.0f, 7.0f))
-        Ambient(Color(1.0f, 0.3f, 0.3f, 0.3f))
         Frame {
-            Camera(orbitCamera.camera(projection, width, height))
+            DirectionalLight(Vec3(1.0f, -1.0f, -1.0f).normalize(), Color.white(7f))
+            AmbientLight(Color.white(0.2f))
+            camera = orbitCamera.camera(projection, width, height)
             Renderable(
                 standart {
                     baseColorTexture = texture("model/head.jpg")
-                    pbr.metallic = 0.1f
+                    pbr.metallic = 0.3f
                     pbr.roughness = 0.5f
                 },
                 mesh = obj("model/head.obj"),
                 transform = scale(7.0f).rotate(1.y, -PIdiv2)
             )
+            Gui {
+                Filler()
+                Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "Model generated using meshy.ai (CC BY 4.0)", color = Color(0xFF66FF55))
+            }
         }
     }
 }

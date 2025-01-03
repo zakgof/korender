@@ -16,14 +16,14 @@ import kotlin.math.sin
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun MeshesExample() {
-    val orbitCamera = OrbitCamera(20.z, 2.y)
     Korender(appResourceLoader = { Res.readBytes(it) }) {
+        val orbitCamera = OrbitCamera(this, 20.z, 2.y)
         OnTouch { orbitCamera.touch(it) }
         val materialModifier = standart {
             baseColorTexture = texture("sand.jpg")
         }
         Frame {
-            Camera(orbitCamera.camera(projection, width, height))
+            camera = orbitCamera.camera(projection, width, height)
             Renderable(
                 materialModifier,
                 mesh = customMesh(

@@ -15,11 +15,11 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun TransparencyExample() {
-    val orbitCamera = OrbitCamera(20.z, 0.y)
     Korender(appResourceLoader = { Res.readBytes(it) }) {
+        val orbitCamera = OrbitCamera(this, 20.z, 0.y)
         OnTouch { orbitCamera.touch(it) }
         Frame {
-            Camera(orbitCamera.camera(projection, width, height))
+            camera = orbitCamera.camera(projection, width, height)
             fun semitransparent(color: Color, position: Vec3) = Renderable(
                 standart {
                     baseColor = color

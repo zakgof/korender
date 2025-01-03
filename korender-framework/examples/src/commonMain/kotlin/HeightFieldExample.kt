@@ -12,11 +12,11 @@ import kotlin.math.sin
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun HeightFieldExample() {
-    val freeCamera = FreeCamera(10.y, Vec3(0f, -1f, -1f).normalize())
     Korender(appResourceLoader = { Res.readBytes(it) }) {
+        val freeCamera = FreeCamera(this, 10.y, Vec3(0f, -1f, -1f).normalize())
         Frame {
             OnTouch { freeCamera.touch(it) }
-            Camera(freeCamera.camera(projection, width, height, frameInfo.dt))
+            camera = freeCamera.camera(projection, width, height, frameInfo.dt)
             Renderable(
                 standart {
                     baseColorTexture = texture("sand.jpg")

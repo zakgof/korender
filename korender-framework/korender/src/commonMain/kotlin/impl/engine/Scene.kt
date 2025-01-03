@@ -9,7 +9,7 @@ import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 
 internal class Scene(
-    sceneDeclaration: SceneDeclaration,
+    private val sceneDeclaration: SceneDeclaration,
     private val inventory: Inventory,
     private val renderContext: RenderContext,
     time: Float
@@ -25,16 +25,12 @@ internal class Scene(
         sceneDeclaration.compilePasses()
         shadower = sceneDeclaration.shadow?.let { CascadeShadower(inventory, it.cascades) }
         val shadowCascades = shadower?.cascadeNumber ?: 0
-        shadowCasters =
-            if (sceneDeclaration.passes.isNotEmpty()) createShadowCasters(sceneDeclaration.passes[0].renderables) else listOf()
+        shadowCasters = if (sceneDeclaration.passes.isNotEmpty())
+            createShadowCasters(sceneDeclaration.passes[0].renderables)
+        else
+            listOf()
         passes = sceneDeclaration.passes.map {
-            ScenePass(
-                inventory,
-                renderContext,
-                it,
-                shadowCascades,
-                time
-            )
+            ScenePass(inventory, renderContext, it, shadowCascades, time)
         }
         touchBoxes = passes.flatMap { it.touchBoxes }
         touchBoxesHandler = { evt ->
@@ -60,30 +56,25 @@ internal class Scene(
                 value
         }
 
+        // TODO: shadow pass per light
         val shadowUniforms: Map<String, Any?> =
-            shadower?.render(renderContext, shadowCasters, fixer) ?: mapOf()
+            shadower?.render(renderContext, sceneDeclaration.passes[0].directionalLights[0].direction, shadowCasters, fixer) ?: mapOf()
         val passFrameBuffers = (0 until passes.size - 1)
             .map {
-                inventory.frameBuffer(
-                    FrameBufferDeclaration(
-                        "filter-$it",
-                        renderContext.width,
-                        renderContext.height,
-                        true
-                    )
-                )
+                inventory.frameBuffer(FrameBufferDeclaration("filter-$it", renderContext.width, renderContext.height,true))
             }
 
         val prevFrameContext = mutableMapOf<String, Any?>()
 
         val contextUniforms = renderContext.uniforms()
 
-        for (p in passes.indices) {
-            val totalContextUniforms = contextUniforms + shadowUniforms + prevFrameContext
+        passes.forEachIndexed { p, pass ->
+
+            val totalContextUniforms = contextUniforms + shadowUniforms + pass.lightUniforms + prevFrameContext
 
             val frameBuffer = if (p == passes.size - 1) null else passFrameBuffers[p % 2]
             renderTo(frameBuffer) {
-                passes[p].render(totalContextUniforms, fixer)
+                pass.render(totalContextUniforms, fixer)
             }
             prevFrameContext["filterColorTexture"] = frameBuffer?.colorTexture
             prevFrameContext["filterDepthTexture"] = frameBuffer?.depthTexture

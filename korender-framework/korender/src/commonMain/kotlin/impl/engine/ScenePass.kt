@@ -18,6 +18,8 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
+import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.Vec3
 
 internal class ScenePass(
     private val inventory: Inventory,
@@ -33,8 +35,12 @@ internal class ScenePass(
     private val transparents = mutableListOf<Renderable>()
     private val skies = mutableListOf<Renderable>()
     private val screens = mutableListOf<Renderable>()
+    val lightUniforms = mutableMapOf<String, Any?>()
 
     init {
+
+        fillLightUniforms(passDeclaration)
+
         passDeclaration.gltfs.forEach {
             inventory.gltf(it)?.let { l ->
                 passDeclaration.renderables += GltfSceneBuilder(inventory, it.gltfResource, l).build(time)
@@ -51,9 +57,28 @@ internal class ScenePass(
                 }
             }
         }
-        val guiRenderers = passDeclaration.guis.map { GuiRenderer(inventory, renderContext.width, renderContext.height, it) }
+        val guiRenderers = passDeclaration.guis.map {
+            GuiRenderer(inventory, renderContext.width, renderContext.height, it)
+        }
         screens.addAll(guiRenderers.flatMap { it.renderables })
         touchBoxes.addAll(guiRenderers.flatMap { it.touchBoxes })
+    }
+
+    private fun fillLightUniforms(passDeclaration: PassDeclaration) {
+        if (passDeclaration.directionalLights.isEmpty() && passDeclaration.pointLights.isEmpty()) {
+            passDeclaration.directionalLights.add(DirectionalLightDeclaration(Vec3(1f, -1f, 1f).normalize(), Color(1f, 7f, 7f, 7f)))
+        }
+        lightUniforms["ambientColor"] = passDeclaration.ambientLightColor
+        lightUniforms["numDirectionalLights"] = passDeclaration.directionalLights.size
+        (0 until 32).forEach { i ->
+            lightUniforms["directionalLights[$i].dir"] = if (i < passDeclaration.directionalLights.size) passDeclaration.directionalLights[i].direction else Vec3.ZERO
+            lightUniforms["directionalLights[$i].color"] = if (i < passDeclaration.directionalLights.size) passDeclaration.directionalLights[i].color else Color.White
+        }
+        lightUniforms["numPointLights"] = passDeclaration.pointLights.size
+        (0 until 32).forEach { i ->
+            lightUniforms["pointLights[$i].pos"] = if (i < passDeclaration.pointLights.size) passDeclaration.pointLights[i].position else Vec3.ZERO
+            lightUniforms["pointLights[$i].color"] = if (i < passDeclaration.pointLights.size) passDeclaration.pointLights[i].color else Color.White
+        }
     }
 
     fun render(contextUniforms: Map<String, Any?>, fixer: (Any?) -> Any?) {
@@ -75,4 +100,5 @@ internal class ScenePass(
             .forEach { it.render(contextUniforms, fixer) }
         glDepthMask(true)
     }
+
 }

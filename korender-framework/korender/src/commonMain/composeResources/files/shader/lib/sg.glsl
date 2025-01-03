@@ -1,5 +1,5 @@
 
-vec3 doSpecularGlosiness(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, vec3 ambientColor) {
+vec3 doSpecularGlosiness(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor) {
 
 #ifdef SPECULAR_GLOSSINESS_MAP
     vec4 sgtexel = texture(specularGlossinessTexture, vtex);
@@ -28,7 +28,5 @@ vec3 doSpecularGlosiness(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, v
     float G = geometrySmith(NdotV, NdotL, roughness);
     vec3 f_specular = F * D * G / max(4.0 * NdotV * NdotL, 0.000001);
 
-    vec3 material = (f_diffuse + f_specular) * NdotL * lightColor;
-
-    return material + ambientColor * albedo.rgb;
+    return (f_diffuse + f_specular) * NdotL * lightColor;
 }

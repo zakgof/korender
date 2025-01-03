@@ -3,15 +3,18 @@ package com.zakgof.korender.impl.engine
 import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.AsyncContext
 import com.zakgof.korender.BlurParams
+import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
+import com.zakgof.korender.FrustumProjectionDeclaration
 import com.zakgof.korender.IndexType
-import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
+import com.zakgof.korender.OrthoProjectionDeclaration
+import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.StandartParams
@@ -21,16 +24,17 @@ import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.WaterParams
-import com.zakgof.korender.camera.Camera
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.impl.camera.Camera
+import com.zakgof.korender.impl.camera.DefaultCamera
+import com.zakgof.korender.impl.checkGlError
 import com.zakgof.korender.impl.geometry.Cube
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.geometry.HeightField
 import com.zakgof.korender.impl.geometry.ObjMesh
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.geometry.Sphere
-import com.zakgof.korender.impl.gl.GL.glGetError
 import com.zakgof.korender.impl.material.InternalAdjustParams
 import com.zakgof.korender.impl.material.InternalBlurParams
 import com.zakgof.korender.impl.material.InternalFastCloudSkyParams
@@ -42,9 +46,11 @@ import com.zakgof.korender.impl.material.InternalStandartParams
 import com.zakgof.korender.impl.material.InternalWaterParams
 import com.zakgof.korender.impl.material.ParamUniforms
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
+import com.zakgof.korender.impl.projection.FrustumProjection
+import com.zakgof.korender.impl.projection.OrthoProjection
+import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.projection.Projection
 import kotlinx.coroutines.channels.Channel
 
 internal class Engine(
@@ -185,27 +191,38 @@ internal class Engine(
                 it.pluginUniforms += ParamUniforms(InternalFastCloudSkyParams(), block)
             }
 
+        override fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration =
+            FrustumProjection(width, height, near, far)
 
-        override fun Camera(camera: Camera) {
-            renderContext.camera = camera
-        }
+        override fun ortho(width: Float, height: Float, near: Float, far: Float): OrthoProjectionDeclaration =
+            OrthoProjection(width, height, near, far)
 
-        override fun Projection(projection: Projection) {
-            renderContext.projection = projection
-        }
+        override fun camera(position: Vec3, direction: Vec3, up: Vec3): CameraDeclaration =
+            DefaultCamera(position, direction, up)
 
-        override fun Light(direction: Vec3, color: Color) {
-            renderContext.lightDirection = direction
-            renderContext.lightColor = color
-        }
+        override var camera: CameraDeclaration
+            get() = renderContext.camera
+            set(value) {
+                renderContext.camera = value as Camera
+            }
 
-        override fun Ambient(color: Color) {
-            renderContext.ambientColor = color
-        }
+        override var projection: ProjectionDeclaration
+            get() = renderContext.projection
+            set(value) {
+                renderContext.projection = value as Projection
+            }
 
-        override fun Background(color: Color) {
-            renderContext.backgroundColor = color
-        }
+        override var background: Color
+            get() = renderContext.backgroundColor
+            set(value) {
+                renderContext.backgroundColor = value
+            }
+
+        override val width: Int
+            get() = renderContext.width
+
+        override val height: Int
+            get() = renderContext.height
     }
 
     init {
@@ -218,25 +235,12 @@ internal class Engine(
         processTouches()
         val sd = SceneDeclaration()
         frameBlocks.forEach {
-            DefaultFrameContext(
-                sd,
-                frameInfo,
-                renderContext.width,
-                renderContext.height,
-                renderContext.projection,
-                renderContext.camera,
-                renderContext.lightDirection
-            ).apply(
-                it
-            )
+            DefaultFrameContext(sd, frameInfo).apply(it)
         }
         inventory.go {
             val scene = Scene(sd, inventory, renderContext, frameInfo.time)
             scene.render()
-            val error = glGetError()
-            if (error != 0) {
-                throw KorenderException("Frame error $error")
-            }
+            checkGlError()
             sceneTouchBoxesHandler = scene.touchBoxesHandler
         }
     }

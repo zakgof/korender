@@ -12,7 +12,10 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 @Composable
 fun MetallicRoughnessExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
-        Light(Vec3(1.0f, -1.0f, -1.0f).normalize())
+        background = Color(1.0f, 0.1f, 0.1f, 0.15f)
+        DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), Color.white(3f))
+        DirectionalLight(Vec3(-1.0f, 1.0f, 0.0f), Color.white(0.2f))
+        AmbientLight(Color.Black)
         for (m in 0..4) {
             for (r in 0..4) {
                 Renderable(

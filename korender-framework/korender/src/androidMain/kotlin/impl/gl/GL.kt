@@ -1,13 +1,9 @@
-package com.zakgof.korender.gl
+package com.zakgof.korender.impl.gl
 
 import android.opengl.GLES11
 import android.opengl.GLES20
-import com.zakgof.korender.impl.gl.GLBuffer
-import com.zakgof.korender.impl.gl.GLFrameBuffer
-import com.zakgof.korender.impl.gl.GLProgram
-import com.zakgof.korender.impl.gl.GLShader
-import com.zakgof.korender.impl.gl.GLTexture
-import com.zakgof.korender.impl.gl.GLUniformLocation
+import android.opengl.GLES30
+import com.zakgof.korender.impl.buffer.NativeByteBuffer
 
 actual object GL {
 
@@ -51,7 +47,7 @@ actual object GL {
         border: Int,
         format: Int,
         type: Int,
-        pixels: Byter?
+        pixels: NativeByteBuffer?
     ) = GLES11.glTexImage2D(
         target, level, internalformat, width, height, border, format, type, pixels?.byteBuffer
     )
@@ -82,7 +78,7 @@ actual object GL {
     actual fun glBindBuffer(target: Int, buffer: GLBuffer) =
         GLES20.glBindBuffer(target, buffer.buffer)
 
-    actual fun glBufferData(target: Int, data: BufferData<out Any>, usage: Int) =
+    actual fun glBufferData(target: Int, data: NativeByteBuffer, usage: Int) =
         GLES20.glBufferData(target, data.byteBuffer.remaining(), data.byteBuffer, usage)
 
     actual fun glGenBuffers() =
@@ -121,17 +117,11 @@ actual object GL {
     actual fun glGetProgramInfoLog(program: GLProgram): String =
         GLES20.glGetProgramInfoLog(program.program)
 
-    actual fun glGetProgramiv(program: GLProgram, pname: Int, params: Inter) =
-        GLES20.glGetProgramiv(program.program, pname, params.intBuffer)
+    actual fun glGetActiveUniform(program: GLProgram, index: Int): String =
+        GLES20.glGetActiveUniform(program.program, index, IntArray(1) { 0 }, 0, IntArray(1) { 0 }, 0)
 
-    actual fun glGetActiveUniform(program: GLProgram, index: Int, size: Inter, type: Inter): String =
-        GLES20.glGetActiveUniform(program.program, index, size.intBuffer, type.intBuffer)
-
-    actual fun glGetActiveAttrib(
-        program: GLProgram, index: Int, size: Inter, type: Inter
-    ): String = GLES20.glGetActiveAttrib(
-        program.program, index, size.intBuffer, type.intBuffer
-    )
+    actual fun glGetActiveAttrib(program: GLProgram, index: Int): String =
+        GLES20.glGetActiveAttrib(program.program, index, IntArray(1) { 0 }, 0, IntArray(1) { 0 }, 0)
 
     actual fun glShaderSource(
         shader: GLShader, source: String
@@ -141,9 +131,6 @@ actual object GL {
 
     actual fun glCompileShader(shader: GLShader) =
         GLES20.glCompileShader(shader.glHandle)
-
-    actual fun glGetShaderiv(shader: GLShader, pname: Int, params: Inter) =
-        GLES20.glGetShaderiv(shader.glHandle, pname, params.intBuffer)
 
     actual fun glEnableVertexAttribArray(index: Int) =
         GLES20.glEnableVertexAttribArray(index)
@@ -174,14 +161,14 @@ actual object GL {
     actual fun glUniform4f(location: GLUniformLocation, v0: Float, v1: Float, v2: Float, v3: Float) =
         GLES20.glUniform4f(location.glHandle, v0, v1, v2, v3)
 
-    actual fun glUniformMatrix2fv(location: GLUniformLocation, transpose: Boolean, value: Floater) =
-        GLES20.glUniformMatrix2fv(location.glHandle, 1, transpose, value.floatBuffer)
+    actual fun glUniformMatrix2fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray) =
+        GLES20.glUniformMatrix2fv(location.glHandle, 1, transpose, value, 0)
 
-    actual fun glUniformMatrix3fv(location: GLUniformLocation, transpose: Boolean, value: Floater) =
-        GLES20.glUniformMatrix3fv(location.glHandle, 1, transpose, value.floatBuffer)
+    actual fun glUniformMatrix3fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray) =
+        GLES20.glUniformMatrix3fv(location.glHandle, 1, transpose, value, 0)
 
-    actual fun glUniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, value: Floater) =
-        GLES20.glUniformMatrix4fv(location.glHandle, 1, transpose, value.floatBuffer)
+    actual fun glUniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray) =
+        GLES20.glUniformMatrix4fv(location.glHandle, 1, transpose, value, 0)
 
     actual fun glVertexAttribPointer(
         index: Int,
@@ -193,7 +180,16 @@ actual object GL {
     ) =
         GLES20.glVertexAttribPointer(index, size, type, normalized, stride, pointer)
 
-    actual fun glGetShaderi(shader: GLShader, pname: Int) : Int =
+    actual fun glVertexAttribIPointer(
+        index: Int,
+        size: Int,
+        type: Int,
+        stride: Int,
+        pointer: Int
+    ) =
+        GLES30.glVertexAttribIPointer(index, size, type, stride, pointer)
+
+    actual fun glGetShaderi(shader: GLShader, pname: Int): Int =
         intViaArray { GLES20.glGetShaderiv(shader.glHandle, pname, it, 0) }
 
     actual fun glDeleteShader(shader: GLShader) =
@@ -227,4 +223,18 @@ actual object GL {
         GLES20.glCheckFramebufferStatus(target)
 
     private fun intViaArray(function: (IntArray) -> Unit) = IntArray(1).apply(function)[0]
+
+    actual fun glBindVertexArray(vertexArray: GLVertexArray?) =
+        GLES30.glBindVertexArray(vertexArray?.glHandle ?: 0)
+
+    actual fun glBindAttribLocation(program: GLProgram, index: Int, attr: String) =
+        GLES20.glBindAttribLocation(program.program, index, attr)
+
+    actual fun glGenVertexArrays(): GLVertexArray =
+        GLVertexArray(IntArray(1).also {
+            GLES30.glGenVertexArrays(1, it, 0)
+        }[0])
+
+    actual fun glDeleteVertexArrays(vertexArray: GLVertexArray) =
+        GLES30.glDeleteVertexArrays(1, intArrayOf(vertexArray.glHandle), 0)
 }

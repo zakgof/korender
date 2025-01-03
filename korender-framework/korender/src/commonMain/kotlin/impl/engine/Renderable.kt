@@ -1,6 +1,6 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.camera.Camera
+import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.InstancedBillboard
@@ -16,7 +16,7 @@ internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms:
         fun create(inventory: Inventory, declaration: RenderableDeclaration, camera: Camera, isShadowCaster: Boolean, shadowCascades: Int = 0): Renderable? {
             val mesh = inventory.mesh(declaration.mesh) ?: return null
 
-            val additionalShadowFlags = if (isShadowCaster) listOf("SHADOW_CASTER") else (0..<shadowCascades).map { "SHADOW_RECEIVER$it" }
+            val additionalShadowFlags = if (isShadowCaster) listOf("SHADOW_CASTER", "NO_LIGHT") else (0..<shadowCascades).map { "SHADOW_RECEIVER$it" }
             val origShader = declaration.shader
             val modifiedShader = ShaderDeclaration(
                 origShader.vertFile, origShader.fragFile,

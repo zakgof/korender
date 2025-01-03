@@ -91,5 +91,4 @@ interface FastCloudSkyParams {
 }
 
 enum class RenderingOption {
-
 }

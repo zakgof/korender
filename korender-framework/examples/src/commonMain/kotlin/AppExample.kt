@@ -32,6 +32,7 @@ fun AppExample() {
         Demo("Transparency") { TransparencyExample() },
         Demo("Meshes") { MeshesExample() },
         Demo(".obj file") { ObjFileExample() },
+        Demo("Lights") { LightsExample() },
         Demo("Instanced billboards") { InstancedBillboardsExample() },
         Demo("Instanced meshes") { InstancedMeshesExample() },
         Demo("Heightfield") { HeightFieldExample() },

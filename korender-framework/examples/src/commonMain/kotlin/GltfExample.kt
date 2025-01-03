@@ -13,12 +13,12 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun GltfExample() = Korender (appResourceLoader = { Res.readBytes(it) }) {
-    val orbitCamera = OrbitCamera(20.z, 2.y)
+    val orbitCamera = OrbitCamera(this, 20.z, 2.y)
     OnTouch { orbitCamera.touch(it) }
-    Light(Vec3(1.0f, -1.0f, -1.0f).normalize(), Color(1.0f, 7.0f, 7.0f, 7.0f))
-    Ambient(Color(1.0f, 0.6f, 0.6f, 0.6f))
     Frame {
-        Camera(orbitCamera.camera(projection, width, height))
+        camera = orbitCamera.camera(projection, width, height)
+        DirectionalLight(Vec3(1.0f, -1.0f, -1.0f).normalize(), Color(1.0f, 7.0f, 7.0f, 7.0f))
+        AmbientLight(Color(1.0f, 0.6f, 0.6f, 0.6f))
         Scene(gltfResource = "gltf/ai/swat.glb")
         Gui {
             Filler()
