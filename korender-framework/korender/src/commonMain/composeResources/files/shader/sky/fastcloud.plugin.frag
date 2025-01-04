@@ -11,7 +11,7 @@ uniform vec4 darkblue;
 
 vec3 sky(vec3 look) {
 
-    vec2 uv = skydiskfromlook(look, 2.5) + time * 0.001;
+    vec2 uv = skydiskfromlook(look, 4.5) + time * 0.001;
 
     float f = thickness * ((fbm2(uv * scale) - 0.5) +
               rippleamount * (fbm2(uv * scale * ripplescale) - 0.5)) +

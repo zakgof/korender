@@ -32,7 +32,8 @@ fun AppExample() {
         Demo("Transparency") { TransparencyExample() },
         Demo("Dynamic meshes") { MeshesExample() },
         Demo(".obj file") { ObjFileExample() },
-        Demo("Lights") { LightsExample() },
+        Demo(".gltf scene") { GltfExample() },
+        Demo("Point lights") { LightsExample() },
         Demo("Instanced billboards") { InstancedBillboardsExample() },
         Demo("Instanced meshes") { InstancedMeshesExample() },
         Demo("Shadow mapping") { ShadowExample() },
@@ -41,11 +42,10 @@ fun AppExample() {
         Demo("Fireball effect") { FireBallExample() },
         Demo("Smoke effect") { SmokeExample() },
         Demo("GUI") { GuiExample() },
-        Demo("Sky") { SkyExample() },
-        Demo("Gltf scene") { GltfExample() }
+        Demo("Sky") { SkyExample() }
     )
 
-    var selectedOption by remember { mutableStateOf(options.last()) }
+    var selectedOption by remember { mutableStateOf(options.first()) }
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     val backgroundColor = Color(0xFF181818)
@@ -67,7 +67,7 @@ fun AppExample() {
             Text(
                 modifier = Modifier.padding(8.dp),
                 text = "Korender Demo",
-                fontSize = 16.sp,
+                fontSize = 18.sp,
                 color = textColor
             )
             options.map { option ->
@@ -75,7 +75,7 @@ fun AppExample() {
                     modifier = Modifier
                         .background(color = if (option == selectedOption) selectColor else backgroundColor)
                         .clickable { selectedOption = option }
-                        .padding(8.dp, 4.dp),
+                        .padding(12.dp, 6.dp),
                     text = option.title,
                     fontSize = 12.sp,
                     color = textColor

@@ -20,7 +20,7 @@ fun LightsExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
         camera = camera(Vec3(0f, 3f, 20f), -1.z, 1.y)
         Frame {
-            PointLight(2.y + 4.x * sin(frameInfo.time) + 4.z * cos(frameInfo.time), Color.Red)
+            PointLight(2.y + 4.x * sin(frameInfo.time + 0f) + 4.z * cos(frameInfo.time + 0f), Color.Red)
             PointLight(2.y + 4.x * sin(frameInfo.time + 2f) + 4.z * cos(frameInfo.time + 2f), Color.Green)
             PointLight(2.y + 4.x * sin(frameInfo.time + 4f) + 4.z * cos(frameInfo.time + 4f), Color.Blue)
             AmbientLight(Color.white(0.05f))
@@ -32,7 +32,7 @@ fun LightsExample() =
                     pbr.roughness = 0.8f
                 },
                 mesh = cube(1f),
-                transform = scale(20f, 1f, 20f)
+                transform = scale(10f, 1f, 10f)
             )
 
             Renderable(

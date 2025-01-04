@@ -69,7 +69,7 @@ uniform sampler2D normalTexture;
 
 #endif
 
-// TODO TRIPLANAR AND APERIODIC FOR EVERYTHING
+// TODO TRIPLANAR, DETAIL FOR EVERYTHING
 
 #ifdef TRIPLANAR
   uniform float triplanarScale;
@@ -132,7 +132,6 @@ void main() {
     #endif
 
     vec3 V = normalize(cameraPos - vpos);
-
 
     float shadowRatio = 0.;
     #ifdef SHADOW_RECEIVER0
