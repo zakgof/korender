@@ -79,13 +79,24 @@ internal actual object Platform {
             canvas.width = 16 * 256
             val ctx = canvas.getContext("2d") as CanvasRenderingContext2D
             ctx.font = "256px KorenderFont"
-            ctx.fillStyle = "white".toJsString()
-            ctx.clearRect(0.0, 0.0, canvas.width.toDouble(), canvas.height.toDouble())
             val texts = (0 until 128).map { "" + it.toChar() }
+            val origMetrics = texts.map { ctx.measureText(it) }
+            val actualBbHeight = origMetrics.maxOfOrNull { it.actualBoundingBoxDescent + it.actualBoundingBoxAscent }!!
+            val fittingHeight = (256 * 256 / actualBbHeight).toInt() + 1
+            println("Effective height: $fittingHeight")
+            ctx.font = "${fittingHeight}px KorenderFont"
+            ctx.fillStyle = "white".toJsString()
+
             val metrics = texts.map { ctx.measureText(it) }
+            val maxDescent = origMetrics.maxOfOrNull { it.actualBoundingBoxDescent }!!
+
+            ctx.clearRect(0.0, 0.0, canvas.width.toDouble(), canvas.height.toDouble())
             val widths = metrics.map { it.width.toFloat() / 256.0f }.toFloatArray()
-            val maxDescent = metrics.maxOfOrNull { it.actualBoundingBoxDescent }!!
+
             texts.indices.forEach {
+//                ctx.fillStyle = listOf("red".toJsString(), "blue".toJsString(), "magenta".toJsString())[it % 3]
+//                ctx.fillRect((it % 16) * 256.0, (it / 16) * 256.0, 256.0, 256.0)
+//                ctx.fillStyle = "white".toJsString()
                 ctx.fillText(
                     texts[it],
                     (it % 16) * 256.0,
@@ -105,6 +116,8 @@ internal actual object Platform {
                 ctx.canvas.height,
                 byteArray
             )
+//            println("FONT IMAGE DUMP")
+//            println(canvas.toDataURL())
             FontDef(image, widths)
         }
     }
