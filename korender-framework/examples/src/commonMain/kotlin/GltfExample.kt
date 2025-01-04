@@ -18,7 +18,7 @@ fun GltfExample() = Korender (appResourceLoader = { Res.readBytes(it) }) {
     Frame {
         camera = orbitCamera.camera(projection, width, height)
         DirectionalLight(Vec3(1.0f, -1.0f, -1.0f).normalize(), Color(1.0f, 7.0f, 7.0f, 7.0f))
-        AmbientLight(Color(1.0f, 0.6f, 0.6f, 0.6f))
+        AmbientLight(Color.white(0.6f))
         Scene(gltfResource = "gltf/ai/swat.glb")
         Gui {
             Filler()

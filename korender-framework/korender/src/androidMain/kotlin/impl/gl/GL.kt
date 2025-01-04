@@ -24,13 +24,8 @@ actual object GL {
         GLES11.glDeleteTextures(1, intArrayOf(texture.texture), 0)
 
     actual fun glPixelStorei(pname: Int, param: Int) = GLES11.glPixelStorei(pname, param)
-    actual fun glGenTextures(): GLTexture =
-        com.zakgof.korender.impl.gl.GLTexture(IntArray(1).also {
-            GLES11.glGenTextures(
-                1,
-                it,
-                0
-            )
+    actual fun glGenTextures(): GLTexture = GLTexture(IntArray(1).also {
+            GLES11.glGenTextures(1, it, 0)
         }[0])
 
     actual fun glBlendFunc(sfactor: Int, dfactor: Int) = GLES11.glBlendFunc(sfactor, dfactor)
@@ -165,10 +160,10 @@ actual object GL {
         GLES20.glUniformMatrix2fv(location.glHandle, 1, transpose, value, 0)
 
     actual fun glUniformMatrix3fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray) =
-        GLES20.glUniformMatrix3fv(location.glHandle, 1, transpose, value, 0)
+        GLES20.glUniformMatrix3fv(location.glHandle, value.size / 9, transpose, value, 0)
 
     actual fun glUniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray) =
-        GLES20.glUniformMatrix4fv(location.glHandle, 1, transpose, value, 0)
+        GLES20.glUniformMatrix4fv(location.glHandle, value.size / 16, transpose, value, 0)
 
     actual fun glVertexAttribPointer(
         index: Int,

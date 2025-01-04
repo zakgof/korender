@@ -9,6 +9,8 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.Typeface
+import android.opengl.GLES20
+import android.opengl.GLES30
 import android.opengl.GLSurfaceView
 import android.os.Build
 import android.view.View
@@ -42,6 +44,7 @@ import java.util.concurrent.atomic.AtomicReference
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import kotlin.math.max
+
 
 val androidContext = AtomicReference<Context>(null)
 

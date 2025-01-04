@@ -1,12 +1,15 @@
 package com.zakgof.korender.impl.gltf
 
 import com.zakgof.korender.Attributes.JOINTS_BYTE
+import com.zakgof.korender.Attributes.JOINTS_INT
+import com.zakgof.korender.Attributes.JOINTS_SHORT
 import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Attributes.WEIGHTS
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
@@ -19,6 +22,7 @@ import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.gl.GLConstants
+import com.zakgof.korender.impl.glgpu.toGL
 import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
 import com.zakgof.korender.impl.material.InternalStandartParams
 import com.zakgof.korender.impl.material.MaterialBuilder
@@ -381,7 +385,8 @@ internal class GltfSceneBuilder(
         val indicesAccessor = primitive.indices?.let { gltfLoaded.model.accessors!![it] }
         val verticesAttributeAccessors = primitive.attributes
             .mapNotNull { p ->
-                attributeByGltfName(p.key)?.let { it to gltfLoaded.model.accessors!![p.value] }
+                val accessor = gltfLoaded.model.accessors!![p.value]
+                attributeForAccessor(p.key, accessor)?.let { it to accessor }
             }
 
         return CustomMesh(
@@ -399,13 +404,19 @@ internal class GltfSceneBuilder(
         }
     }
 
-    private fun attributeByGltfName(key: String) = when (key) {
-        "POSITION" -> POS
-        "NORMAL" -> NORMAL
-        "TEXCOORD_0" -> TEX
-        "JOINTS_0" -> JOINTS_BYTE // TODO
-        "WEIGHTS_0" -> WEIGHTS
-        else -> null
+    private fun attributeForAccessor(key: String, accessor: Gltf.Accessor): MeshAttribute? {
+        val candidates = when (key) {
+            "POSITION" -> listOf(POS)
+            "NORMAL" -> listOf(NORMAL)
+            "TEXCOORD_0" -> listOf(TEX)
+            "JOINTS_0" -> listOf(JOINTS_BYTE, JOINTS_SHORT, JOINTS_INT)
+            "WEIGHTS_0" -> listOf(WEIGHTS)
+            else -> null
+        }
+        return candidates?.firstOrNull {
+            it.structSize == accessor.elementComponentSize()
+                    && it.primitiveType.toGL() == accessor.componentType
+        }
     }
 
     private fun accessorComponentTypeToIndexType(componentType: Int) =

@@ -25,7 +25,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_BYTE
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_INT
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_SHORT
 
-internal fun AttributeType.toGL() : Int = when (this) {
+internal fun AttributeType.toGL(): Int = when (this) {
     AttributeType.Byte -> GL_UNSIGNED_BYTE
     AttributeType.Short -> GL_UNSIGNED_SHORT
     AttributeType.Int -> GL_UNSIGNED_INT
@@ -70,17 +70,15 @@ internal class GlGpuMesh(
 
             if (attr.primitiveType == AttributeType.Float)
                 glVertexAttribPointer(attr.location, attr.structSize, attr.primitiveType.toGL(), false, 0, 0)
-            else
+            else {
+                println("" + vb[index].byte(0) + " " + vb[index].byte(1) + " " + vb[index].byte(2) + " " + vb[index].byte(3));
                 glVertexAttribIPointer(attr.location, attr.structSize, attr.primitiveType.toGL(), 0, 0)
+            }
             glEnableVertexAttribArray(attr.location)
-
-            println("Update attr data in GPU: ${attr.name} ${vb[index]}")
         }
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib, usage)
-
-        println("Update index data in GPU: $ib ")
 
         glBindVertexArray(null)
     }
@@ -94,7 +92,7 @@ internal class GlGpuMesh(
                 IndexType.Byte -> GL_UNSIGNED_BYTE
                 IndexType.Short -> GL_UNSIGNED_SHORT
                 IndexType.Int -> GL_UNSIGNED_INT
-            } ,
+            },
             0
         )
         glBindVertexArray(null)

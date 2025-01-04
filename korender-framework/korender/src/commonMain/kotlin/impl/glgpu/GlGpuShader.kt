@@ -71,8 +71,6 @@ internal class GlGpuShader(
         glLinkProgram(programHandle)
         glValidateProgram(programHandle)
 
-        println(fragmentShaderText)
-
         val vertexLog: String = glGetShaderInfoLog(vertexShaderHandle)
         if (vertexLog.isNotEmpty()) {
             println(

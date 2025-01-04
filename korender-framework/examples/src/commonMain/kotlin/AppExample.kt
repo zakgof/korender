@@ -35,7 +35,6 @@ fun AppExample() {
         Demo("Lights") { LightsExample() },
         Demo("Instanced billboards") { InstancedBillboardsExample() },
         Demo("Instanced meshes") { InstancedMeshesExample() },
-        Demo("Heightfield") { HeightFieldExample() },
         Demo("Shadow mapping") { ShadowExample() },
         Demo("Adjustment filter") { FilterExample() },
         Demo("Blur filter") { BlurExample() },
@@ -44,11 +43,10 @@ fun AppExample() {
         Demo("Smoke effect") { SmokeExample() },
         Demo("GUI") { GuiExample() },
         Demo("Sky") { SkyExample() },
-        Demo("Shader plugin" ) { ShaderPluginExample() },
         Demo("Gltf scene") { GltfExample() }
     )
 
-    var selectedOption by remember { mutableStateOf(options[1]) }
+    var selectedOption by remember { mutableStateOf(options.last()) }
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     val backgroundColor = Color(0xFF181818)

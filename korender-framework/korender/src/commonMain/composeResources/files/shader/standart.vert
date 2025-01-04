@@ -59,8 +59,8 @@ void main() {
         weights.z * jointMatrices[joints.z] * inverseBindMatrices[joints.z] +
         weights.w * jointMatrices[joints.w] * inverseBindMatrices[joints.w];
 
-vec4 worldPos =  (skinningMatrix * vec4(pos, 1.0));
-    vnormal = mat3(transpose(inverse( skinningMatrix))) * normal;
+    vec4 worldPos = (skinningMatrix * vec4(pos, 1.0));
+    vnormal = mat3(transpose(inverse(skinningMatrix))) * normal;
 #else
     vec4 worldPos = model * vec4(pos, 1.0);
     vnormal = mat3(transpose(inverse(model))) * normal;
@@ -68,7 +68,6 @@ vec4 worldPos =  (skinningMatrix * vec4(pos, 1.0));
 
     vpos = worldPos.xyz;
     vtex = tex;
-
 
     #ifdef SHADOW_RECEIVER0
 	  vshadow0 = (biasMatrix * shadowProjection0 * shadowView0 * worldPos).xyz;
