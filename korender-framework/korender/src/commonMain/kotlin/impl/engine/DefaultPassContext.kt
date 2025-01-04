@@ -23,8 +23,8 @@ internal class DefaultPassContext(
     override val frameInfo: FrameInfo
 ) : PassContext {
 
-    override fun Scene(gltfResource: String) {
-        passDeclaration.gltfs += GltfDeclaration(gltfResource)
+    override fun Scene(gltfResource: String, transform: Transform) {
+        passDeclaration.gltfs += GltfDeclaration(gltfResource, transform)
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean) {

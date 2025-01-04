@@ -5,6 +5,7 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -19,7 +20,7 @@ fun GltfExample() = Korender (appResourceLoader = { Res.readBytes(it) }) {
         camera = orbitCamera.camera(projection, width, height)
         DirectionalLight(Vec3(1.0f, -1.0f, -1.0f).normalize(), Color(1.0f, 7.0f, 7.0f, 7.0f))
         AmbientLight(Color.white(0.6f))
-        Scene(gltfResource = "gltf/ai/swat.glb")
+        Scene(gltfResource = "gltf/ai/swat.glb", transform = scale(0.03f).rotate(1.y, frameInfo.time))
         Gui {
             Filler()
             Text(id = "fps", fontResource = "font/orbitron.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFF66FF55))

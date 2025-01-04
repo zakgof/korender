@@ -114,7 +114,10 @@ internal class ShadowDeclaration {
 
 internal data class CascadeDeclaration(val mapSize: Int, val near: Float, var far: Float)
 
-internal data class GltfDeclaration(val gltfResource: String)
+internal class GltfDeclaration(val gltfResource: String, val transform: Transform = Transform()) {
+    override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.gltfResource == gltfResource)
+    override fun hashCode(): Int = gltfResource.hashCode()
+}
 
 internal class PointLightDeclaration(val position: Vec3, val color: Color)
 

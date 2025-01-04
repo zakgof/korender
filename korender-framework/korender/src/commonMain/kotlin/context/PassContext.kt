@@ -18,7 +18,7 @@ interface PassContext {
     fun Gui(block: GuiContainerContext.() -> Unit)
     fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: Any, count: Int, mesh: MeshDeclaration, static: Boolean = false, transparent: Boolean = false, block: InstancedRenderablesContext.() -> Unit)
     fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, transparent: Boolean = false, block: InstancedBillboardsContext.() -> Unit)
-    fun Scene(gltfResource: String)
+    fun Scene(gltfResource: String, transform: Transform = Transform())
 
     fun DirectionalLight(direction: Vec3, color: Color = Color.White)
     fun PointLight(position: Vec3, color: Color = Color.White)

@@ -43,7 +43,6 @@ class LoadedSkin(val inverseBindMatrices: List<Mat4>, var jointMatrices: List<Ma
 
 internal object GltfLoader {
 
-
     private val json = Json {
         ignoreUnknownKeys = true
     }
@@ -156,6 +155,7 @@ internal object GltfLoader {
 internal class GltfSceneBuilder(
     val inventory: Inventory,
     private val resource: String,
+    private val globalTransform: Transform,
     private val gltfLoaded: GltfLoaded
 ) {
 
@@ -189,10 +189,10 @@ internal class GltfSceneBuilder(
 
         scene.nodes.forEach { nodeIndex ->
             processNode(
-                Transform().scale(0.03f),
+                globalTransform,
                 nodeIndex,
                 model.nodes!![nodeIndex]
-            ) // TODO debug scale
+            )
         }
         model.skins?.mapIndexed { skinIndex, skin ->
             loadedSkins[skinIndex].jointMatrices = skin.joints.map { nodeMatrices[it]!!.mat4 }
