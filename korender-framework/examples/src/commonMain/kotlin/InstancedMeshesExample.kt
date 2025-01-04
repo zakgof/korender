@@ -21,7 +21,7 @@ fun InstancedMeshesExample() = Korender(appResourceLoader = { Res.readBytes(it) 
         camera = freeCamera.camera(projection, width, height, frameInfo.dt)
         InstancedRenderables(
             standart {
-                baseColorTexture = texture("sand.jpg")
+                baseColorTexture = texture("texture/asphalt-albedo.jpg")
                 pbr.metallic = 0.1f
             },
             id = "particles",
@@ -41,12 +41,12 @@ fun InstancedMeshesExample() = Korender(appResourceLoader = { Res.readBytes(it) 
                 Column {
                     Filler()
                     Image(
-                        imageResource = "accelerate.png",
+                        imageResource = "texture/accelerate.png",
                         width = 128,
                         height = 128,
                         onTouch = { freeCamera.forward(it) })
                     Image(
-                        imageResource = "decelerate.png",
+                        imageResource = "texture/decelerate.png",
                         width = 128,
                         height = 128,
                         onTouch = { freeCamera.backward(it) })

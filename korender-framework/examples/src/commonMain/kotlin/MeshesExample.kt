@@ -8,6 +8,7 @@ import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
+import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
@@ -20,7 +21,7 @@ fun MeshesExample() {
         val orbitCamera = OrbitCamera(this, 20.z, 2.y)
         OnTouch { orbitCamera.touch(it) }
         val materialModifier = standart {
-            baseColorTexture = texture("sand.jpg")
+            baseColor = Color.Blue
         }
         Frame {
             camera = orbitCamera.camera(projection, width, height)

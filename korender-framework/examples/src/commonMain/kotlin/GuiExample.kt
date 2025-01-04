@@ -16,7 +16,7 @@ fun GuiExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         Gui {
             Row {
                 Filler()
-                Image(imageResource = "korender32.png", width = 100, height = 100)
+                Image(imageResource = "texture/korender32.png", width = 100, height = 100)
                 Text(id = "title", fontResource = "font/anta.ttf", height = 100, text = "Korender Demo", color = Color(0xFF803456))
                 Filler()
             }

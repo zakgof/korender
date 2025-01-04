@@ -20,7 +20,7 @@ fun InstancedBillboardsExample() = Korender(appResourceLoader = { Res.readBytes(
     Frame {
         InstancedBillboards(
             standart {
-                baseColorTexture = texture("splat.png")
+                baseColorTexture = texture("texture/splat.png")
             },
             id = "particles",
             count = particleNum,

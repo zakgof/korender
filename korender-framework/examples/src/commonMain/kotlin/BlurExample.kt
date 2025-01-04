@@ -15,7 +15,7 @@ fun BlurExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         Pass {
             Renderable(
                 standart {
-                    baseColorTexture = texture("sand.jpg")
+                    baseColorTexture = texture("texture/asphalt-albedo.jpg")
                 },
                 mesh = sphere(3f),
                 transform = translate(-2.x)
@@ -33,7 +33,7 @@ fun BlurExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             })
             Renderable(
                 standart {
-                    baseColorTexture = texture("sand.jpg")
+                    baseColorTexture = texture("texture/asphalt-albedo.jpg")
                 },
                 mesh = sphere(3f),
                 transform = translate(2.x)
