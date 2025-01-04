@@ -9,8 +9,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.Typeface
-import android.opengl.GLES20
-import android.opengl.GLES30
 import android.opengl.GLSurfaceView
 import android.os.Build
 import android.view.View
@@ -43,7 +41,6 @@ import java.nio.ByteOrder
 import java.util.concurrent.atomic.AtomicReference
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
-import kotlin.math.max
 
 
 val androidContext = AtomicReference<Context>(null)
@@ -96,27 +93,20 @@ internal actual object Platform {
         paint.typeface = Typeface.createFromFile(tmpFile)
         paint.color = Color.WHITE
         paint.textSize = 128f
-        val bounds = Rect()
-
-        val maxwidthheight =
-            (0 until 128).maxOf {
-                paint.getTextBounds("" + it.toChar(), 0, 1, bounds)
-                max(bounds.right, bounds.height())
-            }
-        val fontSize = 128f * cell.toFloat() / maxwidthheight
+        val texts = (0 until 128).map { "" + it.toChar() }
+        val fontSize = 128f * cell.toFloat() / (paint.fontMetrics.descent - paint.fontMetrics.ascent)
+        println("Effective font size $fontSize")
         paint.textSize = fontSize
-
-        val widths = FloatArray(128)
-        for (c in 0 until 128) {
-            val width = paint.measureText("" + c.toChar())
-            widths[c] = width / cell
+        val widths = texts.mapIndexed { c, text ->
+            val width = paint.measureText(text)
             canvas.drawText(
                 "" + c.toChar(),
                 ((c % 16) * cell).toFloat(),
                 ((c / 16) * cell + cell - paint.fontMetrics.descent),
                 paint
             )
-        }
+            width / cell
+        }.toFloatArray()
         val image = bitmapToImage(bitmap)
         return CompletableDeferred(FontDef(image, widths))
     }
