@@ -50,6 +50,7 @@ interface StandartParams : BaseParams {
 
     var baseColor: Color
     var baseColorTexture: TextureDeclaration?
+    var triplanarScale: Float?
 
     val pbr: Pbr
     val specularGlossiness: SpecularGlossiness

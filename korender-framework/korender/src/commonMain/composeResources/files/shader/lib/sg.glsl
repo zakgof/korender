@@ -2,7 +2,7 @@
 vec3 doSpecularGlosiness(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor) {
 
 #ifdef SPECULAR_GLOSSINESS_MAP
-    vec4 sgtexel = texture(specularGlossinessTexture, vtex);
+    vec4 sgtexel = textureRegOrTriplanar(specularGlossinessTexture, vtex, vpos, N);
     vec3 specular = sgtexel.rgb * specularFactor.rgb;
     float glossiness = sgtexel.a * glossinessFactor;
 #else

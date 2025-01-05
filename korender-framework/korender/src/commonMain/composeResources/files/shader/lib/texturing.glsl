@@ -13,6 +13,14 @@ vec4 triplanar(sampler2D tex, vec3 pos, vec3 normal) {
     col3.xyzw * blend_weights.zzzz;
 }
 
+vec4 textureRegOrTriplanar(sampler2D tex, vec2 vtex, vec3 vpos, vec3 vnormal) {
+    #ifdef TRIPLANAR
+        return triplanar(tex, vpos * triplanarScale, vnormal);
+    #else
+        return texture(tex, vtex);
+    #endif
+}
+
 vec4 aperiodic(sampler2D tilesetSampler, sampler2D indexSampler, vec2 tex) {
     const float factor = 0.0625;
     vec2 intile = fract(tex) * factor;

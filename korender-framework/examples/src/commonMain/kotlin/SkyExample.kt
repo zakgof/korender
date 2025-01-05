@@ -23,7 +23,10 @@ fun SkyExample() {
             Renderable(
                 standart {
                     baseColorTexture = texture("texture/asphalt-albedo.jpg")
+                    normalTexture = texture("texture/asphalt-normal.jpg")
+                    triplanarScale = 0.1f
                     pbr.metallic = 0.2f
+                    pbr.roughness = 0.9f
                 },
                 mesh = cube(1f),
                 transform = scale(200f, 1f, 200f)

@@ -1,7 +1,5 @@
 #import "!shader/lib/header.glsl"
-#import "!shader/lib/texturing.glsl"
 #import "!shader/lib/light.glsl"
-#import "!shader/lib/shading.glsl"
 
 in vec3 vpos;
 in vec3 vnormal;
@@ -26,6 +24,19 @@ uniform sampler2D baseColorTexture;
 #endif
 #ifdef NORMAL_MAP
 uniform sampler2D normalTexture;
+#endif
+
+#ifdef TRIPLANAR
+uniform float triplanarScale;
+#endif
+
+#import "!shader/lib/texturing.glsl"
+#import "!shader/lib/shading.glsl"
+
+#ifdef DETAIL
+uniform sampler2D detailTexture;
+uniform float detailScale;
+uniform float detailRatio;
 #endif
 
 // PBR model
@@ -69,16 +80,7 @@ uniform sampler2D normalTexture;
 
 #endif
 
-// TODO TRIPLANAR, DETAIL FOR EVERYTHING
-
-#ifdef TRIPLANAR
-  uniform float triplanarScale;
-#endif
-#ifdef DETAIL
-  uniform sampler2D detailTexture;
-  uniform float detailScale;
-  uniform float detailRatio;
-#endif
+// TODO TRIPLANAR, DETAIL FOR EVERYTHIN
 #ifdef SHADOW_RECEIVER0
   uniform sampler2D shadowTexture0;
 #endif
@@ -115,7 +117,7 @@ out vec4 fragColor;
 void main() {
 
 #ifdef BASE_COLOR_MAP
-    vec4 albedo = texture(baseColorTexture, vtex) * baseColor;
+    vec4 albedo = textureRegOrTriplanar(baseColorTexture, vtex, vpos, vnormal) * baseColor;
 #else
     vec4 albedo = baseColor;
 #endif

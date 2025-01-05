@@ -156,6 +156,7 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
 
     override var baseColor = Color(1f, 0.5f, 0.5f, 0.5f)
     override var baseColorTexture: TextureDeclaration? = null
+    override var triplanarScale: Float? = null
 
     override val pbr: Pbr
         get() {
@@ -210,6 +211,7 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
 
         map["normalTexture"] = normalTexture
         map["shadowTexture"] = shadowTexture
+        map["triplanarScale"] = triplanarScale
 
         map["jointMatrices[0]"] = jointMatrices
         map["inverseBindMatrices[0]"] = inverseBindMatrices
@@ -228,6 +230,7 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
         if (pcss) {
             defs += "PCSS"
         }
+        triplanarScale?.let { defs += "TRIPLANAR" }
     }
 
     internal class InternalPbr : Pbr {

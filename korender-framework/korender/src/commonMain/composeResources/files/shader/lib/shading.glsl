@@ -31,7 +31,7 @@ float geometrySmith(float NdotV, float NdotL, float roughness) {
 }
 
 vec3 getNormalFromMap(sampler2D normalMap, vec3 vnormal, vec2 vtex, vec3 vpos) {
-    vec3 tangentNormal = texture(normalMap, vtex).rgb;
+    vec3 tangentNormal = textureRegOrTriplanar(normalMap, vtex, vpos, vnormal).rgb;
     tangentNormal = tangentNormal * 2.0 - 1.0; // Convert from [0,1] to [-1,1]
 
     vec3 Q1 = dFdx(vpos);

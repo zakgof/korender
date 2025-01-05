@@ -33,12 +33,12 @@ vec3 doPbr(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor) {
     float rough = roughness;
 #endif
 #ifdef EMISSIVE_MAP
-    vec3 emissive = texture(emissiveTexture, vtex).rgb * emissiveFactor.rgb;
+    vec3 emissive = textureRegOrTriplanar(emissiveTexture, vtex, vpos, N).rgb * emissiveFactor.rgb;
 #else
     vec3 emissive = vec3(0.);
 #endif
 #ifdef OCCLUSION_MAP
-    float occlusion = texture(occlusionTexture, vtex).r;
+    float occlusion = textureRegOrTriplanar(occlusionTexture, vtex, vpos, N).r;
 #else
     float occlusion = 1.;
 #endif
