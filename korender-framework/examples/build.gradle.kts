@@ -83,7 +83,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "0.2.0"
+        versionName = "0.3.0"
     }
     packaging {
         resources {
@@ -123,7 +123,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi)
             packageName = "com.zakgof.korender"
-            packageVersion = "0.2.1"
+            packageVersion = "0.3.0"
             modules("jdk.unsupported")
             windows {
                 iconFile.set(project.file("korender32.ico"))
