@@ -70,6 +70,7 @@ actual class NativeByteBuffer actual constructor(size: Int) {
 
     actual fun put(other: NativeByteBuffer) {
         array.set(other.array, position)
+        position += other.array.length
     }
 
     actual fun size(): Int = array.length

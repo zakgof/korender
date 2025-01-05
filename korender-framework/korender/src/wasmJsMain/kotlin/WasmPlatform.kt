@@ -41,6 +41,7 @@ import org.w3c.dom.HTMLImageElement
 import org.w3c.dom.Window
 import org.w3c.dom.events.Event
 import org.w3c.dom.events.MouseEvent
+import org.w3c.dom.get
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -234,7 +235,7 @@ actual fun Korender(
             println("WebGL context lost !")
         }
 
-        fun sendTouch(type: TouchEvent.Type, event: Event) {
+        fun sendMouseTouch(type: TouchEvent.Type, event: Event) {
             val me = event as MouseEvent
             val x = me.pageX - canvas.offsetLeft
             val y = me.pageY - canvas.offsetTop
@@ -243,14 +244,45 @@ actual fun Korender(
             }
         }
 
+        fun sendTouchTouch(type: TouchEvent.Type, event: Event) {
+            val te = event as org.w3c.dom.TouchEvent
+            te.touches[0]?.let { touch ->
+                val x = touch.pageX - canvas.offsetLeft
+                val y = touch.pageY - canvas.offsetTop
+                GlobalScope.launch {
+                    engine?.pushTouch(TouchEvent(type, x.toFloat(), y.toFloat()))
+                }
+            }
+            // TODO improve this POC
+            if (type == TouchEvent.Type.UP && te.touches[0] == null) {
+                te.changedTouches[0]?.let { touch ->
+                    val x = touch.pageX - canvas.offsetLeft
+                    val y = touch.pageY - canvas.offsetTop
+                    GlobalScope.launch {
+                        engine?.pushTouch(TouchEvent(type, x.toFloat(), y.toFloat()))
+                    }
+                }
+            }
+        }
+
         canvas.addEventListener("mouseup") {
-            sendTouch(TouchEvent.Type.UP, it)
+            sendMouseTouch(TouchEvent.Type.UP, it)
         }
         canvas.addEventListener("mousedown") {
-            sendTouch(TouchEvent.Type.DOWN, it)
+            sendMouseTouch(TouchEvent.Type.DOWN, it)
         }
         canvas.addEventListener("mousemove") {
-            sendTouch(TouchEvent.Type.MOVE, it)
+            sendMouseTouch(TouchEvent.Type.MOVE, it)
+        }
+
+        canvas.addEventListener("touchstart") {
+            sendTouchTouch(TouchEvent.Type.DOWN, it)
+        }
+        canvas.addEventListener("touchend") {
+            sendTouchTouch(TouchEvent.Type.UP, it)
+        }
+        canvas.addEventListener("touchmove") {
+            sendTouchTouch(TouchEvent.Type.MOVE, it)
         }
 
         onDispose {
@@ -265,7 +297,6 @@ private fun animate(window: Window, canvas: HTMLCanvasElement, engine: Engine) {
     window.requestAnimationFrame {
         try {
             if (canvas.isConnected) {
-                println("------------")
                 engine.frame()
                 animate(window, canvas, engine)
             } else {

@@ -76,8 +76,8 @@ internal class Scene(
             renderTo(frameBuffer) {
                 pass.render(totalContextUniforms, fixer)
             }
-            prevFrameContext["filterColorTexture"] = frameBuffer?.colorTexture
-            prevFrameContext["filterDepthTexture"] = frameBuffer?.depthTexture
+            prevFrameContext["filterColorTexture"] = frameBuffer?.colorTexture ?: contextUniforms["noiseTexture"] // TODO this is hack
+            prevFrameContext["filterDepthTexture"] = frameBuffer?.depthTexture ?: contextUniforms["noiseTexture"] // TODO this is hack
         }
     }
 
