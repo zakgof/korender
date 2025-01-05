@@ -90,5 +90,12 @@ interface FastCloudSkyParams {
     var lightblue: Color
 }
 
+interface StarrySkyParams {
+    var colorness: Float
+    var density: Float
+    var speed: Float
+    var size: Float
+}
+
 enum class RenderingOption {
 }

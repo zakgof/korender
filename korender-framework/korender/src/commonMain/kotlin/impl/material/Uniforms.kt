@@ -11,6 +11,7 @@ import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.StandartParams
 import com.zakgof.korender.StandartParams.Pbr
 import com.zakgof.korender.StandartParams.SpecularGlossiness
+import com.zakgof.korender.StarrySkyParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.WaterParams
 import com.zakgof.korender.math.Color
@@ -128,6 +129,21 @@ internal class InternalFastCloudSkyParams : FastCloudSkyParams, InternalBasePara
         map["lightblue"] = lightblue
         map["rippleamount"] = rippleamount
         map["ripplescale"] = ripplescale
+    }
+}
+
+internal class InternalStarrySkyParams : StarrySkyParams, InternalBaseParams() {
+
+    override var colorness = 0.8f;
+    override var density = 20.0f;
+    override var speed = 1.0f;
+    override var size = 15.0f;
+
+    override fun collect() {
+        map["colorness"] = colorness
+        map["density"] = density
+        map["speed"] = speed
+        map["size"] = size
     }
 }
 

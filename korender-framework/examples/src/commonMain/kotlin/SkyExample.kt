@@ -10,7 +10,6 @@ import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
-import kotlin.math.sin
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
@@ -20,9 +19,7 @@ fun SkyExample() {
         OnTouch { freeCamera.touch(it) }
         Frame {
             camera = freeCamera.camera(projection, width, height, 0f)
-            Sky(fastCloudSky() {
-                thickness = 10f + 10f * sin(frameInfo.time * 0.5f)
-            })
+            Sky(starrySky())
             Renderable(
                 standart {
                     baseColorTexture = texture("texture/asphalt-albedo.jpg")
