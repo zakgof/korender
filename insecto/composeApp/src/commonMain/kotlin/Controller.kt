@@ -1,13 +1,11 @@
+import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.FrameInfo
-import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.image.Images
-import com.zakgof.korender.input.TouchEvent
+import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.projection.Projection
 
 class Controller {
-
 
     val elevationRatio = 300.0f
     val hfImage = Images.image("/terrain/hf-rg16-512.png")
@@ -74,7 +72,7 @@ class Controller {
         collisionDetector.go()
     }
 
-    fun camera(bugTransform: Transform, projection: Projection, width: Int, height: Int, dt: Float, time: Float): Camera {
+    fun camera(bugTransform: Transform, projection: ProjectionDeclaration, width: Int, height: Int, dt: Float, time: Float): CameraDeclaration {
         return if (gameOver && time - gameOverTime > 2f) {
             FlyAwayCamera().camera(bugTransform, time - gameOverTime - 2f)
         } else {
