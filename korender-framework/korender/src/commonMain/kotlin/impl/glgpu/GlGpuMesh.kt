@@ -1,52 +1,107 @@
 package com.zakgof.korender.impl.glgpu
 
-import com.zakgof.korender.impl.geometry.Attribute
-import com.zakgof.korender.impl.gpu.GpuMesh
-import java.nio.ByteBuffer
+import com.zakgof.korender.AttributeType
+import com.zakgof.korender.IndexType
+import com.zakgof.korender.MeshAttribute
+import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.impl.gl.GL.glBindBuffer
+import com.zakgof.korender.impl.gl.GL.glBindVertexArray
+import com.zakgof.korender.impl.gl.GL.glBufferData
+import com.zakgof.korender.impl.gl.GL.glDeleteBuffers
+import com.zakgof.korender.impl.gl.GL.glDeleteVertexArrays
+import com.zakgof.korender.impl.gl.GL.glDrawElements
+import com.zakgof.korender.impl.gl.GL.glEnableVertexAttribArray
+import com.zakgof.korender.impl.gl.GL.glGenBuffers
+import com.zakgof.korender.impl.gl.GL.glGenVertexArrays
+import com.zakgof.korender.impl.gl.GL.glVertexAttribIPointer
+import com.zakgof.korender.impl.gl.GL.glVertexAttribPointer
+import com.zakgof.korender.impl.gl.GLConstants.GL_ARRAY_BUFFER
+import com.zakgof.korender.impl.gl.GLConstants.GL_DYNAMIC_DRAW
+import com.zakgof.korender.impl.gl.GLConstants.GL_ELEMENT_ARRAY_BUFFER
+import com.zakgof.korender.impl.gl.GLConstants.GL_FLOAT
+import com.zakgof.korender.impl.gl.GLConstants.GL_STATIC_DRAW
+import com.zakgof.korender.impl.gl.GLConstants.GL_TRIANGLES
+import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_BYTE
+import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_INT
+import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_SHORT
 
-class GlGpuMesh(
+internal fun AttributeType.toGL(): Int = when (this) {
+    AttributeType.Byte -> GL_UNSIGNED_BYTE
+    AttributeType.Short -> GL_UNSIGNED_SHORT
+    AttributeType.Int -> GL_UNSIGNED_INT
+    AttributeType.Float -> GL_FLOAT
+}
+
+internal class GlGpuMesh(
     private val name: String,
-    val attrs: List<Attribute>,
-    val vertexSize: Int,
+    val attrs: List<MeshAttribute>,
     isDynamic: Boolean = false,
-    private val isLongIndex: Boolean = false
-) : GpuMesh {
+    private val indexType: IndexType
+) : AutoCloseable {
 
-    private val vbHandle: Int = com.zakgof.korender.impl.gl.VGL15.glGenBuffers()
-    private val ibHandle: Int = com.zakgof.korender.impl.gl.VGL15.glGenBuffers()
-    private val usage: Int = if (isDynamic) com.zakgof.korender.impl.gl.VGL15.GL_DYNAMIC_DRAW else com.zakgof.korender.impl.gl.VGL15.GL_STATIC_DRAW
+    private val vao = glGenVertexArrays()
+    private val vbos = attrs.map { glGenBuffers() }
+    private val ebo = glGenBuffers()
+    private val usage: Int = if (isDynamic) GL_DYNAMIC_DRAW else GL_STATIC_DRAW
 
     private var vertices: Int = -1
     private var indices: Int = -1
 
     init {
-        println("Creating GPU Mesh [$name] $vbHandle/$ibHandle")
+        println("Creating GPU Mesh [$name] $vao/$vbos/$ebo")
     }
 
-    override fun render() =
-        com.zakgof.korender.impl.gl.VGL11.glDrawElements(
-            com.zakgof.korender.impl.gl.VGL11.GL_TRIANGLES,
-            indices,
-            if (isLongIndex) com.zakgof.korender.impl.gl.VGL11.GL_UNSIGNED_INT else com.zakgof.korender.impl.gl.VGL11.GL_UNSIGNED_SHORT,
-            0
-        )
+    fun bind() = glBindVertexArray(vao)
 
-    override fun bind() {
-        com.zakgof.korender.impl.gl.VGL15.glBindBuffer(com.zakgof.korender.impl.gl.VGL15.GL_ARRAY_BUFFER, vbHandle)
-        com.zakgof.korender.impl.gl.VGL15.glBindBuffer(com.zakgof.korender.impl.gl.VGL15.GL_ELEMENT_ARRAY_BUFFER, ibHandle)
-    }
-
-    override fun update(vb: ByteBuffer, ib: ByteBuffer, vertices: Int, indices: Int) {
+    fun update(
+        vb: List<NativeByteBuffer>,
+        ib: NativeByteBuffer,
+        vertices: Int,
+        indices: Int
+    ) {
         this.vertices = vertices
         this.indices = indices
-        bind()
-        com.zakgof.korender.impl.gl.VGL15.glBufferData(com.zakgof.korender.impl.gl.VGL15.GL_ARRAY_BUFFER, vb.rewind() as ByteBuffer, usage)
-        com.zakgof.korender.impl.gl.VGL15.glBufferData(com.zakgof.korender.impl.gl.VGL15.GL_ELEMENT_ARRAY_BUFFER, ib.rewind() as ByteBuffer, usage)
+        glBindVertexArray(vao)
+
+        attrs.forEachIndexed { index, attr ->
+            val vbo = vbos[index]
+            glBindBuffer(GL_ARRAY_BUFFER, vbo)
+            glBufferData(GL_ARRAY_BUFFER, vb[index], usage)
+
+            if (attr.primitiveType == AttributeType.Float)
+                glVertexAttribPointer(attr.location, attr.structSize, attr.primitiveType.toGL(), false, 0, 0)
+            else {
+                println("" + vb[index].byte(0) + " " + vb[index].byte(1) + " " + vb[index].byte(2) + " " + vb[index].byte(3));
+                glVertexAttribIPointer(attr.location, attr.structSize, attr.primitiveType.toGL(), 0, 0)
+            }
+            glEnableVertexAttribArray(attr.location)
+        }
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib, usage)
+
+        glBindVertexArray(null)
+    }
+
+    fun render() {
+        glBindVertexArray(vao)
+        glDrawElements(
+            GL_TRIANGLES,
+            indices,
+            when (indexType) {
+                IndexType.Byte -> GL_UNSIGNED_BYTE
+                IndexType.Short -> GL_UNSIGNED_SHORT
+                IndexType.Int -> GL_UNSIGNED_INT
+            },
+            0
+        )
+        glBindVertexArray(null)
     }
 
     override fun close() {
-        println("Destroying GPU Mesh [$name] $vbHandle/$ibHandle")
-        com.zakgof.korender.impl.gl.VGL15.glDeleteBuffers(vbHandle)
-        com.zakgof.korender.impl.gl.VGL15.glDeleteBuffers(ibHandle)
+        println("Destroying GPU Mesh [$name] $vao/$vbos/$ebo")
+        vbos.forEach { glDeleteBuffers(it) }
+        glDeleteBuffers(ebo)
+        glDeleteVertexArrays(vao)
     }
 }

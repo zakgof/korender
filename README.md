@@ -1,5 +1,9 @@
 # ![Korender](doc/korender32.png) korender
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.zakgof/korender/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.zakgof/korender)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.0.0-278ec7.svg?logo=kotlin)](http://kotlinlang.org)
+![android](https://img.shields.io/badge/android-136F63)
+![windows](https://img.shields.io/badge/windows-3F88C5)
+![linux](https://img.shields.io/badge/linux-FFBA08)
 
 Kotlin Multiplatform 3D graphics rendering engine based on OpenGL / OpenGL ES.
 
@@ -27,6 +31,8 @@ fun App() = Korender {
 }
 ````
 ![Korender](doc/quickstart.jpg)
+
+Korender is BETA - any APIs may change without notice.
 
 ### Supported platforms
 - Desktop (Windows/Linux) - based on LWJGL
@@ -62,15 +68,15 @@ fun App() = Korender {
 or, create an application from scratch:
 
 - Generate a new KMP application using [Kotlin Multiplatform Wizard](https://kmp.jetbrains.com/). Select Android and Desktop platforms.
-- Add Korender dependency `com.github.zakgof:korender:0.1.0`
+- Add Korender dependency `com.github.zakgof:korender:0.2.0`
 - Add the above code to commonMain
 - Run on desktop: `.\gradlew composeApp:run`
 
 
 ### Examples showcase app
 
-- JVM Desktop Windows: https://github.com/zakgof/korender/releases/download/0.1.0/korender-demo-0.1.0.zip
-- Android APK: https://github.com/zakgof/korender/releases/download/0.1.0/korender-demo-0.1.0.apk
+- JVM Desktop Windows: https://github.com/zakgof/korender/releases/download/0.2.0/korender-demo-0.2.0.zip
+- Android APK: https://github.com/zakgof/korender/releases/download/0.2.0/korender-demo-0.2.0.apk
 
 [Examples source code](https://github.com/zakgof/korender/tree/main/korender-framework/examples/src/commonMain/kotlin)
 

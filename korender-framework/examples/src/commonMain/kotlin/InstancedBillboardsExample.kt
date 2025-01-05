@@ -2,16 +2,17 @@ package com.zakgof.korender.examples
 
 
 import androidx.compose.runtime.Composable
+import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.material.MaterialModifiers.standart
-import com.zakgof.korender.material.Textures.texture
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
+import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.random.Random
 
+@OptIn(ExperimentalResourceApi::class)
 @Composable
-fun InstancedBillboardsExample() = Korender {
+fun InstancedBillboardsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
     val particleNum = 1000
     val particles = Array(particleNum) { Particle(Random.nextDouble(5.0).toFloat()) }
@@ -19,7 +20,7 @@ fun InstancedBillboardsExample() = Korender {
     Frame {
         InstancedBillboards(
             standart {
-                colorTexture = texture("/splat.png")
+                baseColorTexture = texture("texture/splat.png")
             },
             id = "particles",
             count = particleNum,

@@ -1,34 +1,28 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.FrameInfo
-import com.zakgof.korender.camera.Camera
+import com.zakgof.korender.MaterialModifier
+import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.GuiContainerContext
 import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.PassContext
 import com.zakgof.korender.context.ShadowContext
-import com.zakgof.korender.material.MaterialModifier
+import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.mesh.MeshDeclaration
-import com.zakgof.korender.projection.Projection
 
 internal class DefaultFrameContext(
     private val sceneDeclaration: SceneDeclaration,
     override val frameInfo: FrameInfo,
-    override val width: Int,
-    override val height: Int,
-    override var projection: Projection,
-    override var camera: Camera,
-    override var light: Vec3
 ) : FrameContext {
 
-    private val defaultPassContext = DefaultPassContext(sceneDeclaration.defaultPass, frameInfo, width, height, projection, camera, light)
+    private val defaultPassContext = DefaultPassContext(sceneDeclaration.defaultPass, frameInfo)
 
     override fun Pass(block: PassContext.() -> Unit) {
         val passDeclaration = PassDeclaration()
-        DefaultPassContext(passDeclaration, frameInfo, width, height, projection, camera, light).apply(block)
+        DefaultPassContext(passDeclaration, frameInfo).apply(block)
         sceneDeclaration.addPass(passDeclaration)
     }
 
@@ -53,22 +47,21 @@ internal class DefaultFrameContext(
     override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, transparent: Boolean, block: InstancedBillboardsContext.() -> Unit) =
         defaultPassContext.InstancedBillboards(*materialModifiers, id = id, count = count, transparent = transparent, block = block)
 
+    override fun Scene(gltfResource: String, transform: Transform) =
+        defaultPassContext.Scene(gltfResource, transform)
+
+    override fun DirectionalLight(direction: Vec3, color: Color) =
+        defaultPassContext.DirectionalLight(direction, color)
+
+    override fun PointLight(position: Vec3, color: Color) =
+        defaultPassContext.PointLight(position, color)
+
+    override fun AmbientLight(color: Color) =
+        defaultPassContext.AmbientLight(color)
+
     override fun Shadow(block: ShadowContext.() -> Unit) {
         val shadowDeclaration = ShadowDeclaration()
         ShadowContext(shadowDeclaration).apply(block)
         sceneDeclaration.addShadow(shadowDeclaration)
     }
-
-    override fun Camera(camera: Camera) {
-        this.camera = camera
-    }
-
-    override fun Projection(projection: Projection) {
-        this.projection = projection
-    }
-
-    override fun Light(light: Vec3) {
-        this.light = light
-    }
-
 }

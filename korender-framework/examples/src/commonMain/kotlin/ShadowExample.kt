@@ -1,31 +1,33 @@
 package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
+import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.camera.DefaultCamera
-import com.zakgof.korender.material.MaterialModifiers.standart
-import com.zakgof.korender.material.StandartMaterialOption
-import com.zakgof.korender.material.Textures.texture
+import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import com.zakgof.korender.mesh.Meshes.cube
-import com.zakgof.korender.mesh.Meshes.sphere
+import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.sin
 
+@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun ShadowExample() =
-    Korender {
-        val materialModifier = standart(StandartMaterialOption.Pcss) {
-            colorTexture = texture("/sand.jpg")
+    Korender(appResourceLoader = { Res.readBytes(it) }) {
+        val materialModifier = standart {
+            baseColorTexture = texture("texture/asphalt-albedo.jpg")
+            normalTexture = texture("texture/asphalt-normal.jpg")
+            pbr.metallic = 0.2f
+            pcss = true
         }
+        camera = camera(Vec3(-2.0f, 3f, 20f), -1.z, 1.y)
         Frame {
-            Light(Vec3(1f, -1f, 1f).normalize())
-            Camera(DefaultCamera(Vec3(-2.0f, 3f, 20f), -1.z, 1.y))
+            DirectionalLight(Vec3(1f, -1f, 1f).normalize(), Color.white(5.0f))
+            AmbientLight(Color.white(0.35f))
             Shadow {
-                Cascade(mapSize = 1024, near = 5.0f, far = 15.0f)
+                Cascade(mapSize = 1024, near = 10.0f, far = 25.0f)
             }
             Renderable(
                 materialModifier,

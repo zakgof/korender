@@ -2,27 +2,20 @@ package com.zakgof.korender
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.context.KorenderContext
-import com.zakgof.korender.impl.engine.Engine
-import com.zakgof.korender.input.TouchEvent
 
 @Composable
-fun Korender(block: KorenderContext.() -> Unit) {
+expect fun Korender(
+    appResourceLoader: ResourceLoader = { throw KorenderException("No application resource provided") },
+    block: KorenderContext.() -> Unit
+)
 
-    lateinit var engine: Engine
+typealias ResourceLoader = suspend (String) -> ByteArray
 
-    getPlatform().openGL(
-        init = { w, h -> engine = Engine(w, h, block) },
-        frame = { engine.frame() },
-        resize = { w, h -> engine.resize(w, h) },
-        touch = { e -> engine.pushTouch(e) }
-    )
-}
+class KorenderException(message: String) : RuntimeException(message)
 
-typealias TouchHandler = (TouchEvent) -> Unit
-
-fun onClick(touchEvent: TouchEvent, clickHandler: () -> Unit) {
-    if (touchEvent.type == TouchEvent.Type.DOWN) {
-        clickHandler()
-    }
-}
-
+class FrameInfo(
+    val frame: Long,
+    val time: Float,
+    val dt: Float,
+    val avgFps: Float,
+)

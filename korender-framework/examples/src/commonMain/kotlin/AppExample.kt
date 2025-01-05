@@ -1,16 +1,16 @@
 package com.zakgof.korender.examples
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.gestures.scrollBy
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.Button
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,55 +21,75 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 
 @Composable
 fun AppExample() {
     val options = listOf(
-        Demo("Show", "Features showcase") { ShowcaseExample() },
-        Demo("Trans", "Transparent objects") { TransparencyExample() },
-        Demo("Mesh", "Demonstration of static and dynamic custom meshes") { MeshesExample() },
-        Demo("Obj", "Loading a textured obj file") { ObjFileExample() },
-        Demo("IBB", "Particles system using instanced billboards") { InstancedBillboardsExample() },
-        Demo("IM", "Instanced meshes") { InstancedMeshesExample() },
-        Demo("HF", "Heightfield") { HeightFieldExample() },
-        Demo("Shadow", "Shadow mapping") { ShadowExample() },
-        Demo("Filter", "Post processing saturation filter") { FilterExample() },
-        Demo("FXAA", "Post processing FXAA filter") { FxaaExample() },
-        Demo("FBall", "Fireball effect") { FireBallExample() },
-        Demo("Smoke", "Smoke effect") { SmokeExample() },
-        Demo("GUI", "On-screen GUI") { GuiExample() },
-        Demo("Sky", "Simple sky") { SkyExample() },
-        Demo("Plg", "Shader plugin") { ShaderPluginExample() }
+        Demo("Feature showcase") { ShowcaseExample() },
+        Demo("PBR metallic/roughness") { MetallicRoughnessExample() },
+        Demo("Transparency") { TransparencyExample() },
+        Demo("Dynamic meshes") { MeshesExample() },
+        Demo(".obj file") { ObjFileExample() },
+        Demo(".gltf scene") { GltfExample() },
+        Demo("Point lights") { LightsExample() },
+        Demo("Instanced billboards") { InstancedBillboardsExample() },
+        Demo("Instanced meshes") { InstancedMeshesExample() },
+        Demo("Shadow mapping") { ShadowExample() },
+        Demo("Blur filter") { BlurExample() },
+        Demo("FXAA filter") { FxaaExample() },
+        Demo("Fireball effect") { FireBallExample() },
+        Demo("Smoke effect") { SmokeExample() },
+        Demo("GUI") { GuiExample() },
+        Demo("Sky") { SkyExample() }
     )
 
-    var option by remember { mutableStateOf(options[0]) }
-    Column {
-        val coroutineScope = rememberCoroutineScope()
-        val scrollState = rememberScrollState()
-        Row(
+    var selectedOption by remember { mutableStateOf(options.first()) }
+    val coroutineScope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
+    val backgroundColor = Color(0xFF181818)
+    val selectColor = Color(0xFF808080)
+    val textColor = Color(0xFFFFFFFF)
+    Row (modifier = Modifier.background(backgroundColor)) {
+        Column(
             modifier = Modifier
-                .horizontalScroll(scrollState)
+                .verticalScroll(scrollState)
                 .draggable(
-                    orientation = Orientation.Horizontal,
+                    orientation = Orientation.Vertical,
                     state = rememberDraggableState { delta ->
                         coroutineScope.launch {
                             scrollState.scrollBy(-delta)
                         }
                     }
                 )
-                .padding(horizontal = 3.dp),
-            horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
-            options.map {
-                Button(onClick = { option = it }) {
-                    Text(it.title)
-                }
+            Text(
+                modifier = Modifier.padding(8.dp),
+                text = "Korender Demo",
+                fontSize = 18.sp,
+                color = textColor
+            )
+            options.map { option ->
+                Text(
+                    modifier = Modifier
+                        .background(color = if (option == selectedOption) selectColor else backgroundColor)
+                        .clickable { selectedOption = option }
+                        .padding(12.dp, 6.dp),
+                    text = option.title,
+                    fontSize = 12.sp,
+                    color = textColor
+                )
             }
         }
-        Text(text = option.description, color = Color.Cyan)
-        option.composable()
+
+        Column(modifier = Modifier.weight(1f)) {
+            selectedOption.composable()
+        }
     }
 }
 
-private class Demo(val title: String, val description: String, val composable: @Composable () -> Unit)
+private data class Demo(
+    val title: String,
+    val composable: @Composable () -> Unit
+)

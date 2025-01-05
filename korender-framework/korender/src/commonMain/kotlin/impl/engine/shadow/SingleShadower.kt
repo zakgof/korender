@@ -1,71 +1,93 @@
 package com.zakgof.korender.impl.engine.shadow
 
-import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.camera.DefaultCamera
+import com.zakgof.korender.impl.camera.Camera
+import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.FrameBufferDeclaration
 import com.zakgof.korender.impl.engine.Inventory
+import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.engine.Renderable
 import com.zakgof.korender.impl.engine.ShaderDeclaration
-import com.zakgof.korender.impl.gl.VGL11
-import com.zakgof.korender.impl.gpu.GpuFrameBuffer
-import com.zakgof.korender.uniforms.MapUniformSupplier
-import com.zakgof.korender.material.TextureDeclaration
-import com.zakgof.korender.uniforms.UniformSupplier
+import com.zakgof.korender.impl.gl.GL.glClear
+import com.zakgof.korender.impl.gl.GL.glCullFace
+import com.zakgof.korender.impl.gl.GL.glEnable
+import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
+import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
+import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
+import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
+import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
+import com.zakgof.korender.impl.projection.FrustumProjection
+import com.zakgof.korender.impl.projection.OrthoProjection
+import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
-import com.zakgof.korender.projection.FrustumProjection
-import com.zakgof.korender.projection.OrthoProjection
-import com.zakgof.korender.projection.Projection
 
-internal class SingleShadower(private val index: Int, private val inventory: Inventory, private val decl: CascadeDeclaration) : Shadower {
+internal class SingleShadower(
+    private val index: Int,
+    private val inventory: Inventory,
+    private val decl: CascadeDeclaration
+) : Shadower {
 
     override val cascadeNumber = 1
-    private val frameBuffer: GpuFrameBuffer = inventory.frameBuffer(FrameBufferDeclaration("shadow$index", decl.mapSize, decl.mapSize, false))
+    private val frameBuffer: GlGpuFrameBuffer? = inventory.frameBuffer(
+        FrameBufferDeclaration(
+            "shadow$index",
+            decl.mapSize,
+            decl.mapSize,
+            false
+        )
+    )
 
-    override fun render(projection: Projection, camera: Camera, light: Vec3, shadowCasters: List<Renderable>): UniformSupplier {
+    override fun render(
+        renderContext: RenderContext,
+        lightDirection: Vec3,
+        shadowCasters: List<Renderable>,
+        fixer: (Any?) -> Any?
+    ): Map<String, Any?> {
 
-        val matrices = updateShadowCamera(projection, camera, light)
+        if (frameBuffer == null)
+            return mapOf();
+
+        val matrices = updateShadowCamera(renderContext.projection, renderContext.camera, lightDirection)
         val shadowCamera = matrices.first
         val shadowProjection = matrices.second
-        val casterUniforms = mapOf(
-            "light" to light,
+        val casterUniforms = renderContext.uniforms() + mapOf(
             "view" to shadowCamera.mat4,
             "projection" to shadowProjection.mat4,
             "cameraPos" to shadowCamera.position
         )
-
-        val uniformDecorator: (UniformSupplier) -> UniformSupplier = {
-            UniformSupplier { key ->
-                var value = it[key] ?: casterUniforms[key]
-                if (value is TextureDeclaration) {
-                    value = inventory.texture(value)
-                }
-                value
-            }
-        }
         frameBuffer.exec {
-            VGL11.glClear(VGL11.GL_COLOR_BUFFER_BIT or VGL11.GL_DEPTH_BUFFER_BIT)
-            VGL11.glEnable(VGL11.GL_DEPTH_TEST)
-            VGL11.glCullFace(VGL11.GL_BACK)
-            shadowCasters.forEach { r ->
+            glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+            glEnable(GL_DEPTH_TEST)
+            glCullFace(GL_BACK)
+            shadowCasters.forEach { casterRenderable ->
                 // TODO: need to copy all the defs and plugins from the original shader
-                val casterShader = inventory.shader(ShaderDeclaration("standart.vert", "standart.frag", setOf("SHADOW_CASTER")))
-                casterShader.render(
-                    uniformDecorator(r.uniforms + mapOf("model" to r.transform.mat4)),
-                    r.mesh.gpuMesh
+                val casterShader = inventory.shader(
+                    ShaderDeclaration(
+                        "!shader/standart.vert",
+                        "!shader/standart.frag",
+                        setOf("SHADOW_CASTER", "NO_LIGHT")
+                    )
                 )
+
+                casterShader?.let {
+                    casterRenderable.render(casterUniforms, fixer, it)
+                }
             }
         }
 
-        return MapUniformSupplier(
+        return mapOf(
             "shadowTexture$index" to frameBuffer.colorTexture,
             "shadowProjection$index" to shadowProjection.mat4,
             "shadowView$index" to shadowCamera.mat4
         )
     }
 
-    private fun updateShadowCamera(projection: Projection, camera: Camera, light: Vec3): Pair<DefaultCamera, OrthoProjection> {
+    private fun updateShadowCamera(
+        projection: Projection,
+        camera: Camera,
+        light: Vec3
+    ): Pair<DefaultCamera, OrthoProjection> {
 
         val right = (light % 1.y).normalize()
         val up = (right % light).normalize()
@@ -87,16 +109,27 @@ internal class SingleShadower(private val index: Int, private val inventory: Inv
         val height = ymax - ymin
 
         val shadowCamera = DefaultCamera(position = cameraPos, direction = light, up = up)
-        val shadowProjection = OrthoProjection(width = width * 0.51f, height = height * 0.51f, near = near * 0.98f, far = far * 1.05f)
+        val shadowProjection = OrthoProjection(
+            width = width * 0.51f,
+            height = height * 0.51f,
+            near = near * 0.98f,
+            far = far * 1.05f
+        )
 
         return shadowCamera to shadowProjection
     }
 
-    private fun frustumCorners(projection: Projection, camera: Camera, near: Float, far: Float): List<Vec3> {
+    private fun frustumCorners(
+        projection: Projection,
+        camera: Camera,
+        near: Float,
+        far: Float
+    ): List<Vec3> {
         projection as FrustumProjection
         camera as DefaultCamera
         val upNear = camera.up * (projection.height * 0.5f * near / projection.near)
-        val rightNear = (camera.direction % camera.up).normalize() * (projection.width * 0.5f * near / projection.near)
+        val rightNear =
+            (camera.direction % camera.up).normalize() * (projection.width * 0.5f * near / projection.near)
         val toNear = camera.direction * near
         val toFar = camera.direction * far
         val upFar = upNear * (far / near)
@@ -112,6 +145,5 @@ internal class SingleShadower(private val index: Int, private val inventory: Inv
             camera.position + upFar - rightFar + toFar,
         )
     }
-
 
 }

@@ -1,6 +1,6 @@
 
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import java.util.Properties
 
 plugins {
@@ -8,35 +8,55 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.jetbrainsCompose)
+    alias(libs.plugins.kotlinSerialization)
     id("maven-publish")
     id("signing")
 }
 
-val libraryVersion = "0.2.0"
+val libraryVersion = "0.3.0"
 val libraryGroup = "com.github.zakgof"
 
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "com.zakgof.korender.resources"
+    generateResClass = always
+}
+
+@OptIn(ExperimentalKotlinGradlePluginApi::class)
 kotlin {
+
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
     androidTarget {
         publishLibraryVariants("release")
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
-        }
     }
 
     jvm("desktop")
 
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        browser {
+        }
+    }
+
     sourceSets {
         val desktopMain by getting
+        val wasmJsMain by getting
 
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
             implementation(compose.ui)
-            implementation(libs.obj)
+            implementation(compose.material)
+            implementation(compose.components.resources)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json)
         }
         desktopMain.dependencies {
+            implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.kotlin.reflect)
             implementation(compose.desktop.currentOs)
 
@@ -50,6 +70,9 @@ kotlin {
             implementation("org.lwjgl:lwjgl:3.3.3:natives-linux")
             implementation("org.lwjgl:lwjgl-opengl:3.3.3:natives-linux")
         }
+        wasmJsMain.dependencies {
+            implementation(libs.kotlinx.browser)
+        }
     }
 }
 
@@ -57,7 +80,6 @@ android {
 
     namespace = "com.zakgof.korender"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
-    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
@@ -73,8 +95,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
@@ -111,10 +133,12 @@ publishing {
     repositories {
         maven {
             name = "sonatype"
-            setUrl(if (libraryVersion.contains("SNAPSHOT"))
-                "https://oss.sonatype.org/content/repositories/snapshots/"
-            else
-                "https://oss.sonatype.org/service/local/staging/deploy/maven2")
+            setUrl(
+                if (libraryVersion.contains("SNAPSHOT"))
+                    "https://oss.sonatype.org/content/repositories/snapshots/"
+                else
+                    "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            )
             credentials {
                 username = getExtraString("ossrhUsername")
                 password = getExtraString("ossrhPassword")

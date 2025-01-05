@@ -2,31 +2,40 @@ package com.zakgof.korender.examples
 
 
 import androidx.compose.runtime.Composable
+import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
-import com.zakgof.korender.material.MaterialModifiers.standart
-import com.zakgof.korender.material.Textures.texture
-import com.zakgof.korender.math.FloatMath
+import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.FloatMath.PIdiv2
 import com.zakgof.korender.math.Transform.Companion.scale
+import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import com.zakgof.korender.mesh.Meshes.obj
+import org.jetbrains.compose.resources.ExperimentalResourceApi
 
+@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun ObjFileExample() {
-    val orbitCamera = OrbitCamera(20.z, 0.z)
-    Korender {
+    Korender(appResourceLoader = { Res.readBytes(it) }) {
+        val orbitCamera = OrbitCamera(this, 20.z, 0.z)
         OnTouch { orbitCamera.touch(it) }
         Frame {
-            Camera(orbitCamera.camera(projection, width, height))
+            DirectionalLight(Vec3(1.0f, -1.0f, -1.0f).normalize(), Color.white(7f))
+            AmbientLight(Color.white(0.2f))
+            camera = orbitCamera.camera(projection, width, height)
             Renderable(
                 standart {
-                    colorTexture = texture("/head.jpg")
+                    baseColorTexture = texture("model/head.jpg")
+                    pbr.metallic = 0.3f
+                    pbr.roughness = 0.5f
                 },
-                mesh = obj("/head.obj"),
-                transform = scale(7.0f).rotate(1.y, -FloatMath.PIdiv2)
+                mesh = obj("model/head.obj"),
+                transform = scale(7.0f).rotate(1.y, -PIdiv2)
             )
+            Gui {
+                Filler()
+                Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "Model generated using meshy.ai (CC BY 4.0)", color = Color(0xFF66FF55))
+            }
         }
     }
-
 }

@@ -1,5 +1,5 @@
 package com.zakgof.korender.impl.font
 
-import com.zakgof.korender.image.Image
+import com.zakgof.korender.impl.image.Image
 
-class FontDef (val image: Image, val widths: FloatArray)
+internal class FontDef (val image: Image, val widths: FloatArray)

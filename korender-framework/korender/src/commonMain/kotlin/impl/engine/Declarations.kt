@@ -1,14 +1,14 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.material.StandartMaterialOption
+import com.zakgof.korender.impl.material.DynamicUniforms
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.mesh.MeshDeclaration
-import com.zakgof.korender.uniforms.UniformSupplier
 
 internal class SceneDeclaration {
     var shadow: ShadowDeclaration? = null
@@ -24,7 +24,7 @@ internal class SceneDeclaration {
     }
 
     fun compilePasses() {
-        if (defaultPass.renderables.isNotEmpty() || defaultPass.guis.isNotEmpty()) {
+        if (defaultPass.renderables.isNotEmpty() || defaultPass.guis.isNotEmpty() || defaultPass.gltfs.isNotEmpty()) {
             if (passes.isNotEmpty()) {
                 throw KorenderException("It is not allowed to mix Passes and renderables in Frame context")
             }
@@ -34,11 +34,12 @@ internal class SceneDeclaration {
 }
 
 internal class PassDeclaration {
+    val pointLights = mutableListOf<PointLightDeclaration>()
+    val directionalLights = mutableListOf<DirectionalLightDeclaration>()
+    var ambientLightColor = Color(1.0f, 0.15f, 0.15f, 0.15f)
     val renderables = mutableListOf<RenderableDeclaration>()
     val guis = mutableListOf<ElementDeclaration.Container>()
-
-    fun add(renderable: RenderableDeclaration) = renderables.add(renderable)
-    fun addGui(gui: ElementDeclaration.Container) = guis.add(gui)
+    val gltfs = mutableListOf<GltfDeclaration>()
 }
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
@@ -49,51 +50,21 @@ internal data class ShaderDeclaration(
     val vertFile: String,
     val fragFile: String,
     val defs: Set<String> = setOf(),
+    val options: Set<RenderingOption> = setOf(),
     val plugins: Map<String, String> = mapOf()
-) {
-    constructor(
-        vertFile: String,
-        fragFile: String,
-        defs: Set<String>,
-        stdOptions: Set<StandartMaterialOption>,
-        plugins: Map<String, String>
-    ) : this(vertFile, fragFile, defs + stdOptionsToDefs(stdOptions, plugins), plugins)
-}
-
-
-private fun stdOptionsToDefs(
-    stdOptions: Set<StandartMaterialOption>,
-    plugins: Map<String, String>
-): Set<String> {
-    // TODO: this is ugly
-    val set = HashSet<String>()
-    stdOptions.forEach {
-        when (it) {
-            StandartMaterialOption.FixedColor -> set.add("COLOR")
-            StandartMaterialOption.Triplanar -> set.add("TRIPLANAR")
-            StandartMaterialOption.Aperiodic -> set.add("APERIODIC")
-            StandartMaterialOption.NormalMap -> set.add("NORMAL_MAP")
-            StandartMaterialOption.Detail -> set.add("DETAIL")
-            StandartMaterialOption.NoLight -> set.add("NO_LIGHT")
-            StandartMaterialOption.Pcss -> set.add("PCSS")
-            StandartMaterialOption.NoShadowCast -> set.add("NO_SHADOW_CAST") // TODO: this is ugly
-            else -> {}
-        }
-    }
-    return set + plugins.keys.map { "PLUGIN_" + it.uppercase() }
-}
+)
 
 internal class RenderableDeclaration(
     val mesh: MeshDeclaration,
     val shader: ShaderDeclaration,
-    val uniforms: UniformSupplier,
+    val uniforms: DynamicUniforms,
     val transform: Transform = Transform(),
     val bucket: Bucket = Bucket.OPAQUE
 )
 
 internal class MaterialDeclaration(
     val shader: ShaderDeclaration,
-    val uniforms: UniformSupplier
+    val uniforms: DynamicUniforms
 )
 
 internal sealed class ElementDeclaration {
@@ -142,3 +113,12 @@ internal class ShadowDeclaration {
 }
 
 internal data class CascadeDeclaration(val mapSize: Int, val near: Float, var far: Float)
+
+internal class GltfDeclaration(val gltfResource: String, val transform: Transform = Transform()) {
+    override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.gltfResource == gltfResource)
+    override fun hashCode(): Int = gltfResource.hashCode()
+}
+
+internal class PointLightDeclaration(val position: Vec3, val color: Color)
+
+internal class DirectionalLightDeclaration(val direction: Vec3, val color: Color)

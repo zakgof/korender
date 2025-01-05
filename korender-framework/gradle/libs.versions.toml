@@ -1,23 +1,29 @@
 [versions]
-agp = "8.2.0"
+agp = "8.5.2"
 android-compileSdk = "34"
 android-minSdk = "29"
 android-targetSdk = "34"
-androidx-activityCompose = "1.9.0"
-compose-plugin = "1.6.10"
-kotlin = "2.0.0"
+androidx-activityCompose = "1.9.3"
+compose-plugin = "1.7.0"
+kotlin = "2.1.0"
+kotlinxCoroutinesCore = "1.9.0"
+kotlinxBrowser = "0.3"
+kotlinxSerializationJson = "1.7.1"
 lwjgl3-awt = "0.1.8"
 lwjgl = "3.3.3"
-obj = "0.4.0"
 
 [libraries]
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
+kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version.ref = "kotlinxBrowser" }
+
+kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinxCoroutinesCore" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 lwjgl = { module = "org.lwjgl:lwjgl", version.ref = "lwjgl" }
 lwjgl-jawt = { module = "org.lwjgl:lwjgl-jawt", version.ref = "lwjgl" }
 lwjgl-opengl = { module = "org.lwjgl:lwjgl-opengl", version.ref = "lwjgl" }
 lwjgl3-awt = { module = "org.lwjglx:lwjgl3-awt", version.ref = "lwjgl3-awt" }
-obj = { module = "de.javagl:obj", version.ref = "obj" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -25,3 +31,4 @@ androidLibrary = { id = "com.android.library", version.ref = "agp" }
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

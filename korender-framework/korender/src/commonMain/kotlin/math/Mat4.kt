@@ -1,8 +1,5 @@
 package com.zakgof.korender.math
 
-import com.zakgof.korender.impl.glgpu.BufferUtils
-import java.nio.FloatBuffer
-
 class Mat4(
     val m00: Float,
     val m01: Float,
@@ -20,8 +17,26 @@ class Mat4(
     val m31: Float,
     val m32: Float,
     val m33: Float
-
 ) {
+    constructor(array: FloatArray) : this(
+        array[0],
+        array[4],
+        array[8],
+        array[12],
+        array[1],
+        array[5],
+        array[9],
+        array[13],
+        array[2],
+        array[6],
+        array[10],
+        array[14],
+        array[3],
+        array[7],
+        array[11],
+        array[15]
+    )
+
     companion object {
         val ZERO: Mat4 = Mat4(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
         val IDENTITY: Mat4 = Mat4(1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f)
@@ -57,11 +72,11 @@ class Mat4(
     }
 
     fun project(vec: Vec3): Vec3 {
-        val w_inv: Float = 1.0f / (m30 * vec.x + m31 * vec.y + m32 * vec.z + m33)
+        val winv: Float = 1.0f / (m30 * vec.x + m31 * vec.y + m32 * vec.z + m33)
         return Vec3(
-            w_inv * (m00 * vec.x + m01 * vec.y + m02 * vec.z + m03),
-            w_inv * (m10 * vec.x + m11 * vec.y + m12 * vec.z + m13),
-            w_inv * (m20 * vec.x + m21 * vec.y + m22 * vec.z + m23)
+            winv * (m00 * vec.x + m01 * vec.y + m02 * vec.z + m03),
+            winv * (m10 * vec.x + m11 * vec.y + m12 * vec.z + m13),
+            winv * (m20 * vec.x + m21 * vec.y + m22 * vec.z + m23)
         )
     }
 
@@ -71,10 +86,6 @@ class Mat4(
         m02, m12, m22, m32,
         m03, m13, m23, m33
     )
-
-    fun asBuffer(): FloatBuffer =
-        BufferUtils.createFloatBuffer(16).put(asArray())
-
 
     operator fun times(mat: Mat4): Mat4 = Mat4(
         m00 * mat.m00 + m01 * mat.m10 + m02 * mat.m20 + m03 * mat.m30,
@@ -98,3 +109,5 @@ class Mat4(
         m30 * mat.m03 + m31 * mat.m13 + m32 * mat.m23 + m33 * mat.m33
     )
 }
+
+class Mat4List(val matrices: List<Mat4>)
