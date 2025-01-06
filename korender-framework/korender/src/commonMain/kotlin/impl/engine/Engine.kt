@@ -8,12 +8,14 @@ import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
 import com.zakgof.korender.FrustumProjectionDeclaration
+import com.zakgof.korender.Image
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.OrthoProjectionDeclaration
+import com.zakgof.korender.Platform
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.SmokeParams
@@ -51,14 +53,16 @@ import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.OrthoProjection
 import com.zakgof.korender.impl.projection.Projection
+import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Vec3
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.channels.Channel
 
 internal class Engine(
     width: Int,
     height: Int,
-    asyncContext: AsyncContext,
+    private val asyncContext: AsyncContext,
     block: KorenderContext.() -> Unit
 ) {
 
@@ -231,6 +235,13 @@ internal class Engine(
 
         override val height: Int
             get() = renderContext.height
+
+        override fun loadImage(imageResource: String): Deferred<Image> {
+            return asyncContext.call {
+                val bytes = resourceBytes(asyncContext.appResourceLoader, imageResource)
+                Platform.loadImage(bytes, imageResource.split(".").last()).await()
+            }
+        }
     }
 
     init {

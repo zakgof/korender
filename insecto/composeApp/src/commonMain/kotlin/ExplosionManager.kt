@@ -9,8 +9,8 @@ class ExplosionManager {
     val splinters = mutableListOf<Splinter>()
 
     fun update(time: Float, dt: Float) {
-        explosions.removeIf { !it.update(time) }
-        splinters.removeIf { !it.update(time, dt) }
+        explosions.removeAll { !it.update(time) }
+        splinters.removeAll { !it.update(time, dt) }
     }
 
     fun boom(position: Vec3, startRadius: Float, finishRadius: Float, time: Float) {

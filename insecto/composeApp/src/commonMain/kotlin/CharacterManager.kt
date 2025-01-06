@@ -1,5 +1,5 @@
 
-import com.zakgof.korender.input.TouchEvent
+import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.rotate

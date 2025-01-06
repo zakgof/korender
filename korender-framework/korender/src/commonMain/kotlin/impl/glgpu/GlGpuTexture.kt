@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.glgpu
 
+import com.zakgof.korender.Image
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -34,17 +35,10 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_T
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_BYTE
 import com.zakgof.korender.impl.gl.GLTexture
 import com.zakgof.korender.impl.ignoringGlError
-import com.zakgof.korender.impl.image.Image
+import com.zakgof.korender.impl.image.InternalImage
 import kotlin.math.min
 
 internal class GlGpuTexture(private val name: String, val glHandle: GLTexture) : AutoCloseable {
-
-    enum class Format {
-        RGB,
-        RGBA,
-        Gray,
-        Gray16
-    }
 
     companion object {
         val filterMap = mapOf(
@@ -62,14 +56,14 @@ internal class GlGpuTexture(private val name: String, val glHandle: GLTexture) :
             TextureWrap.Repeat to GL_REPEAT
         )
         val formatMap = mapOf(
-            Format.RGBA to GL_RGBA,
-            Format.RGB to GL_RGB,
+            Image.Format.RGBA to GL_RGBA,
+            Image.Format.RGB to GL_RGB,
         )
     }
 
     constructor(
         name: String,
-        image: Image,
+        image: InternalImage,
         filter: TextureFilter = TextureFilter.MipMapLinearLinear,
         wrap: TextureWrap = TextureWrap.Repeat,
         aniso: Int = 1024,

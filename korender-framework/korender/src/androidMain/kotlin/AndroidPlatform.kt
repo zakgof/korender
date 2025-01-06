@@ -7,7 +7,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Rect
 import android.graphics.Typeface
 import android.opengl.GLSurfaceView
 import android.os.Build
@@ -27,8 +26,7 @@ import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
-import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.image.Image
+import com.zakgof.korender.impl.image.InternalImage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -49,7 +47,7 @@ internal actual object Platform {
 
     actual val name: String = "Android ${Build.VERSION.SDK_INT}"
 
-    internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<Image> =
+    internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage> =
         CompletableDeferred(bitmapToImage(BitmapFactory.decodeByteArray(bytes, 0, bytes.size)))
 
     private fun bitmapToImage(bitmap: Bitmap): AndroidImage {
@@ -58,7 +56,7 @@ internal actual object Platform {
         bitmap.copyPixelsToBuffer(byteBuffer)
         val format = bitmap.config
         val gpuFormat = when (format) {
-            Bitmap.Config.ARGB_8888 -> GlGpuTexture.Format.RGBA
+            Bitmap.Config.ARGB_8888 -> Image.Format.RGBA
             else -> throw KorenderException("Unsupported image format $format")
         }
         val gpuBytes = when (format) {
@@ -119,8 +117,8 @@ internal class AndroidImage(
     override val width: Int,
     override val height: Int,
     override val bytes: NativeByteBuffer,
-    override val format: GlGpuTexture.Format
-) : Image {
+    override val format: Image.Format
+) : InternalImage {
     override fun pixel(x: Int, y: Int): com.zakgof.korender.math.Color {
         // TODO: performance optimization
         val androidColor = bitmap.getPixel(x, y)

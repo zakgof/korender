@@ -13,7 +13,7 @@ class EnemyManager(private val hf: HeightField) {
         if (heads.size < headsCount) {
             heads.add(Head(characterPosition))
         }
-        heads.removeIf { !it.update(characterPosition, dt, hf) }
+        heads.removeAll { !it.update(characterPosition, dt, hf) }
     }
 
     fun hit(head: Head) = heads.remove(head)

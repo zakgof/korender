@@ -23,7 +23,7 @@ class CollisionDetector {
     }
 
     fun <T : Any, O : Any> detect(kClass1: KClass<T>, kClass2: KClass<O>, block: Handler<T, O>) {
-        handlers.computeIfAbsent(kClass1) { mutableMapOf() }[kClass2] = block as Handler<Any, Any>
+        handlers.getOrPut(kClass1) { mutableMapOf() }[kClass2] = block as Handler<Any, Any>
     }
 
     fun go() {

@@ -3,7 +3,7 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import kotlin.math.sin
 
-class SkullManager(private val hf: HeightField) {
+class SkullManager(hf: HeightField) {
 
     val skulls = mutableListOf(
         Skull(hf, Vec3(-4542f, 0f, -4672f)),

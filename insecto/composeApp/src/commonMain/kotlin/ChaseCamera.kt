@@ -1,13 +1,12 @@
 
-import com.zakgof.korender.camera.Camera
-import com.zakgof.korender.camera.DefaultCamera
-import com.zakgof.korender.input.TouchEvent
+import com.zakgof.korender.CameraDeclaration
+import com.zakgof.korender.FrustumProjectionDeclaration
+import com.zakgof.korender.TouchEvent
+import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import com.zakgof.korender.projection.FrustumProjection
-import com.zakgof.korender.projection.Projection
 import kotlin.math.min
 
 class ChaseCamera (initialTarget: Transform) {
@@ -20,10 +19,10 @@ class ChaseCamera (initialTarget: Transform) {
     private var dragStartEvent: TouchEvent? = null
     private var dragStartCamToTarget: Vec3? = null
 
-    fun camera(targetTransform: Transform, projection: Projection, width: Int, height: Int, hf: HeightField, dt: Float): Camera {
+    fun camera(targetTransform: Transform, kc: KorenderContext, hf: HeightField, dt: Float): CameraDeclaration {
 
         target = targetTransform * -2.z
-        val frustum =  projection as FrustumProjection
+        val frustum =  kc.projection as FrustumProjectionDeclaration
 
         if (dragStartCamToTarget != null) {
 
@@ -33,8 +32,8 @@ class ChaseCamera (initialTarget: Transform) {
 
 
             position = target + dragStartCamToTarget!! +
-                    startRight * (deltaX / width * frustum.width * 8.0f) +
-                    startUp * (deltaY / height * frustum.height * 8.0f)
+                    startRight * (deltaX / kc.width * frustum.width * 8.0f) +
+                    startUp * (deltaY / kc.height * frustum.height * 8.0f)
         } else {
             val expectedPosition = targetTransform * Vec3(0f, 2f, 10f)
             val expectedJump = expectedPosition - position
@@ -49,7 +48,7 @@ class ChaseCamera (initialTarget: Transform) {
         val direction = (target - position).normalize()
         val right = (direction % 1.y).normalize()
         val up = (right % direction).normalize()
-        return DefaultCamera(position, direction, up)
+        return kc.camera(position, direction, up)
     }
 
     fun touch(touchEvent: TouchEvent) {

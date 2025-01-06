@@ -1,4 +1,5 @@
 import androidx.compose.runtime.Composable
+import com.zakgof.insecto.Res
 import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
@@ -12,49 +13,50 @@ import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import kotlinx.coroutines.Deferred
-
-
-fun loadImage(imageResource: String) : Deferred<Image>
+import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @Composable
-fun App() = Korender {
+@OptIn(ExperimentalResourceApi::class)
+fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-    val controller = Controller()
+    val controller = Controller(this)
 
     Frame {
 
-        controller.update(frameInfo)
-        val bugTransform = controller.characterManager.transform()
-        OnTouch { controller.chaseCamera.touch(it) }
+        controller.game?.session?.let { session ->
 
-        DirectionalLight(Vec3(0f, -1f, 3f).normalize())
-        projection = frustum(width = 3f * width / height, height = 3f, near = 3f, far = 10000f)
-        camera =
-            controller.camera(bugTransform, projection, width, height, frameInfo.dt, frameInfo.time)
-        Shadow {
-            Cascade(1024, 3f, 20f)
-            Cascade(512, 20f, 100f)
-            Cascade(512, 100f, 10000f)
-        }
+            session.update(frameInfo)
+            val bugTransform = session.characterManager.transform()
+            OnTouch { session.chaseCamera.touch(it) }
+            projection = frustum(width = 3f * width / height, height = 3f, near = 3f, far = 10000f)
+            camera = session.camera(this@Korender, bugTransform, frameInfo.dt, frameInfo.time)
+            Shadow {
+                Cascade(1024, 3f, 20f)
+                Cascade(512, 20f, 100f)
+                Cascade(512, 100f, 10000f)
+            }
 
-        val skyPlugin = fastCloudSky()
-        Pass {
-            terrain(this@Korender, controller.hfImage, controller.hf, controller.elevationRatio)
-            bug(this@Korender, bugTransform)
-            controller.missileManager.missiles.forEach { missile(this@Korender, it.transform()) }
-            controller.enemyManager.heads.forEach { head(this@Korender, it.transform()) }
-            controller.explosionManager.explosions.forEach { explosion(this@Korender, it) }
-            splinters(this@Korender, controller.explosionManager)
-            controller.skullManager.skulls.forEach { skull(this@Korender, it) }
-            Sky(skyPlugin)
-        }
-        Pass {
-            Screen(water(), skyPlugin)
-        }
-        Pass {
-            Screen(fragment("atmosphere.frag"))
-            gui(controller)
+            val skyPlugin = fastCloudSky()
+            Pass {
+                DirectionalLight(Vec3(0f, -1f, 3f).normalize(), Color.white(0.8f))
+                AmbientLight(Color.white(0.3f))
+                terrain(this@Korender, session.hf, controller.elevationRatio)
+                bug(this@Korender, bugTransform)
+                session.missileManager.missiles.forEach { missile(this@Korender, it.transform()) }
+                session.enemyManager.heads.forEach { head(this@Korender, it.transform()) }
+                session.explosionManager.explosions.forEach { explosion(this@Korender, it) }
+                splinters(this@Korender, session.explosionManager)
+                session.skullManager.skulls.forEach { skull(this@Korender, it) }
+                Sky(skyPlugin)
+            }
+            Pass {
+                Screen(water(), skyPlugin)
+                gui(controller.game!!)
+            }
+            // Pass {
+                // Screen(fragment("atmosphere.frag"), uniforms()) TODO
+
+            // }
         }
     }
 }
@@ -63,48 +65,45 @@ fun PassContext.skull(kc: KorenderContext, skull: SkullManager.Skull) {
     if (!skull.destroyed) {
         Renderable(
             kc.standart {
-                baseColorTexture = kc.texture("/skull/skull.jpg")
+                baseColorTexture = kc.texture("skull/skull.jpg")
                 pbr.metallic = 0.5f
             },
-            mesh = kc.obj("/skull/skull.obj"),
+            mesh = kc.obj("skull/skull.obj"),
             transform = skull.transform * rotate(1.y, -PIdiv2)
         )
     }
 }
 
-private fun PassContext.gui(controller: Controller) {
-    val cannonBtm = (controller.characterManager.cannonAngle * 256f).toInt() - 48
+private fun PassContext.gui(game: Controller.Game) {
+    val cannonBtm = (game.session.characterManager.cannonAngle * 256f).toInt() - 48
     val cannonTop = 52 - cannonBtm
     Gui {
         Text(
             id = "points",
-            text = String.format("SCORE: %d", controller.characterManager.score),
-            fontResource = "/ubuntu.ttf",
+            text = "SCORE: ${game.session.characterManager.score}",
+            fontResource = "ubuntu.ttf",
             height = 50,
             color = Color(0xFFFF8080)
         )
         Text(
             id = "fps",
-            text = String.format(
-                "FPS: %.1f  ${controller.characterManager.transform() * Vec3.ZERO}",
-                frameInfo.avgFps
-            ),
-            fontResource = "/ubuntu.ttf",
+            text = "FPS: ${frameInfo.avgFps} ${game.session.characterManager.transform() * Vec3.ZERO}",
+            fontResource = "ubuntu.ttf",
             height = 30,
             color = Color(0xFFFF8080)
         )
 
-        if (controller.gameOver) {
+        if (game.session.gameOver) {
             Filler()
             Row {
                 Filler()
                 Text(
                     id = "gameover",
                     text = "GAME OVER",
-                    fontResource = "/ubuntu.ttf",
+                    fontResource = "ubuntu.ttf",
                     height = 100,
                     color = Color(0xFFFF1234),
-                    onTouch = { controller.restart(it) })
+                    onTouch = { game.restart(it) })
                 Filler()
             }
             Row {
@@ -112,47 +111,47 @@ private fun PassContext.gui(controller: Controller) {
                 Text(
                     id = "restart",
                     text = "click to start new game",
-                    fontResource = "/ubuntu.ttf",
+                    fontResource = "ubuntu.ttf",
                     height = 50,
                     color = Color(0xFF89FF34),
-                    onTouch = { controller.restart(it) })
+                    onTouch = { game.restart(it) })
                 Filler()
             }
         }
 
         Filler()
-        if (!controller.gameOver) {
+        if (!game.session.gameOver) {
             Row {
                 Column {
                     Row {
                         Column {
                             Filler()
                             Image(
-                                imageResource = "/icon/left.png",
+                                imageResource = "icon/left.png",
                                 width = 128,
                                 height = 128,
-                                onTouch = { controller.characterManager.left(it) })
+                                onTouch = { game.session.characterManager.left(it) })
                         }
                         Column {
                             Filler()
                             Image(
-                                imageResource = "/icon/accelerate.png",
+                                imageResource = "icon/accelerate.png",
                                 width = 128,
                                 height = 128,
-                                onTouch = { controller.characterManager.forward(it) })
+                                onTouch = { game.session.characterManager.forward(it) })
                             Image(
-                                imageResource = "/icon/decelerate.png",
+                                imageResource = "icon/decelerate.png",
                                 width = 128,
                                 height = 128,
-                                onTouch = { controller.characterManager.backward(it) })
+                                onTouch = { game.session.characterManager.backward(it) })
                         }
                         Column {
                             Filler()
                             Image(
-                                imageResource = "/icon/right.png",
+                                imageResource = "icon/right.png",
                                 width = 128,
                                 height = 128,
-                                onTouch = { controller.characterManager.right(it) })
+                                onTouch = { game.session.characterManager.right(it) })
                         }
                     }
                 }
@@ -160,12 +159,12 @@ private fun PassContext.gui(controller: Controller) {
                 Column {
                     Filler()
                     Image(
-                        imageResource = "/icon/angle-up.png",
+                        imageResource = "icon/angle-up.png",
                         width = 128,
                         height = 128,
-                        onTouch = { controller.characterManager.cannonUp(it) })
+                        onTouch = { game.session.characterManager.cannonUp(it) })
                     Image(
-                        imageResource = "/icon/minus.png",
+                        imageResource = "icon/minus.png",
                         width = 64,
                         height = 64,
                         marginLeft = 32,
@@ -173,24 +172,24 @@ private fun PassContext.gui(controller: Controller) {
                         marginBottom = cannonBtm
                     )
                     Image(
-                        imageResource = "/icon/angle-down.png",
+                        imageResource = "icon/angle-down.png",
                         width = 128,
                         height = 128,
-                        marginBottom = if (controller.missileManager.canFire(frameInfo.time)) 0 else 128,
-                        onTouch = { controller.characterManager.cannonDown(it) })
+                        marginBottom = if (game.session.missileManager.canFire(frameInfo.time)) 0 else 128,
+                        onTouch = { game.session.characterManager.cannonDown(it) })
 
-                    if (controller.missileManager.canFire(frameInfo.time)) {
+                    if (game.session.missileManager.canFire(frameInfo.time)) {
                         Image(
-                            imageResource = "/icon/fire.png",
+                            imageResource = "icon/fire.png",
                             width = 128,
                             height = 128,
                             onTouch = {
-                                controller.missileManager.fire(
+                                game.session.missileManager.fire(
                                     frameInfo.time,
                                     it,
-                                    controller.characterManager.transform(),
-                                    controller.characterManager.velocity,
-                                    controller.characterManager.cannonAngle
+                                    game.session.characterManager.transform(),
+                                    game.session.characterManager.velocity,
+                                    game.session.characterManager.cannonAngle
                                 )
                             })
                     }
@@ -207,7 +206,8 @@ private fun PassContext.terrain(
 ) {
     Renderable(
         ck.standart {
-            baseColorTexture = ck.texture("/terrain/terrainbase.jpg")
+            baseColorTexture = ck.texture("terrain/terrainbase.jpg")
+            pbr.metallic = 0.0f
             // detailTexture = ck.texture("/sand.jpg")
             // detailRatio = 1.0f
             // detailScale = 1600.0f
@@ -223,13 +223,15 @@ private fun PassContext.terrain(
     Renderable(
         ck.plugin("texture", "terrain/texture.plugin.frag"),
         ck.standart {
-            baseColorTexture = ck.texture("/terrain/terrainbase.jpg")
-            set("tex1", ck.texture("/sand.jpg"))
-            set("tex2", ck.texture("/grass.jpg"))
+            baseColorTexture = ck.texture("terrain/terrainbase.jpg")
+            pbr.metallic = 0.0f
+            pbr.roughness = 0.7f
+            set("tex1", ck.texture("sand.jpg"))
+            set("tex2", ck.texture("grass.jpg"))
         },
         mesh = ck.heightField(id = "terrain",
-            cellsX = hf.width - 1,
-            cellsZ = hf.height - 1,
+            cellsX = hf.image.width - 1,
+            cellsZ = hf.image.height - 1,
             cellWidth = 20.0f,
             height = { x, y -> hf.pixel(x, y) * elevationRatio - 3.0f }
         )
@@ -238,28 +240,28 @@ private fun PassContext.terrain(
 
 fun PassContext.bug(kc: KorenderContext, bugTransform: Transform) = Renderable(
     kc.standart {
-        baseColorTexture = kc.texture("/bug/bug.jpg")
+        baseColorTexture = kc.texture("bug/bug.jpg")
         pbr.metallic = 0.2f
     },
-    mesh = kc.obj("/bug/bug.obj"),
+    mesh = kc.obj("bug/bug.obj"),
     transform = bugTransform * rotate(1.y, -PIdiv2).scale(2.0f).translate(0.3f.y)
 )
 
 fun PassContext.missile(kc: KorenderContext, missileTransform: Transform) = Renderable(
     kc.standart {
-        baseColorTexture = kc.texture("/missile/missile.jpg")
+        baseColorTexture = kc.texture("missile/missile.jpg")
         pbr.metallic = 0.8f
     },
-    mesh = kc.obj("/missile/missile.obj"),
+    mesh = kc.obj("missile/missile.obj"),
     transform = missileTransform * rotate(1.y, -PIdiv2)
 )
 
 fun PassContext.head(kc: KorenderContext, headTransform: Transform) = Renderable(
     kc.standart {
-        baseColorTexture = kc.texture("/head/head-high.jpg")
+        baseColorTexture = kc.texture("head/head-high.jpg")
         pbr.metallic = 0.4f
     },
-    mesh = kc.obj("/head/head-high.obj"),
+    mesh = kc.obj("head/head-high.obj"),
     transform = headTransform * rotate(1.y, -PIdiv2).scale(2.0f)
 )
 
@@ -277,7 +279,7 @@ fun PassContext.splinters(kc: KorenderContext, explosionManager: ExplosionManage
     InstancedRenderables(
         kc.standart {
             baseColor = Color(0xFF804040)
-            baseColorTexture = kc.texture("/sand.jpg")
+            baseColorTexture = kc.texture("sand.jpg")
         },
         id = "splinters",
         count = 5000,

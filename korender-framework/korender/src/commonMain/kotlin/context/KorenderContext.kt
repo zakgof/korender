@@ -7,6 +7,7 @@ import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
 import com.zakgof.korender.FrustumProjectionDeclaration
+import com.zakgof.korender.Image
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshAttribute
@@ -25,6 +26,7 @@ import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.WaterParams
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Vec3
+import kotlinx.coroutines.Deferred
 
 interface KorenderContext {
 
@@ -89,4 +91,6 @@ interface KorenderContext {
     fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration
     fun ortho(width: Float, height: Float, near: Float, far: Float): OrthoProjectionDeclaration
     fun camera(position: Vec3, direction: Vec3, up: Vec3): CameraDeclaration
+
+    fun loadImage(imageResource: String): Deferred<Image>
 }

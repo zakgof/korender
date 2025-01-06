@@ -16,9 +16,7 @@ import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.gl.GL
-import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.image.Image
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.impl.image.InternalImage
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.CompletableDeferred
@@ -45,24 +43,13 @@ import org.w3c.dom.get
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-internal fun Byte.toClampedFloat(): Float = this.toInt().and(0xFF).toFloat()
-
 internal class WasmImage(
     override val width: Int,
     override val height: Int,
-    private val byteArray: ByteArray,
-    override val format: GlGpuTexture.Format = GlGpuTexture.Format.RGBA
-) : Image {
+    byteArray: ByteArray,
+    override val format: Image.Format = Image.Format.RGBA
+) : InternalImage {
     override val bytes = NativeByteBuffer(byteArray)
-    override fun pixel(x: Int, y: Int): Color {
-        val base = (x + y * width) * 4
-        return Color(
-            byteArray[base + 3].toClampedFloat(),
-            byteArray[base].toClampedFloat(),
-            byteArray[base + 1].toClampedFloat(),
-            byteArray[base + 2].toClampedFloat()
-        )
-    }
 }
 
 internal actual object Platform {
@@ -124,8 +111,8 @@ internal actual object Platform {
     }
 
     @OptIn(ExperimentalEncodingApi::class)
-    internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<Image> {
-        val result = CompletableDeferred<Image>()
+    internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage> {
+        val result = CompletableDeferred<InternalImage>()
         val base64Data = Base64.encode(bytes)
         val image = document.createElement("img") as HTMLImageElement
         image.src = "data:image/$type;base64,$base64Data"

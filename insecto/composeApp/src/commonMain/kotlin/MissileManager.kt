@@ -1,5 +1,5 @@
 
-import com.zakgof.korender.input.TouchEvent
+import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -14,7 +14,7 @@ class MissileManager(private val hf: HeightField, private val explosionManager: 
 
     fun update(time: Float, dt: Float) {
         missiles.forEach { it.update(dt) }
-        missiles.removeIf {
+        missiles.removeAll {
             if (it.position.y < hf.elevation(it.position.x, it.position.z)  - 0.1f) {
                 explosionManager.boom(hf.surface(it.position), 0f, 6f, time)
                 true

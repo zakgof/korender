@@ -2,7 +2,6 @@ package com.zakgof.korender
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -13,8 +12,7 @@ import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
-import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.image.Image
+import com.zakgof.korender.impl.image.InternalImage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -148,14 +146,6 @@ actual fun Korender(
             canvas
         }
     )
-
-    DisposableEffect(null) {
-
-        onDispose {
-
-        }
-    }
-
 }
 
 internal actual object Platform {
@@ -164,7 +154,7 @@ internal actual object Platform {
 
     actual fun nanoTime() = System.nanoTime()
 
-    internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<Image> =
+    internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage> =
         CompletableDeferred(image(ImageIO.read(ByteArrayInputStream(bytes))))
 
     private fun loadBgr(data: ByteArray): NativeByteBuffer {
@@ -237,7 +227,7 @@ internal actual object Platform {
         return CompletableDeferred(FontDef(image, widths))
     }
 
-    private fun image(bufferedImage: BufferedImage): Image {
+    private fun image(bufferedImage: BufferedImage): InternalImage {
         val raster = bufferedImage.raster
         val bytes = when (bufferedImage.type) {
             BufferedImage.TYPE_3BYTE_BGR -> loadBgr((raster.dataBuffer as DataBufferByte).data)
@@ -247,10 +237,10 @@ internal actual object Platform {
             else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
         }
         val format = when (bufferedImage.type) {
-            BufferedImage.TYPE_3BYTE_BGR -> GlGpuTexture.Format.RGB
-            BufferedImage.TYPE_4BYTE_ABGR -> GlGpuTexture.Format.RGBA
-            BufferedImage.TYPE_BYTE_GRAY -> GlGpuTexture.Format.Gray
-            BufferedImage.TYPE_USHORT_GRAY -> GlGpuTexture.Format.Gray16
+            BufferedImage.TYPE_3BYTE_BGR -> Image.Format.RGB
+            BufferedImage.TYPE_4BYTE_ABGR -> Image.Format.RGBA
+            BufferedImage.TYPE_BYTE_GRAY -> Image.Format.Gray
+            BufferedImage.TYPE_USHORT_GRAY -> Image.Format.Gray16
             else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
         }
         return JvmImage(
@@ -269,31 +259,10 @@ internal class JvmImage(
     override val width: Int,
     override val height: Int,
     override val bytes: NativeByteBuffer,
-    override val format: GlGpuTexture.Format
-) : Image {
+    override val format: Image.Format
+) : InternalImage {
 
-    private val pixel = FloatArray(3) { 0f }
 
-    override fun pixel(x: Int, y: Int): com.zakgof.korender.math.Color {
-        raster.getPixel(x, y, pixel)
-        return when (format) {
-            // TODO support more formats
-            // TODO support transparency
-            GlGpuTexture.Format.Gray16 -> com.zakgof.korender.math.Color(
-                1.0f,
-                pixel[0] / 65535.0f,
-                pixel[0] / 65535.0f,
-                pixel[0] / 65535.0f
-            )
-
-            else -> com.zakgof.korender.math.Color(
-                1.0f,
-                pixel[0] / 255.0f,
-                pixel[1] / 255.0f,
-                pixel[2] / 255.0f
-            )
-        }
-    }
 
 
 }
