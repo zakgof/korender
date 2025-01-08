@@ -17,7 +17,7 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @Composable
 @OptIn(ExperimentalResourceApi::class)
-fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun Insecto() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
     val controller = Controller(this)
 

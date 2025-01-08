@@ -26,13 +26,13 @@ internal interface InternalImage : Image {
 
             Image.Format.Gray -> {
                 val gray = byteToFloat(bytes.byte((x + y * width)))
-                Color(1.0f, gray, gray, gray)
+                Color.white(gray)
             }
 
             Image.Format.Gray16 -> {
                 val gray = (bytes.byte((x + y * width) * 2).toUByte().toFloat() * 256.0f +
                         bytes.byte((x + y * width) * 2 + 1).toUByte().toFloat()) / 65535.0f
-                Color(1.0f, gray, gray, gray)
+                Color.white(gray)
             }
         }
 
