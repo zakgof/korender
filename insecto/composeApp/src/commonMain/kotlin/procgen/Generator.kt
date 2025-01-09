@@ -6,7 +6,19 @@ import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
+
+class Recto(val xmin: Int, val xmax: Int, val ymin: Int, val ymax: Int, val zmin: Int, val zmax: Int)
+
 private fun cube(x: Int, y: Int, z: Int) = x or (y shl 8) or (z shl 16)
+
+private fun Int.withX(x: Int): Int = cube(x, this.cy, this.cz)
+private fun Int.withY(y: Int): Int = cube(this.cx, y, this.cz)
+private fun Int.withZ(z: Int): Int = cube(this.cx, this.cy, z)
+private fun Set<Int>.inRect(x1: Int, x2: Int, y1: Int, y2: Int, z1: Int, z2: Int) =
+    this.filter { (it.cx in x1..x2) && (it.cy in y1..y2) && (it.cz in z1..z2) }.toSet()
+
+private fun Set<Int>.filled(x1: Int, x2: Int, y1: Int, y2: Int, z1: Int, z2: Int) =
+    inRect(x1, x2, y1, y2, z1, z2).size == (x2 - x1 + 1) * (y2 - y1 + 1) * (z2 - z1 + 1)
 
 private val Int.cx: Int
     get() = this and 0xFF
@@ -15,133 +27,257 @@ private val Int.cy: Int
 private val Int.cz: Int
     get() = (this shr 16) and 0xFF
 
-class Generator(private val xsize: Int, private val ysize: Int, private val height: Int) {
+class Generator {
 
-    fun run(block: Context.() -> Unit): Triangulation {
-        val cubes = collectCubes(block)
-        return triangulate(cubes)
+    private val lightWindow = CTriangulation()
+    private val roof = CTriangulation()
+
+    fun building(xoffset: Int, yoffset: Int, xsize: Int, ysize: Int, height: Int, block: Context.() -> Unit): Generator {
+        val cubes = collectCubes(xsize, ysize, height, block)
+        triangulate(xoffset, yoffset, cubes)
+        return this
     }
 
-    private fun collectCubes(block: Context.() -> Unit): MutableSet<Int> {
+    fun lw(): Triangulation = lightWindow
+    fun rf(): Triangulation = roof
+
+    private fun collectCubes(xsize: Int, ysize: Int, height: Int, block: Context.() -> Unit): MutableSet<Int> {
         val cubes = mutableSetOf<Int>()
         var level = Level(xsize, ysize)
         for (z in 0 until height) {
             block.invoke(level)
             cubes += level.cubes
+
+            println("Level $z    cubes ${level.cubes.size}")
+
             level = level.up()
         }
+        println("=======")
         return cubes
     }
 
-    private fun triangulate(cubes: Set<Int>): Triangulation {
-        val points = mutableListOf<Vec3>()
-        val normals = mutableListOf<Vec3>()
-        val texs = mutableListOf<Vec2>()
-        val indexes = mutableListOf<Int>()
-        var faces = 0
+    private fun triangulate(xoffset: Int, yoffset: Int, cubes: Set<Int>) {
 
-        fun v3(x: Int, y: Int, z: Int) = Vec3(x.toFloat(), y.toFloat(), z.toFloat())
+        fun v3(cx: Int, cz: Int, cy: Int) = Vec3((cx + xoffset).toFloat(), cz.toFloat(), (cy + yoffset).toFloat())
 
-        cubes.forEach {
-            // left
-            if (it.cx == 0 || !cubes.contains(cube(it.cx - 1, it.cy, it.cz))) {
-                points += v3(it.cx, it.cz, it.cy)
-                points += v3(it.cx, it.cz + 1, it.cy)
-                points += v3(it.cx, it.cz + 1, it.cy + 1)
-                points += v3(it.cx, it.cz, it.cy + 1)
-                normals += List(4) { -1.x }
-                texs += listOf(Vec2(0f, 0f), Vec2(0f, 1f), Vec2(1f, 1f), Vec2(1f, 0f))
-                indexes += listOf(faces * 4 + 0, faces * 4 + 2, faces * 4 + 1, faces * 4 + 0, faces * 4 + 3, faces * 4 + 2)
-                faces++
+        // FRONT
+        cubes.filter { !cubes.contains(cube(it.cx, it.cy + 1, it.cz)) }
+            .groupBy { it.cy }.values.forEach { layer ->
+                val cells = layer.toMutableSet()
+                while (cells.isNotEmpty()) {
+                    val cell = cells.first()
+                    var minz = cell.cz
+                    var maxz = cell.cz
+                    var minx = cell.cx
+                    var maxx = cell.cx
+                    while (cells.contains(cell.withZ(minz - 1))) {
+                        minz--
+                    }
+                    while (cells.contains(cell.withZ(maxz + 1))) {
+                        maxz++
+                    }
+                    while (cells.filled(minx - 1, minx - 1, cell.cy, cell.cy, minz, maxz)) {
+                        minx--
+                    }
+                    while (cells.filled(maxx + 1, maxx + 1, cell.cy, cell.cy, minz, maxz)) {
+                        maxx++
+                    }
+                    cells.removeAll(cells.inRect(minx, maxx, cell.cy, cell.cy, minz, maxz))
+
+                    lightWindow.face(
+                        v3(minx, minz, cell.cy + 1),
+                        v3(minx, maxz + 1, cell.cy + 1),
+                        v3(maxx + 1, maxz + 1, cell.cy + 1),
+                        v3(maxx + 1, minz, cell.cy + 1),
+                        1.z,
+                        maxx + 1 - minx, maxz + 1 - minz
+                    )
+                }
             }
-            // right
-            if (!cubes.contains(cube(it.cx + 1, it.cy, it.cz))) {
-                points += v3(it.cx + 1, it.cz, it.cy + 1)
-                points += v3(it.cx + 1, it.cz + 1, it.cy + 1)
-                points += v3(it.cx + 1, it.cz + 1, it.cy)
-                points += v3(it.cx + 1, it.cz, it.cy)
-                normals += List(4) { 1.x }
-                texs += listOf(Vec2(0f, 0f), Vec2(0f, 1f), Vec2(1f, 1f), Vec2(1f, 0f))
-                indexes += listOf(faces * 4 + 0, faces * 4 + 2, faces * 4 + 1, faces * 4 + 0, faces * 4 + 3, faces * 4 + 2)
-                faces++
+
+        // BACK
+        cubes.filter { (it.cy == 0 || !cubes.contains(cube(it.cx, it.cy - 1, it.cz))) }
+            .groupBy { it.cy }.values.forEach { layer ->
+                val cells = layer.toMutableSet()
+                while (cells.isNotEmpty()) {
+                    val cell = cells.first()
+                    var minz = cell.cz
+                    var maxz = cell.cz
+                    var minx = cell.cx
+                    var maxx = cell.cx
+                    while (cells.contains(cell.withZ(minz - 1))) {
+                        minz--
+                    }
+                    while (cells.contains(cell.withZ(maxz + 1))) {
+                        maxz++
+                    }
+                    while (cells.filled(minx - 1, minx - 1, cell.cy, cell.cy, minz, maxz)) {
+                        minx--
+                    }
+                    while (cells.filled(maxx + 1, maxx + 1, cell.cy, cell.cy, minz, maxz)) {
+                        maxx++
+                    }
+                    cells.removeAll(cells.inRect(minx, maxx, cell.cy, cell.cy, minz, maxz))
+
+                    lightWindow.face(
+                        v3(maxx + 1, minz, cell.cy),
+                        v3(maxx + 1, maxz + 1, cell.cy),
+                        v3(minx, maxz + 1, cell.cy),
+                        v3(minx, minz, cell.cy),
+                        -1.z,
+                        maxx + 1 - minx, maxz + 1 - minz
+                    )
+                }
             }
-            // bottom
-            if (it.cz == 0 || !cubes.contains(cube(it.cx, it.cy, it.cz - 1))) {
-                points += v3(it.cx, it.cz, it.cy)
-                points += v3(it.cx, it.cz, it.cy + 1)
-                points += v3(it.cx + 1, it.cz, it.cy + 1)
-                points += v3(it.cx + 1, it.cz, it.cy)
-                normals += List(4) { -1.y }
-                texs += listOf(Vec2(0f, 0f), Vec2(0f, 1f), Vec2(1f, 1f), Vec2(1f, 0f))
-                indexes += listOf(faces * 4 + 0, faces * 4 + 2, faces * 4 + 1, faces * 4 + 0, faces * 4 + 3, faces * 4 + 2)
-                faces++
+
+        // LEFT
+        cubes.filter { (it.cx == 0 || !cubes.contains(cube(it.cx - 1, it.cy, it.cz))) }
+            .groupBy { it.cx }.values.forEach { layer ->
+                val cells = layer.toMutableSet()
+                while (cells.isNotEmpty()) {
+                    val cell = cells.first()
+                    var minz = cell.cz
+                    var maxz = cell.cz
+                    var miny = cell.cy
+                    var maxy = cell.cy
+                    while (cells.contains(cell.withZ(minz - 1))) {
+                        minz--
+                    }
+                    while (cells.contains(cell.withZ(maxz + 1))) {
+                        maxz++
+                    }
+                    while (cells.filled(cell.cx, cell.cx, miny - 1, miny - 1, minz, maxz)) {
+                        miny--
+                    }
+                    while (cells.filled(cell.cx, cell.cx, maxy + 1, maxy + 1, minz, maxz)) {
+                        maxy++
+                    }
+                    cells.removeAll(cells.inRect(cell.cx, cell.cx, miny, maxy, minz, maxz))
+
+                    lightWindow.face(
+                        v3(cell.cx, minz, miny),
+                        v3(cell.cx, maxz + 1, miny),
+                        v3(cell.cx, maxz + 1, maxy + 1),
+                        v3(cell.cx, minz, maxy + 1),
+                        -1.x,
+                        maxy + 1 - miny, maxz + 1 - minz
+                    )
+                }
             }
-            // top
-            if (!cubes.contains(cube(it.cx, it.cy, it.cz + 1))) {
-                points += v3(it.cx, it.cz + 1, it.cy + 1)
-                points += v3(it.cx, it.cz + 1, it.cy)
-                points += v3(it.cx + 1, it.cz + 1, it.cy)
-                points += v3(it.cx + 1, it.cz + 1, it.cy + 1)
-                normals += List(4) { 1.y }
-                texs += listOf(Vec2(0f, 0f), Vec2(0f, 1f), Vec2(1f, 1f), Vec2(1f, 0f))
-                indexes += listOf(faces * 4 + 0, faces * 4 + 2, faces * 4 + 1, faces * 4 + 0, faces * 4 + 3, faces * 4 + 2)
-                faces++
+
+        // RIGHT
+        cubes.filter { !cubes.contains(cube(it.cx + 1, it.cy, it.cz)) }
+            .groupBy { it.cx }.values.forEach { layer ->
+                val cells = layer.toMutableSet()
+                while (cells.isNotEmpty()) {
+                    val cell = cells.first()
+                    var minz = cell.cz
+                    var maxz = cell.cz
+                    var miny = cell.cy
+                    var maxy = cell.cy
+                    while (cells.contains(cell.withZ(minz - 1))) {
+                        minz--
+                    }
+                    while (cells.contains(cell.withZ(maxz + 1))) {
+                        maxz++
+                    }
+                    while (cells.filled(cell.cx, cell.cx, miny - 1, miny - 1, minz, maxz)) {
+                        miny--
+                    }
+                    while (cells.filled(cell.cx, cell.cx, maxy + 1, maxy + 1, minz, maxz)) {
+                        maxy++
+                    }
+                    cells.removeAll(cells.inRect(cell.cx, cell.cx, miny, maxy, minz, maxz))
+
+                    lightWindow.face(
+                        v3(cell.cx + 1, minz, maxy + 1),
+                        v3(cell.cx + 1, maxz + 1, maxy + 1),
+                        v3(cell.cx + 1, maxz + 1, miny),
+                        v3(cell.cx + 1, minz, miny),
+                        1.x,
+                        maxy + 1 - miny, maxz + 1 - minz
+                    )
+                }
             }
-            // front
-            if (!cubes.contains(cube(it.cx, it.cy + 1, it.cz))) {
-                points += v3(it.cx, it.cz, it.cy + 1)
-                points += v3(it.cx, it.cz + 1, it.cy + 1)
-                points += v3(it.cx + 1, it.cz + 1, it.cy + 1)
-                points += v3(it.cx + 1, it.cz, it.cy + 1)
-                normals += List(4) { 1.z }
-                texs += listOf(Vec2(0f, 0f), Vec2(0f, 1f), Vec2(1f, 1f), Vec2(1f, 0f))
-                indexes += listOf(faces * 4 + 0, faces * 4 + 2, faces * 4 + 1, faces * 4 + 0, faces * 4 + 3, faces * 4 + 2)
-                faces++
+
+        // ROOF
+        cubes.filter { !cubes.contains(cube(it.cx, it.cy, it.cz + 1)) }
+            .groupBy { it.cz }.values.forEach { layer ->
+                val cells = layer.toMutableSet()
+                while (cells.isNotEmpty()) {
+                    val cell = cells.first()
+                    var minx = cell.cx
+                    var maxx = cell.cx
+                    var miny = cell.cy
+                    var maxy = cell.cy
+                    while (cells.contains(cell.withY(miny - 1))) {
+                        miny--
+                    }
+                    while (cells.contains(cell.withY(maxy + 1))) {
+                        maxy++
+                    }
+                    while (cells.filled(minx, maxx, miny - 1, miny - 1, cell.cz, cell.cz)) {
+                        miny--
+                    }
+                    while (cells.filled(minx, maxx, maxy + 1, maxy + 1, cell.cz, cell.cz)) {
+                        maxy++
+                    }
+                    cells.removeAll(cells.inRect(minx, maxx, miny, maxy, cell.cz, cell.cz))
+
+                    roof.face(
+                        v3(minx, cell.cz + 1, maxy + 1),
+                        v3(minx, cell.cz + 1, miny),
+                        v3(maxx + 1, cell.cz + 1, miny),
+                        v3(maxx + 1, cell.cz + 1, maxy + 1),
+                        1.y,
+                        maxx + 1 - minx, maxy + 1 - miny
+                    )
+                }
             }
-            // back
-            if (it.cy == 0 || !cubes.contains(cube(it.cx, it.cy - 1, it.cz))) {
-                points += v3(it.cx + 1, it.cz, it.cy)
-                points += v3(it.cx + 1, it.cz + 1, it.cy)
-                points += v3(it.cx, it.cz + 1, it.cy)
-                points += v3(it.cx, it.cz, it.cy)
-                normals += List(4) { -1.z }
-                texs += listOf(Vec2(0f, 0f), Vec2(0f, 1f), Vec2(1f, 1f), Vec2(1f, 0f))
-                indexes += listOf(faces * 4 + 0, faces * 4 + 2, faces * 4 + 1, faces * 4 + 0, faces * 4 + 3, faces * 4 + 2)
-                faces++
-            }
-        }
-        return CTriangulation(points, normals, texs, indexes)
     }
 
     private class CTriangulation(
-        override val points: List<Vec3>,
-        override val normals: List<Vec3>,
-        override val texs: List<Vec2>,
-        override val indexes: List<Int>
-    ) : Triangulation
+        override val points: MutableList<Vec3> = mutableListOf(),
+        override val normals: MutableList<Vec3> = mutableListOf(),
+        override val texs: MutableList<Vec2> = mutableListOf(),
+        override val indexes: MutableList<Int> = mutableListOf()
+    ) : Triangulation {
+        var faces = 0
+
+        fun face(pos1: Vec3, pos2: Vec3, pos3: Vec3, pos4: Vec3, normal: Vec3, ucells: Int, vcells: Int) {
+            points += pos1
+            points += pos2
+            points += pos3
+            points += pos4
+            normals += List(4) { normal }
+            texs += listOf(Vec2(0f, 0f), Vec2(0f, vcells.toFloat()), Vec2(ucells.toFloat(), vcells.toFloat()), Vec2(ucells.toFloat(), 0f))
+            indexes += listOf(faces * 4 + 0, faces * 4 + 2, faces * 4 + 1, faces * 4 + 0, faces * 4 + 3, faces * 4 + 2)
+            faces++
+        }
+    }
 
     private class Level(override val level: Int, val cubes: MutableSet<Int>) : Context {
 
-        override val left: Int = cubes.minOf { it.cx }
-        override val right: Int = cubes.maxOf { it.cx }
-        override val bottom: Int = cubes.minOf { it.cy }
-        override val top: Int = cubes.maxOf { it.cy }
+        override val left: Int = cubes.minOfOrNull { it.cx } ?: -1
+        override val right: Int = cubes.maxOfOrNull { it.cx + 1 } ?: -1
+        override val bottom: Int = cubes.minOfOrNull { it.cy } ?: -1
+        override val top: Int = cubes.maxOfOrNull { it.cy + 1 } ?: -1
 
         fun up() = Level(level + 1, cubes.map { cube(it.cx, it.cy, it.cz + 1) }.toMutableSet())
 
         override fun corner(x: Int, y: Int) {
             cubes.removeAll {
-                ((x < 0 && it.cx < -x) || (x > 0 && it.cx > x))
-                        && ((y < 0 && it.cy < -y) || (y > 0 && it.cy > y))
+                ((x < 0 && it.cx < -x) || (x >= 0 && it.cx >= x))
+                        && ((y < 0 && it.cy < -y) || (y >= 0 && it.cy >= y))
             }
         }
 
         override fun flatx(x: Int) {
-            cubes.removeAll { (x < 0 && it.cx < -x) || (x > 0 && it.cx > x) }
+            cubes.removeAll { (x < 0 && it.cx < -x) || (x >= 0 && it.cx >= x) }
         }
 
         override fun flaty(y: Int) {
-            cubes.removeAll { (y < 0 && it.cy < -y) || (y > 0 && it.cy > y) }
+            cubes.removeAll { (y < 0 && it.cy < -y) || (y >= 0 && it.cy >= y) }
         }
 
         constructor(xsize: Int, ysize: Int) : this(
@@ -161,6 +297,29 @@ class Generator(private val xsize: Int, private val ysize: Int, private val heig
         fun corner(x: Int, y: Int)
         fun flatx(x: Int)
         fun flaty(y: Int)
+
+        fun symcorner(x: Int, y: Int) {
+            corner(-left - x, -bottom - y)
+            corner(right - x, -bottom - y)
+            corner(-left - x, top - y)
+            corner(right - x, top - y)
+        }
+
+        fun square(x: Int, y: Int) {
+            flatx(-left - x)
+            flatx(right - x)
+            flaty(-bottom - y)
+            flaty(top - y)
+        }
+
+        fun squareTo(x: Int, y: Int) {
+            val centx = (left + right) / 2
+            val centy = (top + bottom) / 2
+            flatx(-centx - x)
+            flatx(centx + x)
+            flaty(-centy - y)
+            flaty(centy + y)
+        }
     }
 
     interface Triangulation {
