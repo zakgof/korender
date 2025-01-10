@@ -3,13 +3,6 @@ package com.zakgof.korender.impl.gl
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.WebGL2RenderingContext
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
-import com.zakgof.korender.impl.gl.GLBuffer
-import com.zakgof.korender.impl.gl.GLFrameBuffer
-import com.zakgof.korender.impl.gl.GLProgram
-import com.zakgof.korender.impl.gl.GLShader
-import com.zakgof.korender.impl.gl.GLTexture
-import com.zakgof.korender.impl.gl.GLUniformLocation
-import com.zakgof.korender.impl.gl.GLVertexArray
 import org.khronos.webgl.toFloat32Array
 
 actual object GL {
@@ -71,7 +64,7 @@ actual object GL {
         target, level, internalformat, width, height, border, format, type, pixels?.array
     )
 
-    actual fun glGetFloatv(pname: Int) : Float? {
+    actual fun glGetFloatv(pname: Int): Float? {
         val paramValue = gl!!.getParameter(pname)
         return (paramValue as JsNumber?)?.toDouble()?.toFloat()
     }
@@ -203,8 +196,7 @@ actual object GL {
         index: Int, size: Int, type: Int, stride: Int, pointer: Int
     ) = gl!!.vertexAttribIPointer(index, size, type, stride, pointer)
 
-    actual fun glGetShaderi(shader: GLShader, pname: Int): Int
-        = boolOrInt(gl!!.getShaderParameter(shader.shader, pname))
+    actual fun glGetShaderi(shader: GLShader, pname: Int): Int = boolOrInt(gl!!.getShaderParameter(shader.shader, pname))
 
     private fun boolOrInt(value: JsAny?): Int {
         if (value is JsNumber) return value.toInt()
@@ -222,7 +214,7 @@ actual object GL {
         gl!!.generateMipmap(target)
 
     actual fun glGenFramebuffers(): GLFrameBuffer =
-        com.zakgof.korender.impl.gl.GLFrameBuffer(gl!!.createFramebuffer())
+        GLFrameBuffer(gl!!.createFramebuffer())
 
     actual fun glFramebufferTexture2D(
         target: Int, attachment: Int, textarget: Int, texture: GLTexture, level: Int
@@ -245,4 +237,7 @@ actual object GL {
 
     actual fun glBufferData(target: Int, data: NativeByteBuffer, usage: Int) =
         gl!!.bufferData(target, data.array, usage)
+
+    actual fun glDrawBuffers(vararg targets: Int) =
+        gl!!.drawBuffers(targets.toTypedArray().map { it.toJsNumber() }.toJsArray())
 }

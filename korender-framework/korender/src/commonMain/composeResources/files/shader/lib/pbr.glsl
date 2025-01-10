@@ -20,28 +20,3 @@ vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 albedo, float metallic, float rou
 
     return (f_diffuse + f_specular) * NdotL * lightColor;
 }
-
-
-vec3 doPbr(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor) {
-
-#ifdef METALLIC_ROUGHNESS_MAP
-    vec4 mrtexel = texture(metallicRoughnessTexture, vtex);
-    float metal = mrtexel.b * metallic;
-    float rough = mrtexel.g * roughness;
-#else
-    float metal = metallic;
-    float rough = roughness;
-#endif
-#ifdef EMISSIVE_MAP
-    vec3 emissive = textureRegOrTriplanar(emissiveTexture, vtex, vpos, N).rgb * emissiveFactor.rgb;
-#else
-    vec3 emissive = vec3(0.);
-#endif
-#ifdef OCCLUSION_MAP
-    float occlusion = textureRegOrTriplanar(occlusionTexture, vtex, vpos, N).r;
-#else
-    float occlusion = 1.;
-#endif
-
-    return calculatePBR(N, V, L, albedo, metal, rough, lightColor, occlusion, emissive);
-}

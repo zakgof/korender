@@ -5,17 +5,17 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.impl.material.DynamicUniforms
+import com.zakgof.korender.impl.material.MaterialBuilder
+import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
 internal class SceneDeclaration {
-    var shadow: ShadowDeclaration? = null
-    val defaultPass = PassDeclaration()
-    val passes = mutableListOf<PassDeclaration>()
 
-    fun addPass(pass: PassDeclaration) = passes.add(pass)
+    var shadow: ShadowDeclaration? = null
+    // TODO: shadows per light
     fun addShadow(shadow: ShadowDeclaration) {
         if (this.shadow != null) {
             throw KorenderException("Only one Shadow declaration is allowed")
@@ -23,23 +23,17 @@ internal class SceneDeclaration {
         this.shadow = shadow
     }
 
-    fun compilePasses() {
-        if (defaultPass.renderables.isNotEmpty() || defaultPass.guis.isNotEmpty() || defaultPass.gltfs.isNotEmpty()) {
-            if (passes.isNotEmpty()) {
-                throw KorenderException("It is not allowed to mix Passes and renderables in Frame context")
-            }
-            passes.add(defaultPass)
-        }
-    }
-}
-
-internal class PassDeclaration {
     val pointLights = mutableListOf<PointLightDeclaration>()
     val directionalLights = mutableListOf<DirectionalLightDeclaration>()
     var ambientLightColor = Color(1.0f, 0.15f, 0.15f, 0.15f)
     val renderables = mutableListOf<RenderableDeclaration>()
     val guis = mutableListOf<ElementDeclaration.Container>()
     val gltfs = mutableListOf<GltfDeclaration>()
+    var filters = mutableListOf<MaterialDeclaration>()
+
+    init {
+        filters += materialDeclaration(MaterialBuilder(vertShaderFile = "!shader/screen.vert", fragShaderFile = "!shader/composition.frag"))
+    }
 }
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
@@ -104,6 +98,7 @@ internal data class FrameBufferDeclaration(
     val id: String,
     val width: Int,
     val height: Int,
+    val colorTextures: Int,
     val withDepth: Boolean
 )
 

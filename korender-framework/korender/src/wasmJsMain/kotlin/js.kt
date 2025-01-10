@@ -12,6 +12,7 @@ abstract external class WebGL2RenderingContext : WebGLRenderingContextBase, Rend
     abstract fun deleteVertexArray(vertexArray: WebGLVertexArray)
     abstract fun bindVertexArray(vertexArray: WebGLVertexArray?)
     abstract fun vertexAttribIPointer(index: Int, size: Int, type: Int, stride: Int, pointer: Int)
+    abstract fun drawBuffers(targets: JsArray<JsNumber>)
 }
 
 abstract external class WebGLVertexArray : WebGLObject, JsAny

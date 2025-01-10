@@ -11,7 +11,7 @@ internal fun interface InternalMaterialModifier : MaterialModifier {
 
 internal class MaterialBuilder(
     var vertShaderFile: String = "!shader/standart.vert",
-    var fragShaderFile: String = "!shader/standart.frag",
+    var fragShaderFile: String = "!shader/geometry.frag",
     val options: MutableSet<RenderingOption> = mutableSetOf(),
     val shaderDefs: MutableSet<String> = mutableSetOf(),
     val plugins: MutableMap<String, String> = mutableMapOf(),
@@ -23,3 +23,9 @@ internal class MaterialBuilder(
         uniforms = { pluginUniforms.fold(shaderUniforms()) { acc, pu -> acc + pu() } }
     )
 }
+
+internal fun materialDeclaration(builder: MaterialBuilder, vararg materialModifiers: MaterialModifier) =
+    materialModifiers.fold(builder) { acc, mod ->
+        (mod as InternalMaterialModifier).applyTo(acc)
+        acc
+    }.toMaterialDeclaration()

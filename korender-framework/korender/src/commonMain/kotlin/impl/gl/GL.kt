@@ -155,4 +155,6 @@ expect object GL {
     fun glBindFramebuffer(target: Int, framebuffer: GLFrameBuffer?)
 
     fun glCheckFramebufferStatus(target: Int): Int
+
+    fun glDrawBuffers(vararg targets: Int)
 }

@@ -6,6 +6,7 @@ import com.zakgof.korender.impl.gl.GL.glBindFramebuffer
 import com.zakgof.korender.impl.gl.GL.glBindTexture
 import com.zakgof.korender.impl.gl.GL.glCheckFramebufferStatus
 import com.zakgof.korender.impl.gl.GL.glDeleteFramebuffers
+import com.zakgof.korender.impl.gl.GL.glDrawBuffers
 import com.zakgof.korender.impl.gl.GL.glFramebufferTexture2D
 import com.zakgof.korender.impl.gl.GL.glGenFramebuffers
 import com.zakgof.korender.impl.gl.GL.glGenTextures
@@ -36,12 +37,12 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_SHORT
 import com.zakgof.korender.impl.gl.GLFrameBuffer
 import com.zakgof.korender.impl.ignoringGlError
 
-internal class GlGpuFrameBuffer(private val name: String, private val width: Int, private val height: Int, useDepthBuffer: Boolean) :
+internal class GlGpuFrameBuffer(private val name: String, private val width: Int, private val height: Int, colorTexturesNum: Int, useDepthBuffer: Boolean) :
     AutoCloseable {
 
     private val fbHandle: GLFrameBuffer = glGenFramebuffers()
 
-    val colorTexture:  GlGpuTexture
+    val colorTextures = mutableListOf<GlGpuTexture>()
     val depthTexture: GlGpuTexture?
 
     init {
@@ -49,14 +50,18 @@ internal class GlGpuFrameBuffer(private val name: String, private val width: Int
         println("Creating GPU Framebuffer [$name] ${width}x${height}: $fbHandle")
 
         glBindFramebuffer(GL_FRAMEBUFFER, fbHandle)
-        colorTexture = createTexture(false)
-        glFramebufferTexture2D(
-            GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT0,
-            GL_TEXTURE_2D,
-            colorTexture.glHandle,
-            0
-        )
+
+        for (ct in 0 until colorTexturesNum) {
+            val colorTexture = createTexture(false)
+            colorTextures += colorTexture
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER,
+                GL_COLOR_ATTACHMENT0 + ct,
+                GL_TEXTURE_2D,
+                colorTexture.glHandle,
+                0
+            )
+        }
 
         if (useDepthBuffer) {
             depthTexture = createTexture(true)
@@ -70,6 +75,9 @@ internal class GlGpuFrameBuffer(private val name: String, private val width: Int
         } else {
             depthTexture = null
         }
+
+        glDrawBuffers(*IntArray(colorTexturesNum) { GL_COLOR_ATTACHMENT0 + it })
+
         val err: Int = glCheckFramebufferStatus(GL_FRAMEBUFFER)
         if (err != GL_FRAMEBUFFER_COMPLETE) {
             throw KorenderException("Error creating framebuffer $err")
@@ -111,7 +119,7 @@ internal class GlGpuFrameBuffer(private val name: String, private val width: Int
     override fun close() {
         println("Destroying GPU Framebuffer [$name] $fbHandle ")
         glDeleteFramebuffers(fbHandle)
-        colorTexture.close()
+        colorTextures.forEach { it.close() }
         depthTexture?.close()
     }
 

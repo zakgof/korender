@@ -116,12 +116,17 @@ out vec4 fragColor;
 
 void main() {
 
+
+
 #ifdef BASE_COLOR_MAP
     vec4 albedo = textureRegOrTriplanar(baseColorTexture, vtex, vpos, vnormal) * baseColor;
 #else
     vec4 albedo = baseColor;
 #endif
 
+#ifdef PLUGIN_TEXTURE
+    albedo = pluginTexture(albedo);
+#endif
 
 #ifdef NO_LIGHT
     vec3 color = albedo.rgb;

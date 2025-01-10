@@ -34,6 +34,7 @@ internal class SingleShadower(
             "shadow$index",
             decl.mapSize,
             decl.mapSize,
+            1, // TODO: depth only
             false
         )
     )
@@ -65,7 +66,7 @@ internal class SingleShadower(
                 val casterShader = inventory.shader(
                     ShaderDeclaration(
                         "!shader/standart.vert",
-                        "!shader/standart.frag",
+                        "!shader/standart.frag", // TODO: completely different caster shader
                         setOf("SHADOW_CASTER", "NO_LIGHT")
                     )
                 )
@@ -77,7 +78,7 @@ internal class SingleShadower(
         }
 
         return mapOf(
-            "shadowTexture$index" to frameBuffer.colorTexture,
+            "shadowTexture$index" to frameBuffer.colorTextures[0], // TODO OR DEPTH ?
             "shadowProjection$index" to shadowProjection.mat4,
             "shadowView$index" to shadowCamera.mat4
         )

@@ -12,32 +12,19 @@ import kotlin.math.sin
 @Composable
 fun BlurExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
-        Pass {
-            Renderable(
-                standart {
-                    baseColorTexture = texture("texture/asphalt-albedo.jpg")
-                },
-                mesh = sphere(3f),
-                transform = translate(-2.x)
-            )
-        }
+        Renderable(
+            standart {
+                baseColorTexture = texture("texture/asphalt-albedo.jpg")
+            },
+            mesh = sphere(3f),
+            transform = translate(-2.x)
+        )
         val radius = 1.0f + sin(frameInfo.time)
-        Pass {
-            Screen(blurHorz {
-                this.radius = radius
-            })
-        }
-        Pass {
-            Screen(blurVert {
-                this.radius = radius
-            })
-            Renderable(
-                standart {
-                    baseColorTexture = texture("texture/asphalt-albedo.jpg")
-                },
-                mesh = sphere(3f),
-                transform = translate(2.x)
-            )
-        }
+        Filter(blurHorz {
+            this.radius = radius
+        })
+        Filter(blurVert {
+            this.radius = radius
+        })
     }
 }

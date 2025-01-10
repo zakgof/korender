@@ -128,7 +128,10 @@ internal class Engine(
             InternalMaterialModifier { it.shaderDefs += setOf(*defs) }
 
         override fun plugin(name: String, shaderFile: String): InternalMaterialModifier =
-            InternalMaterialModifier { it.plugins[name] = shaderFile }
+            InternalMaterialModifier {
+                it.plugins[name] = shaderFile
+                it.shaderDefs += "PLUGIN_" + name.uppercase()
+            }
 
         override fun options(vararg options: RenderingOption): InternalMaterialModifier =
             InternalMaterialModifier { it.options += setOf(*options) }

@@ -17,26 +17,22 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 fun ShowcaseExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     camera = camera(Vec3(0f, 5f, 30f), -1.z, 1.y)
     Frame {
-        Pass {
-            DirectionalLight(Vec3(1f, -1f, -1f))
-            Sky(fastCloudSky())
-            Renderable(
-                standart {
-                    baseColor = Green
-                    pbr.metallic = 0.3f
-                    pbr.roughness = 0.5f
-                },
-                mesh = sphere(2f),
-                transform = translate(-0.5f.y)
-            )
+        DirectionalLight(Vec3(1f, -1f, -1f))
+        Sky(fastCloudSky())
+        Renderable(
+            standart {
+                baseColor = Green
+                pbr.metallic = 0.3f
+                pbr.roughness = 0.5f
+            },
+            mesh = sphere(2f),
+            transform = translate(-0.5f.y)
+        )
+        Gui {
+            Filler()
+            Text(text = "FPS ${frameInfo.avgFps}", height = 50, color = Red, fontResource = "font/orbitron.ttf", id = "fps")
         }
-        Pass {
-            Screen(water(), fastCloudSky())
-            Billboard(fire { yscale = 10f; xscale = 2f }, position = 6.y, transparent = true)
-            Gui {
-                Filler()
-                Text(text = "FPS ${frameInfo.avgFps}", height = 50, color = Red, fontResource = "font/orbitron.ttf", id = "fps")
-            }
-        }
+        Billboard(fire { yscale = 10f; xscale = 2f }, position = 6.y, transparent = true)
+        // Filter(water(), fastCloudSky())
     }
 }

@@ -11,22 +11,18 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 @Composable
 fun FxaaExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
-        Pass {
-            Renderable(
-                standart {
-                    baseColor = Green
-                    pbr.metallic = 0.2f
-                },
-                mesh = sphere(4f),
-            )
+        Renderable(
+            standart {
+                baseColor = Green
+                pbr.metallic = 0.2f
+            },
+            mesh = sphere(4f),
+        )
+        Gui {
+            Text(text = "FXAA", fontResource = "font/orbitron.ttf", height = 50, color = Red, id = "fxaa")
         }
         if (frameInfo.time.toInt() % 6 < 3) {
-            Pass {
-                Screen(fxaa())
-                Gui {
-                    Text(text = "FXAA", fontResource = "font/orbitron.ttf", height = 50, color = Red, id = "fxaa")
-                }
-            }
+            Filter(fxaa())
         }
     }
 }
