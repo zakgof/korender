@@ -4,7 +4,7 @@
 
 in vec2 vtex;
 
-uniform sampler2D albedoTexture;
+uniform sampler2D cdiffTexture;
 uniform sampler2D normalTexture;
 uniform sampler2D materialTexture;
 uniform sampler2D depthTexture;
@@ -47,22 +47,21 @@ void main() {
 
     vec3 V = normalize(cameraPos - vpos);
 
-    vec4 albedo = texture(albedoTexture, vtex);
+    vec4 cdiff = texture(cdiffTexture, vtex);
     vec3 N = normalize(texture(normalTexture, vtex).rgb * 2.0 - 1.0);
-    vec4 materialTexel = texture(materialTexture, vtex);
 
-    float metal = materialTexel.r;
-    float rough = materialTexel.g;
+    vec4 materialTexel = texture(materialTexture, vtex);
+    vec3 F0 = materialTexel.rgb;
+    float roughness = materialTexel.a;
 
     float shadowRatio = 0.;
 
-    vec3 color = albedo.rgb * ambientColor.rgb;
+    vec3 color = cdiff.rgb * ambientColor.rgb;
 
     for (int l=0; l<numDirectionalLights; l++) {
         vec3 lightValue = directionalLights[l].color.rgb * (1. - shadowRatio);
         vec3 L = normalize(-directionalLights[l].dir);
-
-        color += calculatePBR(N, V, L, albedo.rgb, metal, rough, lightValue, 1., vec3(0.));
+        color += calculatePBR(N, V, L, cdiff.rgb, F0, roughness, lightValue);
     }
     for (int l=0; l<numPointLights; l++) {
         vec3 ftol = pointLights[l].pos - vpos;
@@ -70,11 +69,9 @@ void main() {
         float att = max(2.0, 3.0 / distance);
         vec3 lightValue = pointLights[l].color.rgb * (1. - shadowRatio) * att;// TODO quadratic; configurable attenuation ratio
         vec3 L = normalize(ftol);
-        color += calculatePBR(N, V, L, albedo.rgb, metal, rough, lightValue, 1., vec3(0.));
+        color += calculatePBR(N, V, L, cdiff.rgb, F0, roughness, lightValue);
     }
 
-
-    // TODO: lighting and shadowing
-    fragColor = vec4(color, albedo.a);
+    fragColor = vec4(color, cdiff.a);
     gl_FragDepth = depth;
 }

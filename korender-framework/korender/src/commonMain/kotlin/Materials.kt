@@ -68,10 +68,11 @@ interface StandartParams : BaseParams {
     interface Pbr {
         var metallic: Float
         var roughness: Float
-        var emissiveFactor: Color
         var metallicRoughnessTexture: TextureDeclaration?
-        var emissiveTexture: TextureDeclaration?
-        var occlusionTexture: TextureDeclaration?
+
+//        var emissiveFactor: Color
+//        var emissiveTexture: TextureDeclaration?
+//        var occlusionTexture: TextureDeclaration?
     }
 
     interface SpecularGlossiness {

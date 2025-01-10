@@ -7,6 +7,10 @@ in vec2 vtex;
 uniform vec4 baseColor;
 uniform float metallic;
 uniform float roughness;
+#ifdef SPECULAR_GLOSSINESS
+    uniform vec4 specularFactor;
+    uniform float glossinessFactor;
+#endif
 
 #ifdef BASE_COLOR_MAP
 uniform sampler2D baseColorTexture;
@@ -25,18 +29,21 @@ uniform float detailScale;
 uniform float detailRatio;
 #endif
 
-
 #ifdef METALLIC_ROUGHNESS_MAP
 uniform sampler2D metallicRoughnessTexture;
 #endif
 
-// TODO TRIPLANAR, DETAIL FOR EVERYTHIN
+#ifdef SPECULAR_GLOSSINESS_MAP
+uniform sampler2D specularGlossinessTexture;
+#endif
+
+//  TODO DETAIL FOR EVERYTHIN
 
 #ifdef PLUGIN_TEXTURE
   #import "$texture"
 #endif
 
-layout(location = 0) out vec4 albedoChannel;
+layout(location = 0) out vec4 cdiffChannel;
 layout(location = 1) out vec4 normalChannel;
 layout(location = 2) out vec4 materialChannel;
 
@@ -61,16 +68,32 @@ void main() {
     vec3 N = normalize(vnormal);
 #endif
 
-#ifdef METALLIC_ROUGHNESS_MAP
-    vec4 mrtexel = texture(metallicRoughnessTexture, vtex);
-    float metal = mrtexel.b * metallic;
-    float rough = mrtexel.g * roughness;
+#ifdef SPECULAR_GLOSSINESS
+    #ifdef SPECULAR_GLOSSINESS_MAP
+        vec4 sgtexel = textureRegOrTriplanar(specularGlossinessTexture, vtex, vpos, N);
+        vec3 specular = sgtexel.rgb * specularFactor.rgb;
+        float glossiness = sgtexel.a * glossinessFactor;
+    #else
+        vec3 specular = specularFactor.rgb;
+        float glossiness = glossinessFactor;
+    #endif
+    vec3 c_diff = albedo.rgb * (1. - max(max(specular.r, specular.g), specular.b));
+    vec3 F0 = specular;
+    float rough = 1. - glossiness;
 #else
-    float metal = metallic;
-    float rough = roughness;
+    #ifdef METALLIC_ROUGHNESS_MAP
+        vec4 mrtexel = textureRegOrTriplanar(metallicRoughnessTexture, vtex, vpos, N);
+        float metal = mrtexel.b * metallic;
+        float rough = mrtexel.g * roughness;
+    #else
+        float metal = metallic;
+        float rough = roughness;
+    #endif
+    vec3 c_diff = mix(albedo.rgb, vec3(0.), metal);
+    vec3 F0 = mix(vec3(0.04), albedo.rgb, metal);
 #endif
 
-    albedoChannel = albedo;
-    normalChannel = vec4(N * 0.5 + 0.5, 1.0); // TODO vec3 RGB TODO unused channel
-    materialChannel = vec4(metal, rough, 1.0, 1.0); // TODO vec3  RGB TODO unused channels
+    cdiffChannel = vec4(c_diff, albedo.a); // TODO vec3 RGB TODO unused a channel
+    normalChannel = vec4(N * 0.5 + 0.5, 1.0); // TODO vec3 RGB TODO unused a channel
+    materialChannel = vec4(F0, rough);
 }

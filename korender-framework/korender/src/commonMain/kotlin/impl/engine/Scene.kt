@@ -11,6 +11,7 @@ import com.zakgof.korender.impl.gl.GL.glClearColor
 import com.zakgof.korender.impl.gl.GL.glCullFace
 import com.zakgof.korender.impl.gl.GL.glDepthFunc
 import com.zakgof.korender.impl.gl.GL.glDepthMask
+import com.zakgof.korender.impl.gl.GL.glDisable
 import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GL.glViewport
 import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
@@ -56,7 +57,7 @@ internal class Scene(
             }
         }
         sceneDeclaration.renderables.forEach {
-            val renderable = Renderable.create(inventory, it, renderContext.camera, false, sceneDeclaration.shadow?.cascades?.size ?:0)
+            val renderable = Renderable.create(inventory, it, renderContext.camera, false, sceneDeclaration.shadow?.cascades?.size ?: 0)
             renderable?.let { r ->
                 when (it.bucket) {
                     Bucket.OPAQUE -> opaques.add(r)
@@ -127,7 +128,7 @@ internal class Scene(
             renderGeometry(contextUniforms, fixer)
         }
         val geometryUniforms = mapOf(
-            "albedoTexture" to geometryBuffer.colorTextures[0],
+            "cdiffTexture" to geometryBuffer.colorTextures[0],
             "normalTexture" to geometryBuffer.colorTextures[1],
             "materialTexture" to geometryBuffer.colorTextures[2],
             "depthTexture" to geometryBuffer.depthTexture!!
@@ -146,14 +147,14 @@ internal class Scene(
 
             val frameBuffer = if (p == sceneDeclaration.filters.size - 1) null else filterFrameBuffers[p % 2]
             renderTo(frameBuffer) {
-                renderFilter(filter, totalContextUniforms, fixer, frameBuffer == null)
+                renderFilter(filter, totalContextUniforms, fixer, p == 0, frameBuffer == null)
             }
             prevFrameContext["filterColorTexture"] = frameBuffer?.colorTextures?.get(0) ?: contextUniforms["noiseTexture"] // TODO this is hack
             prevFrameContext["filterDepthTexture"] = frameBuffer?.depthTexture ?: contextUniforms["noiseTexture"] // TODO this is hack
         }
     }
 
-    private fun renderFilter(filter: MaterialDeclaration, uniforms: Map<String, Any?>, fixer: (Any?) -> Any?, final: Boolean) {
+    private fun renderFilter(filter: MaterialDeclaration, uniforms: Map<String, Any?>, fixer: (Any?) -> Any?, first: Boolean, final: Boolean) {
 
         val mesh = inventory.mesh(ScreenQuad)
         val shader = inventory.shader(filter.shader)
@@ -174,6 +175,10 @@ internal class Scene(
             Renderable(mesh, shader, filter.uniforms).render(uniforms, fixer)
         }
 
+        if (first) {
+            skies.forEach { it.render(uniforms, fixer) }
+        }
+
         if (final) {
             screens.forEach { it.render(uniforms, fixer) }
             glDepthMask(false)
@@ -189,18 +194,15 @@ internal class Scene(
     }
 
     private fun renderGeometry(contextUniforms: Map<String, Any?>, fixer: (Any?) -> Any?) {
-        val back = renderContext.backgroundColor
-        glClearColor(back.r, back.g, back.b, back.a)
+        glClearColor(0f, 0f, 0f, 0f);
         glViewport(0, 0, renderContext.width, renderContext.height)
-        glEnable(GL_BLEND)
+        glDisable(GL_BLEND)
         glEnable(GL_DEPTH_TEST)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glDepthFunc(GL_LEQUAL)
         glEnable(GL_CULL_FACE)
         glCullFace(GL_BACK)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         opaques.forEach { it.render(contextUniforms, fixer) }
-        skies.forEach { it.render(contextUniforms, fixer) }
     }
 
     internal class TouchBox(

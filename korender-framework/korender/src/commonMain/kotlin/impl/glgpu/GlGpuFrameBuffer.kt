@@ -24,7 +24,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER_COMPLETE
 import com.zakgof.korender.impl.gl.GLConstants.GL_LINEAR
 import com.zakgof.korender.impl.gl.GLConstants.GL_NEAREST
-import com.zakgof.korender.impl.gl.GLConstants.GL_RGB
+import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE0
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_2D
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_BORDER_COLOR
@@ -92,11 +92,11 @@ internal class GlGpuFrameBuffer(private val name: String, private val width: Int
         glTexImage2D(
             GL_TEXTURE_2D,
             0,
-            if (depth) (if (shaderEnv == "WEBGL") GL_DEPTH_COMPONENT16 else GL_DEPTH_COMPONENT) else GL_RGB,
+            if (depth) (if (shaderEnv == "WEBGL") GL_DEPTH_COMPONENT16 else GL_DEPTH_COMPONENT) else GL_RGBA,
             width,
             height,
             0,
-            if (depth) GL_DEPTH_COMPONENT else GL_RGB,
+            if (depth) GL_DEPTH_COMPONENT else GL_RGBA,
             if (depth) GL_UNSIGNED_SHORT else GL_UNSIGNED_BYTE,
             null
         )

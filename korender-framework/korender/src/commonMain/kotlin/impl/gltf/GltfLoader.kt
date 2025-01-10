@@ -351,10 +351,11 @@ internal class GltfSceneBuilder(
                 this.baseColorTexture = albedoTexture
                 this.pbr.metallic = metallic
                 this.pbr.roughness = roughness
-                this.pbr.emissiveFactor = emissiveFactor
                 this.pbr.metallicRoughnessTexture = metallicRoughnessTexture
-                this.pbr.occlusionTexture = occlusionTexture
-                this.pbr.emissiveTexture = emissiveTexture
+
+//                this.pbr.emissiveFactor = emissiveFactor
+//                this.pbr.occlusionTexture = occlusionTexture
+//                this.pbr.emissiveTexture = emissiveTexture
             }
 
             if (matSpecularGlossiness != null) {

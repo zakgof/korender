@@ -16,7 +16,9 @@ actual object GL {
         GL11.glDrawElements(mode, count, type, indices.toLong())
 
     actual fun glEnable(target: Int) = GL11.glEnable(target)
+
     actual fun glDisable(target: Int) = GL11.glDisable(target)
+
     actual fun glBindTexture(target: Int, texture: GLTexture) =
         GL11.glBindTexture(target, texture.glHandle)
 
@@ -26,7 +28,7 @@ actual object GL {
     actual fun glDeleteTextures(texture: GLTexture) = GL11.glDeleteTextures(texture.glHandle)
     actual fun glPixelStorei(pname: Int, param: Int) = GL11.glPixelStorei(pname, param)
     actual fun glGenTextures(): GLTexture =
-        com.zakgof.korender.impl.gl.GLTexture(GL11.glGenTextures())
+        GLTexture(GL11.glGenTextures())
     actual fun glBlendFunc(sfactor: Int, dfactor: Int) = GL11.glBlendFunc(sfactor, dfactor)
     actual fun glDepthFunc(func: Int) = GL11.glDepthFunc(func)
     actual fun glDepthMask(flag: Boolean) = GL11.glDepthMask(flag)

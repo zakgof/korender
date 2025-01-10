@@ -149,7 +149,6 @@ internal class InternalStarrySkyParams : StarrySkyParams, InternalBaseParams() {
 
 internal class InternalStandartParams : StandartParams, InternalBaseParams() {
 
-    private var _pbr: Pbr? = null
     private var _specularGlossiness: SpecularGlossiness? = null
 
     override var pcss = false
@@ -158,13 +157,8 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
     override var baseColorTexture: TextureDeclaration? = null
     override var triplanarScale: Float? = null
 
-    override val pbr: Pbr
-        get() {
-            if (_pbr == null) {
-                _pbr = InternalPbr()
-            }
-            return _pbr!!
-        }
+    override val pbr = InternalPbr()
+
     override val specularGlossiness: SpecularGlossiness
         get() {
             if (_specularGlossiness == null) {
@@ -188,18 +182,19 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
         map["baseColor"] = baseColor
         map["baseColorTexture"] = baseColorTexture
 
-        if (_pbr != null) {
-            map["metallic"] = _pbr!!.metallic
-            map["roughness"] = _pbr!!.roughness
-            map["emissiveFactor"] = _pbr!!.emissiveFactor
-            map["metallicRoughnessTexture"] = _pbr!!.metallicRoughnessTexture
-            map["emissiveTexture"] = _pbr!!.emissiveTexture
-            map["occlusionTexture"] = _pbr!!.occlusionTexture
-            defs += "PBR"
-            _pbr!!.metallicRoughnessTexture?.let { defs += "METALLIC_ROUGHNESS_MAP" }
-            _pbr!!.emissiveTexture?.let { defs += "EMISSIVE_MAP" }
-            _pbr!!.occlusionTexture?.let { defs += "OCCLUSION_MAP" }
-        }
+        map["metallic"] = pbr.metallic
+        map["roughness"] = pbr.roughness
+        map["metallicRoughnessTexture"] = pbr.metallicRoughnessTexture
+
+
+//        map["emissiveFactor"] = pbr.emissiveFactor
+
+//            map["emissiveTexture"] = _pbr!!.emissiveTexture
+//            map["occlusionTexture"] = _pbr!!.occlusionTexture
+
+        pbr.metallicRoughnessTexture?.let { defs += "METALLIC_ROUGHNESS_MAP" }
+//          _pbr!!.emissiveTexture?.let { defs += "EMISSIVE_MAP" }
+//          _pbr!!.occlusionTexture?.let { defs += "OCCLUSION_MAP" }
 
         if (_specularGlossiness != null) {
             map["specularFactor"] = _specularGlossiness!!.specularFactor
@@ -223,10 +218,6 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
         baseColorTexture?.let { defs += "BASE_COLOR_MAP" }
         normalTexture?.let { defs += "NORMAL_MAP" }
         jointMatrices?.let { defs += "SKINNING" }
-
-        if (_pbr == null && _specularGlossiness == null) {
-            defs += "NO_LIGHT"
-        }
         if (pcss) {
             defs += "PCSS"
         }
@@ -236,10 +227,12 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
     internal class InternalPbr : Pbr {
         override var metallic = 0.1f
         override var roughness = 0.5f
-        override var emissiveFactor = Color(1f, 1f, 1f, 1f)
         override var metallicRoughnessTexture: TextureDeclaration? = null
-        override var emissiveTexture: TextureDeclaration? = null
-        override var occlusionTexture: TextureDeclaration? = null
+
+//        override var emissiveFactor = Color(1f, 1f, 1f, 1f)
+//        override var emissiveTexture: TextureDeclaration? = null
+//        override var occlusionTexture: TextureDeclaration? = null
+
     }
 
     internal class InternalSpecularGlossiness : SpecularGlossiness {
@@ -248,6 +241,7 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
         override var specularGlossinessTexture: TextureDeclaration? = null
     }
 }
+
 
 internal class ParamUniforms<P : InternalBaseParams>(
     private val params: P,
