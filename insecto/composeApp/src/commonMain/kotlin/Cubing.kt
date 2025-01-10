@@ -1,3 +1,4 @@
+
 import androidx.compose.runtime.Composable
 import com.zakgof.insecto.Res
 import com.zakgof.korender.Attributes.NORMAL
@@ -26,7 +27,7 @@ fun Int.chance(block: () -> Unit) {
 @OptIn(ExperimentalResourceApi::class)
 fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val tria = tria()
-    val orbitCamera = OrbitCamera(this, 400.z, 0.z)
+    val orbitCamera = OrbitCamera(this, 300.z, 0.z)
 
     fun Generator.Triangulation.toCustomMesh(id: String) =
         customMesh(id, this.points.size, this.indexes.size, POS, NORMAL, TEX) {
@@ -38,31 +39,40 @@ fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
     Frame {
 
-        fun city(texture: String, mesh: Generator.Triangulation) = Renderable(
-            standart {
-                baseColorTexture = texture(texture)
-                pbr.metallic = 0.0f
-            },
-            mesh = mesh.toCustomMesh("city-$texture"),
-            transform = translate(-192f, -32f, -192f)
-        )
-
-
         AmbientLight(white(0.4f))
         DirectionalLight(Vec3(1f, -1f, -1f).normalize(), white(1.0f))
         DirectionalLight(Vec3(-1f, 1f, 1f).normalize(), white(0.2f))
-        PointLight(Vec3(1f, 1f, 5f), white(3.65f))
+
+        PointLight(Vec3(0f, 0f, 5f), white(3f))
+        PointLight(Vec3(100f, 100f, 5f), white(3f))
+        PointLight(Vec3(-100f, -100f, 5f), white(3f))
 
         OnTouch { orbitCamera.touch(it) }
         camera = orbitCamera.camera(projection, width, height)
 
-        city("lw.jpg", tria.lw())
-        city("roof.jpg", tria.rf())
+        Renderable(
+            standart {
+                baseColorTexture = texture("city/roof.jpg")
+                pbr.metallic = 0.0f
+            },
+            plugin("texture", "city/window.texture.plugin.frag"),
+            mesh = tria.lw().toCustomMesh("windows"),
+            transform = translate(-192f, -32f, -192f)
+        )
+
+        Renderable(
+            standart {
+                baseColorTexture = texture("city/roof.jpg")
+                pbr.metallic = 0.0f
+            },
+            mesh = tria.rf().toCustomMesh("roof"),
+            transform = translate(-192f, -32f, -192f)
+        )
 
         Renderable(
             standart {
                 baseColor = white(0.1f)
-                baseColorTexture = texture("roof.jpg")
+                baseColorTexture = texture("city/roof.jpg")
                 pbr.metallic = 0.0f
                 pbr.roughness = 1.0f
                 triplanarScale = 0.02f
