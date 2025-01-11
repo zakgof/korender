@@ -125,6 +125,9 @@ actual object GL {
     actual fun glUniform1i(location: GLUniformLocation, v0: Int) =
         GL20.glUniform1i(location.glHandle, v0)
 
+    actual fun glUniform1iv(location: GLUniformLocation, vararg v0: Int) =
+        GL20.glUniform1iv(location.glHandle, v0)
+
     actual fun glUniform1f(location: GLUniformLocation, v0: Float) =
         GL20.glUniform1f(location.glHandle, v0)
 

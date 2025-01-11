@@ -14,8 +14,8 @@ import com.zakgof.korender.StandartParams.SpecularGlossiness
 import com.zakgof.korender.StarrySkyParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.WaterParams
+import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.math.Color
-import com.zakgof.korender.math.Mat4List
 
 typealias DynamicUniforms = () -> Map<String, Any?>
 
@@ -170,8 +170,8 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
     override var normalTexture: TextureDeclaration? = null
     override var shadowTexture: TextureDeclaration? = null
 
-    override var jointMatrices: Mat4List? = null
-    override var inverseBindMatrices: Mat4List? = null
+    var jointMatrices: Mat4List? = null
+    var inverseBindMatrices: Mat4List? = null
 
     override var xscale = 1f
     override var yscale = 1f

@@ -63,6 +63,8 @@ internal class GlGpuFrameBuffer(private val name: String, private val width: Int
             )
         }
 
+        println("Framebuffer textures [${colorTextures.map{it.glHandle}}]")
+
         if (useDepthBuffer) {
             depthTexture = createTexture(true)
             glFramebufferTexture2D(
@@ -83,7 +85,6 @@ internal class GlGpuFrameBuffer(private val name: String, private val width: Int
             throw KorenderException("Error creating framebuffer $err")
         }
     }
-
 
     private fun createTexture(depth: Boolean): GlGpuTexture {
         val glHandle = glGenTextures()

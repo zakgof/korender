@@ -3,7 +3,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.Color.Companion.white
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
@@ -22,17 +22,20 @@ fun ShadowExample() =
             pbr.metallic = 0.2f
             pcss = true
         }
-        camera = camera(Vec3(-2.0f, 3f, 20f), -1.z, 1.y)
+        camera = camera(Vec3(-2.0f, 5f, 30f), -1.z, 1.y)
         Frame {
-            DirectionalLight(Vec3(1f, -1f, 1f).normalize(), Color.white(5.0f))
-            AmbientLight(Color.white(0.35f))
-            Shadow {
-                Cascade(mapSize = 1024, near = 10.0f, far = 25.0f)
+            DirectionalLight(Vec3(1f, -1f, 2f).normalize(), white(5.0f)) {
+                Cascade(mapSize = 1024, near = 10.0f, far = 50.0f)
             }
+            DirectionalLight(Vec3(-1f, -1f, 2f).normalize(), white(3.0f)) {
+                Cascade(mapSize = 1024, near = 10.0f, far = 50.0f)
+            }
+            AmbientLight(white(0.25f))
+
             Renderable(
                 materialModifier,
                 mesh = cube(1f),
-                transform = scale(8f, 1f, 8f)
+                transform = scale(10f, 1f, 10f)
             )
             Renderable(
                 materialModifier,

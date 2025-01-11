@@ -1,6 +1,8 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.impl.camera.Camera
+import com.zakgof.korender.impl.context.DefaultInstancedBillboardsContext
+import com.zakgof.korender.impl.context.DefaultInstancedRenderablesContext
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.InstancedBillboard
@@ -13,18 +15,9 @@ import com.zakgof.korender.math.Transform
 internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms: DynamicUniforms, val transform: Transform = Transform()) {
 
     companion object {
-        fun create(inventory: Inventory, declaration: RenderableDeclaration, camera: Camera, isShadowCaster: Boolean, shadowCascades: Int = 0): Renderable? {
+        fun create(inventory: Inventory, declaration: RenderableDeclaration, camera: Camera): Renderable? {
             val mesh = inventory.mesh(declaration.mesh) ?: return null
-
-            val additionalShadowFlags = if (isShadowCaster) listOf("SHADOW_CASTER", "NO_LIGHT") else (0..<shadowCascades).map { "SHADOW_RECEIVER$it" }
-            val origShader = declaration.shader
-            val modifiedShader = ShaderDeclaration(
-                origShader.vertFile, origShader.fragFile,
-                origShader.defs + additionalShadowFlags,
-                setOf(),
-                origShader.plugins
-            )
-            val shader = inventory.shader(modifiedShader) ?: return null
+            val shader = inventory.shader(declaration.shader) ?: return null
 
             if (declaration.mesh is CustomMesh && declaration.mesh.dynamic) {
                 (mesh as Geometry.DefaultMesh).updateMesh(declaration.mesh.block)
@@ -50,9 +43,14 @@ internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms:
                     mesh.updateInstances(instances)
                 }
             }
-            val uniforms = declaration.uniforms
-            val transform = declaration.transform
-            return Renderable(mesh, shader, uniforms, transform)
+            return Renderable(mesh, shader, declaration.uniforms, declaration.transform)
+        }
+
+        fun createShadowCaster(inventory: Inventory, declaration: RenderableDeclaration): Renderable? {
+            val mesh = inventory.mesh(declaration.mesh) ?: return null
+            val modifiedShaderDeclaration = ShaderDeclaration("!shader/standart.vert", "!shader/caster.frag")
+            val shader = inventory.shader(modifiedShaderDeclaration) ?: return null
+            return Renderable(mesh, shader, declaration.uniforms, declaration.transform)
         }
     }
 

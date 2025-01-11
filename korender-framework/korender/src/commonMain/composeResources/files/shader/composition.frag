@@ -1,4 +1,5 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/light.glsl"
 #import "!shader/lib/shading.glsl"
 #import "!shader/lib/pbr.glsl"
 
@@ -14,10 +15,11 @@ uniform vec4 ambientColor;
 uniform mat4 projection;
 uniform mat4 view;
 
-
 struct DirectionalLight {
     vec3 dir;
     vec4 color;
+    int shadowTextureIndex;
+    int shadowTextureCount;
 };
 struct PointLight {
     vec3 pos;
@@ -28,6 +30,8 @@ uniform DirectionalLight directionalLights[32];
 uniform int numDirectionalLights;
 uniform PointLight pointLights[32];
 uniform int numPointLights;
+uniform sampler2D shadowTextures[32];
+uniform mat4 bsps[32];
 
 out vec4 fragColor;
 
@@ -54,16 +58,22 @@ void main() {
     vec3 F0 = materialTexel.rgb;
     float roughness = materialTexel.a;
 
-    float shadowRatio = 0.;
-
     vec3 color = cdiff.rgb * ambientColor.rgb;
 
     for (int l=0; l<numDirectionalLights; l++) {
-        vec3 lightValue = directionalLights[l].color.rgb * (1. - shadowRatio);
-        vec3 L = normalize(-directionalLights[l].dir);
+        DirectionalLight dl = directionalLights[l];
+        float shadowRatio = 0.;
+        for (int c=0; c<dl.shadowTextureCount; c++) {
+            int idx = dl.shadowTextureIndex + c;
+            vec3 vshadow = (bsps[idx] * vec4(vpos, 1.0)).xyz;
+            shadowRatio = max(shadowRatio, shadow(shadowTextures[idx], vshadow));
+        }
+        vec3 lightValue = dl.color.rgb * (1. - shadowRatio);
+        vec3 L = normalize(-dl.dir);
         color += calculatePBR(N, V, L, cdiff.rgb, F0, roughness, lightValue);
     }
     for (int l=0; l<numPointLights; l++) {
+        float shadowRatio = 0.;
         vec3 ftol = pointLights[l].pos - vpos;
         float distance = length(ftol);
         float att = max(2.0, 3.0 / distance);
@@ -73,5 +83,6 @@ void main() {
     }
 
     fragColor = vec4(color, cdiff.a);
+
     gl_FragDepth = depth;
 }

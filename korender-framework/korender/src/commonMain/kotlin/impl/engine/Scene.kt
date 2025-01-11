@@ -2,8 +2,8 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.impl.engine.shadow.CascadeShadower
-import com.zakgof.korender.impl.engine.shadow.Shadower
+import com.zakgof.korender.impl.engine.shadow.ShadowRenderer
+import com.zakgof.korender.impl.engine.shadow.ShadowerData
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glBlendFunc
 import com.zakgof.korender.impl.gl.GL.glClear
@@ -24,10 +24,13 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
+import com.zakgof.korender.impl.glgpu.GlGpuTextureList
+import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec3
 
 internal class Scene(
@@ -37,7 +40,6 @@ internal class Scene(
     time: Float
 ) {
 
-    private val shadower: Shadower?
     private val shadowCasters: List<Renderable>
     val touchBoxesHandler: (TouchEvent) -> Boolean
     private val touchBoxes = mutableListOf<TouchBox>()
@@ -46,10 +48,8 @@ internal class Scene(
     private val transparents = mutableListOf<Renderable>()
     private val skies = mutableListOf<Renderable>()
     private val screens = mutableListOf<Renderable>()
-    private val lightUniforms = mutableMapOf<String, Any?>()
 
     init {
-        fillLightUniforms(sceneDeclaration)
 
         sceneDeclaration.gltfs.forEach {
             inventory.gltf(it)?.let { l ->
@@ -57,7 +57,7 @@ internal class Scene(
             }
         }
         sceneDeclaration.renderables.forEach {
-            val renderable = Renderable.create(inventory, it, renderContext.camera, false, sceneDeclaration.shadow?.cascades?.size ?: 0)
+            val renderable = Renderable.create(inventory, it, renderContext.camera)
             renderable?.let { r ->
                 when (it.bucket) {
                     Bucket.OPAQUE -> opaques.add(r)
@@ -75,35 +75,18 @@ internal class Scene(
         touchBoxesHandler = { evt ->
             touchBoxes.any { it.touch(evt) }
         }
-
-        shadower = sceneDeclaration.shadow?.let { CascadeShadower(inventory, it.cascades) }
         shadowCasters = createShadowCasters(sceneDeclaration.renderables)
     }
 
-    private fun fillLightUniforms(sceneDeclaration: SceneDeclaration) {
-        if (sceneDeclaration.directionalLights.isEmpty() && sceneDeclaration.pointLights.isEmpty()) {
-            sceneDeclaration.directionalLights.add(DirectionalLightDeclaration(Vec3(1f, -1f, 1f).normalize(), Color(1f, 7f, 7f, 7f)))
-        }
-        lightUniforms["ambientColor"] = sceneDeclaration.ambientLightColor
-        lightUniforms["numDirectionalLights"] = sceneDeclaration.directionalLights.size
-        (0 until 32).forEach { i ->
-            lightUniforms["directionalLights[$i].dir"] = if (i < sceneDeclaration.directionalLights.size) sceneDeclaration.directionalLights[i].direction else Vec3.ZERO
-            lightUniforms["directionalLights[$i].color"] = if (i < sceneDeclaration.directionalLights.size) sceneDeclaration.directionalLights[i].color else Color.White
-        }
-        lightUniforms["numPointLights"] = sceneDeclaration.pointLights.size
-        (0 until 32).forEach { i ->
-            lightUniforms["pointLights[$i].pos"] = if (i < sceneDeclaration.pointLights.size) sceneDeclaration.pointLights[i].position else Vec3.ZERO
-            lightUniforms["pointLights[$i].color"] = if (i < sceneDeclaration.pointLights.size) sceneDeclaration.pointLights[i].color else Color.White
-        }
-    }
 
     private fun createShadowCasters(declarations: List<RenderableDeclaration>) =
+
+        // TODO: renderable or material flag to disable shadow casting
         declarations.filter {
-            it.shader.fragFile == "!shader/geometry.frag" && !it.shader.defs.contains(
-                "NO_SHADOW_CAST"
-            )
+            (it.shader.fragFile == "!shader/geometry.frag" ||
+                    it.shader.fragFile == "!shader/forward.frag")
         }
-            .mapNotNull { Renderable.create(inventory, it, renderContext.camera, true) }
+            .mapNotNull { Renderable.createShadowCaster(inventory, it) }
 
     fun render() {
 
@@ -115,9 +98,7 @@ internal class Scene(
                 value
         }
 
-        // TODO: shadow pass per light
-        val shadowUniforms: Map<String, Any?> =
-            shadower?.render(renderContext, sceneDeclaration.directionalLights[0].direction, shadowCasters, fixer) ?: mapOf()
+        val directLightUniforms = renderShadows(fixer)
 
         // TODO: configurable texture channels resolutions (half/quarter)
         val geometryBuffer = inventory.frameBuffer(FrameBufferDeclaration("geometry", renderContext.width, renderContext.height, 3, true)) ?: return
@@ -143,7 +124,7 @@ internal class Scene(
 
         sceneDeclaration.filters.forEachIndexed { p, filter ->
 
-            val totalContextUniforms = contextUniforms + geometryUniforms + shadowUniforms + lightUniforms + prevFrameContext
+            val totalContextUniforms = contextUniforms + geometryUniforms + directLightUniforms + prevFrameContext
 
             val frameBuffer = if (p == sceneDeclaration.filters.size - 1) null else filterFrameBuffers[p % 2]
             renderTo(frameBuffer) {
@@ -152,6 +133,58 @@ internal class Scene(
             prevFrameContext["filterColorTexture"] = frameBuffer?.colorTextures?.get(0) ?: contextUniforms["noiseTexture"] // TODO this is hack
             prevFrameContext["filterDepthTexture"] = frameBuffer?.depthTexture ?: contextUniforms["noiseTexture"] // TODO this is hack
         }
+    }
+
+    private fun renderShadows(fixer: (Any?) -> Any?): Map<String, Any?> {
+        val directLightUniforms = mutableMapOf<String, Any?>()
+
+        (0 until 32).forEach {
+            directLightUniforms["directionalLights[$it].dir"] = Vec3.ZERO
+            directLightUniforms["directionalLights[$it].color"] = Color.Black
+            directLightUniforms["directionalLights[$it].shadowTextureIndex"] = -1
+            directLightUniforms["directionalLights[$it].shadowTextureCount"] = 0
+            directLightUniforms["pointLights[$it].pos"] = Vec3.ZERO
+            directLightUniforms["pointLights[$it].color"] = Color.Black
+
+            directLightUniforms["bsps[0]"] = Mat4.ZERO
+            directLightUniforms["shadowTextures[0]"] = NotYetLoadedTexture
+        }
+
+        val shadowData = mutableListOf<ShadowerData>()
+        sceneDeclaration.directionalLights.forEachIndexed { li, dl ->
+            directLightUniforms["directionalLights[$li].dir"] = dl.direction
+            directLightUniforms["directionalLights[$li].color"] = dl.color
+            val indexes = dl.shadowDeclaration.cascades.mapIndexedNotNull { ci, cascadeDeclaration ->
+                ShadowRenderer.render(
+                    "$li-$ci",
+                    inventory,
+                    dl.direction,
+                    cascadeDeclaration,
+                    renderContext,
+                    shadowCasters,
+                    fixer
+                )?.let {
+                    shadowData += it
+                    shadowData.size - 1
+                }
+            }
+            directLightUniforms["directionalLights[$li].shadowTextureIndex"] = indexes.minOrNull() ?: -1
+            directLightUniforms["directionalLights[$li].shadowTextureCount"] = indexes.size
+        }
+
+        directLightUniforms["shadowTextures[0]"] = GlGpuTextureList(shadowData.map { it.texture })
+        directLightUniforms["bsps[0]"] = Mat4List(shadowData.map { it.bsp })
+
+        directLightUniforms["numDirectionalLights"] = sceneDeclaration.directionalLights.size
+        // TODO
+        directLightUniforms["ambientColor"] = sceneDeclaration.ambientLightColor
+
+        directLightUniforms["numPointLights"] = sceneDeclaration.pointLights.size
+        sceneDeclaration.pointLights.forEachIndexed { i, pl ->
+            directLightUniforms["pointLights[$i].pos"] = pl.position
+            directLightUniforms["pointLights[$i].color"] = pl.color
+        }
+        return directLightUniforms
     }
 
     private fun renderFilter(filter: MaterialDeclaration, uniforms: Map<String, Any?>, fixer: (Any?) -> Any?, first: Boolean, final: Boolean) {

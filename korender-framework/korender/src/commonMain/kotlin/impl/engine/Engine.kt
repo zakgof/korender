@@ -32,6 +32,7 @@ import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.checkGlError
+import com.zakgof.korender.impl.context.DefaultFrameContext
 import com.zakgof.korender.impl.geometry.Cube
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.geometry.HeightField

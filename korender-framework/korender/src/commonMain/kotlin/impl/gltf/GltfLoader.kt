@@ -22,6 +22,7 @@ import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.gl.GLConstants
+import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.impl.glgpu.toGL
 import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
 import com.zakgof.korender.impl.material.InternalStandartParams
@@ -30,7 +31,6 @@ import com.zakgof.korender.impl.material.ParamUniforms
 import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Mat4
-import com.zakgof.korender.math.Mat4List
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3

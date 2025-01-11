@@ -1,7 +1,6 @@
 package com.zakgof.korender
 
 import com.zakgof.korender.math.Color
-import com.zakgof.korender.math.Mat4List
 
 interface MaterialModifier
 
@@ -57,9 +56,6 @@ interface StandartParams : BaseParams {
 
     var normalTexture: TextureDeclaration?
     var shadowTexture: TextureDeclaration?
-
-    var jointMatrices: Mat4List?
-    var inverseBindMatrices: Mat4List?
 
     var xscale: Float
     var yscale: Float

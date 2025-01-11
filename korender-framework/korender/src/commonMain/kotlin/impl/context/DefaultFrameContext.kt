@@ -1,4 +1,4 @@
-package com.zakgof.korender.impl.engine
+package com.zakgof.korender.impl.context
 
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.MaterialModifier
@@ -8,6 +8,14 @@ import com.zakgof.korender.context.GuiContainerContext
 import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.ShadowContext
+import com.zakgof.korender.impl.engine.Bucket
+import com.zakgof.korender.impl.engine.DirectionalLightDeclaration
+import com.zakgof.korender.impl.engine.ElementDeclaration
+import com.zakgof.korender.impl.engine.GltfDeclaration
+import com.zakgof.korender.impl.engine.PointLightDeclaration
+import com.zakgof.korender.impl.engine.RenderableDeclaration
+import com.zakgof.korender.impl.engine.SceneDeclaration
+import com.zakgof.korender.impl.engine.ShadowDeclaration
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.ScreenQuad
@@ -22,12 +30,6 @@ internal class DefaultFrameContext(
     private val sceneDeclaration: SceneDeclaration,
     override val frameInfo: FrameInfo,
 ) : FrameContext {
-
-    override fun Shadow(block: ShadowContext.() -> Unit) {
-        val shadowDeclaration = ShadowDeclaration()
-        ShadowContext(shadowDeclaration).apply(block)
-        sceneDeclaration.addShadow(shadowDeclaration)
-    }
 
     override fun Scene(gltfResource: String, transform: Transform) {
         sceneDeclaration.gltfs += GltfDeclaration(gltfResource, transform)
@@ -80,8 +82,10 @@ internal class DefaultFrameContext(
 
     }
 
-    override fun DirectionalLight(direction: Vec3, color: Color) {
-        sceneDeclaration.directionalLights += DirectionalLightDeclaration(direction, color)
+    override fun DirectionalLight(direction: Vec3, color: Color, block: ShadowContext.() -> Unit) {
+        val shadowDeclaration = ShadowDeclaration()
+        DefaultShadowContext(shadowDeclaration).apply(block)
+        sceneDeclaration.directionalLights += DirectionalLightDeclaration(direction, color, shadowDeclaration)
     }
 
     override fun PointLight(position: Vec3, color: Color) {

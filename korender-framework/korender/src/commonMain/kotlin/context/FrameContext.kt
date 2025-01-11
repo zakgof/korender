@@ -11,8 +11,6 @@ interface FrameContext {
 
     val frameInfo: FrameInfo
 
-    fun Shadow(block: ShadowContext.() -> Unit)
-
     fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform = Transform(), transparent: Boolean = false)
     fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3 = Vec3.ZERO, transparent: Boolean = false)
     fun Screen(vararg materialModifiers: MaterialModifier)
@@ -24,7 +22,7 @@ interface FrameContext {
 
     fun Filter(vararg materialModifiers: MaterialModifier)
 
-    fun DirectionalLight(direction: Vec3, color: Color = Color.White)
+    fun DirectionalLight(direction: Vec3, color: Color = Color.White, block: ShadowContext.() -> Unit = {})
     fun PointLight(position: Vec3, color: Color = Color.White)
     fun AmbientLight(color: Color)
 }

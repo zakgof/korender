@@ -107,6 +107,7 @@ expect object GL {
     fun glGetAttribLocation(program: GLProgram, name: String): Int
 
     fun glUniform1i(location: GLUniformLocation, v0: Int)
+    fun glUniform1iv(location: GLUniformLocation, vararg v0: Int)
     fun glUniform1f(location: GLUniformLocation, v0: Float)
     fun glUniform2f(location: GLUniformLocation, v0: Float, v1: Float)
     fun glUniform3f(location: GLUniformLocation, v0: Float, v1: Float, v2: Float)

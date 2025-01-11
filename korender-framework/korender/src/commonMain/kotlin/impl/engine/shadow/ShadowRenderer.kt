@@ -7,7 +7,6 @@ import com.zakgof.korender.impl.engine.FrameBufferDeclaration
 import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.engine.Renderable
-import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glCullFace
 import com.zakgof.korender.impl.gl.GL.glEnable
@@ -15,41 +14,36 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
-import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
+import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.OrthoProjection
 import com.zakgof.korender.impl.projection.Projection
+import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 
-internal class SingleShadower(
-    private val index: Int,
-    private val inventory: Inventory,
-    private val decl: CascadeDeclaration
-) : Shadower {
+internal object ShadowRenderer {
 
-    override val cascadeNumber = 1
-    private val frameBuffer: GlGpuFrameBuffer? = inventory.frameBuffer(
-        FrameBufferDeclaration(
-            "shadow$index",
-            decl.mapSize,
-            decl.mapSize,
-            1, // TODO: depth only
-            false
-        )
-    )
-
-    override fun render(
-        renderContext: RenderContext,
+    fun render(
+        id: String,
+        inventory: Inventory,
         lightDirection: Vec3,
+        declaration: CascadeDeclaration,
+        renderContext: RenderContext,
         shadowCasters: List<Renderable>,
         fixer: (Any?) -> Any?
-    ): Map<String, Any?> {
+    ): ShadowerData? {
+        val frameBuffer = inventory.frameBuffer(
+            FrameBufferDeclaration(
+                "shadow-$id",
+                declaration.mapSize,
+                declaration.mapSize,
+                1, // TODO: depth only
+                false
+            )
+        ) ?: return null
 
-        if (frameBuffer == null)
-            return mapOf();
-
-        val matrices = updateShadowCamera(renderContext.projection, renderContext.camera, lightDirection)
+        val matrices = updateShadowCamera(renderContext.projection, renderContext.camera, lightDirection, declaration)
         val shadowCamera = matrices.first
         val shadowProjection = matrices.second
         val casterUniforms = renderContext.uniforms() + mapOf(
@@ -62,37 +56,31 @@ internal class SingleShadower(
             glEnable(GL_DEPTH_TEST)
             glCullFace(GL_BACK)
             shadowCasters.forEach { casterRenderable ->
-                // TODO: need to copy all the defs and plugins from the original shader
-                val casterShader = inventory.shader(
-                    ShaderDeclaration(
-                        "!shader/standart.vert",
-                        "!shader/standart.frag", // TODO: completely different caster shader
-                        setOf("SHADOW_CASTER", "NO_LIGHT")
-                    )
-                )
-
-                casterShader?.let {
-                    casterRenderable.render(casterUniforms, fixer, it)
-                }
+                casterRenderable.render(casterUniforms, fixer)
             }
         }
 
-        return mapOf(
-            "shadowTexture$index" to frameBuffer.colorTextures[0], // TODO OR DEPTH ?
-            "shadowProjection$index" to shadowProjection.mat4,
-            "shadowView$index" to shadowCamera.mat4
+        return ShadowerData(
+            frameBuffer.colorTextures[0], // TODO OR DEPTH ?
+            Mat4(
+                0.5f, 0.0f, 0.0f, 0.5f,
+                0.0f, 0.5f, 0.0f, 0.5f,
+                0.0f, 0.0f, 0.5f, 0.5f,
+                0.0f, 0.0f, 0.0f, 1.0f
+            )  * shadowProjection.mat4 * shadowCamera.mat4
         )
     }
 
     private fun updateShadowCamera(
         projection: Projection,
         camera: Camera,
-        light: Vec3
+        light: Vec3,
+        declaration: CascadeDeclaration
     ): Pair<DefaultCamera, OrthoProjection> {
 
         val right = (light % 1.y).normalize()
         val up = (right % light).normalize()
-        val corners = frustumCorners(projection, camera, decl.near, decl.far)
+        val corners = frustumCorners(projection, camera, declaration.near, declaration.far)
         val xmin = corners.minOf { it * right }
         val ymin = corners.minOf { it * up }
         val zmin = corners.minOf { it * light }
@@ -148,3 +136,8 @@ internal class SingleShadower(
     }
 
 }
+
+internal class ShadowerData (
+    val texture: GlGpuTexture,
+    val bsp: Mat4
+)

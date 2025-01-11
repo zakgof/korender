@@ -1,9 +1,9 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.TouchHandler
+import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.material.DynamicUniforms
 import com.zakgof.korender.impl.material.MaterialBuilder
 import com.zakgof.korender.impl.material.materialDeclaration
@@ -13,15 +13,6 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
 internal class SceneDeclaration {
-
-    var shadow: ShadowDeclaration? = null
-    // TODO: shadows per light
-    fun addShadow(shadow: ShadowDeclaration) {
-        if (this.shadow != null) {
-            throw KorenderException("Only one Shadow declaration is allowed")
-        }
-        this.shadow = shadow
-    }
 
     val pointLights = mutableListOf<PointLightDeclaration>()
     val directionalLights = mutableListOf<DirectionalLightDeclaration>()
@@ -104,7 +95,6 @@ internal data class FrameBufferDeclaration(
 
 internal class ShadowDeclaration {
     val cascades = mutableListOf<CascadeDeclaration>()
-    fun addCascade(cascadeDeclaration: CascadeDeclaration) = cascades.add(cascadeDeclaration)
 }
 
 internal data class CascadeDeclaration(val mapSize: Int, val near: Float, var far: Float)
@@ -116,4 +106,4 @@ internal class GltfDeclaration(val gltfResource: String, val transform: Transfor
 
 internal class PointLightDeclaration(val position: Vec3, val color: Color)
 
-internal class DirectionalLightDeclaration(val direction: Vec3, val color: Color)
+internal class DirectionalLightDeclaration(val direction: Vec3, val color: Color, val shadowDeclaration: ShadowDeclaration)
