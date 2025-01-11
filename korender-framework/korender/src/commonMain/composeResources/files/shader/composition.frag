@@ -67,14 +67,13 @@ void main() {
     vec4 worldPosition4 = inverse(view) * viewPosition;
     vec3 vpos = worldPosition4.xyz;
 
-    vec3 V = normalize(cameraPos - vpos);
-
     vec4 cdiff = texture(cdiffTexture, vtex);
-    vec3 N = normalize(texture(normalTexture, vtex).rgb * 2.0 - 1.0);
-
     vec4 materialTexel = texture(materialTexture, vtex);
     vec3 F0 = materialTexel.rgb;
     float roughness = materialTexel.a;
+
+    vec3 V = normalize(cameraPos - vpos);
+    vec3 N = normalize(texture(normalTexture, vtex).rgb * 2.0 - 1.0);
 
     vec3 color = cdiff.rgb * ambientColor.rgb;
 

@@ -1,0 +1,166 @@
+#import "!shader/lib/header.glsl"
+
+in vec3 vpos;
+in vec3 vnormal;
+in vec2 vtex;
+
+uniform vec4 baseColor;
+uniform float metallic;
+uniform float roughness;
+#ifdef SPECULAR_GLOSSINESS
+    uniform vec4 specularFactor;
+    uniform float glossinessFactor;
+#endif
+
+#ifdef BASE_COLOR_MAP
+    uniform sampler2D baseColorTexture;
+#endif
+#ifdef NORMAL_MAP
+    uniform sampler2D normalTexture;
+#endif
+#ifdef TRIPLANAR
+    uniform float triplanarScale;
+#endif
+#ifdef DETAIL
+    uniform sampler2D detailTexture;
+    uniform float detailScale;
+    uniform float detailRatio;
+#endif
+
+#ifdef METALLIC_ROUGHNESS_MAP
+    uniform sampler2D metallicRoughnessTexture;
+#endif
+#ifdef SPECULAR_GLOSSINESS_MAP
+    uniform sampler2D specularGlossinessTexture;
+#endif
+
+//  TODO DETAIL FOR EVERYTHIN
+
+uniform vec3 cameraPos;
+uniform vec4 ambientColor;
+uniform mat4 projection;
+uniform mat4 view;
+
+struct DirectionalLight {
+    vec3 dir;
+    vec4 color;
+    int shadowTextureIndex;
+    int shadowTextureCount;
+};
+struct PointLight {
+    vec3 pos;
+    vec4 color;
+};
+
+uniform DirectionalLight directionalLights[4];
+uniform int numDirectionalLights;
+uniform PointLight pointLights[4];
+uniform int numPointLights;
+uniform sampler2D shadowTextures[4];
+uniform mat4 bsps[4];
+
+out vec4 fragColor;
+
+#ifdef PLUGIN_TEXTURE
+    #import "$texture"
+#endif
+
+#import "!shader/lib/texturing.glsl"
+#import "!shader/lib/normals.glsl"
+#import "!shader/lib/light.glsl"
+#import "!shader/lib/shading.glsl"
+#import "!shader/lib/pbr.glsl"
+
+float sampleShadowTexture(sampler2D texarray[4], int i, vec3 v) {
+    float sh = 0.;
+    switch (i) {
+        case 0: sh = shadow(texarray[0], v); break;
+        case 1: sh =  shadow(texarray[1], v); break;
+        case 2: sh =  shadow(texarray[2], v); break;
+        case 3: sh =  shadow(texarray[3], v); break;
+//        case 4: sh =  shadow(texarray[4], v); break;
+//        case 5: sh =  shadow(texarray[5], v); break;
+//        case 6: sh =  shadow(texarray[6], v); break;
+//        case 7: sh =  shadow(texarray[7], v); break;
+//        case 8: sh =  shadow(texarray[8], v); break;
+//        case 9: sh =  shadow(texarray[9], v); break;
+//        case 10: sh =  shadow(texarray[10], v); break;
+//        case 11: sh =  shadow(texarray[11], v); break;
+    }
+    return sh;
+}
+
+void main() {
+
+    #ifdef BASE_COLOR_MAP
+        vec4 albedo = textureRegOrTriplanar(baseColorTexture, vtex, vpos, vnormal) * baseColor;
+    #else
+        vec4 albedo = baseColor;
+    #endif
+
+    #ifdef PLUGIN_TEXTURE
+        albedo = pluginTexture(albedo);
+    #endif
+
+    #ifdef NORMAL_MAP
+        vec3 N = getNormalFromMap(normalTexture, vnormal, vtex, vpos);
+    #else
+        vec3 N = normalize(vnormal);
+    #endif
+
+    #ifdef SPECULAR_GLOSSINESS
+        #ifdef SPECULAR_GLOSSINESS_MAP
+            vec4 sgtexel = textureRegOrTriplanar(specularGlossinessTexture, vtex, vpos, N);
+            vec3 specular = sgtexel.rgb * specularFactor.rgb;
+            float glossiness = sgtexel.a * glossinessFactor;
+        #else
+            vec3 specular = specularFactor.rgb;
+            float glossiness = glossinessFactor;
+        #endif
+        vec3 c_diff = albedo.rgb * (1. - max(max(specular.r, specular.g), specular.b));
+        vec3 F0 = specular;
+        float rough = 1. - glossiness;
+    #else
+        #ifdef METALLIC_ROUGHNESS_MAP
+            vec4 mrtexel = textureRegOrTriplanar(metallicRoughnessTexture, vtex, vpos, N);
+            float metal = mrtexel.b * metallic;
+            float rough = mrtexel.g * roughness;
+        #else
+            float metal = metallic;
+            float rough = roughness;
+        #endif
+        vec3 c_diff = mix(albedo.rgb, vec3(0.), metal);
+        vec3 F0 = mix(vec3(0.04), albedo.rgb, metal);
+    #endif
+
+    ///////////////////////
+
+    vec3 V = normalize(cameraPos - vpos);
+
+    vec3 color = c_diff * ambientColor.rgb;
+
+    for (int l=0; l<numDirectionalLights; l++) {
+        DirectionalLight dl = directionalLights[l];
+        float shadowRatio = 0.;
+        for (int c=0; c<dl.shadowTextureCount; c++) {
+            int idx = dl.shadowTextureIndex + c;
+            vec3 vshadow = (bsps[idx] * vec4(vpos, 1.0)).xyz;
+            float sh = sampleShadowTexture(shadowTextures, idx, vshadow);
+            shadowRatio = max(shadowRatio, sh);
+        }
+        vec3 lightValue = dl.color.rgb * (1. - shadowRatio);
+        vec3 L = normalize(-dl.dir);
+        color += calculatePBR(N, V, L, c_diff, F0, roughness, lightValue);
+    }
+    for (int l=0; l<numPointLights; l++) {
+        float shadowRatio = 0.;
+        vec3 ftol = pointLights[l].pos - vpos;
+        float distance = length(ftol);
+        float att = max(2.0, 3.0 / distance);
+        vec3 lightValue = pointLights[l].color.rgb * (1. - shadowRatio) * att;// TODO quadratic; configurable attenuation ratio
+        vec3 L = normalize(ftol);
+        color += calculatePBR(N, V, L, c_diff, F0, roughness, lightValue);
+    }
+
+    fragColor = vec4(color, albedo.a);
+}

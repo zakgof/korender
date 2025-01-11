@@ -72,7 +72,7 @@ internal class Engine(
     private val inventory = Inventory(asyncContext)
     private val renderContext = RenderContext(width, height)
 
-    private lateinit var sceneTouchBoxesHandler: (TouchEvent) -> Boolean
+    private lateinit var sceneTouchBoxesHandler : (TouchEvent) -> Boolean
     private val touchHandlers = mutableListOf<TouchHandler>()
 
     inner class KorenderContextImpl : KorenderContext {

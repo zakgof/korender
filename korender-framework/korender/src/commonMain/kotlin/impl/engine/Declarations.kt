@@ -5,15 +5,12 @@ import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.material.DynamicUniforms
-import com.zakgof.korender.impl.material.MaterialBuilder
-import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
 internal class SceneDeclaration {
-
     val pointLights = mutableListOf<PointLightDeclaration>()
     val directionalLights = mutableListOf<DirectionalLightDeclaration>()
     var ambientLightColor = Color(1.0f, 0.15f, 0.15f, 0.15f)
@@ -21,10 +18,6 @@ internal class SceneDeclaration {
     val guis = mutableListOf<ElementDeclaration.Container>()
     val gltfs = mutableListOf<GltfDeclaration>()
     var filters = mutableListOf<MaterialDeclaration>()
-
-    init {
-        filters += materialDeclaration(MaterialBuilder(vertShaderFile = "!shader/screen.vert", fragShaderFile = "!shader/composition.frag"))
-    }
 }
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)

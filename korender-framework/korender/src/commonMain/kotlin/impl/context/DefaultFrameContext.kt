@@ -41,7 +41,7 @@ internal class DefaultFrameContext(
     }
 
     override fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3, transparent: Boolean) {
-        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "!shader/billboard.vert", fragShaderFile = "!shader/standart.frag"), *materialModifiers)
+        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "!shader/billboard.vert", fragShaderFile = "!shader/forward.frag"), *materialModifiers)
         sceneDeclaration.renderables += RenderableDeclaration(com.zakgof.korender.impl.geometry.Billboard, materialDeclaration.shader, materialDeclaration.uniforms, translate(position), if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE)
     }
 
@@ -72,7 +72,7 @@ internal class DefaultFrameContext(
     }
 
     override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, transparent: Boolean, block: InstancedBillboardsContext.() -> Unit) {
-        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "!shader/billboard.vert", fragShaderFile = "!shader/standart.frag"), *materialModifiers)
+        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "!shader/billboard.vert", fragShaderFile = "!shader/forward.frag"), *materialModifiers)
         sceneDeclaration.renderables +=
             RenderableDeclaration(
                 InstancedBillboard(id, count, transparent, block),

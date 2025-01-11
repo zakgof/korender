@@ -11,7 +11,7 @@ internal fun interface InternalMaterialModifier : MaterialModifier {
 
 internal class MaterialBuilder(
     var vertShaderFile: String = "!shader/standart.vert",
-    var fragShaderFile: String = "!shader/geometry.frag",
+    var fragShaderFile: String = "!shader/forward.frag", // TODO switch to deferred
     val options: MutableSet<RenderingOption> = mutableSetOf(),
     val shaderDefs: MutableSet<String> = mutableSetOf(),
     val plugins: MutableMap<String, String> = mutableMapOf(),
