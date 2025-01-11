@@ -30,7 +30,7 @@ fun ShowcaseExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         )
         Gui {
             Filler()
-            Text(text = "FPS ${frameInfo.avgFps}", height = 50, color = Red, fontResource = "font/orbitron.ttf", id = "fps")
+            Text(text = "FPS ${frameInfo.avgFps.toInt()}", height = 50, color = Red, fontResource = "font/orbitron.ttf", id = "fps")
         }
         Billboard(fire { yscale = 10f; xscale = 2f }, position = 6.y, transparent = true)
         Filter(water(), fastCloudSky())

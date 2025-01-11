@@ -78,7 +78,6 @@ internal class Scene(
         shadowCasters = createShadowCasters(sceneDeclaration.renderables)
     }
 
-
     private fun createShadowCasters(declarations: List<RenderableDeclaration>) =
 
         // TODO: renderable or material flag to disable shadow casting
