@@ -30,13 +30,31 @@ uniform DirectionalLight directionalLights[32];
 uniform int numDirectionalLights;
 uniform PointLight pointLights[32];
 uniform int numPointLights;
-uniform sampler2D shadowTextures[32];
-uniform mat4 bsps[32];
+uniform sampler2D shadowTextures[12];
+uniform mat4 bsps[12];
 
 out vec4 fragColor;
 
-void main() {
+float sampleShadowTexture(sampler2D texarray[12], int i, vec3 v) {
+    float sh = 0.;
+    switch (i) {
+        case 0: sh = shadow(texarray[0], v); break;
+        case 1: sh =  shadow(texarray[1], v); break;
+        case 2: sh =  shadow(texarray[2], v); break;
+        case 3: sh =  shadow(texarray[3], v); break;
+        case 4: sh =  shadow(texarray[4], v); break;
+        case 5: sh =  shadow(texarray[5], v); break;
+        case 6: sh =  shadow(texarray[6], v); break;
+        case 7: sh =  shadow(texarray[7], v); break;
+        case 8: sh =  shadow(texarray[8], v); break;
+        case 9: sh =  shadow(texarray[9], v); break;
+        case 10: sh =  shadow(texarray[10], v); break;
+        case 11: sh =  shadow(texarray[11], v); break;
+    }
+    return sh;
+}
 
+void main() {
 
     float depth = texture(depthTexture, vtex).r;
 
@@ -66,7 +84,8 @@ void main() {
         for (int c=0; c<dl.shadowTextureCount; c++) {
             int idx = dl.shadowTextureIndex + c;
             vec3 vshadow = (bsps[idx] * vec4(vpos, 1.0)).xyz;
-            shadowRatio = max(shadowRatio, shadow(shadowTextures[idx], vshadow));
+            float sh = sampleShadowTexture(shadowTextures, idx, vshadow);
+            shadowRatio = max(shadowRatio, sh);
         }
         vec3 lightValue = dl.color.rgb * (1. - shadowRatio);
         vec3 L = normalize(-dl.dir);

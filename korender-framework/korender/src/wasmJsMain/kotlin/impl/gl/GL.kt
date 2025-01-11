@@ -4,6 +4,7 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.WebGL2RenderingContext
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import org.khronos.webgl.toFloat32Array
+import org.khronos.webgl.toInt32Array
 
 actual object GL {
 
@@ -91,12 +92,10 @@ actual object GL {
         gl!!.bindBuffer(target, buffer.buffer)
 
     actual fun glGenBuffers(): GLBuffer =
-        com.zakgof.korender.impl.gl.GLBuffer(
-            gl!!.createBuffer() ?: throw KorenderException("Failed to create WebGL buffer")
-        )
+        GLBuffer(gl!!.createBuffer() ?: throw KorenderException("Failed to create WebGL buffer"))
 
     actual fun glGenVertexArrays(): GLVertexArray =
-        com.zakgof.korender.impl.gl.GLVertexArray(
+        GLVertexArray(
             gl!!.createVertexArray()
                 ?: throw KorenderException("Failed to create WebGL vertex array")
         )
@@ -166,6 +165,9 @@ actual object GL {
 
     actual fun glUniform1i(location: GLUniformLocation, v0: Int) =
         gl!!.uniform1i(location.uniformLocation, v0)
+
+    actual fun glUniform1iv(location: GLUniformLocation, vararg v0: Int) =
+        gl!!.uniform1iv(location.uniformLocation, v0.toInt32Array())
 
     actual fun glUniform1f(location: GLUniformLocation, v0: Float) =
         gl!!.uniform1f(location.uniformLocation, v0)

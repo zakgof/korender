@@ -263,7 +263,7 @@ internal class Engine(
         inventory.go {
             val scene = Scene(sd, inventory, renderContext, frameInfo.time)
             scene.render()
-            checkGlError()
+            checkGlError("during rendering")
             sceneTouchBoxesHandler = scene.touchBoxesHandler
         }
     }
