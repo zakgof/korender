@@ -170,8 +170,7 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
     override var normalTexture: TextureDeclaration? = null
     override var shadowTexture: TextureDeclaration? = null
 
-    var jointMatrices: Mat4List? = null
-    var inverseBindMatrices: Mat4List? = null
+    var jntMatrices: Mat4List? = null
 
     override var xscale = 1f
     override var yscale = 1f
@@ -208,8 +207,7 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
         map["shadowTexture"] = shadowTexture
         map["triplanarScale"] = triplanarScale
 
-        map["jointMatrices[0]"] = jointMatrices
-        map["inverseBindMatrices[0]"] = inverseBindMatrices
+        map["jntMatrices[0]"] = jntMatrices
 
         map["xscale"] = xscale
         map["yscale"] = yscale
@@ -217,7 +215,7 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
 
         baseColorTexture?.let { defs += "BASE_COLOR_MAP" }
         normalTexture?.let { defs += "NORMAL_MAP" }
-        jointMatrices?.let { defs += "SKINNING" }
+        jntMatrices?.let { defs += "SKINNING" }
         if (pcss) {
             defs += "PCSS"
         }

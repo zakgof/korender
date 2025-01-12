@@ -367,8 +367,11 @@ internal class GltfSceneBuilder(
             }
 
             if (skinIndex != null) {
-                this.jointMatrices = Mat4List(loadedSkins[skinIndex].jointMatrices)
-                this.inverseBindMatrices = Mat4List(loadedSkins[skinIndex].inverseBindMatrices)
+                this.jntMatrices = Mat4List(
+                    loadedSkins[skinIndex].jointMatrices.mapIndexed {ind, jm ->
+                        jm * loadedSkins[skinIndex].inverseBindMatrices[ind]
+                    }
+                )
             }
         }
 

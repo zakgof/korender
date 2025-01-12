@@ -41,16 +41,18 @@ uniform vec4 ambientColor;
 uniform mat4 projection;
 uniform mat4 view;
 
+const int MAX_LIGHTS = 32;
 uniform int numDirectionalLights;
-uniform vec3 directionalLightDir[32];
-uniform vec4 directionalLightColor[32];
-uniform int directionalLightShadowTextureIndex[32];
-uniform int directionalLightShadowTextureCount[32];
+uniform vec3 directionalLightDir[MAX_LIGHTS];
+uniform vec4 directionalLightColor[MAX_LIGHTS];
+uniform int directionalLightShadowTextureIndex[MAX_LIGHTS];
+uniform int directionalLightShadowTextureCount[MAX_LIGHTS];
 
 uniform int numPointLights;
-uniform vec3 pointLightPos[32];
-uniform vec4 pointLightColor[32];
+uniform vec3 pointLightPos[MAX_LIGHTS];
+uniform vec4 pointLightColor[MAX_LIGHTS];
 
+const int MAX_SHADOWS = 12;
 uniform int numShadows;
 uniform sampler2D shadowTextures[12];
 uniform mat4 bsps[12];
@@ -61,39 +63,44 @@ out vec4 fragColor;
     #import "$texture"
 #endif
 
-#import "!shader/lib/texturing.glsl"
-#import "!shader/lib/normals.glsl"
+#import "!shader/lib/triplanar.glsl"
+#import "!shader/lib/normalmap.glsl"
+
 #import "!shader/lib/light.glsl"
 #import "!shader/lib/shading.glsl"
 #import "!shader/lib/pbr.glsl"
 
-float sampleShadowTexture(sampler2D texarray[12], int i, vec3 v) {
+float sampleShadowTexture(int i, vec3 v) {
     #ifdef WEBGL
     float sh = 0.;
     switch (i) {
-        case 0: sh = shadow(texarray[0], v); break;
-        case 1: sh =  shadow(texarray[1], v); break;
-        case 2: sh =  shadow(texarray[2], v); break;
-        case 3: sh =  shadow(texarray[3], v); break;
-        case 4: sh =  shadow(texarray[4], v); break;
-        case 5: sh =  shadow(texarray[5], v); break;
-        case 6: sh =  shadow(texarray[6], v); break;
-        case 7: sh =  shadow(texarray[7], v); break;
-        case 8: sh =  shadow(texarray[8], v); break;
-        case 9: sh =  shadow(texarray[9], v); break;
-        case 10: sh =  shadow(texarray[10], v); break;
-        case 11: sh =  shadow(texarray[11], v); break;
+        case 0: sh = shadow(shadowTextures[0], v); break;
+        case 1: sh =  shadow(shadowTextures[1], v); break;
+        case 2: sh =  shadow(shadowTextures[2], v); break;
+        case 3: sh =  shadow(shadowTextures[3], v); break;
+        case 4: sh =  shadow(shadowTextures[4], v); break;
+        case 5: sh =  shadow(shadowTextures[5], v); break;
+        case 6: sh =  shadow(shadowTextures[6], v); break;
+        case 7: sh =  shadow(shadowTextures[7], v); break;
+        case 8: sh =  shadow(shadowTextures[8], v); break;
+        case 9: sh =  shadow(shadowTextures[9], v); break;
+        case 10: sh =  shadow(shadowTextures[10], v); break;
+        case 11: sh =  shadow(shadowTextures[11], v); break;
     }
     return sh;
     #else
-    return shadow(texarray[i], v);
+    return shadow(shadowTextures[i], v);
     #endif
 }
 
 void main() {
 
     #ifdef BASE_COLOR_MAP
-        vec4 albedo = textureRegOrTriplanar(baseColorTexture, vtex, vpos, vnormal) * baseColor;
+        #ifdef TRIPLANAR
+            vec4 albedo = triplanarBaseColor(vpos * triplanarScale, vnormal) * baseColor;
+        #else
+            vec4 albedo = texture(baseColorTexture, vtex) * baseColor;
+        #endif
     #else
         vec4 albedo = baseColor;
     #endif
@@ -103,10 +110,11 @@ void main() {
     #endif
 
     #ifdef NORMAL_MAP
-        vec3 N = getNormalFromMap(normalTexture, vnormal, vtex, vpos);
+        vec3 N = getNormalFromMap(vnormal, vtex, vpos);
     #else
         vec3 N = normalize(vnormal);
     #endif
+
 
     #ifdef SPECULAR_GLOSSINESS
         #ifdef SPECULAR_GLOSSINESS_MAP
@@ -145,7 +153,7 @@ void main() {
         for (int c=0; c<shadowCount; c++) {
             int idx = directionalLightShadowTextureIndex[l] + c;
             vec3 vshadow = (bsps[idx] * vec4(vpos, 1.0)).xyz;
-            float sh = sampleShadowTexture(shadowTextures, idx, vshadow);
+            float sh = sampleShadowTexture(idx, vshadow);
             shadowRatio = max(shadowRatio, sh);
         }
         vec3 lightValue = directionalLightColor[l].rgb * (1. - shadowRatio);

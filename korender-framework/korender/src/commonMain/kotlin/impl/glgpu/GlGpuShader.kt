@@ -1,7 +1,6 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.impl.checkGlError
 import com.zakgof.korender.impl.gl.GL.glAttachShader
 import com.zakgof.korender.impl.gl.GL.glBindAttribLocation
 import com.zakgof.korender.impl.gl.GL.glCompileShader
@@ -85,11 +84,11 @@ internal class GlGpuShader(
 
         val fragmentLog: String = glGetShaderInfoLog(fragmentShaderHandle)
         if (fragmentLog.isNotEmpty()) {
-            println(
-                "Fragment shader log [${fragDebugInfo.file}]\n\n" + fragDebugInfo.decorate(
-                    fragmentLog
-                )
-            )
+            println("Fragment shader log [${fragDebugInfo.file}]\n\n" + fragDebugInfo.decorate(fragmentLog))
+
+            fragmentShaderText.lines().forEachIndexed { l, line ->
+                println("${l+1} $line")
+            }
         }
 
         val programLog: String = glGetProgramInfoLog(programHandle)
@@ -225,7 +224,7 @@ internal class GlGpuShader(
             }
 
         }
-        checkGlError("while setting uniform $name in shader $this")
+        // checkGlError("while setting uniform $name in shader $this")
         return when (value) {
             is GlGpuTexture -> 1
             is GlGpuTextureList -> value.textures.size

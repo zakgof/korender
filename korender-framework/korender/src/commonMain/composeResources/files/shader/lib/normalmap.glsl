@@ -1,5 +1,13 @@
-vec3 getNormalFromMap(sampler2D normalMap, vec3 vnormal, vec2 vtex, vec3 vpos) {
-    vec3 tangentNormal = textureRegOrTriplanar(normalMap, vtex, vpos, vnormal).rgb;
+#ifdef NORMAL_MAP
+
+vec3 getNormalFromMap(vec3 vnormal, vec2 vtex, vec3 vpos) {
+
+    #ifdef TRIPLANAR
+    vec3 tangentNormal = triplanarNormal(vpos * triplanarScale, vnormal).rgb;
+    #else
+    vec3 tangentNormal = texture(normalTexture, vtex).rgb;
+    #endif
+
     tangentNormal = tangentNormal * 2.0 - 1.0; // Convert from [0,1] to [-1,1]
 
     vec3 Q1 = dFdx(vpos);
@@ -14,3 +22,5 @@ vec3 getNormalFromMap(sampler2D normalMap, vec3 vnormal, vec2 vtex, vec3 vpos) {
     mat3 TBN = mat3(T, B, N);
     return normalize(TBN * tangentNormal);
 }
+
+#endif
