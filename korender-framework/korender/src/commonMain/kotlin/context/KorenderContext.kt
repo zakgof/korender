@@ -30,7 +30,7 @@ import kotlinx.coroutines.Deferred
 
 interface KorenderContext {
 
-    fun Frame(block: FrameContext.() -> Unit)
+    fun Frame(deferredShading: Boolean = false, block: FrameContext.() -> Unit)
     fun OnTouch(handler: (TouchEvent) -> Unit)
 
     var camera: CameraDeclaration

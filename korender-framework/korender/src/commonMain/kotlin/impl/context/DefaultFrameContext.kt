@@ -19,6 +19,7 @@ import com.zakgof.korender.impl.engine.ShadowDeclaration
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.ScreenQuad
+import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.MaterialBuilder
 import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.math.Color
@@ -28,6 +29,7 @@ import com.zakgof.korender.math.Vec3
 
 internal class DefaultFrameContext(
     private val sceneDeclaration: SceneDeclaration,
+    private val deferredShading: Boolean,
     override val frameInfo: FrameInfo,
 ) : FrameContext {
 
@@ -36,22 +38,38 @@ internal class DefaultFrameContext(
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean) {
-        val materialDeclaration = materialDeclaration(MaterialBuilder(), *materialModifiers)
+        val materialDeclaration = materialDeclaration(MaterialBuilder(deferredShading), *materialModifiers)
         sceneDeclaration.renderables += RenderableDeclaration(mesh, materialDeclaration.shader, materialDeclaration.uniforms, transform, if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE)
     }
 
     override fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3, transparent: Boolean) {
-        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "!shader/billboard.vert", fragShaderFile = "!shader/forward.frag"), *materialModifiers)
+        val materialDeclaration = materialDeclaration(MaterialBuilder(false), InternalMaterialModifier {
+            it.vertShaderFile = "!shader/billboard.vert"
+        }, *materialModifiers)
         sceneDeclaration.renderables += RenderableDeclaration(com.zakgof.korender.impl.geometry.Billboard, materialDeclaration.shader, materialDeclaration.uniforms, translate(position), if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE)
     }
 
     override fun Screen(vararg materialModifiers: MaterialModifier) {
-        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "!shader/screen.vert", fragShaderFile = "!shader/screen.frag"), *materialModifiers)
+        val materialDeclaration = materialDeclaration(
+            MaterialBuilder(false),
+            InternalMaterialModifier {
+                it.vertShaderFile = "!shader/screen.vert"
+                it.fragShaderFile = "!shader/screen.frag"
+            },
+            *materialModifiers
+        )
         sceneDeclaration.renderables += RenderableDeclaration(ScreenQuad, materialDeclaration.shader, materialDeclaration.uniforms, Transform(), Bucket.SCREEN)
     }
 
     override fun Sky(vararg materialModifiers: MaterialModifier) {
-        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "!shader/sky/sky.vert", fragShaderFile = "!shader/sky/sky.frag"), *materialModifiers)
+        val materialDeclaration = materialDeclaration(
+            MaterialBuilder(false),
+            InternalMaterialModifier {
+                it.vertShaderFile = "!shader/sky/sky.vert"
+                it.fragShaderFile = "!shader/sky/sky.frag"
+            },
+            *materialModifiers
+        )
         sceneDeclaration.renderables += RenderableDeclaration(ScreenQuad, materialDeclaration.shader, materialDeclaration.uniforms, Transform(), Bucket.SKY)
     }
 
@@ -62,7 +80,7 @@ internal class DefaultFrameContext(
     }
 
     override fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: Any, count: Int, mesh: MeshDeclaration, static: Boolean, transparent: Boolean, block: InstancedRenderablesContext.() -> Unit) {
-        val materialDeclaration = materialDeclaration(MaterialBuilder(), *materialModifiers)
+        val materialDeclaration = materialDeclaration(MaterialBuilder(deferredShading), *materialModifiers)
         sceneDeclaration.renderables +=
             RenderableDeclaration(
                 InstancedMesh(id, count, mesh, materialDeclaration, static, transparent, block),
@@ -72,14 +90,17 @@ internal class DefaultFrameContext(
     }
 
     override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, transparent: Boolean, block: InstancedBillboardsContext.() -> Unit) {
-        val materialDeclaration = materialDeclaration(MaterialBuilder(vertShaderFile = "!shader/billboard.vert", fragShaderFile = "!shader/forward.frag"), *materialModifiers)
+        val materialDeclaration = materialDeclaration(MaterialBuilder(false),
+            InternalMaterialModifier {
+                it.vertShaderFile = "!shader/billboard.vert"
+            },
+            *materialModifiers)
         sceneDeclaration.renderables +=
             RenderableDeclaration(
                 InstancedBillboard(id, count, transparent, block),
                 materialDeclaration.shader,
                 materialDeclaration.uniforms
             )
-
     }
 
     override fun DirectionalLight(direction: Vec3, color: Color, block: ShadowContext.() -> Unit) {
@@ -97,8 +118,11 @@ internal class DefaultFrameContext(
     }
 
     override fun Filter(vararg materialModifiers: MaterialModifier) {
-        sceneDeclaration.filters += materialDeclaration(
-            MaterialBuilder(vertShaderFile = "!shader/screen.vert", fragShaderFile = "!shader/screen.frag"),
+        sceneDeclaration.filters += materialDeclaration(MaterialBuilder(false),
+            InternalMaterialModifier {
+                it.vertShaderFile = "!shader/screen.vert"
+                it.fragShaderFile = "!shader/screen.frag"
+            },
             *materialModifiers
         )
     }

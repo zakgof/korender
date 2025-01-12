@@ -130,7 +130,7 @@ void main() {
         float rough = 1. - glossiness;
     #else
         #ifdef METALLIC_ROUGHNESS_MAP
-            vec4 mrtexel = textureRegOrTriplanar(metallicRoughnessTexture, vtex, vpos, N);
+            vec4 mrtexel = textureRegOrTriplanar(metallicRoughnessTexture, vtex, vpos, N); // TODO
             float metal = mrtexel.b * metallic;
             float rough = mrtexel.g * roughness;
         #else
@@ -158,7 +158,7 @@ void main() {
         }
         vec3 lightValue = directionalLightColor[l].rgb * (1. - shadowRatio);
         vec3 L = normalize(-directionalLightDir[l]);
-        color += calculatePBR(N, V, L, c_diff, F0, roughness, lightValue);
+        color += calculatePBR(N, V, L, c_diff, F0, rough, lightValue);
     }
     for (int l=0; l<numPointLights; l++) {
         float shadowRatio = 0.;
@@ -167,7 +167,7 @@ void main() {
         float att = max(2.0, 3.0 / distance);
         vec3 lightValue = pointLightColor[l].rgb * (1. - shadowRatio) * att;// TODO quadratic; configurable attenuation ratio
         vec3 L = normalize(ftol);
-        color += calculatePBR(N, V, L, c_diff, F0, roughness, lightValue);
+        color += calculatePBR(N, V, L, c_diff, F0, rough, lightValue);
     }
 
     fragColor = vec4(color, albedo.a);

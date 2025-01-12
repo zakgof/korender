@@ -17,7 +17,6 @@ import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.impl.absolutizeResource
 import com.zakgof.korender.impl.engine.Bucket
 import com.zakgof.korender.impl.engine.GltfDeclaration
-import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.geometry.CustomMesh
@@ -153,12 +152,11 @@ internal object GltfLoader {
 }
 
 internal class GltfSceneBuilder(
-    val inventory: Inventory,
     private val resource: String,
     private val globalTransform: Transform,
-    private val gltfLoaded: GltfLoaded
+    private val gltfLoaded: GltfLoaded,
+    private val deferredShading: Boolean
 ) {
-
     private val nodeMatrices = mutableMapOf<Int, Transform>()
     private val meshes = mutableListOf<Pair<Int, Int>>()
     private val renderableDeclarations = mutableListOf<RenderableDeclaration>()
@@ -375,7 +373,7 @@ internal class GltfSceneBuilder(
             }
         }
 
-        val builder = MaterialBuilder()
+        val builder = MaterialBuilder(deferredShading)
         builder.shaderDefs += pu.shaderDefs()
         builder.shaderUniforms = pu
         return builder.toMaterialDeclaration()

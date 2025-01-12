@@ -5,46 +5,39 @@ import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.impl.engine.shadow.ShadowRenderer
 import com.zakgof.korender.impl.engine.shadow.ShadowerData
 import com.zakgof.korender.impl.geometry.ScreenQuad
-import com.zakgof.korender.impl.gl.GL.glBlendFunc
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glClearColor
-import com.zakgof.korender.impl.gl.GL.glCullFace
 import com.zakgof.korender.impl.gl.GL.glDepthFunc
 import com.zakgof.korender.impl.gl.GL.glDepthMask
+import com.zakgof.korender.impl.gl.GL.glDisable
 import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GL.glViewport
-import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
 import com.zakgof.korender.impl.gl.GLConstants.GL_BLEND
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
-import com.zakgof.korender.impl.gl.GLConstants.GL_CULL_FACE
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
-import com.zakgof.korender.impl.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
-import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
 import com.zakgof.korender.impl.glgpu.ColorList
-import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.impl.glgpu.Vec3List
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
+import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.MaterialBuilder
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Vec3
-import kotlin.math.min
 
 internal class Scene(
     private val sceneDeclaration: SceneDeclaration,
     private val inventory: Inventory,
     private val renderContext: RenderContext,
+    private val deferredShading: Boolean,
     time: Float
 ) {
-
-    private val deferredShading = false
 
     private val shadowCasters: List<Renderable>
     val touchBoxesHandler: (TouchEvent) -> Boolean
@@ -66,7 +59,7 @@ internal class Scene(
     init {
         sceneDeclaration.gltfs.forEach {
             inventory.gltf(it)?.let { l ->
-                sceneDeclaration.renderables += GltfSceneBuilder(inventory, it.gltfResource, it.transform, l).build(time)
+                sceneDeclaration.renderables += GltfSceneBuilder(it.gltfResource, it.transform, l, deferredShading).build(time)
             }
         }
         sceneDeclaration.renderables.forEach {
@@ -101,99 +94,129 @@ internal class Scene(
 
     fun render() {
 
-        val directLightUniforms = renderShadows()
-        val contextUniforms = renderContext.uniforms()
-        val geometryUniforms = renderDeferred(contextUniforms)
+        val uniforms = mutableMapOf<String, Any?>()
 
-        val filterFrameBuffers = (0 until min(sceneDeclaration.filters.size, 2))
-            .map {
-                inventory.frameBuffer(FrameBufferDeclaration("filter-$it", renderContext.width, renderContext.height, 1, true))
+        uniforms += renderContext.uniforms()
+        uniforms += renderShadows()
+
+        try {
+            if (deferredShading) {
+                renderSceneDeferred(uniforms)
+            } else {
+                renderSceneForward(uniforms)
             }
+        } catch (_: SkipRender) {
+            println("Scene rendering skipped as framebuffers are not ready")
+        }
+    }
 
-        val prevFrameContext = mutableMapOf<String, Any?>()
+    private fun renderSceneDeferred(uniforms: MutableMap<String, Any?>) {
 
-        val mainFrameBuffer = if (sceneDeclaration.filters.isEmpty()) null else filterFrameBuffers[0]
+        uniforms += renderDeferredOpaques(uniforms)
 
-        val totalMainUniforms = contextUniforms + geometryUniforms + directLightUniforms
-        renderMain(mainFrameBuffer, totalMainUniforms)
+        if (sceneDeclaration.filters.isNotEmpty()) {
+            uniforms += renderToFilter(0) {
+                renderComposition(uniforms)
+            }
+        } else {
+            renderComposition(uniforms)
+            renderTransparents(uniforms)
+        }
 
-        prevFrameContext["filterColorTexture"] = mainFrameBuffer?.colorTextures?.get(0) ?: contextUniforms["noiseTexture"] // TODO this is hack
-        prevFrameContext["filterDepthTexture"] = mainFrameBuffer?.depthTexture ?: contextUniforms["noiseTexture"] // TODO this is hack
+        sceneDeclaration.filters.forEachIndexed { index, filter ->
+            if (index < sceneDeclaration.filters.size - 1) {
+                uniforms += renderToFilter(index + 1) {
+                    renderFilter(filter, uniforms)
+                }
+            } else {
+                renderFilter(filter, uniforms)
+                renderTransparents(uniforms)
+            }
+        }
+    }
 
-        sceneDeclaration.filters.forEachIndexed { p, filter ->
-            val totalContextUniforms = contextUniforms + geometryUniforms + directLightUniforms + prevFrameContext
-            val frameBuffer = if (p == sceneDeclaration.filters.size - 1) null else filterFrameBuffers[(p+1) % 2]
-            renderTo(frameBuffer) {
-                renderFilter(filter, totalContextUniforms)
-                if (frameBuffer == null) {
-                    glEnable(GL_BLEND)
-                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-                    screens.forEach { it.render(totalContextUniforms, fixer) }
-                    glDepthMask(false)
-                    transparents.sortedByDescending { (renderContext.camera.mat4 * it.transform.offset()).z }
-                        .forEach { it.render(totalContextUniforms, fixer) }
-                    glDepthMask(true)
+    private fun renderSceneForward(uniforms: MutableMap<String, Any?>) {
+        if (sceneDeclaration.filters.isEmpty()) {
+            renderForwardOpaques(uniforms)
+            renderTransparents(uniforms)
+        } else {
+            uniforms += renderToFilter(0) {
+                renderForwardOpaques(uniforms)
+            }
+            sceneDeclaration.filters.dropLast(1).forEachIndexed { index, filter ->
+                uniforms += renderToFilter(index + 1) {
+                    renderFilter(filter, uniforms)
                 }
             }
-            prevFrameContext["filterColorTexture"] = frameBuffer?.colorTextures?.get(0) ?: contextUniforms["noiseTexture"] // TODO this is hack
-            prevFrameContext["filterDepthTexture"] = frameBuffer?.depthTexture ?: contextUniforms["noiseTexture"] // TODO this is hack
+            renderFilter(sceneDeclaration.filters.last(), uniforms)
+            renderTransparents(uniforms)
         }
     }
 
-    private fun renderDeferred(contextUniforms: Map<String, Any?>): Map<String, Any?> {
-        if (deferredShading) {
-            // TODO: configurable texture channels resolutions (half/quarter)
-            val geometryBuffer = inventory.frameBuffer(FrameBufferDeclaration("geometry", renderContext.width, renderContext.height, 3, true)) ?: return mapOf()
-            geometryBuffer.exec {
-                renderGeometry(contextUniforms)
-            }
-            return mapOf(
-                "cdiffTexture" to geometryBuffer.colorTextures[0],
-                "normalTexture" to geometryBuffer.colorTextures[1],
-                "materialTexture" to geometryBuffer.colorTextures[2],
-                "depthTexture" to geometryBuffer.depthTexture!!
-            )
+    private fun renderDeferredOpaques(uniforms: Map<String, Any?>): Map<String, Any?> {
+        // TODO: configurable texture channels resolutions (half/quarter)
+        val geometryBuffer = inventory.frameBuffer(FrameBufferDeclaration("geometry", renderContext.width, renderContext.height, 3, true)) ?: throw SkipRender
+        geometryBuffer.exec {
+            glClearColor(0f, 0f, 0f, 1f)
+            glViewport(0, 0, renderContext.width, renderContext.height)
+            glDisable(GL_BLEND)
+            glEnable(GL_DEPTH_TEST)
+            glDepthFunc(GL_LEQUAL)
+            glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+            opaques.forEach { it.render(uniforms, fixer) }
         }
-        return mapOf()
+        return mapOf(
+            "cdiffTexture" to geometryBuffer.colorTextures[0],
+            "normalTexture" to geometryBuffer.colorTextures[1],
+            "materialTexture" to geometryBuffer.colorTextures[2],
+            "depthTexture" to geometryBuffer.depthTexture!!
+        )
     }
 
-    private fun renderMain(frameBuffer: GlGpuFrameBuffer?, uniforms: Map<String, Any?>) {
-        renderTo (frameBuffer) {
-            if (deferredShading) {
-                renderFilter(
-                    materialDeclaration(MaterialBuilder(vertShaderFile = "!shader/screen.vert", fragShaderFile = "!shader/composition.frag")),
-                    uniforms
-                )
-            } else {
-                renderGeometry(uniforms)
-            }
-            skies.forEach { it.render(uniforms, fixer) }
+    private fun renderComposition(uniforms: MutableMap<String, Any?>) {
+        val back = renderContext.backgroundColor
+        glClearColor(back.r, back.g, back.b, back.a)
+        glViewport(0, 0, renderContext.width, renderContext.height)
+        glEnable(GL_BLEND)
+        glEnable(GL_DEPTH_TEST)
+        glDepthFunc(GL_LEQUAL)
+        glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+        renderFilter(
+            materialDeclaration(
+                MaterialBuilder(false),
+                InternalMaterialModifier {
+                    it.vertShaderFile = "!shader/screen.vert"
+                    it.fragShaderFile = "!shader/composition.frag"
+                }
+            ),
+            uniforms
+        )
+        skies.forEach { it.render(uniforms, fixer) }
+    }
 
-            if (frameBuffer == null) {
-                glEnable(GL_BLEND)
-                screens.forEach { it.render(uniforms, fixer) }
-                glDepthMask(false)
-                transparents.sortedByDescending { (renderContext.camera.mat4 * it.transform.offset()).z }
-                    .forEach { it.render(uniforms, fixer) }
-                glDepthMask(true)
-            }
-        }
+    private fun renderForwardOpaques(uniforms: Map<String, Any?>) {
+        val back = renderContext.backgroundColor
+        glClearColor(back.r, back.g, back.b, back.a)
+        glViewport(0, 0, renderContext.width, renderContext.height)
+        glEnable(GL_BLEND)
+        glEnable(GL_DEPTH_TEST)
+        glDepthFunc(GL_LEQUAL)
+        glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+        opaques.forEach { it.render(uniforms, fixer) }
+        skies.forEach { it.render(uniforms, fixer) }
+    }
+
+    private fun renderTransparents(uniforms: MutableMap<String, Any?>) {
+        glEnable(GL_BLEND)
+        screens.forEach { it.render(uniforms, fixer) }
+        glDepthMask(false)
+        transparents.sortedByDescending { (renderContext.camera.mat4 * it.transform.offset()).z }
+            .forEach { it.render(uniforms, fixer) }
+        glDepthMask(true)
     }
 
     private fun renderShadows(): Map<String, Any?> {
         val uniforms = mutableMapOf<String, Any?>()
-
-//        (0 until 32).forEach { _ ->
-//            uniforms["directionalLightsDir[0]"] = Vec3List(listOf())
-//            uniforms["directionalLightColor[0]"] = ColorList(listOf())
-//            uniforms["directionalLightShadowTextureIndex[0]"] = -1
-//            uniforms["directionalLightShadowTextureCount[0]"] = 0
-//            uniforms["pointLightPos[0]"] = Vec3List(listOf())
-//            uniforms["pointLightColor[0]"] = ColorList(listOf())
-//            uniforms["bsps[0]"] = Mat4List(listOf())
-//            uniforms["shadowTextures[0]"] = GlGpuTextureList(listOf())
-//        }
-
         val shadowData = mutableListOf<ShadowerData>()
         val directionalDirs = mutableListOf<Vec3>()
         val directionalColors = mutableListOf<Color>()
@@ -239,42 +262,27 @@ internal class Scene(
     }
 
     private fun renderFilter(filter: MaterialDeclaration, uniforms: Map<String, Any?>) {
-
         val mesh = inventory.mesh(ScreenQuad)
         val shader = inventory.shader(filter.shader)
-
-        // TODO
-        val back = renderContext.backgroundColor
-        glClearColor(back.r, back.g, back.b, back.a)
+        glClearColor(0f, 0f, 0f, 1f)
         glViewport(0, 0, renderContext.width, renderContext.height)
         glEnable(GL_BLEND)
         glEnable(GL_DEPTH_TEST)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glDepthFunc(GL_LEQUAL)
-        glEnable(GL_CULL_FACE)
-        glCullFace(GL_BACK)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         if (mesh != null && shader != null) {
             Renderable(mesh, shader, filter.uniforms).render(uniforms, fixer)
         }
     }
 
-    private fun renderTo(fb: GlGpuFrameBuffer?, block: () -> Unit) {
-        if (fb == null) block() else fb.exec { block() }
-    }
-
-    private fun renderGeometry(contextUniforms: Map<String, Any?>) {
-        val back = renderContext.backgroundColor
-        glClearColor(back.r, back.g, back.b, back.a)
-        glViewport(0, 0, renderContext.width, renderContext.height)
-        glEnable(GL_BLEND)
-        glEnable(GL_DEPTH_TEST)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glDepthFunc(GL_LEQUAL)
-        glEnable(GL_CULL_FACE)
-        glCullFace(GL_BACK)
-        glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-        opaques.forEach { it.render(contextUniforms, fixer) }
+    private fun renderToFilter(index: Int, block: () -> Unit): Map<String, Any?> {
+        val number = index % 2
+        val fb = inventory.frameBuffer(FrameBufferDeclaration("filter-$number", renderContext.width, renderContext.height, 1, true)) ?: throw SkipRender
+        fb.exec { block() }
+        return mapOf(
+            "filterColorTexture" to fb.colorTextures[0],
+            "filterDepthTexture" to fb.depthTexture
+        )
     }
 
     internal class TouchBox(
@@ -294,4 +302,6 @@ internal class Scene(
         }
     }
 }
+
+private object SkipRender : RuntimeException()
 
