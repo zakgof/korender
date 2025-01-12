@@ -10,6 +10,7 @@ import com.zakgof.korender.FireballParams
 import com.zakgof.korender.FrustumProjectionDeclaration
 import com.zakgof.korender.Image
 import com.zakgof.korender.IndexType
+import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
@@ -31,13 +32,20 @@ import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
-import com.zakgof.korender.impl.checkGlError
+import com.zakgof.korender.impl.context.DefaultFrameContext
 import com.zakgof.korender.impl.geometry.Cube
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.geometry.HeightField
 import com.zakgof.korender.impl.geometry.ObjMesh
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.geometry.Sphere
+import com.zakgof.korender.impl.gl.GL.glBlendFunc
+import com.zakgof.korender.impl.gl.GL.glCullFace
+import com.zakgof.korender.impl.gl.GL.glEnable
+import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
+import com.zakgof.korender.impl.gl.GLConstants.GL_CULL_FACE
+import com.zakgof.korender.impl.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
+import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
 import com.zakgof.korender.impl.material.InternalAdjustParams
 import com.zakgof.korender.impl.material.InternalBlurParams
 import com.zakgof.korender.impl.material.InternalFastCloudSkyParams
@@ -70,13 +78,18 @@ internal class Engine(
     private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
     private val inventory = Inventory(asyncContext)
     private val renderContext = RenderContext(width, height)
+    private var deferredShading = false
 
-    private lateinit var sceneTouchBoxesHandler: (TouchEvent) -> Boolean
+    private lateinit var sceneTouchBoxesHandler : (TouchEvent) -> Boolean
     private val touchHandlers = mutableListOf<TouchHandler>()
 
     inner class KorenderContextImpl : KorenderContext {
-        override fun Frame(block: FrameContext.() -> Unit) {
+
+        override fun Frame(deferredShading: Boolean, block: FrameContext.() -> Unit) {
+            if (frameBlocks.isNotEmpty())
+                throw KorenderException("Only one Frame declaration is allowed")
             frameBlocks.add(block)
+            this@Engine.deferredShading = deferredShading // TODO
         }
 
         override fun OnTouch(handler: (TouchEvent) -> Unit) {
@@ -128,7 +141,10 @@ internal class Engine(
             InternalMaterialModifier { it.shaderDefs += setOf(*defs) }
 
         override fun plugin(name: String, shaderFile: String): InternalMaterialModifier =
-            InternalMaterialModifier { it.plugins[name] = shaderFile }
+            InternalMaterialModifier {
+                it.plugins[name] = shaderFile
+                it.shaderDefs += "PLUGIN_" + name.uppercase()
+            }
 
         override fun options(vararg options: RenderingOption): InternalMaterialModifier =
             InternalMaterialModifier { it.options += setOf(*options) }
@@ -246,6 +262,9 @@ internal class Engine(
 
     init {
         println("Engine init $width x $height")
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_CULL_FACE)
+        glCullFace(GL_BACK)
         block.invoke(KorenderContextImpl())
     }
 
@@ -254,12 +273,12 @@ internal class Engine(
         processTouches()
         val sd = SceneDeclaration()
         frameBlocks.forEach {
-            DefaultFrameContext(sd, frameInfo).apply(it)
+            DefaultFrameContext(sd, deferredShading, frameInfo).apply(it)
         }
         inventory.go {
-            val scene = Scene(sd, inventory, renderContext, frameInfo.time)
+            val scene = Scene(sd, inventory, renderContext, deferredShading, frameInfo.time)
             scene.render()
-            checkGlError()
+            // scheckGlError("during rendering")
             sceneTouchBoxesHandler = scene.touchBoxesHandler
         }
     }

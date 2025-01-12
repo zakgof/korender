@@ -4,8 +4,8 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
+import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Color.Companion.Green
-import com.zakgof.korender.math.Color.Companion.Red
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -17,26 +17,22 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 fun ShowcaseExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     camera = camera(Vec3(0f, 5f, 30f), -1.z, 1.y)
     Frame {
-        Pass {
-            DirectionalLight(Vec3(1f, -1f, -1f))
-            Sky(fastCloudSky())
-            Renderable(
-                standart {
-                    baseColor = Green
-                    pbr.metallic = 0.3f
-                    pbr.roughness = 0.5f
-                },
-                mesh = sphere(2f),
-                transform = translate(-0.5f.y)
-            )
+        DirectionalLight(Vec3(1f, -1f, -1f))
+        Sky(fastCloudSky())
+        Renderable(
+            standart {
+                baseColor = Green
+                pbr.metallic = 0.3f
+                pbr.roughness = 0.5f
+            },
+            mesh = sphere(2f),
+            transform = translate(-0.5f.y)
+        )
+        Gui {
+            Filler()
+            Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = Color(0xFF66FF55))
         }
-        Pass {
-            Screen(water(), fastCloudSky())
-            Billboard(fire { yscale = 10f; xscale = 2f }, position = 6.y, transparent = true)
-            Gui {
-                Filler()
-                Text(text = "FPS ${frameInfo.avgFps.toInt()}", height = 50, color = Red, fontResource = "font/orbitron.ttf", id = "fps")
-            }
-        }
+        Billboard(fire { yscale = 10f; xscale = 2f }, position = 6.y, transparent = true)
+        Filter(water(), fastCloudSky())
     }
 }

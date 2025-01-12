@@ -13,7 +13,7 @@ plugins {
     id("signing")
 }
 
-val libraryVersion = "0.3.1-SNAPSHOT"
+val libraryVersion = "0.3.2-SNAPSHOT"
 val libraryGroup = "com.github.zakgof"
 
 compose.resources {

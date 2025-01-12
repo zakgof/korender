@@ -34,7 +34,7 @@ fun GuiExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                 Filler()
             }
             Filler()
-            Text(id = "fps", fontResource = "font/orbitron.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFF66FF55))
+            Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = Color(0xFF66FF55))
         }
     }
 }

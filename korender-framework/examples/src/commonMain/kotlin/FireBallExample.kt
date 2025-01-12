@@ -3,6 +3,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
+import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -15,6 +16,7 @@ import kotlin.math.floor
 fun FireBallExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     camera = camera(Vec3(0f, 2f, 20f), -1.z, 1.y)
     Frame {
+        AmbientLight(Color.White)
         val phase = fract(frameInfo.time)
         Billboard(
             fireball {

@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.impl.engine.Scene.TouchBox
+import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.geometry.ImageQuad
 import com.zakgof.korender.impl.material.NotYetLoadedTexture

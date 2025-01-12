@@ -19,9 +19,12 @@ import com.zakgof.korender.impl.gl.GL.glLinkProgram
 import com.zakgof.korender.impl.gl.GL.glShaderSource
 import com.zakgof.korender.impl.gl.GL.glUniform1f
 import com.zakgof.korender.impl.gl.GL.glUniform1i
+import com.zakgof.korender.impl.gl.GL.glUniform1iv
 import com.zakgof.korender.impl.gl.GL.glUniform2f
 import com.zakgof.korender.impl.gl.GL.glUniform3f
+import com.zakgof.korender.impl.gl.GL.glUniform3fv
 import com.zakgof.korender.impl.gl.GL.glUniform4f
+import com.zakgof.korender.impl.gl.GL.glUniform4fv
 import com.zakgof.korender.impl.gl.GL.glUniformMatrix3fv
 import com.zakgof.korender.impl.gl.GL.glUniformMatrix4fv
 import com.zakgof.korender.impl.gl.GL.glUseProgram
@@ -39,7 +42,6 @@ import com.zakgof.korender.impl.material.ShaderDebugInfo
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Mat3
 import com.zakgof.korender.math.Mat4
-import com.zakgof.korender.math.Mat4List
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
@@ -82,11 +84,11 @@ internal class GlGpuShader(
 
         val fragmentLog: String = glGetShaderInfoLog(fragmentShaderHandle)
         if (fragmentLog.isNotEmpty()) {
-            println(
-                "Fragment shader log [${fragDebugInfo.file}]\n\n" + fragDebugInfo.decorate(
-                    fragmentLog
-                )
-            )
+            println("Fragment shader log [${fragDebugInfo.file}]\n\n" + fragDebugInfo.decorate(fragmentLog))
+
+            fragmentShaderText.lines().forEachIndexed { l, line ->
+                println("${l+1} $line")
+            }
         }
 
         val programLog: String = glGetProgramInfoLog(programHandle)
@@ -160,11 +162,11 @@ internal class GlGpuShader(
         uniformLocations.forEach {
             val uniformValue =
                 requireNotNull(uniforms(it.key)) { "Material ${toString()} does not provide value for the uniform ${it.key}" }
-            if (bind(uniformValue, it.value, currentTexUnit)) currentTexUnit++
+            currentTexUnit += bind(it.key, uniformValue, it.value, currentTexUnit)
         }
     }
 
-    private fun bind(value: Any, location: GLUniformLocation, currentTexUnit: Int): Boolean {
+    private fun bind(name: String, value: Any, location: GLUniformLocation, currentTexUnit: Int): Int {
         when (value) {
             is Int -> glUniform1i(location, value)
             is Float -> glUniform1f(location, value)
@@ -175,14 +177,27 @@ internal class GlGpuShader(
                 location, false, value.asArray()
             )
 
+            is IntList -> if (value.values.isNotEmpty()) {
+                glUniform1iv(location, *value.values.toIntArray())
+            }
+
+            is Vec3List -> if (value.values.isNotEmpty()) {
+                glUniform3fv(location, value.values.flatMap { listOf(it.x, it.y, it.z) }.toFloatArray())
+            }
+
+            is ColorList -> if (value.values.isNotEmpty()) {
+                glUniform4fv(location, value.values.flatMap { listOf(it.r, it.g, it.b, it.a) }.toFloatArray())
+            }
+
             is Mat3 -> glUniformMatrix3fv(
                 location, false, value.asArray()
             )
 
             is Mat4List -> {
-                // TODO ineffective! use buffers?
-                val fa = value.matrices.flatMap { it.asArray().asList() }.toFloatArray()
-                glUniformMatrix4fv(location, false, fa)
+                if (value.matrices.isNotEmpty()) {
+                    val fa = value.matrices.flatMap { it.asArray().asList() }.toFloatArray()
+                    glUniformMatrix4fv(location, false, fa)
+                }
             }
 
             is GlGpuTexture -> {
@@ -190,18 +205,42 @@ internal class GlGpuShader(
                 glUniform1i(location, currentTexUnit)
             }
 
+            is GlGpuTextureList -> {
+                if (value.textures.isNotEmpty()) {
+                    val units = value.textures.mapIndexed { i, tex ->
+                        tex.bind(currentTexUnit + i)
+                        currentTexUnit + i
+                    }
+                    glUniform1iv(location, *units.toIntArray())
+                }
+            }
+
             is NotYetLoadedTexture -> {
                 // glUniform1i(location, -1)
             }
 
             else -> {
-                val uniformName = uniformLocations.entries.first { it.value == location }.key
-                throw KorenderException("Unsupported uniform value $value of type ${value::class} for uniform $uniformName")
+                throw KorenderException("Unsupported uniform value $value of type ${value::class} for uniform $name")
             }
 
         }
-        return value is GlGpuTexture
+        // checkGlError("while setting uniform $name in shader $this")
+        return when (value) {
+            is GlGpuTexture -> 1
+            is GlGpuTextureList -> value.textures.size
+            else -> 0
+        }
     }
 
     override fun toString() = name
 }
+
+internal data class IntList(val values: List<Int>)
+
+internal data class Mat4List(val matrices: List<Mat4>)
+
+internal data class Vec3List(val values: List<Vec3>)
+
+internal data class ColorList(val values: List<Color>)
+
+internal data class GlGpuTextureList(val textures: List<GlGpuTexture>)

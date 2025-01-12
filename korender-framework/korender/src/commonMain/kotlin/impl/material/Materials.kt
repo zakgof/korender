@@ -9,17 +9,23 @@ internal fun interface InternalMaterialModifier : MaterialModifier {
     fun applyTo(builder: MaterialBuilder)
 }
 
-internal class MaterialBuilder(
-    var vertShaderFile: String = "!shader/standart.vert",
-    var fragShaderFile: String = "!shader/standart.frag",
-    val options: MutableSet<RenderingOption> = mutableSetOf(),
-    val shaderDefs: MutableSet<String> = mutableSetOf(),
-    val plugins: MutableMap<String, String> = mutableMapOf(),
-    var shaderUniforms: DynamicUniforms = ParamUniforms(InternalStandartParams()) {},
+internal class MaterialBuilder(deferredShading: Boolean) {
+    var vertShaderFile: String = "!shader/standart.vert"
+    var fragShaderFile: String = if (deferredShading) "!shader/geometry.frag" else "!shader/forward.frag"
+    val options: MutableSet<RenderingOption> = mutableSetOf()
+    val shaderDefs: MutableSet<String> = mutableSetOf()
+    val plugins: MutableMap<String, String> = mutableMapOf()
+    var shaderUniforms: DynamicUniforms = ParamUniforms(InternalStandartParams()) {}
     val pluginUniforms: MutableList<DynamicUniforms> = mutableListOf()
-) {
+
     fun toMaterialDeclaration(): MaterialDeclaration = MaterialDeclaration(
         shader = ShaderDeclaration(vertShaderFile, fragShaderFile, shaderDefs, options, plugins),
         uniforms = { pluginUniforms.fold(shaderUniforms()) { acc, pu -> acc + pu() } }
     )
 }
+
+internal fun materialDeclaration(builder: MaterialBuilder, vararg materialModifiers: MaterialModifier) =
+    materialModifiers.fold(builder) { acc, mod ->
+        (mod as InternalMaterialModifier).applyTo(acc)
+        acc
+    }.toMaterialDeclaration()

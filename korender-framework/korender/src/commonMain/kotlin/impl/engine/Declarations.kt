@@ -1,9 +1,9 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.TouchHandler
+import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.material.DynamicUniforms
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
@@ -11,35 +11,13 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
 internal class SceneDeclaration {
-    var shadow: ShadowDeclaration? = null
-    val defaultPass = PassDeclaration()
-    val passes = mutableListOf<PassDeclaration>()
-
-    fun addPass(pass: PassDeclaration) = passes.add(pass)
-    fun addShadow(shadow: ShadowDeclaration) {
-        if (this.shadow != null) {
-            throw KorenderException("Only one Shadow declaration is allowed")
-        }
-        this.shadow = shadow
-    }
-
-    fun compilePasses() {
-        if (defaultPass.renderables.isNotEmpty() || defaultPass.guis.isNotEmpty() || defaultPass.gltfs.isNotEmpty()) {
-            if (passes.isNotEmpty()) {
-                throw KorenderException("It is not allowed to mix Passes and renderables in Frame context")
-            }
-            passes.add(defaultPass)
-        }
-    }
-}
-
-internal class PassDeclaration {
     val pointLights = mutableListOf<PointLightDeclaration>()
     val directionalLights = mutableListOf<DirectionalLightDeclaration>()
     var ambientLightColor = Color(1.0f, 0.15f, 0.15f, 0.15f)
     val renderables = mutableListOf<RenderableDeclaration>()
     val guis = mutableListOf<ElementDeclaration.Container>()
     val gltfs = mutableListOf<GltfDeclaration>()
+    var filters = mutableListOf<MaterialDeclaration>()
 }
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
@@ -104,12 +82,12 @@ internal data class FrameBufferDeclaration(
     val id: String,
     val width: Int,
     val height: Int,
+    val colorTextures: Int,
     val withDepth: Boolean
 )
 
 internal class ShadowDeclaration {
     val cascades = mutableListOf<CascadeDeclaration>()
-    fun addCascade(cascadeDeclaration: CascadeDeclaration) = cascades.add(cascadeDeclaration)
 }
 
 internal data class CascadeDeclaration(val mapSize: Int, val near: Float, var far: Float)
@@ -121,4 +99,4 @@ internal class GltfDeclaration(val gltfResource: String, val transform: Transfor
 
 internal class PointLightDeclaration(val position: Vec3, val color: Color)
 
-internal class DirectionalLightDeclaration(val direction: Vec3, val color: Color)
+internal class DirectionalLightDeclaration(val direction: Vec3, val color: Color, val shadowDeclaration: ShadowDeclaration)

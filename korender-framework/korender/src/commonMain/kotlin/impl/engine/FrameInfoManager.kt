@@ -9,7 +9,7 @@ internal class FrameInfoManager() {
 
     private var frameNumber = 0L
     private var prevFrameNano: Long = Platform.nanoTime()
-    private val frames = mutableListOf<Long>() // TODO: this needs optimization, linked list
+    private val frames = ArrayDeque<Long>()
     fun frame(): FrameInfo {
         val now = Platform.nanoTime()
         val frameTime = now - prevFrameNano

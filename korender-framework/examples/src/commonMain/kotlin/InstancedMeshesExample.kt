@@ -18,6 +18,7 @@ fun InstancedMeshesExample() = Korender(appResourceLoader = { Res.readBytes(it) 
     OnTouch { freeCamera.touch(it) }
     Frame {
         AmbientLight(Color.white(0.4f))
+        DirectionalLight(Vec3(1f, 1f, -2f).normalize(), Color.White)
         camera = freeCamera.camera(projection, width, height, frameInfo.dt)
         InstancedRenderables(
             standart {

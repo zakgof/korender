@@ -1,7 +1,6 @@
 package com.zakgof.korender
 
 import com.zakgof.korender.math.Color
-import com.zakgof.korender.math.Mat4List
 
 interface MaterialModifier
 
@@ -58,9 +57,6 @@ interface StandartParams : BaseParams {
     var normalTexture: TextureDeclaration?
     var shadowTexture: TextureDeclaration?
 
-    var jointMatrices: Mat4List?
-    var inverseBindMatrices: Mat4List?
-
     var xscale: Float
     var yscale: Float
     var rotation: Float
@@ -68,10 +64,11 @@ interface StandartParams : BaseParams {
     interface Pbr {
         var metallic: Float
         var roughness: Float
-        var emissiveFactor: Color
         var metallicRoughnessTexture: TextureDeclaration?
-        var emissiveTexture: TextureDeclaration?
-        var occlusionTexture: TextureDeclaration?
+
+//        var emissiveFactor: Color
+//        var emissiveTexture: TextureDeclaration?
+//        var occlusionTexture: TextureDeclaration?
     }
 
     interface SpecularGlossiness {

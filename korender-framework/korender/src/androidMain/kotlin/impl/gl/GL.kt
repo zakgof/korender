@@ -144,6 +144,9 @@ actual object GL {
     actual fun glUniform1i(location: GLUniformLocation, v0: Int) =
         GLES20.glUniform1i(location.glHandle, v0)
 
+    actual fun glUniform1iv(location: GLUniformLocation, vararg v0: Int) =
+        GLES20.glUniform1iv(location.glHandle, v0.size, v0, 0)
+
     actual fun glUniform1f(location: GLUniformLocation, v0: Float) =
         GLES20.glUniform1f(location.glHandle, v0)
 
@@ -232,4 +235,7 @@ actual object GL {
 
     actual fun glDeleteVertexArrays(vertexArray: GLVertexArray) =
         GLES30.glDeleteVertexArrays(1, intArrayOf(vertexArray.glHandle), 0)
+
+    actual fun glDrawBuffers(vararg targets: Int) =
+        GLES30.glDrawBuffers(targets.size, targets, 0)
 }
