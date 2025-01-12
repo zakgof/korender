@@ -41,23 +41,19 @@ uniform vec4 ambientColor;
 uniform mat4 projection;
 uniform mat4 view;
 
-struct DirectionalLight {
-    vec3 dir;
-    vec4 color;
-    int shadowTextureIndex;
-    int shadowTextureCount;
-};
-struct PointLight {
-    vec3 pos;
-    vec4 color;
-};
-
-uniform DirectionalLight directionalLights[4];
 uniform int numDirectionalLights;
-uniform PointLight pointLights[4];
+uniform vec3 directionalLightDir[32];
+uniform vec4 directionalLightColor[32];
+uniform int directionalLightShadowTextureIndex[32];
+uniform int directionalLightShadowTextureCount[32];
+
 uniform int numPointLights;
-uniform sampler2D shadowTextures[4];
-uniform mat4 bsps[4];
+uniform vec3 pointLightPos[32];
+uniform vec4 pointLightColor[32];
+
+uniform int numShadows;
+uniform sampler2D shadowTextures[12];
+uniform mat4 bsps[12];
 
 out vec4 fragColor;
 
@@ -71,23 +67,27 @@ out vec4 fragColor;
 #import "!shader/lib/shading.glsl"
 #import "!shader/lib/pbr.glsl"
 
-float sampleShadowTexture(sampler2D texarray[4], int i, vec3 v) {
+float sampleShadowTexture(sampler2D texarray[12], int i, vec3 v) {
+    #ifdef WEBGL
     float sh = 0.;
     switch (i) {
         case 0: sh = shadow(texarray[0], v); break;
         case 1: sh =  shadow(texarray[1], v); break;
         case 2: sh =  shadow(texarray[2], v); break;
         case 3: sh =  shadow(texarray[3], v); break;
-//        case 4: sh =  shadow(texarray[4], v); break;
-//        case 5: sh =  shadow(texarray[5], v); break;
-//        case 6: sh =  shadow(texarray[6], v); break;
-//        case 7: sh =  shadow(texarray[7], v); break;
-//        case 8: sh =  shadow(texarray[8], v); break;
-//        case 9: sh =  shadow(texarray[9], v); break;
-//        case 10: sh =  shadow(texarray[10], v); break;
-//        case 11: sh =  shadow(texarray[11], v); break;
+        case 4: sh =  shadow(texarray[4], v); break;
+        case 5: sh =  shadow(texarray[5], v); break;
+        case 6: sh =  shadow(texarray[6], v); break;
+        case 7: sh =  shadow(texarray[7], v); break;
+        case 8: sh =  shadow(texarray[8], v); break;
+        case 9: sh =  shadow(texarray[9], v); break;
+        case 10: sh =  shadow(texarray[10], v); break;
+        case 11: sh =  shadow(texarray[11], v); break;
     }
     return sh;
+    #else
+    return shadow(texarray[i], v);
+    #endif
 }
 
 void main() {
@@ -140,24 +140,24 @@ void main() {
     vec3 color = c_diff * ambientColor.rgb;
 
     for (int l=0; l<numDirectionalLights; l++) {
-        DirectionalLight dl = directionalLights[l];
         float shadowRatio = 0.;
-        for (int c=0; c<dl.shadowTextureCount; c++) {
-            int idx = dl.shadowTextureIndex + c;
+        int shadowCount = directionalLightShadowTextureCount[l];
+        for (int c=0; c<shadowCount; c++) {
+            int idx = directionalLightShadowTextureIndex[l] + c;
             vec3 vshadow = (bsps[idx] * vec4(vpos, 1.0)).xyz;
             float sh = sampleShadowTexture(shadowTextures, idx, vshadow);
             shadowRatio = max(shadowRatio, sh);
         }
-        vec3 lightValue = dl.color.rgb * (1. - shadowRatio);
-        vec3 L = normalize(-dl.dir);
+        vec3 lightValue = directionalLightColor[l].rgb * (1. - shadowRatio);
+        vec3 L = normalize(-directionalLightDir[l]);
         color += calculatePBR(N, V, L, c_diff, F0, roughness, lightValue);
     }
     for (int l=0; l<numPointLights; l++) {
         float shadowRatio = 0.;
-        vec3 ftol = pointLights[l].pos - vpos;
+        vec3 ftol = pointLightPos[l] - vpos;
         float distance = length(ftol);
         float att = max(2.0, 3.0 / distance);
-        vec3 lightValue = pointLights[l].color.rgb * (1. - shadowRatio) * att;// TODO quadratic; configurable attenuation ratio
+        vec3 lightValue = pointLightColor[l].rgb * (1. - shadowRatio) * att;// TODO quadratic; configurable attenuation ratio
         vec3 L = normalize(ftol);
         color += calculatePBR(N, V, L, c_diff, F0, roughness, lightValue);
     }

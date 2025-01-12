@@ -23,7 +23,9 @@ import com.zakgof.korender.impl.gl.GL.glUniform1i
 import com.zakgof.korender.impl.gl.GL.glUniform1iv
 import com.zakgof.korender.impl.gl.GL.glUniform2f
 import com.zakgof.korender.impl.gl.GL.glUniform3f
+import com.zakgof.korender.impl.gl.GL.glUniform3fv
 import com.zakgof.korender.impl.gl.GL.glUniform4f
+import com.zakgof.korender.impl.gl.GL.glUniform4fv
 import com.zakgof.korender.impl.gl.GL.glUniformMatrix3fv
 import com.zakgof.korender.impl.gl.GL.glUniformMatrix4fv
 import com.zakgof.korender.impl.gl.GL.glUseProgram
@@ -176,6 +178,18 @@ internal class GlGpuShader(
                 location, false, value.asArray()
             )
 
+            is IntList -> if (value.values.isNotEmpty()) {
+                glUniform1iv(location, *value.values.toIntArray())
+            }
+
+            is Vec3List -> if (value.values.isNotEmpty()) {
+                glUniform3fv(location, value.values.flatMap { listOf(it.x, it.y, it.z) }.toFloatArray())
+            }
+
+            is ColorList -> if (value.values.isNotEmpty()) {
+                glUniform4fv(location, value.values.flatMap { listOf(it.r, it.g, it.b, it.a) }.toFloatArray())
+            }
+
             is Mat3 -> glUniformMatrix3fv(
                 location, false, value.asArray()
             )
@@ -222,6 +236,12 @@ internal class GlGpuShader(
     override fun toString() = name
 }
 
-internal class Mat4List(val matrices: List<Mat4>)
+internal data class IntList(val values: List<Int>)
 
-internal class GlGpuTextureList(val textures: List<GlGpuTexture>)
+internal data class Mat4List(val matrices: List<Mat4>)
+
+internal data class Vec3List(val values: List<Vec3>)
+
+internal data class ColorList(val values: List<Color>)
+
+internal data class GlGpuTextureList(val textures: List<GlGpuTexture>)

@@ -29,6 +29,7 @@ actual object GL {
     actual fun glPixelStorei(pname: Int, param: Int) = GL11.glPixelStorei(pname, param)
     actual fun glGenTextures(): GLTexture =
         GLTexture(GL11.glGenTextures())
+
     actual fun glBlendFunc(sfactor: Int, dfactor: Int) = GL11.glBlendFunc(sfactor, dfactor)
     actual fun glDepthFunc(func: Int) = GL11.glDepthFunc(func)
     actual fun glDepthMask(flag: Boolean) = GL11.glDepthMask(flag)
@@ -112,9 +113,11 @@ actual object GL {
     actual fun glShaderSource(shader: GLShader, source: String) =
         GL20.glShaderSource(shader.glHandle, source)
 
-    actual fun glCompileShader(shader: GLShader) = GL20.glCompileShader(shader.glHandle)
+    actual fun glCompileShader(shader: GLShader) =
+        GL20.glCompileShader(shader.glHandle)
 
-    actual fun glEnableVertexAttribArray(index: Int) = GL20.glEnableVertexAttribArray(index)
+    actual fun glEnableVertexAttribArray(index: Int) =
+        GL20.glEnableVertexAttribArray(index)
 
     actual fun glGetUniformLocation(program: GLProgram, name: String) =
         GLUniformLocation(GL20.glGetUniformLocation(program.glHandle, name))
@@ -137,14 +140,14 @@ actual object GL {
     actual fun glUniform3f(location: GLUniformLocation, v0: Float, v1: Float, v2: Float) =
         GL20.glUniform3f(location.glHandle, v0, v1, v2)
 
-    actual fun glUniform4f(
-        location: GLUniformLocation,
-        v0: Float,
-        v1: Float,
-        v2: Float,
-        v3: Float
-    ) =
+    actual fun glUniform4f(location: GLUniformLocation, v0: Float, v1: Float, v2: Float, v3: Float) =
         GL20.glUniform4f(location.glHandle, v0, v1, v2, v3)
+
+    actual fun glUniform3fv(location: GLUniformLocation, value: FloatArray) =
+        GL20.glUniform3fv(location.glHandle, value)
+
+    actual fun glUniform4fv(location: GLUniformLocation, value: FloatArray) =
+        GL20.glUniform4fv(location.glHandle, value)
 
     actual fun glUniformMatrix2fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray) =
         GL20.glUniformMatrix2fv(location.glHandle, transpose, value)

@@ -23,16 +23,18 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
+import com.zakgof.korender.impl.glgpu.ColorList
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.glgpu.GlGpuTextureList
+import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Mat4List
+import com.zakgof.korender.impl.glgpu.Vec3List
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.MaterialBuilder
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.math.Color
-import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec3
 import kotlin.math.min
 
@@ -177,24 +179,25 @@ internal class Scene(
     }
 
     private fun renderShadows(): Map<String, Any?> {
-        val directLightUniforms = mutableMapOf<String, Any?>()
+        val uniforms = mutableMapOf<String, Any?>()
 
-        (0 until 32).forEach {
-            directLightUniforms["directionalLights[$it].dir"] = Vec3.ZERO
-            directLightUniforms["directionalLights[$it].color"] = Color.Black
-            directLightUniforms["directionalLights[$it].shadowTextureIndex"] = -1
-            directLightUniforms["directionalLights[$it].shadowTextureCount"] = 0
-            directLightUniforms["pointLights[$it].pos"] = Vec3.ZERO
-            directLightUniforms["pointLights[$it].color"] = Color.Black
-
-            directLightUniforms["bsps[0]"] = Mat4.ZERO
-            directLightUniforms["shadowTextures[0]"] = NotYetLoadedTexture
-        }
+//        (0 until 32).forEach { _ ->
+//            uniforms["directionalLightsDir[0]"] = Vec3List(listOf())
+//            uniforms["directionalLightColor[0]"] = ColorList(listOf())
+//            uniforms["directionalLightShadowTextureIndex[0]"] = -1
+//            uniforms["directionalLightShadowTextureCount[0]"] = 0
+//            uniforms["pointLightPos[0]"] = Vec3List(listOf())
+//            uniforms["pointLightColor[0]"] = ColorList(listOf())
+//            uniforms["bsps[0]"] = Mat4List(listOf())
+//            uniforms["shadowTextures[0]"] = GlGpuTextureList(listOf())
+//        }
 
         val shadowData = mutableListOf<ShadowerData>()
+        val directionalDirs = mutableListOf<Vec3>()
+        val directionalColors = mutableListOf<Color>()
+        val directionalShadowIndexes = mutableListOf<Int>()
+        val directionalShadowCounts = mutableListOf<Int>()
         sceneDeclaration.directionalLights.forEachIndexed { li, dl ->
-            directLightUniforms["directionalLights[$li].dir"] = dl.direction
-            directLightUniforms["directionalLights[$li].color"] = dl.color
             val indexes = dl.shadowDeclaration.cascades.mapIndexedNotNull { ci, cascadeDeclaration ->
                 ShadowRenderer.render(
                     "$li-$ci",
@@ -209,23 +212,28 @@ internal class Scene(
                     shadowData.size - 1
                 }
             }
-            directLightUniforms["directionalLights[$li].shadowTextureIndex"] = indexes.minOrNull() ?: -1
-            directLightUniforms["directionalLights[$li].shadowTextureCount"] = indexes.size
+            directionalDirs += dl.direction
+            directionalColors += dl.color
+            directionalShadowIndexes += indexes.minOrNull() ?: -1
+            directionalShadowCounts += indexes.size
         }
+        uniforms["numShadows"] = shadowData.size
+        uniforms["shadowTextures[0]"] = GlGpuTextureList(shadowData.map { it.texture })
+        uniforms["bsps[0]"] = Mat4List(shadowData.map { it.bsp })
 
-        directLightUniforms["shadowTextures[0]"] = GlGpuTextureList(shadowData.map { it.texture })
-        directLightUniforms["bsps[0]"] = Mat4List(shadowData.map { it.bsp })
+        uniforms["numDirectionalLights"] = sceneDeclaration.directionalLights.size
+        uniforms["directionalLightDir[0]"] = Vec3List(directionalDirs)
+        uniforms["directionalLightColor[0]"] = ColorList(directionalColors)
+        uniforms["directionalLightShadowTextureIndex[0]"] = IntList(directionalShadowIndexes)
+        uniforms["directionalLightShadowTextureCount[0]"] = IntList(directionalShadowCounts)
 
-        directLightUniforms["numDirectionalLights"] = sceneDeclaration.directionalLights.size
-        // TODO
-        directLightUniforms["ambientColor"] = sceneDeclaration.ambientLightColor
+        uniforms["ambientColor"] = sceneDeclaration.ambientLightColor
 
-        directLightUniforms["numPointLights"] = sceneDeclaration.pointLights.size
-        sceneDeclaration.pointLights.forEachIndexed { i, pl ->
-            directLightUniforms["pointLights[$i].pos"] = pl.position
-            directLightUniforms["pointLights[$i].color"] = pl.color
-        }
-        return directLightUniforms
+        uniforms["numPointLights"] = sceneDeclaration.pointLights.size
+        uniforms["pointLightPos[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.position })
+        uniforms["pointLightColor[0]"] = ColorList(sceneDeclaration.pointLights.map { it.color })
+
+        return uniforms
     }
 
     private fun renderFilter(filter: MaterialDeclaration, uniforms: Map<String, Any?>) {
