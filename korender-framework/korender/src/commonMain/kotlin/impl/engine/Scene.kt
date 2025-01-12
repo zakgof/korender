@@ -11,7 +11,6 @@ import com.zakgof.korender.impl.gl.GL.glClearColor
 import com.zakgof.korender.impl.gl.GL.glCullFace
 import com.zakgof.korender.impl.gl.GL.glDepthFunc
 import com.zakgof.korender.impl.gl.GL.glDepthMask
-import com.zakgof.korender.impl.gl.GL.glDisable
 import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GL.glViewport
 import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
@@ -127,6 +126,8 @@ internal class Scene(
             renderTo(frameBuffer) {
                 renderFilter(filter, totalContextUniforms)
                 if (frameBuffer == null) {
+                    glEnable(GL_BLEND)
+                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
                     screens.forEach { it.render(totalContextUniforms, fixer) }
                     glDepthMask(false)
                     transparents.sortedByDescending { (renderContext.camera.mat4 * it.transform.offset()).z }
@@ -169,6 +170,7 @@ internal class Scene(
             skies.forEach { it.render(uniforms, fixer) }
 
             if (frameBuffer == null) {
+                glEnable(GL_BLEND)
                 screens.forEach { it.render(uniforms, fixer) }
                 glDepthMask(false)
                 transparents.sortedByDescending { (renderContext.camera.mat4 * it.transform.offset()).z }
@@ -262,10 +264,12 @@ internal class Scene(
     }
 
     private fun renderGeometry(contextUniforms: Map<String, Any?>) {
-        glClearColor(0f, 0f, 0f, 0f);
+        val back = renderContext.backgroundColor
+        glClearColor(back.r, back.g, back.b, back.a)
         glViewport(0, 0, renderContext.width, renderContext.height)
-        glDisable(GL_BLEND)
+        glEnable(GL_BLEND)
         glEnable(GL_DEPTH_TEST)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glDepthFunc(GL_LEQUAL)
         glEnable(GL_CULL_FACE)
         glCullFace(GL_BACK)

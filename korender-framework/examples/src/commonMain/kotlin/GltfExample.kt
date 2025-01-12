@@ -23,7 +23,7 @@ fun GltfExample() = Korender (appResourceLoader = { Res.readBytes(it) }) {
         Scene(gltfResource = "gltf/ai/swat.glb", transform = scale(0.03f).rotate(1.y, frameInfo.time))
         Gui {
             Filler()
-            Text(id = "fps", fontResource = "font/orbitron.ttf", height = 50, text = "FPS ${frameInfo.avgFps.toInt()}", color = Color(0xFF66FF55))
+            Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = Color(0xFF66FF55))
         }
     }
 }

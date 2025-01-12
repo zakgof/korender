@@ -18,6 +18,7 @@ fun SkyExample() {
         val freeCamera = FreeCamera(this, Vec3(0f, 4f, 20f), -1.z)
         OnTouch { freeCamera.touch(it) }
         Frame {
+            AmbientLight(Color.White)
             camera = freeCamera.camera(projection, width, height, 0f)
             Sky(starrySky())
             Renderable(
@@ -29,11 +30,11 @@ fun SkyExample() {
                     pbr.roughness = 0.9f
                 },
                 mesh = cube(1f),
-                transform = scale(200f, 1f, 200f)
+                transform = scale(2000f, 1f, 2000f)
             )
             Gui {
                 Filler()
-                Text(id = "fps", fontResource = "font/orbitron.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFF66FF55))
+                Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = Color(0xFF66FF55))
             }
         }
     }

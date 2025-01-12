@@ -24,6 +24,7 @@ fun MeshesExample() {
             baseColor = Color.Blue
         }
         Frame {
+            AmbientLight(Color.White)
             camera = orbitCamera.camera(projection, width, height)
             Renderable(
                 materialModifier,

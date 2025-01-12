@@ -19,6 +19,7 @@ fun TransparencyExample() {
         val orbitCamera = OrbitCamera(this, 20.z, 0.y)
         OnTouch { orbitCamera.touch(it) }
         Frame {
+            AmbientLight(Color.White)
             camera = orbitCamera.camera(projection, width, height)
             fun semitransparent(color: Color, position: Vec3) = Renderable(
                 standart {

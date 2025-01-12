@@ -3,8 +3,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.math.Transform.Companion.translate
-import com.zakgof.korender.math.x
+import com.zakgof.korender.math.Color
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.sin
 
@@ -12,12 +11,12 @@ import kotlin.math.sin
 @Composable
 fun BlurExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
+        AmbientLight(Color.White)
         Renderable(
             standart {
                 baseColorTexture = texture("texture/asphalt-albedo.jpg")
             },
-            mesh = sphere(3f),
-            transform = translate(-2.x)
+            mesh = sphere(3f)
         )
         val radius = 1.0f + sin(frameInfo.time)
         Filter(blurHorz {

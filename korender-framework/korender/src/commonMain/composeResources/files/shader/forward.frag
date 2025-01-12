@@ -34,7 +34,7 @@ uniform float roughness;
     uniform sampler2D specularGlossinessTexture;
 #endif
 
-//  TODO DETAIL FOR EVERYTHIN
+//  TODO DETAIL FOR BASECOLOR
 
 uniform vec3 cameraPos;
 uniform vec4 ambientColor;
@@ -54,8 +54,8 @@ uniform vec4 pointLightColor[MAX_LIGHTS];
 
 const int MAX_SHADOWS = 12;
 uniform int numShadows;
-uniform sampler2D shadowTextures[12];
-uniform mat4 bsps[12];
+uniform sampler2D shadowTextures[MAX_SHADOWS];
+uniform mat4 bsps[MAX_SHADOWS];
 
 out vec4 fragColor;
 
