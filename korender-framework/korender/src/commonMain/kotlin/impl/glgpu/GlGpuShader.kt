@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.impl.engine.SkipRender
 import com.zakgof.korender.impl.gl.GL.glAttachShader
 import com.zakgof.korender.impl.gl.GL.glBindAttribLocation
 import com.zakgof.korender.impl.gl.GL.glCompileShader
@@ -215,9 +216,7 @@ internal class GlGpuShader(
                 }
             }
 
-            is NotYetLoadedTexture -> {
-                // glUniform1i(location, -1)
-            }
+            is NotYetLoadedTexture -> throw SkipRender
 
             else -> {
                 throw KorenderException("Unsupported uniform value $value of type ${value::class} for uniform $name")

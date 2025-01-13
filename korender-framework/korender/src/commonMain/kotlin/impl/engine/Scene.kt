@@ -303,5 +303,5 @@ internal class Scene(
     }
 }
 
-private object SkipRender : RuntimeException()
+internal object SkipRender : RuntimeException()
 

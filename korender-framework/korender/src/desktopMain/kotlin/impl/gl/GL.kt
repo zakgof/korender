@@ -19,8 +19,8 @@ actual object GL {
 
     actual fun glDisable(target: Int) = GL11.glDisable(target)
 
-    actual fun glBindTexture(target: Int, texture: GLTexture) =
-        GL11.glBindTexture(target, texture.glHandle)
+    actual fun glBindTexture(target: Int, texture: GLTexture?) =
+        GL11.glBindTexture(target, texture?.glHandle ?: 0)
 
     actual fun glTexParameterf(target: Int, pname: Int, param: Float) =
         GL11.glTexParameterf(target, pname, param)

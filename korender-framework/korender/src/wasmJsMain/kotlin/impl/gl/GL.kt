@@ -22,8 +22,8 @@ actual object GL {
     actual fun glDisable(target: Int) =
         gl!!.disable(target)
 
-    actual fun glBindTexture(target: Int, texture: GLTexture) =
-        gl!!.bindTexture(target, texture.texture)
+    actual fun glBindTexture(target: Int, texture: GLTexture?) =
+        gl!!.bindTexture(target, texture?.texture)
 
     actual fun glTexParameterf(target: Int, pname: Int, param: Float) =
         gl!!.texParameterf(target, pname, param)

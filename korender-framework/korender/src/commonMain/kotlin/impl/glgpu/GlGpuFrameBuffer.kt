@@ -1,7 +1,6 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.impl.gl.GL.glActiveTexture
 import com.zakgof.korender.impl.gl.GL.glBindFramebuffer
 import com.zakgof.korender.impl.gl.GL.glBindTexture
 import com.zakgof.korender.impl.gl.GL.glCheckFramebufferStatus
@@ -25,7 +24,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER_COMPLETE
 import com.zakgof.korender.impl.gl.GLConstants.GL_LINEAR
 import com.zakgof.korender.impl.gl.GLConstants.GL_NEAREST
 import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA
-import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE0
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_2D
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_BORDER_COLOR
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MAG_FILTER
@@ -47,7 +45,7 @@ internal class GlGpuFrameBuffer(private val name: String, private val width: Int
 
     init {
 
-        println("Creating GPU Framebuffer [$name] ${width}x${height}: $fbHandle")
+        println("Creating GPU Framebuffer $this")
 
         glBindFramebuffer(GL_FRAMEBUFFER, fbHandle)
 
@@ -84,11 +82,12 @@ internal class GlGpuFrameBuffer(private val name: String, private val width: Int
         if (err != GL_FRAMEBUFFER_COMPLETE) {
             throw KorenderException("Error creating framebuffer $err")
         }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, null)
     }
 
     private fun createTexture(depth: Boolean): GlGpuTexture {
         val glHandle = glGenTextures()
-        glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, glHandle)
         glTexImage2D(
             GL_TEXTURE_2D,
@@ -114,6 +113,7 @@ internal class GlGpuFrameBuffer(private val name: String, private val width: Int
                 glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, floatArrayOf(0f, 0f, 0f, 0f))
             }
         }
+        glBindTexture(GL_TEXTURE_2D, null)
         return GlGpuTexture("$name-${if (depth) "depth" else "tex"}", glHandle)
     }
 
@@ -135,5 +135,9 @@ internal class GlGpuFrameBuffer(private val name: String, private val width: Int
         glViewport(0, 0, width, height)
     }
 
-    private fun unbind() = glBindFramebuffer(GL_FRAMEBUFFER, null)
+    private fun unbind() {
+        glBindFramebuffer(GL_FRAMEBUFFER, null)
+    }
+
+    override fun toString() = "[$name] ${width}x${height}: $fbHandle"
 }

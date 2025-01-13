@@ -12,7 +12,7 @@ expect object GL {
 
     fun glDisable(target: Int)
 
-    fun glBindTexture(target: Int, texture: GLTexture)
+    fun glBindTexture(target: Int, texture: GLTexture?)
 
     fun glTexParameterf(target: Int, pname: Int, param: Float)
 

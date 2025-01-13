@@ -26,12 +26,12 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.await
 import kotlinx.coroutines.launch
+import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.Uint8ClampedArray
 import org.khronos.webgl.WebGLRenderingContext.Companion.RENDERER
 import org.khronos.webgl.WebGLRenderingContext.Companion.SHADING_LANGUAGE_VERSION
 import org.khronos.webgl.WebGLRenderingContext.Companion.VENDOR
 import org.khronos.webgl.WebGLRenderingContext.Companion.VERSION
-import org.khronos.webgl.get
 import org.khronos.webgl.toInt8Array
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
@@ -46,17 +46,15 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 internal class WasmImage(
     override val width: Int,
     override val height: Int,
-    byteArray: ByteArray,
+    override val bytes: NativeByteBuffer,
     override val format: Image.Format = Image.Format.RGBA
-) : InternalImage {
-    override val bytes = NativeByteBuffer(byteArray)
-}
+) : InternalImage
 
 internal actual object Platform {
 
     actual val name: String = "Wasm"
 
-    @OptIn(DelicateCoroutinesApi::class)
+    @OptIn(DelicateCoroutinesApi::class, ExperimentalUnsignedTypes::class)
     internal actual fun loadFont(bytes: ByteArray): Deferred<FontDef> {
         val ffLoader = jsLoadFont(bytes.toInt8Array())
         return GlobalScope.async {
@@ -98,14 +96,12 @@ internal actual object Platform {
                 ctx.canvas.height.toDouble()
             )
             val uint8ClampedArray: Uint8ClampedArray = imageData.data
-            val byteArray = ByteArray(uint8ClampedArray.length) { uint8ClampedArray[it] }
+            val uint8Array = Uint8Array(uint8ClampedArray.buffer, uint8ClampedArray.byteOffset, uint8ClampedArray.length)
             val image = WasmImage(
                 ctx.canvas.width,
                 ctx.canvas.height,
-                byteArray
+                NativeByteBuffer(uint8Array)
             )
-//            println("FONT IMAGE DUMP")
-//            println(canvas.toDataURL())
             FontDef(image, widths)
         }
     }
@@ -120,7 +116,6 @@ internal actual object Platform {
             result.completeExceptionally(KorenderException("$a $b $c $d $e"))
             null
         }
-        println(image.src)
         image.onload = {
             val canvas = document.createElement("canvas") as HTMLCanvasElement
             val context = canvas.getContext("2d") as CanvasRenderingContext2D
@@ -134,8 +129,8 @@ internal actual object Platform {
                 canvas.height.toDouble()
             )
             val uint8ClampedArray: Uint8ClampedArray = imageData.data
-            val byteArray = ByteArray(uint8ClampedArray.length) { uint8ClampedArray[it] }
-            result.complete(WasmImage(imageData.width, imageData.height, byteArray))
+            val uint8Array = Uint8Array(uint8ClampedArray.buffer, uint8ClampedArray.byteOffset, uint8ClampedArray.length)
+            result.complete(WasmImage(imageData.width, imageData.height, NativeByteBuffer(uint8Array)))
         }
         return result
     }
