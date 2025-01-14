@@ -164,7 +164,7 @@ void main() {
         float shadowRatio = 0.;
         vec3 ftol = pointLightPos[l] - vpos;
         float distance = length(ftol);
-        float att = max(2.0, 3.0 / distance);
+        float att = min(2.0, 20.0 / distance);
         vec3 lightValue = pointLightColor[l].rgb * (1. - shadowRatio) * att;// TODO quadratic; configurable attenuation ratio
         vec3 L = normalize(ftol);
         color += calculatePBR(N, V, L, c_diff, F0, rough, lightValue);
