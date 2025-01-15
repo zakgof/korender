@@ -69,7 +69,7 @@ internal class GlGpuTexture(private val name: String, val glHandle: GLTexture) :
         aniso: Int = 1024,
     ) : this(name, glGenTextures()) {
 
-        println("Creating GPU Texture [$name] $glHandle")
+        println("Creating GPU Texture $this")
 
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, glHandle)
@@ -125,8 +125,10 @@ internal class GlGpuTexture(private val name: String, val glHandle: GLTexture) :
     }
 
     override fun close() {
-        println("Destroying GPU Texture [$name] $glHandle")
+        println("Destroying GPU Texture $this")
         glDeleteTextures(glHandle)
     }
+
+    override fun toString() = "[$name] $glHandle"
 
 }

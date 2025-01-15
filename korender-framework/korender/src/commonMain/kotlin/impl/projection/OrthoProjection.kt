@@ -12,7 +12,7 @@ internal class OrthoProjection(
     override val mat4 = Mat4(
         1f / width, 0f, 0f, 0f,
         0f, 1f / height, 0f, 0f,
-        0f, 0f, 1f / (far - near), near / (far - near),
+        0f, 0f, -2f / (far - near), -(far + near) / (far - near),
         0f, 0f, 0f, 1f
     )
 }

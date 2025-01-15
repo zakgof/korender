@@ -32,7 +32,7 @@ float[25] kernel5 = float[](
 );
 
 float shadow(sampler2D shadowTexture, vec3 vshadow) {
-    float beavis = 0.01;
+    float beavis = 0.001;
     #ifdef PCSS
     float centerSample = texture(shadowTexture, vshadow.xy).r;
         float penumbraWidth = centerSample > 0.001 ?  0.03 * (vshadow.z - centerSample) / centerSample : 0.0;
@@ -43,7 +43,7 @@ float shadow(sampler2D shadowTexture, vec3 vshadow) {
                 float w = kernel5[(x+2)*5 + (y+2)];
                 vec2 uv = vshadow.xy + vec2(x, y) * penumbraWidth;
                 float shadowSample = texture(shadowTexture, uv).r;
-                float val = (shadowSample > 0.001 && shadowSample > vshadow.z + beavis && uv.x > 0. && uv.x < 1. && uv.y > 0. && uv.y < 1.) ? 1. : 0.;
+                float val = (shadowSample > 0.00 && shadowSample < vshadow.z - beavis && uv.x > 0. && uv.x < 1. && uv.y > 0. && uv.y < 1.) ? 1. : 0.;
                 cumulative += w * val;
                 weight += w;
             }
@@ -51,6 +51,6 @@ float shadow(sampler2D shadowTexture, vec3 vshadow) {
         return cumulative / weight;
     #else
         float shadowSample = texture(shadowTexture, vshadow.xy).r;
-        return (shadowSample > 0.001 && shadowSample > vshadow.z + beavis) ? 1.0 : 0.0;
+        return (shadowSample > 0.001 && shadowSample < vshadow.z - beavis && vshadow.x > 0.001 && vshadow.x < 0.999 && vshadow.y > 0.001 && vshadow.y < 0.999) ? 1. : 0.;
     #endif
 }

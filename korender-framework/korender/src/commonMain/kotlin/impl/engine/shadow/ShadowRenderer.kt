@@ -8,10 +8,13 @@ import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.engine.Renderable
 import com.zakgof.korender.impl.gl.GL.glClear
+import com.zakgof.korender.impl.gl.GL.glClearColor
 import com.zakgof.korender.impl.gl.GL.glCullFace
+import com.zakgof.korender.impl.gl.GL.glDisable
 import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
+import com.zakgof.korender.impl.gl.GLConstants.GL_CULL_FACE
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
@@ -38,8 +41,8 @@ internal object ShadowRenderer {
                 "shadow-$id",
                 declaration.mapSize,
                 declaration.mapSize,
-                1, // TODO: depth only
-                false
+                0,
+                true
             )
         ) ?: return null
 
@@ -52,16 +55,19 @@ internal object ShadowRenderer {
             "cameraPos" to shadowCamera.position
         )
         frameBuffer.exec {
+            glClearColor(0f, 0f, 0f, 1f)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             glEnable(GL_DEPTH_TEST)
             glCullFace(GL_BACK)
+            glDisable(GL_CULL_FACE)
             shadowCasters.forEach { casterRenderable ->
                 casterRenderable.render(casterUniforms, fixer)
             }
+            glEnable(GL_CULL_FACE)
         }
 
         return ShadowerData(
-            frameBuffer.colorTextures[0], // TODO OR DEPTH ?
+            frameBuffer.depthTexture!!,
             Mat4(
                 0.5f, 0.0f, 0.0f, 0.5f,
                 0.0f, 0.5f, 0.0f, 0.5f,
@@ -91,9 +97,15 @@ internal object ShadowRenderer {
         val center = right * ((xmin + xmax) * 0.5f) +
                 up * ((ymin + ymax) * 0.5f) +
                 light * ((zmin + zmax) * 0.5f)
-        val near = 5f
-        val far = near + (zmax - zmin)
-        val cameraPos = center - light * (near + (zmax - zmin) * 0.5f)
+
+        val near = 1f // TODO
+        val volume = 50f // TODO
+
+        val cameraPos = center - light * (near + volume)
+
+
+        val far = near + volume + (zmax - zmin) * 0.5f
+
         val width = xmax - xmin
         val height = ymax - ymin
 

@@ -11,6 +11,8 @@ import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.FrustumProjectionDeclaration
 import com.zakgof.korender.Korender
 import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.Color.Companion.Blue
+import com.zakgof.korender.math.Color.Companion.Green
 import com.zakgof.korender.math.Color.Companion.Red
 import com.zakgof.korender.math.Color.Companion.White
 import com.zakgof.korender.math.Color.Companion.white
@@ -55,13 +57,14 @@ fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         camera = orbitCamera.camera(projection, width, height)
         projection = frustum(width = 0.3f * width / height, height = 0.3f, near = 1f, far = 500f)
 
-        AmbientLight(white(0.006f))
-        DirectionalLight(Vec3(2f, -4f, 1f).normalize()) {
-            Cascade(1024, (projection as FrustumProjectionDeclaration).near, 20f)
+        AmbientLight(white(0.1f))
+        DirectionalLight(Vec3(2f, -4f, 0f).normalize(), white(3.0f)) {
+            Cascade(1024, (projection as FrustumProjectionDeclaration).near, 11f)
+            Cascade(1024, 9f, 80f)
         }
 
-        for (xx in 0 .. 4) {
-            for (zz in 0 .. 4) {
+        for (xx in 0..4) {
+            for (zz in 0..4) {
                 PointLight(Vec3(-192f + 4 + 96f * xx, 8f, -192f + 4 + 96f * zz), white(1.5f))
                 Renderable(
                     standart { baseColor = Red },
@@ -70,7 +73,6 @@ fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                 )
             }
         }
-
 
         Renderable(
             standart {
@@ -98,7 +100,7 @@ fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                 pbr.roughness = 0.4f
             },
             mesh = cube(),
-            transform = scale(800f, 1f, 800f).translate(-3.y)
+            transform = scale(800f, 1f, 800f).translate(-0.55f.y)
         )
 
         Renderable(
@@ -121,13 +123,20 @@ fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             mesh = roadsMesh
         )
 
+        Renderable(standart { baseColor = Blue }, mesh = sphere(0.3f), transform = translate(-82.z + 0.x + 3.y))
+        Renderable(standart { baseColor = Green }, mesh = sphere(0.3f), transform = translate(-82.z + 8.x + 3.y))
+
         Scene(gltfResource = "city/swat.glb", transform = scale(0.005f).translate(-102.z + 3.x))
 
         Sky(starrySky {
             colorness = 0.2f
-            density = 10f
+            density = 20f
             size = 3f
         })
+
+        Filter(fragment("city/shadow-debug.frag"))
+
+
         Gui {
             Filler()
             Text(id = "fps", fontResource = "ubuntu.ttf", height = 20, text = "FPS ${frameInfo.avgFps.toInt()}", color = Color(0xFF66FF55))
