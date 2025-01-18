@@ -42,7 +42,7 @@ interface KorenderContext {
 
     fun texture(
         textureResource: String,
-        filter: TextureFilter = TextureFilter.MipMapLinearLinear,
+        filter: TextureFilter = TextureFilter.MipMap,
         wrap: TextureWrap = TextureWrap.Repeat,
         aniso: Int = 1024
     ): TextureDeclaration

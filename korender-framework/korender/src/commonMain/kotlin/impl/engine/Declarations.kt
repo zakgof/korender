@@ -4,6 +4,7 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.impl.context.Direction
+import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.material.DynamicUniforms
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
@@ -82,7 +83,7 @@ internal data class FrameBufferDeclaration(
     val id: String,
     val width: Int,
     val height: Int,
-    val colorTextures: Int,
+    val colorTexturePresets: List<GlGpuTexture.Preset>,
     val withDepth: Boolean
 )
 

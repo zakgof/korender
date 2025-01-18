@@ -9,7 +9,6 @@ import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glClearColor
 import com.zakgof.korender.impl.gl.GL.glDepthFunc
 import com.zakgof.korender.impl.gl.GL.glDepthMask
-import com.zakgof.korender.impl.gl.GL.glDisable
 import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GL.glViewport
 import com.zakgof.korender.impl.gl.GLConstants.GL_BLEND
@@ -18,6 +17,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.glgpu.ColorList
+import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Mat4List
@@ -155,11 +155,12 @@ internal class Scene(
 
     private fun renderDeferredOpaques(uniforms: Map<String, Any?>): Map<String, Any?> {
         // TODO: configurable texture channels resolutions (half/quarter)
-        val geometryBuffer = inventory.frameBuffer(FrameBufferDeclaration("geometry", renderContext.width, renderContext.height, 3, true)) ?: throw SkipRender
+        val geometryBuffer = inventory.frameBuffer(FrameBufferDeclaration("geometry", renderContext.width, renderContext.height,
+            listOf(GlGpuTexture.Preset.RGBANoFilter, GlGpuTexture.Preset.RGBANoFilter, GlGpuTexture.Preset.RGBANoFilter),
+            true)) ?: throw SkipRender
         geometryBuffer.exec {
             glClearColor(0f, 0f, 0f, 1f)
             glViewport(0, 0, renderContext.width, renderContext.height)
-            glDisable(GL_BLEND)
             glEnable(GL_DEPTH_TEST)
             glDepthFunc(GL_LEQUAL)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
@@ -228,7 +229,8 @@ internal class Scene(
                     "$li-$ci",
                     inventory,
                     dl.direction,
-                    cascadeDeclaration,
+                    dl.shadowDeclaration.cascades,
+                    ci,
                     renderContext,
                     shadowCasters,
                     fixer
@@ -245,6 +247,7 @@ internal class Scene(
         uniforms["numShadows"] = shadowData.size
         uniforms["shadowTextures[0]"] = GlGpuTextureList(shadowData.map { it.texture })
         uniforms["bsps[0]"] = Mat4List(shadowData.map { it.bsp })
+        uniforms["cascade[0]"] = ColorList(shadowData.map { Color(it.cascade[3], it.cascade[0], it.cascade[1], it.cascade[2]) })
 
         uniforms["numDirectionalLights"] = sceneDeclaration.directionalLights.size
         uniforms["directionalLightDir[0]"] = Vec3List(directionalDirs)
@@ -277,7 +280,7 @@ internal class Scene(
 
     private fun renderToFilter(index: Int, block: () -> Unit): Map<String, Any?> {
         val number = index % 2
-        val fb = inventory.frameBuffer(FrameBufferDeclaration("filter-$number", renderContext.width, renderContext.height, 1, true)) ?: throw SkipRender
+        val fb = inventory.frameBuffer(FrameBufferDeclaration("filter-$number", renderContext.width, renderContext.height, listOf(GlGpuTexture.Preset.RGBNoFilter), true)) ?: throw SkipRender
         fb.exec { block() }
         return mapOf(
             "filterColorTexture" to fb.colorTextures[0],

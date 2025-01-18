@@ -484,7 +484,7 @@ internal class GltfSceneBuilder(
             val bytes = getImageBytes(img)
             ByteArrayTextureDeclaration(
                 img.uri ?: "TODO ${ti.index}", // TODO !!!
-                TextureFilter.MipMapLinearLinear,
+                TextureFilter.MipMap,
                 TextureWrap.Repeat,
                 1024,
                 bytes,

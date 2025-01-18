@@ -32,6 +32,7 @@ import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
+import com.zakgof.korender.impl.checkGlError
 import com.zakgof.korender.impl.context.DefaultFrameContext
 import com.zakgof.korender.impl.geometry.Cube
 import com.zakgof.korender.impl.geometry.CustomMesh
@@ -278,7 +279,7 @@ internal class Engine(
         inventory.go {
             val scene = Scene(sd, inventory, renderContext, deferredShading, frameInfo.time)
             scene.render()
-            // scheckGlError("during rendering")
+            checkGlError("during rendering")
             sceneTouchBoxesHandler = scene.touchBoxesHandler
         }
     }

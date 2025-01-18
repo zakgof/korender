@@ -29,6 +29,7 @@ internal class RenderContext(var width: Int, var height: Int) {
         "view" to camera.mat4,
         "projection" to projection.mat4,
         "cameraPos" to camera.position,
+        "cameraDir" to camera.direction,
         "screenWidth" to width.toFloat(),
         "screenHeight" to height.toFloat(),
         "time" to (Platform.nanoTime() - frameInfoManager.startNanos) * 1e-9f

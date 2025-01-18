@@ -60,7 +60,7 @@ fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         AmbientLight(white(0.1f))
         DirectionalLight(Vec3(2f, -4f, 0f).normalize(), white(3.0f)) {
             Cascade(1024, (projection as FrustumProjectionDeclaration).near, 11f)
-            Cascade(1024, 9f, 80f)
+            //Cascade(1024, 9f, 80f)
         }
 
         for (xx in 0..4) {
@@ -130,11 +130,11 @@ fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         Sky(starrySky {
             colorness = 0.2f
-            density = 20f
+            density = 40f
             size = 3f
         })
 
-        Filter(fragment("city/shadow-debug.frag"))
+        // Filter(fragment("city/shadow-debug.frag"))
 
 
         Gui {

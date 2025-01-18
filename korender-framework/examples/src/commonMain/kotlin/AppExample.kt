@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppExample() {
     val options = listOf(
+        Demo("Cascade shadows") { CSMExample() },
         Demo("Feature showcase") { ShowcaseExample() },
         Demo("PBR metallic/roughness") { MetallicRoughnessExample() },
         Demo("Transparency") { TransparencyExample() },

@@ -8,6 +8,9 @@ out vec4 fragColor;
 
 void main() {
     // TODO: fully transparent pixels should not cast shadows, get color, sample textures and cut
-    // TODO: return moments for MSM, exp for ESM
-    gl_FragDepth = gl_FragCoord.z;
+    float d = gl_FragCoord.z;
+    float dx = dFdx(d);
+    float dy = dFdy(d);
+    float m2 = d * d + 0.25 * (dx * dx + dy * dy);
+    fragColor = vec4(d, m2, 0.0, 1.0);
 }

@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.engine.shadow
 
+import com.zakgof.korender.FrustumProjectionDeclaration
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.CascadeDeclaration
@@ -24,6 +25,8 @@ import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
+import kotlin.math.ceil
+import kotlin.math.round
 
 internal object ShadowRenderer {
 
@@ -31,18 +34,20 @@ internal object ShadowRenderer {
         id: String,
         inventory: Inventory,
         lightDirection: Vec3,
-        declaration: CascadeDeclaration,
+        declarations: List<CascadeDeclaration>,
+        index: Int,
         renderContext: RenderContext,
         shadowCasters: List<Renderable>,
         fixer: (Any?) -> Any?
     ): ShadowerData? {
+        val declaration = declarations[index]
         val frameBuffer = inventory.frameBuffer(
             FrameBufferDeclaration(
                 "shadow-$id",
                 declaration.mapSize,
                 declaration.mapSize,
-                0,
-                true
+                listOf(GlGpuTexture.Preset.VSM),
+                false
             )
         ) ?: return null
 
@@ -67,13 +72,19 @@ internal object ShadowRenderer {
         }
 
         return ShadowerData(
-            frameBuffer.depthTexture!!,
+            frameBuffer.colorTextures[0],
             Mat4(
                 0.5f, 0.0f, 0.0f, 0.5f,
                 0.0f, 0.5f, 0.0f, 0.5f,
                 0.0f, 0.0f, 0.5f, 0.5f,
                 0.0f, 0.0f, 0.0f, 1.0f
-            )  * shadowProjection.mat4 * shadowCamera.mat4
+            ) * shadowProjection.mat4 * shadowCamera.mat4,
+            listOf(
+                if (index == 0) 0f else declaration.near,
+                if (index == 0) 0f else declarations[index-1].far,
+                if (index == declarations.size-1) 1e10f else declarations[index+1].near,
+                if (index == declarations.size-1) 1e10f else declaration.far
+            )
         )
     }
 
@@ -84,9 +95,12 @@ internal object ShadowRenderer {
         declaration: CascadeDeclaration
     ): Pair<DefaultCamera, OrthoProjection> {
 
+
+        projection as FrustumProjection
+
         val right = (light % 1.y).normalize()
         val up = (right % light).normalize()
-        val corners = frustumCorners(projection, camera, declaration.near, declaration.far)
+        val corners = frustumCorners(projection , camera, declaration.near, declaration.far)
         val xmin = corners.minOf { it * right }
         val ymin = corners.minOf { it * up }
         val zmin = corners.minOf { it * light }
@@ -94,39 +108,44 @@ internal object ShadowRenderer {
         val ymax = corners.maxOf { it * up }
         val zmax = corners.maxOf { it * light }
 
-        val center = right * ((xmin + xmax) * 0.5f) +
-                up * ((ymin + ymax) * 0.5f) +
-                light * ((zmin + zmax) * 0.5f)
+        val farWidth = projection.width * declaration.far / projection.near
+        val farHeight = projection.height * declaration.far / projection.near
+        val depth = declaration.far - declaration.near
+        val dim = Vec3(farHeight, farWidth, depth).length()
+
 
         val near = 1f // TODO
-        val volume = 50f // TODO
+        val volume = 80f // TODO
 
-        val cameraPos = center - light * (near + volume)
+        val fragSize = dim / declaration.mapSize * 2.0f // TODO ?
+        val depthSize = volume / 255f
+
+        val moveUpSnap = round((ymin + ymax) * 0.5f / fragSize) * fragSize
+        val moveRightSnap = round((xmin + xmax) * 0.5f / fragSize) * fragSize
+        val depthSnap = ceil(zmax / depthSize) * depthSize
+
+        val centerBottom = right * moveRightSnap +
+                up * moveUpSnap +
+                light * depthSnap
 
 
-        val far = near + volume + (zmax - zmin) * 0.5f
+        val far = near + volume
+        val cameraPos = centerBottom - light * far
 
-        val width = xmax - xmin
-        val height = ymax - ymin
+        // println("SHADOW CAMERA: $cameraPos")
 
-        val shadowCamera = DefaultCamera(position = cameraPos, direction = light, up = up)
-        val shadowProjection = OrthoProjection(
-            width = width * 0.51f,
-            height = height * 0.51f,
-            near = near * 0.98f,
-            far = far * 1.05f
-        )
+        val shadowProjection = OrthoProjection(dim, dim, near, far)
+        val shadowCamera = DefaultCamera(cameraPos, light, up)
 
         return shadowCamera to shadowProjection
     }
 
     private fun frustumCorners(
-        projection: Projection,
+        projection: FrustumProjectionDeclaration,
         camera: Camera,
         near: Float,
         far: Float
     ): List<Vec3> {
-        projection as FrustumProjection
         camera as DefaultCamera
         val upNear = camera.up * (projection.height * 0.5f * near / projection.near)
         val rightNear =
@@ -149,7 +168,8 @@ internal object ShadowRenderer {
 
 }
 
-internal class ShadowerData (
+internal class ShadowerData(
     val texture: GlGpuTexture,
-    val bsp: Mat4
+    val bsp: Mat4,
+    val cascade: List<Float>
 )

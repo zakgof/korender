@@ -8,35 +8,36 @@ uniform vec4 baseColor;
 uniform float metallic;
 uniform float roughness;
 #ifdef SPECULAR_GLOSSINESS
-    uniform vec4 specularFactor;
-    uniform float glossinessFactor;
+uniform vec4 specularFactor;
+uniform float glossinessFactor;
 #endif
 
 #ifdef BASE_COLOR_MAP
-    uniform sampler2D baseColorTexture;
+uniform sampler2D baseColorTexture;
 #endif
 #ifdef NORMAL_MAP
-    uniform sampler2D normalTexture;
+uniform sampler2D normalTexture;
 #endif
 #ifdef TRIPLANAR
-    uniform float triplanarScale;
+uniform float triplanarScale;
 #endif
 #ifdef DETAIL
-    uniform sampler2D detailTexture;
-    uniform float detailScale;
-    uniform float detailRatio;
+uniform sampler2D detailTexture;
+uniform float detailScale;
+uniform float detailRatio;
 #endif
 
 #ifdef METALLIC_ROUGHNESS_MAP
-    uniform sampler2D metallicRoughnessTexture;
+uniform sampler2D metallicRoughnessTexture;
 #endif
 #ifdef SPECULAR_GLOSSINESS_MAP
-    uniform sampler2D specularGlossinessTexture;
+uniform sampler2D specularGlossinessTexture;
 #endif
 
 //  TODO DETAIL FOR BASECOLOR
 
 uniform vec3 cameraPos;
+uniform vec3 cameraDir;
 uniform vec4 ambientColor;
 uniform mat4 projection;
 uniform mat4 view;
@@ -56,11 +57,12 @@ const int MAX_SHADOWS = 12;
 uniform int numShadows;
 uniform sampler2D shadowTextures[MAX_SHADOWS];
 uniform mat4 bsps[MAX_SHADOWS];
+uniform vec4 cascade[MAX_SHADOWS];
 
 out vec4 fragColor;
 
 #ifdef PLUGIN_TEXTURE
-    #import "$texture"
+#import "$texture"
 #endif
 
 #import "!shader/lib/triplanar.glsl"
@@ -89,56 +91,56 @@ float sampleShadowTexture(int i, vec3 v) {
     }
     return sh;
     #else
-    return shadow(shadowTextures[i], v);
+    return varianceShadow(shadowTextures[i], v);
     #endif
 }
 
 void main() {
 
     #ifdef BASE_COLOR_MAP
-        #ifdef TRIPLANAR
-            vec4 albedo = triplanarBaseColor(vpos * triplanarScale, vnormal) * baseColor;
-        #else
-            vec4 albedo = texture(baseColorTexture, vtex) * baseColor;
-        #endif
+    #ifdef TRIPLANAR
+    vec4 albedo = triplanarBaseColor(vpos * triplanarScale, vnormal) * baseColor;
     #else
-        vec4 albedo = baseColor;
+    vec4 albedo = texture(baseColorTexture, vtex) * baseColor;
+    #endif
+    #else
+    vec4 albedo = baseColor;
     #endif
 
     #ifdef PLUGIN_TEXTURE
-        albedo = pluginTexture(albedo);
+    albedo = pluginTexture(albedo);
     #endif
 
     #ifdef NORMAL_MAP
-        vec3 N = getNormalFromMap(vnormal, vtex, vpos);
+    vec3 N = getNormalFromMap(vnormal, vtex, vpos);
     #else
-        vec3 N = normalize(vnormal);
+    vec3 N = normalize(vnormal);
     #endif
 
 
     #ifdef SPECULAR_GLOSSINESS
-        #ifdef SPECULAR_GLOSSINESS_MAP
-            vec4 sgtexel = textureRegOrTriplanar(specularGlossinessTexture, vtex, vpos, N);
-            vec3 specular = sgtexel.rgb * specularFactor.rgb;
-            float glossiness = sgtexel.a * glossinessFactor;
-        #else
-            vec3 specular = specularFactor.rgb;
-            float glossiness = glossinessFactor;
-        #endif
-        vec3 c_diff = albedo.rgb * (1. - max(max(specular.r, specular.g), specular.b));
-        vec3 F0 = specular;
-        float rough = 1. - glossiness;
+    #ifdef SPECULAR_GLOSSINESS_MAP
+    vec4 sgtexel = textureRegOrTriplanar(specularGlossinessTexture, vtex, vpos, N);
+    vec3 specular = sgtexel.rgb * specularFactor.rgb;
+    float glossiness = sgtexel.a * glossinessFactor;
     #else
-        #ifdef METALLIC_ROUGHNESS_MAP
-            vec4 mrtexel = textureRegOrTriplanar(metallicRoughnessTexture, vtex, vpos, N); // TODO
-            float metal = mrtexel.b * metallic;
-            float rough = mrtexel.g * roughness;
-        #else
-            float metal = metallic;
-            float rough = roughness;
-        #endif
-        vec3 c_diff = mix(albedo.rgb, vec3(0.), metal);
-        vec3 F0 = mix(vec3(0.04), albedo.rgb, metal);
+    vec3 specular = specularFactor.rgb;
+    float glossiness = glossinessFactor;
+    #endif
+    vec3 c_diff = albedo.rgb * (1. - max(max(specular.r, specular.g), specular.b));
+    vec3 F0 = specular;
+    float rough = 1. - glossiness;
+    #else
+    #ifdef METALLIC_ROUGHNESS_MAP
+    vec4 mrtexel = textureRegOrTriplanar(metallicRoughnessTexture, vtex, vpos, N);// TODO
+    float metal = mrtexel.b * metallic;
+    float rough = mrtexel.g * roughness;
+    #else
+    float metal = metallic;
+    float rough = roughness;
+    #endif
+    vec3 c_diff = mix(albedo.rgb, vec3(0.), metal);
+    vec3 F0 = mix(vec3(0.04), albedo.rgb, metal);
     #endif
 
     ///////////////////////
@@ -147,6 +149,8 @@ void main() {
 
     vec3 color = c_diff * ambientColor.rgb;
 
+    float plane = dot((vpos - cameraPos), cameraDir);
+
     for (int l=0; l<numDirectionalLights; l++) {
         float shadowRatio = 0.;
         int shadowCount = directionalLightShadowTextureCount[l];
@@ -154,7 +158,15 @@ void main() {
             int idx = directionalLightShadowTextureIndex[l] + c;
             vec3 vshadow = (bsps[idx] * vec4(vpos, 1.0)).xyz;
             float sh = sampleShadowTexture(idx, vshadow);
-            shadowRatio = max(shadowRatio, sh);
+
+            vec4 ci = cascade[c];
+            float cascadeContribution = smoothstep(ci.r, ci.g, plane) * (1.0 - smoothstep(ci.b, ci.a, plane));
+            shadowRatio += sh * cascadeContribution;
+
+            // TODO: DEBUG
+            if (vshadow.z > 0.999)
+                color += vec3(1.0, 0.0, 0.0);
+
         }
         vec3 lightValue = directionalLightColor[l].rgb * (1. - shadowRatio);
         vec3 L = normalize(-directionalLightDir[l]);

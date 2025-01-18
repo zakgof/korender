@@ -22,7 +22,7 @@ internal class Inventory(asyncContext: AsyncContext) {
     private val textures = Registry<InternalTexture, GlGpuTexture>(asyncContext) { Texturing.create(it, asyncContext.appResourceLoader) }
     private val fonts = Registry<String, Font>(asyncContext) { Fonts.load(it, asyncContext.appResourceLoader) }
     private val fontMeshes = Registry<Any, Geometry.MultiMesh>(asyncContext) { Geometry.font(256) }
-    private val frameBuffers = Registry<FrameBufferDeclaration, GlGpuFrameBuffer>(asyncContext) { GlGpuFrameBuffer(it.id, it.width, it.height, it.colorTextures, it.withDepth) }
+    private val frameBuffers = Registry<FrameBufferDeclaration, GlGpuFrameBuffer>(asyncContext) { GlGpuFrameBuffer(it.id, it.width, it.height, it.colorTexturePresets, it.withDepth) }
     private val gltfs = Registry<GltfDeclaration, GltfLoaded>(asyncContext) { GltfLoader.load(it, asyncContext.appResourceLoader) }
 
     fun go(block: Inventory.() -> Unit) {
