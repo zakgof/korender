@@ -11,6 +11,6 @@ void main() {
     float d = gl_FragCoord.z;
     float dx = dFdx(d);
     float dy = dFdy(d);
-    float m2 = d * d + 0.25 * (dx * dx + dy * dy);
+    float m2 = d * d + min(0.25 * (dx * dx + dy * dy), 0.25);
     fragColor = vec4(d, m2, 0.0, 1.0);
 }

@@ -36,14 +36,29 @@ float varianceShadow(sampler2D shadowTexture, vec3 vshadow) {
     vec2 moments = texture(shadowTexture, vshadow.xy).rg;
 
     if (moments.x < 0.001 || vshadow.x < 0.001 || vshadow.x > 0.999 || vshadow.y < 0.001 || vshadow.y > 0.999 || vshadow.z > 0.999)
-        return 0.0f;
+        return 0.;
 
     float p = vshadow.z - moments.x;
     if (p <= beavis)
-        return 0.0;
+        return 0.;
 
     float variance = max(moments.y - moments.x * moments.x, 0.0001);
-    return 1.0 - variance / (variance + p * p );
+    return  p * p  / (variance + p * p );
+}
+
+float varianceShadowSmooth(sampler2D shadowTexture, vec3 vshadow) {
+    float cumulative = 0.;
+    float weight = 0.;
+    for (int x = -2; x <= 2; ++x) {
+        for (int y = -2; y <= 2; ++y) {
+            float w = kernel5[(x+2)*5 + (y+2)];
+            vec3 uv = vshadow.xyz + vec3(x, y, 0) * 0.0006;
+            float val = varianceShadow(shadowTexture, uv);
+            cumulative += w * val;
+            weight += w;
+        }
+    }
+    return cumulative / weight;
 }
 
 float shadow(sampler2D shadowTexture, vec3 vshadow) {

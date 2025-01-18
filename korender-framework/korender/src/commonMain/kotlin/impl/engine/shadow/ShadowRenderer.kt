@@ -95,7 +95,6 @@ internal object ShadowRenderer {
         declaration: CascadeDeclaration
     ): Pair<DefaultCamera, OrthoProjection> {
 
-
         projection as FrustumProjection
 
         val right = (light % 1.y).normalize()
@@ -113,9 +112,8 @@ internal object ShadowRenderer {
         val depth = declaration.far - declaration.near
         val dim = Vec3(farHeight, farWidth, depth).length()
 
-
         val near = 1f // TODO
-        val volume = 80f // TODO
+        val volume = 150f // TODO
 
         val fragSize = dim / declaration.mapSize * 2.0f // TODO ?
         val depthSize = volume / 255f
@@ -134,6 +132,7 @@ internal object ShadowRenderer {
 
         // println("SHADOW CAMERA: $cameraPos")
 
+        // TODO wrong matrix, divide by 2
         val shadowProjection = OrthoProjection(dim, dim, near, far)
         val shadowCamera = DefaultCamera(cameraPos, light, up)
 
