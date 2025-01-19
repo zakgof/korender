@@ -163,9 +163,8 @@ void main() {
             float cascadeContribution = smoothstep(ci.r, ci.g, plane) * (1.0 - smoothstep(ci.b, ci.a, plane));
             shadowRatio += sh * cascadeContribution;
 
-            // TODO: DEBUG
-            if (vshadow.z > 0.999)
-                color += vec3(1.0, 0.0, 0.0);
+//            if (vshadow.z > 0.999)
+//                color += vec3(1.0, 0.0, 0.0);
 
         }
         vec3 lightValue = directionalLightColor[l].rgb * (1. - shadowRatio);
@@ -181,6 +180,5 @@ void main() {
         vec3 L = normalize(ftol);
         color += calculatePBR(N, V, L, c_diff, F0, rough, lightValue);
     }
-
     fragColor = vec4(color, albedo.a);
 }

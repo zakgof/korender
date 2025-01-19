@@ -41,18 +41,18 @@ fun roads(): Roads {
     val crossroads = RoadTriangulation()
     for (xx in 0..16) {
         for (zz in 0..16) {
-            crossroads.box(-192 + xx * 24, -192 + zz * 24, 8, 8, 8, false)
+            crossroads.box(-192 + xx * 24 + 3, -192 + zz * 24 + 3, 2, 2, 2, false)
         }
     }
     val roads = RoadTriangulation()
     for (xx in 0 until 16) {
         for (zz in 0 .. 16) {
-            roads.box(-192 + 8 + xx * 24, -192 + zz * 24, 16, 8, 8, true)
+            roads.box(-192 + xx * 24 + 5, -192 + zz * 24 + 3, 22, 2, 2, true)
         }
     }
     for (zz in 0 until 16) {
         for (xx in 0 .. 16) {
-            roads.box(-192 + xx * 24, -192 + 8 + zz * 24, 8, 16, 8, false)
+            roads.box(-192 + xx * 24 + 3, -192 + zz * 24 + 5, 2, 22, 2, false)
         }
     }
     return Roads(roads, crossroads)

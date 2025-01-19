@@ -56,25 +56,25 @@ fun CSMExample() =
             )
             Renderable(
                 standart { baseColor = Red },
-                mesh = sphere (0.1f),
+                mesh = sphere(0.1f),
                 transform = translate((-10 + 5).z),
             )
             Renderable(
                 standart { baseColor = Red },
-                mesh = sphere (0.1f),
-                transform = translate((- 12 + 5).z ),
+                mesh = sphere(0.1f),
+                transform = translate((-12 + 5).z),
             )
             Renderable(
                 standart { baseColor = Red },
-                mesh = sphere (0.1f),
-                transform = translate((- 25 + 5).z),
+                mesh = sphere(0.1f),
+                transform = translate((-25 + 5).z),
             )
             Renderable(
                 standart { baseColor = Red },
-                mesh = sphere (0.1f),
-                transform = translate((- 30 + 5).z),
+                mesh = sphere(0.1f),
+                transform = translate((-30 + 5).z),
             )
 
-            Filter(fragment("!shader/effect/shadow-debug.frag"))
+            //  Filter(fragment("!shader/effect/shadow-debug.frag"))
         }
     }

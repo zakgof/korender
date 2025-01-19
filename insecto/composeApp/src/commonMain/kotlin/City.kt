@@ -1,4 +1,3 @@
-
 import androidx.compose.runtime.Composable
 import city.Generator
 import city.OrbitCamera
@@ -8,11 +7,9 @@ import com.zakgof.insecto.Res
 import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
-import com.zakgof.korender.FrustumProjectionDeclaration
 import com.zakgof.korender.Korender
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Color.Companion.Blue
-import com.zakgof.korender.math.Color.Companion.Green
 import com.zakgof.korender.math.Color.Companion.Red
 import com.zakgof.korender.math.Color.Companion.White
 import com.zakgof.korender.math.Color.Companion.white
@@ -36,7 +33,7 @@ fun Int.chance(block: () -> Unit) {
 fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val tria = tria()
     val roads = roads()
-    val orbitCamera = OrbitCamera(this, -112.z + 1.y + 3.x, -102.z + 1.y + 3.x)
+    val orbitCamera = OrbitCamera(this, -103f.z + 0.3f.y + 3.2f.x, -102.z + 0.3f.y + 3.2f.x)
 
     fun Triangulation.toCustomMesh(id: String) =
         customMesh(id, this.points.size, this.indexes.size, POS, NORMAL, TEX) {
@@ -55,22 +52,17 @@ fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         OnTouch { orbitCamera.touch(it) }
         camera = orbitCamera.camera(projection, width, height)
-        projection = frustum(width = 0.3f * width / height, height = 0.3f, near = 1f, far = 500f)
+        projection = frustum(width = 0.3f * width / height, height = 0.3f, near = 0.3f, far = 500f)
 
-        AmbientLight(white(0.1f))
-        DirectionalLight(Vec3(2f, -4f, 0f).normalize(), white(3.0f)) {
-            Cascade(1024, (projection as FrustumProjectionDeclaration).near, 11f)
-            //Cascade(1024, 9f, 80f)
+        AmbientLight(white(0.2f))
+        DirectionalLight(Vec3(2f, -5f, 0f).normalize(), white(5.0f)) {
+            Cascade(1024, 0.3f, 2.2f, 30f)
+            Cascade(1024, 2.0f, 50.0f, 98f)
         }
 
         for (xx in 0..4) {
             for (zz in 0..4) {
-                PointLight(Vec3(-192f + 4 + 96f * xx, 8f, -192f + 4 + 96f * zz), white(1.5f))
-                Renderable(
-                    standart { baseColor = Red },
-                    mesh = sphere(0.4f),
-                    transform = translate(Vec3(-192f + 4 + 96f * xx, 8f, -192f + 4 + 96f * zz))
-                )
+                PointLight(Vec3(-192f + 4 + 96f * xx, 8f, -192f + 4 + 96f * zz), white(1.1f))
             }
         }
 
@@ -95,12 +87,12 @@ fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         Renderable(
             standart {
-                baseColor = white(0.4f)
+                baseColor = white(0.1f)
                 pbr.metallic = 0.0f
-                pbr.roughness = 0.4f
+                pbr.roughness = 0.8f
             },
             mesh = cube(),
-            transform = scale(800f, 1f, 800f).translate(-0.55f.y)
+            transform = scale(800f, 1f, 800f).translate(-0.501f.y)
         )
 
         Renderable(
@@ -123,23 +115,27 @@ fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             mesh = roadsMesh
         )
 
-        Renderable(standart { baseColor = Blue }, mesh = sphere(0.3f), transform = translate(-82.z + 0.x + 3.y))
-        Renderable(standart { baseColor = Green }, mesh = sphere(0.3f), transform = translate(-82.z + 8.x + 3.y))
-
-        Scene(gltfResource = "city/swat.glb", transform = scale(0.005f).translate(-102.z + 3.x))
+        Scene(gltfResource = "city/swat.glb", transform = scale(0.002f).translate(-102.z + 3.2f.x))
 
         Sky(starrySky {
-            colorness = 0.2f
-            density = 40f
-            size = 3f
+            colorness = 0.4f
+            density = 30f
+            size = 20f
         })
 
-        // Filter(fragment("city/shadow-debug.frag"))
 
+        Filter(fxaa())
+        // Filter(fragment("city/shadow-debug.frag"))
 
         Gui {
             Filler()
-            Text(id = "fps", fontResource = "ubuntu.ttf", height = 20, text = "FPS ${frameInfo.avgFps.toInt()}", color = Color(0xFF66FF55))
+            Text(
+                id = "fps",
+                fontResource = "ubuntu.ttf",
+                height = 20,
+                text = "FPS ${frameInfo.avgFps.toInt()}",
+                color = Color(0xFF66FF55)
+            )
         }
     }
 }
@@ -165,7 +161,12 @@ fun tria(): Generator {
 
                         base -> 30.chance { symcorner(Random.nextInt(1, 3), Random.nextInt(1, 3)) }
                         base + 1 -> 40.chance { symcorner(1, 1) }
-                        base + 3 -> 20.chance { symcorner(Random.nextInt(1, 3), Random.nextInt(1, 3)) }
+                        base + 3 -> 20.chance {
+                            symcorner(
+                                Random.nextInt(1, 3),
+                                Random.nextInt(1, 3)
+                            )
+                        }
 
                         main -> square(Random.nextInt(1, 3), Random.nextInt(1, 3))
                         main + 1 -> 40.chance { symcorner(1, 1) }

@@ -91,7 +91,7 @@ internal class ShadowDeclaration {
     val cascades = mutableListOf<CascadeDeclaration>()
 }
 
-internal data class CascadeDeclaration(val mapSize: Int, val near: Float, var far: Float)
+internal data class CascadeDeclaration(val mapSize: Int, val near: Float, val far: Float, val reservedDepth: Float )
 
 internal class GltfDeclaration(val gltfResource: String, val transform: Transform = Transform()) {
     override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.gltfResource == gltfResource)

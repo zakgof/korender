@@ -26,6 +26,7 @@ import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import kotlin.math.ceil
+import kotlin.math.max
 import kotlin.math.round
 
 internal object ShadowRenderer {
@@ -47,7 +48,7 @@ internal object ShadowRenderer {
                 declaration.mapSize,
                 declaration.mapSize,
                 listOf(GlGpuTexture.Preset.VSM),
-                false
+                true
             )
         ) ?: return null
 
@@ -57,7 +58,8 @@ internal object ShadowRenderer {
         val casterUniforms = renderContext.uniforms() + mapOf(
             "view" to shadowCamera.mat4,
             "projection" to shadowProjection.mat4,
-            "cameraPos" to shadowCamera.position
+            "cameraPos" to shadowCamera.position,
+            "cameraDir" to shadowCamera.direction
         )
         frameBuffer.exec {
             glClearColor(0f, 0f, 0f, 1f)
@@ -112,10 +114,10 @@ internal object ShadowRenderer {
         val depth = declaration.far - declaration.near
         val dim = Vec3(farHeight, farWidth, depth).length()
 
-        val near = 1f // TODO
-        val volume = 150f // TODO
+        val near = 1f
+        val volume = max((zmax - zmin), declaration.reservedDepth)
 
-        val fragSize = dim / declaration.mapSize * 2.0f // TODO ?
+        val fragSize = dim / declaration.mapSize * 2.0f
         val depthSize = volume / 255f
 
         val moveUpSnap = round((ymin + ymax) * 0.5f / fragSize) * fragSize
@@ -126,13 +128,9 @@ internal object ShadowRenderer {
                 up * moveUpSnap +
                 light * depthSnap
 
-
         val far = near + volume
         val cameraPos = centerBottom - light * far
 
-        // println("SHADOW CAMERA: $cameraPos")
-
-        // TODO wrong matrix, divide by 2
         val shadowProjection = OrthoProjection(dim, dim, near, far)
         val shadowCamera = DefaultCamera(cameraPos, light, up)
 
