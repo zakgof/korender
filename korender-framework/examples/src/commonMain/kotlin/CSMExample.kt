@@ -3,7 +3,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.examples.camera.OrbitCamera
+import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.math.Color.Companion.Red
 import com.zakgof.korender.math.Color.Companion.white
 import com.zakgof.korender.math.Transform.Companion.scale
@@ -24,15 +24,16 @@ fun CSMExample() =
             pbr.roughness = 0.9f
             pcss = false
         }
-        val orbitCamera = OrbitCamera(this, Vec3(0f, 2f, 5f), Vec3(0f, 2f, 0f))
-        OnTouch { orbitCamera.touch(it) }
+        val freeCamera = FreeCamera(this, Vec3(0f, 2f, 5f), (-1).z)
+        OnTouch { freeCamera.touch(it) }
+        OnKey { freeCamera.handle(it) }
         Frame {
             projection = frustum(4f * width / height, 4f, 4f, 10000f)
-            camera = orbitCamera.camera(projection, width, height)
+            camera = freeCamera.camera(projection, width, height, frameInfo.dt)
             DirectionalLight(Vec3(1f, -1f, 0f).normalize(), white(5.0f)) {
-                Cascade(mapSize = 1024, 4f, 12f)
-                Cascade(mapSize = 1024, 10f, 30f)
-                Cascade(mapSize = 1024, 25f, 100f)
+                Cascade(mapSize = 1024, 4f, 12f, 30f)
+                Cascade(mapSize = 1024, 10f, 30f, 50f)
+                Cascade(mapSize = 1024, 25f, 100f, 100f)
             }
             AmbientLight(white(0.25f))
 
@@ -75,6 +76,6 @@ fun CSMExample() =
                 transform = translate((-30 + 5).z),
             )
 
-            //  Filter(fragment("!shader/effect/shadow-debug.frag"))
+            Filter(fragment("!shader/effect/shadow-debug.frag"))
         }
     }

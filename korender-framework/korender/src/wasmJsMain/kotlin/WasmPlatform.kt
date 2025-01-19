@@ -247,6 +247,13 @@ actual fun Korender(
             }
         }
 
+        fun sendKey(type: KeyEvent.Type, event: Event) {
+            val ke = event as org.w3c.dom.events.KeyboardEvent
+            GlobalScope.launch {
+                engine?.pushKey(KeyEvent(type, ke.key))
+            }
+        }
+
         canvas.addEventListener("mouseup") {
             sendMouseTouch(TouchEvent.Type.UP, it)
         }
@@ -265,6 +272,13 @@ actual fun Korender(
         }
         canvas.addEventListener("touchmove") {
             sendTouchTouch(TouchEvent.Type.MOVE, it)
+        }
+        // TODO cleanup
+        document.addEventListener("keydown") {
+            sendKey(KeyEvent.Type.DOWN, it)
+        }
+        document.addEventListener("keyup") {
+            sendKey(KeyEvent.Type.UP, it)
         }
 
         onDispose {

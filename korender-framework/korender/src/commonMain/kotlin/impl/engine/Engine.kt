@@ -10,6 +10,8 @@ import com.zakgof.korender.FireballParams
 import com.zakgof.korender.FrustumProjectionDeclaration
 import com.zakgof.korender.Image
 import com.zakgof.korender.IndexType
+import com.zakgof.korender.KeyEvent
+import com.zakgof.korender.KeyHandler
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshAttribute
@@ -76,13 +78,16 @@ internal class Engine(
 ) {
 
     private val touchQueue = Channel<TouchEvent>(Channel.UNLIMITED)
+    private val keyQueue = Channel<KeyEvent>(Channel.UNLIMITED)
     private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
     private val inventory = Inventory(asyncContext)
     private val renderContext = RenderContext(width, height)
     private var deferredShading = false
 
-    private lateinit var sceneTouchBoxesHandler : (TouchEvent) -> Boolean
+    // TODO bug here
+    private lateinit var sceneTouchBoxesHandler: (TouchEvent) -> Boolean
     private val touchHandlers = mutableListOf<TouchHandler>()
+    private val keyHandlers = mutableListOf<KeyHandler>()
 
     inner class KorenderContextImpl : KorenderContext {
 
@@ -95,6 +100,10 @@ internal class Engine(
 
         override fun OnTouch(handler: (TouchEvent) -> Unit) {
             touchHandlers.add(handler)
+        }
+
+        override fun OnKey(handler: (KeyEvent) -> Unit) {
+            keyHandlers.add(handler)
         }
 
         override fun texture(
@@ -272,6 +281,7 @@ internal class Engine(
     fun frame() {
         val frameInfo = renderContext.frameInfoManager.frame()
         processTouches()
+        processKeys()
         val sd = SceneDeclaration()
         frameBlocks.forEach {
             DefaultFrameContext(sd, deferredShading, frameInfo).apply(it)
@@ -285,6 +295,7 @@ internal class Engine(
     }
 
     suspend fun pushTouch(touchEvent: TouchEvent) = touchQueue.send(touchEvent)
+    suspend fun pushKey(keyEvent: KeyEvent) = keyQueue.send(keyEvent)
 
     private fun processTouches() {
         do {
@@ -294,6 +305,13 @@ internal class Engine(
                     touchHandlers.forEach { it(touchEvent) }
                 }
             }
+        } while (event != null)
+    }
+
+    private fun processKeys() {
+        do {
+            val event = keyQueue.tryReceive().getOrNull()
+            event?.let { keyEvent -> keyHandlers.forEach { it(keyEvent) } }
         } while (event != null)
     }
 

@@ -9,6 +9,7 @@ import com.zakgof.korender.FireballParams
 import com.zakgof.korender.FrustumProjectionDeclaration
 import com.zakgof.korender.Image
 import com.zakgof.korender.IndexType
+import com.zakgof.korender.KeyHandler
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
@@ -22,7 +23,7 @@ import com.zakgof.korender.StarrySkyParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
-import com.zakgof.korender.TouchEvent
+import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.WaterParams
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Vec3
@@ -31,7 +32,8 @@ import kotlinx.coroutines.Deferred
 interface KorenderContext {
 
     fun Frame(deferredShading: Boolean = false, block: FrameContext.() -> Unit)
-    fun OnTouch(handler: (TouchEvent) -> Unit)
+    fun OnTouch(handler: TouchHandler)
+    fun OnKey(handler: KeyHandler)
 
     var camera: CameraDeclaration
     var projection: ProjectionDeclaration

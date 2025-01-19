@@ -27,6 +27,8 @@ import java.awt.Font
 import java.awt.GraphicsEnvironment
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
+import java.awt.event.KeyAdapter
+import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.event.MouseMotionAdapter
@@ -59,13 +61,21 @@ actual fun Korender(
     val pixelRatio by remember { mutableStateOf(detectDevicePixelRatio()) }
 
     fun sendTouch(
-        canvas: AWTGLCanvas,
         type: TouchEvent.Type,
         ex: Int,
         ey: Int
-    ) = canvas.runInContext {
+    ) {
         GlobalScope.launch {
             engine?.pushTouch(TouchEvent(type, ex * pixelRatio[0], ey * pixelRatio[1]))
+        }
+    }
+
+    fun sendKey(
+        type: com.zakgof.korender.KeyEvent.Type,
+        c: String
+    ) {
+        GlobalScope.launch {
+            engine?.pushKey(KeyEvent(type, c))
         }
     }
 
@@ -120,17 +130,25 @@ actual fun Korender(
             }
             canvas.addMouseMotionListener(object : MouseMotionAdapter() {
                 override fun mouseMoved(e: MouseEvent) =
-                    sendTouch(canvas, TouchEvent.Type.MOVE, e.x, e.y)
+                    sendTouch(TouchEvent.Type.MOVE, e.x, e.y)
 
                 override fun mouseDragged(e: MouseEvent) =
-                    sendTouch(canvas, TouchEvent.Type.MOVE, e.x, e.y)
+                    sendTouch(TouchEvent.Type.MOVE, e.x, e.y)
             })
             canvas.addMouseListener(object : MouseAdapter() {
                 override fun mousePressed(e: MouseEvent) =
-                    sendTouch(canvas, TouchEvent.Type.DOWN, e.x, e.y)
+                    sendTouch(TouchEvent.Type.DOWN, e.x, e.y)
 
                 override fun mouseReleased(e: MouseEvent) =
-                    sendTouch(canvas, TouchEvent.Type.UP, e.x, e.y)
+                    sendTouch(TouchEvent.Type.UP, e.x, e.y)
+            })
+            canvas.addKeyListener(object : KeyAdapter() {
+                override fun keyPressed(e: KeyEvent) {
+                    sendKey(com.zakgof.korender.KeyEvent.Type.DOWN, e.keyChar.toString()) // TODO all keycodes
+                }
+                override fun keyReleased(e: KeyEvent) {
+                    sendKey(com.zakgof.korender.KeyEvent.Type.UP, e.keyChar.toString()) // TODO all keycodes
+                }
             })
 
             canvas.addComponentListener(object : ComponentAdapter() {
@@ -261,8 +279,6 @@ internal class JvmImage(
     override val bytes: NativeByteBuffer,
     override val format: Image.Format
 ) : InternalImage {
-
-
 
 
 }
