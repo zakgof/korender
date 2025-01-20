@@ -7,7 +7,6 @@ import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Color.Companion.White
-import com.zakgof.korender.math.Color.Companion.white
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.y
 
@@ -52,9 +51,10 @@ class StaticScene(private val kc: KorenderContext) {
 
         Renderable(
             standart {
-                baseColor = white(0.1f)
+                baseColorTexture = texture("insecto/grass.jpg")
                 pbr.metallic = 0.0f
                 pbr.roughness = 0.8f
+                triplanarScale = 1.0f
             },
             mesh = cube(),
             transform = scale(800f, 1f, 800f).translate(-0.501f.y)

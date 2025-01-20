@@ -3,18 +3,10 @@ package city
 import androidx.compose.runtime.Composable
 import city.controller.Controller
 import com.zakgof.insecto.Res
-import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Korender
-import com.zakgof.korender.math.Color
-import com.zakgof.korender.math.Color.Companion.White
 import com.zakgof.korender.math.Color.Companion.white
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.math.x
-import com.zakgof.korender.math.y
-import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.random.Random
 
@@ -30,15 +22,12 @@ fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val staticScene = StaticScene(this)
     val controller = Controller()
 
-    // val orbitCamera = OrbitCamera(this, -103f.z + 0.3f.y + 3.2f.x, -102.z + 0.3f.y + 3.2f.x)
-
-
     Frame {
 
         OnTouch { controller.touch(it) }
         OnKey { controller.key(it) }
         projection = frustum(width = 0.3f * width / height, height = 0.3f, near = 0.3f, far = 500f)
-        camera = controller.character.camera(projection, width, height)
+        camera = controller.camera(this)
 
         controller.update(frameInfo.dt)
 
@@ -54,8 +43,6 @@ fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         }
 
         staticScene.render(this)
-
-        Scene(gltfResource = "city/swat.glb", transform = scale(0.002f).translate(-102.z + 3.2f.x))
-
+        Scene(gltfResource = "city/swat.glb", transform = controller.character.transform * scale(0.002f))
     }
 }
