@@ -88,6 +88,7 @@ internal class Engine(
     private lateinit var sceneTouchBoxesHandler: (TouchEvent) -> Boolean
     private val touchHandlers = mutableListOf<TouchHandler>()
     private val keyHandlers = mutableListOf<KeyHandler>()
+    private val kc = KorenderContextImpl()
 
     inner class KorenderContextImpl : KorenderContext {
 
@@ -275,7 +276,7 @@ internal class Engine(
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_CULL_FACE)
         glCullFace(GL_BACK)
-        block.invoke(KorenderContextImpl())
+        block.invoke(kc)
     }
 
     fun frame() {
@@ -284,7 +285,7 @@ internal class Engine(
         processKeys()
         val sd = SceneDeclaration()
         frameBlocks.forEach {
-            DefaultFrameContext(sd, deferredShading, frameInfo).apply(it)
+            DefaultFrameContext(kc, sd, deferredShading, frameInfo).apply(it)
         }
         inventory.go {
             val scene = Scene(sd, inventory, renderContext, deferredShading, frameInfo.time)

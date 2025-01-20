@@ -1,4 +1,4 @@
-
+package insecto
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import kotlin.math.sin

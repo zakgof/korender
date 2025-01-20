@@ -27,12 +27,12 @@ private val Int.cy: Int
 private val Int.cz: Int
     get() = (this shr 16) and 0xFF
 
-class Generator {
+class CityGenerator {
 
     private val lightWindow = CTriangulation()
     private val roof = CTriangulation()
 
-    fun building(xoffset: Int, yoffset: Int, xsize: Int, ysize: Int, height: Int, block: Context.() -> Unit): Generator {
+    fun building(xoffset: Int, yoffset: Int, xsize: Int, ysize: Int, height: Int, block: Context.() -> Unit): CityGenerator {
         val cubes = collectCubes(xsize, ysize, height, block)
         triangulate(xoffset, yoffset, cubes)
         return this

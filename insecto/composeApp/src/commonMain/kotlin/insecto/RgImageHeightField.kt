@@ -1,3 +1,5 @@
+package insecto
+
 import com.zakgof.korender.Image
 import com.zakgof.korender.math.Vec3
 
@@ -6,7 +8,8 @@ import com.zakgof.korender.math.Vec3
 *   G: low byte
 *   B: 0
 */
-class RgImageHeightField(val image: Image, private val cell: Float, private val elevationRatio: Float) : HeightField {
+class RgImageHeightField(val image: Image, private val cell: Float, private val elevationRatio: Float) :
+    HeightField {
 
     override fun elevation(x: Float, z: Float): Float {
         val xfr = (x / cell + (image.width - 1) * 0.5f)

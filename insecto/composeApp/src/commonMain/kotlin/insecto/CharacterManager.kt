@@ -1,7 +1,6 @@
-
+package insecto
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.math.Quaternion
-import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y

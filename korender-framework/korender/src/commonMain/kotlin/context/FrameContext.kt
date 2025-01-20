@@ -7,7 +7,7 @@ import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 
-interface FrameContext {
+interface FrameContext : KorenderContext {
 
     val frameInfo: FrameInfo
 

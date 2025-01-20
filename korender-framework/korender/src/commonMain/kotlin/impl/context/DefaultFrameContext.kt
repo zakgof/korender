@@ -7,6 +7,7 @@ import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.GuiContainerContext
 import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedRenderablesContext
+import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.context.ShadowContext
 import com.zakgof.korender.impl.engine.Bucket
 import com.zakgof.korender.impl.engine.DirectionalLightDeclaration
@@ -28,10 +29,11 @@ import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 
 internal class DefaultFrameContext(
+    private val korenderContext: KorenderContext,
     private val sceneDeclaration: SceneDeclaration,
     private val deferredShading: Boolean,
     override val frameInfo: FrameInfo,
-) : FrameContext {
+) : FrameContext, KorenderContext by korenderContext {
 
     override fun Scene(gltfResource: String, transform: Transform) {
         sceneDeclaration.gltfs += GltfDeclaration(gltfResource, transform)

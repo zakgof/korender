@@ -1,3 +1,5 @@
+package insecto
+
 import com.zakgof.korender.math.Vec3
 import kotlin.math.max
 

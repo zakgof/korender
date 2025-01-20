@@ -1,6 +1,6 @@
 package com.zakgof.korenderdemo
 
-import App
+import city.App
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
