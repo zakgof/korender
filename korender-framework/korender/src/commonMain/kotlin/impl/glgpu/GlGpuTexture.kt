@@ -140,12 +140,13 @@ internal class GlGpuTexture(
         name, null, width, height, preset.filter, preset.wrap, preset.aniso, preset.formats
     )
 
+    @OptIn(ExperimentalStdlibApi::class)
     private fun initTexImage(formats: List<GlFormat>, width: Int, height: Int, image: InternalImage?) {
         for (glFormat in formats) {
             glTexImage2D(GL_TEXTURE_2D, 0, glFormat.internal, width, height, 0, glFormat.format, glFormat.type, image?.bytes)
             val errcode = glGetError()
             if (errcode != 0) {
-                println("Falling back to next format when creating texture")
+                println("Could not create a texture with format 0x${glFormat.internal.toHexString()}. Falling back to next format when creating texture")
                 continue
             }
             return
@@ -178,8 +179,8 @@ internal class GlGpuTexture(
             )
         ),
         VSM(
-            TextureFilter.MipMap, TextureWrap.ClampToBorder, 1024, listOf(
-                // TODO: still want this
+            TextureFilter.Linear, TextureWrap.MirroredRepeat, 1024, listOf(
+                // TODO: still want this on Desktop
 //                GlFormat(GL_RG32F, GL_RG, GL_FLOAT),
 //                GlFormat(GL_RG16F, GL_RG, GL_FLOAT),
                 GlFormat(GL_RG16, GL_RG, GL_UNSIGNED_SHORT),

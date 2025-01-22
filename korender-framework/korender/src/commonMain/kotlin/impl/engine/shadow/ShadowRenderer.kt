@@ -11,11 +11,9 @@ import com.zakgof.korender.impl.engine.Renderable
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glClearColor
 import com.zakgof.korender.impl.gl.GL.glCullFace
-import com.zakgof.korender.impl.gl.GL.glDisable
 import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
-import com.zakgof.korender.impl.gl.GLConstants.GL_CULL_FACE
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
@@ -62,15 +60,13 @@ internal object ShadowRenderer {
             "cameraDir" to shadowCamera.direction
         )
         frameBuffer.exec {
-            glClearColor(0f, 0f, 0f, 1f)
+            glClearColor(1f, 0f, 0f, 1f)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             glEnable(GL_DEPTH_TEST)
             glCullFace(GL_BACK)
-            glDisable(GL_CULL_FACE)
             shadowCasters.forEach { casterRenderable ->
                 casterRenderable.render(casterUniforms, fixer)
             }
-            glEnable(GL_CULL_FACE)
         }
 
         return ShadowerData(

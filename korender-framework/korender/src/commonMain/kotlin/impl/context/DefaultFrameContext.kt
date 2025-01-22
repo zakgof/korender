@@ -40,7 +40,9 @@ internal class DefaultFrameContext(
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean) {
-        val materialDeclaration = materialDeclaration(MaterialBuilder(deferredShading), *materialModifiers)
+        val materialDeclaration = materialDeclaration(MaterialBuilder(deferredShading),
+            InternalMaterialModifier { it.shaderDefs += "VSM_SHADOW" }, // TODO
+            *materialModifiers)
         sceneDeclaration.renderables += RenderableDeclaration(mesh, materialDeclaration.shader, materialDeclaration.uniforms, transform, if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE)
     }
 

@@ -68,30 +68,29 @@ out vec4 fragColor;
 #import "!shader/lib/triplanar.glsl"
 #import "!shader/lib/normalmap.glsl"
 
-#import "!shader/lib/light.glsl"
-#import "!shader/lib/shading.glsl"
+#import "!shader/lib/shadow.glsl"
 #import "!shader/lib/pbr.glsl"
 
 float sampleShadowTexture(int i, vec3 v) {
     #ifdef WEBGL
     float sh = 0.;
     switch (i) {
-        case 0: sh = shadow(shadowTextures[0], v); break;
-        case 1: sh =  shadow(shadowTextures[1], v); break;
-        case 2: sh =  shadow(shadowTextures[2], v); break;
-        case 3: sh =  shadow(shadowTextures[3], v); break;
-        case 4: sh =  shadow(shadowTextures[4], v); break;
-        case 5: sh =  shadow(shadowTextures[5], v); break;
-        case 6: sh =  shadow(shadowTextures[6], v); break;
-        case 7: sh =  shadow(shadowTextures[7], v); break;
-        case 8: sh =  shadow(shadowTextures[8], v); break;
-        case 9: sh =  shadow(shadowTextures[9], v); break;
-        case 10: sh =  shadow(shadowTextures[10], v); break;
-        case 11: sh =  shadow(shadowTextures[11], v); break;
+        case 0: sh = shadow(shadowTextures[0], v, vpos); break;
+        case 1: sh =  shadow(shadowTextures[1], v, vpos); break;
+        case 2: sh =  shadow(shadowTextures[2], v, vpos); break;
+        case 3: sh =  shadow(shadowTextures[3], v, vpos); break;
+        case 4: sh =  shadow(shadowTextures[4], v, vpos); break;
+        case 5: sh =  shadow(shadowTextures[5], v, vpos); break;
+        case 6: sh =  shadow(shadowTextures[6], v, vpos); break;
+        case 7: sh =  shadow(shadowTextures[7], v, vpos); break;
+        case 8: sh =  shadow(shadowTextures[8], v, vpos); break;
+        case 9: sh =  shadow(shadowTextures[9], v, vpos); break;
+        case 10: sh =  shadow(shadowTextures[10], v, vpos); break;
+        case 11: sh =  shadow(shadowTextures[11], v, vpos); break;
     }
     return sh;
     #else
-    return varianceShadow(shadowTextures[i], v);
+    return shadow(shadowTextures[i], v, vpos);
     #endif
 }
 
@@ -157,15 +156,17 @@ void main() {
         for (int c=0; c<shadowCount; c++) {
             int idx = directionalLightShadowTextureIndex[l] + c;
             vec3 vshadow = (bsps[idx] * vec4(vpos, 1.0)).xyz;
-            float sh = sampleShadowTexture(idx, vshadow);
+//
+//
+//            vec2 poi = vec2(0.1, 0.5);
+//            float dist = distance(poi, vshadow.xy);
+//            float ratio = 0.50 * (1.0 - pow(dist, 3.));
+//            vshadow.xy = vshadow.xy + (poi - vshadow.xy) * ratio;
 
+            float sh = sampleShadowTexture(idx, vshadow);
             vec4 ci = cascade[c];
             float cascadeContribution = smoothstep(ci.r, ci.g, plane) * (1.0 - smoothstep(ci.b, ci.a, plane));
             shadowRatio += sh * cascadeContribution;
-
-//            if (vshadow.z > 0.999)
-//                color += vec3(1.0, 0.0, 0.0);
-
         }
         vec3 lightValue = directionalLightColor[l].rgb * (1. - shadowRatio);
         vec3 L = normalize(-directionalLightDir[l]);

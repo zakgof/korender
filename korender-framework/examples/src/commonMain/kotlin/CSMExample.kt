@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.FreeCamera
+import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Color.Companion.Red
 import com.zakgof.korender.math.Color.Companion.white
 import com.zakgof.korender.math.Transform.Companion.scale
@@ -30,7 +31,7 @@ fun CSMExample() =
         Frame {
             projection = frustum(4f * width / height, 4f, 4f, 10000f)
             camera = freeCamera.camera(projection, width, height, frameInfo.dt)
-            DirectionalLight(Vec3(1f, -1f, 0f).normalize(), white(5.0f)) {
+            DirectionalLight(Vec3(1f, -1f, 0.3f).normalize(), white(5.0f)) {
                 Cascade(mapSize = 1024, 4f, 12f, 30f)
                 Cascade(mapSize = 1024, 10f, 30f, 50f)
                 Cascade(mapSize = 1024, 25f, 100f, 100f)
@@ -56,6 +57,14 @@ fun CSMExample() =
                 transform = scale(1f, 1f, 200f).translate(Vec3(-5f, 3f, -100f))
             )
             Renderable(
+                materialModifier,
+                mesh = cube(),
+                transform = scale(2f, 10f, 2f).translate(Vec3(-7f, 5f, -10f))
+            )
+
+
+
+            Renderable(
                 standart { baseColor = Red },
                 mesh = sphere(0.1f),
                 transform = translate((-10 + 5).z),
@@ -76,6 +85,9 @@ fun CSMExample() =
                 transform = translate((-30 + 5).z),
             )
 
-            Filter(fragment("!shader/effect/shadow-debug.frag"))
+            Gui {
+                Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = Color(0xFF66FF55))
+            }
+            // Filter(fragment("!shader/effect/shadow-debug.frag"))
         }
     }

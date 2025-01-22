@@ -48,8 +48,8 @@ internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms:
 
         fun createShadowCaster(inventory: Inventory, declaration: RenderableDeclaration): Renderable? {
             val mesh = inventory.mesh(declaration.mesh) ?: return null
-            val modifiedShaderDeclaration = ShaderDeclaration("!shader/standart.vert", "!shader/caster.frag",
-                declaration.shader.defs,
+            val modifiedShaderDeclaration = ShaderDeclaration("!shader/caster.vert", "!shader/caster.frag",
+                declaration.shader.defs, // TODO configurable
                 declaration.shader.options,
                 declaration.shader.plugins
             )
