@@ -84,6 +84,13 @@ fun CSMExample() =
                 mesh = sphere(0.1f),
                 transform = translate((-30 + 5).z),
             )
+            Renderable(
+                standart { baseColor = Red },
+                mesh = sphere(0.5f),
+                transform = translate(2f, 0.5f, -3f),
+            )
+
+
 
             Gui {
                 Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = Color(0xFF66FF55))

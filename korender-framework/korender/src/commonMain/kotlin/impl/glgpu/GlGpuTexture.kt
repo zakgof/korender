@@ -31,6 +31,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_RG
 import com.zakgof.korender.impl.gl.GLConstants.GL_RG16
 import com.zakgof.korender.impl.gl.GLConstants.GL_RG8
 import com.zakgof.korender.impl.gl.GLConstants.GL_RGB
+import com.zakgof.korender.impl.gl.GLConstants.GL_RGB16
 import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE0
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_2D
@@ -181,8 +182,10 @@ internal class GlGpuTexture(
         VSM(
             TextureFilter.Linear, TextureWrap.MirroredRepeat, 1024, listOf(
                 // TODO: still want this on Desktop
-//                GlFormat(GL_RG32F, GL_RG, GL_FLOAT),
+ //               GlFormat(GL_RG32F, GL_RG, GL_FLOAT),
 //                GlFormat(GL_RG16F, GL_RG, GL_FLOAT),
+                GlFormat(GL_RGB16, GL_RGB, GL_UNSIGNED_SHORT), // TODO ESM
+
                 GlFormat(GL_RG16, GL_RG, GL_UNSIGNED_SHORT),
                 GlFormat(GL_RG8, GL_RG, GL_UNSIGNED_BYTE),
                 GlFormat(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE)

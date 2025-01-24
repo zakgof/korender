@@ -12,6 +12,7 @@ layout(location = 4) in vec4 weights;
 out vec3 vpos;
 out vec3 vnormal;
 out vec2 vtex;
+out vec4 vsuper;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -50,6 +51,11 @@ void main() {
 //    float ratio = 0.50 * (1.0 - pow(dist, 3.));
 //    tc = tc + (poi - tc) * ratio;
 
+    float yMin = -0.5;
+    float yMax = 60.0;
 
-    gl_Position = vec4(((tc * 2.0) - vec2(1., 1.)) * tpos.w, tpos.zw);
+    float skewZ = (worldPos.y * 2.0 / (yMin - yMax) - (yMin + yMax) / (yMin - yMax)) * tpos.w;
+
+    gl_Position = vec4(((tc * 2.0) - vec2(1., 1.)) * tpos.w, skewZ, tpos.w);
+    vsuper = gl_Position;
 }

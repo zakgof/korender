@@ -22,12 +22,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zakgof.korender.examples.city.City
 import kotlinx.coroutines.launch
 
 @Composable
 fun AppExample() {
     val options = listOf(
         Demo("Cascade shadows") { CSMExample() },
+        Demo("City scene") { City() },
         Demo("Feature showcase") { ShowcaseExample() },
         Demo("PBR metallic/roughness") { MetallicRoughnessExample() },
         Demo("Transparency") { TransparencyExample() },

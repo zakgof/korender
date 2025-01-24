@@ -33,8 +33,8 @@ fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         AmbientLight(white(0.2f))
         DirectionalLight(Vec3(2f, -5f, 0f).normalize(), white(5.0f)) {
-            Cascade(1024, 0.3f, 2.2f, 30f)
-            Cascade(1024, 2.0f, 50.0f, 98f)
+            Cascade(1024, 0.3f, 2.2f, 4f)
+            // Cascade(1024, 2.0f, 50.0f, 98f)
         }
         for (xx in 0..4) {
             for (zz in 0..4) {
@@ -44,5 +44,9 @@ fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         staticScene.render(this)
         Scene(gltfResource = "city/swat.glb", transform = controller.character.transform * scale(0.002f))
+
+
+        Filter(fragment("city/shadow-debug.frag"))
+
     }
 }

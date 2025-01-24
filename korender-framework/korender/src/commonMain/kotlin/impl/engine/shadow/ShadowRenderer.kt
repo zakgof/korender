@@ -8,15 +8,24 @@ import com.zakgof.korender.impl.engine.FrameBufferDeclaration
 import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.engine.Renderable
+import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glClearColor
 import com.zakgof.korender.impl.gl.GL.glCullFace
+import com.zakgof.korender.impl.gl.GL.glDepthFunc
 import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
+import com.zakgof.korender.impl.gl.GLConstants.GL_BLEND
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
+import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
+import com.zakgof.korender.impl.material.InternalBlurParams
+import com.zakgof.korender.impl.material.InternalMaterialModifier
+import com.zakgof.korender.impl.material.MaterialBuilder
+import com.zakgof.korender.impl.material.ParamUniforms
+import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.OrthoProjection
 import com.zakgof.korender.impl.projection.Projection
@@ -41,13 +50,7 @@ internal object ShadowRenderer {
     ): ShadowerData? {
         val declaration = declarations[index]
         val frameBuffer = inventory.frameBuffer(
-            FrameBufferDeclaration(
-                "shadow-$id",
-                declaration.mapSize,
-                declaration.mapSize,
-                listOf(GlGpuTexture.Preset.VSM),
-                true
-            )
+            FrameBufferDeclaration( "shadow-$id", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM),true)
         ) ?: return null
 
         val matrices = updateShadowCamera(renderContext.projection, renderContext.camera, lightDirection, declaration)
@@ -66,6 +69,59 @@ internal object ShadowRenderer {
             glCullFace(GL_BACK)
             shadowCasters.forEach { casterRenderable ->
                 casterRenderable.render(casterUniforms, fixer)
+            }
+        }
+
+        val blurFrameBuffer = inventory.frameBuffer(
+            FrameBufferDeclaration( "shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM),true)
+        ) ?: return null
+
+        val blur1 = materialDeclaration(MaterialBuilder(false),
+            InternalMaterialModifier {
+                it.vertShaderFile = "!shader/screen.vert"
+                it.fragShaderFile = "!shader/effect/blurv.frag"
+                it.shaderUniforms = ParamUniforms(InternalBlurParams()) {
+                }
+            }
+        )
+        val prevPassUniforms = mapOf(
+            "filterColorTexture" to frameBuffer.colorTextures[0],
+            "filterDepthTexture" to frameBuffer.depthTexture
+        )
+        blurFrameBuffer.exec {
+            val mesh = inventory.mesh(ScreenQuad)
+            val shader = inventory.shader(blur1.shader)
+            glClearColor(0f, 0f, 0f, 1f)
+            glEnable(GL_BLEND)
+            glEnable(GL_DEPTH_TEST)
+            glDepthFunc(GL_LEQUAL)
+            glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+            if (mesh != null && shader != null) {
+                Renderable(mesh, shader, blur1.uniforms).render(renderContext.uniforms() + prevPassUniforms, fixer)
+            }
+        }
+        val blur2 = materialDeclaration(MaterialBuilder(false),
+            InternalMaterialModifier {
+                it.vertShaderFile = "!shader/screen.vert"
+                it.fragShaderFile = "!shader/effect/blurh.frag"
+                it.shaderUniforms = ParamUniforms(InternalBlurParams()) {
+                }
+            }
+        )
+        val prevPassUniforms2 = mapOf(
+            "filterColorTexture" to blurFrameBuffer.colorTextures[0],
+            "filterDepthTexture" to blurFrameBuffer.depthTexture
+        )
+        frameBuffer.exec {
+            val mesh = inventory.mesh(ScreenQuad)
+            val shader = inventory.shader(blur2.shader)
+            glClearColor(0f, 0f, 0f, 1f)
+            glEnable(GL_BLEND)
+            glEnable(GL_DEPTH_TEST)
+            glDepthFunc(GL_LEQUAL)
+            glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+            if (mesh != null && shader != null) {
+                Renderable(mesh, shader, blur1.uniforms).render(renderContext.uniforms() + prevPassUniforms2, fixer)
             }
         }
 
