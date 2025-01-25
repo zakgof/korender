@@ -8,6 +8,8 @@ import com.zakgof.korender.impl.engine.FrameBufferDeclaration
 import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.engine.Renderable
+import com.zakgof.korender.impl.engine.RenderableDeclaration
+import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glClearColor
@@ -20,7 +22,13 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
+import com.zakgof.korender.impl.glgpu.ColorList
+import com.zakgof.korender.impl.glgpu.FloatList
+import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
+import com.zakgof.korender.impl.glgpu.GlGpuTextureList
+import com.zakgof.korender.impl.glgpu.IntList
+import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.impl.material.InternalBlurParams
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.MaterialBuilder
@@ -29,14 +37,21 @@ import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.OrthoProjection
 import com.zakgof.korender.impl.projection.Projection
+import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import kotlin.math.ceil
-import kotlin.math.max
 import kotlin.math.round
 
 internal object ShadowRenderer {
+
+    private val SHADOW_SHIFTER = Mat4(
+        0.5f, 0.0f, 0.0f, 0.5f,
+        0.0f, 0.5f, 0.0f, 0.5f,
+        0.0f, 0.0f, 0.5f, 0.5f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    )
 
     fun render(
         id: String,
@@ -45,12 +60,13 @@ internal object ShadowRenderer {
         declarations: List<CascadeDeclaration>,
         index: Int,
         renderContext: RenderContext,
-        shadowCasters: List<Renderable>,
+        shadowCasterDeclarations: List<RenderableDeclaration>,
         fixer: (Any?) -> Any?
     ): ShadowerData? {
+
         val declaration = declarations[index]
         val frameBuffer = inventory.frameBuffer(
-            FrameBufferDeclaration( "shadow-$id", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM),true)
+            FrameBufferDeclaration("shadow-$id", declaration.mapSize, declaration.mapSize, fbPreset(declaration), true)
         ) ?: return null
 
         val matrices = updateShadowCamera(renderContext.projection, renderContext.camera, lightDirection, declaration)
@@ -62,25 +78,107 @@ internal object ShadowRenderer {
             "cameraPos" to shadowCamera.position,
             "cameraDir" to shadowCamera.direction
         )
+
         frameBuffer.exec {
-            glClearColor(1f, 0f, 0f, 1f)
+            glClearColor(1f, 1f, 0f, 1f)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             glEnable(GL_DEPTH_TEST)
             glCullFace(GL_BACK)
-            shadowCasters.forEach { casterRenderable ->
-                casterRenderable.render(casterUniforms, fixer)
+            shadowCasterDeclarations.filter {
+                // TODO: renderable or material flag to disable shadow casting
+                (it.shader.fragFile == "!shader/geometry.frag" ||
+                        it.shader.fragFile == "!shader/forward.frag")
+            }.forEach { renderableDeclaration ->
+                val mesh = inventory.mesh(renderableDeclaration.mesh)
+                val uniforms = mutableMapOf<String, Any?>()
+                val defs = mutableSetOf<String>()
+                defs += renderableDeclaration.shader.defs
+                if (declaration.fixedYRange != null) {
+                    defs += "FIXED_SHADOW_Y_RANGE"
+                    uniforms["fixedYMin"] = declaration.fixedYRange.first
+                    uniforms["fixedYMax"] = declaration.fixedYRange.second
+                }
+                when (declaration.algorithm) {
+                    is InternalVsmParams -> defs += "VSM_SHADOW"
+                    is InternalHardParams -> defs += "HARD_SHADOW"
+                    is InternalPccfParams -> defs += "PCCF_SHADOW"
+                }
+
+                val modifiedShaderDeclaration = ShaderDeclaration(
+                    "!shader/caster.vert", "!shader/caster.frag",
+                    defs,
+                    renderableDeclaration.shader.options,
+                    renderableDeclaration.shader.plugins
+                )
+                val shader = inventory.shader(modifiedShaderDeclaration)
+                if (mesh != null && shader != null) {
+                    Renderable(mesh, shader, renderableDeclaration.uniforms, renderableDeclaration.transform)
+                        .render(casterUniforms + uniforms, fixer)
+                }
             }
         }
 
+        if (declaration.algorithm is InternalVsmParams && declaration.algorithm.blurRadius != null) {
+            val texBlurRadius = declaration.algorithm.blurRadius * declaration.mapSize / shadowProjection.width
+            blurShadowMap(
+                id,
+                declaration,
+                frameBuffer,
+                inventory,
+                renderContext,
+                fixer,
+                texBlurRadius
+            )
+        }
+        return ShadowerData(
+            output(frameBuffer, declaration),
+            SHADOW_SHIFTER * shadowProjection.mat4 * shadowCamera.mat4,
+            listOf(
+                if (index == 0) 0f else declaration.near,
+                if (index == 0) 0f else declarations[index - 1].far,
+                if (index == declarations.size - 1) 1e10f else declarations[index + 1].near,
+                if (index == declarations.size - 1) 1e10f else declaration.far
+            ),
+            declaration.fixedYRange?.first ?: 0f,
+            declaration.fixedYRange?.second ?: 0f,
+            mode(declaration)
+        )
+    }
+
+    private fun output(frameBuffer: GlGpuFrameBuffer, declaration: CascadeDeclaration): GlGpuTexture =
+        if (declaration.algorithm is InternalVsmParams) frameBuffer.colorTextures[0] else frameBuffer.depthTexture!!
+
+    private fun fbPreset(declaration: CascadeDeclaration): List<GlGpuTexture.Preset> =
+        if (declaration.algorithm is InternalVsmParams) listOf(GlGpuTexture.Preset.VSM) else listOf()
+
+    private fun mode(declaration: CascadeDeclaration): Int =
+        when (declaration.algorithm) {
+            is InternalHardParams -> 0
+            is InternalPccfParams -> 1
+            is InternalVsmParams -> 2
+            else -> 0
+        } or (if (declaration.fixedYRange != null) 128 else 0)
+
+    private fun blurShadowMap(
+        id: String,
+        declaration: CascadeDeclaration,
+        frameBuffer: GlGpuFrameBuffer,
+        inventory: Inventory,
+        renderContext: RenderContext,
+        fixer: (Any?) -> Any?,
+        texBlurRadius: Float
+    ) {
+
         val blurFrameBuffer = inventory.frameBuffer(
-            FrameBufferDeclaration( "shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM),true)
-        ) ?: return null
+            FrameBufferDeclaration("shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM), true)
+        ) ?: return
 
         val blur1 = materialDeclaration(MaterialBuilder(false),
             InternalMaterialModifier {
                 it.vertShaderFile = "!shader/screen.vert"
                 it.fragShaderFile = "!shader/effect/blurv.frag"
                 it.shaderUniforms = ParamUniforms(InternalBlurParams()) {
+                    radius = texBlurRadius
                 }
             }
         )
@@ -105,6 +203,7 @@ internal object ShadowRenderer {
                 it.vertShaderFile = "!shader/screen.vert"
                 it.fragShaderFile = "!shader/effect/blurh.frag"
                 it.shaderUniforms = ParamUniforms(InternalBlurParams()) {
+                    radius = texBlurRadius
                 }
             }
         )
@@ -125,21 +224,7 @@ internal object ShadowRenderer {
             }
         }
 
-        return ShadowerData(
-            frameBuffer.colorTextures[0],
-            Mat4(
-                0.5f, 0.0f, 0.0f, 0.5f,
-                0.0f, 0.5f, 0.0f, 0.5f,
-                0.0f, 0.0f, 0.5f, 0.5f,
-                0.0f, 0.0f, 0.0f, 1.0f
-            ) * shadowProjection.mat4 * shadowCamera.mat4,
-            listOf(
-                if (index == 0) 0f else declaration.near,
-                if (index == 0) 0f else declarations[index-1].far,
-                if (index == declarations.size-1) 1e10f else declarations[index+1].near,
-                if (index == declarations.size-1) 1e10f else declaration.far
-            )
-        )
+
     }
 
     private fun updateShadowCamera(
@@ -153,7 +238,7 @@ internal object ShadowRenderer {
 
         val right = (light % 1.y).normalize()
         val up = (right % light).normalize()
-        val corners = frustumCorners(projection , camera, declaration.near, declaration.far)
+        val corners = frustumCorners(projection, camera, declaration.near, declaration.far)
         val xmin = corners.minOf { it * right }
         val ymin = corners.minOf { it * up }
         val zmin = corners.minOf { it * light }
@@ -167,7 +252,7 @@ internal object ShadowRenderer {
         val dim = Vec3(farHeight, farWidth, depth).length()
 
         val near = 1f
-        val volume = max((zmax - zmin), declaration.reservedDepth)
+        val volume = zmax - zmin
 
         val fragSize = dim / declaration.mapSize * 2.0f
         val depthSize = volume / 255f
@@ -220,5 +305,18 @@ internal object ShadowRenderer {
 internal class ShadowerData(
     val texture: GlGpuTexture,
     val bsp: Mat4,
-    val cascade: List<Float>
+    val cascade: List<Float>,
+    val yMin: Float,
+    val yMax: Float,
+    val mode: Int
+)
+
+internal fun List<ShadowerData>.uniforms(): Map<String, Any?> = mapOf(
+    "numShadows" to size,
+    "shadowTextures[0]" to GlGpuTextureList(this.map { it.texture }),
+    "bsps[0]" to Mat4List(this.map { it.bsp }),
+    "cascade[0]" to ColorList(this.map { Color(it.cascade[3], it.cascade[0], it.cascade[1], it.cascade[2]) }),
+    "yMin[0]" to FloatList(this.map { it.yMin }),
+    "yMax[0]" to FloatList(this.map { it.yMax }),
+    "shadowMode[0]" to IntList(this.map { it.mode })
 )

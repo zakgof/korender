@@ -12,11 +12,15 @@ layout(location = 4) in vec4 weights;
 out vec3 vpos;
 out vec3 vnormal;
 out vec2 vtex;
-out vec4 vsuper;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+
+#ifdef FIXED_SHADOW_Y_RANGE
+uniform float fixedYMin;
+uniform float fixedYMax;
+#endif
 
 #ifdef SKINNING
     const int MAX_JOINTS = 32;
@@ -42,6 +46,8 @@ void main() {
     vpos = worldPos.xyz;
     vtex = tex;
 
+#ifdef FIXED_SHADOW_Y_RANGE
+
     vec4 tpos = projection * (view * worldPos);
 
     vec2 tc = (tpos.xy / tpos.w + vec2(1., 1.)) * 0.5;
@@ -51,11 +57,15 @@ void main() {
 //    float ratio = 0.50 * (1.0 - pow(dist, 3.));
 //    tc = tc + (poi - tc) * ratio;
 
-    float yMin = -0.5;
-    float yMax = 60.0;
 
-    float skewZ = (worldPos.y * 2.0 / (yMin - yMax) - (yMin + yMax) / (yMin - yMax)) * tpos.w;
+
+    float skewZ = (worldPos.y * 2.0 / (fixedYMin - fixedYMax) - (fixedYMin + fixedYMax) / (fixedYMin - fixedYMax)) * tpos.w;
 
     gl_Position = vec4(((tc * 2.0) - vec2(1., 1.)) * tpos.w, skewZ, tpos.w);
-    vsuper = gl_Position;
+
+#else
+
+    gl_Position = projection * (view * worldPos);
+
+#endif
 }

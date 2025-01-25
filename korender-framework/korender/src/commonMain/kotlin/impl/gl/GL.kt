@@ -112,6 +112,7 @@ expect object GL {
     fun glUniform2f(location: GLUniformLocation, v0: Float, v1: Float)
     fun glUniform3f(location: GLUniformLocation, v0: Float, v1: Float, v2: Float)
     fun glUniform4f(location: GLUniformLocation, v0: Float, v1: Float, v2: Float, v3: Float)
+    fun glUniform1fv(location: GLUniformLocation, value: FloatArray)
     fun glUniform3fv(location: GLUniformLocation, value: FloatArray)
     fun glUniform4fv(location: GLUniformLocation, value: FloatArray)
     fun glUniformMatrix2fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray)

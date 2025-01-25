@@ -14,7 +14,7 @@ void main() {
 
     vec4 color = texture(filterColorTexture, vtex);
 
-    float min = 0.5;
+    float min = 0.1;
 
     if (numShadows > 0 && vtex.x < min && vtex.y < min) {
         color = texture(shadowTextures[0], vtex / min);

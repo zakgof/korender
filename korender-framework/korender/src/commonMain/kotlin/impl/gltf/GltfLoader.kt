@@ -374,7 +374,7 @@ internal class GltfSceneBuilder(
         }
 
         val builder = MaterialBuilder(deferredShading)
-        builder.shaderDefs += pu.shaderDefs() + "VSM_SHADOW" // TODO: not here !!!
+        builder.shaderDefs += pu.shaderDefs()
         builder.shaderUniforms = pu
         return builder.toMaterialDeclaration()
     }

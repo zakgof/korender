@@ -58,6 +58,9 @@ uniform int numShadows;
 uniform sampler2D shadowTextures[MAX_SHADOWS];
 uniform mat4 bsps[MAX_SHADOWS];
 uniform vec4 cascade[MAX_SHADOWS];
+uniform float yMin[MAX_SHADOWS];
+uniform float yMax[MAX_SHADOWS];
+uniform int shadowMode[MAX_SHADOWS];
 
 out vec4 fragColor;
 
@@ -71,26 +74,26 @@ out vec4 fragColor;
 #import "!shader/lib/shadow.glsl"
 #import "!shader/lib/pbr.glsl"
 
-float sampleShadowTexture(int i, vec3 v) {
+float calculateShadow(int i, vec3 v, int mode) {
     #ifdef WEBGL
     float sh = 0.;
     switch (i) {
-        case 0: sh = shadow(shadowTextures[0], v, vpos); break;
-        case 1: sh =  shadow(shadowTextures[1], v, vpos); break;
-        case 2: sh =  shadow(shadowTextures[2], v, vpos); break;
-        case 3: sh =  shadow(shadowTextures[3], v, vpos); break;
-        case 4: sh =  shadow(shadowTextures[4], v, vpos); break;
-        case 5: sh =  shadow(shadowTextures[5], v, vpos); break;
-        case 6: sh =  shadow(shadowTextures[6], v, vpos); break;
-        case 7: sh =  shadow(shadowTextures[7], v, vpos); break;
-        case 8: sh =  shadow(shadowTextures[8], v, vpos); break;
-        case 9: sh =  shadow(shadowTextures[9], v, vpos); break;
-        case 10: sh =  shadow(shadowTextures[10], v, vpos); break;
-        case 11: sh =  shadow(shadowTextures[11], v, vpos); break;
+        case 0: sh = shadow(shadowTextures[0], v, vpos, mode); break;
+        case 1: sh =  shadow(shadowTextures[1], v, vpos, mode); break;
+        case 2: sh =  shadow(shadowTextures[2], v, vpos, mode); break;
+        case 3: sh =  shadow(shadowTextures[3], v, vpos, mode); break;
+        case 4: sh =  shadow(shadowTextures[4], v, vpos, mode); break;
+        case 5: sh =  shadow(shadowTextures[5], v, vpos, mode); break;
+        case 6: sh =  shadow(shadowTextures[6], v, vpos, mode); break;
+        case 7: sh =  shadow(shadowTextures[7], v, vpos, mode); break;
+        case 8: sh =  shadow(shadowTextures[8], v, vpos, mode); break;
+        case 9: sh =  shadow(shadowTextures[9], v, vpos, mode); break;
+        case 10: sh =  shadow(shadowTextures[10], v, vpos, mode); break;
+        case 11: sh =  shadow(shadowTextures[11], v, vpos, mode); break;
     }
     return sh;
     #else
-    return shadow(shadowTextures[i], v, vpos);
+    return shadow(shadowTextures[i], v, vpos, mode);
     #endif
 }
 
@@ -156,14 +159,17 @@ void main() {
         for (int c=0; c<shadowCount; c++) {
             int idx = directionalLightShadowTextureIndex[l] + c;
             vec3 vshadow = (bsps[idx] * vec4(vpos, 1.0)).xyz;
-//
-//
+
+            if ((shadowMode[idx] & 0x80) != 0) {
+                vshadow.z = (yMax[idx] - vpos.y) / (yMax[idx] - yMin[idx]);
+            }
+
 //            vec2 poi = vec2(0.1, 0.5);
 //            float dist = distance(poi, vshadow.xy);
 //            float ratio = 0.50 * (1.0 - pow(dist, 3.));
 //            vshadow.xy = vshadow.xy + (poi - vshadow.xy) * ratio;
 
-            float sh = sampleShadowTexture(idx, vshadow);
+            float sh = calculateShadow(idx, vshadow, shadowMode[idx] & 0x7);
             vec4 ci = cascade[c];
             float cascadeContribution = smoothstep(ci.r, ci.g, plane) * (1.0 - smoothstep(ci.b, ci.a, plane));
             shadowRatio += sh * cascadeContribution;

@@ -32,9 +32,9 @@ fun CSMExample() =
             projection = frustum(4f * width / height, 4f, 4f, 10000f)
             camera = freeCamera.camera(projection, width, height, frameInfo.dt)
             DirectionalLight(Vec3(1f, -1f, 0.3f).normalize(), white(5.0f)) {
-                Cascade(mapSize = 1024, 4f, 12f, 30f)
-                Cascade(mapSize = 1024, 10f, 30f, 50f)
-                Cascade(mapSize = 1024, 25f, 100f, 100f)
+                Cascade(1024, 4f, 12f, 0f to 50f, pccf(32, 0.02f))
+                Cascade(1024, 10f, 30f, 0f to 50f, vsm(0.02f))
+                Cascade(1024, 25f, 100f, 0f to 50f, vsm(0.02f))
             }
             AmbientLight(white(0.25f))
 
@@ -90,11 +90,9 @@ fun CSMExample() =
                 transform = translate(2f, 0.5f, -3f),
             )
 
-
-
             Gui {
                 Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = Color(0xFF66FF55))
             }
-            // Filter(fragment("!shader/effect/shadow-debug.frag"))
+            Filter(fragment("!shader/effect/shadow-debug.frag"))
         }
     }

@@ -26,13 +26,13 @@ fun ShadowExample() =
         camera = camera(Vec3(-2.0f, 5f, 30f), -1.z, 1.y)
         Frame {
             DirectionalLight(Vec3(1f, -1f, 2f).normalize(), white(5.0f)) {
-                Cascade(mapSize = 1024, near = 10.0f, far = 40.0f)
+                Cascade(mapSize = 1024, near = 10.0f, 40.0f, 0f to 10f, vsm())
             }
             DirectionalLight(Vec3(-1f, -1f, 2f).normalize(), white(3.0f)) {
-                Cascade(mapSize = 1024, near = 10.0f, far = 40.0f)
+                Cascade(mapSize = 1024, near = 10.0f, 40.0f, 0f to 10f, vsm())
             }
             DirectionalLight(Vec3(0f, -1f, -3f).normalize(), white(4.0f)) {
-                Cascade(mapSize = 1024, near = 10.0f, far = 40.0f)
+                Cascade(mapSize = 1024, near = 10.0f, 40.0f, 0f to 10f, vsm())
             }
             AmbientLight(white(0.05f))
 

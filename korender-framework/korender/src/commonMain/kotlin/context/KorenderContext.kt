@@ -17,6 +17,7 @@ import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.OrthoProjectionDeclaration
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.RenderingOption
+import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.StandartParams
 import com.zakgof.korender.StarrySkyParams
@@ -95,4 +96,8 @@ interface KorenderContext {
     fun camera(position: Vec3, direction: Vec3, up: Vec3): CameraDeclaration
 
     fun loadImage(imageResource: String): Deferred<Image>
+
+    fun vsm(blurRadius: Float? = null): ShadowAlgorithmDeclaration
+    fun hard(): ShadowAlgorithmDeclaration
+    fun pccf(samples: Int, blurRadius: Float): ShadowAlgorithmDeclaration
 }

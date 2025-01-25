@@ -4,6 +4,7 @@ import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.impl.engine.shadow.ShadowRenderer
 import com.zakgof.korender.impl.engine.shadow.ShadowerData
+import com.zakgof.korender.impl.engine.shadow.uniforms
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glClearColor
@@ -18,9 +19,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.glgpu.ColorList
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.glgpu.IntList
-import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.impl.glgpu.Vec3List
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
 import com.zakgof.korender.impl.material.InternalMaterialModifier
@@ -39,7 +38,6 @@ internal class Scene(
     time: Float
 ) {
 
-    private val shadowCasters: List<Renderable>
     val touchBoxesHandler: (TouchEvent) -> Boolean
     private val touchBoxes = mutableListOf<TouchBox>()
 
@@ -81,16 +79,7 @@ internal class Scene(
         touchBoxesHandler = { evt ->
             touchBoxes.any { it.touch(evt) }
         }
-        shadowCasters = createShadowCasters(sceneDeclaration.renderables)
     }
-
-    private fun createShadowCasters(declarations: List<RenderableDeclaration>) =
-        // TODO: renderable or material flag to disable shadow casting
-        declarations.filter {
-            (it.shader.fragFile == "!shader/geometry.frag" ||
-                    it.shader.fragFile == "!shader/forward.frag")
-        }
-            .mapNotNull { Renderable.createShadowCaster(inventory, it) }
 
     fun render() {
 
@@ -232,7 +221,7 @@ internal class Scene(
                     dl.shadowDeclaration.cascades,
                     ci,
                     renderContext,
-                    shadowCasters,
+                    sceneDeclaration.renderables,
                     fixer
                 )?.let {
                     shadowData += it
@@ -244,10 +233,8 @@ internal class Scene(
             directionalShadowIndexes += indexes.minOrNull() ?: -1
             directionalShadowCounts += indexes.size
         }
-        uniforms["numShadows"] = shadowData.size
-        uniforms["shadowTextures[0]"] = GlGpuTextureList(shadowData.map { it.texture })
-        uniforms["bsps[0]"] = Mat4List(shadowData.map { it.bsp })
-        uniforms["cascade[0]"] = ColorList(shadowData.map { Color(it.cascade[3], it.cascade[0], it.cascade[1], it.cascade[2]) })
+
+        uniforms += shadowData.uniforms()
 
         uniforms["numDirectionalLights"] = sceneDeclaration.directionalLights.size
         uniforms["directionalLightDir[0]"] = Vec3List(directionalDirs)

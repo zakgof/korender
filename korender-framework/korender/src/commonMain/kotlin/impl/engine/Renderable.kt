@@ -45,22 +45,11 @@ internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms:
             }
             return Renderable(mesh, shader, declaration.uniforms, declaration.transform)
         }
-
-        fun createShadowCaster(inventory: Inventory, declaration: RenderableDeclaration): Renderable? {
-            val mesh = inventory.mesh(declaration.mesh) ?: return null
-            val modifiedShaderDeclaration = ShaderDeclaration("!shader/caster.vert", "!shader/caster.frag",
-                declaration.shader.defs, // TODO configurable
-                declaration.shader.options,
-                declaration.shader.plugins
-            )
-            val shader = inventory.shader(modifiedShaderDeclaration) ?: return null
-            return Renderable(mesh, shader, declaration.uniforms, declaration.transform)
-        }
     }
 
-    fun render(contextUniforms: Map<String, Any?>, fixer: (Any?) -> Any?, shaderOverride: GlGpuShader = this.shader) {
+    fun render(contextUniforms: Map<String, Any?>, fixer: (Any?) -> Any?) {
         val totalUniformSupplier = uniforms.invoke() + contextUniforms + mapOf("model" to transform.mat4)
-        shaderOverride.render(
+        shader.render(
             { fixer(totalUniformSupplier[it]) },
             mesh.gpuMesh
         )

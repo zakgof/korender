@@ -19,6 +19,7 @@ import com.zakgof.korender.impl.gl.GL.glGetUniformLocation
 import com.zakgof.korender.impl.gl.GL.glLinkProgram
 import com.zakgof.korender.impl.gl.GL.glShaderSource
 import com.zakgof.korender.impl.gl.GL.glUniform1f
+import com.zakgof.korender.impl.gl.GL.glUniform1fv
 import com.zakgof.korender.impl.gl.GL.glUniform1i
 import com.zakgof.korender.impl.gl.GL.glUniform1iv
 import com.zakgof.korender.impl.gl.GL.glUniform2f
@@ -182,6 +183,10 @@ internal class GlGpuShader(
                 glUniform1iv(location, *value.values.toIntArray())
             }
 
+            is FloatList -> if (value.values.isNotEmpty()) {
+                glUniform1fv(location, value.values.toFloatArray())
+            }
+
             is Vec3List -> if (value.values.isNotEmpty()) {
                 glUniform3fv(location, value.values.flatMap { listOf(it.x, it.y, it.z) }.toFloatArray())
             }
@@ -235,6 +240,8 @@ internal class GlGpuShader(
 }
 
 internal data class IntList(val values: List<Int>)
+
+internal data class FloatList(val values: List<Float>)
 
 internal data class Mat4List(val matrices: List<Mat4>)
 

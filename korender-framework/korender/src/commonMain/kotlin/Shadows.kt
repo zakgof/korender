@@ -1,0 +1,3 @@
+package com.zakgof.korender
+
+interface ShadowAlgorithmDeclaration

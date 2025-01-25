@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.RenderingOption
+import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
@@ -91,7 +92,7 @@ internal class ShadowDeclaration {
     val cascades = mutableListOf<CascadeDeclaration>()
 }
 
-internal data class CascadeDeclaration(val mapSize: Int, val near: Float, val far: Float, val reservedDepth: Float )
+internal data class CascadeDeclaration(val mapSize: Int, val near: Float, val far: Float, val fixedYRange: Pair<Float, Float>?, val algorithm: ShadowAlgorithmDeclaration)
 
 internal class GltfDeclaration(val gltfResource: String, val transform: Transform = Transform()) {
     override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.gltfResource == gltfResource)

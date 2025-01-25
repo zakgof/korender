@@ -21,6 +21,7 @@ import com.zakgof.korender.OrthoProjectionDeclaration
 import com.zakgof.korender.Platform
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.RenderingOption
+import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.StandartParams
 import com.zakgof.korender.StarrySkyParams
@@ -36,6 +37,9 @@ import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.checkGlError
 import com.zakgof.korender.impl.context.DefaultFrameContext
+import com.zakgof.korender.impl.engine.shadow.InternalHardParams
+import com.zakgof.korender.impl.engine.shadow.InternalPccfParams
+import com.zakgof.korender.impl.engine.shadow.InternalVsmParams
 import com.zakgof.korender.impl.geometry.Cube
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.geometry.HeightField
@@ -269,6 +273,16 @@ internal class Engine(
                 Platform.loadImage(bytes, imageResource.split(".").last()).await()
             }
         }
+
+        override fun vsm(blurRadius: Float?): ShadowAlgorithmDeclaration =
+            InternalVsmParams(blurRadius)
+
+        override fun hard(): ShadowAlgorithmDeclaration =
+            InternalHardParams()
+
+        override fun pccf(samples: Int, blurRadius: Float): ShadowAlgorithmDeclaration =
+            InternalPccfParams(samples, blurRadius)
+
     }
 
     init {
