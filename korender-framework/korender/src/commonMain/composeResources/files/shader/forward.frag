@@ -169,7 +169,7 @@ void main() {
 //            float ratio = 0.50 * (1.0 - pow(dist, 3.));
 //            vshadow.xy = vshadow.xy + (poi - vshadow.xy) * ratio;
 
-            float sh = calculateShadow(idx, vshadow, shadowMode[idx] & 0x7);
+            float sh = calculateShadow(idx, vshadow, shadowMode[idx] & 0x07);
             vec4 ci = cascade[c];
             float cascadeContribution = smoothstep(ci.r, ci.g, plane) * (1.0 - smoothstep(ci.b, ci.a, plane));
             shadowRatio += sh * cascadeContribution;

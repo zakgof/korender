@@ -8,9 +8,6 @@ float vsm(sampler2D shadowTexture, vec3 vshadow, vec3 vpos) {
     const float varianceMagic = 0.00001;
     #endif
 
-    if (vshadow.x < 0.001 || vshadow.x > 0.999 || vshadow.y < 0.001 || vshadow.y > 0.999)
-        return 0.;
-
     vec3 moments = texture(shadowTexture, vshadow.xy).rgb;
     float p = vshadow.z * vshadow.z - moments.x;
 
@@ -19,6 +16,9 @@ float vsm(sampler2D shadowTexture, vec3 vshadow, vec3 vpos) {
 
     variance = max(variance, varianceMagic);
     float hardness =  p * p / (variance + p * p);
+
+    if (vshadow.x < 0.001 || vshadow.x > 0.999 || vshadow.y < 0.001 || vshadow.y > 0.999)
+        return 0.;
 
     return hardStep * hardness;
 }
@@ -32,20 +32,22 @@ vec2 vogelDiskSample(int sampleIndex, int numSamples, float phi) {
 }
 
 float pccf(sampler2D shadowTexture, vec3 vshadow, vec3 vpos) {
-    float beavis = 0.01;
+    float beavis = 0.002;
     int sampleCount = 32;
-    float penumbraWidth = 0.001;
+    float penumbraWidth = 0.002;
 
     const float PHI = 1.61803398874989484820459;
     float phi = 0.; // 6.28 * fract(tan(distance(vpos.xy * 20.0 * PHI, vpos.xy * 20.0) * 0.01) * vpos.x);
 
     float cumulative = 0.;
     float weight = 0.;
+    vec2 dx = dFdx(vshadow.xy);
+    vec2 dy = dFdy(vshadow.xy);
     for (int s = 0; s < sampleCount; ++s) {
         vec2 offset = vogelDiskSample(s, sampleCount, phi) * penumbraWidth;
         vec2 uv = vshadow.xy + offset;
-        float shadowSample = texture(shadowTexture, uv).r;
-        float val = (shadowSample > 0.00 && shadowSample < vshadow.z - beavis && uv.x > 0. && uv.x < 1. && uv.y > 0. && uv.y < 1.) ? 1. : 0.;
+        float shadowSample = textureGrad(shadowTexture, uv, dx, dy).r;
+        float val = (shadowSample < vshadow.z - beavis && uv.x > 0. && uv.x < 1. && uv.y > 0. && uv.y < 1.) ? 1. : 0.;
         cumulative += val;
         weight += 1.;
     }
@@ -62,10 +64,11 @@ float hard(sampler2D shadowTexture, vec3 vshadow, vec3 vpos) {
 }
 
 float shadow(sampler2D shadowTexture, vec3 vshadow, vec3 vpos, int mode) {
+    float sh = 0.;
     switch (mode) {
-        case 0: return hard(shadowTexture, vshadow, vpos);
-        case 1: return pccf(shadowTexture, vshadow, vpos);
-        case 2: return vsm(shadowTexture, vshadow, vpos);
+          case 0: sh = hard(shadowTexture, vshadow, vpos); break;
+          case 1: sh =  pccf(shadowTexture, vshadow, vpos); break;
+          case 2: sh =  vsm(shadowTexture, vshadow, vpos); break;
     }
-    return 0.;
+    return sh;
 }

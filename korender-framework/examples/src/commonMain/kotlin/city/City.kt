@@ -33,9 +33,9 @@ fun City() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         AmbientLight(white(0.2f))
         DirectionalLight(Vec3(2f, -5f, 0f).normalize(), white(5.0f)) {
-            Cascade(1024, 0.3f, 2.2f, 0f to 60f, vsm(0.001f))
-            Cascade(1024, 2.0f, 25.0f, 0f to 60f, vsm(0.001f))
-            Cascade(1024, 20.0f, 60.0f, 0f to 60f, vsm(0.001f))
+            Cascade(1024, 0.3f, 2.8f, 0f to 60f, pccf())
+            Cascade(1024, 2.0f, 25.0f, 0f to 60f, vsm())
+            Cascade(1024, 20.0f, 60.0f, 0f to 60f, vsm())
         }
         for (xx in 0..4) {
             for (zz in 0..4) {

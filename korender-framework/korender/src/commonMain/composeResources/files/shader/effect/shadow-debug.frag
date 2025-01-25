@@ -26,7 +26,6 @@ void main() {
         color = texture(shadowTextures[2], (vtex - vec2(2. * min, 0.0)) / min);
     }
 
-
     fragColor = color;
 
 }

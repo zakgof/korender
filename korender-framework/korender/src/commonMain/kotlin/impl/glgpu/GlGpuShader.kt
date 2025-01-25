@@ -96,6 +96,11 @@ internal class GlGpuShader(
         val programLog: String = glGetProgramInfoLog(programHandle)
         if (programLog.isNotEmpty()) {
             println("\nProgram log $name\n\n$programLog")
+
+            fragmentShaderText.lines().forEachIndexed { l, line ->
+                println("${l+1} $line")
+            }
+
         }
 
         val vertexCompileStatus = glGetShaderi(vertexShaderHandle, GL_COMPILE_STATUS)

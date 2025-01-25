@@ -181,6 +181,9 @@ actual object GL {
     actual fun glUniform4f(location: GLUniformLocation, v0: Float, v1: Float, v2: Float, v3: Float) =
         gl!!.uniform4f(location.uniformLocation, v0, v1, v2, v3)
 
+    actual fun glUniform1fv(location: GLUniformLocation, value: FloatArray) =
+        gl!!.uniform1fv(location.uniformLocation, value.toFloat32Array())
+
     actual fun glUniform3fv(location: GLUniformLocation, value: FloatArray) =
         gl!!.uniform3fv(location.uniformLocation, value.toFloat32Array())
 
