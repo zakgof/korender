@@ -203,7 +203,6 @@ internal object Geometry {
                 IndexType.Byte -> indexBuffer.byte(index).toInt()
                 IndexType.Short -> indexBuffer.short(index).toInt()
                 IndexType.Int -> indexBuffer.int(index)
-                else -> -1
             }
 
         fun build(isDynamic: Boolean = false): DefaultMesh =
@@ -505,7 +504,7 @@ internal object Geometry {
         }
 
 
-    fun heightMap(xsize: Int, zsize: Int, cell: Float, height: (Int, Int) -> Float) =
+    private fun heightMap(xsize: Int, zsize: Int, cell: Float, height: (Int, Int) -> Float) =
         create("heightmap", (xsize + 1) * (zsize + 1), xsize * zsize * 6, POS, NORMAL, TEX) {
             for (x in 0..xsize) {
                 for (z in 0..zsize) {

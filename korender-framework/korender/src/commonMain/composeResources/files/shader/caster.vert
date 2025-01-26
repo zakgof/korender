@@ -49,19 +49,8 @@ void main() {
 #ifdef FIXED_SHADOW_Y_RANGE
 
     vec4 tpos = projection * (view * worldPos);
-
-    vec2 tc = (tpos.xy / tpos.w + vec2(1., 1.)) * 0.5;
-
-//    vec2 poi = vec2(0.1, 0.5);
-//    float dist = distance(poi, tc);
-//    float ratio = 0.50 * (1.0 - pow(dist, 3.));
-//    tc = tc + (poi - tc) * ratio;
-
-
-
-    float skewZ = (worldPos.y * 2.0 / (fixedYMin - fixedYMax) - (fixedYMin + fixedYMax) / (fixedYMin - fixedYMax)) * tpos.w;
-
-    gl_Position = vec4(((tc * 2.0) - vec2(1., 1.)) * tpos.w, skewZ, tpos.w);
+    tpos.z = (worldPos.y * 2.0 / (fixedYMin - fixedYMax) - (fixedYMin + fixedYMax) / (fixedYMin - fixedYMax)) * tpos.w;
+    gl_Position = tpos;
 
 #else
 

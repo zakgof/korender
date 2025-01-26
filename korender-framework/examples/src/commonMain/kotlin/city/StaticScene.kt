@@ -5,16 +5,17 @@ import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.examples.city.controller.Controller
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Color.Companion.White
 import com.zakgof.korender.math.Transform.Companion.scale
-import com.zakgof.korender.math.y
+import com.zakgof.korender.math.Transform.Companion.translate
 
 
-class StaticScene(private val kc: KorenderContext) {
+class StaticScene(private val kc: KorenderContext, private val controller: Controller) {
 
     private val cityTriangulation = cityTriangulation()
-    private val roads = roads()
+    private val roads = roads(controller.heightField)
 
     private fun Triangulation.toCustomMesh(id: String) =
         kc.customMesh(id, this.points.size, this.indexes.size, POS, NORMAL, TEX) {
@@ -56,8 +57,10 @@ class StaticScene(private val kc: KorenderContext) {
                 pbr.roughness = 0.8f
                 triplanarScale = 1.0f
             },
-            mesh = cube(),
-            transform = scale(800f, 1f, 800f).translate(-0.501f.y)
+            mesh = heightField("hf", 128, 128, 3.0f) { xx, zz ->
+                controller.heightField(-192f + xx * 3.0f, -192f + zz * 3.0f)
+            },
+            transform = translate(0f, -0.02f, 0f)
         )
 
         Renderable(
@@ -86,6 +89,10 @@ class StaticScene(private val kc: KorenderContext) {
             density = 30f
             size = 20f
         })
+
+        Scene(gltfResource = "city/racecar.glb", transform = scale(0.6f).translate(3.2f, 0.11f, -98f))
+
+        Scene(gltfResource = "city/car2.glb", transform = scale(0.2f).translate(6.2f, 0.00f, -98f))
 
 
         Filter(fxaa())

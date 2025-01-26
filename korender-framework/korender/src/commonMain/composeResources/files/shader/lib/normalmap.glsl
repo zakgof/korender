@@ -2,11 +2,11 @@
 
 vec3 getNormalFromMap(vec3 vnormal, vec2 vtex, vec3 vpos) {
 
-    #ifdef TRIPLANAR
+#ifdef TRIPLANAR
     vec3 tangentNormal = triplanarNormal(vpos * triplanarScale, vnormal).rgb;
-    #else
+#else
     vec3 tangentNormal = texture(normalTexture, vtex).rgb;
-    #endif
+#endif
 
     tangentNormal = tangentNormal * 2.0 - 1.0; // Convert from [0,1] to [-1,1]
 

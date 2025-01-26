@@ -8,7 +8,7 @@ import com.zakgof.korender.math.z
 
 class ChaseCamera {
 
-    private val distance = 1.0f
+    private val distance = 0.8f
 
     private var offset: Vec3 = 1.z
 
@@ -18,8 +18,8 @@ class ChaseCamera {
     private var dragStartCamToTarget: Vec3? = null
 
     fun camera(targetPosition: Vec3, targetLook: Vec3, fc: FrameContext): CameraDeclaration {
-        val cameraPos = targetPosition + targetLook * (-distance) + 0.3f.y
-        val cameraDir = (targetPosition - cameraPos).normalize()
+        val cameraPos = targetPosition + targetLook * (-distance) + 0.2f.y
+        val cameraDir = (targetPosition + 0.2f.y - cameraPos).normalize()
         val cameraRight = cameraDir % 1.y
         val cameraUp = cameraRight % cameraDir
         return fc.camera(cameraPos, cameraDir, cameraUp)

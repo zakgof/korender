@@ -129,7 +129,7 @@ internal object GltfLoader {
         )
             .flatten()
             .associateWith { loadUriBytes(appResourceLoader, absolutizeResource(it, gltfResource)) }
-        return GltfLoaded(model, loadedUris.toMutableMap())
+        return GltfLoaded(model, gltfResource, loadedUris.toMutableMap())
     }
 
     @OptIn(ExperimentalEncodingApi::class)
@@ -483,7 +483,7 @@ internal class GltfSceneBuilder(
         return image?.let { img ->
             val bytes = getImageBytes(img)
             ByteArrayTextureDeclaration(
-                img.uri ?: "TODO ${ti.index}", // TODO !!!
+                img.uri ?: "${gltfLoaded.id} ${ti.index}", // TODO !!!
                 TextureFilter.MipMap,
                 TextureWrap.Repeat,
                 1024,

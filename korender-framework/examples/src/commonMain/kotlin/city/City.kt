@@ -19,8 +19,9 @@ fun Int.chance(block: () -> Unit) {
 @OptIn(ExperimentalResourceApi::class)
 fun City() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-    val staticScene = StaticScene(this)
+
     val controller = Controller()
+    val staticScene = StaticScene(this, controller)
 
     Frame {
 

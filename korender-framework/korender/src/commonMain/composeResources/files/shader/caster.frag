@@ -18,7 +18,7 @@ void main() {
     // TODO Depth is used anyway. Swizzling ?
     fragColor = vec4(m1, m2, 1.0, 1.0);
 #else
-    // fragColor = vec4(1.0, 1.0, 1.0, 1.0);
+
 #endif
 
 }

@@ -13,11 +13,21 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
+typealias HeightField = (Float, Float) -> Float
+
+fun HeightField.land(x: Float, z: Float) = Vec3(x, this(x, z), z)
+fun HeightField.land(vec: Vec3) = Vec3(vec.x, this(vec.x, vec.z), vec.z)
+
 class Controller {
 
     private var forward = 0f
     private var rota = 0f
 
+    val heightField: HeightField = { xx, zz ->
+        5.0f *
+                (1.0f - xx * xx / (192f * 192f)) *
+                (1.0f - zz * zz / (192f * 192f))
+    }
     val character = Character()
     val chaseCamera = ChaseCamera()
 
@@ -47,14 +57,17 @@ class Controller {
     }
 
     fun update(dt: Float) {
-        character.position += character.direction * (forward * dt) * 0.3f
-        character.direction = (fromAxisAngle(1.y, rota * dt * 0.4f) * character.direction).normalize()
+        character.position = heightField.land(character.position + character.direction * (forward * dt) * 10.3f)
+        character.direction = (fromAxisAngle(1.y, rota * dt * 2.4f) * character.direction).normalize()
     }
 
-    class Character {
-        var position = Vec3(3.2f, 0f, -102f)
+    inner class Character {
+        var position = heightField.land(3.2f, -102f)
         var direction = 1.z
         val transform: Transform
             get() = rotate(lookAt(direction, 1.y)).translate(position)
     }
+
+
 }
+
