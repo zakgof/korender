@@ -20,6 +20,10 @@ out vec4 fragColor;
 
 #import "$sky"
 
+#ifdef PLUGIN_SECSKY
+    #import "$secsky"
+#endif
+
 void main() {
 
     vec3 color = texture(filterColorTexture, vtex).rgb;
@@ -43,6 +47,10 @@ void main() {
 
         vec3 reflecteddir = reflect(look, normal);
         vec3 reflectedcolor = sky(reflecteddir).rgb;
+
+        #ifdef PLUGIN_SECSKY
+            reflectedcolor = pluginSecsky(reflecteddir, reflectedcolor);
+        #endif
 
         float R0 = 0.0222;
         float t = 1. - clamp(dot(-look, normal), 0., 1.);

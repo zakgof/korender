@@ -5,22 +5,31 @@ in vec3 vnormal;
 in vec2 vtex;
 
 uniform vec4 baseColor;
+uniform vec4 emissiveFactor;
 uniform float metallic;
 uniform float roughness;
+
 #ifdef SPECULAR_GLOSSINESS
-uniform vec4 specularFactor;
-uniform float glossinessFactor;
+    uniform vec4 specularFactor;
+    uniform float glossinessFactor;
 #endif
 
 #ifdef BASE_COLOR_MAP
 uniform sampler2D baseColorTexture;
 #endif
+
 #ifdef NORMAL_MAP
 uniform sampler2D normalTexture;
 #endif
+
+#ifdef EMISSIVE_MAP
+uniform sampler2D emissiveTexture;
+#endif
+
 #ifdef TRIPLANAR
 uniform float triplanarScale;
 #endif
+
 #ifdef DETAIL
 uniform sampler2D detailTexture;
 uniform float detailScale;
@@ -64,8 +73,12 @@ uniform int shadowMode[MAX_SHADOWS];
 
 out vec4 fragColor;
 
-#ifdef PLUGIN_TEXTURE
+#ifdef PLUGIN_ALBEDO
 #import "$texture"
+#endif
+
+#ifdef PLUGIN_EMISSION
+#import "$emission"
 #endif
 
 #import "!shader/lib/triplanar.glsl"
@@ -109,8 +122,8 @@ void main() {
     vec4 albedo = baseColor;
 #endif
 
-#ifdef PLUGIN_TEXTURE
-    albedo = pluginTexture(albedo);
+#ifdef PLUGIN_ALBEDO
+    albedo = pluginAlbedo(albedo);
 #endif
 
 #ifdef NORMAL_MAP
@@ -119,6 +132,19 @@ void main() {
     vec3 N = normalize(vnormal);
 #endif
 
+#ifdef EMISSIVE_MAP
+    #ifdef TRIPLANAR
+    vec3 emission = triplanar(emissiveTexture, vpos * triplanarScale, vnormal).rgb * emissiveFactor.rgb;
+    #else
+    vec3 emission = texture(emissiveTexture, vtex).rgb * emissiveFactor.rgb;
+    #endif
+#else
+    vec3 emission = vec3(0.);
+#endif
+
+#ifdef PLUGIN_EMISSION
+    emission = pluginEmission(emission);
+#endif
 
 #ifdef SPECULAR_GLOSSINESS
     #ifdef SPECULAR_GLOSSINESS_MAP
@@ -157,7 +183,7 @@ void main() {
 
     vec3 V = normalize(cameraPos - vpos);
 
-    vec3 color = c_diff * ambientColor.rgb;
+    vec3 color = c_diff * ambientColor.rgb + emission;
 
     float plane = dot((vpos - cameraPos), cameraDir);
 

@@ -5,7 +5,7 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 
-class Roads(val roads: Triangulation, val crossroads: Triangulation)
+class Roads(val roads: Triangulation, val crossroads: Triangulation, val fillers: Triangulation)
 
 private class RoadTriangulation(
     override val points: MutableList<Vec3> = mutableListOf(),
@@ -57,5 +57,11 @@ fun roads(heightField: (Float, Float) -> Float): Roads {
             roads.box(heightField, -192 + xx * 24 + 3, -192 + zz * 24 + 5, 2, 22, 2, false)
         }
     }
-    return Roads(roads, crossroads)
+    val fillers = RoadTriangulation()
+    for (xx in 0 until 16) {
+        for (zz in 0 until 16) {
+            fillers.box(heightField, -192 + xx * 24 + 5, -192 + zz * 24 + 5, 22, 22, 2, false)
+        }
+    }
+    return Roads(roads, crossroads, fillers)
 }

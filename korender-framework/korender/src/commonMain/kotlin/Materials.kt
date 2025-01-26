@@ -31,13 +31,13 @@ interface SmokeParams : BillboardVertexParams {
     var seed: Float
 }
 
-interface WaterParams {
+interface WaterParams : BaseParams {
     var waterColor: Color
     var transparency: Float
     var waveScale: Float
 }
 
-interface AdjustParams {
+interface AdjustParams : BaseParams {
     var brightness: Float
     var contrast: Float
     var saturation: Float
@@ -51,11 +51,13 @@ interface StandartParams : BaseParams {
     var baseColorTexture: TextureDeclaration?
     var triplanarScale: Float?
 
-    val pbr: Pbr
-    val specularGlossiness: SpecularGlossiness
-
     var normalTexture: TextureDeclaration?
     var shadowTexture: TextureDeclaration?
+    var emissiveFactor: Color
+    var emissiveTexture: TextureDeclaration?
+
+    val pbr: Pbr
+    val specularGlossiness: SpecularGlossiness
 
     var xscale: Float
     var yscale: Float
@@ -65,9 +67,6 @@ interface StandartParams : BaseParams {
         var metallic: Float
         var roughness: Float
         var metallicRoughnessTexture: TextureDeclaration?
-
-//        var emissiveFactor: Color
-//        var emissiveTexture: TextureDeclaration?
 //        var occlusionTexture: TextureDeclaration?
     }
 
@@ -78,7 +77,7 @@ interface StandartParams : BaseParams {
     }
 }
 
-interface FastCloudSkyParams {
+interface FastCloudSkyParams : BaseParams {
     var density: Float     // 0..5
     var thickness: Float  // 0..20
     var scale: Float       // 0.1..10
@@ -88,11 +87,16 @@ interface FastCloudSkyParams {
     var lightblue: Color
 }
 
-interface StarrySkyParams {
+interface StarrySkyParams : BaseParams {
     var colorness: Float
     var density: Float
     var speed: Float
     var size: Float
+}
+
+interface FogParams : BaseParams {
+    var density: Float
+    var color: Color
 }
 
 enum class RenderingOption {

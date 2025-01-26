@@ -3,13 +3,13 @@ package com.zakgof.korender.examples.city
 import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
+import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.examples.city.controller.Controller
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Color.Companion.White
 import com.zakgof.korender.math.Transform.Companion.scale
-import com.zakgof.korender.math.Transform.Companion.translate
 
 
 class StaticScene(private val kc: KorenderContext, private val controller: Controller) {
@@ -29,16 +29,17 @@ class StaticScene(private val kc: KorenderContext, private val controller: Contr
     private val roofMesh = cityTriangulation.rf().toCustomMesh("roof")
     private val crossroadsMesh = roads.crossroads.toCustomMesh("cross")
     private val roadsMesh = roads.roads.toCustomMesh("roadz")
+    private val fillersMesh = roads.fillers.toCustomMesh("fillers")
 
     fun render(fc: FrameContext) = with(fc) {
+
         Renderable(
             standart {
-                baseColor = White
                 baseColorTexture = texture("city/dw.jpg")
-                set("windowTexture", texture("city/lw.jpg"))
-                pbr.metallic = 0.6f
+                set("windowTexture", texture("city/lw.jpg", wrap = TextureWrap.MirroredRepeat))
+                pbr.metallic = 0.3f
             },
-            plugin("texture", "city/window.texture.plugin.frag"),
+            plugin("emission", "city/window.emission.plugin.frag"),
             mesh = windowsMesh
         )
 
@@ -57,10 +58,7 @@ class StaticScene(private val kc: KorenderContext, private val controller: Contr
                 pbr.roughness = 0.8f
                 triplanarScale = 1.0f
             },
-            mesh = heightField("hf", 128, 128, 3.0f) { xx, zz ->
-                controller.heightField(-192f + xx * 3.0f, -192f + zz * 3.0f)
-            },
-            transform = translate(0f, -0.02f, 0f)
+            mesh = fillersMesh
         )
 
         Renderable(
@@ -86,17 +84,19 @@ class StaticScene(private val kc: KorenderContext, private val controller: Contr
 
         val sky = starrySky {
             colorness = 0.4f
-            density = 30f
+            density = 20f
             size = 20f
+            set("moonTexture", texture("city/moon.png"))
         }
-        Sky(sky)
+        val moon = plugin("secsky", "city/moon.secsky.plugin.frag")
+
+        Sky(sky, moon)
 
         Scene(gltfResource = "city/racecar.glb", transform = scale(0.6f).translate(3.2f, 0.11f, -98f))
-
         Scene(gltfResource = "city/car2.glb", transform = scale(0.2f).translate(6.2f, 0.00f, -98f))
 
-
-        Filter(water(), sky)
+        Filter(water(), sky, moon)
+        Filter(fog())
 
         Gui {
             Filler()

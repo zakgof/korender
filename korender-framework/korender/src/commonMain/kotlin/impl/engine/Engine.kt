@@ -7,6 +7,7 @@ import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
+import com.zakgof.korender.FogParams
 import com.zakgof.korender.FrustumProjectionDeclaration
 import com.zakgof.korender.Image
 import com.zakgof.korender.IndexType
@@ -58,6 +59,7 @@ import com.zakgof.korender.impl.material.InternalBlurParams
 import com.zakgof.korender.impl.material.InternalFastCloudSkyParams
 import com.zakgof.korender.impl.material.InternalFireParams
 import com.zakgof.korender.impl.material.InternalFireballParams
+import com.zakgof.korender.impl.material.InternalFogParams
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalSmokeParams
 import com.zakgof.korender.impl.material.InternalStandartParams
@@ -232,6 +234,12 @@ internal class Engine(
             InternalMaterialModifier {
                 it.plugins["sky"] = "!shader/sky/starry.plugin.frag"
                 it.pluginUniforms += ParamUniforms(InternalStarrySkyParams(), block)
+            }
+
+        override fun fog(block: FogParams.() -> Unit) =
+            InternalMaterialModifier {
+                it.fragShaderFile = "!shader/effect/fog.frag"
+                it.shaderUniforms = ParamUniforms(InternalFogParams(), block)
             }
 
         override fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration =

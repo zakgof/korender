@@ -6,6 +6,7 @@ import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
+import com.zakgof.korender.FogParams
 import com.zakgof.korender.FrustumProjectionDeclaration
 import com.zakgof.korender.Image
 import com.zakgof.korender.IndexType
@@ -90,6 +91,7 @@ interface KorenderContext {
     fun fxaa(): MaterialModifier
     fun fastCloudSky(block: FastCloudSkyParams.() -> Unit = {}): MaterialModifier
     fun starrySky(block: StarrySkyParams.() -> Unit = {}): MaterialModifier
+    fun fog(block: FogParams.() -> Unit = {}): MaterialModifier
 
     fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration
     fun ortho(width: Float, height: Float, near: Float, far: Float): OrthoProjectionDeclaration

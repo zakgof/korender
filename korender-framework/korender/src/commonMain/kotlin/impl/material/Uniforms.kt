@@ -7,6 +7,7 @@ import com.zakgof.korender.BlurParams
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
+import com.zakgof.korender.FogParams
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.StandartParams
 import com.zakgof.korender.StandartParams.Pbr
@@ -16,6 +17,7 @@ import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.WaterParams
 import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.Color.Companion.white
 
 typealias DynamicUniforms = () -> Map<String, Any?>
 
@@ -153,9 +155,14 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
 
     override var pcss = false
 
-    override var baseColor = Color(1f, 0.5f, 0.5f, 0.5f)
+    override var baseColor = white(1.0f)
+    override var emissiveFactor = white(1.0f)
     override var baseColorTexture: TextureDeclaration? = null
     override var triplanarScale: Float? = null
+
+    override var normalTexture: TextureDeclaration? = null
+    override var shadowTexture: TextureDeclaration? = null
+    override var emissiveTexture: TextureDeclaration? = null
 
     override val pbr = InternalPbr()
 
@@ -166,9 +173,6 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
             }
             return _specularGlossiness!!
         }
-
-    override var normalTexture: TextureDeclaration? = null
-    override var shadowTexture: TextureDeclaration? = null
 
     var jntMatrices: Mat4List? = null
 
@@ -185,14 +189,12 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
         map["roughness"] = pbr.roughness
         map["metallicRoughnessTexture"] = pbr.metallicRoughnessTexture
 
+        map["emissiveFactor"] = emissiveFactor
+        map["emissiveTexture"] = emissiveTexture
 
-//        map["emissiveFactor"] = pbr.emissiveFactor
-
-//            map["emissiveTexture"] = _pbr!!.emissiveTexture
 //            map["occlusionTexture"] = _pbr!!.occlusionTexture
 
         pbr.metallicRoughnessTexture?.let { defs += "METALLIC_ROUGHNESS_MAP" }
-//          _pbr!!.emissiveTexture?.let { defs += "EMISSIVE_MAP" }
 //          _pbr!!.occlusionTexture?.let { defs += "OCCLUSION_MAP" }
 
         if (_specularGlossiness != null) {
@@ -215,6 +217,8 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
 
         baseColorTexture?.let { defs += "BASE_COLOR_MAP" }
         normalTexture?.let { defs += "NORMAL_MAP" }
+        emissiveTexture?.let { defs += "EMISSIVE_MAP" }
+
         jntMatrices?.let { defs += "SKINNING" }
         if (pcss) {
             defs += "PCSS"
@@ -237,6 +241,17 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
         override var specularFactor: Color = Color.White
         override var glossinessFactor: Float = 0.2f
         override var specularGlossinessTexture: TextureDeclaration? = null
+    }
+}
+
+internal class InternalFogParams : FogParams, InternalBaseParams() {
+
+    override var density = 0.02f
+    override var color = white(0.01f)
+
+    override fun collect() {
+        map["density"] = density
+        map["fogColor"] = color
     }
 }
 
