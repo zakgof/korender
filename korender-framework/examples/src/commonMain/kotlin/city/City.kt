@@ -30,8 +30,6 @@ fun City() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         projection = frustum(width = 0.3f * width / height, height = 0.3f, near = 0.3f, far = 500f)
         camera = controller.camera(this)
 
-        controller.update(frameInfo.dt)
-
         AmbientLight(white(0.2f))
         DirectionalLight(Vec3(2f, -5f, 0f).normalize(), white(5.0f)) {
             Cascade(1024, 0.3f, 2.8f, 0f to 60f, pccf())
@@ -48,7 +46,7 @@ fun City() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         Scene(gltfResource = "city/swat.glb", transform = controller.character.transform * scale(0.002f))
 
 
-        Filter(fragment("city/shadow-debug.frag"))
+        controller.update(frameInfo.dt)
 
     }
 }

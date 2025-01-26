@@ -84,19 +84,19 @@ class StaticScene(private val kc: KorenderContext, private val controller: Contr
         )
 
 
-        Sky(starrySky {
+        val sky = starrySky {
             colorness = 0.4f
             density = 30f
             size = 20f
-        })
+        }
+        Sky(sky)
 
         Scene(gltfResource = "city/racecar.glb", transform = scale(0.6f).translate(3.2f, 0.11f, -98f))
 
         Scene(gltfResource = "city/car2.glb", transform = scale(0.2f).translate(6.2f, 0.00f, -98f))
 
 
-        Filter(fxaa())
-        // Filter(fragment("city/shadow-debug.frag"))
+        Filter(water(), sky)
 
         Gui {
             Filler()
