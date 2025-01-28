@@ -6,4 +6,4 @@ internal class InternalVsmParams(val blurRadius: Float?) : ShadowAlgorithmDeclar
 
 internal class InternalHardParams() : ShadowAlgorithmDeclaration
 
-internal class InternalPccfParams(val samples: Int, val blurRadius: Float) : ShadowAlgorithmDeclaration
+internal class InternalPcssParams(val samples: Int, val blurRadius: Float) : ShadowAlgorithmDeclaration

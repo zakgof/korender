@@ -70,11 +70,13 @@ uniform vec4 cascade[MAX_SHADOWS];
 uniform float yMin[MAX_SHADOWS];
 uniform float yMax[MAX_SHADOWS];
 uniform int shadowMode[MAX_SHADOWS];
+uniform float f1[MAX_SHADOWS];
+uniform int i1[MAX_SHADOWS];
 
 out vec4 fragColor;
 
 #ifdef PLUGIN_ALBEDO
-#import "$texture"
+#import "$albedo"
 #endif
 
 #ifdef PLUGIN_EMISSION
@@ -86,29 +88,6 @@ out vec4 fragColor;
 
 #import "!shader/lib/shadow.glsl"
 #import "!shader/lib/pbr.glsl"
-
-float calculateShadow(int i, vec3 v, int mode) {
-    #ifdef WEBGL
-    float sh = 0.;
-    switch (i) {
-        case 0: sh = shadow(shadowTextures[0], v, vpos, mode); break;
-        case 1: sh =  shadow(shadowTextures[1], v, vpos, mode); break;
-        case 2: sh =  shadow(shadowTextures[2], v, vpos, mode); break;
-        case 3: sh =  shadow(shadowTextures[3], v, vpos, mode); break;
-        case 4: sh =  shadow(shadowTextures[4], v, vpos, mode); break;
-        case 5: sh =  shadow(shadowTextures[5], v, vpos, mode); break;
-        case 6: sh =  shadow(shadowTextures[6], v, vpos, mode); break;
-        case 7: sh =  shadow(shadowTextures[7], v, vpos, mode); break;
-        case 8: sh =  shadow(shadowTextures[8], v, vpos, mode); break;
-        case 9: sh =  shadow(shadowTextures[9], v, vpos, mode); break;
-        case 10: sh =  shadow(shadowTextures[10], v, vpos, mode); break;
-        case 11: sh =  shadow(shadowTextures[11], v, vpos, mode); break;
-    }
-    return sh;
-    #else
-    return shadow(shadowTextures[i], v, vpos, mode);
-    #endif
-}
 
 void main() {
 

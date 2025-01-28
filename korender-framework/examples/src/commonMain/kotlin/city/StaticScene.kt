@@ -31,56 +31,62 @@ class StaticScene(private val kc: KorenderContext, private val controller: Contr
     private val roadsMesh = roads.roads.toCustomMesh("roadz")
     private val fillersMesh = roads.fillers.toCustomMesh("fillers")
 
+
+
     fun render(fc: FrameContext) = with(fc) {
 
+        val roof = standart {
+            baseColorTexture = texture("city/roof.jpg")
+            pbr.metallic = 0.6f
+        }
+        val windows = standart {
+            baseColorTexture = texture("city/dw.jpg")
+            set("windowTexture", texture("city/lw.jpg", wrap = TextureWrap.MirroredRepeat))
+            pbr.metallic = 0.3f
+        }
+        val asphalt = standart {
+            baseColorTexture = texture("texture/asphalt-albedo.jpg")
+            pbr.metallic = 0.0f
+            pbr.roughness = 0.8f
+            triplanarScale = 1.0f
+        }
+        val crossroad = standart {
+            baseColor = White
+            baseColorTexture = texture("city/crossroad.jpg")
+            pbr.metallic = 0.0f
+            pbr.roughness = 0.8f
+        }
+        val road = standart {
+            baseColor = White
+            baseColorTexture = texture("city/road.jpg")
+            pbr.metallic = 0.0f
+            pbr.roughness = 0.8f
+        }
+
         Renderable(
-            standart {
-                baseColorTexture = texture("city/dw.jpg")
-                set("windowTexture", texture("city/lw.jpg", wrap = TextureWrap.MirroredRepeat))
-                pbr.metallic = 0.3f
-            },
+            windows,
             plugin("emission", "city/window.emission.plugin.frag"),
             mesh = windowsMesh
         )
 
-        Renderable(
-            standart {
-                baseColorTexture = texture("city/roof.jpg")
-                pbr.metallic = 0.6f
-            },
-            mesh = roofMesh,
-        )
+        Renderable(roof, mesh = roofMesh)
+
+        Renderable(asphalt, mesh = fillersMesh)
+
+//        Renderable(asphalt,
+//            mesh = cube(),
+//            transform = scale(386f, 2f, 386f).translate(-383f, 1f, -383f)
+//        )
 
         Renderable(
-            standart {
-                baseColorTexture = texture("texture/asphalt-albedo.jpg")
-                pbr.metallic = 0.0f
-                pbr.roughness = 0.8f
-                triplanarScale = 1.0f
-            },
-            mesh = fillersMesh
-        )
-
-        Renderable(
-            standart {
-                baseColor = White
-                baseColorTexture = texture("city/crossroad.jpg")
-                pbr.metallic = 0.0f
-                pbr.roughness = 0.8f
-            },
+            crossroad,
             mesh = crossroadsMesh
         )
 
         Renderable(
-            standart {
-                baseColor = White
-                baseColorTexture = texture("city/road.jpg")
-                pbr.metallic = 0.0f
-                pbr.roughness = 0.8f
-            },
+            road,
             mesh = roadsMesh
         )
-
 
         val sky = starrySky {
             colorness = 0.4f
@@ -102,9 +108,9 @@ class StaticScene(private val kc: KorenderContext, private val controller: Contr
             Filler()
             Text(
                 id = "fps",
+                text = "FPS ${frameInfo.avgFps.toInt()}",
                 fontResource = "font/anta.ttf",
                 height = 20,
-                text = "FPS ${frameInfo.avgFps.toInt()}",
                 color = Color(0xFF66FF55)
             )
         }

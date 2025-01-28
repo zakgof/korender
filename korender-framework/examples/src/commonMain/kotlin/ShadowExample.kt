@@ -21,7 +21,6 @@ fun ShadowExample() =
             baseColorTexture = texture("texture/asphalt-albedo.jpg")
             normalTexture = texture("texture/asphalt-normal.jpg")
             pbr.metallic = 0.2f
-            pcss = false
         }
         camera = camera(Vec3(-2.0f, 5f, 30f), -1.z, 1.y)
         Frame {

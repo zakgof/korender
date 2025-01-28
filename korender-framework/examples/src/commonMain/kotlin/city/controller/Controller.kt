@@ -22,14 +22,14 @@ class Controller {
 
     private var forward = 0f
     private var rota = 0f
+    private val chaseCamera = ChaseCamera()
 
     val heightField: HeightField = { xx, zz ->
-        5.0f *
-                (1.0f - xx * xx / (192f * 192f)) *
-                (1.0f - zz * zz / (192f * 192f))
+        1.0f + 5.0f *
+                (1.0f - xx * xx / (196f * 196f)) *
+                (1.0f - zz * zz / (196f * 196f))
     }
     val character = Character()
-    val chaseCamera = ChaseCamera()
 
     fun camera(fc: FrameContext): CameraDeclaration =
         chaseCamera.camera(character.position, character.direction, fc)

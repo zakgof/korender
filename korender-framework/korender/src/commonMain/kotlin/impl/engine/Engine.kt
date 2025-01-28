@@ -39,7 +39,7 @@ import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.checkGlError
 import com.zakgof.korender.impl.context.DefaultFrameContext
 import com.zakgof.korender.impl.engine.shadow.InternalHardParams
-import com.zakgof.korender.impl.engine.shadow.InternalPccfParams
+import com.zakgof.korender.impl.engine.shadow.InternalPcssParams
 import com.zakgof.korender.impl.engine.shadow.InternalVsmParams
 import com.zakgof.korender.impl.geometry.Cube
 import com.zakgof.korender.impl.geometry.CustomMesh
@@ -288,8 +288,8 @@ internal class Engine(
         override fun hard(): ShadowAlgorithmDeclaration =
             InternalHardParams()
 
-        override fun pccf(samples: Int, blurRadius: Float): ShadowAlgorithmDeclaration =
-            InternalPccfParams(samples, blurRadius)
+        override fun pcss(samples: Int, blurRadius: Float): ShadowAlgorithmDeclaration =
+            InternalPcssParams(samples, blurRadius)
 
     }
 

@@ -161,6 +161,8 @@ actual object GL {
     actual fun glUniform4f(location: GLUniformLocation, v0: Float, v1: Float, v2: Float, v3: Float) =
         GLES20.glUniform4f(location.glHandle, v0, v1, v2, v3)
 
+    actual fun glUniform1fv(location: GLUniformLocation, value: FloatArray)=
+        GLES20.glUniform1fv(location.glHandle, value.size, value, 0)
 
     actual fun glUniform3fv(location: GLUniformLocation, value: FloatArray) =
         GLES20.glUniform3fv(location.glHandle, value.size / 3, value, 0)

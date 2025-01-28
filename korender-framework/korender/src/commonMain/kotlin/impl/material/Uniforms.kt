@@ -153,8 +153,6 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
 
     private var _specularGlossiness: SpecularGlossiness? = null
 
-    override var pcss = false
-
     override var baseColor = white(1.0f)
     override var emissiveFactor = white(1.0f)
     override var baseColorTexture: TextureDeclaration? = null
@@ -220,9 +218,6 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
         emissiveTexture?.let { defs += "EMISSIVE_MAP" }
 
         jntMatrices?.let { defs += "SKINNING" }
-        if (pcss) {
-            defs += "PCSS"
-        }
         triplanarScale?.let { defs += "TRIPLANAR" }
     }
 
@@ -231,8 +226,6 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
         override var roughness = 0.5f
         override var metallicRoughnessTexture: TextureDeclaration? = null
 
-//        override var emissiveFactor = Color(1f, 1f, 1f, 1f)
-//        override var emissiveTexture: TextureDeclaration? = null
 //        override var occlusionTexture: TextureDeclaration? = null
 
     }

@@ -45,8 +45,6 @@ interface AdjustParams : BaseParams {
 
 interface StandartParams : BaseParams {
 
-    var pcss: Boolean
-
     var baseColor: Color
     var baseColorTexture: TextureDeclaration?
     var triplanarScale: Float?

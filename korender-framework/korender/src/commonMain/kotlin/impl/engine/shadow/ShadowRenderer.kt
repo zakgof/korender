@@ -101,7 +101,7 @@ internal object ShadowRenderer {
                 when (declaration.algorithm) {
                     is InternalVsmParams -> defs += "VSM_SHADOW"
                     is InternalHardParams -> defs += "HARD_SHADOW"
-                    is InternalPccfParams -> defs += "PCCF_SHADOW"
+                    is InternalPcssParams -> defs += "PCSS_SHADOW"
                 }
 
                 val modifiedShaderDeclaration = ShaderDeclaration(
@@ -141,7 +141,9 @@ internal object ShadowRenderer {
             ),
             declaration.fixedYRange?.first ?: 0f,
             declaration.fixedYRange?.second ?: 0f,
-            mode(declaration)
+            mode(declaration),
+            (declaration.algorithm as? InternalPcssParams)?.samples ?: 0,
+            (declaration.algorithm as? InternalPcssParams)?.blurRadius ?: 0f
         )
     }
 
@@ -154,7 +156,7 @@ internal object ShadowRenderer {
     private fun mode(declaration: CascadeDeclaration): Int =
         when (declaration.algorithm) {
             is InternalHardParams -> 0
-            is InternalPccfParams -> 1
+            is InternalPcssParams -> 1
             is InternalVsmParams -> 2
             else -> 0
         } or (if (declaration.fixedYRange != null) 128 else 0)
@@ -308,7 +310,9 @@ internal class ShadowerData(
     val cascade: List<Float>,
     val yMin: Float,
     val yMax: Float,
-    val mode: Int
+    val mode: Int,
+    val i1: Int,
+    val f1: Float
 )
 
 internal fun List<ShadowerData>.uniforms(): Map<String, Any?> = mapOf(
@@ -318,5 +322,7 @@ internal fun List<ShadowerData>.uniforms(): Map<String, Any?> = mapOf(
     "cascade[0]" to ColorList(this.map { Color(it.cascade[3], it.cascade[0], it.cascade[1], it.cascade[2]) }),
     "yMin[0]" to FloatList(this.map { it.yMin }),
     "yMax[0]" to FloatList(this.map { it.yMax }),
-    "shadowMode[0]" to IntList(this.map { it.mode })
+    "shadowMode[0]" to IntList(this.map { it.mode }),
+    "i1[0]" to IntList(this.map { it.i1 }),
+    "f1[0]" to FloatList(this.map { it.f1 })
 )

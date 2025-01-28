@@ -23,7 +23,6 @@ fun CSMExample() =
             triplanarScale = 1.0f
             pbr.metallic = 0.0f
             pbr.roughness = 0.9f
-            pcss = false
         }
         val freeCamera = FreeCamera(this, Vec3(0f, 2f, 5f), (-1).z)
         OnTouch { freeCamera.touch(it) }
@@ -32,7 +31,7 @@ fun CSMExample() =
             projection = frustum(4f * width / height, 4f, 4f, 10000f)
             camera = freeCamera.camera(projection, width, height, frameInfo.dt)
             DirectionalLight(Vec3(1f, -1f, 0.3f).normalize(), white(5.0f)) {
-                Cascade(1024, 4f, 12f, -0f to 50f, pccf())
+                Cascade(1024, 4f, 12f, -0f to 50f, pcss())
                 Cascade(1024, 10f, 30f, 0f to 50f, vsm())
                 Cascade(1024, 25f, 100f, 0f to 50f, vsm())
             }

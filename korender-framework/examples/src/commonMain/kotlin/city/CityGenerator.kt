@@ -48,7 +48,7 @@ class CityGenerator {
             block.invoke(level)
             cubes += level.cubes
 
-            println("Level $z    cubes ${level.cubes.size}")
+            // println("Level $z    cubes ${level.cubes.size}")
 
             level = level.up()
         }

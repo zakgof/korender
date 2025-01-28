@@ -101,5 +101,5 @@ interface KorenderContext {
 
     fun vsm(blurRadius: Float? = null): ShadowAlgorithmDeclaration
     fun hard(): ShadowAlgorithmDeclaration
-    fun pccf(samples: Int = 32, blurRadius: Float = 0.02f): ShadowAlgorithmDeclaration
+    fun pcss(samples: Int = 32, blurRadius: Float = 0.002f): ShadowAlgorithmDeclaration
 }
