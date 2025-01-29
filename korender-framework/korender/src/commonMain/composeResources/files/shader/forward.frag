@@ -86,8 +86,10 @@ out vec4 fragColor;
 #import "!shader/lib/triplanar.glsl"
 #import "!shader/lib/normalmap.glsl"
 
-#import "!shader/lib/shadow.glsl"
+float shadowRatios[MAX_SHADOWS];
+
 #import "!shader/lib/pbr.glsl"
+#import "!shader/lib/shadow.glsl"
 
 void main() {
 
@@ -166,24 +168,27 @@ void main() {
 
     float plane = dot((vpos - cameraPos), cameraDir);
 
-    for (int l=0; l<numDirectionalLights; l++) {
-        float shadowRatio = 0.;
-        int shadowCount = directionalLightShadowTextureCount[l];
-        for (int c=0; c<shadowCount; c++) {
-            int idx = directionalLightShadowTextureIndex[l] + c;
-            vec3 vshadow = (bsps[idx] * vec4(vpos, 1.0)).xyz;
-            if ((shadowMode[idx] & 0x80) != 0) {
-                vshadow.z = (yMax[idx] - vpos.y) / (yMax[idx] - yMin[idx]);
-            }
-            float sh = calculateShadow(idx, vshadow, shadowMode[idx] & 0x07);
-            vec4 ci = cascade[c];
-            float cascadeContribution = smoothstep(ci.r, ci.g, plane) * (1.0 - smoothstep(ci.b, ci.a, plane));
-            shadowRatio += sh * cascadeContribution;
-        }
-        vec3 lightValue = directionalLightColor[l].rgb * (1. - shadowRatio);
-        vec3 L = normalize(-directionalLightDir[l]);
-        color += calculatePBR(N, V, L, c_diff, F0, rough, lightValue);
-    }
+    #ifdef OPENGL
+        for (int s=0; s<numShadows; s++)
+            shadowRatios[s] = casc(s, plane, shadowTextures[s]);
+    #else
+        if (numShadows > 0) shadowRatios[0] = casc(0, plane, shadowTextures[0]);
+        if (numShadows > 1) shadowRatios[1] = casc(1, plane, shadowTextures[1]);
+        if (numShadows > 2) shadowRatios[2] = casc(2, plane, shadowTextures[2]);
+        if (numShadows > 3) shadowRatios[3] = casc(3, plane, shadowTextures[3]);
+        if (numShadows > 4) shadowRatios[4] = casc(4, plane, shadowTextures[4]);
+        if (numShadows > 5) shadowRatios[5] = casc(5, plane, shadowTextures[5]);
+        if (numShadows > 6) shadowRatios[6] = casc(6, plane, shadowTextures[6]);
+        if (numShadows > 7) shadowRatios[7] = casc(7, plane, shadowTextures[7]);
+        if (numShadows > 8) shadowRatios[8] = casc(8, plane, shadowTextures[8]);
+        if (numShadows > 9) shadowRatios[9] = casc(9, plane, shadowTextures[9]);
+        if (numShadows > 10) shadowRatios[10] = casc(10, plane, shadowTextures[10]);
+        if (numShadows > 11) shadowRatios[11] = casc(11, plane, shadowTextures[11]);
+    #endif
+
+    for (int l=0; l<numDirectionalLights; l++)
+        color += dirLight(l, N, V, c_diff, F0, rough);
+
     for (int l=0; l<numPointLights; l++) {
         float shadowRatio = 0.;
         vec3 ftol = pointLightPos[l] - vpos;

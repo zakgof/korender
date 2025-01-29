@@ -340,6 +340,7 @@ internal class GltfSceneBuilder(
         val glossinessFactor = matSpecularGlossiness?.glossinessFactor ?: 0.2f
         val specularGlossinessTexture = matSpecularGlossiness?.specularGlossinessTexture?.let { getTexture(it) }
 
+        // TODO: Precreate all except jointMatrices
         val pu = ParamUniforms(InternalStandartParams()) {
 
             this.baseColor = baseColor
@@ -350,10 +351,9 @@ internal class GltfSceneBuilder(
                 this.pbr.metallic = metallic
                 this.pbr.roughness = roughness
                 this.pbr.metallicRoughnessTexture = metallicRoughnessTexture
-
-//                this.pbr.emissiveFactor = emissiveFactor
+                this.emissiveFactor = emissiveFactor
+                this.emissiveTexture = emissiveTexture
 //                this.pbr.occlusionTexture = occlusionTexture
-//                this.pbr.emissiveTexture = emissiveTexture
             }
 
             if (matSpecularGlossiness != null) {

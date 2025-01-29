@@ -71,25 +71,25 @@ float shadow(sampler2D shadowTexture, int index, vec3 vshadow, int mode) {
     return sh;
 }
 
-float calculateShadow(int i, vec3 v, int mode) {
-    #ifndef OPENGL
-    float sh = 0.;
-    switch (i) {
-        case 0: sh =  shadow(shadowTextures[0],  i, v, mode); break;
-        case 1: sh =  shadow(shadowTextures[1],  i, v, mode); break;
-        case 2: sh =  shadow(shadowTextures[2],  i, v, mode); break;
-        case 3: sh =  shadow(shadowTextures[3],  i, v, mode); break;
-        case 4: sh =  shadow(shadowTextures[4],  i, v, mode); break;
-        case 5: sh =  shadow(shadowTextures[5],  i, v, mode); break;
-        case 6: sh =  shadow(shadowTextures[6],  i, v, mode); break;
-        case 7: sh =  shadow(shadowTextures[7],  i, v, mode); break;
-        case 8: sh =  shadow(shadowTextures[8],  i, v, mode); break;
-        case 9: sh =  shadow(shadowTextures[9],  i, v, mode); break;
-        case 10: sh = shadow(shadowTextures[10], i, v, mode); break;
-        case 11: sh = shadow(shadowTextures[11], i, v, mode); break;
+float casc(int s, float plane, sampler2D shadowTexture) {
+    vec3 vshadow = (bsps[s] * vec4(vpos, 1.0)).xyz;
+    if ((shadowMode[s] & 0x80) != 0) {
+        vshadow.z = (yMax[s] - vpos.y) / (yMax[s] - yMin[s]);
     }
-    return sh;
-    #else
-    return shadow(shadowTextures[i], i, v, mode);
-    #endif
+    float sh = shadow(shadowTexture, s, vshadow, shadowMode[s] & 0x07);
+    vec4 ci = cascade[s];
+    float cascadeContribution = smoothstep(ci.r, ci.g, plane) * (1.0 - smoothstep(ci.b, ci.a, plane));
+    return sh * cascadeContribution;
+}
+
+vec3 dirLight(int l, vec3 N, vec3 V, vec3 c_diff, vec3 F0, float rough) {
+    float shadowRatio = 0.;
+    int shadowCount = directionalLightShadowTextureCount[l];
+    for (int c=0; c<shadowCount; c++) {
+        int idx = directionalLightShadowTextureIndex[l] + c;
+        shadowRatio += shadowRatios[idx];
+    }
+    vec3 lightValue = directionalLightColor[l].rgb * (1. - shadowRatio);
+    vec3 L = normalize(-directionalLightDir[l]);
+    return calculatePBR(N, V, L, c_diff, F0, rough, lightValue);
 }
