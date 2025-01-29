@@ -12,6 +12,7 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+        <profileable android:shell="true" />
         <activity
             android:exported="true"
             android:screenOrientation="landscape"

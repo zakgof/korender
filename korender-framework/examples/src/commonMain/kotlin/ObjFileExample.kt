@@ -33,8 +33,9 @@ fun ObjFileExample() {
                 transform = scale(7.0f).rotate(1.y, -PIdiv2)
             )
             Gui {
+                Text(id = "lic", fontResource = "font/orbitron.ttf", height = 30, text = "Model generated using meshy.ai (CC BY 4.0)", color = Color(0xFF66FF55))
                 Filler()
-                Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "Model generated using meshy.ai (CC BY 4.0)", color = Color(0xFF66FF55))
+                Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = Color(0xFF66FF55))
             }
         }
     }
