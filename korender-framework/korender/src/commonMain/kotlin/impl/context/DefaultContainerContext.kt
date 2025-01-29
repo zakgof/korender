@@ -19,8 +19,8 @@ internal class DefaultContainerContext(private val declaration: ElementDeclarati
         declaration.add(column)
     }
 
-    override fun Text(id: Any, fontResource: String, height: Int, text: String, color: Color, onTouch: TouchHandler) {
-        declaration.add(ElementDeclaration.Text(id, fontResource, height, text, color, onTouch))
+    override fun Text(id: Any, fontResource: String, height: Int, text: String, color: Color, static: Boolean, onTouch: TouchHandler) {
+        declaration.add(ElementDeclaration.Text(id, fontResource, height, text, color, static, onTouch))
     }
 
     override fun Filler() {

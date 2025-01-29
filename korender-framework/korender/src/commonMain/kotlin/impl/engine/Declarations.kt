@@ -50,12 +50,14 @@ internal class MaterialDeclaration(
 internal sealed class ElementDeclaration {
 
     class Filler : ElementDeclaration()
+
     class Text(
         val id: Any,
         val fontResource: String,
         val height: Int,
         val text: String,
         val color: Color,
+        val static: Boolean,
         val onTouch: TouchHandler
     ) : ElementDeclaration()
 

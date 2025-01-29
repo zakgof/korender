@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.impl.engine.Scene.TouchBox
 import com.zakgof.korender.impl.context.Direction
+import com.zakgof.korender.impl.engine.Scene.TouchBox
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.geometry.ImageQuad
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
@@ -137,14 +137,16 @@ internal class GuiRenderer(
         val font = inventory.font(declaration.fontResource)
         val shader = inventory.shader(Fonts.shaderDeclaration)
         if (mesh != null && font != null && shader != null) {
-            mesh.updateFont(
-                declaration.text,
-                declaration.height.toFloat() / height,
-                height.toFloat() / width.toFloat(),
-                x.toFloat() / width,
-                1.0f - y.toFloat() / height,
-                font.widths
-            )
+            if (!declaration.static || !mesh.isInitialized()) {
+                mesh.updateFont(
+                    declaration.text,
+                    declaration.height.toFloat() / height,
+                    height.toFloat() / width.toFloat(),
+                    x.toFloat() / width,
+                    1.0f - y.toFloat() / height,
+                    font.widths
+                )
+            }
             renderables.add(
                 Renderable(
                     mesh = mesh,
