@@ -42,7 +42,7 @@ fun City() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         }
 
         staticScene.render(this)
-        Scene(gltfResource = "city/swat.glb", transform = controller.character.transform * scale(0.002f))
+        // Scene(gltfResource = "city/swat.glb", transform = controller.character.transform * scale(0.002f))
 
 
         controller.update(frameInfo.dt)

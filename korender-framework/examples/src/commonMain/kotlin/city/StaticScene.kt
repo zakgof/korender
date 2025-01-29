@@ -9,7 +9,6 @@ import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.examples.city.controller.Controller
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Color.Companion.White
-import com.zakgof.korender.math.Transform.Companion.scale
 
 
 class StaticScene(private val kc: KorenderContext, private val controller: Controller) {
@@ -98,8 +97,8 @@ class StaticScene(private val kc: KorenderContext, private val controller: Contr
 
         Sky(sky, moon)
 
-        Scene(gltfResource = "city/racecar.glb", transform = scale(0.6f).translate(3.2f, 0.11f, -98f))
-        Scene(gltfResource = "city/car2.glb", transform = scale(0.2f).translate(6.2f, 0.00f, -98f))
+//        Scene(gltfResource = "city/racecar.glb", transform = scale(0.6f).translate(3.2f, 0.11f, -98f))
+//        Scene(gltfResource = "city/car2.glb", transform = scale(0.2f).translate(6.2f, 0.00f, -98f))
 
         Filter(water(), sky, moon)
         Filter(fog())

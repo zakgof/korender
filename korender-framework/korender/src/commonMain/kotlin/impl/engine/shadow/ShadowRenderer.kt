@@ -14,14 +14,11 @@ import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glClearColor
 import com.zakgof.korender.impl.gl.GL.glCullFace
-import com.zakgof.korender.impl.gl.GL.glDepthFunc
 import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
-import com.zakgof.korender.impl.gl.GLConstants.GL_BLEND
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
-import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.glgpu.ColorList
 import com.zakgof.korender.impl.glgpu.FloatList
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
@@ -84,8 +81,6 @@ internal object ShadowRenderer {
         frameBuffer.exec {
             glClearColor(1f, 1f, 0f, 1f)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-            glEnable(GL_DEPTH_TEST)
-            glCullFace(GL_BACK)
             shadowCasterDeclarations.filter {
                 // TODO: renderable or material flag to disable shadow casting
                 (it.shader.fragFile == "!shader/geometry.frag" ||
@@ -196,9 +191,6 @@ internal object ShadowRenderer {
             val mesh = inventory.mesh(ScreenQuad)
             val shader = inventory.shader(blur1.shader)
             glClearColor(0f, 0f, 0f, 1f)
-            glEnable(GL_BLEND)
-            glEnable(GL_DEPTH_TEST)
-            glDepthFunc(GL_LEQUAL)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             if (mesh != null && shader != null) {
                 Renderable(mesh, shader, blur1.uniforms).render(uniforms, fixer)
@@ -220,9 +212,6 @@ internal object ShadowRenderer {
             val mesh = inventory.mesh(ScreenQuad)
             val shader = inventory.shader(blur2.shader)
             glClearColor(0f, 0f, 0f, 1f)
-            glEnable(GL_BLEND)
-            glEnable(GL_DEPTH_TEST)
-            glDepthFunc(GL_LEQUAL)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             if (mesh != null && shader != null) {
                 Renderable(mesh, shader, blur1.uniforms).render(uniforms, fixer)

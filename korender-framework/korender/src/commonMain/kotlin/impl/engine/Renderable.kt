@@ -22,7 +22,6 @@ internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms:
             if (declaration.mesh is CustomMesh && declaration.mesh.dynamic) {
                 (mesh as Geometry.DefaultMesh).updateMesh(declaration.mesh.block)
             }
-
             if (declaration.mesh is InstancedBillboard) {
                 // TODO: static
                 val instances = mutableListOf<BillboardInstance>();
@@ -48,9 +47,8 @@ internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms:
     }
 
     fun render(contextUniforms: Map<String, Any?>, fixer: (Any?) -> Any?) {
-        val totalUniformSupplier = uniforms.invoke() + contextUniforms + mapOf("model" to transform.mat4)
         shader.render(
-            { fixer(totalUniformSupplier[it]) },
+            { fixer(uniforms.invoke()[it] ?: contextUniforms[it] ?: if (it == "model") transform.mat4 else null )},
             mesh.gpuMesh
         )
     }

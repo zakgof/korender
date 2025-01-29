@@ -8,15 +8,10 @@ import com.zakgof.korender.impl.engine.shadow.uniforms
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glClearColor
-import com.zakgof.korender.impl.gl.GL.glDepthFunc
 import com.zakgof.korender.impl.gl.GL.glDepthMask
-import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GL.glViewport
-import com.zakgof.korender.impl.gl.GLConstants.GL_BLEND
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
-import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
-import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.glgpu.ColorList
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.IntList
@@ -154,8 +149,6 @@ internal class Scene(
         geometryBuffer.exec {
             glClearColor(0f, 0f, 0f, 1f)
             glViewport(0, 0, renderContext.width, renderContext.height)
-            glEnable(GL_DEPTH_TEST)
-            glDepthFunc(GL_LEQUAL)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             opaques.forEach { it.render(uniforms, fixer) }
         }
@@ -171,9 +164,6 @@ internal class Scene(
         val back = renderContext.backgroundColor
         glClearColor(back.r, back.g, back.b, back.a)
         glViewport(0, 0, renderContext.width, renderContext.height)
-        glEnable(GL_BLEND)
-        glEnable(GL_DEPTH_TEST)
-        glDepthFunc(GL_LEQUAL)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         renderFilter(
             materialDeclaration(
@@ -192,16 +182,12 @@ internal class Scene(
         val back = renderContext.backgroundColor
         glClearColor(back.r, back.g, back.b, back.a)
         glViewport(0, 0, renderContext.width, renderContext.height)
-        glEnable(GL_BLEND)
-        glEnable(GL_DEPTH_TEST)
-        glDepthFunc(GL_LEQUAL)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         opaques.forEach { it.render(uniforms, fixer) }
         skies.forEach { it.render(uniforms, fixer) }
     }
 
     private fun renderTransparents(uniforms: MutableMap<String, Any?>) {
-        glEnable(GL_BLEND)
         screens.forEach { it.render(uniforms, fixer) }
         glDepthMask(false)
         transparents.sortedByDescending { (renderContext.camera.mat4 * it.transform.offset()).z }
@@ -255,9 +241,6 @@ internal class Scene(
         val shader = inventory.shader(filter.shader)
         glClearColor(0f, 0f, 0f, 1f)
         glViewport(0, 0, renderContext.width, renderContext.height)
-        glEnable(GL_BLEND)
-        glEnable(GL_DEPTH_TEST)
-        glDepthFunc(GL_LEQUAL)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         if (mesh != null && shader != null) {
             Renderable(mesh, shader, filter.uniforms).render(uniforms, fixer)

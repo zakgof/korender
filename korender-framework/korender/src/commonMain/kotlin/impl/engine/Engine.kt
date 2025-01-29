@@ -49,9 +49,13 @@ import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.geometry.Sphere
 import com.zakgof.korender.impl.gl.GL.glBlendFunc
 import com.zakgof.korender.impl.gl.GL.glCullFace
+import com.zakgof.korender.impl.gl.GL.glDepthFunc
 import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
+import com.zakgof.korender.impl.gl.GLConstants.GL_BLEND
 import com.zakgof.korender.impl.gl.GLConstants.GL_CULL_FACE
+import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
+import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
 import com.zakgof.korender.impl.material.InternalAdjustParams
@@ -298,6 +302,9 @@ internal class Engine(
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_CULL_FACE)
         glCullFace(GL_BACK)
+        glDepthFunc(GL_LEQUAL)
+        glEnable(GL_BLEND)
+        glEnable(GL_DEPTH_TEST)
         block.invoke(kc)
     }
 
