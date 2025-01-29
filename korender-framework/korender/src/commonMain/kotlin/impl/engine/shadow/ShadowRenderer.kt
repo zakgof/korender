@@ -72,12 +72,14 @@ internal object ShadowRenderer {
         val matrices = updateShadowCamera(renderContext.projection, renderContext.camera, lightDirection, declaration)
         val shadowCamera = matrices.first
         val shadowProjection = matrices.second
-        val casterUniforms = renderContext.uniforms() + mapOf(
-            "view" to shadowCamera.mat4,
-            "projection" to shadowProjection.mat4,
-            "cameraPos" to shadowCamera.position,
-            "cameraDir" to shadowCamera.direction
-        )
+
+        val casterUniforms = mutableMapOf<String, Any?>()
+        renderContext.uniforms(casterUniforms)
+
+        casterUniforms["view"] = shadowCamera.mat4
+        casterUniforms["projection"] = shadowProjection.mat4
+        casterUniforms["cameraPos"] = shadowCamera.position
+        casterUniforms["cameraDir"] = shadowCamera.direction
 
         frameBuffer.exec {
             glClearColor(1f, 1f, 0f, 1f)
@@ -171,6 +173,9 @@ internal object ShadowRenderer {
         texBlurRadius: Float
     ) {
 
+        val uniforms = mutableMapOf<String, Any?>()
+        renderContext.uniforms(uniforms) // TODO once per frame only
+
         val blurFrameBuffer = inventory.frameBuffer(
             FrameBufferDeclaration("shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM), true)
         ) ?: return
@@ -184,10 +189,9 @@ internal object ShadowRenderer {
                 }
             }
         )
-        val prevPassUniforms = mapOf(
-            "filterColorTexture" to frameBuffer.colorTextures[0],
-            "filterDepthTexture" to frameBuffer.depthTexture
-        )
+        uniforms["filterColorTexture"] = frameBuffer.colorTextures[0]
+        uniforms["filterDepthTexture"] = frameBuffer.depthTexture
+
         blurFrameBuffer.exec {
             val mesh = inventory.mesh(ScreenQuad)
             val shader = inventory.shader(blur1.shader)
@@ -197,7 +201,7 @@ internal object ShadowRenderer {
             glDepthFunc(GL_LEQUAL)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             if (mesh != null && shader != null) {
-                Renderable(mesh, shader, blur1.uniforms).render(renderContext.uniforms() + prevPassUniforms, fixer)
+                Renderable(mesh, shader, blur1.uniforms).render(uniforms, fixer)
             }
         }
         val blur2 = materialDeclaration(MaterialBuilder(false),
@@ -209,10 +213,9 @@ internal object ShadowRenderer {
                 }
             }
         )
-        val prevPassUniforms2 = mapOf(
-            "filterColorTexture" to blurFrameBuffer.colorTextures[0],
-            "filterDepthTexture" to blurFrameBuffer.depthTexture
-        )
+        uniforms["filterColorTexture"] = frameBuffer.colorTextures[0]
+        uniforms["filterDepthTexture"] = frameBuffer.depthTexture
+
         frameBuffer.exec {
             val mesh = inventory.mesh(ScreenQuad)
             val shader = inventory.shader(blur2.shader)
@@ -222,11 +225,9 @@ internal object ShadowRenderer {
             glDepthFunc(GL_LEQUAL)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             if (mesh != null && shader != null) {
-                Renderable(mesh, shader, blur1.uniforms).render(renderContext.uniforms() + prevPassUniforms2, fixer)
+                Renderable(mesh, shader, blur1.uniforms).render(uniforms, fixer)
             }
         }
-
-
     }
 
     private fun updateShadowCamera(
@@ -315,14 +316,14 @@ internal class ShadowerData(
     val f1: Float
 )
 
-internal fun List<ShadowerData>.uniforms(): Map<String, Any?> = mapOf(
-    "numShadows" to size,
-    "shadowTextures[0]" to GlGpuTextureList(this.map { it.texture }),
-    "bsps[0]" to Mat4List(this.map { it.bsp }),
-    "cascade[0]" to ColorList(this.map { Color(it.cascade[3], it.cascade[0], it.cascade[1], it.cascade[2]) }),
-    "yMin[0]" to FloatList(this.map { it.yMin }),
-    "yMax[0]" to FloatList(this.map { it.yMax }),
-    "shadowMode[0]" to IntList(this.map { it.mode }),
-    "i1[0]" to IntList(this.map { it.i1 }),
-    "f1[0]" to FloatList(this.map { it.f1 })
-)
+internal fun List<ShadowerData>.uniforms(m: MutableMap<String, Any?>) {
+    m["numShadows"] = size
+    m["shadowTextures[0]"] = GlGpuTextureList(this.map { it.texture })
+    m["bsps[0]"] = Mat4List(this.map { it.bsp })
+    m["cascade[0]"] = ColorList(this.map { Color(it.cascade[3], it.cascade[0], it.cascade[1], it.cascade[2]) })
+    m["yMin[0]"] = FloatList(this.map { it.yMin })
+    m["yMax[0]"] = FloatList(this.map { it.yMax })
+    m["shadowMode[0]"] = IntList(this.map { it.mode })
+    m["i1[0]"] = IntList(this.map { it.i1 })
+    m["f1[0]"] = FloatList(this.map { it.f1 })
+}

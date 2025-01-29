@@ -85,8 +85,8 @@ internal class Scene(
 
         val uniforms = mutableMapOf<String, Any?>()
 
-        uniforms += renderContext.uniforms()
-        uniforms += renderShadows()
+        renderContext.uniforms(uniforms)
+        renderShadows(uniforms)
 
         try {
             if (deferredShading) {
@@ -104,7 +104,7 @@ internal class Scene(
         uniforms += renderDeferredOpaques(uniforms)
 
         if (sceneDeclaration.filters.isNotEmpty()) {
-            uniforms += renderToFilter(0) {
+            renderToFilter(0, uniforms) {
                 renderComposition(uniforms)
             }
         } else {
@@ -114,7 +114,7 @@ internal class Scene(
 
         sceneDeclaration.filters.forEachIndexed { index, filter ->
             if (index < sceneDeclaration.filters.size - 1) {
-                uniforms += renderToFilter(index + 1) {
+                renderToFilter(index + 1, uniforms) {
                     renderFilter(filter, uniforms)
                 }
             } else {
@@ -129,11 +129,11 @@ internal class Scene(
             renderForwardOpaques(uniforms)
             renderTransparents(uniforms)
         } else {
-            uniforms += renderToFilter(0) {
+            renderToFilter(0, uniforms) {
                 renderForwardOpaques(uniforms)
             }
             sceneDeclaration.filters.dropLast(1).forEachIndexed { index, filter ->
-                uniforms += renderToFilter(index + 1) {
+                renderToFilter(index + 1, uniforms) {
                     renderFilter(filter, uniforms)
                 }
             }
@@ -144,9 +144,13 @@ internal class Scene(
 
     private fun renderDeferredOpaques(uniforms: Map<String, Any?>): Map<String, Any?> {
         // TODO: configurable texture channels resolutions (half/quarter)
-        val geometryBuffer = inventory.frameBuffer(FrameBufferDeclaration("geometry", renderContext.width, renderContext.height,
-            listOf(GlGpuTexture.Preset.RGBANoFilter, GlGpuTexture.Preset.RGBANoFilter, GlGpuTexture.Preset.RGBANoFilter),
-            true)) ?: throw SkipRender
+        val geometryBuffer = inventory.frameBuffer(
+            FrameBufferDeclaration(
+                "geometry", renderContext.width, renderContext.height,
+                listOf(GlGpuTexture.Preset.RGBANoFilter, GlGpuTexture.Preset.RGBANoFilter, GlGpuTexture.Preset.RGBANoFilter),
+                true
+            )
+        ) ?: throw SkipRender
         geometryBuffer.exec {
             glClearColor(0f, 0f, 0f, 1f)
             glViewport(0, 0, renderContext.width, renderContext.height)
@@ -205,8 +209,7 @@ internal class Scene(
         glDepthMask(true)
     }
 
-    private fun renderShadows(): Map<String, Any?> {
-        val uniforms = mutableMapOf<String, Any?>()
+    private fun renderShadows(m: MutableMap<String, Any?>) {
         val shadowData = mutableListOf<ShadowerData>()
         val directionalDirs = mutableListOf<Vec3>()
         val directionalColors = mutableListOf<Color>()
@@ -234,21 +237,17 @@ internal class Scene(
             directionalShadowCounts += indexes.size
         }
 
-        uniforms += shadowData.uniforms()
+        shadowData.uniforms(m)
 
-        uniforms["numDirectionalLights"] = sceneDeclaration.directionalLights.size
-        uniforms["directionalLightDir[0]"] = Vec3List(directionalDirs)
-        uniforms["directionalLightColor[0]"] = ColorList(directionalColors)
-        uniforms["directionalLightShadowTextureIndex[0]"] = IntList(directionalShadowIndexes)
-        uniforms["directionalLightShadowTextureCount[0]"] = IntList(directionalShadowCounts)
-
-        uniforms["ambientColor"] = sceneDeclaration.ambientLightColor
-
-        uniforms["numPointLights"] = sceneDeclaration.pointLights.size
-        uniforms["pointLightPos[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.position })
-        uniforms["pointLightColor[0]"] = ColorList(sceneDeclaration.pointLights.map { it.color })
-
-        return uniforms
+        m["numDirectionalLights"] = sceneDeclaration.directionalLights.size
+        m["directionalLightDir[0]"] = Vec3List(directionalDirs)
+        m["directionalLightColor[0]"] = ColorList(directionalColors)
+        m["directionalLightShadowTextureIndex[0]"] = IntList(directionalShadowIndexes)
+        m["directionalLightShadowTextureCount[0]"] = IntList(directionalShadowCounts)
+        m["ambientColor"] = sceneDeclaration.ambientLightColor
+        m["numPointLights"] = sceneDeclaration.pointLights.size
+        m["pointLightPos[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.position })
+        m["pointLightColor[0]"] = ColorList(sceneDeclaration.pointLights.map { it.color })
     }
 
     private fun renderFilter(filter: MaterialDeclaration, uniforms: Map<String, Any?>) {
@@ -265,14 +264,12 @@ internal class Scene(
         }
     }
 
-    private fun renderToFilter(index: Int, block: () -> Unit): Map<String, Any?> {
+    private fun renderToFilter(index: Int, m: MutableMap<String, Any?>, block: () -> Unit) {
         val number = index % 2
         val fb = inventory.frameBuffer(FrameBufferDeclaration("filter-$number", renderContext.width, renderContext.height, listOf(GlGpuTexture.Preset.RGBNoFilter), true)) ?: throw SkipRender
         fb.exec { block() }
-        return mapOf(
-            "filterColorTexture" to fb.colorTextures[0],
-            "filterDepthTexture" to fb.depthTexture
-        )
+        m["filterColorTexture"] = fb.colorTextures[0]
+        m["filterDepthTexture"] = fb.depthTexture
     }
 
     internal class TouchBox(
