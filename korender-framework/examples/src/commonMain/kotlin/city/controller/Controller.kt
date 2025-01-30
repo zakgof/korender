@@ -20,10 +20,6 @@ fun HeightField.land(vec: Vec3) = Vec3(vec.x, this(vec.x, vec.z), vec.z)
 
 class Controller {
 
-    private var forward = 0f
-    private var rota = 0f
-    private val chaseCamera = ChaseCamera()
-
     val heightField: HeightField = { xx, zz ->
         1.0f + 5.0f *
                 (1.0f - xx * xx / (196f * 196f)) *
@@ -31,8 +27,12 @@ class Controller {
     }
     val character = Character()
 
+    private var forward = 0f
+    private var rota = 0f
+    private val chaseCamera = ChaseCamera(character)
+
     fun camera(fc: FrameContext): CameraDeclaration =
-        chaseCamera.camera(character.position, character.direction, fc)
+        chaseCamera.camera(fc)
 
     fun touch(touchEvent: TouchEvent) =
         chaseCamera.touch(touchEvent)
@@ -67,7 +67,6 @@ class Controller {
         val transform: Transform
             get() = rotate(lookAt(direction, 1.y)).translate(position)
     }
-
 
 }
 

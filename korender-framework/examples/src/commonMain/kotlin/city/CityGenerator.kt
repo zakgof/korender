@@ -7,8 +7,6 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 
-class Recto(val xmin: Int, val xmax: Int, val ymin: Int, val ymax: Int, val zmin: Int, val zmax: Int)
-
 private fun cube(x: Int, y: Int, z: Int) = x or (y shl 8) or (z shl 16)
 
 private fun Int.withX(x: Int): Int = cube(x, this.cy, this.cz)
@@ -47,12 +45,9 @@ class CityGenerator {
         for (z in 0 until height) {
             block.invoke(level)
             cubes += level.cubes
-
             // println("Level $z    cubes ${level.cubes.size}")
-
             level = level.up()
         }
-        println("=======")
         return cubes
     }
 
