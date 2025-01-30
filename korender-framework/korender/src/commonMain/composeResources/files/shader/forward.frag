@@ -62,7 +62,7 @@ uniform int numPointLights;
 uniform vec3 pointLightPos[MAX_LIGHTS];
 uniform vec4 pointLightColor[MAX_LIGHTS];
 
-const int MAX_SHADOWS = 12;
+const int MAX_SHADOWS = 8;
 uniform int numShadows;
 uniform sampler2D shadowTextures[MAX_SHADOWS];
 uniform mat4 bsps[MAX_SHADOWS];
@@ -88,8 +88,9 @@ out vec4 fragColor;
 
 float shadowRatios[MAX_SHADOWS];
 
-#import "!shader/lib/pbr.glsl"
 #import "!shader/lib/shadow.glsl"
+#import "!shader/lib/pbr.glsl"
+#import "!shader/lib/light.glsl"
 
 void main() {
 
@@ -168,35 +169,14 @@ void main() {
 
     float plane = dot((vpos - cameraPos), cameraDir);
 
-    #ifdef OPENGL
-        for (int s=0; s<numShadows; s++)
-            shadowRatios[s] = casc(s, plane, shadowTextures[s]);
-    #else
-        if (numShadows > 0) shadowRatios[0] = casc(0, plane, shadowTextures[0]);
-        if (numShadows > 1) shadowRatios[1] = casc(1, plane, shadowTextures[1]);
-        if (numShadows > 2) shadowRatios[2] = casc(2, plane, shadowTextures[2]);
-        if (numShadows > 3) shadowRatios[3] = casc(3, plane, shadowTextures[3]);
-        if (numShadows > 4) shadowRatios[4] = casc(4, plane, shadowTextures[4]);
-        if (numShadows > 5) shadowRatios[5] = casc(5, plane, shadowTextures[5]);
-        if (numShadows > 6) shadowRatios[6] = casc(6, plane, shadowTextures[6]);
-        if (numShadows > 7) shadowRatios[7] = casc(7, plane, shadowTextures[7]);
-        if (numShadows > 8) shadowRatios[8] = casc(8, plane, shadowTextures[8]);
-        if (numShadows > 9) shadowRatios[9] = casc(9, plane, shadowTextures[9]);
-        if (numShadows > 10) shadowRatios[10] = casc(10, plane, shadowTextures[10]);
-        if (numShadows > 11) shadowRatios[11] = casc(11, plane, shadowTextures[11]);
-    #endif
+    populateShadowRatios(plane, vpos);
 
-    for (int l=0; l<numDirectionalLights; l++)
+    for (int l=0; l<numDirectionalLights; l++) {
         color += dirLight(l, N, V, c_diff, F0, rough);
-
-    for (int l=0; l<numPointLights; l++) {
-        float shadowRatio = 0.;
-        vec3 ftol = pointLightPos[l] - vpos;
-        float distance = length(ftol);
-        float att = 1.0 / (1.0 + 1.0 * distance + 1.0 * (distance * distance));
-        vec3 lightValue = pointLightColor[l].rgb * (1. - shadowRatio) * att;// TODO quadratic; configurable attenuation ratio
-        vec3 L = normalize(ftol);
-        color += calculatePBR(N, V, L, c_diff, F0, rough, lightValue);
     }
+    for (int l=0; l<numPointLights; l++) {
+        color += pointLight(vpos, l, N, V, c_diff, F0, rough);
+    }
+
     fragColor = vec4(color, albedo.a);
 }

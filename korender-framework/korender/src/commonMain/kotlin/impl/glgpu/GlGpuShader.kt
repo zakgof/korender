@@ -77,36 +77,21 @@ internal class GlGpuShader(
 
         val vertexLog: String = glGetShaderInfoLog(vertexShaderHandle)
         if (vertexLog.isNotEmpty()) {
-            println(
-                "Vertex shader log [${vertDebugInfo.file}]\n\n" + vertDebugInfo.decorate(
-                    vertexLog
-                )
-            )
+            println("Vertex shader log [${vertDebugInfo.file}]\n\n" + vertDebugInfo.decorate(vertexLog))
         }
 
         val fragmentLog: String = glGetShaderInfoLog(fragmentShaderHandle)
         if (fragmentLog.isNotEmpty()) {
             println("Fragment shader log [${fragDebugInfo.file}]\n\n" + fragDebugInfo.decorate(fragmentLog))
-
-            fragmentShaderText.lines().forEachIndexed { l, line ->
-                println("${l+1} $line")
-            }
         }
 
         val programLog: String = glGetProgramInfoLog(programHandle)
         if (programLog.isNotEmpty()) {
             println("\nProgram log $name\n\n$programLog")
-
-            fragmentShaderText.lines().forEachIndexed { l, line ->
-                println("${l+1} $line")
-            }
-
         }
 
-        val vertexCompileStatus = glGetShaderi(vertexShaderHandle, GL_COMPILE_STATUS)
-        if (vertexCompileStatus == 0)
-            throw RuntimeException("Vertex shader compilation failure $vertexCompileStatus")
-
+        if (glGetShaderi(vertexShaderHandle, GL_COMPILE_STATUS) == 0)
+            throw RuntimeException("Vertex shader compilation failure")
         if (glGetShaderi(fragmentShaderHandle, GL_COMPILE_STATUS) == 0) {
             throw RuntimeException("Fragment shader compilation failure")
         } else if (glGetProgrami(programHandle, GL_LINK_STATUS) == 0) {

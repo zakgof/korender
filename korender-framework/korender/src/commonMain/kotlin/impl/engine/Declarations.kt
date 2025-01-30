@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.ShadowAlgorithmDeclaration
@@ -19,7 +20,9 @@ internal class SceneDeclaration {
     val renderables = mutableListOf<RenderableDeclaration>()
     val guis = mutableListOf<ElementDeclaration.Container>()
     val gltfs = mutableListOf<GltfDeclaration>()
-    var filters = mutableListOf<MaterialDeclaration>()
+    var filters = mutableListOf<List<MaterialModifier>>()
+    var deferredShading: Boolean = false
+    var compositionModifiers = mutableListOf<MaterialModifier>()
 }
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
@@ -35,12 +38,20 @@ internal data class ShaderDeclaration(
 )
 
 internal class RenderableDeclaration(
+    val base: BaseMaterial,
+    val materialModifiers: List<MaterialModifier>,
     val mesh: MeshDeclaration,
-    val shader: ShaderDeclaration,
-    val uniforms: DynamicUniforms,
     val transform: Transform = Transform(),
     val bucket: Bucket = Bucket.OPAQUE
 )
+
+internal enum class BaseMaterial {
+    Renderable,
+    Billboard,
+    Screen,
+    Sky,
+    Composition
+}
 
 internal class MaterialDeclaration(
     val shader: ShaderDeclaration,

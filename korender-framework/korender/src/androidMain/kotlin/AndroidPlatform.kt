@@ -9,7 +9,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.opengl.GLSurfaceView
-import android.os.Build
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.LinearLayout
@@ -45,7 +44,7 @@ val androidContext = AtomicReference<Context>(null)
 
 internal actual object Platform {
 
-    actual val name: String = "Android ${Build.VERSION.SDK_INT}"
+    actual val target = KorenderContext.TargetPlatform.Android
 
     internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage> =
         CompletableDeferred(bitmapToImage(BitmapFactory.decodeByteArray(bytes, 0, bytes.size)))

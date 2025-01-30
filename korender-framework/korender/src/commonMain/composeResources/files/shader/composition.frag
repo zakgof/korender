@@ -5,12 +5,18 @@ in vec2 vtex;
 uniform sampler2D cdiffTexture;
 uniform sampler2D normalTexture;
 uniform sampler2D materialTexture;
+uniform sampler2D emissionTexture;
 uniform sampler2D depthTexture;
 
+//////////
+
 uniform vec3 cameraPos;
+uniform vec3 cameraDir;
 uniform vec4 ambientColor;
 uniform mat4 projection;
 uniform mat4 view;
+
+//////////
 
 const int MAX_LIGHTS = 32;
 uniform int numDirectionalLights;
@@ -23,39 +29,34 @@ uniform int numPointLights;
 uniform vec3 pointLightPos[MAX_LIGHTS];
 uniform vec4 pointLightColor[MAX_LIGHTS];
 
-const int MAX_SHADOWS = 12;
+const int MAX_SHADOWS = 8;
 uniform int numShadows;
 uniform sampler2D shadowTextures[MAX_SHADOWS];
 uniform mat4 bsps[MAX_SHADOWS];
+uniform vec4 cascade[MAX_SHADOWS];
+uniform float yMin[MAX_SHADOWS];
+uniform float yMax[MAX_SHADOWS];
+uniform int shadowMode[MAX_SHADOWS];
+uniform float f1[MAX_SHADOWS];
+uniform int i1[MAX_SHADOWS];
+
+//////////
 
 out vec4 fragColor;
 
-#import "!shader/lib/light.glsl"
-#import "!shader/lib/shading.glsl"
-#import "!shader/lib/pbr.glsl"
+float shadowRatios[MAX_SHADOWS];
 
-float sampleShadowTexture(int i, vec3 v) {
-    #ifdef WEBGL
-    float sh = 0.;
-    switch (i) {
-        case 0: sh = shadow(shadowTextures[0], v); break;
-        case 1: sh =  shadow(shadowTextures[1], v); break;
-        case 2: sh =  shadow(shadowTextures[2], v); break;
-        case 3: sh =  shadow(shadowTextures[3], v); break;
-        case 4: sh =  shadow(shadowTextures[4], v); break;
-        case 5: sh =  shadow(shadowTextures[5], v); break;
-        case 6: sh =  shadow(shadowTextures[6], v); break;
-        case 7: sh =  shadow(shadowTextures[7], v); break;
-        case 8: sh =  shadow(shadowTextures[8], v); break;
-        case 9: sh =  shadow(shadowTextures[9], v); break;
-        case 10: sh =  shadow(shadowTextures[10], v); break;
-        case 11: sh =  shadow(shadowTextures[11], v); break;
-    }
-    return sh;
-    #else
-    return shadow(shadowTextures[i], v);
-    #endif
-}
+#import "!shader/lib/shadow.glsl"
+#import "!shader/lib/pbr.glsl"
+#import "!shader/lib/light.glsl"
+
+#ifdef PLUGIN_COLOR
+#import "$color"
+#endif
+
+#ifdef PLUGIN_DEPTH
+#import "$depth"
+#endif
 
 void main() {
 
@@ -72,36 +73,33 @@ void main() {
 
     vec3 c_diff = texture(cdiffTexture, vtex).rgb;
     vec4 materialTexel = texture(materialTexture, vtex);
+    vec4 emissionTexel = texture(emissionTexture, vtex);
+    vec4 normalTexel = texture(normalTexture, vtex);
+
     vec3 F0 = materialTexel.rgb;
-    float roughness = materialTexel.a;
+    float rough = materialTexel.a;
 
     vec3 V = normalize(cameraPos - vpos);
-    vec3 N = normalize(texture(normalTexture, vtex).rgb * 2.0 - 1.0);
+    vec3 N = normalize(normalTexel.rgb * 2.0 - 1.0);
 
-    vec3 color = c_diff * ambientColor.rgb;
+    vec3 color = c_diff * ambientColor.rgb + emissionTexel.rgb;
 
-    for (int l=0; l<numDirectionalLights; l++) {
-        float shadowRatio = 0.;
-        int shadowCount = directionalLightShadowTextureCount[l];
-        for (int c=0; c<shadowCount; c++) {
-            int idx = directionalLightShadowTextureIndex[l] + c;
-            vec3 vshadow = (bsps[idx] * vec4(vpos, 1.0)).xyz;
-            float sh = sampleShadowTexture(idx, vshadow);
-            shadowRatio = max(shadowRatio, sh);
-        }
-        vec3 lightValue = directionalLightColor[l].rgb * (1. - shadowRatio);
-        vec3 L = normalize(-directionalLightDir[l]);
-        color += calculatePBR(N, V, L, c_diff, F0, roughness, lightValue);
-    }
-    for (int l=0; l<numPointLights; l++) {
-        float shadowRatio = 0.;
-        vec3 ftol = pointLightPos[l] - vpos;
-        float distance = length(ftol);
-        float att = max(2.0, 3.0 / distance);
-        vec3 lightValue = pointLightColor[l].rgb * (1. - shadowRatio) * att;// TODO quadratic; configurable attenuation ratio
-        vec3 L = normalize(ftol);
-        color += calculatePBR(N, V, L, c_diff, F0, roughness, lightValue);
-    }
+    float plane = dot((vpos - cameraPos), cameraDir);
+    populateShadowRatios(plane, vpos);
+
+    for (int l=0; l<numDirectionalLights; l++)
+        color += dirLight(l, N, V, c_diff, F0, rough);
+
+    for (int l=0; l<numPointLights; l++)
+        color += pointLight(vpos, l, N, V, c_diff, F0, rough);
+
+#ifdef PLUGIN_COLOR
+    color = pluginColor(vpos, color, depth);
+#endif
+
+#ifdef PLUGIN_DEPTH
+    color = pluginDepth(vpos, color, depth);
+#endif
 
     fragColor = vec4(color, 1.);
     gl_FragDepth = depth;

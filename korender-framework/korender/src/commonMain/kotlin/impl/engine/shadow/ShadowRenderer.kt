@@ -3,6 +3,7 @@ package com.zakgof.korender.impl.engine.shadow
 import com.zakgof.korender.FrustumProjectionDeclaration
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
+import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.FrameBufferDeclaration
 import com.zakgof.korender.impl.engine.Inventory
@@ -13,12 +14,8 @@ import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glClearColor
-import com.zakgof.korender.impl.gl.GL.glCullFace
-import com.zakgof.korender.impl.gl.GL.glEnable
-import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
-import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.impl.glgpu.ColorList
 import com.zakgof.korender.impl.glgpu.FloatList
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
@@ -28,7 +25,6 @@ import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.impl.material.InternalBlurParams
 import com.zakgof.korender.impl.material.InternalMaterialModifier
-import com.zakgof.korender.impl.material.MaterialBuilder
 import com.zakgof.korender.impl.material.ParamUniforms
 import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
@@ -83,13 +79,16 @@ internal object ShadowRenderer {
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             shadowCasterDeclarations.filter {
                 // TODO: renderable or material flag to disable shadow casting
-                (it.shader.fragFile == "!shader/geometry.frag" ||
-                        it.shader.fragFile == "!shader/forward.frag")
+                it.base == BaseMaterial.Renderable
             }.forEach { renderableDeclaration ->
+
+                // TODO: maybe just pass renderable not the declaration
+                val materialDeclaration = materialDeclaration(renderableDeclaration.base, false, *renderableDeclaration.materialModifiers.toTypedArray())
+
                 val mesh = inventory.mesh(renderableDeclaration.mesh)
                 val uniforms = mutableMapOf<String, Any?>()
                 val defs = mutableSetOf<String>()
-                defs += renderableDeclaration.shader.defs
+                defs += materialDeclaration.shader.defs
                 if (declaration.fixedYRange != null) {
                     defs += "FIXED_SHADOW_Y_RANGE"
                     uniforms["fixedYMin"] = declaration.fixedYRange.first
@@ -104,12 +103,12 @@ internal object ShadowRenderer {
                 val modifiedShaderDeclaration = ShaderDeclaration(
                     "!shader/caster.vert", "!shader/caster.frag",
                     defs,
-                    renderableDeclaration.shader.options,
-                    renderableDeclaration.shader.plugins
+                    materialDeclaration.shader.options,
+                    materialDeclaration.shader.plugins
                 )
                 val shader = inventory.shader(modifiedShaderDeclaration)
                 if (mesh != null && shader != null) {
-                    Renderable(mesh, shader, renderableDeclaration.uniforms, renderableDeclaration.transform)
+                    Renderable(mesh, shader, materialDeclaration.uniforms, renderableDeclaration.transform)
                         .render(casterUniforms + uniforms, fixer)
                 }
             }
@@ -175,7 +174,7 @@ internal object ShadowRenderer {
             FrameBufferDeclaration("shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM), true)
         ) ?: return
 
-        val blur1 = materialDeclaration(MaterialBuilder(false),
+        val blur1 = materialDeclaration(BaseMaterial.Screen, false,
             InternalMaterialModifier {
                 it.vertShaderFile = "!shader/screen.vert"
                 it.fragShaderFile = "!shader/effect/blurv.frag"
@@ -196,7 +195,7 @@ internal object ShadowRenderer {
                 Renderable(mesh, shader, blur1.uniforms).render(uniforms, fixer)
             }
         }
-        val blur2 = materialDeclaration(MaterialBuilder(false),
+        val blur2 = materialDeclaration(BaseMaterial.Screen, false,
             InternalMaterialModifier {
                 it.vertShaderFile = "!shader/screen.vert"
                 it.fragShaderFile = "!shader/effect/blurh.frag"

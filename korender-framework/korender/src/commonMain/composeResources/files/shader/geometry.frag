@@ -5,8 +5,10 @@ in vec3 vnormal;
 in vec2 vtex;
 
 uniform vec4 baseColor;
+uniform vec4 emissiveFactor;
 uniform float metallic;
 uniform float roughness;
+
 #ifdef SPECULAR_GLOSSINESS
 uniform vec4 specularFactor;
 uniform float glossinessFactor;
@@ -15,12 +17,19 @@ uniform float glossinessFactor;
 #ifdef BASE_COLOR_MAP
 uniform sampler2D baseColorTexture;
 #endif
+
 #ifdef NORMAL_MAP
 uniform sampler2D normalTexture;
 #endif
+
+#ifdef EMISSIVE_MAP
+uniform sampler2D emissiveTexture;
+#endif
+
 #ifdef TRIPLANAR
 uniform float triplanarScale;
 #endif
+
 #ifdef DETAIL
 uniform sampler2D detailTexture;
 uniform float detailScale;
@@ -39,12 +48,17 @@ uniform vec4 ambientColor;
 uniform mat4 projection;
 uniform mat4 view;
 
-layout(location = 0) out vec4 cdiffChannel;
-layout(location = 1) out vec4 normalChannel;
+layout(location = 0) out vec3 cdiffChannel;
+layout(location = 1) out vec3 normalChannel;
 layout(location = 2) out vec4 materialChannel;
+layout(location = 3) out vec3 emissionChannel;
 
-#ifdef PLUGIN_TEXTURE
-#import "$texture"
+#ifdef PLUGIN_ALBEDO
+#import "$albedo"
+#endif
+
+#ifdef PLUGIN_EMISSION
+#import "$emission"
 #endif
 
 #import "!shader/lib/triplanar.glsl"
@@ -54,7 +68,7 @@ void main() {
 
     #ifdef BASE_COLOR_MAP
     #ifdef TRIPLANAR
-    vec4 albedo = triplanarBaseColor(vpos * triplanarScale, vnormal) * baseColor;
+    vec4 albedo = triplanar(baseColorTexture, vpos * triplanarScale, vnormal) * baseColor;
     #else
     vec4 albedo = texture(baseColorTexture, vtex) * baseColor;
     #endif
@@ -62,8 +76,8 @@ void main() {
     vec4 albedo = baseColor;
     #endif
 
-    #ifdef PLUGIN_TEXTURE
-    albedo = pluginTexture(albedo);
+    #ifdef PLUGIN_ALBEDO
+    albedo = pluginAlbedo(albedo);
     #endif
 
     #ifdef NORMAL_MAP
@@ -72,10 +86,27 @@ void main() {
     vec3 N = normalize(vnormal);
     #endif
 
+    #ifdef EMISSIVE_MAP
+    #ifdef TRIPLANAR
+    vec3 emission = triplanar(emissiveTexture, vpos * triplanarScale, vnormal).rgb * emissiveFactor.rgb;
+    #else
+    vec3 emission = texture(emissiveTexture, vtex).rgb * emissiveFactor.rgb;
+    #endif
+    #else
+    vec3 emission = vec3(0.);
+    #endif
+
+    #ifdef PLUGIN_EMISSION
+    emission = pluginEmission(emission);
+    #endif
 
     #ifdef SPECULAR_GLOSSINESS
     #ifdef SPECULAR_GLOSSINESS_MAP
-    vec4 sgtexel = textureRegOrTriplanar(specularGlossinessTexture, vtex, vpos, N);
+    #ifdef TRIPLANAR
+    vec4 sgtexel = triplanar(specularGlossinessTexture, vtex, vpos, N);
+    #else
+    vec4 sgtexel = texture(specularGlossinessTexture, vtex);
+    #endif
     vec3 specular = sgtexel.rgb * specularFactor.rgb;
     float glossiness = sgtexel.a * glossinessFactor;
     #else
@@ -87,7 +118,11 @@ void main() {
     float rough = 1. - glossiness;
     #else
     #ifdef METALLIC_ROUGHNESS_MAP
-    vec4 mrtexel = textureRegOrTriplanar(metallicRoughnessTexture, vtex, vpos, N);
+    #ifdef TRIPLANAR
+    vec4 mrtexel = triplanar(metallicRoughnessTexture, vtex, vpos, N);
+    #else
+    vec4 mrtexel = texture(metallicRoughnessTexture, vtex);
+    #endif
     float metal = mrtexel.b * metallic;
     float rough = mrtexel.g * roughness;
     #else
@@ -98,9 +133,10 @@ void main() {
     vec3 F0 = mix(vec3(0.04), albedo.rgb, metal);
     #endif
 
-    cdiffChannel = vec4(c_diff, albedo.a); // TODO vec3 RGB TODO unused a channel
-    normalChannel = vec4(N * 0.5 + 0.5, 1.0); // TODO vec3 RGB TODO unused a channel
+    cdiffChannel = vec3(c_diff);
+    normalChannel = vec3(N * 0.5 + 0.5);
     materialChannel = vec4(F0, rough);
+    emissionChannel = vec3(emission);
 }
 
 

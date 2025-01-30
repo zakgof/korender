@@ -25,4 +25,6 @@ interface FrameContext : KorenderContext {
     fun DirectionalLight(direction: Vec3, color: Color = Color.White, block: ShadowContext.() -> Unit = {})
     fun PointLight(position: Vec3, color: Color = Color.White)
     fun AmbientLight(color: Color)
+
+    fun DeferredShading(vararg compositionModifiers: MaterialModifier)
 }

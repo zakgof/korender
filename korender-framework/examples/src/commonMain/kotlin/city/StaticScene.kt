@@ -10,7 +10,6 @@ import com.zakgof.korender.examples.city.controller.Controller
 import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Color.Companion.White
 
-
 class StaticScene(private val kc: KorenderContext, private val controller: Controller) {
 
     private val cityTriangulation = cityTriangulation()

@@ -92,7 +92,6 @@ internal class Engine(
     private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
     private val inventory = Inventory(asyncContext)
     private val renderContext = RenderContext(width, height)
-    private var deferredShading = false
 
     // TODO bug here
     private lateinit var sceneTouchBoxesHandler: (TouchEvent) -> Boolean
@@ -102,11 +101,12 @@ internal class Engine(
 
     inner class KorenderContextImpl : KorenderContext {
 
-        override fun Frame(deferredShading: Boolean, block: FrameContext.() -> Unit) {
+        override val target: KorenderContext.TargetPlatform = Platform.target
+
+        override fun Frame(block: FrameContext.() -> Unit) {
             if (frameBlocks.isNotEmpty())
                 throw KorenderException("Only one Frame declaration is allowed")
             frameBlocks.add(block)
-            this@Engine.deferredShading = deferredShading // TODO
         }
 
         override fun OnTouch(handler: (TouchEvent) -> Unit) {
@@ -314,10 +314,10 @@ internal class Engine(
         processKeys()
         val sd = SceneDeclaration()
         frameBlocks.forEach {
-            DefaultFrameContext(kc, sd, deferredShading, frameInfo).apply(it)
+            DefaultFrameContext(kc, sd, frameInfo).apply(it)
         }
         inventory.go {
-            val scene = Scene(sd, inventory, renderContext, deferredShading, frameInfo.time)
+            val scene = Scene(sd, inventory, renderContext, frameInfo.time)
             scene.render()
             checkGlError("during rendering")
             sceneTouchBoxesHandler = scene.touchBoxesHandler

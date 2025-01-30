@@ -168,7 +168,7 @@ actual fun Korender(
 
 internal actual object Platform {
 
-    actual val name: String = "Java ${System.getProperty("java.version")}"
+    actual val target = KorenderContext.TargetPlatform.Desktop
 
     actual fun nanoTime() = System.nanoTime()
 

@@ -71,7 +71,7 @@ float shadow(sampler2D shadowTexture, int index, vec3 vshadow, int mode) {
     return sh;
 }
 
-float casc(int s, float plane, sampler2D shadowTexture) {
+float casc(int s, float plane, vec3 vpos, sampler2D shadowTexture) {
     vec3 vshadow = (bsps[s] * vec4(vpos, 1.0)).xyz;
     if ((shadowMode[s] & 0x80) != 0) {
         vshadow.z = (yMax[s] - vpos.y) / (yMax[s] - yMin[s]);
@@ -82,14 +82,18 @@ float casc(int s, float plane, sampler2D shadowTexture) {
     return sh * cascadeContribution;
 }
 
-vec3 dirLight(int l, vec3 N, vec3 V, vec3 c_diff, vec3 F0, float rough) {
-    float shadowRatio = 0.;
-    int shadowCount = directionalLightShadowTextureCount[l];
-    for (int c=0; c<shadowCount; c++) {
-        int idx = directionalLightShadowTextureIndex[l] + c;
-        shadowRatio += shadowRatios[idx];
-    }
-    vec3 lightValue = directionalLightColor[l].rgb * (1. - shadowRatio);
-    vec3 L = normalize(-directionalLightDir[l]);
-    return calculatePBR(N, V, L, c_diff, F0, rough, lightValue);
+void populateShadowRatios(float plane, vec3 vpos) {
+    #ifdef OPENGL
+    for (int s=0; s<numShadows; s++)
+    shadowRatios[s] = casc(s, plane, vpos, shadowTextures[s]);
+    #else
+    if (numShadows > 0) shadowRatios[0] = casc(0, plane, vpos, shadowTextures[0]);
+    if (numShadows > 1) shadowRatios[1] = casc(1, plane, vpos, shadowTextures[1]);
+    if (numShadows > 2) shadowRatios[2] = casc(2, plane, vpos, shadowTextures[2]);
+    if (numShadows > 3) shadowRatios[3] = casc(3, plane, vpos, shadowTextures[3]);
+    if (numShadows > 4) shadowRatios[4] = casc(4, plane, vpos, shadowTextures[4]);
+    if (numShadows > 5) shadowRatios[5] = casc(5, plane, vpos, shadowTextures[5]);
+    if (numShadows > 6) shadowRatios[6] = casc(6, plane, vpos, shadowTextures[6]);
+    if (numShadows > 7) shadowRatios[7] = casc(7, plane, vpos, shadowTextures[7]);
+    #endif
 }

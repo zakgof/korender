@@ -6,7 +6,6 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedRenderablesContext
-import com.zakgof.korender.impl.engine.MaterialDeclaration
 
 internal data class Cube(val halfSide: Float) : MeshDeclaration
 internal data class Sphere(val radius: Float) : MeshDeclaration
@@ -19,7 +18,6 @@ internal data class InstancedMesh(
     val id: Any,
     val count: Int,
     val mesh: MeshDeclaration,
-    val material: MaterialDeclaration,
     val static: Boolean,
     val transparent: Boolean,
     val block: InstancedRenderablesContext.() -> Unit

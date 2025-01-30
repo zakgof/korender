@@ -10,14 +10,23 @@ import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.Mesh
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.material.DynamicUniforms
+import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.math.Transform
 
-internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms: DynamicUniforms, val transform: Transform = Transform()) {
+internal class Renderable(
+    val mesh: Mesh,
+    val shader: GlGpuShader,
+    val uniforms: DynamicUniforms,
+    val transform: Transform = Transform()
+) {
 
     companion object {
-        fun create(inventory: Inventory, declaration: RenderableDeclaration, camera: Camera): Renderable? {
+        fun create(inventory: Inventory, declaration: RenderableDeclaration, camera: Camera, deferredShading: Boolean): Renderable? {
+
+            val materialDeclaration = materialDeclaration(declaration.base, deferredShading, *declaration.materialModifiers.toTypedArray())
+
             val mesh = inventory.mesh(declaration.mesh) ?: return null
-            val shader = inventory.shader(declaration.shader) ?: return null
+            val shader = inventory.shader(materialDeclaration.shader) ?: return null
 
             if (declaration.mesh is CustomMesh && declaration.mesh.dynamic) {
                 (mesh as Geometry.DefaultMesh).updateMesh(declaration.mesh.block)
@@ -42,7 +51,7 @@ internal class Renderable(val mesh: Mesh, val shader: GlGpuShader, val uniforms:
                     mesh.updateInstances(instances)
                 }
             }
-            return Renderable(mesh, shader, declaration.uniforms, declaration.transform)
+            return Renderable(mesh, shader, materialDeclaration.uniforms, declaration.transform)
         }
     }
 

@@ -52,7 +52,7 @@ internal class WasmImage(
 
 internal actual object Platform {
 
-    actual val name: String = "Wasm"
+    actual val target = KorenderContext.TargetPlatform.Web
 
     @OptIn(DelicateCoroutinesApi::class, ExperimentalUnsignedTypes::class)
     internal actual fun loadFont(bytes: ByteArray): Deferred<FontDef> {

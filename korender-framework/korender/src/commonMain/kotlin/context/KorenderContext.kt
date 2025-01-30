@@ -33,7 +33,7 @@ import kotlinx.coroutines.Deferred
 
 interface KorenderContext {
 
-    fun Frame(deferredShading: Boolean = false, block: FrameContext.() -> Unit)
+    fun Frame(block: FrameContext.() -> Unit)
     fun OnTouch(handler: TouchHandler)
     fun OnKey(handler: KeyHandler)
 
@@ -102,4 +102,12 @@ interface KorenderContext {
     fun vsm(blurRadius: Float? = null): ShadowAlgorithmDeclaration
     fun hard(): ShadowAlgorithmDeclaration
     fun pcss(samples: Int = 32, blurRadius: Float = 0.002f): ShadowAlgorithmDeclaration
+
+    val target: TargetPlatform
+
+    enum class TargetPlatform {
+        Desktop,
+        Android,
+        Web
+    }
 }

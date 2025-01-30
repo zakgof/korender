@@ -9,7 +9,10 @@ import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glClearColor
 import com.zakgof.korender.impl.gl.GL.glDepthMask
+import com.zakgof.korender.impl.gl.GL.glDisable
+import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GL.glViewport
+import com.zakgof.korender.impl.gl.GLConstants.GL_BLEND
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.glgpu.ColorList
@@ -17,9 +20,7 @@ import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Vec3List
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
-import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalTexture
-import com.zakgof.korender.impl.material.MaterialBuilder
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.math.Color
@@ -29,9 +30,10 @@ internal class Scene(
     private val sceneDeclaration: SceneDeclaration,
     private val inventory: Inventory,
     private val renderContext: RenderContext,
-    private val deferredShading: Boolean,
     time: Float
 ) {
+
+    private val deferredShading = sceneDeclaration.deferredShading
 
     val touchBoxesHandler: (TouchEvent) -> Boolean
     private val touchBoxes = mutableListOf<TouchBox>()
@@ -48,15 +50,16 @@ internal class Scene(
         } else
             value
     }
+    private val filters = sceneDeclaration.filters.map { materialDeclaration(BaseMaterial.Screen, deferredShading, *it.toTypedArray())  }
 
     init {
         sceneDeclaration.gltfs.forEach {
             inventory.gltf(it)?.let { l ->
-                sceneDeclaration.renderables += GltfSceneBuilder(it.gltfResource, it.transform, l, deferredShading).build(time)
+                sceneDeclaration.renderables += GltfSceneBuilder(it.gltfResource, it.transform, l).build(time)
             }
         }
         sceneDeclaration.renderables.forEach {
-            val renderable = Renderable.create(inventory, it, renderContext.camera)
+            val renderable = Renderable.create(inventory, it, renderContext.camera, deferredShading)
             renderable?.let { r ->
                 when (it.bucket) {
                     Bucket.OPAQUE -> opaques.add(r)
@@ -96,7 +99,7 @@ internal class Scene(
 
     private fun renderSceneDeferred(uniforms: MutableMap<String, Any?>) {
 
-        uniforms += renderDeferredOpaques(uniforms)
+        renderDeferredOpaques(uniforms)
 
         if (sceneDeclaration.filters.isNotEmpty()) {
             renderToFilter(0, uniforms) {
@@ -107,7 +110,7 @@ internal class Scene(
             renderTransparents(uniforms)
         }
 
-        sceneDeclaration.filters.forEachIndexed { index, filter ->
+        filters.forEachIndexed { index, filter ->
             if (index < sceneDeclaration.filters.size - 1) {
                 renderToFilter(index + 1, uniforms) {
                     renderFilter(filter, uniforms)
@@ -127,22 +130,27 @@ internal class Scene(
             renderToFilter(0, uniforms) {
                 renderForwardOpaques(uniforms)
             }
-            sceneDeclaration.filters.dropLast(1).forEachIndexed { index, filter ->
+            filters.dropLast(1).forEachIndexed { index, filter ->
                 renderToFilter(index + 1, uniforms) {
                     renderFilter(filter, uniforms)
                 }
             }
-            renderFilter(sceneDeclaration.filters.last(), uniforms)
+            renderFilter(filters.last(), uniforms)
             renderTransparents(uniforms)
         }
     }
 
-    private fun renderDeferredOpaques(uniforms: Map<String, Any?>): Map<String, Any?> {
+    private fun renderDeferredOpaques(uniforms: MutableMap<String, Any?>) {
         // TODO: configurable texture channels resolutions (half/quarter)
         val geometryBuffer = inventory.frameBuffer(
             FrameBufferDeclaration(
                 "geometry", renderContext.width, renderContext.height,
-                listOf(GlGpuTexture.Preset.RGBANoFilter, GlGpuTexture.Preset.RGBANoFilter, GlGpuTexture.Preset.RGBANoFilter),
+                listOf(
+                    GlGpuTexture.Preset.RGBANoFilter,
+                    GlGpuTexture.Preset.RGBANoFilter,
+                    GlGpuTexture.Preset.RGBANoFilter,
+                    GlGpuTexture.Preset.RGBANoFilter,
+                ),
                 true
             )
         ) ?: throw SkipRender
@@ -150,14 +158,16 @@ internal class Scene(
             glClearColor(0f, 0f, 0f, 1f)
             glViewport(0, 0, renderContext.width, renderContext.height)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+            glDisable(GL_BLEND);
             opaques.forEach { it.render(uniforms, fixer) }
+            glEnable(GL_BLEND);
         }
-        return mapOf(
-            "cdiffTexture" to geometryBuffer.colorTextures[0],
-            "normalTexture" to geometryBuffer.colorTextures[1],
-            "materialTexture" to geometryBuffer.colorTextures[2],
-            "depthTexture" to geometryBuffer.depthTexture!!
-        )
+        uniforms["cdiffTexture"] = geometryBuffer.colorTextures[0]
+        uniforms["normalTexture"] = geometryBuffer.colorTextures[1]
+        uniforms["materialTexture"] = geometryBuffer.colorTextures[2]
+        uniforms["emissionTexture"] = geometryBuffer.colorTextures[3]
+        uniforms["depthTexture"] = geometryBuffer.depthTexture!!
+
     }
 
     private fun renderComposition(uniforms: MutableMap<String, Any?>) {
@@ -166,12 +176,8 @@ internal class Scene(
         glViewport(0, 0, renderContext.width, renderContext.height)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         renderFilter(
-            materialDeclaration(
-                MaterialBuilder(false),
-                InternalMaterialModifier {
-                    it.vertShaderFile = "!shader/screen.vert"
-                    it.fragShaderFile = "!shader/composition.frag"
-                }
+            materialDeclaration(BaseMaterial.Composition, true,
+                *sceneDeclaration.compositionModifiers.toTypedArray()
             ),
             uniforms
         )
