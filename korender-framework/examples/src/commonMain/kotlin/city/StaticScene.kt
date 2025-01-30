@@ -30,8 +30,6 @@ class StaticScene(private val kc: KorenderContext, private val controller: Contr
     private val roadsMesh = roads.roads.toCustomMesh("roadz")
     private val fillersMesh = roads.fillers.toCustomMesh("fillers")
 
-
-
     fun render(fc: FrameContext) = with(fc) {
 
         val roof = standart {
@@ -61,32 +59,6 @@ class StaticScene(private val kc: KorenderContext, private val controller: Contr
             pbr.metallic = 0.0f
             pbr.roughness = 0.8f
         }
-
-        Renderable(
-            windows,
-            plugin("emission", "city/window.emission.plugin.frag"),
-            mesh = windowsMesh
-        )
-
-        Renderable(roof, mesh = roofMesh)
-
-        Renderable(asphalt, mesh = fillersMesh)
-
-//        Renderable(asphalt,
-//            mesh = cube(),
-//            transform = scale(386f, 2f, 386f).translate(-383f, 1f, -383f)
-//        )
-
-        Renderable(
-            crossroad,
-            mesh = crossroadsMesh
-        )
-
-        Renderable(
-            road,
-            mesh = roadsMesh
-        )
-
         val sky = starrySky {
             colorness = 0.4f
             density = 20f
@@ -95,10 +67,14 @@ class StaticScene(private val kc: KorenderContext, private val controller: Contr
         }
         val moon = plugin("secsky", "city/moon.secsky.plugin.frag")
 
-        Sky(sky, moon)
+        Renderable(windows, plugin("emission", "city/window.emission.plugin.frag"), mesh = windowsMesh)
+        Renderable(roof, mesh = roofMesh)
 
-//        Scene(gltfResource = "city/racecar.glb", transform = scale(0.6f).translate(3.2f, 0.11f, -98f))
-//        Scene(gltfResource = "city/car2.glb", transform = scale(0.2f).translate(6.2f, 0.00f, -98f))
+        Renderable(asphalt, mesh = fillersMesh)
+        Renderable(crossroad, mesh = crossroadsMesh)
+        Renderable(road, mesh = roadsMesh)
+
+        Sky(sky, moon)
 
         Filter(water(), sky, moon)
         Filter(fog())

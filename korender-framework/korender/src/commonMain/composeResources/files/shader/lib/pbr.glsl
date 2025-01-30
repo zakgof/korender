@@ -1,11 +1,6 @@
 // Constants
 const float PI = 3.14159265359;
 
-// Helper functions
-vec3 fresnelSchlick(float cosTheta, vec3 F0) {
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}
-
 float distributionGGX(float NdotH, float roughness) {
     float a = roughness * roughness;
     float a2 = a * a;
@@ -30,8 +25,7 @@ float geometrySmith(float NdotV, float NdotL, float roughness) {
     return ggx1 * ggx2;
 }
 
-vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 cdiff, vec3 F0, float roughness,
-                  vec3 lightColor) {
+vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 cdiff, vec3 F0, float roughness, vec3 lightColor) {
 
     vec3 H = normalize(V + L);
 
@@ -43,9 +37,14 @@ vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 cdiff, vec3 F0, float roughness,
     vec3 F = F0 + (1. - F0) * pow(1. - VdotH, 5.);
     vec3 f_diffuse = (1. - F) * (1. / PI) * cdiff;
 
+#ifdef BLINN_PHONG
+    float shininess = mix(2.0, 256.0, 1.0 - roughness);
+    vec3 f_specular = F * pow(NdotH, shininess);
+#else
     float D = distributionGGX(NdotH, roughness);
     float G = geometrySmith(NdotV, NdotL, roughness);
     vec3 f_specular = F * D * G / max(4.0 * NdotV * NdotL, 0.000001);
+#endif
 
     return (f_diffuse + f_specular) * NdotL * lightColor;
 }
