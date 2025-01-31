@@ -53,7 +53,7 @@ float pcss(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float penumbr
 }
 
 float hard(sampler2D shadowTexture, vec3 vshadow) {
-    float beavis = 0.002;
+    float beavis = 0.0005;
     float shadowSample = texture(shadowTexture, vshadow.xy).r;
 
     return (shadowSample < vshadow.z - beavis

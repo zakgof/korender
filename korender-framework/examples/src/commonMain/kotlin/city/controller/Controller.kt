@@ -36,7 +36,7 @@ class Controller {
 
     fun joystick(offset: Pair<Float, Float>, dt: Float) {
         character.position = heightField.land(character.position + character.direction * (-offset.second * dt) * 10.3f)
-        character.direction = (fromAxisAngle(1.y, -offset.first * dt * 2.4f) * character.direction).normalize()
+        character.direction = (fromAxisAngle(1.y, -offset.first * dt * 1.4f) * character.direction).normalize()
     }
 
     fun touch(touchEvent: TouchEvent) =
@@ -48,7 +48,7 @@ class Controller {
 
     fun update(dt: Float) {
         character.position = heightField.land(character.position + character.direction * (forward * dt) * 10.3f)
-        character.direction = (fromAxisAngle(1.y, rota * dt * 2.4f) * character.direction).normalize()
+        character.direction = (fromAxisAngle(1.y, rota * dt * 1.4f) * character.direction).normalize()
     }
 
     inner class Character {

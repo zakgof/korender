@@ -6,6 +6,7 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.Color.Companion.white
 import com.zakgof.korender.math.FloatMath.PIdiv2
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
@@ -20,8 +21,8 @@ fun ObjFileExample() {
         val orbitCamera = OrbitCamera(this, 20.z, 0.z)
         OnTouch { orbitCamera.touch(it) }
         Frame {
-            DirectionalLight(Vec3(1.0f, -1.0f, -1.0f).normalize(), Color.white(7f))
-            AmbientLight(Color.white(0.2f))
+            DirectionalLight(Vec3(1.0f, -1.0f, -1.0f).normalize(), white(3f))
+            AmbientLight(white(0.2f))
             camera = orbitCamera.camera(projection, width, height)
             Renderable(
                 standart {

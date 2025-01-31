@@ -19,8 +19,8 @@ class Joystick {
             var xx = keyX + touchX
             var yy = keyY + touchY
             val l2 = xx * xx + yy * yy
-            if (l2 > 1.0) {
-                val l = 1.0f / sqrt(l2)
+            if (l2 > 4.0) {
+                val l = 2.0f / sqrt(l2)
                 xx *= l
                 yy *= l
             }
@@ -49,25 +49,38 @@ class Joystick {
                 keyX = 0f
         }
 
-        val minDim = min(width, height) / 10
+        val unit = min(width, height) / 24
         Stack {
-            Image(imageResource = "city/joystick-outer.png", width = minDim * 2, height = minDim * 2, marginBottom = minDim / 2, marginLeft = minDim / 2)
-            Image(id = "joystick", imageResource = "city/joystick-inner.png", width = minDim, height = minDim, marginLeft = minDim + (offset.first * minDim / 2).toInt(), marginTop = minDim / 2 + (offset.second * minDim / 2).toInt(), onTouch = { touch ->
-                if (touch.type == TouchEvent.Type.DOWN) {
-                    downEvent = touch
-                    touchX = 0f
-                    touchY = 0f
-                }
-                if (touch.type == TouchEvent.Type.UP) {
-                    downEvent = null
-                    touchX = 0f
-                    touchY = 0f
-                }
-                if (touch.type == TouchEvent.Type.MOVE && downEvent != null) {
-                    touchX = (2.0f * (touch.x - downEvent!!.x) / minDim)
-                    touchY = (2.0f * (touch.y - downEvent!!.y) / minDim)
-                }
-            })
+            Image(
+                imageResource = "city/joystick-outer.png",
+                width = unit * 8,
+                height = unit * 8,
+                marginLeft = unit,
+                marginBottom = unit
+            )
+            Image(
+                id = "joystick",
+                imageResource = "city/joystick-inner.png",
+                width = unit * 4,
+                height = unit * 4,
+                marginLeft = unit * 3 + (offset.first * unit).toInt(),
+                marginTop = unit * 2 + (offset.second * unit).toInt(),
+                onTouch = { touch ->
+                    if (touch.type == TouchEvent.Type.DOWN) {
+                        downEvent = touch
+                        touchX = 0f
+                        touchY = 0f
+                    }
+                    if (touch.type == TouchEvent.Type.UP) {
+                        downEvent = null
+                        touchX = 0f
+                        touchY = 0f
+                    }
+                    if (touch.type == TouchEvent.Type.MOVE && downEvent != null) {
+                        touchX = (1.0f * (touch.x - downEvent!!.x) / unit)
+                        touchY = (1.0f * (touch.y - downEvent!!.y) / unit)
+                    }
+                })
         }
     }
 }
