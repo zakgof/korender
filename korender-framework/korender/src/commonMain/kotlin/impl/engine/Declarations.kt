@@ -73,6 +73,7 @@ internal sealed class ElementDeclaration {
     ) : ElementDeclaration()
 
     class Image(
+        val id: Any?,
         val imageResource: String,
         val width: Int,
         val height: Int,

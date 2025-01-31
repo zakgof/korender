@@ -93,8 +93,8 @@ internal class Engine(
     private val inventory = Inventory(asyncContext)
     private val renderContext = RenderContext(width, height)
 
-    // TODO bug here
-    private lateinit var sceneTouchBoxesHandler: (TouchEvent) -> Boolean
+    private var touchBoxes: List<Scene.TouchBox> = listOf()
+    private var pressedTouchBoxIds = setOf<Any>()
     private val touchHandlers = mutableListOf<TouchHandler>()
     private val keyHandlers = mutableListOf<KeyHandler>()
     private val kc = KorenderContextImpl()
@@ -320,7 +320,7 @@ internal class Engine(
             val scene = Scene(sd, inventory, renderContext, frameInfo.time)
             scene.render()
             checkGlError("during rendering")
-            sceneTouchBoxesHandler = scene.touchBoxesHandler
+            touchBoxes = scene.touchBoxes
         }
     }
 
@@ -331,7 +331,38 @@ internal class Engine(
         do {
             val event = touchQueue.tryReceive().getOrNull()
             event?.let { touchEvent ->
-                if (!sceneTouchBoxesHandler(touchEvent)) {
+
+                val handled = when (touchEvent.type) {
+
+                    TouchEvent.Type.DOWN -> {
+                        val hitIds = touchBoxes.filter { it.touch(touchEvent, false) }.map { it.id }
+                        pressedTouchBoxIds = hitIds.filterNotNull().toSet()
+                        hitIds.isNotEmpty()
+                    }
+
+                    TouchEvent.Type.MOVE -> {
+                        if (pressedTouchBoxIds.isEmpty()) {
+                            false
+                            // touchBoxes.fold(false) { acc, tb -> acc or tb.touch(touchEvent, false) }
+                        } else {
+                            touchBoxes.filter { pressedTouchBoxIds.contains(it.id) }
+                                .fold(false) { acc, tb -> acc or tb.touch(touchEvent, true) }
+                        }
+                    }
+
+                    TouchEvent.Type.UP -> {
+                        val handled = if (pressedTouchBoxIds.isEmpty()) {
+                            false
+                            // touchBoxes.fold(false) { acc, tb -> acc or tb.touch(touchEvent, false) }
+                        } else {
+                            touchBoxes.filter { pressedTouchBoxIds.contains(it.id) }
+                                .fold(false) { acc, tb -> acc or tb.touch(touchEvent, true) }
+                        }
+                        pressedTouchBoxIds = setOf()
+                        handled
+                    }
+                }
+                if (!handled) {
                     touchHandlers.forEach { it(touchEvent) }
                 }
             }
@@ -346,7 +377,7 @@ internal class Engine(
     }
 
     fun resize(w: Int, h: Int) {
-        println("Engine resize $w x $h")
+        println("Viewport resize $w x $h")
         renderContext.width = w
         renderContext.height = h
     }

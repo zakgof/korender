@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.KorenderException
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.engine.Scene.TouchBox
 import com.zakgof.korender.impl.font.Fonts
@@ -33,8 +34,8 @@ internal class GuiRenderer(
         width: Int,
         height: Int,
         container: ElementDeclaration.Container
-    ) {
-        if (container.direction == Direction.Vertical) {
+    ): Unit = when (container.direction) {
+        Direction.Vertical -> {
             val fillers = container.elements.count { sizes[it]!!.height < 0 }
             val normalsHeight =
                 container.elements.map { sizes[it]!!.height }.filter { it >= 0 }.sum()
@@ -47,21 +48,14 @@ internal class GuiRenderer(
                 when (child) {
                     is ElementDeclaration.Text -> createText(child, x, currY, childWidth)
                     is ElementDeclaration.Image -> createImage(child, x, currY)
-                    is ElementDeclaration.Container -> layoutContainer(
-                        sizes,
-                        x,
-                        currY,
-                        childWidth,
-                        childHeight,
-                        child
-                    )
-
+                    is ElementDeclaration.Container -> layoutContainer(sizes, x, currY, childWidth, childHeight, child)
                     is ElementDeclaration.Filler -> {}
                 }
                 currY += childHeight
             }
         }
-        if (container.direction == Direction.Horizontal) {
+
+        Direction.Horizontal -> {
             val fillers = container.elements.count { sizes[it]!!.width < 0 }
             val normalsWidths =
                 container.elements.map { sizes[it]!!.width }.filter { it >= 0 }.sum()
@@ -74,18 +68,23 @@ internal class GuiRenderer(
                 when (child) {
                     is ElementDeclaration.Text -> createText(child, currX, y, childWidth)
                     is ElementDeclaration.Image -> createImage(child, currX, y)
-                    is ElementDeclaration.Container -> layoutContainer(
-                        sizes,
-                        currX,
-                        y,
-                        childWidth,
-                        childHeight,
-                        child
-                    )
-
+                    is ElementDeclaration.Container -> layoutContainer(sizes, currX, y, childWidth, childHeight, child)
                     is ElementDeclaration.Filler -> {}
                 }
                 currX += childWidth
+            }
+        }
+
+        Direction.Stack -> {
+            if (container.elements.any { sizes[it]!!.width < 0 }) throw KorenderException("Fillers not allowed in Stack")
+            for (child in container.elements) {
+                val declSize = sizes[child]!!
+                when (child) {
+                    is ElementDeclaration.Text -> createText(child, x, y, declSize.width)
+                    is ElementDeclaration.Image -> createImage(child, x, y)
+                    is ElementDeclaration.Container -> layoutContainer(sizes, x, y, declSize.width, declSize.height, child)
+                    is ElementDeclaration.Filler -> {}
+                }
             }
         }
     }
@@ -126,7 +125,8 @@ internal class GuiRenderer(
                     y + declaration.marginTop,
                     declaration.width,
                     declaration.height,
-                    declaration.onTouch
+                    declaration.id,
+                    declaration.onTouch,
                 )
             )
         }
@@ -159,7 +159,7 @@ internal class GuiRenderer(
                     }
                 )
             )
-            touchBoxes.add(TouchBox(x, y, w, declaration.height, declaration.onTouch))
+            touchBoxes.add(TouchBox(x, y, w, declaration.height, declaration.id, declaration.onTouch))
         }
     }
 
@@ -175,44 +175,59 @@ internal class GuiRenderer(
                 if (parentDirection == Direction.Vertical) Size(0, -1) else Size(-1, 0)
             }
 
-            is ElementDeclaration.Container -> {
-                if (element.direction == Direction.Vertical) {
-                    var w = 0
-                    var h = 0
-                    for (child in element.elements) {
-                        val childSize = sizeEm(element.direction, child, sizes)
-                        if (w >= 0) {
-                            w = if (childSize.width < 0) -1 else max(w, childSize.width)
-                        }
-                        if (h >= 0) {
-                            if (childSize.height < 0) {
-                                h = -1
-                            } else {
-                                h += childSize.height
+            is ElementDeclaration.Container ->
+                when (element.direction) {
+                    Direction.Vertical -> {
+                        var w = 0
+                        var h = 0
+                        for (child in element.elements) {
+                            val childSize = sizeEm(element.direction, child, sizes)
+                            if (w >= 0) {
+                                w = if (childSize.width < 0) -1 else max(w, childSize.width)
+                            }
+                            if (h >= 0) {
+                                if (childSize.height < 0) {
+                                    h = -1
+                                } else {
+                                    h += childSize.height
+                                }
                             }
                         }
+                        Size(w, h)
                     }
-                    Size(w, h)
-                } else {
-                    var w = 0
-                    var h = 0
-                    for (child in element.elements) {
-                        val childSize = sizeEm(element.direction, child, sizes)
-                        if (h >= 0) {
-                            h = if (childSize.height < 0) -1 else max(h, childSize.height)
-                        }
-                        if (w >= 0) {
-                            if (childSize.width < 0) {
-                                w = -1
-                            } else {
-                                w += childSize.width
+
+                    Direction.Horizontal -> {
+                        var w = 0
+                        var h = 0
+                        for (child in element.elements) {
+                            val childSize = sizeEm(element.direction, child, sizes)
+                            if (h >= 0) {
+                                h = if (childSize.height < 0) -1 else max(h, childSize.height)
+                            }
+                            if (w >= 0) {
+                                if (childSize.width < 0) {
+                                    w = -1
+                                } else {
+                                    w += childSize.width
+                                }
                             }
                         }
+                        Size(w, h)
                     }
-                    Size(w, h)
+
+                    Direction.Stack -> {
+                        var w = 0
+                        var h = 0
+                        for (child in element.elements) {
+                            val childSize = sizeEm(element.direction, child, sizes)
+                            w = max(childSize.width, w)
+                            h = max(childSize.height, h)
+                        }
+                        Size(w, h)
+                    }
                 }
-            }
         }
+
         sizes[element] = size
         return size
     }

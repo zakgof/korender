@@ -35,8 +35,7 @@ internal class Scene(
 
     private val deferredShading = sceneDeclaration.deferredShading
 
-    val touchBoxesHandler: (TouchEvent) -> Boolean
-    private val touchBoxes = mutableListOf<TouchBox>()
+    val touchBoxes: List<TouchBox>
 
     private val opaques = mutableListOf<Renderable>()
     private val transparents = mutableListOf<Renderable>()
@@ -73,10 +72,7 @@ internal class Scene(
             GuiRenderer(inventory, renderContext.width, renderContext.height, it)
         }
         screens.addAll(guiRenderers.flatMap { it.renderables })
-        touchBoxes.addAll(guiRenderers.flatMap { it.touchBoxes })
-        touchBoxesHandler = { evt ->
-            touchBoxes.any { it.touch(evt) }
-        }
+        touchBoxes = guiRenderers.flatMap { it.touchBoxes }
     }
 
     fun render() {
@@ -266,11 +262,13 @@ internal class Scene(
         private val y: Int,
         private val w: Int,
         private val h: Int,
+        val id: Any?,
         private val handler: TouchHandler
     ) {
-        fun touch(touchEvent: TouchEvent): Boolean {
-            // TODO: process drag-out as UP
-            if (touchEvent.x > x && touchEvent.x < x + w && touchEvent.y > y && touchEvent.y < y + h) {
+
+
+        fun touch(touchEvent: TouchEvent, forced: Boolean): Boolean {
+            if (forced || touchEvent.x > x && touchEvent.x < x + w && touchEvent.y > y && touchEvent.y < y + h) {
                 handler(touchEvent)
                 return true
             }

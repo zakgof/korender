@@ -59,7 +59,7 @@ internal class DefaultFrameContext(
 
     override fun Gui(block: GuiContainerContext.() -> Unit) {
         val root = ElementDeclaration.Container(Direction.Vertical)
-        DefaultContainerContext(root).apply(block)
+        DefaultContainerContext(this, root).apply(block)
         sceneDeclaration.guis += root
     }
 

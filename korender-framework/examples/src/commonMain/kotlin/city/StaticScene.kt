@@ -7,7 +7,6 @@ import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.examples.city.controller.Controller
-import com.zakgof.korender.math.Color
 import com.zakgof.korender.math.Color.Companion.White
 
 class StaticScene(private val kc: KorenderContext, private val controller: Controller) {
@@ -78,15 +77,6 @@ class StaticScene(private val kc: KorenderContext, private val controller: Contr
         Filter(water(), sky, moon)
         Filter(fog())
 
-        Gui {
-            Filler()
-            Text(
-                id = "fps",
-                text = "FPS ${frameInfo.avgFps.toInt()}",
-                fontResource = "font/anta.ttf",
-                height = 20,
-                color = Color(0xFF66FF55)
-            )
-        }
     }
 }
+

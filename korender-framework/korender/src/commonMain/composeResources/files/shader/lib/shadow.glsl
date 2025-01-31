@@ -30,7 +30,7 @@ vec2 vogelDiskSample(int sampleIndex, int numSamples, float phi) {
 }
 
 float pcss(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float penumbraWidth) {
-    float beavis = 0.002;
+    float beavis = 0.0005;
 
     const float PHI = 1.61803398874989484820459;
     float phi = 0.; // 6.28 * fract(tan(distance(vpos.xy * 20.0 * PHI, vpos.xy * 20.0) * 0.01) * vpos.x);
