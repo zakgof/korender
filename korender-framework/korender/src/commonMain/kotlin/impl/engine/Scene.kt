@@ -54,7 +54,7 @@ internal class Scene(
     init {
         sceneDeclaration.gltfs.forEach {
             inventory.gltf(it)?.let { l ->
-                sceneDeclaration.renderables += GltfSceneBuilder(it.gltfResource, it.transform, l).build(time)
+                sceneDeclaration.renderables += GltfSceneBuilder(it.gltfResource, it.transform, l).build(it.time)
             }
         }
         sceneDeclaration.renderables.forEach {

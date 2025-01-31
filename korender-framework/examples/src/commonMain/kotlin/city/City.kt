@@ -28,7 +28,6 @@ fun City() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         DeferredShading(/* plugin("color", "city/composition.color.plugin.frag") */)
 
         OnTouch { controller.touch(it) }
-        OnKey { controller.key(it) }
         projection = frustum(width = 0.3f * width / height, height = 0.3f, near = 0.3f, far = 500f)
         camera = controller.camera(this)
 
@@ -57,7 +56,7 @@ fun City() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         }
 
         staticScene.render(this)
-        Scene(gltfResource = "city/swat.glb", transform = controller.character.transform * scale(0.002f))
+        Scene(gltfResource = "city/swat.glb", time=controller.character.animTime, transform = controller.character.transform * scale(0.002f))
 
         Gui {
             Text(
@@ -75,8 +74,6 @@ fun City() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         }
 
         controller.joystick(joystick.offset, frameInfo.dt)
-
-        controller.update(frameInfo.dt)
 
     }
 }

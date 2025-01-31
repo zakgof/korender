@@ -37,8 +37,8 @@ internal class DefaultFrameContext(
         sceneDeclaration.compositionModifiers += compositionModifiers
     }
 
-    override fun Scene(gltfResource: String, transform: Transform) {
-        sceneDeclaration.gltfs += GltfDeclaration(gltfResource, transform)
+    override fun Scene(gltfResource: String, transform: Transform, time: Float?) {
+        sceneDeclaration.gltfs += GltfDeclaration(gltfResource, transform, time ?: frameInfo.time)
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean) {
