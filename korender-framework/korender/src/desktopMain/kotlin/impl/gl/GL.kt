@@ -15,6 +15,9 @@ actual object GL {
     actual fun glDrawElements(mode: Int, count: Int, type: Int, indices: Int) =
         GL11.glDrawElements(mode, count, type, indices.toLong())
 
+    actual fun glDrawArrays(mode: Int, starting: Int, count: Int) =
+        GL11.glDrawArrays(mode, starting, count)
+
     actual fun glEnable(target: Int) = GL11.glEnable(target)
 
     actual fun glDisable(target: Int) = GL11.glDisable(target)

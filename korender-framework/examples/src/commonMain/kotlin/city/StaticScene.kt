@@ -63,6 +63,7 @@ class StaticScene(private val kc: KorenderContext, private val controller: Contr
             size = 20f
             set("moonTexture", texture("city/moon.png"))
         }
+
         val moon = plugin("secsky", "city/moon.secsky.plugin.frag")
 
         Renderable(windows, plugin("emission", "city/window.emission.plugin.frag"), mesh = windowsMesh)

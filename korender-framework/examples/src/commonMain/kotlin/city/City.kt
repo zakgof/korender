@@ -11,6 +11,7 @@ import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.random.Random
+
 fun Int.chance(block: () -> Unit) {
     if (Random.nextInt(100) < this) block()
 }
@@ -31,11 +32,7 @@ fun City() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         projection = frustum(width = 0.3f * width / height, height = 0.3f, near = 0.3f, far = 500f)
         camera = controller.camera(this)
 
-        if (target == KorenderContext.TargetPlatform.Desktop) {
-            AmbientLight(white(0.2f))
-        } else {
-            AmbientLight(white(0.4f))
-        }
+        AmbientLight(white(0.4f))
         DirectionalLight(Vec3(3f, -5f, 6f).normalize(), white(1.0f)) {
             if (target == KorenderContext.TargetPlatform.Desktop) {
                 Cascade(1024, 0.3f, 2.8f, -1f to 60f, pcss(8))
@@ -56,7 +53,12 @@ fun City() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         }
 
         staticScene.render(this)
-        Scene(gltfResource = "city/swat.glb", time=controller.character.animTime, transform = controller.character.transform * scale(0.002f))
+        Scene(
+            gltfResource = "city/swat-woman.glb",
+            animation = 1,
+            time = controller.character.animTime,
+            transform = controller.character.transform * scale(0.002f)
+        )
 
         Gui {
             Text(

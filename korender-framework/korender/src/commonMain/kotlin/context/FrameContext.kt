@@ -18,7 +18,7 @@ interface FrameContext : KorenderContext {
     fun Gui(block: GuiContainerContext.() -> Unit)
     fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: Any, count: Int, mesh: MeshDeclaration, static: Boolean = false, transparent: Boolean = false, block: InstancedRenderablesContext.() -> Unit)
     fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, transparent: Boolean = false, block: InstancedBillboardsContext.() -> Unit)
-    fun Scene(gltfResource: String, transform: Transform = Transform(), time: Float? = null)
+    fun Scene(gltfResource: String, animation:Int = 0, transform: Transform = Transform(), time: Float? = null)
 
     fun Filter(vararg materialModifiers: MaterialModifier)
 

@@ -8,7 +8,7 @@ vec3 pluginSecsky(vec3 look, vec3 color) {
 
     if (tex.x > 0.0 && tex.x < 1.0 && tex.y > 0.0 && tex.y < 1.0) {
         vec4 moon = texture(moonTexture, tex);
-        return moon.rgb * moon.a + color * (1.0 - moon.a);
+        color = moon.rgb * moon.a + color * (1.0 - moon.a);
     }
     return color;
 }

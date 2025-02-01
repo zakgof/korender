@@ -36,9 +36,9 @@ class Controller {
         chaseCamera.camera(fc)
 
     fun joystick(offset: Pair<Float, Float>, dt: Float) {
-        character.position = heightField.land(character.position + character.direction * ((forward-offset.second) * dt) * 10.3f)
+        character.position = heightField.land(character.position + character.direction * ((forward-offset.second) * dt) * 0.6f)
         character.direction = (fromAxisAngle(1.y, -(offset.first + rota) * dt * 1.4f) * character.direction).normalize()
-        character.animTime += (forward-offset.second) * 3.0f * dt
+        character.animTime += (forward-offset.second) * 1.0f * dt
 
         if (abs(forward - offset.second) < 0.001f) {
             if (fract((character.animTime + 0.38f) / 1.375f) < 0.1) {

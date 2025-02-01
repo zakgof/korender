@@ -8,6 +8,8 @@ expect object GL {
 
     fun glDrawElements(mode: Int, count: Int, type: Int, indices: Int)
 
+    fun glDrawArrays(mode: Int, starting: Int, count: Int)
+
     fun glEnable(target: Int)
 
     fun glDisable(target: Int)

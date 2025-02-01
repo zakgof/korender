@@ -153,8 +153,7 @@ internal object GltfLoader {
 }
 
 internal class GltfSceneBuilder(
-    private val resource: String,
-    private val globalTransform: Transform,
+    private val declaration: GltfDeclaration,
     private val gltfLoaded: GltfLoaded,
 ) {
     private val nodeMatrices = mutableMapOf<Int, Transform>()
@@ -176,7 +175,8 @@ internal class GltfSceneBuilder(
             LoadedSkin(inverseBindMatrices, listOf()) // TODO separate these two things
         }?.let { loadedSkins.addAll(it) }
 
-        model.animations?.forEach { animation ->
+        if (declaration.animation < (model.animations?.size ?: 0)) {
+            val animation = model.animations!![declaration.animation]
             val samplerValues = animation.samplers.map { sampler -> getSamplerValue(sampler, time) }
             animation.channels.forEach { channel ->
                 nodeAnimations.getOrPut(channel.target.node!!) {
@@ -187,7 +187,7 @@ internal class GltfSceneBuilder(
 
         scene.nodes.forEach { nodeIndex ->
             processNode(
-                globalTransform,
+                declaration.transform,
                 nodeIndex,
                 model.nodes!![nodeIndex]
             )
@@ -395,14 +395,14 @@ internal class GltfSceneBuilder(
             }
 
         return CustomMesh(
-            "$resource:$meshIndex:$primitiveIndex",
+            "${declaration.gltfResource}:$meshIndex:$primitiveIndex",
             verticesAttributeAccessors.first().second.count,
-            indicesAccessor!!.count,
+            indicesAccessor?.count ?: 0,
             verticesAttributeAccessors.map { it.first },
             false,
-            accessorComponentTypeToIndexType(indicesAccessor.componentType)
+            accessorComponentTypeToIndexType(indicesAccessor?.componentType)
         ) {
-            indexBytes(getAccessorBytes(indicesAccessor))
+            indicesAccessor?.let {indexBytes(getAccessorBytes(it))}
             verticesAttributeAccessors.forEach {
                 attrBytes(it.first, getAccessorBytes(it.second))
             }
@@ -424,8 +424,9 @@ internal class GltfSceneBuilder(
         }
     }
 
-    private fun accessorComponentTypeToIndexType(componentType: Int) =
+    private fun accessorComponentTypeToIndexType(componentType: Int?) =
         when (componentType) {
+            null -> null
             GLConstants.GL_UNSIGNED_BYTE -> IndexType.Byte
             GLConstants.GL_UNSIGNED_SHORT -> IndexType.Short
             GLConstants.GL_UNSIGNED_INT -> IndexType.Int
