@@ -7,7 +7,8 @@ import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.examples.city.controller.Controller
-import com.zakgof.korender.math.Color.Companion.White
+import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA.Companion.White
 
 class StaticScene(private val kc: KorenderContext, private val controller: Controller) {
 
@@ -36,6 +37,7 @@ class StaticScene(private val kc: KorenderContext, private val controller: Contr
         }
         val windows = standart {
             baseColorTexture = texture("city/dw.jpg")
+            emissiveFactor = ColorRGB.White
             set("windowTexture", texture("city/lw.jpg", wrap = TextureWrap.MirroredRepeat))
             pbr.metallic = 0.3f
         }

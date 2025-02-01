@@ -1,6 +1,7 @@
 package com.zakgof.korender
 
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 
 interface MaterialModifier
 
@@ -32,7 +33,7 @@ interface SmokeParams : BillboardVertexParams {
 }
 
 interface WaterParams : BaseParams {
-    var waterColor: Color
+    var waterColor: ColorRGB
     var transparency: Float
     var waveScale: Float
 }
@@ -45,13 +46,13 @@ interface AdjustParams : BaseParams {
 
 interface StandartParams : BaseParams {
 
-    var baseColor: Color
+    var baseColor: ColorRGBA
     var baseColorTexture: TextureDeclaration?
     var triplanarScale: Float?
 
     var normalTexture: TextureDeclaration?
     var shadowTexture: TextureDeclaration?
-    var emissiveFactor: Color
+    var emissiveFactor: ColorRGB
     var emissiveTexture: TextureDeclaration?
 
     val pbr: Pbr
@@ -69,7 +70,7 @@ interface StandartParams : BaseParams {
     }
 
     interface SpecularGlossiness {
-        var specularFactor: Color
+        var specularFactor: ColorRGB
         var glossinessFactor: Float
         var specularGlossinessTexture: TextureDeclaration?
     }
@@ -81,8 +82,8 @@ interface FastCloudSkyParams : BaseParams {
     var scale: Float       // 0.1..10
     var rippleamount: Float  // 0..1
     var ripplescale: Float // 1..10
-    var darkblue: Color
-    var lightblue: Color
+    var darkblue: ColorRGB
+    var lightblue: ColorRGB
 }
 
 interface StarrySkyParams : BaseParams {
@@ -94,7 +95,7 @@ interface StarrySkyParams : BaseParams {
 
 interface FogParams : BaseParams {
     var density: Float
-    var color: Color
+    var color: ColorRGB
 }
 
 enum class RenderingOption {

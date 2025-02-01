@@ -6,7 +6,7 @@ import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.Projection
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
@@ -19,7 +19,7 @@ internal class RenderContext(var width: Int, var height: Int) {
         set(newProjection) {
             _projection = newProjection
         }
-    var backgroundColor = Color.Black
+    var backgroundColor = ColorRGB.Black
 
     val frameInfoManager = FrameInfoManager()
 

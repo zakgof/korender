@@ -75,7 +75,7 @@ import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.OrthoProjection
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.impl.resourceBytes
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Vec3
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.channels.Channel
@@ -267,7 +267,7 @@ internal class Engine(
                 renderContext.projection = value as Projection
             }
 
-        override var background: Color
+        override var background: ColorRGB
             get() = renderContext.backgroundColor
             set(value) {
                 renderContext.backgroundColor = value

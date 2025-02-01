@@ -5,12 +5,12 @@ in vec3 vnormal;
 in vec2 vtex;
 
 uniform vec4 baseColor;
-uniform vec4 emissiveFactor;
+uniform vec3 emissiveFactor;
 uniform float metallic;
 uniform float roughness;
 
 #ifdef SPECULAR_GLOSSINESS
-uniform vec4 specularFactor;
+uniform vec3 specularFactor;
 uniform float glossinessFactor;
 #endif
 
@@ -93,7 +93,7 @@ void main() {
     vec3 emission = texture(emissiveTexture, vtex).rgb * emissiveFactor.rgb;
     #endif
     #else
-    vec3 emission = vec3(0.);
+    vec3 emission = emissiveFactor;
     #endif
 
     #ifdef PLUGIN_EMISSION

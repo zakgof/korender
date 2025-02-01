@@ -118,10 +118,10 @@ internal class AndroidImage(
     override val bytes: NativeByteBuffer,
     override val format: Image.Format
 ) : InternalImage {
-    override fun pixel(x: Int, y: Int): com.zakgof.korender.math.Color {
+    override fun pixel(x: Int, y: Int): com.zakgof.korender.math.ColorRGBA {
         // TODO: performance optimization
         val androidColor = bitmap.getPixel(x, y)
-        return com.zakgof.korender.math.Color(androidColor.toLong())
+        return com.zakgof.korender.math.ColorRGBA(androidColor.toLong())
     }
 }
 

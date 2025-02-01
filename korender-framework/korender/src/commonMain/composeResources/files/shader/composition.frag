@@ -12,7 +12,7 @@ uniform sampler2D depthTexture;
 
 uniform vec3 cameraPos;
 uniform vec3 cameraDir;
-uniform vec4 ambientColor;
+uniform vec3 ambientColor;
 uniform mat4 projection;
 uniform mat4 view;
 
@@ -21,13 +21,14 @@ uniform mat4 view;
 const int MAX_LIGHTS = 32;
 uniform int numDirectionalLights;
 uniform vec3 directionalLightDir[MAX_LIGHTS];
-uniform vec4 directionalLightColor[MAX_LIGHTS];
+uniform vec3 directionalLightColor[MAX_LIGHTS];
 uniform int directionalLightShadowTextureIndex[MAX_LIGHTS];
 uniform int directionalLightShadowTextureCount[MAX_LIGHTS];
 
 uniform int numPointLights;
 uniform vec3 pointLightPos[MAX_LIGHTS];
-uniform vec4 pointLightColor[MAX_LIGHTS];
+uniform vec3 pointLightColor[MAX_LIGHTS];
+uniform vec3 pointLightAttenuation[MAX_LIGHTS];
 
 const int MAX_SHADOWS = 8;
 uniform int numShadows;

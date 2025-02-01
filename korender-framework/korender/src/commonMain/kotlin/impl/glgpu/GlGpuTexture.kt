@@ -12,9 +12,7 @@ import com.zakgof.korender.impl.gl.GL.glGenerateMipmap
 import com.zakgof.korender.impl.gl.GL.glGetError
 import com.zakgof.korender.impl.gl.GL.glGetFloatv
 import com.zakgof.korender.impl.gl.GL.glTexImage2D
-import com.zakgof.korender.impl.gl.GL.glTexParameterfv
 import com.zakgof.korender.impl.gl.GL.glTexParameteri
-import com.zakgof.korender.impl.gl.GLConstants.GL_CLAMP_TO_BORDER
 import com.zakgof.korender.impl.gl.GLConstants.GL_CLAMP_TO_EDGE
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_COMPONENT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_COMPONENT16
@@ -34,7 +32,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_RGB
 import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE0
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_2D
-import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_BORDER_COLOR
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MAG_FILTER
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MAX_ANISOTROPY
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MIN_FILTER
@@ -63,7 +60,6 @@ private val filterMagMap = mapOf(
 private val wrapMap = mapOf(
     TextureWrap.MirroredRepeat to GL_MIRRORED_REPEAT,
     TextureWrap.ClampToEdge to GL_CLAMP_TO_EDGE,
-    TextureWrap.ClampToBorder to GL_CLAMP_TO_BORDER,
     TextureWrap.Repeat to GL_REPEAT
 )
 
@@ -104,10 +100,6 @@ internal class GlGpuTexture(
         val glWrap = wrapMap[wrap]!!
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrap)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrap)
-
-        if (glWrap == GL_CLAMP_TO_BORDER) {
-            glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, floatArrayOf(1f, 1f, 1f, 1f))
-        }
 
         if (aniso > 0) {
             ignoringGlError {

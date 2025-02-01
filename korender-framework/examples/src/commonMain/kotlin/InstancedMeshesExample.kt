@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.FreeCamera
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.z
@@ -17,8 +17,7 @@ fun InstancedMeshesExample() = Korender(appResourceLoader = { Res.readBytes(it) 
     val freeCamera = FreeCamera(this, 20.z, -1.z)
     OnTouch { freeCamera.touch(it) }
     Frame {
-        AmbientLight(Color.white(0.4f))
-        DirectionalLight(Vec3(1f, 1f, -2f).normalize(), Color.White)
+        DirectionalLight(Vec3(1f, 1f, -2f).normalize(), ColorRGB.White)
         camera = freeCamera.camera(projection, width, height, frameInfo.dt)
         InstancedRenderables(
             standart {

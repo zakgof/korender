@@ -5,7 +5,8 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -19,9 +20,9 @@ fun TransparencyExample() {
         val orbitCamera = OrbitCamera(this, 20.z, 0.y)
         OnTouch { orbitCamera.touch(it) }
         Frame {
-            AmbientLight(Color.White)
+            AmbientLight(ColorRGB.White)
             camera = orbitCamera.camera(projection, width, height)
-            fun semitransparent(color: Color, position: Vec3) = Renderable(
+            fun semitransparent(color: ColorRGBA, position: Vec3) = Renderable(
                 standart {
                     baseColor = color
                 },
@@ -30,9 +31,9 @@ fun TransparencyExample() {
                 transparent = true
             )
 
-            semitransparent(Color(0.5f, 0.5f, 0.0f, 0.0f), Vec3(0f, 0f, 0f))
-            semitransparent(Color(0.5f, 0.0f, 0.5f, 0.0f), Vec3(1f, 1f, 1f))
-            semitransparent(Color(0.5f, 0.0f, 0.0f, 0.5f), Vec3(-1f, -1f, -1f))
+            semitransparent(ColorRGBA(0.5f, 0.0f, 0.0f,0.5f ), Vec3(0f, 0f, 0f))
+            semitransparent(ColorRGBA(0.0f, 0.5f, 0.0f,0.5f), Vec3(1f, 1f, 1f))
+            semitransparent(ColorRGBA(0.0f, 0.0f, 0.5f,0.5f), Vec3(-1f, -1f, -1f))
         }
     }
 }

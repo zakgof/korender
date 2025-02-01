@@ -16,7 +16,7 @@ import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glClearColor
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
-import com.zakgof.korender.impl.glgpu.ColorList
+import com.zakgof.korender.impl.glgpu.Color4List
 import com.zakgof.korender.impl.glgpu.FloatList
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
@@ -30,7 +30,7 @@ import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.OrthoProjection
 import com.zakgof.korender.impl.projection.Projection
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -308,7 +308,7 @@ internal fun List<ShadowerData>.uniforms(m: MutableMap<String, Any?>) {
     m["numShadows"] = size
     m["shadowTextures[0]"] = GlGpuTextureList(this.map { it.texture })
     m["bsps[0]"] = Mat4List(this.map { it.bsp })
-    m["cascade[0]"] = ColorList(this.map { Color(it.cascade[3], it.cascade[0], it.cascade[1], it.cascade[2]) })
+    m["cascade[0]"] = Color4List(this.map { ColorRGBA(it.cascade[0], it.cascade[1], it.cascade[2], it.cascade[3]) })
     m["yMin[0]"] = FloatList(this.map { it.yMin })
     m["yMax[0]"] = FloatList(this.map { it.yMax })
     m["shadowMode[0]"] = IntList(this.map { it.mode })

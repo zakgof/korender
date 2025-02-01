@@ -41,7 +41,8 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_VERTEX_SHADER
 import com.zakgof.korender.impl.gl.GLUniformLocation
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ShaderDebugInfo
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat3
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec2
@@ -164,7 +165,8 @@ internal class GlGpuShader(
             is Float -> glUniform1f(location, value)
             is Vec2 -> glUniform2f(location, value.x, value.y)
             is Vec3 -> glUniform3f(location, value.x, value.y, value.z)
-            is Color -> glUniform4f(location, value.r, value.g, value.b, value.a)
+            is ColorRGB -> glUniform3f(location, value.r, value.g, value.b)
+            is ColorRGBA -> glUniform4f(location, value.r, value.g, value.b, value.a)
             is Mat4 -> glUniformMatrix4fv(
                 location, false, value.asArray()
             )
@@ -181,7 +183,11 @@ internal class GlGpuShader(
                 glUniform3fv(location, value.values.flatMap { listOf(it.x, it.y, it.z) }.toFloatArray())
             }
 
-            is ColorList -> if (value.values.isNotEmpty()) {
+            is Color3List -> if (value.values.isNotEmpty()) {
+                glUniform3fv(location, value.values.flatMap { listOf(it.r, it.g, it.b) }.toFloatArray())
+            }
+
+            is Color4List -> if (value.values.isNotEmpty()) {
                 glUniform4fv(location, value.values.flatMap { listOf(it.r, it.g, it.b, it.a) }.toFloatArray())
             }
 
@@ -237,6 +243,8 @@ internal data class Mat4List(val matrices: List<Mat4>)
 
 internal data class Vec3List(val values: List<Vec3>)
 
-internal data class ColorList(val values: List<Color>)
+internal data class Color4List(val values: List<ColorRGBA>)
+
+internal data class Color3List(val values: List<ColorRGB>)
 
 internal data class GlGpuTextureList(val textures: List<GlGpuTexture>)

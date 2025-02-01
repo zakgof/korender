@@ -3,7 +3,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGB.Companion.White
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.sin
 
@@ -11,7 +11,7 @@ import kotlin.math.sin
 @Composable
 fun BlurExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
-        AmbientLight(Color.White)
+        AmbientLight(White)
         Renderable(
             standart {
                 baseColorTexture = texture("texture/asphalt-albedo.jpg")

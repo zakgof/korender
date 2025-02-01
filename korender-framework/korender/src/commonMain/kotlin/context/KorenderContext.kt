@@ -27,7 +27,7 @@ import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.WaterParams
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Vec3
 import kotlinx.coroutines.Deferred
 
@@ -39,7 +39,7 @@ interface KorenderContext {
 
     var camera: CameraDeclaration
     var projection: ProjectionDeclaration
-    var background: Color
+    var background: ColorRGB
 
     val width: Int
     val height: Int

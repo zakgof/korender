@@ -2,37 +2,37 @@ package com.zakgof.korender.impl.image
 
 import com.zakgof.korender.Image
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGBA
 
 internal interface InternalImage : Image {
 
     val bytes: NativeByteBuffer
 
-    override fun pixel(x: Int, y: Int): Color =
+    override fun pixel(x: Int, y: Int): ColorRGBA =
         when (format) {
-            Image.Format.RGB -> Color(
-                1.0f,
+            Image.Format.RGB -> ColorRGBA(
                 byteToFloat(bytes.byte((x + y * width) * 3)),
                 byteToFloat(bytes.byte((x + y * width) * 3 + 1)),
-                byteToFloat(bytes.byte((x + y * width) * 3 + 2))
+                byteToFloat(bytes.byte((x + y * width) * 3 + 2)),
+                1.0f,
             )
 
-            Image.Format.RGBA -> Color(
-                byteToFloat(bytes.byte((x + y * width) * 4 + 3)),
+            Image.Format.RGBA -> ColorRGBA(
                 byteToFloat(bytes.byte((x + y * width) * 4)),
                 byteToFloat(bytes.byte((x + y * width) * 4 + 1)),
-                byteToFloat(bytes.byte((x + y * width) * 4 + 2))
+                byteToFloat(bytes.byte((x + y * width) * 4 + 2)),
+                byteToFloat(bytes.byte((x + y * width) * 4 + 3)),
             )
 
             Image.Format.Gray -> {
                 val gray = byteToFloat(bytes.byte((x + y * width)))
-                Color.white(gray)
+                ColorRGBA.white(gray)
             }
 
             Image.Format.Gray16 -> {
                 val gray = (bytes.byte((x + y * width) * 2).toUByte().toFloat() * 256.0f +
                         bytes.byte((x + y * width) * 2 + 1).toUByte().toFloat()) / 65535.0f
-                Color.white(gray)
+                ColorRGBA.white(gray)
             }
         }
 

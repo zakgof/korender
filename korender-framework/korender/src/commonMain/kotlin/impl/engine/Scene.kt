@@ -15,7 +15,7 @@ import com.zakgof.korender.impl.gl.GL.glViewport
 import com.zakgof.korender.impl.gl.GLConstants.GL_BLEND
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
-import com.zakgof.korender.impl.glgpu.ColorList
+import com.zakgof.korender.impl.glgpu.Color3List
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Vec3List
@@ -23,7 +23,7 @@ import com.zakgof.korender.impl.gltf.GltfSceneBuilder
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.materialDeclaration
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Vec3
 
 internal class Scene(
@@ -42,19 +42,16 @@ internal class Scene(
     private val skies = mutableListOf<Renderable>()
     private val screens = mutableListOf<Renderable>()
 
-    // TODO: ugly
+    // TODO (backlog): ugly
     private val fixer = { value: Any? ->
-        if (value is InternalTexture) {
-            inventory.texture(value) ?: NotYetLoadedTexture
-        } else
-            value
+        if (value is InternalTexture) inventory.texture(value) ?: NotYetLoadedTexture else value
     }
-    private val filters = sceneDeclaration.filters.map { materialDeclaration(BaseMaterial.Screen, deferredShading, *it.toTypedArray())  }
+    private val filters = sceneDeclaration.filters.map { materialDeclaration(BaseMaterial.Screen, deferredShading, *it.toTypedArray()) }
 
     init {
         sceneDeclaration.gltfs.forEach {
-            inventory.gltf(it)?.let { l ->
-                sceneDeclaration.renderables += GltfSceneBuilder(it, l).build(it.time)
+            inventory.gltf(it)?.let { gltfLoaded ->
+                sceneDeclaration.renderables += GltfSceneBuilder(it, gltfLoaded).build(it.time)
             }
         }
         sceneDeclaration.renderables.forEach {
@@ -137,7 +134,6 @@ internal class Scene(
     }
 
     private fun renderDeferredOpaques(uniforms: MutableMap<String, Any?>) {
-        // TODO: configurable texture channels resolutions (half/quarter)
         val geometryBuffer = inventory.frameBuffer(
             FrameBufferDeclaration(
                 "geometry", renderContext.width, renderContext.height,
@@ -168,11 +164,12 @@ internal class Scene(
 
     private fun renderComposition(uniforms: MutableMap<String, Any?>) {
         val back = renderContext.backgroundColor
-        glClearColor(back.r, back.g, back.b, back.a)
+        glClearColor(back.r, back.g, back.b, 1.0f)
         glViewport(0, 0, renderContext.width, renderContext.height)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         renderFilter(
-            materialDeclaration(BaseMaterial.Composition, true,
+            materialDeclaration(
+                BaseMaterial.Composition, true,
                 *sceneDeclaration.compositionModifiers.toTypedArray()
             ),
             uniforms
@@ -182,7 +179,7 @@ internal class Scene(
 
     private fun renderForwardOpaques(uniforms: Map<String, Any?>) {
         val back = renderContext.backgroundColor
-        glClearColor(back.r, back.g, back.b, back.a)
+        glClearColor(back.r, back.g, back.b, 1.0f)
         glViewport(0, 0, renderContext.width, renderContext.height)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         opaques.forEach { it.render(uniforms, fixer) }
@@ -200,7 +197,7 @@ internal class Scene(
     private fun renderShadows(m: MutableMap<String, Any?>) {
         val shadowData = mutableListOf<ShadowerData>()
         val directionalDirs = mutableListOf<Vec3>()
-        val directionalColors = mutableListOf<Color>()
+        val directionalColors = mutableListOf<ColorRGB>()
         val directionalShadowIndexes = mutableListOf<Int>()
         val directionalShadowCounts = mutableListOf<Int>()
         sceneDeclaration.directionalLights.forEachIndexed { li, dl ->
@@ -229,13 +226,14 @@ internal class Scene(
 
         m["numDirectionalLights"] = sceneDeclaration.directionalLights.size
         m["directionalLightDir[0]"] = Vec3List(directionalDirs)
-        m["directionalLightColor[0]"] = ColorList(directionalColors)
+        m["directionalLightColor[0]"] = Color3List(directionalColors)
         m["directionalLightShadowTextureIndex[0]"] = IntList(directionalShadowIndexes)
         m["directionalLightShadowTextureCount[0]"] = IntList(directionalShadowCounts)
         m["ambientColor"] = sceneDeclaration.ambientLightColor
         m["numPointLights"] = sceneDeclaration.pointLights.size
         m["pointLightPos[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.position })
-        m["pointLightColor[0]"] = ColorList(sceneDeclaration.pointLights.map { it.color })
+        m["pointLightColor[0]"] = Color3List(sceneDeclaration.pointLights.map { it.color })
+        m["pointLightAttenuation[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.attenuation })
     }
 
     private fun renderFilter(filter: MaterialDeclaration, uniforms: Map<String, Any?>) {

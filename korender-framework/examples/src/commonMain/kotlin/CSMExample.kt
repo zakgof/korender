@@ -4,9 +4,9 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.FreeCamera
-import com.zakgof.korender.math.Color
-import com.zakgof.korender.math.Color.Companion.Red
-import com.zakgof.korender.math.Color.Companion.white
+import com.zakgof.korender.math.ColorRGB.Companion.white
+import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.math.ColorRGBA.Companion.Red
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
@@ -35,8 +35,6 @@ fun CSMExample() =
                 Cascade(1024, 10f, 30f, 0f to 50f, vsm())
                 Cascade(1024, 25f, 100f, 0f to 50f, vsm())
             }
-            AmbientLight(white(0.25f))
-
             Renderable(
                 materialModifier,
                 mesh = cube(1f),
@@ -90,7 +88,7 @@ fun CSMExample() =
             )
 
             Gui {
-                Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = Color(0xFF66FF55))
+                Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = ColorRGBA(0x66FF55B0))
             }
             // Filter(fragment("!shader/effect/shadow-debug.frag"))
         }

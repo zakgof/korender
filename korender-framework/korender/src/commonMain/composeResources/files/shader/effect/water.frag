@@ -3,7 +3,7 @@
 
 in vec2 vtex;
 
-uniform vec4 waterColor;
+uniform vec3 waterColor;
 uniform float transparency;
 uniform float waveScale;
 

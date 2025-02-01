@@ -4,7 +4,7 @@ import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.GuiContainerContext
 import com.zakgof.korender.impl.engine.ElementDeclaration
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGBA
 
 internal class DefaultContainerContext(
     private val frameContext: FrameContext,
@@ -29,7 +29,7 @@ internal class DefaultContainerContext(
         declaration.add(stack)
     }
 
-    override fun Text(id: Any, fontResource: String, height: Int, text: String, color: Color, static: Boolean, onTouch: TouchHandler) {
+    override fun Text(id: Any, fontResource: String, height: Int, text: String, color: ColorRGBA, static: Boolean, onTouch: TouchHandler) {
         declaration.add(ElementDeclaration.Text(id, fontResource, height, text, color, static, onTouch))
     }
 

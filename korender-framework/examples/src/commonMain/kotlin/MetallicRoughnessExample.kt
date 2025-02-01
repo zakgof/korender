@@ -3,7 +3,8 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import org.jetbrains.compose.resources.ExperimentalResourceApi
@@ -12,15 +13,15 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 @Composable
 fun MetallicRoughnessExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
-        background = Color(1.0f, 0.1f, 0.1f, 0.15f)
-        DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), Color.white(3f))
-        DirectionalLight(Vec3(-1.0f, 1.0f, 0.0f), Color.white(0.2f))
-        AmbientLight(Color.Black)
+        background = ColorRGB(0.1f, 0.1f, 0.15f)
+        DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(3f))
+        DirectionalLight(Vec3(-1.0f, 1.0f, 0.0f), ColorRGB.white(0.2f))
+        AmbientLight(ColorRGB.Black)
         for (m in 0..4) {
             for (r in 0..4) {
                 Renderable(
                     standart {
-                        baseColor = Color.White
+                        baseColor = ColorRGBA.White
                         pbr.metallic = (r / 4.0f)
                         pbr.roughness = (m / 4.0f)
                     },
@@ -31,7 +32,7 @@ fun MetallicRoughnessExample() = Korender(appResourceLoader = { Res.readBytes(it
         }
         Gui {
             Filler()
-            Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = Color(0xFF66FF55))
+            Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = ColorRGBA(0x66FF55B0))
         }
     }
 }

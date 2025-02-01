@@ -16,8 +16,8 @@ import com.zakgof.korender.StarrySkyParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.WaterParams
 import com.zakgof.korender.impl.glgpu.Mat4List
-import com.zakgof.korender.math.Color
-import com.zakgof.korender.math.Color.Companion.white
+import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 
 typealias DynamicUniforms = () -> Map<String, Any?>
 
@@ -102,7 +102,7 @@ internal class InternalSmokeParams : SmokeParams, InternalBillboardVertexParams(
 
 internal class InternalWaterParams : WaterParams, InternalBaseParams() {
 
-    override var waterColor: Color = Color(1.0f, 0.1f, 0.2f, 0.3f)
+    override var waterColor: ColorRGB = ColorRGB(0.1f, 0.2f, 0.3f)
     override var transparency: Float = 0.1f
     override var waveScale: Float = 0.04f
 
@@ -120,8 +120,8 @@ internal class InternalFastCloudSkyParams : FastCloudSkyParams, InternalBasePara
     override var scale = 1.0f       // 0.1..10
     override var rippleamount = 0.3f  // 0..1
     override var ripplescale = 4.0f  // 1..10
-    override var darkblue = Color(1f, 0.2f, 0.4f, 0.6f)
-    override var lightblue = Color(1f, 0.4f, 0.6f, 1.0f)
+    override var darkblue = ColorRGB(0.2f, 0.4f, 0.6f)
+    override var lightblue = ColorRGB(0.4f, 0.6f, 1.0f)
 
     override fun collect() {
         map["density"] = density
@@ -153,8 +153,8 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
 
     private var _specularGlossiness: SpecularGlossiness? = null
 
-    override var baseColor = white(1.0f)
-    override var emissiveFactor = white(1.0f)
+    override var baseColor = ColorRGBA.white(1.0f)
+    override var emissiveFactor = ColorRGB.Black
     override var baseColorTexture: TextureDeclaration? = null
     override var triplanarScale: Float? = null
 
@@ -231,7 +231,7 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
     }
 
     internal class InternalSpecularGlossiness : SpecularGlossiness {
-        override var specularFactor: Color = Color.White
+        override var specularFactor: ColorRGB = ColorRGB.White
         override var glossinessFactor: Float = 0.2f
         override var specularGlossinessTexture: TextureDeclaration? = null
     }
@@ -240,7 +240,7 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
 internal class InternalFogParams : FogParams, InternalBaseParams() {
 
     override var density = 0.02f
-    override var color = white(0.01f)
+    override var color = ColorRGB.white(0.01f)
 
     override fun collect() {
         map["density"] = density

@@ -21,7 +21,7 @@ import com.zakgof.korender.impl.engine.ShadowDeclaration
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.ScreenQuad
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
@@ -37,8 +37,8 @@ internal class DefaultFrameContext(
         sceneDeclaration.compositionModifiers += compositionModifiers
     }
 
-    override fun Scene(gltfResource: String, animation: Int, transform: Transform, time: Float?) {
-        sceneDeclaration.gltfs += GltfDeclaration(gltfResource, animation, transform, time ?: frameInfo.time)
+    override fun Gltf(resource: String, animation: Int, transform: Transform, time: Float?) {
+        sceneDeclaration.gltfs += GltfDeclaration(resource, animation, transform, time ?: frameInfo.time)
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean) {
@@ -83,17 +83,17 @@ internal class DefaultFrameContext(
             )
     }
 
-    override fun DirectionalLight(direction: Vec3, color: Color, block: ShadowContext.() -> Unit) {
+    override fun DirectionalLight(direction: Vec3, color: ColorRGB, block: ShadowContext.() -> Unit) {
         val shadowDeclaration = ShadowDeclaration()
         DefaultShadowContext(shadowDeclaration).apply(block)
         sceneDeclaration.directionalLights += DirectionalLightDeclaration(direction, color, shadowDeclaration)
     }
 
-    override fun PointLight(position: Vec3, color: Color) {
-        sceneDeclaration.pointLights += PointLightDeclaration(position, color)
+    override fun PointLight(position: Vec3, color: ColorRGB, attenuationLinear: Float, attenuationQuadratic: Float) {
+        sceneDeclaration.pointLights += PointLightDeclaration(position, color, Vec3(attenuationLinear, attenuationQuadratic, 0f))
     }
 
-    override fun AmbientLight(color: Color) {
+    override fun AmbientLight(color: ColorRGB) {
         sceneDeclaration.ambientLightColor = color
     }
 

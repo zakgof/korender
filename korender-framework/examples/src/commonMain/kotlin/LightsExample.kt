@@ -3,7 +3,8 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
@@ -18,35 +19,53 @@ import kotlin.math.sin
 @Composable
 fun LightsExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
-        camera = camera(Vec3(0f, 3f, 20f), -1.z, 1.y)
+        camera = camera(Vec3(0f, 3f, 20f), (-1).z, 1.y)
+
+        val mat = standart {
+            baseColor = ColorRGBA.White
+            pbr.metallic = 0.0f
+            pbr.roughness = 0.7f
+        }
+
         Frame {
-            PointLight(2.y + 4.x * sin(frameInfo.time + 0f) + 4.z * cos(frameInfo.time + 0f), Color.Red)
-            PointLight(2.y + 4.x * sin(frameInfo.time + 2f) + 4.z * cos(frameInfo.time + 2f), Color.Green)
-            PointLight(2.y + 4.x * sin(frameInfo.time + 4f) + 4.z * cos(frameInfo.time + 4f), Color.Blue)
-            AmbientLight(Color.white(0.05f))
+
+            fun LightMark(pos: Vec3, color: ColorRGB) = Renderable (
+                standart {
+                    baseColor = ColorRGBA.Black
+                    emissiveFactor = color
+                },
+                mesh = sphere(0.05f),
+                transform = translate(pos)
+            )
+
+            val pos1 = 3.y + 4.x * sin(frameInfo.time + 0f) + 4.z * cos(frameInfo.time + 0f)
+            val pos2 = 3.y + 4.x * sin(frameInfo.time + 2f) + 4.z * cos(frameInfo.time + 2f)
+            val pos3 = 3.y + 4.x * sin(frameInfo.time + 4f) + 4.z * cos(frameInfo.time + 4f)
+
+            AmbientLight(ColorRGB.white(0.1f))
+
+            PointLight(pos1, ColorRGB.Red, 0.001f, 0.001f)
+            PointLight(pos2, ColorRGB.Green, 0.001f, 0.001f)
+            PointLight(pos3, ColorRGB.Blue, 0.001f, 0.001f)
+
+            LightMark(pos1, ColorRGB.Red)
+            LightMark(pos2, ColorRGB.Green)
+            LightMark(pos3, ColorRGB.Blue)
 
             Renderable(
-                standart {
-                    baseColor = Color.White
-                    pbr.metallic = 0.0f
-                    pbr.roughness = 0.8f
-                },
+                mat,
                 mesh = cube(1f),
                 transform = scale(10f, 1f, 10f)
             )
 
             Renderable(
-                standart {
-                    baseColor = Color.White
-                    pbr.metallic = 0.0f
-                    pbr.roughness = 0.4f
-                },
+                mat,
                 mesh = sphere(1f),
                 transform = translate(4.y)
             )
             Gui {
                 Filler()
-                Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = Color(0xFF66FF55))
+                Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = ColorRGBA(0x66FF55B0))
             }
         }
     }

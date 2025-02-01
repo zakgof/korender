@@ -29,7 +29,8 @@ import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalStandartParams
 import com.zakgof.korender.impl.material.ParamUniforms
 import com.zakgof.korender.impl.resourceBytes
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
@@ -326,9 +327,9 @@ internal class GltfSceneBuilder(
         val metallic = matPbr?.metallicFactor ?: 0.2f
         val roughness = matPbr?.roughnessFactor ?: 0.3f
         val emissiveFactor =
-            material?.emissiveFactor?.let { Color(1.0f, it[0], it[1], it[2]) } ?: Color.Black
+            material?.emissiveFactor?.let { ColorRGB(it[0], it[1], it[2]) } ?: ColorRGB.Black
         val baseColor =
-            matPbr?.baseColorFactor?.let { Color(it[3], it[0], it[1], it[2]) } ?: Color.White
+            matPbr?.baseColorFactor?.let { ColorRGBA(it[0], it[1], it[2], it[3]) } ?: ColorRGBA.White
         val albedoTexture = matPbr?.baseColorTexture?.let { getTexture(it) }
         val metallicRoughnessTexture = matPbr?.metallicRoughnessTexture?.let { getTexture(it) }
         val normalTexture = material?.normalTexture?.let { getTexture(it) }
@@ -337,9 +338,9 @@ internal class GltfSceneBuilder(
 
         val matSpecularGlossiness = material?.extensions?.get("KHR_materials_pbrSpecularGlossiness")
                 as? Gltf.KHRMaterialsPbrSpecularGlossiness
-        val diffuseFactor = matSpecularGlossiness?.diffuseFactor?.let { Color(it[3], it[0], it[1], it[2]) } ?: Color.White
+        val diffuseFactor = matSpecularGlossiness?.diffuseFactor?.let { ColorRGB(it[0], it[1], it[2]) } ?: ColorRGB.White
         val diffuseTexture = matSpecularGlossiness?.diffuseTexture?.let { getTexture(it) }
-        val specularFactor = matSpecularGlossiness?.specularFactor?.let { Color(1.0f, it[0], it[1], it[2]) } ?: Color.White
+        val specularFactor = matSpecularGlossiness?.specularFactor?.let { ColorRGB(it[0], it[1], it[2]) } ?: ColorRGB.White
         val glossinessFactor = matSpecularGlossiness?.glossinessFactor ?: 0.2f
         val specularGlossinessTexture = matSpecularGlossiness?.specularGlossinessTexture?.let { getTexture(it) }
 
@@ -360,7 +361,7 @@ internal class GltfSceneBuilder(
             }
 
             if (matSpecularGlossiness != null) {
-                this.baseColor = diffuseFactor
+                this.baseColor = diffuseFactor.toRGBA()
                 this.baseColorTexture = diffuseTexture
                 this.specularGlossiness.specularFactor = specularFactor
                 this.specularGlossiness.glossinessFactor = glossinessFactor
@@ -369,7 +370,7 @@ internal class GltfSceneBuilder(
 
             if (skinIndex != null) {
                 this.jntMatrices = Mat4List(
-                    loadedSkins[skinIndex].jointMatrices.mapIndexed {ind, jm ->
+                    loadedSkins[skinIndex].jointMatrices.mapIndexed { ind, jm ->
                         jm * loadedSkins[skinIndex].inverseBindMatrices[ind]
                     }
                 )
@@ -402,7 +403,7 @@ internal class GltfSceneBuilder(
             false,
             accessorComponentTypeToIndexType(indicesAccessor?.componentType)
         ) {
-            indicesAccessor?.let {indexBytes(getAccessorBytes(it))}
+            indicesAccessor?.let { indexBytes(getAccessorBytes(it)) }
             verticesAttributeAccessors.forEach {
                 attrBytes(it.first, getAccessorBytes(it.second))
             }

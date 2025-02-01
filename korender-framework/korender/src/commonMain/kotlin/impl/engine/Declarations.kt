@@ -8,7 +8,9 @@ import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.material.DynamicUniforms
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGB.Companion.white
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
@@ -16,7 +18,7 @@ import com.zakgof.korender.math.Vec3
 internal class SceneDeclaration {
     val pointLights = mutableListOf<PointLightDeclaration>()
     val directionalLights = mutableListOf<DirectionalLightDeclaration>()
-    var ambientLightColor = Color(1.0f, 0.15f, 0.15f, 0.15f)
+    var ambientLightColor = white(0.3f)
     val renderables = mutableListOf<RenderableDeclaration>()
     val guis = mutableListOf<ElementDeclaration.Container>()
     val gltfs = mutableListOf<GltfDeclaration>()
@@ -67,7 +69,7 @@ internal sealed class ElementDeclaration {
         val fontResource: String,
         val height: Int,
         val text: String,
-        val color: Color,
+        val color: ColorRGBA,
         val static: Boolean,
         val onTouch: TouchHandler
     ) : ElementDeclaration()
@@ -113,6 +115,6 @@ internal class GltfDeclaration(val gltfResource: String, val animation: Int, val
     override fun hashCode(): Int = gltfResource.hashCode()
 }
 
-internal class PointLightDeclaration(val position: Vec3, val color: Color)
+internal class PointLightDeclaration(val position: Vec3, val color: ColorRGB, val attenuation: Vec3)
 
-internal class DirectionalLightDeclaration(val direction: Vec3, val color: Color, val shadowDeclaration: ShadowDeclaration)
+internal class DirectionalLightDeclaration(val direction: Vec3, val color: ColorRGB, val shadowDeclaration: ShadowDeclaration)

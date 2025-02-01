@@ -5,12 +5,12 @@ in vec3 vnormal;
 in vec2 vtex;
 
 uniform vec4 baseColor;
-uniform vec4 emissiveFactor;
+uniform vec3 emissiveFactor;
 uniform float metallic;
 uniform float roughness;
 
 #ifdef SPECULAR_GLOSSINESS
-    uniform vec4 specularFactor;
+    uniform vec3 specularFactor;
     uniform float glossinessFactor;
 #endif
 
@@ -47,20 +47,21 @@ uniform sampler2D specularGlossinessTexture;
 
 uniform vec3 cameraPos;
 uniform vec3 cameraDir;
-uniform vec4 ambientColor;
+uniform vec3 ambientColor;
 uniform mat4 projection;
 uniform mat4 view;
 
 const int MAX_LIGHTS = 32;
 uniform int numDirectionalLights;
 uniform vec3 directionalLightDir[MAX_LIGHTS];
-uniform vec4 directionalLightColor[MAX_LIGHTS];
+uniform vec3 directionalLightColor[MAX_LIGHTS];
 uniform int directionalLightShadowTextureIndex[MAX_LIGHTS];
 uniform int directionalLightShadowTextureCount[MAX_LIGHTS];
 
 uniform int numPointLights;
 uniform vec3 pointLightPos[MAX_LIGHTS];
-uniform vec4 pointLightColor[MAX_LIGHTS];
+uniform vec3 pointLightColor[MAX_LIGHTS];
+uniform vec3 pointLightAttenuation[MAX_LIGHTS];
 
 const int MAX_SHADOWS = 8;
 uniform int numShadows;
@@ -116,12 +117,12 @@ void main() {
 
 #ifdef EMISSIVE_MAP
     #ifdef TRIPLANAR
-    vec3 emission = triplanar(emissiveTexture, vpos * triplanarScale, vnormal).rgb * emissiveFactor.rgb;
+    vec3 emission = triplanar(emissiveTexture, vpos * triplanarScale, vnormal).rgb * emissiveFactor;
     #else
-    vec3 emission = texture(emissiveTexture, vtex).rgb * emissiveFactor.rgb;
+    vec3 emission = texture(emissiveTexture, vtex).rgb * emissiveFactor;
     #endif
 #else
-    vec3 emission = vec3(0.);
+    vec3 emission = emissiveFactor;
 #endif
 
 #ifdef PLUGIN_EMISSION
@@ -135,10 +136,10 @@ void main() {
         #else
             vec4 sgtexel = texture(specularGlossinessTexture, vtex);
         #endif
-        vec3 specular = sgtexel.rgb * specularFactor.rgb;
+        vec3 specular = sgtexel.rgb * specularFactor;
         float glossiness = sgtexel.a * glossinessFactor;
     #else
-        vec3 specular = specularFactor.rgb;
+        vec3 specular = specularFactor;
         float glossiness = glossinessFactor;
     #endif
     vec3 c_diff = albedo.rgb * (1. - max(max(specular.r, specular.g), specular.b));
@@ -165,7 +166,7 @@ void main() {
 
     vec3 V = normalize(cameraPos - vpos);
 
-    vec3 color = c_diff * ambientColor.rgb + emission;
+    vec3 color = c_diff * ambientColor + emission;
 
     float plane = dot((vpos - cameraPos), cameraDir);
 

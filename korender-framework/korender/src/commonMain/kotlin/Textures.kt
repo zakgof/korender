@@ -11,6 +11,5 @@ enum class TextureFilter {
 enum class TextureWrap {
     MirroredRepeat,
     ClampToEdge,
-    ClampToBorder,
     Repeat
 }

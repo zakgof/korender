@@ -9,7 +9,7 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform vec3 cameraPos;
 
-uniform vec4 fogColor;
+uniform vec3 fogColor;
 uniform float density;
 
 out vec4 fragColor;

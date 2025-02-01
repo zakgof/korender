@@ -14,8 +14,9 @@ vec3 pointLight(vec3 vpos, int l, vec3 N, vec3 V, vec3 c_diff, vec3 F0, float ro
     float shadowRatio = 0.;
     vec3 ftol = pointLightPos[l] - vpos;
     float distance = length(ftol);
-    float att = 1.0 / (1.0 + 0.01 * distance + 0.01 * (distance * distance));
-    vec3 lightValue = pointLightColor[l].rgb * (1. - shadowRatio) * att;// TODO quadratic; configurable attenuation ratio
+    vec3 attentuation = pointLightAttenuation[l];
+    float att = 1.0 / (1.0 + attentuation.x * distance + attentuation.y * (distance * distance));
+    vec3 lightValue = pointLightColor[l].rgb * (1. - shadowRatio) * att;
     vec3 L = normalize(ftol);
     return calculatePBR(N, V, L, c_diff, F0, rough, lightValue);
 }
