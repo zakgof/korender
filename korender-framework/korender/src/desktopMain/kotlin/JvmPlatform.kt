@@ -31,6 +31,8 @@ import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.awt.event.MouseEvent.BUTTON1
+import java.awt.event.MouseEvent.BUTTON3
 import java.awt.event.MouseMotionAdapter
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferByte
@@ -62,11 +64,13 @@ actual fun Korender(
 
     fun sendTouch(
         type: TouchEvent.Type,
+        button: TouchEvent.Button,
         ex: Int,
         ey: Int
     ) {
         GlobalScope.launch {
-            engine?.pushTouch(TouchEvent(type, ex * pixelRatio[0], ey * pixelRatio[1]))
+            println("TOUCH $type $button")
+            engine?.pushTouch(TouchEvent(type, button,ex * pixelRatio[0], ey * pixelRatio[1]))
         }
     }
 
@@ -128,19 +132,26 @@ actual fun Korender(
                     swapBuffers()
                 }
             }
+
+            fun Int.toButton() : TouchEvent.Button = when(this) {
+                BUTTON1 -> TouchEvent.Button.LEFT
+                BUTTON3 -> TouchEvent.Button.RIGHT
+                else -> TouchEvent.Button.NONE
+            }
+
             canvas.addMouseMotionListener(object : MouseMotionAdapter() {
                 override fun mouseMoved(e: MouseEvent) =
-                    sendTouch(TouchEvent.Type.MOVE, e.x, e.y)
+                    sendTouch(TouchEvent.Type.MOVE, e.button.toButton(), e.x, e.y)
 
                 override fun mouseDragged(e: MouseEvent) =
-                    sendTouch(TouchEvent.Type.MOVE, e.x, e.y)
+                    sendTouch(TouchEvent.Type.MOVE, e.button.toButton(), e.x, e.y)
             })
             canvas.addMouseListener(object : MouseAdapter() {
                 override fun mousePressed(e: MouseEvent) =
-                    sendTouch(TouchEvent.Type.DOWN, e.x, e.y)
+                    sendTouch(TouchEvent.Type.DOWN, e.button.toButton(), e.x, e.y)
 
                 override fun mouseReleased(e: MouseEvent) =
-                    sendTouch(TouchEvent.Type.UP, e.x, e.y)
+                    sendTouch(TouchEvent.Type.UP, e.button.toButton(), e.x, e.y)
             })
             canvas.addKeyListener(object : KeyAdapter() {
                 override fun keyPressed(e: KeyEvent) {

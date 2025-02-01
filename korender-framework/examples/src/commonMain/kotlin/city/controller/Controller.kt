@@ -35,28 +35,41 @@ class Controller {
     fun camera(fc: FrameContext): CameraDeclaration =
         chaseCamera.camera(fc)
 
-    fun joystick(offset: Pair<Float, Float>, dt: Float) {
+    fun update(offset: Pair<Float, Float>, dt: Float) {
         character.position = heightField.land(character.position + character.direction * ((forward-offset.second) * dt) * 0.6f)
         character.direction = (fromAxisAngle(1.y, -(offset.first + rota) * dt * 1.4f) * character.direction).normalize()
         character.animTime += (forward-offset.second) * 1.0f * dt
 
         if (abs(forward - offset.second) < 0.001f) {
-            if (fract((character.animTime + 0.38f) / 1.375f) < 0.1) {
+            if (fract((character.animTime + 0.38f) / 1.375f) < 0.2) {
                 character.animTime = -0.38f + 0.01f
             } else {
                 character.animTime += 2f * dt
                 character.position = heightField.land(character.position + character.direction * (0.1f * dt) * 10.3f)
             }
         }
+
+        character.animMode = if (character.aiming) 2 else 0
     }
 
-    fun touch(touchEvent: TouchEvent) =
+    fun touch(touchEvent: TouchEvent) {
         chaseCamera.touch(touchEvent)
+        if (touchEvent.button == TouchEvent.Button.RIGHT) {
+            if (touchEvent.type == TouchEvent.Type.DOWN) {
+                character.aiming = true
+            }
+            if (touchEvent.type == TouchEvent.Type.UP) {
+                character.aiming = false
+            }
+        }
+    }
 
     inner class Character {
         var position = heightField.land(3.2f, -102f)
         var direction = 1.z
         var animTime = 0f
+        var animMode = 0
+        var aiming = false
         val transform: Transform
             get() = rotate(lookAt(direction, 1.y)).translate(position)
     }

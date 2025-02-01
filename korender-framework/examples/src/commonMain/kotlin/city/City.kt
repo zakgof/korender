@@ -5,12 +5,14 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.examples.city.controller.Controller
-import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.ColorRGB.Companion.white
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.onClick
 import org.jetbrains.compose.resources.ExperimentalResourceApi
+import kotlin.math.min
 import kotlin.random.Random
 
 fun Int.chance(block: () -> Unit) {
@@ -60,29 +62,54 @@ fun City() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         staticScene.render(this)
         Gltf(
             resource = "city/swat-woman.glb",
-            animation = 1,
+            animation = controller.character.animMode,
             time = controller.character.animTime,
             transform = controller.character.transform * scale(0.002f)
         )
 
-
+        val unit = min(width, height) / 24
 
         Gui {
-            Text(
-                id = "fps",
-                text = "FPS ${frameInfo.avgFps.toInt()}",
-                fontResource = "font/anta.ttf",
-                height = 25,
-                color = ColorRGBA(0xFF66FF55)
-            )
-            Filler()
-            Row {
-                joystick.render(this)
-                Filler()
+            Stack {
+                Row {
+                    Column {
+                        Text(
+                            id = "fps",
+                            text = "FPS ${frameInfo.avgFps.toInt()}",
+                            fontResource = "font/anta.ttf",
+                            height = 25,
+                            color = ColorRGBA(0x66FF55A0)
+                        )
+                        Filler()
+                        Row {
+                            joystick.render(this)
+                            Filler()
+                        }
+                    }
+                    Filler()
+                    Column {
+                        Filler()
+                        Image(
+                            id = "aim",
+                            imageResource = "city/aim.png",
+                            width = unit * 4,
+                            height = unit * 4,
+                            onTouch = { onClick(it) { controller.character.aiming = !controller.character.aiming } }
+                        )
+                    }
+                }
+                if (controller.character.aiming) {
+                    Image(
+                        id = "crosshair",
+                        imageResource = "city/aim.png",
+                        width = unit,
+                        height = unit,
+                        marginLeft = (width - unit) / 2,
+                        marginTop = ((height * 0.9f - unit) / 2).toInt(),
+                    )
+                }
             }
         }
-
-        controller.joystick(joystick.offset, frameInfo.dt)
-
+        controller.update(joystick.offset, frameInfo.dt)
     }
 }

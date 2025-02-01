@@ -1,11 +1,17 @@
 package com.zakgof.korender
 
-class TouchEvent(val type: Type, val x: Float, val y: Float) {
+class TouchEvent(val type: Type, val button: Button, val x: Float, val y: Float) {
 
     enum class Type {
         UP,
         DOWN,
         MOVE
+    }
+
+    enum class Button {
+        NONE,
+        LEFT,
+        RIGHT
     }
 }
 

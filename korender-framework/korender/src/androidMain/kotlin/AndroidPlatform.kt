@@ -176,13 +176,13 @@ actual fun Korender(appResourceLoader: ResourceLoader, block: KorenderContext.()
                 event.changes.forEach {
                     val position = it.position
                     if (event.type == PointerEventType.Press && it.pressed && !it.previousPressed) {
-                        touch(TouchEvent(TouchEvent.Type.DOWN, position.x, position.y))
+                        touch(TouchEvent(TouchEvent.Type.DOWN, TouchEvent.Button.LEFT, position.x, position.y))
                     }
                     if (event.type == PointerEventType.Release && !it.pressed && it.previousPressed) {
-                        touch(TouchEvent(TouchEvent.Type.UP, position.x, position.y))
+                        touch(TouchEvent(TouchEvent.Type.UP, TouchEvent.Button.LEFT, position.x, position.y))
                     }
                     if (event.type == PointerEventType.Move) {
-                        touch(TouchEvent(TouchEvent.Type.MOVE, position.x, position.y))
+                        touch(TouchEvent(TouchEvent.Type.MOVE, TouchEvent.Button.LEFT, position.x, position.y))
                     }
                 }
             }

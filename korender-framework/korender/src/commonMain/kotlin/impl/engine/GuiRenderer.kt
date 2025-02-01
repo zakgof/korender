@@ -1,6 +1,5 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.KorenderException
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.engine.Scene.TouchBox
 import com.zakgof.korender.impl.font.Fonts
@@ -76,13 +75,14 @@ internal class GuiRenderer(
         }
 
         Direction.Stack -> {
-            if (container.elements.any { sizes[it]!!.width < 0 }) throw KorenderException("Fillers not allowed in Stack")
             for (child in container.elements) {
                 val declSize = sizes[child]!!
+                val w = if (declSize.width < 0) width else declSize.width
+                val h = if (declSize.height < 0) height else declSize.height
                 when (child) {
-                    is ElementDeclaration.Text -> createText(child, x, y, declSize.width)
+                    is ElementDeclaration.Text -> createText(child, x, y, w)
                     is ElementDeclaration.Image -> createImage(child, x, y)
-                    is ElementDeclaration.Container -> layoutContainer(sizes, x, y, declSize.width, declSize.height, child)
+                    is ElementDeclaration.Container -> layoutContainer(sizes, x, y, w, h, child)
                     is ElementDeclaration.Filler -> {}
                 }
             }
@@ -220,8 +220,8 @@ internal class GuiRenderer(
                         var h = 0
                         for (child in element.elements) {
                             val childSize = sizeEm(element.direction, child, sizes)
-                            w = max(childSize.width, w)
-                            h = max(childSize.height, h)
+                            w = if (childSize.width < 0 || w < 0) -1 else max(childSize.width, w)
+                            h = if (childSize.height < 0 || h < 0) -1 else max(childSize.height, h)
                         }
                         Size(w, h)
                     }
