@@ -28,21 +28,20 @@ import androidx.compose.ui.unit.sp
 import com.zakgof.app.resources.Res
 import com.zakgof.app.resources.korender32
 import com.zakgof.app.resources.menu
-import com.zakgof.korender.examples.city.City
+import com.zakgof.korender.examples.infcity.InfiniteCity
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun AppExample() {
     val options = listOf(
-        Demo("City scene") { City() },
-        Demo("Cascade shadows") { CSMExample() },
-        Demo("Feature showcase") { ShowcaseExample() },
+        Demo("City demo") { InfiniteCity() },
+        Demo("Effects showcase") { ShowcaseExample() },
         Demo("PBR metallic/roughness") { MetallicRoughnessExample() },
         Demo("Transparency") { TransparencyExample() },
         Demo("Dynamic meshes") { MeshesExample() },
         Demo(".obj file") { ObjFileExample() },
-        Demo(".gltf scene") { GltfExample() },
+        Demo(".gtlf scene") { GltfExample() },
         Demo("Point lights") { LightsExample() },
         Demo("Instanced billboards") { InstancedBillboardsExample() },
         Demo("Instanced meshes") { InstancedMeshesExample() },
@@ -55,7 +54,7 @@ fun AppExample() {
         Demo("Sky") { SkyExample() }
     )
 
-    var isExpanded by remember { mutableStateOf(true) }
+    var isExpanded by remember { mutableStateOf(false) }
     var selectedOption by remember { mutableStateOf(options.first()) }
     val coroutineScope = rememberCoroutineScope()
 

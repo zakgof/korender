@@ -69,7 +69,6 @@ actual fun Korender(
         ey: Int
     ) {
         GlobalScope.launch {
-            println("TOUCH $type $button")
             engine?.pushTouch(TouchEvent(type, button,ex * pixelRatio[0], ey * pixelRatio[1]))
         }
     }

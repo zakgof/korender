@@ -212,6 +212,12 @@ actual fun Korender(
 
         animate(window, canvas, engine!!)
 
+        fun Short.toButton() : TouchEvent.Button = when (this) {
+            0.toShort() -> TouchEvent.Button.LEFT
+            2.toShort() -> TouchEvent.Button.RIGHT
+            else -> TouchEvent.Button.NONE
+        }
+
         canvas.addEventListener("webglcontextlost") {
             it.preventDefault()
             println("WebGL context lost !")
@@ -222,7 +228,7 @@ actual fun Korender(
             val x = me.pageX - canvas.offsetLeft
             val y = me.pageY - canvas.offsetTop
             GlobalScope.launch {
-                engine?.pushTouch(TouchEvent(type, x.toFloat(), y.toFloat()))
+                engine?.pushTouch(TouchEvent(type, me.button.toButton(), x.toFloat(), y.toFloat()))
             }
         }
 
@@ -232,7 +238,7 @@ actual fun Korender(
                 val x = touch.pageX - canvas.offsetLeft
                 val y = touch.pageY - canvas.offsetTop
                 GlobalScope.launch {
-                    engine?.pushTouch(TouchEvent(type, x.toFloat(), y.toFloat()))
+                    engine?.pushTouch(TouchEvent(type, TouchEvent.Button.LEFT, x.toFloat(), y.toFloat()))
                 }
             }
             // TODO improve this POC
@@ -241,7 +247,7 @@ actual fun Korender(
                     val x = touch.pageX - canvas.offsetLeft
                     val y = touch.pageY - canvas.offsetTop
                     GlobalScope.launch {
-                        engine?.pushTouch(TouchEvent(type, x.toFloat(), y.toFloat()))
+                        engine?.pushTouch(TouchEvent(type, TouchEvent.Button.LEFT, x.toFloat(), y.toFloat()))
                     }
                 }
             }
