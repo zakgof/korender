@@ -47,6 +47,8 @@ out vec4 fragColor;
 
 float shadowRatios[MAX_SHADOWS];
 
+#import "!shader/lib/space.glsl"
+#import "!shader/lib/ssr.glsl"
 #import "!shader/lib/shadow.glsl"
 #import "!shader/lib/pbr.glsl"
 #import "!shader/lib/light.glsl"
@@ -63,14 +65,8 @@ void main() {
 
     float depth = texture(depthTexture, vtex).r;
 
-    vec4 ndcPosition;
-    ndcPosition.xy = vtex * 2.0 - 1.0; // Convert to range [-1, 1]
-    ndcPosition.z = depth * 2.0 - 1.0; // Depth range [-1, 1]
-    ndcPosition.w = 1.0;
-    vec4 viewPosition = inverse(projection) * ndcPosition; // TODO precalc inverse as uniform
-    viewPosition /= viewPosition.w;
-    vec4 worldPosition4 = inverse(view) * viewPosition;
-    vec3 vpos = worldPosition4.xyz;
+    vec4 viewPos = screenToViewSpace(vtex, depth);
+    vec3 vpos = (inverse(view) * viewPos).xyz;
 
     vec3 c_diff = texture(cdiffTexture, vtex).rgb;
     vec4 materialTexel = texture(materialTexture, vtex);
@@ -101,6 +97,10 @@ void main() {
 #ifdef PLUGIN_DEPTH
     color = pluginDepth(vpos, color, depth);
 #endif
+
+    // vec3 reflection = ssr(viewPos.xyz, N);
+    // float fresnel = pow(1.0 - dot(N, normalize(viewPos.xyz)), 5.0);
+    // color += reflection * F0 * fresnel;
 
     fragColor = vec4(color, 1.);
     gl_FragDepth = depth;
