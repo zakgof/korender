@@ -88,7 +88,7 @@ fun CSMExample() =
             )
 
             Gui {
-                Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = ColorRGBA(0x66FF55B0))
+                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
             }
             // Filter(fragment("!shader/effect/shadow-debug.frag"))
         }

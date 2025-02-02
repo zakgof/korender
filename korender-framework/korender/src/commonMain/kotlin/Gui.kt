@@ -4,6 +4,12 @@ import com.zakgof.korender.context.GuiContainerContext
 import com.zakgof.korender.math.ColorRGBA
 import kotlin.math.sqrt
 
+data class TextStyle (
+    val fontResource: String = "!font/anta.ttf",
+    val color: ColorRGBA = ColorRGBA(0x66FF55A0),
+    val height: Int = 32
+)
+
 class CheckboxState(initialState: Boolean = false) {
     var state = initialState
 }

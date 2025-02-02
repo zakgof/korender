@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.context
 
+import com.zakgof.korender.TextStyle
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.GuiContainerContext
@@ -29,8 +30,18 @@ internal class DefaultContainerContext(
         declaration.add(stack)
     }
 
-    override fun Text(id: Any, fontResource: String, height: Int, text: String, color: ColorRGBA, static: Boolean, onTouch: TouchHandler) {
-        declaration.add(ElementDeclaration.Text(id, fontResource, height, text, color, static, onTouch))
+    override fun Text(id: Any, text: String, textStyle: TextStyle?, fontResource: String?, height: Int?, color: ColorRGBA?, static: Boolean, onTouch: TouchHandler) {
+        declaration.add(
+            ElementDeclaration.Text(
+                id,
+                fontResource ?: textStyle?.fontResource ?: "!font/anta.ttf",
+                height ?: textStyle?.height ?: 32,
+                text,
+                color ?: textStyle?.color ?: ColorRGBA(0x66FF55A0),
+                static,
+                onTouch
+            )
+        )
     }
 
     override fun Filler() {

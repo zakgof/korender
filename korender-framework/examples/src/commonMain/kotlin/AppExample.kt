@@ -36,22 +36,15 @@ import org.jetbrains.compose.resources.painterResource
 fun AppExample() {
     val options = listOf(
         Demo("City demo") { InfiniteCity() },
-        Demo("Effects showcase") { ShowcaseExample() },
-        Demo("GUI") { GuiExample() },
-        Demo("PBR metallic/roughness") { MetallicRoughnessExample() },
-        Demo("Transparency") { TransparencyExample() },
-        Demo("Dynamic meshes") { MeshesExample() },
-        Demo(".obj file") { ObjFileExample() },
-        Demo(".gtlf scene") { GltfExample() },
+        Demo("OBJ mesh") { ObjFileExample() },
+        Demo("GLTF animation") { GltfExample() },
+        Demo("Shadows") { ShadowExample() },
+        Demo("PBR") { MetallicRoughnessExample() },
+        Demo("Effects") { EffectsExample() },
         Demo("Point lights") { LightsExample() },
-        Demo("Instanced billboards") { InstancedBillboardsExample() },
-        Demo("Instanced meshes") { InstancedMeshesExample() },
-        Demo("Shadow mapping") { ShadowExample() },
-        Demo("Blur filter") { BlurExample() },
-        Demo("FXAA filter") { FxaaExample() },
-        Demo("Fireball effect") { FireBallExample() },
-        Demo("Smoke effect") { SmokeExample() },
-        Demo("Sky") { SkyExample() }
+        Demo("GUI") { GuiExample() },
+        Demo("Particles") { InstancedBillboardsExample() },
+        Demo("Blur") { BlurExample() },
     )
 
     var isExpanded by remember { mutableStateOf(false) }
@@ -86,14 +79,14 @@ fun AppExample() {
                 )
         ) {
             if (isExpanded) {
-                Row (verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(
                         painter = painterResource(Res.drawable.korender32),
                         contentDescription = "Korender",
                         modifier = Modifier.padding(8.dp).size(16.dp)
                     )
                     Text(
-                        text = "Korender Demo",
+                        text = "Korender",
                         fontSize = 18.sp,
                         color = textColor,
                         modifier = Modifier.padding(vertical = 8.dp)
@@ -105,7 +98,6 @@ fun AppExample() {
                         modifier = Modifier
                             .background(color = if (option == selectedOption) selectColor else backgroundColor)
                             .clickable {
-                                isExpanded = false
                                 selectedOption = option
                             }
                             .padding(12.dp, 6.dp),

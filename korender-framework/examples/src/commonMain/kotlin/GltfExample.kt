@@ -25,7 +25,7 @@ fun GltfExample() = Korender (appResourceLoader = { Res.readBytes(it) }) {
         Gui {
             Column {
                 Filler()
-                Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = ColorRGBA(0x66FF55B0))
+                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
             }
         }
     }
