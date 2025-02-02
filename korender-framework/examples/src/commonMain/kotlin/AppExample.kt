@@ -37,6 +37,7 @@ fun AppExample() {
     val options = listOf(
         Demo("City demo") { InfiniteCity() },
         Demo("Effects showcase") { ShowcaseExample() },
+        Demo("GUI") { GuiExample() },
         Demo("PBR metallic/roughness") { MetallicRoughnessExample() },
         Demo("Transparency") { TransparencyExample() },
         Demo("Dynamic meshes") { MeshesExample() },
@@ -50,7 +51,6 @@ fun AppExample() {
         Demo("FXAA filter") { FxaaExample() },
         Demo("Fireball effect") { FireBallExample() },
         Demo("Smoke effect") { SmokeExample() },
-        Demo("GUI") { GuiExample() },
         Demo("Sky") { SkyExample() }
     )
 
