@@ -31,8 +31,10 @@ fun MetallicRoughnessExample() = Korender(appResourceLoader = { Res.readBytes(it
             }
         }
         Gui {
-            Filler()
-            Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = ColorRGBA(0x66FF55B0))
+            Column {
+                Filler()
+                Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = ColorRGBA(0x66FF55B0))
+            }
         }
     }
 }

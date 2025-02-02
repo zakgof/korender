@@ -22,7 +22,7 @@ internal class GuiRenderer(
 
     init {
         val sizes = mutableMapOf<ElementDeclaration, Size>()
-        sizeEm(Direction.Vertical, container, sizes)
+        sizeEm(Direction.Stack, container, sizes)
         layoutContainer(sizes, 0, 0, width, height, container)
     }
 

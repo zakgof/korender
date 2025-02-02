@@ -29,7 +29,7 @@ fun LightsExample() =
 
         Frame {
 
-            fun LightMark(pos: Vec3, color: ColorRGB) = Renderable (
+            fun LightMark(pos: Vec3, color: ColorRGB) = Renderable(
                 standart {
                     baseColor = ColorRGBA.Black
                     emissiveFactor = color
@@ -64,8 +64,10 @@ fun LightsExample() =
                 transform = translate(4.y)
             )
             Gui {
-                Filler()
-                Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = ColorRGBA(0x66FF55B0))
+                Column {
+                    Filler()
+                    Text(id = "fps", fontResource = "font/orbitron.ttf", height = 30, text = "FPS ${frameInfo.avgFps.toInt()}", color = ColorRGBA(0x66FF55B0))
+                }
             }
         }
     }

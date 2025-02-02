@@ -169,13 +169,7 @@ private fun FrameContext.grassMesh() = customMesh("grass", 4, 6, POS, NORMAL, TE
 private fun FrameContext.gui() = Gui {
     Column {
         Filler()
-        Text(
-            id = "fps",
-            text = "FPS ${frameInfo.avgFps.toInt()}",
-            fontResource = "font/anta.ttf",
-            height = 30,
-            color = ColorRGBA(0x66FF55A0)
-        )
+        Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", fontResource = "font/anta.ttf", height = 40, color = ColorRGBA(0x66FF55A0))
     }
 }
 
