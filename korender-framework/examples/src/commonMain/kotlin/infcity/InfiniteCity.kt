@@ -169,7 +169,7 @@ private fun FrameContext.grassMesh() = customMesh("grass", 4, 6, POS, NORMAL, TE
 private fun FrameContext.gui() = Gui {
     Column {
         Filler()
-        Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", fontResource = "font/anta.ttf", height = 40, color = ColorRGBA(0x66FF55A0))
+        Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40, color = ColorRGBA(0x66FF55A0))
     }
 }
 
@@ -178,9 +178,9 @@ private fun FrameContext.sky() {
         colorness = 0.4f
         density = 20f
         size = 20f
-        set("moonTexture", texture("city/moon.png"))
+        set("moonTexture", texture("infcity/moon.png"))
     }
-    val moon = plugin("secsky", "city/moon.secsky.plugin.frag")
+    val moon = plugin("secsky", "infcity/moon.secsky.plugin.frag")
     Sky(sky, moon)
     Filter(fog())
 }
