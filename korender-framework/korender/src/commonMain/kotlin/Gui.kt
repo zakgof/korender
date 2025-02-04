@@ -61,8 +61,8 @@ fun GuiContainerContext.Joystick(id: String, state: JoystickState, width: Int) {
             imageResource = "!gui/joystick.inner.png",
             width = unit * 4,
             height = unit * 4,
-            marginLeft = unit * 3 + (state.x * unit).toInt(),
-            marginTop = unit * 2 + (state.y * unit).toInt(),
+            marginLeft = unit * 3 + (state.x * 1.8f * unit).toInt(),
+            marginTop = unit * 2 + (-state.y * 1.8f * unit).toInt(),
             onTouch = { touch ->
                 if (touch.type == TouchEvent.Type.DOWN) {
                     state.downEvent = touch
@@ -75,13 +75,13 @@ fun GuiContainerContext.Joystick(id: String, state: JoystickState, width: Int) {
                     state.touchY = 0f
                 }
                 if (touch.type == TouchEvent.Type.MOVE && state.downEvent != null) {
-                    state.touchX = (1.0f * (touch.x - state.downEvent!!.x) / unit)
-                    state.touchY = (1.0f * (touch.y - state.downEvent!!.y) / unit)
+                    state.touchX = (0.5f * (touch.x - state.downEvent!!.x) / unit)
+                    state.touchY = (-0.5f * (touch.y - state.downEvent!!.y) / unit)
                 }
 
                 val l2 = state.touchX * state.touchX + state.touchY * state.touchY
-                if (l2 > 4.0) {
-                    val l = 2.0f / sqrt(l2)
+                if (l2 > 1.0) {
+                    val l = 1.0f / sqrt(l2)
                     state.touchX *= l
                     state.touchY *= l
                 }

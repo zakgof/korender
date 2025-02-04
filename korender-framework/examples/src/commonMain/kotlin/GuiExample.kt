@@ -9,12 +9,15 @@ import com.zakgof.korender.Joystick
 import com.zakgof.korender.JoystickState
 import com.zakgof.korender.Korender
 import com.zakgof.korender.ProgressBar
+import com.zakgof.korender.TextStyle
 import com.zakgof.korender.math.ColorRGBA
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun GuiExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+    val statusStyle = TextStyle(height = 36, color = ColorRGBA(0xF06543A0))
+    val widgetStyle = TextStyle(height = 48, color = ColorRGBA(0x66FF55A0))
     val checkboxState = CheckboxState(true)
     val joystickState = JoystickState()
     Frame {
@@ -36,31 +39,31 @@ fun GuiExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                 }
                 Row {
                     Filler()
-                    Text(id = "cbs", fontResource = "font/anta.ttf", height = 48, text = "${checkboxState.state}", color = ColorRGBA(0xF06543A0))
+                    Text(id = "cbs",  text = "${checkboxState.state}", style = statusStyle)
                     Filler()
                 }
                 Filler()
                 Row {
                     Filler()
-                    Text(id = "pbl", fontResource = "font/anta.ttf", height = 48, text = "Progress bar", color = ColorRGBA(0x66FF55A0))
+                    Text(id = "pbl", text = "Progress bar", style = widgetStyle)
                     ProgressBar(id = "pbw", width = 320, value = progress)
                     Filler()
                 }
                 Row {
                     Filler()
-                    Text(id = "pbs", fontResource = "font/anta.ttf", height = 48, text = "${progress.percent()}", color = ColorRGBA(0xF06543A0))
+                    Text(id = "pbs", text = "${progress.percent()}", style = statusStyle)
                     Filler()
                 }
                 Filler()
                 Row {
                     Filler()
-                    Text(id = "jl", fontResource = "font/anta.ttf", height = 48, text = "Joystick", color = ColorRGBA(0x66FF55A0))
-                    Joystick(id = "jw", state = joystickState, width = 128)
+                    Text(id = "jl", text = "Joystick", style = widgetStyle)
+                    Joystick(id = "jw", state = joystickState, width = 256)
                     Filler()
                 }
                 Row {
                     Filler()
-                    Text(id = "js", fontResource = "font/anta.ttf", height = 48, text = "${joystickState.x.percent()} : ${joystickState.y.percent()}", color = ColorRGBA(0xF06543A0))
+                    Text(id = "js", text = "${joystickState.x.percent()} : ${joystickState.y.percent()}", style = statusStyle)
                     Filler()
                 }
                 Filler()

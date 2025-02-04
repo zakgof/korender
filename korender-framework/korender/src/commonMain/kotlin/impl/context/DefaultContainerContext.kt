@@ -30,14 +30,14 @@ internal class DefaultContainerContext(
         declaration.add(stack)
     }
 
-    override fun Text(id: Any, text: String, textStyle: TextStyle?, fontResource: String?, height: Int?, color: ColorRGBA?, static: Boolean, onTouch: TouchHandler) {
+    override fun Text(id: Any, text: String, style: TextStyle?, fontResource: String?, height: Int?, color: ColorRGBA?, static: Boolean, onTouch: TouchHandler) {
         declaration.add(
             ElementDeclaration.Text(
                 id,
-                fontResource ?: textStyle?.fontResource ?: "!font/anta.ttf",
-                height ?: textStyle?.height ?: 32,
+                fontResource ?: style?.fontResource ?: "!font/anta.ttf",
+                height ?: style?.height ?: 32,
                 text,
-                color ?: textStyle?.color ?: ColorRGBA(0x66FF55A0),
+                color ?: style?.color ?: ColorRGBA(0x66FF55A0),
                 static,
                 onTouch
             )
