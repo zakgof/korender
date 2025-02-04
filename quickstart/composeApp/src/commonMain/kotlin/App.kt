@@ -1,34 +1,25 @@
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
-import com.zakgof.korender.material.MaterialModifiers.options
-import com.zakgof.korender.material.MaterialModifiers.standardUniforms
-import com.zakgof.korender.material.StandardMaterialOption
-import com.zakgof.korender.material.Textures.texture
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
-import com.zakgof.korender.mesh.Meshes.sphere
 import kotlin.math.sin
 
 @Composable
 fun App() = Korender {
     Frame {
+        DirectionalLight(Vec3(1f, -1f, -1f).normalize())
         Renderable(
-            options(StandardMaterialOption.Color),
-            standardUniforms {
-                color = Color(1.0f, 0.2f, 1.0f, 0.5f + 0.5f * sin(frameInfo.time))
+            standart {
+                baseColor = ColorRGBA(0.2f, 1.0f, 0.5f + 0.5f * sin(frameInfo.time), 1.0f)
+                pbr.metallic = 0.4f
             },
             mesh = sphere(2.0f),
-            transform = Transform().translate(sin(frameInfo.time).y)
-        )
-
-        Billboard(
-            standardUniforms {
-                colorTexture = texture("/sprite.png")
-            },
-            position = Vec3(1.0f, 1.0f, 0.0f)
+            transform = translate(sin(frameInfo.time).y)
         )
     }
 }
