@@ -9,6 +9,7 @@ import com.zakgof.korender.impl.gl.GL.glBindVertexArray
 import com.zakgof.korender.impl.gl.GL.glBufferData
 import com.zakgof.korender.impl.gl.GL.glDeleteBuffers
 import com.zakgof.korender.impl.gl.GL.glDeleteVertexArrays
+import com.zakgof.korender.impl.gl.GL.glDrawArrays
 import com.zakgof.korender.impl.gl.GL.glDrawElements
 import com.zakgof.korender.impl.gl.GL.glEnableVertexAttribArray
 import com.zakgof.korender.impl.gl.GL.glGenBuffers
@@ -55,7 +56,7 @@ internal class GlGpuMesh(
 
     fun update(
         vb: List<NativeByteBuffer>,
-        ib: NativeByteBuffer,
+        ib: NativeByteBuffer?,
         vertices: Int,
         indices: Int
     ) {
@@ -78,23 +79,27 @@ internal class GlGpuMesh(
         }
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib, usage)
+        ib?.let {glBufferData(GL_ELEMENT_ARRAY_BUFFER, it, usage)}
 
         glBindVertexArray(null)
     }
 
     fun render() {
         glBindVertexArray(vao)
-        glDrawElements(
-            GL_TRIANGLES,
-            indices,
-            when (indexType) {
-                IndexType.Byte -> GL_UNSIGNED_BYTE
-                IndexType.Short -> GL_UNSIGNED_SHORT
-                IndexType.Int -> GL_UNSIGNED_INT
-            },
-            0
-        )
+        if (indices <= 0) {
+            glDrawArrays(GL_TRIANGLES, 0, vertices)
+        } else {
+            glDrawElements(
+                GL_TRIANGLES,
+                indices,
+                when (indexType) {
+                    IndexType.Byte -> GL_UNSIGNED_BYTE
+                    IndexType.Short -> GL_UNSIGNED_SHORT
+                    IndexType.Int -> GL_UNSIGNED_INT
+                },
+                0
+            )
+        }
         glBindVertexArray(null)
     }
 

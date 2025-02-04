@@ -33,9 +33,9 @@ internal fun ignoringGlError(block: () -> Unit) {
     }
 }
 
-internal fun checkGlError() {
+internal fun checkGlError(point: String) {
     val error = glGetError()
     if (error != 0) {
-        throw KorenderException("GL error $error")
+        throw KorenderException("GL error $error $point")
     }
 }

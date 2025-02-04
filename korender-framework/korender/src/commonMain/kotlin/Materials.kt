@@ -1,7 +1,7 @@
 package com.zakgof.korender
 
-import com.zakgof.korender.math.Color
-import com.zakgof.korender.math.Mat4List
+import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 
 interface MaterialModifier
 
@@ -32,13 +32,13 @@ interface SmokeParams : BillboardVertexParams {
     var seed: Float
 }
 
-interface WaterParams {
-    var waterColor: Color
+interface WaterParams : BaseParams {
+    var waterColor: ColorRGB
     var transparency: Float
     var waveScale: Float
 }
 
-interface AdjustParams {
+interface AdjustParams : BaseParams {
     var brightness: Float
     var contrast: Float
     var saturation: Float
@@ -46,19 +46,17 @@ interface AdjustParams {
 
 interface StandartParams : BaseParams {
 
-    var pcss: Boolean
-
-    var baseColor: Color
+    var baseColor: ColorRGBA
     var baseColorTexture: TextureDeclaration?
-
-    val pbr: Pbr
-    val specularGlossiness: SpecularGlossiness
+    var triplanarScale: Float?
 
     var normalTexture: TextureDeclaration?
     var shadowTexture: TextureDeclaration?
+    var emissiveFactor: ColorRGB
+    var emissiveTexture: TextureDeclaration?
 
-    var jointMatrices: Mat4List?
-    var inverseBindMatrices: Mat4List?
+    val pbr: Pbr
+    val specularGlossiness: SpecularGlossiness
 
     var xscale: Float
     var yscale: Float
@@ -67,27 +65,37 @@ interface StandartParams : BaseParams {
     interface Pbr {
         var metallic: Float
         var roughness: Float
-        var emissiveFactor: Color
         var metallicRoughnessTexture: TextureDeclaration?
-        var emissiveTexture: TextureDeclaration?
-        var occlusionTexture: TextureDeclaration?
+//        var occlusionTexture: TextureDeclaration?
     }
 
     interface SpecularGlossiness {
-        var specularFactor: Color
+        var specularFactor: ColorRGB
         var glossinessFactor: Float
         var specularGlossinessTexture: TextureDeclaration?
     }
 }
 
-interface FastCloudSkyParams {
+interface FastCloudSkyParams : BaseParams {
     var density: Float     // 0..5
     var thickness: Float  // 0..20
     var scale: Float       // 0.1..10
     var rippleamount: Float  // 0..1
     var ripplescale: Float // 1..10
-    var darkblue: Color
-    var lightblue: Color
+    var darkblue: ColorRGB
+    var lightblue: ColorRGB
+}
+
+interface StarrySkyParams : BaseParams {
+    var colorness: Float
+    var density: Float
+    var speed: Float
+    var size: Float
+}
+
+interface FogParams : BaseParams {
+    var density: Float
+    var color: ColorRGB
 }
 
 enum class RenderingOption {

@@ -16,9 +16,7 @@ import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.gl.GL
-import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.image.Image
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.impl.image.InternalImage
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.CompletableDeferred
@@ -28,12 +26,12 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.await
 import kotlinx.coroutines.launch
+import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.Uint8ClampedArray
 import org.khronos.webgl.WebGLRenderingContext.Companion.RENDERER
 import org.khronos.webgl.WebGLRenderingContext.Companion.SHADING_LANGUAGE_VERSION
 import org.khronos.webgl.WebGLRenderingContext.Companion.VENDOR
 import org.khronos.webgl.WebGLRenderingContext.Companion.VERSION
-import org.khronos.webgl.get
 import org.khronos.webgl.toInt8Array
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
@@ -45,31 +43,18 @@ import org.w3c.dom.get
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-internal fun Byte.toClampedFloat(): Float = this.toInt().and(0xFF).toFloat()
-
 internal class WasmImage(
     override val width: Int,
     override val height: Int,
-    private val byteArray: ByteArray,
-    override val format: GlGpuTexture.Format = GlGpuTexture.Format.RGBA
-) : Image {
-    override val bytes = NativeByteBuffer(byteArray)
-    override fun pixel(x: Int, y: Int): Color {
-        val base = (x + y * width) * 4
-        return Color(
-            byteArray[base + 3].toClampedFloat(),
-            byteArray[base].toClampedFloat(),
-            byteArray[base + 1].toClampedFloat(),
-            byteArray[base + 2].toClampedFloat()
-        )
-    }
-}
+    override val bytes: NativeByteBuffer,
+    override val format: Image.Format = Image.Format.RGBA
+) : InternalImage
 
 internal actual object Platform {
 
-    actual val name: String = "Wasm"
+    actual val target = KorenderContext.TargetPlatform.Web
 
-    @OptIn(DelicateCoroutinesApi::class)
+    @OptIn(DelicateCoroutinesApi::class, ExperimentalUnsignedTypes::class)
     internal actual fun loadFont(bytes: ByteArray): Deferred<FontDef> {
         val ffLoader = jsLoadFont(bytes.toInt8Array())
         return GlobalScope.async {
@@ -111,21 +96,19 @@ internal actual object Platform {
                 ctx.canvas.height.toDouble()
             )
             val uint8ClampedArray: Uint8ClampedArray = imageData.data
-            val byteArray = ByteArray(uint8ClampedArray.length) { uint8ClampedArray[it] }
+            val uint8Array = Uint8Array(uint8ClampedArray.buffer, uint8ClampedArray.byteOffset, uint8ClampedArray.length)
             val image = WasmImage(
                 ctx.canvas.width,
                 ctx.canvas.height,
-                byteArray
+                NativeByteBuffer(uint8Array)
             )
-//            println("FONT IMAGE DUMP")
-//            println(canvas.toDataURL())
             FontDef(image, widths)
         }
     }
 
     @OptIn(ExperimentalEncodingApi::class)
-    internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<Image> {
-        val result = CompletableDeferred<Image>()
+    internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage> {
+        val result = CompletableDeferred<InternalImage>()
         val base64Data = Base64.encode(bytes)
         val image = document.createElement("img") as HTMLImageElement
         image.src = "data:image/$type;base64,$base64Data"
@@ -133,7 +116,6 @@ internal actual object Platform {
             result.completeExceptionally(KorenderException("$a $b $c $d $e"))
             null
         }
-        println(image.src)
         image.onload = {
             val canvas = document.createElement("canvas") as HTMLCanvasElement
             val context = canvas.getContext("2d") as CanvasRenderingContext2D
@@ -147,8 +129,8 @@ internal actual object Platform {
                 canvas.height.toDouble()
             )
             val uint8ClampedArray: Uint8ClampedArray = imageData.data
-            val byteArray = ByteArray(uint8ClampedArray.length) { uint8ClampedArray[it] }
-            result.complete(WasmImage(imageData.width, imageData.height, byteArray))
+            val uint8Array = Uint8Array(uint8ClampedArray.buffer, uint8ClampedArray.byteOffset, uint8ClampedArray.length)
+            result.complete(WasmImage(imageData.width, imageData.height, NativeByteBuffer(uint8Array)))
         }
         return result
     }
@@ -230,6 +212,12 @@ actual fun Korender(
 
         animate(window, canvas, engine!!)
 
+        fun Short.toButton() : TouchEvent.Button = when (this) {
+            0.toShort() -> TouchEvent.Button.LEFT
+            2.toShort() -> TouchEvent.Button.RIGHT
+            else -> TouchEvent.Button.NONE
+        }
+
         canvas.addEventListener("webglcontextlost") {
             it.preventDefault()
             println("WebGL context lost !")
@@ -240,7 +228,7 @@ actual fun Korender(
             val x = me.pageX - canvas.offsetLeft
             val y = me.pageY - canvas.offsetTop
             GlobalScope.launch {
-                engine?.pushTouch(TouchEvent(type, x.toFloat(), y.toFloat()))
+                engine?.pushTouch(TouchEvent(type, me.button.toButton(), x.toFloat(), y.toFloat()))
             }
         }
 
@@ -250,7 +238,7 @@ actual fun Korender(
                 val x = touch.pageX - canvas.offsetLeft
                 val y = touch.pageY - canvas.offsetTop
                 GlobalScope.launch {
-                    engine?.pushTouch(TouchEvent(type, x.toFloat(), y.toFloat()))
+                    engine?.pushTouch(TouchEvent(type, TouchEvent.Button.LEFT, x.toFloat(), y.toFloat()))
                 }
             }
             // TODO improve this POC
@@ -259,9 +247,16 @@ actual fun Korender(
                     val x = touch.pageX - canvas.offsetLeft
                     val y = touch.pageY - canvas.offsetTop
                     GlobalScope.launch {
-                        engine?.pushTouch(TouchEvent(type, x.toFloat(), y.toFloat()))
+                        engine?.pushTouch(TouchEvent(type, TouchEvent.Button.LEFT, x.toFloat(), y.toFloat()))
                     }
                 }
+            }
+        }
+
+        fun sendKey(type: KeyEvent.Type, event: Event) {
+            val ke = event as org.w3c.dom.events.KeyboardEvent
+            GlobalScope.launch {
+                engine?.pushKey(KeyEvent(type, ke.key))
             }
         }
 
@@ -283,6 +278,13 @@ actual fun Korender(
         }
         canvas.addEventListener("touchmove") {
             sendTouchTouch(TouchEvent.Type.MOVE, it)
+        }
+        // TODO cleanup
+        document.addEventListener("keydown") {
+            sendKey(KeyEvent.Type.DOWN, it)
+        }
+        document.addEventListener("keyup") {
+            sendKey(KeyEvent.Type.UP, it)
         }
 
         onDispose {

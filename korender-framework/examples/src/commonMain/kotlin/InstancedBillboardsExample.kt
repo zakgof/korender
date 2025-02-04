@@ -4,6 +4,8 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
+import com.zakgof.korender.math.ColorRGB.Companion.White
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -18,8 +20,10 @@ fun InstancedBillboardsExample() = Korender(appResourceLoader = { Res.readBytes(
     val particles = Array(particleNum) { Particle(Random.nextDouble(5.0).toFloat()) }
 
     Frame {
+        AmbientLight(White)
         InstancedBillboards(
             standart {
+                baseColor = ColorRGBA.Red
                 baseColorTexture = texture("texture/splat.png")
             },
             id = "particles",

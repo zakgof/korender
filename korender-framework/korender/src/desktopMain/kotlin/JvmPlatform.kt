@@ -2,7 +2,6 @@ package com.zakgof.korender
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -13,8 +12,7 @@ import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
-import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.image.Image
+import com.zakgof.korender.impl.image.InternalImage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -29,8 +27,12 @@ import java.awt.Font
 import java.awt.GraphicsEnvironment
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
+import java.awt.event.KeyAdapter
+import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.awt.event.MouseEvent.BUTTON1
+import java.awt.event.MouseEvent.BUTTON3
 import java.awt.event.MouseMotionAdapter
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferByte
@@ -61,13 +63,22 @@ actual fun Korender(
     val pixelRatio by remember { mutableStateOf(detectDevicePixelRatio()) }
 
     fun sendTouch(
-        canvas: AWTGLCanvas,
         type: TouchEvent.Type,
+        button: TouchEvent.Button,
         ex: Int,
         ey: Int
-    ) = canvas.runInContext {
+    ) {
         GlobalScope.launch {
-            engine?.pushTouch(TouchEvent(type, ex * pixelRatio[0], ey * pixelRatio[1]))
+            engine?.pushTouch(TouchEvent(type, button,ex * pixelRatio[0], ey * pixelRatio[1]))
+        }
+    }
+
+    fun sendKey(
+        type: com.zakgof.korender.KeyEvent.Type,
+        c: String
+    ) {
+        GlobalScope.launch {
+            engine?.pushKey(KeyEvent(type, c))
         }
     }
 
@@ -120,19 +131,34 @@ actual fun Korender(
                     swapBuffers()
                 }
             }
+
+            fun Int.toButton() : TouchEvent.Button = when(this) {
+                BUTTON1 -> TouchEvent.Button.LEFT
+                BUTTON3 -> TouchEvent.Button.RIGHT
+                else -> TouchEvent.Button.NONE
+            }
+
             canvas.addMouseMotionListener(object : MouseMotionAdapter() {
                 override fun mouseMoved(e: MouseEvent) =
-                    sendTouch(canvas, TouchEvent.Type.MOVE, e.x, e.y)
+                    sendTouch(TouchEvent.Type.MOVE, e.button.toButton(), e.x, e.y)
 
                 override fun mouseDragged(e: MouseEvent) =
-                    sendTouch(canvas, TouchEvent.Type.MOVE, e.x, e.y)
+                    sendTouch(TouchEvent.Type.MOVE, e.button.toButton(), e.x, e.y)
             })
             canvas.addMouseListener(object : MouseAdapter() {
                 override fun mousePressed(e: MouseEvent) =
-                    sendTouch(canvas, TouchEvent.Type.DOWN, e.x, e.y)
+                    sendTouch(TouchEvent.Type.DOWN, e.button.toButton(), e.x, e.y)
 
                 override fun mouseReleased(e: MouseEvent) =
-                    sendTouch(canvas, TouchEvent.Type.UP, e.x, e.y)
+                    sendTouch(TouchEvent.Type.UP, e.button.toButton(), e.x, e.y)
+            })
+            canvas.addKeyListener(object : KeyAdapter() {
+                override fun keyPressed(e: KeyEvent) {
+                    sendKey(com.zakgof.korender.KeyEvent.Type.DOWN, e.keyChar.toString()) // TODO all keycodes
+                }
+                override fun keyReleased(e: KeyEvent) {
+                    sendKey(com.zakgof.korender.KeyEvent.Type.UP, e.keyChar.toString()) // TODO all keycodes
+                }
             })
 
             canvas.addComponentListener(object : ComponentAdapter() {
@@ -148,23 +174,15 @@ actual fun Korender(
             canvas
         }
     )
-
-    DisposableEffect(null) {
-
-        onDispose {
-
-        }
-    }
-
 }
 
 internal actual object Platform {
 
-    actual val name: String = "Java ${System.getProperty("java.version")}"
+    actual val target = KorenderContext.TargetPlatform.Desktop
 
     actual fun nanoTime() = System.nanoTime()
 
-    internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<Image> =
+    internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage> =
         CompletableDeferred(image(ImageIO.read(ByteArrayInputStream(bytes))))
 
     private fun loadBgr(data: ByteArray): NativeByteBuffer {
@@ -237,7 +255,7 @@ internal actual object Platform {
         return CompletableDeferred(FontDef(image, widths))
     }
 
-    private fun image(bufferedImage: BufferedImage): Image {
+    private fun image(bufferedImage: BufferedImage): InternalImage {
         val raster = bufferedImage.raster
         val bytes = when (bufferedImage.type) {
             BufferedImage.TYPE_3BYTE_BGR -> loadBgr((raster.dataBuffer as DataBufferByte).data)
@@ -247,10 +265,10 @@ internal actual object Platform {
             else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
         }
         val format = when (bufferedImage.type) {
-            BufferedImage.TYPE_3BYTE_BGR -> GlGpuTexture.Format.RGB
-            BufferedImage.TYPE_4BYTE_ABGR -> GlGpuTexture.Format.RGBA
-            BufferedImage.TYPE_BYTE_GRAY -> GlGpuTexture.Format.Gray
-            BufferedImage.TYPE_USHORT_GRAY -> GlGpuTexture.Format.Gray16
+            BufferedImage.TYPE_3BYTE_BGR -> Image.Format.RGB
+            BufferedImage.TYPE_4BYTE_ABGR -> Image.Format.RGBA
+            BufferedImage.TYPE_BYTE_GRAY -> Image.Format.Gray
+            BufferedImage.TYPE_USHORT_GRAY -> Image.Format.Gray16
             else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
         }
         return JvmImage(
@@ -269,31 +287,8 @@ internal class JvmImage(
     override val width: Int,
     override val height: Int,
     override val bytes: NativeByteBuffer,
-    override val format: GlGpuTexture.Format
-) : Image {
-
-    private val pixel = FloatArray(3) { 0f }
-
-    override fun pixel(x: Int, y: Int): com.zakgof.korender.math.Color {
-        raster.getPixel(x, y, pixel)
-        return when (format) {
-            // TODO support more formats
-            // TODO support transparency
-            GlGpuTexture.Format.Gray16 -> com.zakgof.korender.math.Color(
-                1.0f,
-                pixel[0] / 65535.0f,
-                pixel[0] / 65535.0f,
-                pixel[0] / 65535.0f
-            )
-
-            else -> com.zakgof.korender.math.Color(
-                1.0f,
-                pixel[0] / 255.0f,
-                pixel[1] / 255.0f,
-                pixel[2] / 255.0f
-            )
-        }
-    }
+    override val format: Image.Format
+) : InternalImage {
 
 
 }

@@ -5,11 +5,7 @@ interface TextureDeclaration
 enum class TextureFilter {
     Nearest,
     Linear,
-    MipMap,
-    MipMapNearestNearest,
-    MipMapLinearNearest,
-    MipMapNearestLinear,
-    MipMapLinearLinear
+    MipMap
 }
 
 enum class TextureWrap {

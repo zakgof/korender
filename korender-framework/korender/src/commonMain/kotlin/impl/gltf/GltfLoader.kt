@@ -9,28 +9,29 @@ import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Attributes.WEIGHTS
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.impl.absolutizeResource
+import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.Bucket
 import com.zakgof.korender.impl.engine.GltfDeclaration
-import com.zakgof.korender.impl.engine.Inventory
-import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.gl.GLConstants
+import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.impl.glgpu.toGL
 import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
+import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalStandartParams
-import com.zakgof.korender.impl.material.MaterialBuilder
 import com.zakgof.korender.impl.material.ParamUniforms
 import com.zakgof.korender.impl.resourceBytes
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
-import com.zakgof.korender.math.Mat4List
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
@@ -130,7 +131,7 @@ internal object GltfLoader {
         )
             .flatten()
             .associateWith { loadUriBytes(appResourceLoader, absolutizeResource(it, gltfResource)) }
-        return GltfLoaded(model, loadedUris.toMutableMap())
+        return GltfLoaded(model, gltfResource, loadedUris.toMutableMap())
     }
 
     @OptIn(ExperimentalEncodingApi::class)
@@ -153,12 +154,9 @@ internal object GltfLoader {
 }
 
 internal class GltfSceneBuilder(
-    val inventory: Inventory,
-    private val resource: String,
-    private val globalTransform: Transform,
-    private val gltfLoaded: GltfLoaded
+    private val declaration: GltfDeclaration,
+    private val gltfLoaded: GltfLoaded,
 ) {
-
     private val nodeMatrices = mutableMapOf<Int, Transform>()
     private val meshes = mutableListOf<Pair<Int, Int>>()
     private val renderableDeclarations = mutableListOf<RenderableDeclaration>()
@@ -178,7 +176,8 @@ internal class GltfSceneBuilder(
             LoadedSkin(inverseBindMatrices, listOf()) // TODO separate these two things
         }?.let { loadedSkins.addAll(it) }
 
-        model.animations?.forEach { animation ->
+        if (declaration.animation < (model.animations?.size ?: 0)) {
+            val animation = model.animations!![declaration.animation]
             val samplerValues = animation.samplers.map { sampler -> getSamplerValue(sampler, time) }
             animation.channels.forEach { channel ->
                 nodeAnimations.getOrPut(channel.target.node!!) {
@@ -189,7 +188,7 @@ internal class GltfSceneBuilder(
 
         scene.nodes.forEach { nodeIndex ->
             processNode(
-                globalTransform,
+                declaration.transform,
                 nodeIndex,
                 model.nodes!![nodeIndex]
             )
@@ -300,34 +299,37 @@ internal class GltfSceneBuilder(
     ) {
         mesh.primitives.forEachIndexed { primitiveIndex, primitive ->
             val meshDeclaration = createMeshDeclaration(primitive, meshIndex, primitiveIndex)
-            val materialDeclaration = createMaterialDeclaration(
+            val materialModifiers = createMaterialModifiers(
                 primitive,
                 skinIndex
             )
             val renderableDeclaration = RenderableDeclaration(
-                meshDeclaration,
-                materialDeclaration.shader,
-                materialDeclaration.uniforms,
-                transform,
-                Bucket.OPAQUE // TODO transparent mode
+                BaseMaterial.Renderable,
+                listOf(materialModifiers),
+                mesh = meshDeclaration,
+                transform = transform,
+                bucket = Bucket.OPAQUE // TODO transparent mode
             )
             renderableDeclarations += renderableDeclaration
         }
     }
 
-    private fun createMaterialDeclaration(
+    private fun createMaterialModifiers(
         primitive: Gltf.Mesh.Primitive,
         skinIndex: Int?
-    ): MaterialDeclaration {
+    ): MaterialModifier {
+
+        // TODO: split into 2 parts, precompute textures modifier, calc only skin modifier
+
         val material = primitive.material?.let { gltfLoaded.model.materials!![it] }
         val matPbr = material?.pbrMetallicRoughness
 
         val metallic = matPbr?.metallicFactor ?: 0.2f
         val roughness = matPbr?.roughnessFactor ?: 0.3f
         val emissiveFactor =
-            material?.emissiveFactor?.let { Color(1.0f, it[0], it[1], it[2]) } ?: Color.Black
+            material?.emissiveFactor?.let { ColorRGB(it[0], it[1], it[2]) } ?: ColorRGB.Black
         val baseColor =
-            matPbr?.baseColorFactor?.let { Color(it[3], it[0], it[1], it[2]) } ?: Color.White
+            matPbr?.baseColorFactor?.let { ColorRGBA(it[0], it[1], it[2], it[3]) } ?: ColorRGBA.White
         val albedoTexture = matPbr?.baseColorTexture?.let { getTexture(it) }
         val metallicRoughnessTexture = matPbr?.metallicRoughnessTexture?.let { getTexture(it) }
         val normalTexture = material?.normalTexture?.let { getTexture(it) }
@@ -336,12 +338,13 @@ internal class GltfSceneBuilder(
 
         val matSpecularGlossiness = material?.extensions?.get("KHR_materials_pbrSpecularGlossiness")
                 as? Gltf.KHRMaterialsPbrSpecularGlossiness
-        val diffuseFactor = matSpecularGlossiness?.diffuseFactor?.let { Color(it[3], it[0], it[1], it[2]) } ?: Color.White
+        val diffuseFactor = matSpecularGlossiness?.diffuseFactor?.let { ColorRGB(it[0], it[1], it[2]) } ?: ColorRGB.White
         val diffuseTexture = matSpecularGlossiness?.diffuseTexture?.let { getTexture(it) }
-        val specularFactor = matSpecularGlossiness?.specularFactor?.let { Color(1.0f, it[0], it[1], it[2]) } ?: Color.White
+        val specularFactor = matSpecularGlossiness?.specularFactor?.let { ColorRGB(it[0], it[1], it[2]) } ?: ColorRGB.White
         val glossinessFactor = matSpecularGlossiness?.glossinessFactor ?: 0.2f
         val specularGlossinessTexture = matSpecularGlossiness?.specularGlossinessTexture?.let { getTexture(it) }
 
+        // TODO: Precreate all except jointMatrices
         val pu = ParamUniforms(InternalStandartParams()) {
 
             this.baseColor = baseColor
@@ -351,14 +354,14 @@ internal class GltfSceneBuilder(
                 this.baseColorTexture = albedoTexture
                 this.pbr.metallic = metallic
                 this.pbr.roughness = roughness
-                this.pbr.emissiveFactor = emissiveFactor
                 this.pbr.metallicRoughnessTexture = metallicRoughnessTexture
-                this.pbr.occlusionTexture = occlusionTexture
-                this.pbr.emissiveTexture = emissiveTexture
+                this.emissiveFactor = emissiveFactor
+                this.emissiveTexture = emissiveTexture
+//                this.pbr.occlusionTexture = occlusionTexture
             }
 
             if (matSpecularGlossiness != null) {
-                this.baseColor = diffuseFactor
+                this.baseColor = diffuseFactor.toRGBA()
                 this.baseColorTexture = diffuseTexture
                 this.specularGlossiness.specularFactor = specularFactor
                 this.specularGlossiness.glossinessFactor = glossinessFactor
@@ -366,15 +369,18 @@ internal class GltfSceneBuilder(
             }
 
             if (skinIndex != null) {
-                this.jointMatrices = Mat4List(loadedSkins[skinIndex].jointMatrices)
-                this.inverseBindMatrices = Mat4List(loadedSkins[skinIndex].inverseBindMatrices)
+                this.jntMatrices = Mat4List(
+                    loadedSkins[skinIndex].jointMatrices.mapIndexed { ind, jm ->
+                        jm * loadedSkins[skinIndex].inverseBindMatrices[ind]
+                    }
+                )
             }
         }
 
-        val builder = MaterialBuilder()
-        builder.shaderDefs += pu.shaderDefs()
-        builder.shaderUniforms = pu
-        return builder.toMaterialDeclaration()
+        return InternalMaterialModifier {
+            it.shaderDefs += pu.shaderDefs()
+            it.shaderUniforms = pu
+        }
     }
 
     private fun createMeshDeclaration(
@@ -390,14 +396,14 @@ internal class GltfSceneBuilder(
             }
 
         return CustomMesh(
-            "$resource:$meshIndex:$primitiveIndex",
+            "${declaration.gltfResource}:$meshIndex:$primitiveIndex",
             verticesAttributeAccessors.first().second.count,
-            indicesAccessor!!.count,
+            indicesAccessor?.count ?: 0,
             verticesAttributeAccessors.map { it.first },
             false,
-            accessorComponentTypeToIndexType(indicesAccessor.componentType)
+            accessorComponentTypeToIndexType(indicesAccessor?.componentType)
         ) {
-            indexBytes(getAccessorBytes(indicesAccessor))
+            indicesAccessor?.let { indexBytes(getAccessorBytes(it)) }
             verticesAttributeAccessors.forEach {
                 attrBytes(it.first, getAccessorBytes(it.second))
             }
@@ -419,8 +425,9 @@ internal class GltfSceneBuilder(
         }
     }
 
-    private fun accessorComponentTypeToIndexType(componentType: Int) =
+    private fun accessorComponentTypeToIndexType(componentType: Int?) =
         when (componentType) {
+            null -> null
             GLConstants.GL_UNSIGNED_BYTE -> IndexType.Byte
             GLConstants.GL_UNSIGNED_SHORT -> IndexType.Short
             GLConstants.GL_UNSIGNED_INT -> IndexType.Int
@@ -481,8 +488,8 @@ internal class GltfSceneBuilder(
         return image?.let { img ->
             val bytes = getImageBytes(img)
             ByteArrayTextureDeclaration(
-                img.uri ?: "TODO ${ti.index}", // TODO !!!
-                TextureFilter.MipMapLinearLinear,
+                img.uri ?: "${gltfLoaded.id} ${ti.index}", // TODO !!!
+                TextureFilter.MipMap,
                 TextureWrap.Repeat,
                 1024,
                 bytes,

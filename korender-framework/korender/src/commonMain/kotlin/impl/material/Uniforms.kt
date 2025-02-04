@@ -7,14 +7,17 @@ import com.zakgof.korender.BlurParams
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
+import com.zakgof.korender.FogParams
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.StandartParams
 import com.zakgof.korender.StandartParams.Pbr
 import com.zakgof.korender.StandartParams.SpecularGlossiness
+import com.zakgof.korender.StarrySkyParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.WaterParams
-import com.zakgof.korender.math.Color
-import com.zakgof.korender.math.Mat4List
+import com.zakgof.korender.impl.glgpu.Mat4List
+import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 
 typealias DynamicUniforms = () -> Map<String, Any?>
 
@@ -99,7 +102,7 @@ internal class InternalSmokeParams : SmokeParams, InternalBillboardVertexParams(
 
 internal class InternalWaterParams : WaterParams, InternalBaseParams() {
 
-    override var waterColor: Color = Color(1.0f, 0.1f, 0.2f, 0.3f)
+    override var waterColor: ColorRGB = ColorRGB(0.1f, 0.2f, 0.3f)
     override var transparency: Float = 0.1f
     override var waveScale: Float = 0.04f
 
@@ -117,8 +120,8 @@ internal class InternalFastCloudSkyParams : FastCloudSkyParams, InternalBasePara
     override var scale = 1.0f       // 0.1..10
     override var rippleamount = 0.3f  // 0..1
     override var ripplescale = 4.0f  // 1..10
-    override var darkblue = Color(1f, 0.2f, 0.4f, 0.6f)
-    override var lightblue = Color(1f, 0.4f, 0.6f, 1.0f)
+    override var darkblue = ColorRGB(0.2f, 0.4f, 0.6f)
+    override var lightblue = ColorRGB(0.4f, 0.6f, 1.0f)
 
     override fun collect() {
         map["density"] = density
@@ -131,23 +134,36 @@ internal class InternalFastCloudSkyParams : FastCloudSkyParams, InternalBasePara
     }
 }
 
+internal class InternalStarrySkyParams : StarrySkyParams, InternalBaseParams() {
+
+    override var colorness = 0.8f;
+    override var density = 20.0f;
+    override var speed = 1.0f;
+    override var size = 15.0f;
+
+    override fun collect() {
+        map["colorness"] = colorness
+        map["density"] = density
+        map["speed"] = speed
+        map["size"] = size
+    }
+}
+
 internal class InternalStandartParams : StandartParams, InternalBaseParams() {
 
-    private var _pbr: Pbr? = null
     private var _specularGlossiness: SpecularGlossiness? = null
 
-    override var pcss = false
-
-    override var baseColor = Color(1f, 0.5f, 0.5f, 0.5f)
+    override var baseColor = ColorRGBA.white(1.0f)
+    override var emissiveFactor = ColorRGB.Black
     override var baseColorTexture: TextureDeclaration? = null
+    override var triplanarScale: Float? = null
 
-    override val pbr: Pbr
-        get() {
-            if (_pbr == null) {
-                _pbr = InternalPbr()
-            }
-            return _pbr!!
-        }
+    override var normalTexture: TextureDeclaration? = null
+    override var shadowTexture: TextureDeclaration? = null
+    override var emissiveTexture: TextureDeclaration? = null
+
+    override val pbr = InternalPbr()
+
     override val specularGlossiness: SpecularGlossiness
         get() {
             if (_specularGlossiness == null) {
@@ -156,11 +172,7 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
             return _specularGlossiness!!
         }
 
-    override var normalTexture: TextureDeclaration? = null
-    override var shadowTexture: TextureDeclaration? = null
-
-    override var jointMatrices: Mat4List? = null
-    override var inverseBindMatrices: Mat4List? = null
+    var jntMatrices: Mat4List? = null
 
     override var xscale = 1f
     override var yscale = 1f
@@ -171,18 +183,17 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
         map["baseColor"] = baseColor
         map["baseColorTexture"] = baseColorTexture
 
-        if (_pbr != null) {
-            map["metallic"] = _pbr!!.metallic
-            map["roughness"] = _pbr!!.roughness
-            map["emissiveFactor"] = _pbr!!.emissiveFactor
-            map["metallicRoughnessTexture"] = _pbr!!.metallicRoughnessTexture
-            map["emissiveTexture"] = _pbr!!.emissiveTexture
-            map["occlusionTexture"] = _pbr!!.occlusionTexture
-            defs += "PBR"
-            _pbr!!.metallicRoughnessTexture?.let { defs += "METALLIC_ROUGHNESS_MAP" }
-            _pbr!!.emissiveTexture?.let { defs += "EMISSIVE_MAP" }
-            _pbr!!.occlusionTexture?.let { defs += "OCCLUSION_MAP" }
-        }
+        map["metallic"] = pbr.metallic
+        map["roughness"] = pbr.roughness
+        map["metallicRoughnessTexture"] = pbr.metallicRoughnessTexture
+
+        map["emissiveFactor"] = emissiveFactor
+        map["emissiveTexture"] = emissiveTexture
+
+//            map["occlusionTexture"] = _pbr!!.occlusionTexture
+
+        pbr.metallicRoughnessTexture?.let { defs += "METALLIC_ROUGHNESS_MAP" }
+//          _pbr!!.occlusionTexture?.let { defs += "OCCLUSION_MAP" }
 
         if (_specularGlossiness != null) {
             map["specularFactor"] = _specularGlossiness!!.specularFactor
@@ -194,9 +205,9 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
 
         map["normalTexture"] = normalTexture
         map["shadowTexture"] = shadowTexture
+        map["triplanarScale"] = triplanarScale
 
-        map["jointMatrices[0]"] = jointMatrices
-        map["inverseBindMatrices[0]"] = inverseBindMatrices
+        map["jntMatrices[0]"] = jntMatrices
 
         map["xscale"] = xscale
         map["yscale"] = yscale
@@ -204,31 +215,39 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
 
         baseColorTexture?.let { defs += "BASE_COLOR_MAP" }
         normalTexture?.let { defs += "NORMAL_MAP" }
-        jointMatrices?.let { defs += "SKINNING" }
+        emissiveTexture?.let { defs += "EMISSIVE_MAP" }
 
-        if (_pbr == null && _specularGlossiness == null) {
-            defs += "NO_LIGHT"
-        }
-        if (pcss) {
-            defs += "PCSS"
-        }
+        jntMatrices?.let { defs += "SKINNING" }
+        triplanarScale?.let { defs += "TRIPLANAR" }
     }
 
     internal class InternalPbr : Pbr {
         override var metallic = 0.1f
         override var roughness = 0.5f
-        override var emissiveFactor = Color(1f, 1f, 1f, 1f)
         override var metallicRoughnessTexture: TextureDeclaration? = null
-        override var emissiveTexture: TextureDeclaration? = null
-        override var occlusionTexture: TextureDeclaration? = null
+
+//        override var occlusionTexture: TextureDeclaration? = null
+
     }
 
     internal class InternalSpecularGlossiness : SpecularGlossiness {
-        override var specularFactor: Color = Color.White
+        override var specularFactor: ColorRGB = ColorRGB.White
         override var glossinessFactor: Float = 0.2f
         override var specularGlossinessTexture: TextureDeclaration? = null
     }
 }
+
+internal class InternalFogParams : FogParams, InternalBaseParams() {
+
+    override var density = 0.02f
+    override var color = ColorRGB.white(0.01f)
+
+    override fun collect() {
+        map["density"] = density
+        map["fogColor"] = color
+    }
+}
+
 
 internal class ParamUniforms<P : InternalBaseParams>(
     private val params: P,

@@ -1,45 +1,30 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.KorenderException
+import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.RenderingOption
+import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TouchHandler
+import com.zakgof.korender.impl.context.Direction
+import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.material.DynamicUniforms
-import com.zakgof.korender.math.Color
+import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGB.Companion.white
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
 internal class SceneDeclaration {
-    var shadow: ShadowDeclaration? = null
-    val defaultPass = PassDeclaration()
-    val passes = mutableListOf<PassDeclaration>()
-
-    fun addPass(pass: PassDeclaration) = passes.add(pass)
-    fun addShadow(shadow: ShadowDeclaration) {
-        if (this.shadow != null) {
-            throw KorenderException("Only one Shadow declaration is allowed")
-        }
-        this.shadow = shadow
-    }
-
-    fun compilePasses() {
-        if (defaultPass.renderables.isNotEmpty() || defaultPass.guis.isNotEmpty() || defaultPass.gltfs.isNotEmpty()) {
-            if (passes.isNotEmpty()) {
-                throw KorenderException("It is not allowed to mix Passes and renderables in Frame context")
-            }
-            passes.add(defaultPass)
-        }
-    }
-}
-
-internal class PassDeclaration {
     val pointLights = mutableListOf<PointLightDeclaration>()
     val directionalLights = mutableListOf<DirectionalLightDeclaration>()
-    var ambientLightColor = Color(1.0f, 0.15f, 0.15f, 0.15f)
+    var ambientLightColor = white(0.3f)
     val renderables = mutableListOf<RenderableDeclaration>()
     val guis = mutableListOf<ElementDeclaration.Container>()
     val gltfs = mutableListOf<GltfDeclaration>()
+    var filters = mutableListOf<List<MaterialModifier>>()
+    var deferredShading: Boolean = false
+    var compositionModifiers = mutableListOf<MaterialModifier>()
 }
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
@@ -55,12 +40,20 @@ internal data class ShaderDeclaration(
 )
 
 internal class RenderableDeclaration(
+    val base: BaseMaterial,
+    val materialModifiers: List<MaterialModifier>,
     val mesh: MeshDeclaration,
-    val shader: ShaderDeclaration,
-    val uniforms: DynamicUniforms,
     val transform: Transform = Transform(),
     val bucket: Bucket = Bucket.OPAQUE
 )
+
+internal enum class BaseMaterial {
+    Renderable,
+    Billboard,
+    Screen,
+    Sky,
+    Composition
+}
 
 internal class MaterialDeclaration(
     val shader: ShaderDeclaration,
@@ -70,16 +63,19 @@ internal class MaterialDeclaration(
 internal sealed class ElementDeclaration {
 
     class Filler : ElementDeclaration()
+
     class Text(
         val id: Any,
         val fontResource: String,
         val height: Int,
         val text: String,
-        val color: Color,
+        val color: ColorRGBA,
+        val static: Boolean,
         val onTouch: TouchHandler
     ) : ElementDeclaration()
 
     class Image(
+        val id: Any?,
         val imageResource: String,
         val width: Int,
         val height: Int,
@@ -104,21 +100,21 @@ internal data class FrameBufferDeclaration(
     val id: String,
     val width: Int,
     val height: Int,
+    val colorTexturePresets: List<GlGpuTexture.Preset>,
     val withDepth: Boolean
 )
 
 internal class ShadowDeclaration {
     val cascades = mutableListOf<CascadeDeclaration>()
-    fun addCascade(cascadeDeclaration: CascadeDeclaration) = cascades.add(cascadeDeclaration)
 }
 
-internal data class CascadeDeclaration(val mapSize: Int, val near: Float, var far: Float)
+internal data class CascadeDeclaration(val mapSize: Int, val near: Float, val far: Float, val fixedYRange: Pair<Float, Float>?, val algorithm: ShadowAlgorithmDeclaration)
 
-internal class GltfDeclaration(val gltfResource: String, val transform: Transform = Transform()) {
+internal class GltfDeclaration(val gltfResource: String, val animation: Int, val transform: Transform, val time: Float) {
     override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.gltfResource == gltfResource)
     override fun hashCode(): Int = gltfResource.hashCode()
 }
 
-internal class PointLightDeclaration(val position: Vec3, val color: Color)
+internal class PointLightDeclaration(val position: Vec3, val color: ColorRGB, val attenuation: Vec3)
 
-internal class DirectionalLightDeclaration(val direction: Vec3, val color: Color)
+internal class DirectionalLightDeclaration(val direction: Vec3, val color: ColorRGB, val shadowDeclaration: ShadowDeclaration)

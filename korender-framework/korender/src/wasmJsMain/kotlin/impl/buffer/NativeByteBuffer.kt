@@ -5,14 +5,15 @@ import org.khronos.webgl.get
 import org.khronos.webgl.set
 import org.khronos.webgl.toUint8Array
 
-actual class NativeByteBuffer actual constructor(size: Int) {
+actual class NativeByteBuffer(val array: Uint8Array) {
 
-    constructor(byteArray: ByteArray) : this(byteArray.size) {
+    actual constructor(size: Int) : this(Uint8Array(size))
+
+    constructor(byteArray: ByteArray) : this(Uint8Array(byteArray.size)) {
         put(byteArray)
         rewind()
     }
 
-    internal val array = Uint8Array(size)
     private var position = 0
 
     actual fun put(v: Byte) {

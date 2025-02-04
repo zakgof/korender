@@ -8,11 +8,13 @@ expect object GL {
 
     fun glDrawElements(mode: Int, count: Int, type: Int, indices: Int)
 
+    fun glDrawArrays(mode: Int, starting: Int, count: Int)
+
     fun glEnable(target: Int)
 
     fun glDisable(target: Int)
 
-    fun glBindTexture(target: Int, texture: GLTexture)
+    fun glBindTexture(target: Int, texture: GLTexture?)
 
     fun glTexParameterf(target: Int, pname: Int, param: Float)
 
@@ -107,10 +109,14 @@ expect object GL {
     fun glGetAttribLocation(program: GLProgram, name: String): Int
 
     fun glUniform1i(location: GLUniformLocation, v0: Int)
+    fun glUniform1iv(location: GLUniformLocation, vararg v0: Int)
     fun glUniform1f(location: GLUniformLocation, v0: Float)
     fun glUniform2f(location: GLUniformLocation, v0: Float, v1: Float)
     fun glUniform3f(location: GLUniformLocation, v0: Float, v1: Float, v2: Float)
     fun glUniform4f(location: GLUniformLocation, v0: Float, v1: Float, v2: Float, v3: Float)
+    fun glUniform1fv(location: GLUniformLocation, value: FloatArray)
+    fun glUniform3fv(location: GLUniformLocation, value: FloatArray)
+    fun glUniform4fv(location: GLUniformLocation, value: FloatArray)
     fun glUniformMatrix2fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray)
     fun glUniformMatrix3fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray)
     fun glUniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray)
@@ -155,4 +161,6 @@ expect object GL {
     fun glBindFramebuffer(target: Int, framebuffer: GLFrameBuffer?)
 
     fun glCheckFramebufferStatus(target: Int): Int
+
+    fun glDrawBuffers(vararg targets: Int)
 }

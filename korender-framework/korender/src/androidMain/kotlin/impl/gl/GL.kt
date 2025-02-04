@@ -12,10 +12,15 @@ actual object GL {
     actual fun glDrawElements(mode: Int, count: Int, type: Int, indices: Int) =
         GLES11.glDrawElements(mode, count, type, indices)
 
+    actual fun glDrawArrays(mode: Int, starting: Int, count: Int) =
+        GLES11.glDrawArrays(mode, starting, count)
+
     actual fun glEnable(target: Int) = GLES11.glEnable(target)
+
     actual fun glDisable(target: Int) = GLES11.glDisable(target)
-    actual fun glBindTexture(target: Int, texture: GLTexture) =
-        GLES11.glBindTexture(target, texture.texture)
+
+    actual fun glBindTexture(target: Int, texture: GLTexture?) =
+        GLES11.glBindTexture(target, texture?.texture ?: 0)
 
     actual fun glTexParameterf(target: Int, pname: Int, param: Float) =
         GLES11.glTexParameterf(target, pname, param)
@@ -144,6 +149,9 @@ actual object GL {
     actual fun glUniform1i(location: GLUniformLocation, v0: Int) =
         GLES20.glUniform1i(location.glHandle, v0)
 
+    actual fun glUniform1iv(location: GLUniformLocation, vararg v0: Int) =
+        GLES20.glUniform1iv(location.glHandle, v0.size, v0, 0)
+
     actual fun glUniform1f(location: GLUniformLocation, v0: Float) =
         GLES20.glUniform1f(location.glHandle, v0)
 
@@ -155,6 +163,15 @@ actual object GL {
 
     actual fun glUniform4f(location: GLUniformLocation, v0: Float, v1: Float, v2: Float, v3: Float) =
         GLES20.glUniform4f(location.glHandle, v0, v1, v2, v3)
+
+    actual fun glUniform1fv(location: GLUniformLocation, value: FloatArray)=
+        GLES20.glUniform1fv(location.glHandle, value.size, value, 0)
+
+    actual fun glUniform3fv(location: GLUniformLocation, value: FloatArray) =
+        GLES20.glUniform3fv(location.glHandle, value.size / 3, value, 0)
+
+    actual fun glUniform4fv(location: GLUniformLocation, value: FloatArray) =
+        GLES20.glUniform4fv(location.glHandle, value.size / 4, value, 0)
 
     actual fun glUniformMatrix2fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray) =
         GLES20.glUniformMatrix2fv(location.glHandle, 1, transpose, value, 0)
@@ -232,4 +249,8 @@ actual object GL {
 
     actual fun glDeleteVertexArrays(vertexArray: GLVertexArray) =
         GLES30.glDeleteVertexArrays(1, intArrayOf(vertexArray.glHandle), 0)
+
+    actual fun glDrawBuffers(vararg targets: Int) =
+        GLES30.glDrawBuffers(targets.size, targets, 0)
+
 }

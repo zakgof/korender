@@ -3,11 +3,11 @@ package com.zakgof.korender.impl.material
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Platform
 import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
+import com.zakgof.korender.impl.glgpu.GlGpuTexture
+import com.zakgof.korender.impl.resourceBytes
 
 object NotYetLoadedTexture
 
@@ -54,7 +54,7 @@ internal interface InternalTexture {
 
 internal class ResourceTextureDeclaration(
     val textureResource: String,
-    override val filter: TextureFilter = TextureFilter.MipMapLinearLinear,
+    override val filter: TextureFilter = TextureFilter.MipMap,
     override val wrap: TextureWrap = TextureWrap.Repeat,
     override val aniso: Int = 1024
 ) : TextureDeclaration, InternalTexture {

@@ -3,38 +3,74 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
+import com.zakgof.korender.Checkbox
+import com.zakgof.korender.CheckboxState
+import com.zakgof.korender.Joystick
+import com.zakgof.korender.JoystickState
 import com.zakgof.korender.Korender
-import com.zakgof.korender.math.Color
-import com.zakgof.korender.onClick
+import com.zakgof.korender.ProgressBar
+import com.zakgof.korender.TextStyle
+import com.zakgof.korender.math.ColorRGBA
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun GuiExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
-    var clicked = false
+    val statusStyle = TextStyle(height = 36, color = ColorRGBA(0xF06543A0))
+    val widgetStyle = TextStyle(height = 48, color = ColorRGBA(0x66FF55A0))
+    val checkboxState = CheckboxState(true)
+    val joystickState = JoystickState()
     Frame {
+        val progress = fract(frameInfo.time * 0.1f)
+        Sky(starrySky())
         Gui {
-            Row {
+            Column {
+                Row {
+                    Filler()
+                    Image(imageResource = "texture/korender32.png", width = 48, height = 48, marginTop = 8, marginRight = 8)
+                    Text(id = "header", fontResource = "font/orbitron.ttf", height = 64, text = "Korender GUI Demo", color = ColorRGBA(0x246EB9A0))
+                    Filler()
+                }
                 Filler()
-                Image(imageResource = "texture/korender32.png", width = 100, height = 100)
-                Text(id = "title", fontResource = "font/anta.ttf", height = 100, text = "Korender Demo", color = Color(0xFF803456))
+                Row {
+                    Filler()
+                    Checkbox(id = "cb", state = checkboxState, text = "Checkbox")
+                    Filler()
+                }
+                Row {
+                    Filler()
+                    Text(id = "cbs",  text = "${checkboxState.state}", style = statusStyle)
+                    Filler()
+                }
                 Filler()
-            }
-            Row {
+                Row {
+                    Filler()
+                    Text(id = "pbl", text = "Progress bar", style = widgetStyle)
+                    ProgressBar(id = "pbw", width = 320, value = progress)
+                    Filler()
+                }
+                Row {
+                    Filler()
+                    Text(id = "pbs", text = "${progress.percent()}", style = statusStyle)
+                    Filler()
+                }
                 Filler()
-                if (clicked) {
-                    Text(id = "thanks", fontResource = "font/orbitron.ttf", height = 30, text = "Thank you for clicking", color = Color(0xFF888888), onTouch = {
-                        onClick(it) { clicked = false }
-                    })
-                } else {
-                    Text(id = "clicker", fontResource = "font/orbitron.ttf", height = 50, text = "CLICK ME", color = Color(0xFF8044FF), onTouch = {
-                        onClick(it) { clicked = true }
-                    })
+                Row {
+                    Filler()
+                    Text(id = "jl", text = "Joystick", style = widgetStyle)
+                    Joystick(id = "jw", state = joystickState, width = 256)
+                    Filler()
+                }
+                Row {
+                    Filler()
+                    Text(id = "js", text = "${joystickState.x.percent()} : ${joystickState.y.percent()}", style = statusStyle)
+                    Filler()
                 }
                 Filler()
             }
-            Filler()
-            Text(id = "fps", fontResource = "font/orbitron.ttf", height = 50, text = "FPS ${frameInfo.avgFps}", color = Color(0xFF66FF55))
         }
     }
 }
+
+
+private fun Float.percent() = (this * 100).toInt()

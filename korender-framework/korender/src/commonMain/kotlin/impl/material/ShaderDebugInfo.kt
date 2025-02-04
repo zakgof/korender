@@ -11,9 +11,11 @@ class ShaderDebugInfo(val file: String) {
     private var srcLine = -1
 
     fun decorate(log: String): String {
-        return log.lines().flatMap {
-            listOf(it, debug(it))
-        }.joinToString("\n")
+//        return log.lines().flatMap {
+//            listOf(it, debug(it))
+//        }.joinToString("\n")
+
+        return log
     }
 
     private fun debug(line: String): String {

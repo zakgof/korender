@@ -1,5 +1,31 @@
-vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 albedo, float metallic, float roughness,
-                  vec3 lightColor, float occlusion, vec3 emissive) {
+// Constants
+const float PI = 3.14159265359;
+
+float distributionGGX(float NdotH, float roughness) {
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH2 = NdotH * NdotH;
+    float num = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+    return num / denom;
+}
+
+float geometrySchlickGGX(float NdotV, float roughness) {
+    float r = (roughness + 1.0);
+    float k = (r * r) / 8.0;
+    float num = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+    return num / denom;
+}
+
+float geometrySmith(float NdotV, float NdotL, float roughness) {
+    float ggx2 = geometrySchlickGGX(NdotV, roughness);
+    float ggx1 = geometrySchlickGGX(NdotL, roughness);
+    return ggx1 * ggx2;
+}
+
+vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 cdiff, vec3 F0, float roughness, vec3 lightColor) {
 
     vec3 H = normalize(V + L);
 
@@ -8,40 +34,17 @@ vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 albedo, float metallic, float rou
     float NdotH = max(dot(N, H), 0.0);
     float VdotH = max(dot(V, H), 0.0);
 
-    vec3 c_diff = mix(albedo, vec3(0.), metallic);
-    vec3 F0 = mix(vec3(0.04), albedo, metallic);
-
     vec3 F = F0 + (1. - F0) * pow(1. - VdotH, 5.);
-    vec3 f_diffuse = (1. - F) * (1. / PI) * c_diff;
+    vec3 f_diffuse = (1. - F) * (1. / PI) * cdiff;
 
+#ifdef BLINN_PHONG
+    float shininess = mix(2.0, 256.0, 1.0 - roughness);
+    vec3 f_specular = F * pow(NdotH, shininess);
+#else
     float D = distributionGGX(NdotH, roughness);
     float G = geometrySmith(NdotV, NdotL, roughness);
     vec3 f_specular = F * D * G / max(4.0 * NdotV * NdotL, 0.000001);
+#endif
 
     return (f_diffuse + f_specular) * NdotL * lightColor;
-}
-
-
-vec3 doPbr(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor) {
-
-#ifdef METALLIC_ROUGHNESS_MAP
-    vec4 mrtexel = texture(metallicRoughnessTexture, vtex);
-    float metal = mrtexel.b * metallic;
-    float rough = mrtexel.g * roughness;
-#else
-    float metal = metallic;
-    float rough = roughness;
-#endif
-#ifdef EMISSIVE_MAP
-    vec3 emissive = texture(emissiveTexture, vtex).rgb * emissiveFactor.rgb;
-#else
-    vec3 emissive = vec3(0.);
-#endif
-#ifdef OCCLUSION_MAP
-    float occlusion = texture(occlusionTexture, vtex).r;
-#else
-    float occlusion = 1.;
-#endif
-
-    return calculatePBR(N, V, L, albedo, metal, rough, lightColor, occlusion, emissive);
 }

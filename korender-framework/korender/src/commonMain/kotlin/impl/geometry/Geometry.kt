@@ -124,7 +124,7 @@ internal object Geometry {
     ) : MeshInitializer {
 
         val realIndexType: IndexType = convertIndexType(indexType, indexNumber)
-        val indexBuffer: NativeByteBuffer = NativeByteBuffer(indexNumber * realIndexType.size())
+        val indexBuffer: NativeByteBuffer? = if (indexNumber > 0) NativeByteBuffer(indexNumber * realIndexType.size()) else null
         val attrMap = attrs.indices.associate { attrs[it] to attributeBuffers[it] }
 
         constructor(
@@ -180,16 +180,16 @@ internal object Geometry {
         override fun index(vararg indices: Int): MeshInitializer {
             for (value in indices) {
                 when (realIndexType) {
-                    IndexType.Byte -> indexBuffer.put(value.toByte())
-                    IndexType.Short -> indexBuffer.put(value.toShort())
-                    IndexType.Int -> indexBuffer.put(value)
+                    IndexType.Byte -> indexBuffer!!.put(value.toByte())
+                    IndexType.Short -> indexBuffer!!.put(value.toShort())
+                    IndexType.Int -> indexBuffer!!.put(value)
                 }
             }
             return this
         }
 
         override fun indexBytes(rawBytes: ByteArray): MeshInitializer {
-            indexBuffer.put(rawBytes)
+            indexBuffer!!.put(rawBytes)
             return this
         }
 
@@ -200,10 +200,9 @@ internal object Geometry {
 
         private fun indexGet(index: Int): Int =
             when (realIndexType) {
-                IndexType.Byte -> indexBuffer.byte(index).toInt()
-                IndexType.Short -> indexBuffer.short(index).toInt()
-                IndexType.Int -> indexBuffer.int(index)
-                else -> -1
+                IndexType.Byte -> indexBuffer!!.byte(index).toInt()
+                IndexType.Short -> indexBuffer!!.short(index).toInt()
+                IndexType.Int -> indexBuffer!!.int(index)
             }
 
         fun build(isDynamic: Boolean = false): DefaultMesh =
@@ -258,7 +257,7 @@ internal object Geometry {
         private fun updateGpu() {
             gpuMesh.update(
                 data.attributeBuffers.onEach { it.rewind() },
-                data.indexBuffer.rewind(),
+                data.indexBuffer?.rewind(),
                 data.vertexNumber,
                 data.indexNumber
             )
@@ -266,7 +265,7 @@ internal object Geometry {
 
         fun updateMesh(block: MeshInitializer.() -> Unit) {
             data.attributeBuffers.forEach { it.rewind() }
-            data.indexBuffer.rewind()
+            data.indexBuffer?.rewind()
             data.apply(block)
             updateGpu()
         }
@@ -297,7 +296,7 @@ internal object Geometry {
             }
             gpuMesh.update(
                 data.attributeBuffers.onEach { it.rewind() },
-                data.indexBuffer.rewind(),
+                data.indexBuffer?.rewind(),
                 prototype.vertexNumber * instances.size,
                 prototype.indexNumber * instances.size
             )
@@ -342,7 +341,7 @@ internal object Geometry {
             }
             gpuMesh.update(
                 data.attributeBuffers.onEach { it.rewind() },
-                data.indexBuffer.rewind(),
+                data.indexBuffer?.rewind(),
                 instances.size * 4,
                 instances.size * 6
             )
@@ -390,7 +389,7 @@ internal object Geometry {
             }
             gpuMesh.update(
                 data.attributeBuffers.onEach { it.rewind() },
-                data.indexBuffer.rewind(),
+                data.indexBuffer?.rewind(),
                 text.length * 4,
                 text.length * 6
             )
@@ -505,7 +504,7 @@ internal object Geometry {
         }
 
 
-    fun heightMap(xsize: Int, zsize: Int, cell: Float, height: (Int, Int) -> Float) =
+    private fun heightMap(xsize: Int, zsize: Int, cell: Float, height: (Int, Int) -> Float) =
         create("heightmap", (xsize + 1) * (zsize + 1), xsize * zsize * 6, POS, NORMAL, TEX) {
             for (x in 0..xsize) {
                 for (z in 0..zsize) {

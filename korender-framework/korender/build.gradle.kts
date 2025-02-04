@@ -1,5 +1,4 @@
 
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
@@ -14,7 +13,7 @@ plugins {
     id("signing")
 }
 
-val libraryVersion = "0.3.0"
+val libraryVersion = "0.4.0"
 val libraryGroup = "com.github.zakgof"
 
 compose.resources {
@@ -23,7 +22,6 @@ compose.resources {
     generateResClass = always
 }
 
-@OptIn(ExperimentalKotlinGradlePluginApi::class)
 kotlin {
 
     compilerOptions {

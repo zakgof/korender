@@ -1,14 +1,15 @@
 package com.zakgof.korender
 
+import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.font.FontDef
-import com.zakgof.korender.impl.image.Image
+import com.zakgof.korender.impl.image.InternalImage
 import kotlinx.coroutines.Deferred
 
 internal expect object Platform {
 
-    val name: String
+    val target: KorenderContext.TargetPlatform
 
-    internal fun loadImage(bytes: ByteArray, type: String): Deferred<Image>
+    internal fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage>
 
     internal fun loadFont(bytes: ByteArray): Deferred<FontDef>
 
