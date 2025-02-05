@@ -100,4 +100,10 @@ internal class DefaultFrameContext(
     override fun Filter(vararg materialModifiers: MaterialModifier) {
         sceneDeclaration.filters += materialModifiers.asList()
     }
+
+    override fun CaptureEnv(slot: Int, block: FrameContext.() -> Unit) {
+        val captureSceneDeclaration = SceneDeclaration()
+        DefaultFrameContext(korenderContext, captureSceneDeclaration, frameInfo).apply(block)
+        sceneDeclaration.captures[slot] = captureSceneDeclaration
+    }
 }

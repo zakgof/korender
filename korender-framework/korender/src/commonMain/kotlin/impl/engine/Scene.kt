@@ -1,7 +1,5 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.TouchEvent
-import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.impl.engine.shadow.ShadowRenderer
 import com.zakgof.korender.impl.engine.shadow.ShadowerData
 import com.zakgof.korender.impl.engine.shadow.uniforms
@@ -30,7 +28,7 @@ internal class Scene(
     private val sceneDeclaration: SceneDeclaration,
     private val inventory: Inventory,
     private val renderContext: RenderContext,
-    time: Float
+    private val envSlot: Int? = null
 ) {
 
     private val deferredShading = sceneDeclaration.deferredShading
@@ -46,7 +44,7 @@ internal class Scene(
     private val fixer = { value: Any? ->
         if (value is InternalTexture) inventory.texture(value) ?: NotYetLoadedTexture else value
     }
-    private val filters = sceneDeclaration.filters.map { materialDeclaration(BaseMaterial.Screen, deferredShading, *it.toTypedArray()) }
+    private val filters = sceneDeclaration.filters.map { materialDeclaration(BaseMaterial.Screen, deferredShading, envSlot != null, *it.toTypedArray()) }
 
     init {
         sceneDeclaration.gltfs.forEach {
@@ -75,6 +73,10 @@ internal class Scene(
     fun render() {
 
         val uniforms = mutableMapOf<String, Any?>()
+
+        sceneDeclaration.captures.forEach { kv ->
+            Scene(kv.value, inventory, renderContext, kv.key).renderToEnv()
+        }
 
         renderContext.uniforms(uniforms)
         renderShadows(uniforms)
@@ -169,7 +171,7 @@ internal class Scene(
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         renderFilter(
             materialDeclaration(
-                BaseMaterial.Composition, true,
+                BaseMaterial.Composition, true, envSlot != null,
                 *sceneDeclaration.compositionModifiers.toTypedArray()
             ),
             uniforms
@@ -255,23 +257,8 @@ internal class Scene(
         m["filterDepthTexture"] = fb.depthTexture
     }
 
-    internal class TouchBox(
-        private val x: Int,
-        private val y: Int,
-        private val w: Int,
-        private val h: Int,
-        val id: Any?,
-        private val handler: TouchHandler
-    ) {
+    private fun renderToEnv() {
 
-
-        fun touch(touchEvent: TouchEvent, forced: Boolean): Boolean {
-            if (forced || touchEvent.x > x && touchEvent.x < x + w && touchEvent.y > y && touchEvent.y < y + h) {
-                handler(touchEvent)
-                return true
-            }
-            return false
-        }
     }
 }
 

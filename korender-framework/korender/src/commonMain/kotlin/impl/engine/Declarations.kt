@@ -25,6 +25,7 @@ internal class SceneDeclaration {
     var filters = mutableListOf<List<MaterialModifier>>()
     var deferredShading: Boolean = false
     var compositionModifiers = mutableListOf<MaterialModifier>()
+    val captures = mutableMapOf<Int, SceneDeclaration>()
 }
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)

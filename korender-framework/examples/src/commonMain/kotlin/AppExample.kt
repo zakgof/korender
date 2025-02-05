@@ -35,6 +35,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun AppExample() {
     val options = listOf(
+        Demo("IBL") { IblExample() },
         Demo("City demo") { InfiniteCity() },
         Demo("OBJ mesh") { ObjFileExample() },
         Demo("GLTF animation") { GltfExample() },

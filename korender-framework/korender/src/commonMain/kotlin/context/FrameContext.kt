@@ -27,4 +27,6 @@ interface FrameContext : KorenderContext {
     fun AmbientLight(color: ColorRGB)
 
     fun DeferredShading(vararg compositionModifiers: MaterialModifier)
+
+    fun CaptureEnv(slot: Int, block: FrameContext.() -> Unit)
 }

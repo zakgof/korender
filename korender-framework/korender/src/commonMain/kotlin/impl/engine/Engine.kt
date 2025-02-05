@@ -93,7 +93,7 @@ internal class Engine(
     private val inventory = Inventory(asyncContext)
     private val renderContext = RenderContext(width, height)
 
-    private var touchBoxes: List<Scene.TouchBox> = listOf()
+    private var touchBoxes: List<TouchBox> = listOf()
     private var pressedTouchBoxIds = setOf<Any>()
     private val touchHandlers = mutableListOf<TouchHandler>()
     private val keyHandlers = mutableListOf<KeyHandler>()
@@ -317,7 +317,7 @@ internal class Engine(
             DefaultFrameContext(kc, sd, frameInfo).apply(it)
         }
         inventory.go {
-            val scene = Scene(sd, inventory, renderContext, frameInfo.time)
+            val scene = Scene(sd, inventory, renderContext)
             scene.render()
             checkGlError("during rendering")
             touchBoxes = scene.touchBoxes
