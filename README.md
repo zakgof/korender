@@ -12,7 +12,7 @@ Kotlin Multiplatform 3D graphics rendering engine based on OpenGL / OpenGL ES / 
 Korender uses declarative approach that seamlessly integrates 3D viewport into Compose Multiplatform UI. 
 Same Korender code runs on all supported platforms.
 
-![Korender](doc/scene.jpg)
+![Korender](doc/mobile.jpg)![Korender](doc/desktop.jpg)![Korender](doc/web.jpg)
 
 Live web demo: https://zakgof.github.io/projects/korender/wasm/
 
@@ -28,9 +28,9 @@ Korender is BETA - APIs may change without notice.
 
 ### Examples showcase app
 
-- Web live demo https://zakgof.github.io/projects/korender/wasm/
-- JVM Desktop Windows: https://github.com/zakgof/korender/releases/download/0.4.0/korender-demo-0.4.0.zip
-- Android APK: https://github.com/zakgof/korender/releases/download/0.4.0/korender-demo-0.4.0.apk
+- [Web live demo](https://zakgof.github.io/projects/korender/wasm/)
+- [JVM Desktop Windows](https://github.com/zakgof/korender/releases/download/0.4.0/korender-demo-0.4.0.zip)
+- [Android APK](https://github.com/zakgof/korender/releases/download/0.4.0/korender-demo-0.4.0.apk)
 
 [Examples source code](https://github.com/zakgof/korender/tree/main/korender-framework/examples/src/commonMain/kotlin)
 
