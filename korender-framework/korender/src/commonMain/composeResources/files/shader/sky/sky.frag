@@ -16,7 +16,19 @@ uniform mat4 projection;
 out vec4 fragColor;
 
 void main() {
+
+#ifdef HEMISPHERE
+    #ifdef HTOP
+        vec3 look = lookfromskydisk(vtex, 1.5);
+    #endif
+    #ifdef HBOTTOM
+        vec3 look = lookfromskydisk(vtex, 1.5);
+        look.y = -look.y;
+    #endif
+#else
     vec3 look = screentolook(vtex, projection * view, cameraPos);
+#endif
+
     vec3 color = sky(look);
 
     #ifdef PLUGIN_SECSKY

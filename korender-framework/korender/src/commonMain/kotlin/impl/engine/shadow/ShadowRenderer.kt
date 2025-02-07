@@ -82,7 +82,6 @@ internal object ShadowRenderer {
                 it.base == BaseMaterial.Renderable
             }.forEach { renderableDeclaration ->
 
-                // TODO: maybe just pass renderable not the declaration
                 val materialDeclaration = materialDeclaration(renderableDeclaration.base, false, *renderableDeclaration.materialModifiers.toTypedArray())
 
                 val mesh = inventory.mesh(renderableDeclaration.mesh)
@@ -174,8 +173,7 @@ internal object ShadowRenderer {
             FrameBufferDeclaration("shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM), true)
         ) ?: return
 
-        val blur1 = materialDeclaration(BaseMaterial.Screen, false,
-            InternalMaterialModifier {
+        val blur1 = materialDeclaration(BaseMaterial.Screen, false, InternalMaterialModifier {
                 it.vertShaderFile = "!shader/screen.vert"
                 it.fragShaderFile = "!shader/effect/blurv.frag"
                 it.shaderUniforms = ParamUniforms(InternalBlurParams()) {

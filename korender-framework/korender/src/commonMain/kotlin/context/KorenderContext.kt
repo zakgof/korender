@@ -3,6 +3,7 @@ package com.zakgof.korender.context
 import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
+import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
@@ -44,12 +45,11 @@ interface KorenderContext {
     val width: Int
     val height: Int
 
-    fun texture(
-        textureResource: String,
-        filter: TextureFilter = TextureFilter.MipMap,
-        wrap: TextureWrap = TextureWrap.Repeat,
-        aniso: Int = 1024
-    ): TextureDeclaration
+    fun texture(textureResource: String, filter: TextureFilter = TextureFilter.MipMap,
+        wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): TextureDeclaration
+
+    fun cubeTexture(nxResource: String, nyResource: String, nzResource: String,
+                    pxResource: String, pyResource: String, pzResource: String): CubeTextureDeclaration
 
     fun cube(halfSide: Float = 0.5f): MeshDeclaration
     fun sphere(radius: Float = 1.0f): MeshDeclaration
@@ -91,6 +91,7 @@ interface KorenderContext {
     fun fxaa(): MaterialModifier
     fun fastCloudSky(block: FastCloudSkyParams.() -> Unit = {}): MaterialModifier
     fun starrySky(block: StarrySkyParams.() -> Unit = {}): MaterialModifier
+    fun cubeSky(cubeTexture: CubeTextureDeclaration): MaterialModifier
     fun fog(block: FogParams.() -> Unit = {}): MaterialModifier
 
     fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration

@@ -22,6 +22,10 @@ uniform mat4 projection;
     uniform mat4 jntMatrices[MAX_JOINTS];
 #endif
 
+#ifdef HEMISPHERE
+    #import "!shader/lib/sky.glsl"
+#endif
+
 void main() {
 
 #ifdef SKINNING
@@ -40,5 +44,19 @@ void main() {
 
     vpos = worldPos.xyz;
     vtex = tex;
+
+#ifdef HEMISPHERE
+    #ifdef HTOP
+        vec2 xy = skydiskfromlook(vpos, 1.5) * 2.0 - vec2(1.0);
+        float z = length(vpos) * vpos.y / (1000.0 * abs(vpos.y)) * 2.0 - 1.0;
+    #endif
+    #ifdef HBOTTOM
+        vec2 xy = skydiskfromlook(vec3(vpos.x, -vpos.y, vpos.z), 1.5) * 2.0 - vec2(1.0);
+        float z = -length(vpos) * vpos.y / (1000.0 * abs(vpos.y)) * 2.0 - 1.0;   // -1..1
+    #endif
+    gl_Position = vec4(xy, z, 1.0);
+#else
     gl_Position = projection * (view * worldPos);
+#endif
+
 }

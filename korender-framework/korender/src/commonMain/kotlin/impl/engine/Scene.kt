@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.impl.engine.shadow.ShadowRenderer
 import com.zakgof.korender.impl.engine.shadow.ShadowerData
 import com.zakgof.korender.impl.engine.shadow.uniforms
@@ -20,6 +21,7 @@ import com.zakgof.korender.impl.glgpu.Vec3List
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
+import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Vec3
@@ -31,20 +33,20 @@ internal class Scene(
     private val envSlot: Int? = null
 ) {
 
+    private var guiRenderers: List<GuiRenderer>
     private val deferredShading = sceneDeclaration.deferredShading
 
     val touchBoxes: List<TouchBox>
 
-    private val opaques = mutableListOf<Renderable>()
-    private val transparents = mutableListOf<Renderable>()
-    private val skies = mutableListOf<Renderable>()
-    private val screens = mutableListOf<Renderable>()
-
     // TODO (backlog): ugly
     private val fixer = { value: Any? ->
-        if (value is InternalTexture) inventory.texture(value) ?: NotYetLoadedTexture else value
+        when (value) {
+            is InternalTexture -> inventory.texture(value) ?: NotYetLoadedTexture
+            is ResourceCubeTextureDeclaration -> inventory.cubeTexture(value) ?: NotYetLoadedTexture
+            else -> value
+        }
     }
-    private val filters = sceneDeclaration.filters.map { materialDeclaration(BaseMaterial.Screen, deferredShading, envSlot != null, *it.toTypedArray()) }
+    private val filters = sceneDeclaration.filters.map { materialDeclaration(BaseMaterial.Screen, deferredShading, *it.toTypedArray()) }
 
     init {
         sceneDeclaration.gltfs.forEach {
@@ -52,34 +54,22 @@ internal class Scene(
                 sceneDeclaration.renderables += GltfSceneBuilder(it, gltfLoaded).build(it.time)
             }
         }
-        sceneDeclaration.renderables.forEach {
-            val renderable = Renderable.create(inventory, it, renderContext.camera, deferredShading)
-            renderable?.let { r ->
-                when (it.bucket) {
-                    Bucket.OPAQUE -> opaques.add(r)
-                    Bucket.SKY -> skies.add(r)
-                    Bucket.TRANSPARENT -> transparents.add(r)
-                    Bucket.SCREEN -> screens.add(r)
-                }
-            }
-        }
-        val guiRenderers = sceneDeclaration.guis.map {
+        guiRenderers = sceneDeclaration.guis.map {
             GuiRenderer(inventory, renderContext.width, renderContext.height, it)
         }
-        screens.addAll(guiRenderers.flatMap { it.renderables })
         touchBoxes = guiRenderers.flatMap { it.touchBoxes }
     }
 
     fun render() {
 
         val uniforms = mutableMapOf<String, Any?>()
+        renderContext.uniforms(uniforms)
+
+        renderShadows(uniforms)
 
         sceneDeclaration.captures.forEach { kv ->
-            Scene(kv.value, inventory, renderContext, kv.key).renderToEnv()
+            Scene(kv.value, inventory, renderContext, kv.key).renderToEnv(uniforms)
         }
-
-        renderContext.uniforms(uniforms)
-        renderShadows(uniforms)
 
         try {
             if (deferredShading) {
@@ -119,11 +109,11 @@ internal class Scene(
 
     private fun renderSceneForward(uniforms: MutableMap<String, Any?>) {
         if (sceneDeclaration.filters.isEmpty()) {
-            renderForwardOpaques(uniforms)
+            renderForwardOpaques(uniforms, renderContext.width, renderContext.height)
             renderTransparents(uniforms)
         } else {
             renderToFilter(0, uniforms) {
-                renderForwardOpaques(uniforms)
+                renderForwardOpaques(uniforms, renderContext.width, renderContext.height)
             }
             filters.dropLast(1).forEachIndexed { index, filter ->
                 renderToFilter(index + 1, uniforms) {
@@ -152,8 +142,8 @@ internal class Scene(
             glClearColor(0f, 0f, 0f, 1f)
             glViewport(0, 0, renderContext.width, renderContext.height)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-            glDisable(GL_BLEND);
-            opaques.forEach { it.render(uniforms, fixer) }
+            glDisable(GL_BLEND)
+            renderBucket(uniforms, Bucket.OPAQUE)
             glEnable(GL_BLEND);
         }
         uniforms["cdiffTexture"] = geometryBuffer.colorTextures[0]
@@ -164,6 +154,16 @@ internal class Scene(
 
     }
 
+    private fun renderBucket(uniforms: Map<String, Any?>, bucket: Bucket, vararg defs: String) {
+        sceneDeclaration.renderables
+            .filter { it.bucket == bucket }
+            .forEach {
+                Rendering.render(
+                    inventory, it, renderContext.camera, deferredShading, uniforms, fixer, *defs
+                )
+            }
+    }
+
     private fun renderComposition(uniforms: MutableMap<String, Any?>) {
         val back = renderContext.backgroundColor
         glClearColor(back.r, back.g, back.b, 1.0f)
@@ -171,29 +171,37 @@ internal class Scene(
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         renderFilter(
             materialDeclaration(
-                BaseMaterial.Composition, true, envSlot != null,
+                BaseMaterial.Composition, true,
                 *sceneDeclaration.compositionModifiers.toTypedArray()
             ),
             uniforms
         )
-        skies.forEach { it.render(uniforms, fixer) }
+        renderBucket(uniforms, Bucket.SKY)
     }
 
-    private fun renderForwardOpaques(uniforms: Map<String, Any?>) {
+    private fun renderForwardOpaques(uniforms: Map<String, Any?>, w: Int, h: Int, vararg defs: String) {
         val back = renderContext.backgroundColor
         glClearColor(back.r, back.g, back.b, 1.0f)
-        glViewport(0, 0, renderContext.width, renderContext.height)
+        glViewport(0, 0, w, h)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-        opaques.forEach { it.render(uniforms, fixer) }
-        skies.forEach { it.render(uniforms, fixer) }
+        renderBucket(uniforms, Bucket.OPAQUE, *defs)
+        renderBucket(uniforms, Bucket.SKY, *defs)
     }
 
     private fun renderTransparents(uniforms: MutableMap<String, Any?>) {
-        screens.forEach { it.render(uniforms, fixer) }
         glDepthMask(false)
-        transparents.sortedByDescending { (renderContext.camera.mat4 * it.transform.offset()).z }
-            .forEach { it.render(uniforms, fixer) }
+        sceneDeclaration.renderables
+            .filter { it.bucket == Bucket.TRANSPARENT }
+            .sortedByDescending { (renderContext.camera.mat4 * it.transform.offset()).z }
+            .forEach {
+                Rendering.render(
+                    inventory, it, renderContext.camera, deferredShading,
+                    uniforms, fixer
+                )
+            }
         glDepthMask(true)
+        renderBucket(uniforms, Bucket.SCREEN)
+        guiRenderers.flatMap { it.renderables }
     }
 
     private fun renderShadows(m: MutableMap<String, Any?>) {
@@ -245,7 +253,10 @@ internal class Scene(
         glViewport(0, 0, renderContext.width, renderContext.height)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         if (mesh != null && shader != null) {
-            Renderable(mesh, shader, filter.uniforms).render(uniforms, fixer)
+            shader.render(
+                { fixer(filter.uniforms.invoke()[it] ?: uniforms[it]) },
+                mesh.gpuMesh
+            )
         }
     }
 
@@ -257,8 +268,17 @@ internal class Scene(
         m["filterDepthTexture"] = fb.depthTexture
     }
 
-    private fun renderToEnv() {
-
+    private fun renderToEnv(m: MutableMap<String, Any?>) {
+        val fbTop = inventory.frameBuffer(FrameBufferDeclaration("envtop-$envSlot", 1024, 1024, listOf(GlGpuTexture.Preset.RGBFilter), true)) ?: throw SkipRender
+        val fbBottom = inventory.frameBuffer(FrameBufferDeclaration("envbottom-$envSlot", 1024, 1024, listOf(GlGpuTexture.Preset.RGBFilter), true)) ?: throw SkipRender
+        fbTop.exec {
+            renderForwardOpaques(m, 1024, 1024, "HEMISPHERE", "HTOP")
+        }
+        m["envTextureTop$envSlot"] = fbTop.colorTextures[0]
+        fbBottom.exec {
+            renderForwardOpaques(m, 1024, 1024, "HEMISPHERE", "HBOTTOM")
+        }
+        m["envTextureBottom$envSlot"] = fbBottom.colorTextures[0]
     }
 }
 

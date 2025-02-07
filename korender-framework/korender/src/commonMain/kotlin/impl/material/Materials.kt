@@ -10,10 +10,10 @@ internal fun interface InternalMaterialModifier : MaterialModifier {
     fun applyTo(builder: MaterialBuilder)
 }
 
-internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean, capture: Boolean) {
+internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean) {
 
     var vertShaderFile: String = when (base) {
-        BaseMaterial.Renderable -> if (capture) "!shader/capture.vert" else "!shader/standart.vert"
+        BaseMaterial.Renderable -> "!shader/standart.vert"
         BaseMaterial.Billboard -> "!shader/billboard.vert"
         BaseMaterial.Screen, BaseMaterial.Composition -> "!shader/screen.vert"
         BaseMaterial.Sky -> "!shader/sky/sky.vert"
@@ -37,8 +37,8 @@ internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean, cap
     )
 }
 
-internal fun materialDeclaration(base: BaseMaterial, deferredShading: Boolean, capture: Boolean, vararg materialModifiers: MaterialModifier) =
-    materialModifiers.fold(MaterialBuilder(base, deferredShading, capture)) { acc, mod ->
+internal fun materialDeclaration(base: BaseMaterial, deferredShading: Boolean, vararg materialModifiers: MaterialModifier) =
+    materialModifiers.fold(MaterialBuilder(base, deferredShading)) { acc, mod ->
         (mod as InternalMaterialModifier).applyTo(acc)
         acc
     }.toMaterialDeclaration()

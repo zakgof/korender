@@ -51,8 +51,8 @@ fun InfiniteCity() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 }
 
 private fun FrameContext.light() {
-    AmbientLight(white(0.5f))
-    DirectionalLight(Vec3(0.1f, -1f, -1f).normalize(), white(1f)) {
+    AmbientLight(white(0.6f))
+    DirectionalLight(Vec3(0.1f, -1f, -1f).normalize(), white(2f)) {
         if (target == KorenderContext.TargetPlatform.Desktop) {
             Cascade(1024, 0.3f, 3.0f, 0f to 60f, pcss(12))
             Cascade(1024, 2.5f, 12.0f, 0f to 60f, vsm())

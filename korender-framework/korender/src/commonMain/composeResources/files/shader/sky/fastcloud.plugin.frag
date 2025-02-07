@@ -21,5 +21,6 @@ vec3 sky(vec3 look) {
     vec3 cloud = mix(vec3(1.0), vec3(0.9), clamp(f*g, 0., 3.));
 
     vec3 blue = mix(lightblue, darkblue, -look.y); // TODO light direction
+
     return mix(blue, cloud, clamp(f, 0., 1.));
 }

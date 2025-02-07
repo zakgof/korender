@@ -4,6 +4,7 @@ import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.AsyncContext
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
+import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
@@ -70,6 +71,7 @@ import com.zakgof.korender.impl.material.InternalStandartParams
 import com.zakgof.korender.impl.material.InternalStarrySkyParams
 import com.zakgof.korender.impl.material.InternalWaterParams
 import com.zakgof.korender.impl.material.ParamUniforms
+import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.OrthoProjection
@@ -117,12 +119,11 @@ internal class Engine(
             keyHandlers.add(handler)
         }
 
-        override fun texture(
-            textureResource: String,
-            filter: TextureFilter,
-            wrap: TextureWrap,
-            aniso: Int
-        ): TextureDeclaration = ResourceTextureDeclaration(textureResource, filter, wrap, aniso)
+        override fun texture(textureResource: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureDeclaration =
+            ResourceTextureDeclaration(textureResource, filter, wrap, aniso)
+
+        override fun cubeTexture(nxResource: String, nyResource: String, nzResource: String, pxResource: String, pyResource: String, pzResource: String): CubeTextureDeclaration =
+            ResourceCubeTextureDeclaration(nxResource, nyResource, nzResource, pxResource, pyResource, pzResource)
 
         override fun cube(halfSide: Float): MeshDeclaration = Cube(halfSide)
 
@@ -238,6 +239,12 @@ internal class Engine(
             InternalMaterialModifier {
                 it.plugins["sky"] = "!shader/sky/starry.plugin.frag"
                 it.pluginUniforms += ParamUniforms(InternalStarrySkyParams(), block)
+            }
+
+        override fun cubeSky(cubeTexture: CubeTextureDeclaration) =
+            InternalMaterialModifier {
+                it.plugins["sky"] = "!shader/sky/cube.plugin.frag"
+                it.pluginUniforms += { mapOf("cubeTexture" to cubeTexture) }
             }
 
         override fun fog(block: FogParams.() -> Unit) =

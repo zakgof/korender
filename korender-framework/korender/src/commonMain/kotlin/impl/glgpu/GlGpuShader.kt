@@ -207,6 +207,11 @@ internal class GlGpuShader(
                 glUniform1i(location, currentTexUnit)
             }
 
+            is GlGpuCubeTexture -> {
+                value.bind(currentTexUnit)
+                glUniform1i(location, currentTexUnit)
+            }
+
             is GlGpuTextureList -> {
                 if (value.textures.isNotEmpty()) {
                     val units = value.textures.mapIndexed { i, tex ->
