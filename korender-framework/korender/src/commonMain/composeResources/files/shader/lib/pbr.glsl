@@ -46,5 +46,15 @@ vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 cdiff, vec3 F0, float roughness, 
     vec3 f_specular = F * D * G / max(4.0 * NdotV * NdotL, 0.000001);
 #endif
 
-    return (f_diffuse + f_specular) * NdotL * lightColor;
+
+#ifdef IBL
+    vec3 r = reflect(-V, N);
+    vec3 envSpecular = texture(cubeTexture, r).rgb;
+    envSpecular *= mix(F0, vec3(1.0), pow(1.0 - roughness, 5.0));
+    vec3 indirect = envSpecular * NdotV;
+#else
+    vec3 indirect = vec3(0.);
+#endif
+
+    return (f_diffuse + f_specular) * NdotL * lightColor + indirect;
 }

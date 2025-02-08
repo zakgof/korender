@@ -30,15 +30,14 @@ import com.zakgof.korender.impl.gl.GL.glUniform4fv
 import com.zakgof.korender.impl.gl.GL.glUniformMatrix3fv
 import com.zakgof.korender.impl.gl.GL.glUniformMatrix4fv
 import com.zakgof.korender.impl.gl.GL.glUseProgram
-import com.zakgof.korender.impl.gl.GL.glValidateProgram
 import com.zakgof.korender.impl.gl.GLConstants.GL_ACTIVE_ATTRIBUTES
 import com.zakgof.korender.impl.gl.GLConstants.GL_ACTIVE_UNIFORMS
 import com.zakgof.korender.impl.gl.GLConstants.GL_COMPILE_STATUS
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAGMENT_SHADER
 import com.zakgof.korender.impl.gl.GLConstants.GL_LINK_STATUS
-import com.zakgof.korender.impl.gl.GLConstants.GL_VALIDATE_STATUS
 import com.zakgof.korender.impl.gl.GLConstants.GL_VERTEX_SHADER
 import com.zakgof.korender.impl.gl.GLUniformLocation
+import com.zakgof.korender.impl.material.NotYetLoadedCubeTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ShaderDebugInfo
 import com.zakgof.korender.math.ColorRGB
@@ -53,7 +52,8 @@ internal class GlGpuShader(
     vertexShaderText: String,
     fragmentShaderText: String,
     vertDebugInfo: ShaderDebugInfo,
-    fragDebugInfo: ShaderDebugInfo
+    fragDebugInfo: ShaderDebugInfo,
+    private val zeroTex: GlGpuTexture
 ) : AutoCloseable {
     private val programHandle = glCreateProgram()
     private val vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER)
@@ -74,7 +74,7 @@ internal class GlGpuShader(
         glAttachShader(programHandle, fragmentShaderHandle)
 
         glLinkProgram(programHandle)
-        glValidateProgram(programHandle)
+        // glValidateProgram(programHandle)
 
         val vertexLog: String = glGetShaderInfoLog(vertexShaderHandle)
         if (vertexLog.isNotEmpty()) {
@@ -97,8 +97,8 @@ internal class GlGpuShader(
             throw RuntimeException("Fragment shader compilation failure")
         } else if (glGetProgrami(programHandle, GL_LINK_STATUS) == 0) {
             throw RuntimeException("Program linking failure")
-        } else if (glGetProgrami(programHandle, GL_VALIDATE_STATUS) == 0) {
-            throw RuntimeException("Program validation failure")
+//        } else if (glGetProgrami(programHandle, GL_VALIDATE_STATUS) == 0) {
+//            throw RuntimeException("Program validation failure")
         } else if (vertexLog.isNotEmpty()) {
             throw RuntimeException("Vertex shader compilation warnings")
         } else if (fragmentLog.isNotEmpty()) {
@@ -203,26 +203,35 @@ internal class GlGpuShader(
             }
 
             is GlGpuTexture -> {
+                // println("Bind texture unit $currentTexUnit to 2d texture $name")
                 value.bind(currentTexUnit)
                 glUniform1i(location, currentTexUnit)
             }
 
             is GlGpuCubeTexture -> {
+                // println("Bind texture unit $currentTexUnit to cube texture $name")
                 value.bind(currentTexUnit)
                 glUniform1i(location, currentTexUnit)
             }
 
             is GlGpuTextureList -> {
-                if (value.textures.isNotEmpty()) {
-                    val units = value.textures.mapIndexed { i, tex ->
-                        tex.bind(currentTexUnit + i)
-                        currentTexUnit + i
+                val units = (0 until value.totalNum)
+                    .map {
+                        val ctu = currentTexUnit + it
+                        if (it < value.textures.size) {
+                            value.textures[it].bind(ctu)
+                        } else {
+                            zeroTex.bind(ctu)
+                        }
+                        ctu
                     }
-                    glUniform1iv(location, *units.toIntArray())
-                }
+                // println("Bind texture unit $units to texture array $name")
+                glUniform1iv(location, *units.toIntArray())
             }
 
             is NotYetLoadedTexture -> throw SkipRender
+
+            is NotYetLoadedCubeTexture -> throw SkipRender
 
             else -> {
                 throw KorenderException("Unsupported uniform value $value of type ${value::class} for uniform $name")
@@ -232,7 +241,8 @@ internal class GlGpuShader(
         // checkGlError("while setting uniform $name in shader $this")
         return when (value) {
             is GlGpuTexture -> 1
-            is GlGpuTextureList -> value.textures.size
+            is GlGpuCubeTexture -> 1
+            is GlGpuTextureList -> value.totalNum
             else -> 0
         }
     }
@@ -252,4 +262,4 @@ internal data class Color4List(val values: List<ColorRGBA>)
 
 internal data class Color3List(val values: List<ColorRGB>)
 
-internal data class GlGpuTextureList(val textures: List<GlGpuTexture>)
+internal data class GlGpuTextureList(val textures: List<GlGpuTexture>, val totalNum: Int)

@@ -5,6 +5,7 @@ import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gl.GL.shaderEnv
 import com.zakgof.korender.impl.glgpu.GlGpuShader
+import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.resourceBytes
 
 internal fun <T> MutableList<T>.peek(): T = this.last()
@@ -17,7 +18,8 @@ internal object Shaders {
 
     suspend fun create(
         declaration: ShaderDeclaration,
-        appResourceLoader: ResourceLoader
+        appResourceLoader: ResourceLoader,
+        zeroTex: GlGpuTexture
     ): GlGpuShader {
         val defs = declaration.defs + shaderEnv
         val title = "${declaration.vertFile}:${declaration.fragFile} $defs"
@@ -27,7 +29,7 @@ internal object Shaders {
             preprocessFile(declaration.vertFile, defs, vertDebugInfo, declaration.plugins, appResourceLoader)
         val fragCode =
             preprocessFile(declaration.fragFile, defs, fragDebugInfo, declaration.plugins, appResourceLoader)
-        return GlGpuShader(title, vertCode, fragCode, vertDebugInfo, fragDebugInfo)
+        return GlGpuShader(title, vertCode, fragCode, vertDebugInfo, fragDebugInfo, zeroTex)
     }
 
     private suspend fun preprocessFile(

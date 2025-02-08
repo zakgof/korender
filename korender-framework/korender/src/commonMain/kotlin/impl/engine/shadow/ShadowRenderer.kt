@@ -304,7 +304,7 @@ internal class ShadowerData(
 
 internal fun List<ShadowerData>.uniforms(m: MutableMap<String, Any?>) {
     m["numShadows"] = size
-    m["shadowTextures[0]"] = GlGpuTextureList(this.map { it.texture })
+    m["shadowTextures[0]"] = GlGpuTextureList(this.map { it.texture }, 8)
     m["bsps[0]"] = Mat4List(this.map { it.bsp })
     m["cascade[0]"] = Color4List(this.map { ColorRGBA(it.cascade[0], it.cascade[1], it.cascade[2], it.cascade[3]) })
     m["yMin[0]"] = FloatList(this.map { it.yMin })

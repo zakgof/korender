@@ -35,12 +35,15 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun AppExample() {
     val options = listOf(
+
+        Demo("PBR") { MetallicRoughnessExample() },
+
         Demo("IBL") { IblExample() },
         Demo("City demo") { InfiniteCity() },
         Demo("OBJ mesh") { ObjFileExample() },
         Demo("GLTF animation") { GltfExample() },
         Demo("Shadows") { ShadowExample() },
-        Demo("PBR") { MetallicRoughnessExample() },
+
         Demo("Effects") { EffectsExample() },
         Demo("Point lights") { LightsExample() },
         Demo("GUI") { GuiExample() },

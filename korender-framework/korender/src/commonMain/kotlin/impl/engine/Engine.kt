@@ -253,6 +253,12 @@ internal class Engine(
                 it.shaderUniforms = ParamUniforms(InternalFogParams(), block)
             }
 
+        override fun ibl(env: CubeTextureDeclaration): MaterialModifier =
+            InternalMaterialModifier {
+                it.shaderDefs += "IBL"
+                it.pluginUniforms += { mapOf("cubeTexture" to env) }
+            }
+
         override fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration =
             FrustumProjection(width, height, near, far)
 

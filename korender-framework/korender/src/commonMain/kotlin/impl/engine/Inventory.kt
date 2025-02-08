@@ -19,8 +19,10 @@ import com.zakgof.korender.impl.material.Texturing
 
 internal class Inventory(asyncContext: AsyncContext) {
 
+    private val zeroTex = GlGpuTexture.zeroTex()
+
     private val meshes = Registry<MeshDeclaration, Mesh>(asyncContext) { Geometry.create(it, asyncContext.appResourceLoader) }
-    private val shaders = Registry<ShaderDeclaration, GlGpuShader>(asyncContext) { Shaders.create(it, asyncContext.appResourceLoader) }
+    private val shaders = Registry<ShaderDeclaration, GlGpuShader>(asyncContext) { Shaders.create(it, asyncContext.appResourceLoader, zeroTex) }
     private val textures = Registry<InternalTexture, GlGpuTexture>(asyncContext) { Texturing.create(it, asyncContext.appResourceLoader) }
     private val cubeTextures = Registry<ResourceCubeTextureDeclaration, GlGpuCubeTexture>(asyncContext) { Texturing.cube(it, asyncContext.appResourceLoader) }
     private val fonts = Registry<String, Font>(asyncContext) { Fonts.load(it, asyncContext.appResourceLoader) }

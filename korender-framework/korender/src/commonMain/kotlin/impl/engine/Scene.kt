@@ -1,6 +1,5 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.impl.engine.shadow.ShadowRenderer
 import com.zakgof.korender.impl.engine.shadow.ShadowerData
 import com.zakgof.korender.impl.engine.shadow.uniforms
@@ -20,6 +19,7 @@ import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Vec3List
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
 import com.zakgof.korender.impl.material.InternalTexture
+import com.zakgof.korender.impl.material.NotYetLoadedCubeTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.materialDeclaration
@@ -42,7 +42,7 @@ internal class Scene(
     private val fixer = { value: Any? ->
         when (value) {
             is InternalTexture -> inventory.texture(value) ?: NotYetLoadedTexture
-            is ResourceCubeTextureDeclaration -> inventory.cubeTexture(value) ?: NotYetLoadedTexture
+            is ResourceCubeTextureDeclaration -> inventory.cubeTexture(value) ?: NotYetLoadedCubeTexture
             else -> value
         }
     }
@@ -199,9 +199,13 @@ internal class Scene(
                     uniforms, fixer
                 )
             }
-        glDepthMask(true)
+
         renderBucket(uniforms, Bucket.SCREEN)
-        guiRenderers.flatMap { it.renderables }
+        guiRenderers.flatMap { it.renderables }.forEach {
+            it.render(uniforms, fixer)
+        }
+
+        glDepthMask(true)
     }
 
     private fun renderShadows(m: MutableMap<String, Any?>) {

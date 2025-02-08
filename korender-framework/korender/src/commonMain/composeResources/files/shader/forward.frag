@@ -43,6 +43,10 @@ uniform sampler2D metallicRoughnessTexture;
 uniform sampler2D specularGlossinessTexture;
 #endif
 
+#ifdef IBL
+uniform samplerCube cubeTexture;
+#endif
+
 //  TODO DETAIL FOR BASECOLOR
 
 uniform vec3 cameraPos;

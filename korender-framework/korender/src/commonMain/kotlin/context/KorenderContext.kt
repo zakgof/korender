@@ -93,6 +93,7 @@ interface KorenderContext {
     fun starrySky(block: StarrySkyParams.() -> Unit = {}): MaterialModifier
     fun cubeSky(cubeTexture: CubeTextureDeclaration): MaterialModifier
     fun fog(block: FogParams.() -> Unit = {}): MaterialModifier
+    fun ibl(env: CubeTextureDeclaration): MaterialModifier
 
     fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration
     fun ortho(width: Float, height: Float, near: Float, far: Float): OrthoProjectionDeclaration

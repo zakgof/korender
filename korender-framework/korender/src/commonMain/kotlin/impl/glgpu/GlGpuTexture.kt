@@ -4,6 +4,7 @@ import com.zakgof.korender.Image
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
+import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.gl.GL.glActiveTexture
 import com.zakgof.korender.impl.gl.GL.glBindTexture
 import com.zakgof.korender.impl.gl.GL.glDeleteTextures
@@ -24,6 +25,9 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_LINEAR_MIPMAP_LINEAR
 import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_TEXTURE_MAX_ANISOTROPY
 import com.zakgof.korender.impl.gl.GLConstants.GL_MIRRORED_REPEAT
 import com.zakgof.korender.impl.gl.GLConstants.GL_NEAREST
+import com.zakgof.korender.impl.gl.GLConstants.GL_R16
+import com.zakgof.korender.impl.gl.GLConstants.GL_R8
+import com.zakgof.korender.impl.gl.GLConstants.GL_RED
 import com.zakgof.korender.impl.gl.GLConstants.GL_REPEAT
 import com.zakgof.korender.impl.gl.GLConstants.GL_RG
 import com.zakgof.korender.impl.gl.GLConstants.GL_RG16
@@ -64,8 +68,10 @@ private val wrapMap = mapOf(
 )
 
 private val formatMap = mapOf(
-    Image.Format.RGBA to GL_RGBA,
-    Image.Format.RGB to GL_RGB,
+    Image.Format.RGBA to GlGpuTexture.GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE),
+    Image.Format.RGB to GlGpuTexture.GlFormat(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE),
+    Image.Format.Gray to GlGpuTexture.GlFormat(GL_R8, GL_RED, GL_UNSIGNED_BYTE),
+    Image.Format.Gray16 to GlGpuTexture.GlFormat(GL_R16, GL_RED, GL_UNSIGNED_SHORT)
 )
 
 internal class GlGpuTexture(
@@ -118,9 +124,7 @@ internal class GlGpuTexture(
         wrap: TextureWrap = TextureWrap.Repeat,
         aniso: Int = 1024
     ) : this(
-        name, image, image.width, image.height, filter, wrap, aniso, listOf(
-            GlFormat(formatMap[image.format]!!, formatMap[image.format]!!, GL_UNSIGNED_BYTE)
-        )
+        name, image, image.width, image.height, filter, wrap, aniso, listOf(formatMap[image.format]!!)
     )
 
     constructor(
@@ -188,4 +192,17 @@ internal class GlGpuTexture(
         val format: Int,
         val type: Int
     )
+
+    companion object {
+        fun zeroTex(): GlGpuTexture = GlGpuTexture("zero", object : InternalImage {
+            override val bytes: NativeByteBuffer = NativeByteBuffer(14).apply {
+                put(byteArrayOf(0, 0, 0, 255.toByte(), 0, 0,
+                    0, 255.toByte(), 0, 0, 0, 0, 0, 0))
+                rewind()
+            }
+            override val width = 2
+            override val height = 2
+            override val format = Image.Format.RGB
+        })
+    }
 }

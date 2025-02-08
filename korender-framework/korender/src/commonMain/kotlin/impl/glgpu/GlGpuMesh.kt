@@ -4,6 +4,7 @@ import com.zakgof.korender.AttributeType
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.impl.checkGlError
 import com.zakgof.korender.impl.gl.GL.glBindBuffer
 import com.zakgof.korender.impl.gl.GL.glBindVertexArray
 import com.zakgof.korender.impl.gl.GL.glBufferData
@@ -99,6 +100,7 @@ internal class GlGpuMesh(
                 },
                 0
             )
+            checkGlError("during glDrawElements")
         }
         glBindVertexArray(null)
     }

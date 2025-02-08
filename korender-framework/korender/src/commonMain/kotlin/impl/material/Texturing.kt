@@ -15,6 +15,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.awaitAll
 
 object NotYetLoadedTexture
+object NotYetLoadedCubeTexture
 
 internal object Texturing {
 
