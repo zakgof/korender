@@ -59,6 +59,8 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
+import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.material.InternalAdjustParams
 import com.zakgof.korender.impl.material.InternalBlurParams
 import com.zakgof.korender.impl.material.InternalFastCloudSkyParams
@@ -318,6 +320,9 @@ internal class Engine(
         glDepthFunc(GL_LEQUAL)
         glEnable(GL_BLEND)
         glEnable(GL_DEPTH_TEST)
+        ignoringGlError {
+            glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS)
+        }
         block.invoke(kc)
     }
 

@@ -16,19 +16,25 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 fun MetallicRoughnessExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val freeCamera = FreeCamera(this, Vec3.ZERO, -1.z)
     OnTouch { freeCamera.touch(it) }
-    val env = cubeTexture("cube/nx.jpg", "cube/ny.jpg", "cube/nz.jpg", "cube/px.jpg", "cube/py.jpg", "cube/pz.jpg")
+    val env = cubeTexture(
+        "cube/nx.jpg",
+        "cube/ny.jpg",
+        "cube/nz.jpg",
+        "cube/px.jpg",
+        "cube/py.jpg",
+        "cube/pz.jpg"
+    )
     Frame {
         projection = frustum(width = 5f * width / height, height = 5f, near = 5f, far = 1000f)
         camera = freeCamera.camera(projection, width, height, 0f)
         Sky(cubeSky(env))
-        DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(3f))
-        DirectionalLight(Vec3(-1.0f, 1.0f, 0.0f), ColorRGB.white(0.2f))
+        DirectionalLight(Vec3(1.0f, -1.0f, 0.0f).normalize(), ColorRGB.white(5f))
         AmbientLight(ColorRGB.Black)
         for (m in 0..4) {
             for (r in 0..4) {
                 Renderable(
                     standart {
-                        baseColor = ColorRGBA.White
+                        baseColor = ColorRGBA(0x80A0FFFF)
                         pbr.metallic = (r / 4.0f)
                         pbr.roughness = (m / 4.0f)
                     },
