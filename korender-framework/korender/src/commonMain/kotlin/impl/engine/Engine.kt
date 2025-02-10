@@ -25,6 +25,7 @@ import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SmokeParams
+import com.zakgof.korender.SsrParams
 import com.zakgof.korender.StandartParams
 import com.zakgof.korender.StarrySkyParams
 import com.zakgof.korender.TextureDeclaration
@@ -69,6 +70,7 @@ import com.zakgof.korender.impl.material.InternalFireballParams
 import com.zakgof.korender.impl.material.InternalFogParams
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalSmokeParams
+import com.zakgof.korender.impl.material.InternalSsrParams
 import com.zakgof.korender.impl.material.InternalStandartParams
 import com.zakgof.korender.impl.material.InternalStarrySkyParams
 import com.zakgof.korender.impl.material.InternalWaterParams
@@ -266,6 +268,12 @@ internal class Engine(
             InternalMaterialModifier {
                 it.shaderDefs += "IBL"
                 it.pluginUniforms += { mapOf("cubeTexture" to env) }
+            }
+
+        override fun ssr(block: SsrParams.() -> Unit): MaterialModifier =
+            InternalMaterialModifier {
+                it.shaderDefs += "SSR"
+                it.shaderUniforms = ParamUniforms(InternalSsrParams(), block)
             }
 
         override fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration =

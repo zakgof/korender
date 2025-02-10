@@ -4,11 +4,13 @@ import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.BaseParams
 import com.zakgof.korender.BillboardVertexParams
 import com.zakgof.korender.BlurParams
+import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
 import com.zakgof.korender.FogParams
 import com.zakgof.korender.SmokeParams
+import com.zakgof.korender.SsrParams
 import com.zakgof.korender.StandartParams
 import com.zakgof.korender.StandartParams.Pbr
 import com.zakgof.korender.StandartParams.SpecularGlossiness
@@ -247,6 +249,22 @@ internal class InternalFogParams : FogParams, InternalBaseParams() {
         map["fogColor"] = color
     }
 }
+
+internal class InternalSsrParams : SsrParams, InternalBaseParams() {
+
+    override var samples = 16
+    override var envTexture: CubeTextureDeclaration? = null
+
+    override fun collect() {
+        map["samples"] = samples
+        envTexture?.let {
+            map["envTexture"] = it
+            defs += "SSR_ENV"
+        }
+    }
+}
+
+
 
 
 internal class ParamUniforms<P : InternalBaseParams>(

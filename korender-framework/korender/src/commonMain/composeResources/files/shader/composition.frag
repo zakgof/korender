@@ -84,6 +84,23 @@ void main() {
     float plane = dot((vpos - cameraPos), cameraDir);
     populateShadowRatios(plane, vpos);
 
+#ifdef SSR
+    vec3 reflection = ssr(vpos, N, V);
+    float NdotV = max(dot(N, V), 0.0);
+    vec3 FR = F0 + (1. - F0) * pow(1. - NdotV, 5.);
+    color += reflection * FR;
+
+
+    //    https://github.com/0beqz/screen-space-reflections/blob/main/src/material/shader/reflectionsShader.frag
+    //     // Mixing the reflection with the normal is more accurate and keeps rough objects from gathering light from behind their tangent plane.
+    //    reflectVec = normalize(mix(reflectVec, normal, roughness * roughness));
+    //    reflectVec = inverseTransformDirection(reflectVec, viewMatrix);
+
+//    vec3 env = texture(cubeTexture, R, rough * 8.0).rgb;
+//    vec3 indirect = env * FR;
+
+#endif
+
     for (int l=0; l<numDirectionalLights; l++)
         color += dirLight(l, N, V, c_diff, F0, rough);
 

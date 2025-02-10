@@ -21,6 +21,7 @@ import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SmokeParams
+import com.zakgof.korender.SsrParams
 import com.zakgof.korender.StandartParams
 import com.zakgof.korender.StarrySkyParams
 import com.zakgof.korender.TextureDeclaration
@@ -95,6 +96,7 @@ interface KorenderContext {
     fun cubeSky(envSlot: Int): MaterialModifier
     fun fog(block: FogParams.() -> Unit = {}): MaterialModifier
     fun ibl(env: CubeTextureDeclaration): MaterialModifier
+    fun ssr(block: SsrParams.() -> Unit = {}): MaterialModifier
 
     fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration
     fun ortho(width: Float, height: Float, near: Float, far: Float): OrthoProjectionDeclaration

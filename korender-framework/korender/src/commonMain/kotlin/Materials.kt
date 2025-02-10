@@ -98,5 +98,10 @@ interface FogParams : BaseParams {
     var color: ColorRGB
 }
 
+interface SsrParams : BaseParams {
+    var samples: Int
+    var envTexture: CubeTextureDeclaration?
+}
+
 enum class RenderingOption {
 }

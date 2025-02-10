@@ -45,12 +45,10 @@ vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 cdiff, vec3 F0, float roughness, 
     float G = geometrySmith(NdotV, NdotL, roughness);
     vec3 f_specular = F * D * G / max(4.0 * NdotV * NdotL, 0.001);
 #endif
-
-
+    
 #ifdef IBL
     vec3 R = reflect(-V, N);
     vec3 env = texture(cubeTexture, R, roughness * 8.0).rgb; // TODO env resolution
-
     vec3 FR = F0 + (1. - F0) * pow(1. - NdotV, 5.);
     vec3 indirect = env * FR;
 #else
