@@ -246,7 +246,14 @@ internal class Engine(
         override fun cubeSky(cubeTexture: CubeTextureDeclaration) =
             InternalMaterialModifier {
                 it.plugins["sky"] = "!shader/sky/cube.plugin.frag"
+                it.shaderDefs += "SKY_CUBE"
                 it.pluginUniforms += { mapOf("cubeTexture" to cubeTexture) }
+            }
+
+        override fun cubeSky(envSlot: Int) =
+            InternalMaterialModifier {
+                it.plugins["sky"] = "!shader/sky/cube.plugin.frag"
+                it.shaderDefs += "SKY_CUBE_ENV$envSlot"
             }
 
         override fun fog(block: FogParams.() -> Unit) =

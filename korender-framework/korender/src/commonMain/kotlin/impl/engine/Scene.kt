@@ -1,5 +1,7 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.impl.camera.Camera
+import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.shadow.ShadowRenderer
 import com.zakgof.korender.impl.engine.shadow.ShadowerData
 import com.zakgof.korender.impl.engine.shadow.uniforms
@@ -13,6 +15,12 @@ import com.zakgof.korender.impl.gl.GL.glViewport
 import com.zakgof.korender.impl.gl.GLConstants.GL_BLEND
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_X
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_Z
 import com.zakgof.korender.impl.glgpu.Color3List
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.IntList
@@ -23,8 +31,12 @@ import com.zakgof.korender.impl.material.NotYetLoadedCubeTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.materialDeclaration
+import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.x
+import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
 
 internal class Scene(
     private val sceneDeclaration: SceneDeclaration,
@@ -65,11 +77,15 @@ internal class Scene(
         val uniforms = mutableMapOf<String, Any?>()
         renderContext.uniforms(uniforms)
 
-        renderShadows(uniforms)
-
         sceneDeclaration.captures.forEach { kv ->
-            Scene(kv.value, inventory, renderContext, kv.key).renderToEnv(uniforms)
+            try {
+                Scene(kv.value.sceneDeclaration, inventory, renderContext, kv.key).renderToEnv(uniforms, kv.value)
+            } catch (_: SkipRender) {
+                println("Env probing skipped as framebuffer is not ready")
+            }
         }
+
+        renderShadows(uniforms, false)
 
         try {
             if (deferredShading) {
@@ -92,7 +108,7 @@ internal class Scene(
             }
         } else {
             renderComposition(uniforms)
-            renderTransparents(uniforms)
+            renderTransparents(uniforms, renderContext.camera)
         }
 
         filters.forEachIndexed { index, filter ->
@@ -102,7 +118,7 @@ internal class Scene(
                 }
             } else {
                 renderFilter(filter, uniforms)
-                renderTransparents(uniforms)
+                renderTransparents(uniforms, renderContext.camera)
             }
         }
     }
@@ -110,7 +126,7 @@ internal class Scene(
     private fun renderSceneForward(uniforms: MutableMap<String, Any?>) {
         if (sceneDeclaration.filters.isEmpty()) {
             renderForwardOpaques(uniforms, renderContext.width, renderContext.height)
-            renderTransparents(uniforms)
+            renderTransparents(uniforms, renderContext.camera)
         } else {
             renderToFilter(0, uniforms) {
                 renderForwardOpaques(uniforms, renderContext.width, renderContext.height)
@@ -121,7 +137,7 @@ internal class Scene(
                 }
             }
             renderFilter(filters.last(), uniforms)
-            renderTransparents(uniforms)
+            renderTransparents(uniforms, renderContext.camera)
         }
     }
 
@@ -188,14 +204,14 @@ internal class Scene(
         renderBucket(uniforms, Bucket.SKY, *defs)
     }
 
-    private fun renderTransparents(uniforms: MutableMap<String, Any?>) {
+    private fun renderTransparents(uniforms: MutableMap<String, Any?>, camera: Camera) {
         glDepthMask(false)
         sceneDeclaration.renderables
             .filter { it.bucket == Bucket.TRANSPARENT }
-            .sortedByDescending { (renderContext.camera.mat4 * it.transform.offset()).z }
+            .sortedByDescending { (camera.mat4 * it.transform.offset()).z }
             .forEach {
                 Rendering.render(
-                    inventory, it, renderContext.camera, deferredShading,
+                    inventory, it, camera, deferredShading,
                     uniforms, fixer
                 )
             }
@@ -208,28 +224,31 @@ internal class Scene(
         glDepthMask(true)
     }
 
-    private fun renderShadows(m: MutableMap<String, Any?>) {
+    private fun renderShadows(m: MutableMap<String, Any?>, forceNoShadows: Boolean) {
         val shadowData = mutableListOf<ShadowerData>()
         val directionalDirs = mutableListOf<Vec3>()
         val directionalColors = mutableListOf<ColorRGB>()
         val directionalShadowIndexes = mutableListOf<Int>()
         val directionalShadowCounts = mutableListOf<Int>()
         sceneDeclaration.directionalLights.forEachIndexed { li, dl ->
-            val indexes = dl.shadowDeclaration.cascades.mapIndexedNotNull { ci, cascadeDeclaration ->
-                ShadowRenderer.render(
-                    "$li-$ci",
-                    inventory,
-                    dl.direction,
-                    dl.shadowDeclaration.cascades,
-                    ci,
-                    renderContext,
-                    sceneDeclaration.renderables,
-                    fixer
-                )?.let {
-                    shadowData += it
-                    shadowData.size - 1
+            val indexes = if (forceNoShadows)
+                listOf()
+            else
+                dl.shadowDeclaration.cascades.mapIndexedNotNull { ci, cascadeDeclaration ->
+                    ShadowRenderer.render(
+                        "$li-$ci",
+                        inventory,
+                        dl.direction,
+                        dl.shadowDeclaration.cascades,
+                        ci,
+                        renderContext,
+                        sceneDeclaration.renderables,
+                        fixer
+                    )?.let {
+                        shadowData += it
+                        shadowData.size - 1
+                    }
                 }
-            }
             directionalDirs += dl.direction
             directionalColors += dl.color
             directionalShadowIndexes += indexes.minOrNull() ?: -1
@@ -272,17 +291,31 @@ internal class Scene(
         m["filterDepthTexture"] = fb.depthTexture
     }
 
-    private fun renderToEnv(m: MutableMap<String, Any?>) {
-        val fbTop = inventory.frameBuffer(FrameBufferDeclaration("envtop-$envSlot", 1024, 1024, listOf(GlGpuTexture.Preset.RGBFilter), true)) ?: throw SkipRender
-        val fbBottom = inventory.frameBuffer(FrameBufferDeclaration("envbottom-$envSlot", 1024, 1024, listOf(GlGpuTexture.Preset.RGBFilter), true)) ?: throw SkipRender
-        fbTop.exec {
-            renderForwardOpaques(m, 1024, 1024, "HEMISPHERE", "HTOP")
+    private fun renderToEnv(uniforms: MutableMap<String, Any?>, captureContext: CaptureContext) {
+        renderShadows(uniforms, true)
+        val probeFb = inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$envSlot", captureContext.resolution, captureContext.resolution, true)) ?: throw SkipRender
+        val probeUniforms = mutableMapOf<String, Any?>()
+        probeUniforms += uniforms
+        val projection = FrustumProjection(2f * captureContext.near, 2f * captureContext.near, captureContext.near, captureContext.far)
+        mapOf(
+            GL_TEXTURE_CUBE_MAP_NEGATIVE_X to DefaultCamera(captureContext.position, -1.x, -1.y),
+            GL_TEXTURE_CUBE_MAP_NEGATIVE_Y to DefaultCamera(captureContext.position, -1.y, -1.z),
+            GL_TEXTURE_CUBE_MAP_NEGATIVE_Z to DefaultCamera(captureContext.position, -1.z, -1.y),
+            GL_TEXTURE_CUBE_MAP_POSITIVE_X to DefaultCamera(captureContext.position, 1.x, -1.y),
+            GL_TEXTURE_CUBE_MAP_POSITIVE_Y to DefaultCamera(captureContext.position, 1.y, 1.z),
+            GL_TEXTURE_CUBE_MAP_POSITIVE_Z to DefaultCamera(captureContext.position, 1.z, -1.y),
+        ).forEach {
+            probeUniforms["view"] = it.value.mat4
+            probeUniforms["projection"] = projection.mat4
+            probeUniforms["cameraPos"] = it.value.position
+            probeUniforms["cameraDir"] = it.value.direction
+            probeFb.exec(it.key) {
+                renderForwardOpaques(probeUniforms, captureContext.resolution, captureContext.resolution)
+                renderTransparents(probeUniforms, it.value)
+            }
         }
-        m["envTextureTop$envSlot"] = fbTop.colorTextures[0]
-        fbBottom.exec {
-            renderForwardOpaques(m, 1024, 1024, "HEMISPHERE", "HBOTTOM")
-        }
-        m["envTextureBottom$envSlot"] = fbBottom.colorTextures[0]
+        probeFb.finish()
+        uniforms["envTexture$envSlot"] = probeFb.colorTexture
     }
 }
 

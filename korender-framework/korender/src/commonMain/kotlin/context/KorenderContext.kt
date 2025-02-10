@@ -92,6 +92,7 @@ interface KorenderContext {
     fun fastCloudSky(block: FastCloudSkyParams.() -> Unit = {}): MaterialModifier
     fun starrySky(block: StarrySkyParams.() -> Unit = {}): MaterialModifier
     fun cubeSky(cubeTexture: CubeTextureDeclaration): MaterialModifier
+    fun cubeSky(envSlot: Int): MaterialModifier
     fun fog(block: FogParams.() -> Unit = {}): MaterialModifier
     fun ibl(env: CubeTextureDeclaration): MaterialModifier
 

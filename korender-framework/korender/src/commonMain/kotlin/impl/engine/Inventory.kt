@@ -6,6 +6,7 @@ import com.zakgof.korender.impl.font.Font
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.Mesh
+import com.zakgof.korender.impl.glgpu.GlGpuCubeFrameBuffer
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.glgpu.GlGpuShader
@@ -28,6 +29,8 @@ internal class Inventory(asyncContext: AsyncContext) {
     private val fonts = Registry<String, Font>(asyncContext) { Fonts.load(it, asyncContext.appResourceLoader) }
     private val fontMeshes = Registry<Any, Geometry.MultiMesh>(asyncContext) { Geometry.font(256) }
     private val frameBuffers = Registry<FrameBufferDeclaration, GlGpuFrameBuffer>(asyncContext) { GlGpuFrameBuffer(it.id, it.width, it.height, it.colorTexturePresets, it.withDepth) }
+    private val cubeFrameBuffers = Registry<CubeFrameBufferDeclaration, GlGpuCubeFrameBuffer>(asyncContext) { GlGpuCubeFrameBuffer(it.id, it.width, it.height, it.withDepth) }
+
     private val gltfs = Registry<GltfDeclaration, GltfLoaded>(asyncContext) { GltfLoader.load(it, asyncContext.appResourceLoader) }
 
     fun go(block: Inventory.() -> Unit) {
@@ -37,6 +40,7 @@ internal class Inventory(asyncContext: AsyncContext) {
         fonts.begin()
         fontMeshes.begin()
         frameBuffers.begin()
+        cubeFrameBuffers.begin()
         gltfs.begin()
         block.invoke(this)
         meshes.end()
@@ -45,6 +49,7 @@ internal class Inventory(asyncContext: AsyncContext) {
         fonts.end()
         fontMeshes.end()
         frameBuffers.end()
+        cubeFrameBuffers.end()
         gltfs.end()
     }
 
@@ -55,5 +60,6 @@ internal class Inventory(asyncContext: AsyncContext) {
     fun font(fontResource: String): Font? = fonts[fontResource]
     fun fontMesh(id: Any): Geometry.MultiMesh? = fontMeshes[id]
     fun frameBuffer(decl: FrameBufferDeclaration): GlGpuFrameBuffer? = frameBuffers[decl]
+    fun cubeFrameBuffer(decl: CubeFrameBufferDeclaration): GlGpuCubeFrameBuffer? = cubeFrameBuffers[decl]
     fun gltf(decl: GltfDeclaration): GltfLoaded? = gltfs[decl]
 }

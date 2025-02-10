@@ -11,6 +11,7 @@ import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.context.ShadowContext
 import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.Bucket
+import com.zakgof.korender.impl.engine.CaptureContext
 import com.zakgof.korender.impl.engine.DirectionalLightDeclaration
 import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.GltfDeclaration
@@ -101,9 +102,10 @@ internal class DefaultFrameContext(
         sceneDeclaration.filters += materialModifiers.asList()
     }
 
-    override fun CaptureEnv(slot: Int, block: FrameContext.() -> Unit) {
+    override fun CaptureEnv(slot: Int, resolution: Int, position: Vec3, near: Float, far: Float, block: FrameContext.() -> Unit) {
         val captureSceneDeclaration = SceneDeclaration()
+        val captureContext = CaptureContext(resolution, position, near, far, captureSceneDeclaration)
         DefaultFrameContext(korenderContext, captureSceneDeclaration, frameInfo).apply(block)
-        sceneDeclaration.captures[slot] = captureSceneDeclaration
+        sceneDeclaration.captures[slot] = captureContext
     }
 }

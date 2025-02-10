@@ -38,14 +38,7 @@ import com.zakgof.korender.impl.gl.GLTexture
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.image.InternalImage
 
-internal class GlGpuCubeTexture(
-    imageNx: InternalImage,
-    imageNy: InternalImage,
-    imageNz: InternalImage,
-    imagePx: InternalImage,
-    imagePy: InternalImage,
-    imagePz: InternalImage,
-) : AutoCloseable {
+internal class GlGpuCubeTexture : AutoCloseable {
 
     val glHandle: GLTexture = glGenTextures()
 
@@ -56,7 +49,15 @@ internal class GlGpuCubeTexture(
         Image.Format.Gray16 to GlGpuTexture.GlFormat(GL_R16, GL_RED, GL_UNSIGNED_SHORT)
     )
 
-    init {
+    constructor(
+        imageNx: InternalImage,
+        imageNy: InternalImage,
+        imageNz: InternalImage,
+        imagePx: InternalImage,
+        imagePy: InternalImage,
+        imagePz: InternalImage,
+    ) {
+
         println("Creating GPU Cube Texture $this")
 
         glBindTexture(GL_TEXTURE_CUBE_MAP, glHandle)
@@ -68,6 +69,31 @@ internal class GlGpuCubeTexture(
         loadSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, imagePy)
         loadSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, imagePz)
 
+        setupFiltering()
+
+        glGenerateMipmap(GL_TEXTURE_CUBE_MAP)
+
+        glBindTexture(GL_TEXTURE_CUBE_MAP, null)
+    }
+
+    constructor(width: Int, height: Int) {
+        println("Creating GPU Cube Texture $this")
+
+        glBindTexture(GL_TEXTURE_CUBE_MAP, glHandle)
+
+        initSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, width, height)
+        initSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, width, height)
+        initSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, width, height)
+        initSide(GL_TEXTURE_CUBE_MAP_POSITIVE_X, width, height)
+        initSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, width, height)
+        initSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, width, height)
+
+        setupFiltering()
+
+        glBindTexture(GL_TEXTURE_CUBE_MAP, null)
+    }
+
+    private fun setupFiltering() {
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
@@ -80,16 +106,16 @@ internal class GlGpuCubeTexture(
                 glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_ANISOTROPY, anisoMax.toInt())
             }
         }
-
-        glGenerateMipmap(GL_TEXTURE_CUBE_MAP)
-
-        glBindTexture(GL_TEXTURE_CUBE_MAP, null)
     }
+
 
     private fun loadSide(glSide: Int, image: InternalImage) {
         val glFormat = formatMap[image.format]!!
         glTexImage2D(glSide, 0, glFormat.internal, image.width, image.height, 0, glFormat.format, glFormat.type, image.bytes)
     }
+
+    private fun initSide(glSide: Int, width: Int, height: Int) =
+        glTexImage2D(glSide, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, null)
 
     fun bind(unit: Int) {
         glActiveTexture(GLConstants.GL_TEXTURE0 + unit)
