@@ -25,7 +25,6 @@ import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.impl.material.InternalBlurParams
 import com.zakgof.korender.impl.material.InternalMaterialModifier
-import com.zakgof.korender.impl.material.ParamUniforms
 import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.OrthoProjection
@@ -102,7 +101,6 @@ internal object ShadowRenderer {
                 val modifiedShaderDeclaration = ShaderDeclaration(
                     "!shader/caster.vert", "!shader/caster.frag",
                     defs,
-                    materialDeclaration.shader.options,
                     materialDeclaration.shader.plugins
                 )
                 val shader = inventory.shader(modifiedShaderDeclaration)
@@ -174,12 +172,12 @@ internal object ShadowRenderer {
         ) ?: return
 
         val blur1 = materialDeclaration(BaseMaterial.Screen, false, InternalMaterialModifier {
-                it.vertShaderFile = "!shader/screen.vert"
-                it.fragShaderFile = "!shader/effect/blurv.frag"
-                it.shaderUniforms = ParamUniforms(InternalBlurParams()) {
-                    radius = texBlurRadius
-                }
-            }
+            it.vertShaderFile = "!shader/screen.vert"
+            it.fragShaderFile = "!shader/effect/blurv.frag"
+            InternalBlurParams().apply {
+                radius = texBlurRadius
+            }.collect(it)
+        }
         )
         uniforms["filterColorTexture"] = frameBuffer.colorTextures[0]
         uniforms["filterDepthTexture"] = frameBuffer.depthTexture
@@ -197,9 +195,9 @@ internal object ShadowRenderer {
             InternalMaterialModifier {
                 it.vertShaderFile = "!shader/screen.vert"
                 it.fragShaderFile = "!shader/effect/blurh.frag"
-                it.shaderUniforms = ParamUniforms(InternalBlurParams()) {
+                InternalBlurParams().apply {
                     radius = texBlurRadius
-                }
+                }.collect(it)
             }
         )
         uniforms["filterColorTexture"] = frameBuffer.colorTextures[0]

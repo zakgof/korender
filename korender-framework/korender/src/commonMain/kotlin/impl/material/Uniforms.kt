@@ -4,6 +4,7 @@ import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.BaseParams
 import com.zakgof.korender.BillboardVertexParams
 import com.zakgof.korender.BlurParams
+import com.zakgof.korender.CompositionModifier
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
@@ -17,30 +18,31 @@ import com.zakgof.korender.StandartParams.SpecularGlossiness
 import com.zakgof.korender.StarrySkyParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.WaterParams
+import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 
-typealias DynamicUniforms = () -> Map<String, Any?>
-
 internal abstract class InternalBaseParams : BaseParams {
 
     val map = mutableMapOf<String, Any?>()
-    val defs = mutableSetOf<String>()
 
     override fun set(key: String, value: Any) {
         map[key] = value
     }
 
-    abstract fun collect()
+    open fun collect(mb: MaterialBuilder) {
+        mb.uniforms += map
+    }
 }
 
 internal class InternalBlurParams : BlurParams, InternalBaseParams() {
 
     override var radius = 1.0f
 
-    override fun collect() {
-        map["radius"] = radius
+    override fun collect(mb: MaterialBuilder) {
+        mb.uniforms["radius"] = radius
+        super.collect(mb)
     }
 }
 
@@ -50,10 +52,11 @@ internal class InternalAdjustParams : AdjustParams, InternalBaseParams() {
     override var contrast: Float = 1f
     override var saturation: Float = 1f
 
-    override fun collect() {
-        map["brightness"] = brightness
-        map["contrast"] = contrast
-        map["saturation"] = saturation
+    override fun collect(mb: MaterialBuilder) {
+        mb.uniforms["brightness"] = brightness
+        mb.uniforms["contrast"] = contrast
+        mb.uniforms["saturation"] = saturation
+        super.collect(mb)
     }
 }
 
@@ -63,10 +66,11 @@ internal open class InternalBillboardVertexParams : BillboardVertexParams, Inter
     override var yscale: Float = 1.0f
     override var rotation: Float = 0.0f
 
-    override fun collect() {
-        map["xscale"] = xscale
-        map["yscale"] = yscale
-        map["rotation"] = rotation
+    override fun collect(mb: MaterialBuilder) {
+        mb.uniforms["xscale"] = xscale
+        mb.uniforms["yscale"] = yscale
+        mb.uniforms["rotation"] = rotation
+        super.collect(mb)
     }
 }
 
@@ -74,9 +78,9 @@ internal class InternalFireballParams : FireballParams, InternalBillboardVertexP
 
     override var power = 0.5f
 
-    override fun collect() {
-        map["power"] = power
-        super.collect()
+    override fun collect(mb: MaterialBuilder) {
+        mb.uniforms["power"] = power
+        super.collect(mb)
     }
 }
 
@@ -84,9 +88,9 @@ internal class InternalFireParams : FireParams, InternalBillboardVertexParams() 
 
     override var strength = 3.0f
 
-    override fun collect() {
-        map["strength"] = strength
-        super.collect()
+    override fun collect(mb: MaterialBuilder) {
+        mb.uniforms["strength"] = strength
+        super.collect(mb)
     }
 }
 
@@ -95,10 +99,10 @@ internal class InternalSmokeParams : SmokeParams, InternalBillboardVertexParams(
     override var density = 0.5f
     override var seed = 0f
 
-    override fun collect() {
-        map["density"] = density
-        map["seed"] = seed
-        super.collect()
+    override fun collect(mb: MaterialBuilder) {
+        mb.uniforms["density"] = density
+        mb.uniforms["seed"] = seed
+        super.collect(mb)
     }
 }
 
@@ -108,10 +112,11 @@ internal class InternalWaterParams : WaterParams, InternalBaseParams() {
     override var transparency: Float = 0.1f
     override var waveScale: Float = 0.04f
 
-    override fun collect() {
-        map["waterColor"] = waterColor
-        map["transparency"] = transparency
-        map["waveScale"] = waveScale
+    override fun collect(mb: MaterialBuilder) {
+        mb.uniforms["waterColor"] = waterColor
+        mb.uniforms["transparency"] = transparency
+        mb.uniforms["waveScale"] = waveScale
+        super.collect(mb)
     }
 }
 
@@ -125,14 +130,15 @@ internal class InternalFastCloudSkyParams : FastCloudSkyParams, InternalBasePara
     override var darkblue = ColorRGB(0.2f, 0.4f, 0.6f)
     override var lightblue = ColorRGB(0.4f, 0.6f, 1.0f)
 
-    override fun collect() {
-        map["density"] = density
-        map["thickness"] = thickness
-        map["scale"] = scale
-        map["darkblue"] = darkblue
-        map["lightblue"] = lightblue
-        map["rippleamount"] = rippleamount
-        map["ripplescale"] = ripplescale
+    override fun collect(mb: MaterialBuilder) {
+        mb.uniforms["density"] = density
+        mb.uniforms["thickness"] = thickness
+        mb.uniforms["scale"] = scale
+        mb.uniforms["darkblue"] = darkblue
+        mb.uniforms["lightblue"] = lightblue
+        mb.uniforms["rippleamount"] = rippleamount
+        mb.uniforms["ripplescale"] = ripplescale
+        super.collect(mb)
     }
 }
 
@@ -143,11 +149,12 @@ internal class InternalStarrySkyParams : StarrySkyParams, InternalBaseParams() {
     override var speed = 1.0f;
     override var size = 15.0f;
 
-    override fun collect() {
-        map["colorness"] = colorness
-        map["density"] = density
-        map["speed"] = speed
-        map["size"] = size
+    override fun collect(mb: MaterialBuilder) {
+        mb.uniforms["colorness"] = colorness
+        mb.uniforms["density"] = density
+        mb.uniforms["speed"] = speed
+        mb.uniforms["size"] = size
+        super.collect(mb)
     }
 }
 
@@ -180,47 +187,49 @@ internal class InternalStandartParams : StandartParams, InternalBaseParams() {
     override var yscale = 1f
     override var rotation = 0f
 
-    override fun collect() {
+    override fun collect(mb: MaterialBuilder) {
 
-        map["baseColor"] = baseColor
-        map["baseColorTexture"] = baseColorTexture
+        mb.uniforms["baseColor"] = baseColor
+        mb.uniforms["baseColorTexture"] = baseColorTexture
 
-        map["metallic"] = pbr.metallic
-        map["roughness"] = pbr.roughness
-        map["metallicRoughnessTexture"] = pbr.metallicRoughnessTexture
+        mb.uniforms["metallic"] = pbr.metallic
+        mb.uniforms["roughness"] = pbr.roughness
+        mb.uniforms["metallicRoughnessTexture"] = pbr.metallicRoughnessTexture
 
-        map["emissiveFactor"] = emissiveFactor
-        map["emissiveTexture"] = emissiveTexture
+        mb.uniforms["emissiveFactor"] = emissiveFactor
+        mb.uniforms["emissiveTexture"] = emissiveTexture
 
-//            map["occlusionTexture"] = _pbr!!.occlusionTexture
+//            mb.uniforms["occlusionTexture"] = _pbr!!.occlusionTexture
 
-        pbr.metallicRoughnessTexture?.let { defs += "METALLIC_ROUGHNESS_MAP" }
+        pbr.metallicRoughnessTexture?.let { mb.shaderDefs += "METALLIC_ROUGHNESS_MAP" }
 //          _pbr!!.occlusionTexture?.let { defs += "OCCLUSION_MAP" }
 
         if (_specularGlossiness != null) {
-            map["specularFactor"] = _specularGlossiness!!.specularFactor
-            map["glossinessFactor"] = _specularGlossiness!!.glossinessFactor
-            map["specularGlossinessTexture"] = _specularGlossiness!!.specularGlossinessTexture
-            defs += "SPECULAR_GLOSSINESS"
-            _specularGlossiness!!.specularGlossinessTexture?.let { defs += "SPECULAR_GLOSSINESS_MAP" }
+            mb.uniforms["specularFactor"] = _specularGlossiness!!.specularFactor
+            mb.uniforms["glossinessFactor"] = _specularGlossiness!!.glossinessFactor
+            mb.uniforms["specularGlossinessTexture"] = _specularGlossiness!!.specularGlossinessTexture
+            mb.shaderDefs += "SPECULAR_GLOSSINESS"
+            _specularGlossiness!!.specularGlossinessTexture?.let { mb.shaderDefs += "SPECULAR_GLOSSINESS_MAP" }
         }
 
-        map["normalTexture"] = normalTexture
-        map["shadowTexture"] = shadowTexture
-        map["triplanarScale"] = triplanarScale
+        mb.uniforms["normalTexture"] = normalTexture
+        mb.uniforms["shadowTexture"] = shadowTexture
+        mb.uniforms["triplanarScale"] = triplanarScale
 
-        map["jntMatrices[0]"] = jntMatrices
+        mb.uniforms["jntMatrices[0]"] = jntMatrices
 
-        map["xscale"] = xscale
-        map["yscale"] = yscale
-        map["rotation"] = rotation
+        mb.uniforms["xscale"] = xscale
+        mb.uniforms["yscale"] = yscale
+        mb.uniforms["rotation"] = rotation
 
-        baseColorTexture?.let { defs += "BASE_COLOR_MAP" }
-        normalTexture?.let { defs += "NORMAL_MAP" }
-        emissiveTexture?.let { defs += "EMISSIVE_MAP" }
+        baseColorTexture?.let { mb.shaderDefs += "BASE_COLOR_MAP" }
+        normalTexture?.let { mb.shaderDefs += "NORMAL_MAP" }
+        emissiveTexture?.let { mb.shaderDefs += "EMISSIVE_MAP" }
 
-        jntMatrices?.let { defs += "SKINNING" }
-        triplanarScale?.let { defs += "TRIPLANAR" }
+        jntMatrices?.let { mb.shaderDefs += "SKINNING" }
+        triplanarScale?.let { mb.shaderDefs += "TRIPLANAR" }
+
+        super.collect(mb)
     }
 
     internal class InternalPbr : Pbr {
@@ -244,9 +253,9 @@ internal class InternalFogParams : FogParams, InternalBaseParams() {
     override var density = 0.02f
     override var color = ColorRGB.white(0.01f)
 
-    override fun collect() {
-        map["density"] = density
-        map["fogColor"] = color
+    override fun collect(mb: MaterialBuilder) {
+        mb.uniforms["density"] = density
+        mb.uniforms["fogColor"] = color
     }
 }
 
@@ -255,32 +264,26 @@ internal class InternalSsrParams : SsrParams, InternalBaseParams() {
     override var samples = 16
     override var envTexture: CubeTextureDeclaration? = null
 
-    override fun collect() {
-        map["samples"] = samples
+    override fun collect(mb: MaterialBuilder) {
+        mb.uniforms["samples"] = samples
         envTexture?.let {
-            map["envTexture"] = it
-            defs += "SSR_ENV"
+            mb.uniforms["envTexture"] = it
+            mb.shaderDefs += "SSR_ENV"
         }
+        super.collect(mb)
     }
 }
 
+internal class InternalDeferredEffect(
+    val name: String,
+    val width: Int,
+    val height: Int,
+    val colorPreset: GlGpuTexture.Preset,
+    val colorOutput: String,
+    val filter: InternalMaterialModifier,
+)
 
-
-
-internal class ParamUniforms<P : InternalBaseParams>(
-    private val params: P,
-    private val block: P.() -> Unit
-) : DynamicUniforms {
-
-    override fun invoke(): Map<String, Any?> {
-        block.invoke(params)
-        params.collect()
-        return params.map
-    }
-
-    fun shaderDefs(): Set<String> {
-        block.invoke(params)
-        params.collect()
-        return params.defs
-    }
-}
+internal class InternalCompositionModifier(
+    val filter: InternalDeferredEffect,
+    val compositionModifier: InternalMaterialModifier
+) : CompositionModifier

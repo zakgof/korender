@@ -9,7 +9,6 @@ import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.Mesh
 import com.zakgof.korender.impl.glgpu.GlGpuShader
-import com.zakgof.korender.impl.material.DynamicUniforms
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.math.Transform
@@ -17,12 +16,12 @@ import com.zakgof.korender.math.Transform
 internal class Renderable(
     val mesh: Mesh,
     val shader: GlGpuShader,
-    val uniforms: DynamicUniforms,
+    val uniforms: Map<String, Any?>,
     val transform: Transform = Transform()
 ) {
     fun render(contextUniforms: Map<String, Any?>, fixer: (Any?) -> Any?) {
         shader.render(
-            { fixer(uniforms.invoke()[it] ?: contextUniforms[it] ?: if (it == "model") transform.mat4 else null )},
+            { fixer(uniforms[it] ?: contextUniforms[it] ?: if (it == "model") transform.mat4 else null )},
             mesh.gpuMesh
         )
     }
@@ -68,7 +67,7 @@ internal object Rendering {
             }
         }
         shader.render(
-            { fixer(materialDeclaration.uniforms.invoke()[it] ?: contextUniforms[it] ?: if (it == "model") declaration.transform.mat4 else null) },
+            { fixer(materialDeclaration.uniforms[it] ?: contextUniforms[it] ?: if (it == "model") declaration.transform.mat4 else null) },
             mesh.gpuMesh
         )
     }

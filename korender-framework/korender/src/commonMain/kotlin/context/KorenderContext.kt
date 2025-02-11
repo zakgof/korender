@@ -3,6 +3,7 @@ package com.zakgof.korender.context
 import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
+import com.zakgof.korender.CompositionModifier
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
@@ -18,7 +19,6 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.OrthoProjectionDeclaration
 import com.zakgof.korender.ProjectionDeclaration
-import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.SsrParams
@@ -46,11 +46,15 @@ interface KorenderContext {
     val width: Int
     val height: Int
 
-    fun texture(textureResource: String, filter: TextureFilter = TextureFilter.MipMap,
-        wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): TextureDeclaration
+    fun texture(
+        textureResource: String, filter: TextureFilter = TextureFilter.MipMap,
+        wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024
+    ): TextureDeclaration
 
-    fun cubeTexture(nxResource: String, nyResource: String, nzResource: String,
-                    pxResource: String, pyResource: String, pzResource: String): CubeTextureDeclaration
+    fun cubeTexture(
+        nxResource: String, nyResource: String, nzResource: String,
+        pxResource: String, pyResource: String, pzResource: String
+    ): CubeTextureDeclaration
 
     fun cube(halfSide: Float = 0.5f): MeshDeclaration
     fun sphere(radius: Float = 1.0f): MeshDeclaration
@@ -79,8 +83,7 @@ interface KorenderContext {
     fun fragment(fragShaderFile: String): MaterialModifier
     fun defs(vararg defs: String): MaterialModifier
     fun plugin(name: String, shaderFile: String): MaterialModifier
-    fun options(vararg options: RenderingOption): MaterialModifier
-    fun standart(vararg options: RenderingOption, block: StandartParams.() -> Unit): MaterialModifier
+    fun standart(block: StandartParams.() -> Unit): MaterialModifier
 
     fun blurHorz(block: BlurParams.() -> Unit = {}): MaterialModifier
     fun blurVert(block: BlurParams.() -> Unit = {}): MaterialModifier
@@ -96,7 +99,7 @@ interface KorenderContext {
     fun cubeSky(envSlot: Int): MaterialModifier
     fun fog(block: FogParams.() -> Unit = {}): MaterialModifier
     fun ibl(env: CubeTextureDeclaration): MaterialModifier
-    fun ssr(block: SsrParams.() -> Unit = {}): MaterialModifier
+    fun ssr(block: SsrParams.() -> Unit = {}): CompositionModifier
 
     fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration
     fun ortho(width: Float, height: Float, near: Float, far: Float): OrthoProjectionDeclaration

@@ -1,7 +1,6 @@
 package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.MaterialModifier
-import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.ShaderDeclaration
@@ -25,20 +24,21 @@ internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean) {
         BaseMaterial.Composition -> "!shader/composition.frag"
     }
 
-    val options: MutableSet<RenderingOption> = mutableSetOf()
     val shaderDefs: MutableSet<String> = mutableSetOf()
     val plugins: MutableMap<String, String> = mutableMapOf()
-    var shaderUniforms: DynamicUniforms = ParamUniforms(InternalStandartParams()) {}
-    val pluginUniforms: MutableList<DynamicUniforms> = mutableListOf()
+    var uniforms: MutableMap<String, Any?> = mutableMapOf()
 
     fun toMaterialDeclaration(): MaterialDeclaration = MaterialDeclaration(
-        shader = ShaderDeclaration(vertShaderFile, fragShaderFile, shaderDefs, options, plugins),
-        uniforms = { pluginUniforms.fold(shaderUniforms()) { acc, pu -> acc + pu() } }
+        shader = ShaderDeclaration(vertShaderFile, fragShaderFile, shaderDefs, plugins),
+        uniforms = uniforms
     )
 }
 
 internal fun materialDeclaration(base: BaseMaterial, deferredShading: Boolean, vararg materialModifiers: MaterialModifier) =
+    materialDeclarationBuilder(base, deferredShading, *materialModifiers).toMaterialDeclaration()
+
+internal fun materialDeclarationBuilder(base: BaseMaterial, deferredShading: Boolean, vararg materialModifiers: MaterialModifier) =
     materialModifiers.fold(MaterialBuilder(base, deferredShading)) { acc, mod ->
         (mod as InternalMaterialModifier).applyTo(acc)
         acc
-    }.toMaterialDeclaration()
+    }

@@ -8,6 +8,10 @@ uniform sampler2D materialTexture;
 uniform sampler2D emissionTexture;
 uniform sampler2D depthTexture;
 
+#ifdef SSR
+uniform sampler2D ssrTexture;
+#endif
+
 //////////
 
 uniform vec3 cameraPos;
@@ -48,7 +52,6 @@ out vec4 fragColor;
 float shadowRatios[MAX_SHADOWS];
 
 #import "!shader/lib/space.glsl"
-#import "!shader/lib/ssr.glsl"
 #import "!shader/lib/shadow.glsl"
 #import "!shader/lib/pbr.glsl"
 #import "!shader/lib/light.glsl"
@@ -85,20 +88,7 @@ void main() {
     populateShadowRatios(plane, vpos);
 
 #ifdef SSR
-    vec3 reflection = ssr(vpos, N, V);
-    float NdotV = max(dot(N, V), 0.0);
-    vec3 FR = F0 + (1. - F0) * pow(1. - NdotV, 5.);
-    color += reflection * FR;
-
-
-    //    https://github.com/0beqz/screen-space-reflections/blob/main/src/material/shader/reflectionsShader.frag
-    //     // Mixing the reflection with the normal is more accurate and keeps rough objects from gathering light from behind their tangent plane.
-    //    reflectVec = normalize(mix(reflectVec, normal, roughness * roughness));
-    //    reflectVec = inverseTransformDirection(reflectVec, viewMatrix);
-
-//    vec3 env = texture(cubeTexture, R, rough * 8.0).rgb;
-//    vec3 indirect = env * FR;
-
+    color += texture(ssrTexture, vtex).rgb;
 #endif
 
     for (int l=0; l<numDirectionalLights; l++)
@@ -114,10 +104,6 @@ void main() {
 #ifdef PLUGIN_DEPTH
     color = pluginDepth(vpos, color, depth);
 #endif
-
-    // vec3 reflection = ssr(viewPos.xyz, N);
-    // float fresnel = pow(1.0 - dot(N, normalize(viewPos.xyz)), 5.0);
-    // color += reflection * F0 * fresnel;
 
     fragColor = vec4(color, 1.);
     gl_FragDepth = depth;

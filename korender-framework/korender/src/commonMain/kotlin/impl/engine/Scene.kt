@@ -26,6 +26,8 @@ import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Vec3List
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
+import com.zakgof.korender.impl.material.InternalCompositionModifier
+import com.zakgof.korender.impl.material.InternalDeferredEffect
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedCubeTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
@@ -102,12 +104,21 @@ internal class Scene(
 
         renderDeferredOpaques(uniforms)
 
+        val icms = sceneDeclaration.compositionModifiers
+            .map { it as InternalCompositionModifier }
+        val compositionMaterialModifiers = icms.map { it.compositionModifier }
+            .toTypedArray()
+        val compositionFilters = icms.map { it.filter }
+
+        val compositionMaterial = materialDeclaration(BaseMaterial.Composition, true, *compositionMaterialModifiers)
+        renderDeferredEffects(compositionFilters, uniforms)
+
         if (sceneDeclaration.filters.isNotEmpty()) {
             renderToFilter(0, uniforms) {
-                renderComposition(uniforms)
+                renderComposition(compositionMaterial, uniforms)
             }
         } else {
-            renderComposition(uniforms)
+            renderComposition(compositionMaterial, uniforms)
             renderTransparents(uniforms, renderContext.camera)
         }
 
@@ -120,6 +131,25 @@ internal class Scene(
                 renderFilter(filter, uniforms)
                 renderTransparents(uniforms, renderContext.camera)
             }
+        }
+    }
+
+    private fun renderDeferredEffects(deferredEffects: List<InternalDeferredEffect>, uniforms: MutableMap<String, Any?>) {
+        deferredEffects.forEach {
+            // TODO encode tex preset in effect
+            val fb = inventory.frameBuffer(
+                FrameBufferDeclaration(
+                    "deferred-effect-${it.name}", it.width, it.height, listOf(it.colorPreset), false
+                )
+            )
+            val filterUniforms = mutableMapOf<String, Any?>()
+            val material = materialDeclaration(BaseMaterial.Screen, true, it.filter)
+            // TODO return empty tex if not ready
+            fb?.exec {
+                renderFilter(material, uniforms)
+            }
+            // TODO
+            uniforms[it.colorOutput] = fb?.colorTextures?.get(0)
         }
     }
 
@@ -180,18 +210,12 @@ internal class Scene(
             }
     }
 
-    private fun renderComposition(uniforms: MutableMap<String, Any?>) {
+    private fun renderComposition(compositionMaterial: MaterialDeclaration, uniforms: MutableMap<String, Any?>) {
         val back = renderContext.backgroundColor
         glClearColor(back.r, back.g, back.b, 1.0f)
         glViewport(0, 0, renderContext.width, renderContext.height)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-        renderFilter(
-            materialDeclaration(
-                BaseMaterial.Composition, true,
-                *sceneDeclaration.compositionModifiers.toTypedArray()
-            ),
-            uniforms
-        )
+        renderFilter(compositionMaterial, uniforms)
         renderBucket(uniforms, Bucket.SKY)
     }
 
@@ -277,7 +301,7 @@ internal class Scene(
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         if (mesh != null && shader != null) {
             shader.render(
-                { fixer(filter.uniforms.invoke()[it] ?: uniforms[it]) },
+                { fixer(filter.uniforms[it] ?: uniforms[it]) },
                 mesh.gpuMesh
             )
         }

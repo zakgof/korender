@@ -37,13 +37,14 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                 pbr.roughness = 0.2f
             },
             mesh = sphere(),
-            transform = translate(0f, -3f, -3f)
+            transform = translate(0f, -3f, -15f)
         )
         Renderable(
             standart {
                 baseColorTexture = texture("texture/asphalt-albedo.jpg")
                 pbr.metallic = 0.8f
                 pbr.roughness = 0.2f
+                triplanarScale = 0.4f
             },
             mesh = cube(1f),
             transform = translate(-5.y).scale(100f, 1f, 100f)

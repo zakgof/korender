@@ -94,28 +94,26 @@ internal class GuiRenderer(
         val shader = inventory.shader(Shaders.imageQuadDeclaration)
 
         if (mesh != null && shader != null) {
-
             renderables.add(
                 Renderable(
                     mesh = mesh,
                     shader = shader,
-                    uniforms = {
-                        mapOf<String, Any?>(
-                            "pos" to Vec2(
-                                (x.toFloat() + declaration.marginLeft.toFloat()) / width,
-                                1.0f - (y.toFloat() + declaration.marginTop.toFloat() + declaration.height.toFloat()) / height
-                            ),
-                            "size" to Vec2(
-                                declaration.width.toFloat() / width,
-                                declaration.height.toFloat() / height
-                            ),
-                            "imageTexture" to (inventory.texture(
-                                ResourceTextureDeclaration(
-                                    declaration.imageResource
-                                )
-                            ) ?: NotYetLoadedTexture)
-                        )
-                    }
+                    uniforms =
+                    mapOf<String, Any?>(
+                        "pos" to Vec2(
+                            (x.toFloat() + declaration.marginLeft.toFloat()) / width,
+                            1.0f - (y.toFloat() + declaration.marginTop.toFloat() + declaration.height.toFloat()) / height
+                        ),
+                        "size" to Vec2(
+                            declaration.width.toFloat() / width,
+                            declaration.height.toFloat() / height
+                        ),
+                        "imageTexture" to (inventory.texture(
+                            ResourceTextureDeclaration(
+                                declaration.imageResource
+                            )
+                        ) ?: NotYetLoadedTexture)
+                    )
                 )
             )
             touchBoxes.add(
@@ -150,12 +148,10 @@ internal class GuiRenderer(
                 Renderable(
                     mesh = mesh,
                     shader = shader,
-                    uniforms = {
-                        mapOf(
-                            "color" to declaration.color,
-                            "fontTexture" to font.gpuTexture
-                        )
-                    }
+                    uniforms = mapOf(
+                        "color" to declaration.color,
+                        "fontTexture" to font.gpuTexture
+                    )
                 )
             )
             touchBoxes.add(TouchBox(x, y, w, declaration.height, declaration.id, declaration.onTouch))

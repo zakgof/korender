@@ -5,6 +5,8 @@ import com.zakgof.korender.math.ColorRGBA
 
 interface MaterialModifier
 
+interface CompositionModifier
+
 interface BaseParams {
     fun set(key: String, value: Any)
 }

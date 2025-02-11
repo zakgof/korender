@@ -27,7 +27,6 @@ import com.zakgof.korender.impl.glgpu.toGL
 import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalStandartParams
-import com.zakgof.korender.impl.material.ParamUniforms
 import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
@@ -345,41 +344,38 @@ internal class GltfSceneBuilder(
         val specularGlossinessTexture = matSpecularGlossiness?.specularGlossinessTexture?.let { getTexture(it) }
 
         // TODO: Precreate all except jointMatrices
-        val pu = ParamUniforms(InternalStandartParams()) {
-
-            this.baseColor = baseColor
-            this.normalTexture = normalTexture
-
-            if (matPbr != null) {
-                this.baseColorTexture = albedoTexture
-                this.pbr.metallic = metallic
-                this.pbr.roughness = roughness
-                this.pbr.metallicRoughnessTexture = metallicRoughnessTexture
-                this.emissiveFactor = emissiveFactor
-                this.emissiveTexture = emissiveTexture
-//                this.pbr.occlusionTexture = occlusionTexture
-            }
-
-            if (matSpecularGlossiness != null) {
-                this.baseColor = diffuseFactor.toRGBA()
-                this.baseColorTexture = diffuseTexture
-                this.specularGlossiness.specularFactor = specularFactor
-                this.specularGlossiness.glossinessFactor = glossinessFactor
-                this.specularGlossiness.specularGlossinessTexture = specularGlossinessTexture
-            }
-
-            if (skinIndex != null) {
-                this.jntMatrices = Mat4List(
-                    loadedSkins[skinIndex].jointMatrices.mapIndexed { ind, jm ->
-                        jm * loadedSkins[skinIndex].inverseBindMatrices[ind]
-                    }
-                )
-            }
-        }
-
         return InternalMaterialModifier {
-            it.shaderDefs += pu.shaderDefs()
-            it.shaderUniforms = pu
+            InternalStandartParams().apply {
+
+                this.baseColor = baseColor
+                this.normalTexture = normalTexture
+
+                if (matPbr != null) {
+                    this.baseColorTexture = albedoTexture
+                    this.pbr.metallic = metallic
+                    this.pbr.roughness = roughness
+                    this.pbr.metallicRoughnessTexture = metallicRoughnessTexture
+                    this.emissiveFactor = emissiveFactor
+                    this.emissiveTexture = emissiveTexture
+//                this.pbr.occlusionTexture = occlusionTexture
+                }
+
+                if (matSpecularGlossiness != null) {
+                    this.baseColor = diffuseFactor.toRGBA()
+                    this.baseColorTexture = diffuseTexture
+                    this.specularGlossiness.specularFactor = specularFactor
+                    this.specularGlossiness.glossinessFactor = glossinessFactor
+                    this.specularGlossiness.specularGlossinessTexture = specularGlossinessTexture
+                }
+
+                if (skinIndex != null) {
+                    this.jntMatrices = Mat4List(
+                        loadedSkins[skinIndex].jointMatrices.mapIndexed { ind, jm ->
+                            jm * loadedSkins[skinIndex].inverseBindMatrices[ind]
+                        }
+                    )
+                }
+            }.collect(it)
         }
     }
 

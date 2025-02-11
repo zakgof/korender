@@ -1,13 +1,12 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.CompositionModifier
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
-import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.material.DynamicUniforms
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
@@ -24,7 +23,7 @@ internal class SceneDeclaration {
     val gltfs = mutableListOf<GltfDeclaration>()
     var filters = mutableListOf<List<MaterialModifier>>()
     var deferredShading: Boolean = false
-    var compositionModifiers = mutableListOf<MaterialModifier>()
+    var compositionModifiers = mutableListOf<CompositionModifier>()
     val captures = mutableMapOf<Int, CaptureContext>()
 }
 
@@ -36,7 +35,6 @@ internal data class ShaderDeclaration(
     val vertFile: String,
     val fragFile: String,
     val defs: Set<String> = setOf(),
-    val options: Set<RenderingOption> = setOf(),
     val plugins: Map<String, String> = mapOf()
 )
 
@@ -58,7 +56,7 @@ internal enum class BaseMaterial {
 
 internal class MaterialDeclaration(
     val shader: ShaderDeclaration,
-    val uniforms: DynamicUniforms
+    val uniforms: Map<String, Any?>
 )
 
 internal sealed class ElementDeclaration {
@@ -91,7 +89,6 @@ internal sealed class ElementDeclaration {
     }
 
     class Container(val direction: Direction) : ElementDeclaration() {
-
         val elements = mutableListOf<ElementDeclaration>()
         fun add(element: ElementDeclaration) = elements.add(element)
     }

@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.context
 
+import com.zakgof.korender.CompositionModifier
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
@@ -33,7 +34,7 @@ internal class DefaultFrameContext(
     override val frameInfo: FrameInfo,
 ) : FrameContext, KorenderContext by korenderContext {
 
-    override fun DeferredShading(vararg compositionModifiers: MaterialModifier) {
+    override fun DeferredShading(vararg compositionModifiers: CompositionModifier) {
         sceneDeclaration.deferredShading = true
         sceneDeclaration.compositionModifiers += compositionModifiers
     }

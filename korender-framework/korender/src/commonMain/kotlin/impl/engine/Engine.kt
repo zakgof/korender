@@ -4,6 +4,7 @@ import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.AsyncContext
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
+import com.zakgof.korender.CompositionModifier
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
@@ -22,7 +23,6 @@ import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.OrthoProjectionDeclaration
 import com.zakgof.korender.Platform
 import com.zakgof.korender.ProjectionDeclaration
-import com.zakgof.korender.RenderingOption
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.SsrParams
@@ -61,9 +61,12 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
+import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.material.InternalAdjustParams
 import com.zakgof.korender.impl.material.InternalBlurParams
+import com.zakgof.korender.impl.material.InternalCompositionModifier
+import com.zakgof.korender.impl.material.InternalDeferredEffect
 import com.zakgof.korender.impl.material.InternalFastCloudSkyParams
 import com.zakgof.korender.impl.material.InternalFireParams
 import com.zakgof.korender.impl.material.InternalFireballParams
@@ -74,7 +77,6 @@ import com.zakgof.korender.impl.material.InternalSsrParams
 import com.zakgof.korender.impl.material.InternalStandartParams
 import com.zakgof.korender.impl.material.InternalStarrySkyParams
 import com.zakgof.korender.impl.material.InternalWaterParams
-import com.zakgof.korender.impl.material.ParamUniforms
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
@@ -166,66 +168,58 @@ internal class Engine(
         override fun defs(vararg defs: String): InternalMaterialModifier =
             InternalMaterialModifier { it.shaderDefs += setOf(*defs) }
 
-        override fun plugin(name: String, shaderFile: String): InternalMaterialModifier =
-            InternalMaterialModifier {
-                it.plugins[name] = shaderFile
-                it.shaderDefs += "PLUGIN_" + name.uppercase()
-            }
+        override fun plugin(name: String, shaderFile: String) = InternalMaterialModifier {
+            it.plugins[name] = shaderFile
+            it.shaderDefs += "PLUGIN_" + name.uppercase()
+        }
 
-        override fun options(vararg options: RenderingOption): InternalMaterialModifier =
-            InternalMaterialModifier { it.options += setOf(*options) }
-
-        override fun standart(vararg options: RenderingOption, block: StandartParams.() -> Unit) =
-            InternalMaterialModifier {
-                val pu = ParamUniforms(InternalStandartParams(), block)
-                it.shaderDefs += pu.shaderDefs()
-                it.options += options.asList()
-                it.shaderUniforms = pu
-            }
+        override fun standart(block: StandartParams.() -> Unit) = InternalMaterialModifier {
+            InternalStandartParams().apply(block).collect(it)
+        }
 
         override fun blurVert(block: BlurParams.() -> Unit) =
             InternalMaterialModifier {
                 it.fragShaderFile = "!shader/effect/blurh.frag"
-                it.shaderUniforms = ParamUniforms(InternalBlurParams(), block)
+                InternalBlurParams().apply(block).collect(it)
             }
 
         override fun blurHorz(block: BlurParams.() -> Unit) =
             InternalMaterialModifier {
                 it.fragShaderFile = "!shader/effect/blurv.frag"
-                it.shaderUniforms = ParamUniforms(InternalBlurParams(), block)
+                InternalBlurParams().apply(block).collect(it)
             }
 
         override fun adjust(block: AdjustParams.() -> Unit): MaterialModifier =
             InternalMaterialModifier {
                 it.fragShaderFile = "!shader/effect/adjust.frag"
-                it.shaderUniforms = ParamUniforms(InternalAdjustParams(), block)
+                InternalAdjustParams().apply(block).collect(it)
             }
 
         override fun fire(block: FireParams.() -> Unit) =
             InternalMaterialModifier {
                 it.vertShaderFile = "!shader/billboard.vert"
                 it.fragShaderFile = "!shader/effect/fire.frag"
-                it.shaderUniforms = ParamUniforms(InternalFireParams(), block)
+                InternalFireParams().apply(block).collect(it)
             }
 
         override fun fireball(block: FireballParams.() -> Unit) =
             InternalMaterialModifier {
                 it.vertShaderFile = "!shader/billboard.vert"
                 it.fragShaderFile = "!shader/effect/fireball.frag"
-                it.shaderUniforms = ParamUniforms(InternalFireballParams(), block)
+                InternalFireballParams().apply(block).collect(it)
             }
 
         override fun smoke(block: SmokeParams.() -> Unit) =
             InternalMaterialModifier {
                 it.vertShaderFile = "!shader/billboard.vert"
                 it.fragShaderFile = "!shader/effect/smoke.frag"
-                it.shaderUniforms = ParamUniforms(InternalSmokeParams(), block)
+                InternalSmokeParams().apply(block).collect(it)
             }
 
         override fun water(block: WaterParams.() -> Unit) =
             InternalMaterialModifier {
                 it.fragShaderFile = "!shader/effect/water.frag"
-                it.shaderUniforms = ParamUniforms(InternalWaterParams(), block)
+                InternalWaterParams().apply(block).collect(it)
             }
 
         override fun fxaa() =
@@ -236,20 +230,20 @@ internal class Engine(
         override fun fastCloudSky(block: FastCloudSkyParams.() -> Unit) =
             InternalMaterialModifier {
                 it.plugins["sky"] = "!shader/sky/fastcloud.plugin.frag"
-                it.pluginUniforms += ParamUniforms(InternalFastCloudSkyParams(), block)
+                InternalFastCloudSkyParams().apply(block).collect(it)
             }
 
         override fun starrySky(block: StarrySkyParams.() -> Unit) =
             InternalMaterialModifier {
                 it.plugins["sky"] = "!shader/sky/starry.plugin.frag"
-                it.pluginUniforms += ParamUniforms(InternalStarrySkyParams(), block)
+                InternalStarrySkyParams().apply(block).collect(it)
             }
 
         override fun cubeSky(cubeTexture: CubeTextureDeclaration) =
             InternalMaterialModifier {
                 it.plugins["sky"] = "!shader/sky/cube.plugin.frag"
                 it.shaderDefs += "SKY_CUBE"
-                it.pluginUniforms += { mapOf("cubeTexture" to cubeTexture) }
+                it.uniforms["cubeTexture"] = cubeTexture
             }
 
         override fun cubeSky(envSlot: Int) =
@@ -261,20 +255,25 @@ internal class Engine(
         override fun fog(block: FogParams.() -> Unit) =
             InternalMaterialModifier {
                 it.fragShaderFile = "!shader/effect/fog.frag"
-                it.shaderUniforms = ParamUniforms(InternalFogParams(), block)
+                InternalFogParams().apply(block).collect(it)
             }
 
         override fun ibl(env: CubeTextureDeclaration): MaterialModifier =
             InternalMaterialModifier {
                 it.shaderDefs += "IBL"
-                it.pluginUniforms += { mapOf("cubeTexture" to env) }
+                it.uniforms["cubeTexture"] = env
             }
 
-        override fun ssr(block: SsrParams.() -> Unit): MaterialModifier =
-            InternalMaterialModifier {
-                it.shaderDefs += "SSR"
-                it.shaderUniforms = ParamUniforms(InternalSsrParams(), block)
+        override fun ssr(block: SsrParams.() -> Unit): CompositionModifier = InternalCompositionModifier(
+            InternalDeferredEffect( // TODO width
+                "ssr", width, height, GlGpuTexture.Preset.RGBFilter, "ssrTexture"
+            ) {
+                it.fragShaderFile = "!shader/effect/ssr.frag"
+                InternalSsrParams().apply(block).collect(it)
             }
+        ) {
+            it.shaderDefs += "SSR"
+        }
 
         override fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration =
             FrustumProjection(width, height, near, far)
