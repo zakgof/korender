@@ -3,6 +3,7 @@ package com.zakgof.korender.impl.material
 import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.BaseParams
 import com.zakgof.korender.BillboardVertexParams
+import com.zakgof.korender.BloomParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.FastCloudSkyParams
@@ -273,6 +274,13 @@ internal class InternalSsrParams : SsrParams, InternalBaseParams() {
         super.collect(mb)
     }
 }
+
+internal class InternalBloomParams : BloomParams, InternalBaseParams() {
+    override fun collect(mb: MaterialBuilder) {
+        super.collect(mb)
+    }
+}
+
 
 internal class InternalPostShadingEffect(
     val name: String,

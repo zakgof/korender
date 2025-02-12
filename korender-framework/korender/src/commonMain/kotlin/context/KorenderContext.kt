@@ -1,6 +1,7 @@
 package com.zakgof.korender.context
 
 import com.zakgof.korender.AdjustParams
+import com.zakgof.korender.BloomParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.CubeTextureDeclaration
@@ -99,7 +100,9 @@ interface KorenderContext {
     fun cubeSky(envSlot: Int): MaterialModifier
     fun fog(block: FogParams.() -> Unit = {}): MaterialModifier
     fun ibl(env: CubeTextureDeclaration): MaterialModifier
+
     fun ssr(width: Int? = null, height: Int? = null, block: SsrParams.() -> Unit = {}): PostShadingEffect
+    fun bloom(width: Int? = null, height: Int? = null, block: BloomParams.() -> Unit = {}): PostShadingEffect
 
     fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration
     fun ortho(width: Float, height: Float, near: Float, far: Float): OrthoProjectionDeclaration

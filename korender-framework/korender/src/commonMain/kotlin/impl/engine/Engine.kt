@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.AsyncContext
+import com.zakgof.korender.BloomParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.CubeTextureDeclaration
@@ -64,6 +65,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.material.InternalAdjustParams
+import com.zakgof.korender.impl.material.InternalBloomParams
 import com.zakgof.korender.impl.material.InternalBlurParams
 import com.zakgof.korender.impl.material.InternalFastCloudSkyParams
 import com.zakgof.korender.impl.material.InternalFireParams
@@ -275,6 +277,20 @@ internal class Engine(
             },
             compositionMaterialModifier = {
                 it.shaderDefs += "SSR"
+            })
+
+        override fun bloom(width: Int?, height: Int?, block: BloomParams.() -> Unit): PostShadingEffect = InternalPostShadingEffect(
+            "bloom",
+            width ?: renderContext.width,
+            height ?: renderContext.height,
+            GlGpuTexture.Preset.RGBMipmap,
+            "bloomTexture",
+            effectMaterialModifier = {
+                it.fragShaderFile = "!shader/effect/bloom.frag"
+                InternalBloomParams().apply(block).collect(it)
+            },
+            compositionMaterialModifier = {
+                it.shaderDefs += "BLOOM"
             })
 
         override fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration =

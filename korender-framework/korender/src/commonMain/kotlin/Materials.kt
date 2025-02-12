@@ -104,3 +104,7 @@ interface SsrParams : BaseParams {
     var samples: Int
     var envTexture: CubeTextureDeclaration?
 }
+
+interface BloomParams : BaseParams {
+    
+}
