@@ -5,7 +5,7 @@ import com.zakgof.korender.math.ColorRGBA
 
 interface MaterialModifier
 
-interface CompositionModifier
+interface PostShadingEffect
 
 interface BaseParams {
     fun set(key: String, value: Any)
@@ -103,7 +103,4 @@ interface FogParams : BaseParams {
 interface SsrParams : BaseParams {
     var samples: Int
     var envTexture: CubeTextureDeclaration?
-}
-
-enum class RenderingOption {
 }

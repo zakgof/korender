@@ -1,8 +1,8 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.CompositionModifier
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.impl.context.Direction
@@ -22,9 +22,12 @@ internal class SceneDeclaration {
     val guis = mutableListOf<ElementDeclaration.Container>()
     val gltfs = mutableListOf<GltfDeclaration>()
     var filters = mutableListOf<List<MaterialModifier>>()
-    var deferredShading: Boolean = false
-    var compositionModifiers = mutableListOf<CompositionModifier>()
+    var deferredShadingDeclaration: DeferredShadingDeclaration? = null
     val captures = mutableMapOf<Int, CaptureContext>()
+}
+
+internal class DeferredShadingDeclaration {
+    var postShadingEffects = mutableListOf<PostShadingEffect>()
 }
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
@@ -51,6 +54,7 @@ internal enum class BaseMaterial {
     Billboard,
     Screen,
     Sky,
+    Shading,
     Composition
 }
 

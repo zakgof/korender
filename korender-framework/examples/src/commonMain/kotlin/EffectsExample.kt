@@ -5,7 +5,6 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.context.FrameContext
-import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
@@ -25,7 +24,7 @@ fun EffectsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         smokeDemo()
         fireballDemo()
 
-        Filter(water(), fastCloudSky())
+        PostProcess(water(), fastCloudSky())
         Gui {
             Column {
                 Filler()

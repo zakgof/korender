@@ -14,14 +14,15 @@ internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean) {
     var vertShaderFile: String = when (base) {
         BaseMaterial.Renderable -> "!shader/standart.vert"
         BaseMaterial.Billboard -> "!shader/billboard.vert"
-        BaseMaterial.Screen, BaseMaterial.Composition -> "!shader/screen.vert"
+        BaseMaterial.Screen, BaseMaterial.Shading, BaseMaterial.Composition -> "!shader/screen.vert"
         BaseMaterial.Sky -> "!shader/sky/sky.vert"
     }
     var fragShaderFile: String = when (base) {
-        BaseMaterial.Renderable, BaseMaterial.Billboard -> if (deferredShading) "!shader/geometry.frag" else "!shader/forward.frag"
+        BaseMaterial.Renderable, BaseMaterial.Billboard -> if (deferredShading) "!shader/deferred/geometry.frag" else "!shader/forward.frag"
         BaseMaterial.Screen -> "!shader/screen.frag"
         BaseMaterial.Sky -> "!shader/sky/sky.frag"
-        BaseMaterial.Composition -> "!shader/composition.frag"
+        BaseMaterial.Shading -> "!shader/deferred/shading.frag"
+        BaseMaterial.Composition -> "!shader/deferred/composition.frag"
     }
 
     val shaderDefs: MutableSet<String> = mutableSetOf()

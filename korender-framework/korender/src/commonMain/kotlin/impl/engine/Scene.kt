@@ -22,12 +22,12 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_X
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_Y
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_Z
 import com.zakgof.korender.impl.glgpu.Color3List
+import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Vec3List
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
-import com.zakgof.korender.impl.material.InternalCompositionModifier
-import com.zakgof.korender.impl.material.InternalDeferredEffect
+import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedCubeTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
@@ -48,7 +48,7 @@ internal class Scene(
 ) {
 
     private var guiRenderers: List<GuiRenderer>
-    private val deferredShading = sceneDeclaration.deferredShading
+    private val deferredShading = sceneDeclaration.deferredShadingDeclaration != null
 
     val touchBoxes: List<TouchBox>
 
@@ -104,52 +104,55 @@ internal class Scene(
 
         renderDeferredOpaques(uniforms)
 
-        val icms = sceneDeclaration.compositionModifiers
-            .map { it as InternalCompositionModifier }
-        val compositionMaterialModifiers = icms.map { it.compositionModifier }
-            .toTypedArray()
-        val compositionFilters = icms.map { it.filter }
+        val postShadingEffects = sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects
+        renderDeferredShading(uniforms, if (postShadingEffects.isEmpty() && filters.isEmpty()) null else filters.size + 1)
 
-        val compositionMaterial = materialDeclaration(BaseMaterial.Composition, true, *compositionMaterialModifiers)
-        renderDeferredEffects(compositionFilters, uniforms)
-
-        if (sceneDeclaration.filters.isNotEmpty()) {
-            renderToFilter(0, uniforms) {
-                renderComposition(compositionMaterial, uniforms)
-            }
-        } else {
-            renderComposition(compositionMaterial, uniforms)
-            renderTransparents(uniforms, renderContext.camera)
+        if (postShadingEffects.isNotEmpty()) {
+            postShadingEffects.forEach { renderPostShadingEffect(it as InternalPostShadingEffect, uniforms) }
+            renderComposition(uniforms, if (filters.isEmpty()) null else filters.size)
         }
-
-        filters.forEachIndexed { index, filter ->
-            if (index < sceneDeclaration.filters.size - 1) {
-                renderToFilter(index + 1, uniforms) {
-                    renderFilter(filter, uniforms)
-                }
-            } else {
-                renderFilter(filter, uniforms)
-                renderTransparents(uniforms, renderContext.camera)
+        filters.forEachIndexed { filterIndex, filter ->
+            renderToReusableFb(if (filters.size - 1 == filterIndex) null else filters.size - 1 - filterIndex, uniforms) {
+                renderFullscreen(filter, uniforms)
             }
+        }
+        renderTransparents(uniforms, renderContext.camera)
+    }
+
+    private fun renderDeferredShading(uniforms: MutableMap<String, Any?>, fbIndex: Int?) {
+        renderToReusableFb(fbIndex, uniforms) {
+            val shadingMaterial = materialDeclaration(BaseMaterial.Shading, true)
+            renderFullscreen(shadingMaterial, uniforms)
+            renderBucket(uniforms, Bucket.SKY)
+        }?.let {
+            uniforms["finalColorTexture"] = it.colorTextures[0]
         }
     }
 
-    private fun renderDeferredEffects(deferredEffects: List<InternalDeferredEffect>, uniforms: MutableMap<String, Any?>) {
-        deferredEffects.forEach {
-            // TODO encode tex preset in effect
-            val fb = inventory.frameBuffer(
-                FrameBufferDeclaration(
-                    "deferred-effect-${it.name}", it.width, it.height, listOf(it.colorPreset), false
-                )
+    private fun renderPostShadingEffect(effect: InternalPostShadingEffect, uniforms: MutableMap<String, Any?>) {
+        val fb = inventory.frameBuffer(
+            FrameBufferDeclaration(
+                "post-shading-effect-${effect.name}", effect.width, effect.height, listOf(effect.colorPreset), false
             )
-            val filterUniforms = mutableMapOf<String, Any?>()
-            val material = materialDeclaration(BaseMaterial.Screen, true, it.filter)
-            // TODO return empty tex if not ready
-            fb?.exec {
-                renderFilter(material, uniforms)
-            }
-            // TODO
-            uniforms[it.colorOutput] = fb?.colorTextures?.get(0)
+        )
+        val material = materialDeclaration(BaseMaterial.Screen, true, effect.effectMaterialModifier)
+        // TODO return empty tex if not ready
+        fb?.exec {
+            renderFullscreen(material, uniforms, effect.width, effect.height)
+        }
+        // TODO
+        uniforms[effect.colorOutput] = fb?.colorTextures?.get(0)
+    }
+
+    private fun renderComposition(uniforms: MutableMap<String, Any?>, fbIndex: Int?) {
+        val compositionModifiers = sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects
+            .map {it as InternalPostShadingEffect}
+            .map {it.compositionMaterialModifier}
+            .toTypedArray()
+
+        renderToReusableFb(fbIndex, uniforms) {
+            val shadingMaterial = materialDeclaration(BaseMaterial.Composition, true, *compositionModifiers)
+            renderFullscreen(shadingMaterial, uniforms)
         }
     }
 
@@ -158,15 +161,15 @@ internal class Scene(
             renderForwardOpaques(uniforms, renderContext.width, renderContext.height)
             renderTransparents(uniforms, renderContext.camera)
         } else {
-            renderToFilter(0, uniforms) {
+            renderToReusableFb(0, uniforms) {
                 renderForwardOpaques(uniforms, renderContext.width, renderContext.height)
             }
             filters.dropLast(1).forEachIndexed { index, filter ->
-                renderToFilter(index + 1, uniforms) {
-                    renderFilter(filter, uniforms)
+                renderToReusableFb(index + 1, uniforms) {
+                    renderFullscreen(filter, uniforms)
                 }
             }
-            renderFilter(filters.last(), uniforms)
+            renderFullscreen(filters.last(), uniforms)
             renderTransparents(uniforms, renderContext.camera)
         }
     }
@@ -176,7 +179,7 @@ internal class Scene(
             FrameBufferDeclaration(
                 "geometry", renderContext.width, renderContext.height,
                 listOf(
-                    GlGpuTexture.Preset.RGBANoFilter,
+                    GlGpuTexture.Preset.RGBANoFilter, // TODO review
                     GlGpuTexture.Preset.RGBANoFilter,
                     GlGpuTexture.Preset.RGBANoFilter,
                     GlGpuTexture.Preset.RGBANoFilter,
@@ -208,15 +211,6 @@ internal class Scene(
                     inventory, it, renderContext.camera, deferredShading, uniforms, fixer, *defs
                 )
             }
-    }
-
-    private fun renderComposition(compositionMaterial: MaterialDeclaration, uniforms: MutableMap<String, Any?>) {
-        val back = renderContext.backgroundColor
-        glClearColor(back.r, back.g, back.b, 1.0f)
-        glViewport(0, 0, renderContext.width, renderContext.height)
-        glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-        renderFilter(compositionMaterial, uniforms)
-        renderBucket(uniforms, Bucket.SKY)
     }
 
     private fun renderForwardOpaques(uniforms: Map<String, Any?>, w: Int, h: Int, vararg defs: String) {
@@ -293,11 +287,12 @@ internal class Scene(
         m["pointLightAttenuation[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.attenuation })
     }
 
-    private fun renderFilter(filter: MaterialDeclaration, uniforms: Map<String, Any?>) {
+    private fun renderFullscreen(filter: MaterialDeclaration, uniforms: Map<String, Any?>,
+                         width: Int = renderContext.width, height: Int = renderContext.height) {
         val mesh = inventory.mesh(ScreenQuad)
         val shader = inventory.shader(filter.shader)
         glClearColor(0f, 0f, 0f, 1f)
-        glViewport(0, 0, renderContext.width, renderContext.height)
+        glViewport(0, 0, width, height)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         if (mesh != null && shader != null) {
             shader.render(
@@ -307,12 +302,18 @@ internal class Scene(
         }
     }
 
-    private fun renderToFilter(index: Int, m: MutableMap<String, Any?>, block: () -> Unit) {
-        val number = index % 2
-        val fb = inventory.frameBuffer(FrameBufferDeclaration("filter-$number", renderContext.width, renderContext.height, listOf(GlGpuTexture.Preset.RGBNoFilter), true)) ?: throw SkipRender
-        fb.exec { block() }
-        m["filterColorTexture"] = fb.colorTextures[0]
-        m["filterDepthTexture"] = fb.depthTexture
+    private fun renderToReusableFb(index: Int?, m: MutableMap<String, Any?>, block: () -> Unit) : GlGpuFrameBuffer? {
+        if (index == null) {
+            block()
+            return null
+        } else {
+            val number = index % 2
+            val fb = inventory.frameBuffer(FrameBufferDeclaration("filter-$number", renderContext.width, renderContext.height, listOf(GlGpuTexture.Preset.RGBNoFilter), true)) ?: throw SkipRender
+            fb.exec { block() }
+            m["filterColorTexture"] = fb.colorTextures[0]
+            m["filterDepthTexture"] = fb.depthTexture
+            return fb
+        }
     }
 
     private fun renderToEnv(uniforms: MutableMap<String, Any?>, captureContext: CaptureContext) {

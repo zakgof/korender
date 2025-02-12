@@ -1,9 +1,9 @@
 package com.zakgof.korender.impl.context
 
-import com.zakgof.korender.CompositionModifier
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.context.DeferredShadingContext
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.GuiContainerContext
 import com.zakgof.korender.context.InstancedBillboardsContext
@@ -13,6 +13,7 @@ import com.zakgof.korender.context.ShadowContext
 import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.Bucket
 import com.zakgof.korender.impl.engine.CaptureContext
+import com.zakgof.korender.impl.engine.DeferredShadingDeclaration
 import com.zakgof.korender.impl.engine.DirectionalLightDeclaration
 import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.GltfDeclaration
@@ -34,9 +35,9 @@ internal class DefaultFrameContext(
     override val frameInfo: FrameInfo,
 ) : FrameContext, KorenderContext by korenderContext {
 
-    override fun DeferredShading(vararg compositionModifiers: CompositionModifier) {
-        sceneDeclaration.deferredShading = true
-        sceneDeclaration.compositionModifiers += compositionModifiers
+    override fun DeferredShading(block: DeferredShadingContext.() -> Unit) {
+        sceneDeclaration.deferredShadingDeclaration = DeferredShadingDeclaration()
+        DefaultDeferredShadingContext(sceneDeclaration.deferredShadingDeclaration!!).apply(block)
     }
 
     override fun Gltf(resource: String, animation: Int, transform: Transform, time: Float?) {
@@ -99,7 +100,7 @@ internal class DefaultFrameContext(
         sceneDeclaration.ambientLightColor = color
     }
 
-    override fun Filter(vararg materialModifiers: MaterialModifier) {
+    override fun PostProcess(vararg materialModifiers: MaterialModifier) {
         sceneDeclaration.filters += materialModifiers.asList()
     }
 

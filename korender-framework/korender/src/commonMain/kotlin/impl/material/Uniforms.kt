@@ -4,12 +4,12 @@ import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.BaseParams
 import com.zakgof.korender.BillboardVertexParams
 import com.zakgof.korender.BlurParams
-import com.zakgof.korender.CompositionModifier
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
 import com.zakgof.korender.FogParams
+import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.SsrParams
 import com.zakgof.korender.StandartParams
@@ -274,16 +274,12 @@ internal class InternalSsrParams : SsrParams, InternalBaseParams() {
     }
 }
 
-internal class InternalDeferredEffect(
+internal class InternalPostShadingEffect(
     val name: String,
     val width: Int,
     val height: Int,
     val colorPreset: GlGpuTexture.Preset,
     val colorOutput: String,
-    val filter: InternalMaterialModifier,
-)
-
-internal class InternalCompositionModifier(
-    val filter: InternalDeferredEffect,
-    val compositionModifier: InternalMaterialModifier
-) : CompositionModifier
+    val effectMaterialModifier: InternalMaterialModifier,
+    val compositionMaterialModifier: InternalMaterialModifier,
+) : PostShadingEffect

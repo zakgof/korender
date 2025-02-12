@@ -4,7 +4,6 @@ import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.AsyncContext
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
-import com.zakgof.korender.CompositionModifier
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
@@ -22,6 +21,7 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.OrthoProjectionDeclaration
 import com.zakgof.korender.Platform
+import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SmokeParams
@@ -65,13 +65,12 @@ import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.material.InternalAdjustParams
 import com.zakgof.korender.impl.material.InternalBlurParams
-import com.zakgof.korender.impl.material.InternalCompositionModifier
-import com.zakgof.korender.impl.material.InternalDeferredEffect
 import com.zakgof.korender.impl.material.InternalFastCloudSkyParams
 import com.zakgof.korender.impl.material.InternalFireParams
 import com.zakgof.korender.impl.material.InternalFireballParams
 import com.zakgof.korender.impl.material.InternalFogParams
 import com.zakgof.korender.impl.material.InternalMaterialModifier
+import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalSmokeParams
 import com.zakgof.korender.impl.material.InternalSsrParams
 import com.zakgof.korender.impl.material.InternalStandartParams
@@ -264,16 +263,19 @@ internal class Engine(
                 it.uniforms["cubeTexture"] = env
             }
 
-        override fun ssr(block: SsrParams.() -> Unit): CompositionModifier = InternalCompositionModifier(
-            InternalDeferredEffect( // TODO width
-                "ssr", width, height, GlGpuTexture.Preset.RGBFilter, "ssrTexture"
-            ) {
+        override fun ssr(width: Int?, height: Int?, block: SsrParams.() -> Unit): PostShadingEffect = InternalPostShadingEffect(
+            "ssr",
+            width ?: renderContext.width,
+            height ?: renderContext.height,
+            GlGpuTexture.Preset.RGBFilter,
+            "ssrTexture",
+            effectMaterialModifier = {
                 it.fragShaderFile = "!shader/effect/ssr.frag"
                 InternalSsrParams().apply(block).collect(it)
-            }
-        ) {
-            it.shaderDefs += "SSR"
-        }
+            },
+            compositionMaterialModifier = {
+                it.shaderDefs += "SSR"
+            })
 
         override fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration =
             FrustumProjection(width, height, near, far)

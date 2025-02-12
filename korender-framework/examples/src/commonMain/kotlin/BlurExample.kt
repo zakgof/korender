@@ -19,10 +19,10 @@ fun BlurExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             mesh = sphere(3f)
         )
         val radius = 1.0f + sin(frameInfo.time)
-        Filter(blurHorz {
+        PostProcess(blurHorz {
             this.radius = radius
         })
-        Filter(blurVert {
+        PostProcess(blurVert {
             this.radius = radius
         })
     }

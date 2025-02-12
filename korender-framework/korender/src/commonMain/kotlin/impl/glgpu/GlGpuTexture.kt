@@ -164,6 +164,7 @@ internal class GlGpuTexture(
 
     enum class Preset(val filter: TextureFilter, val wrap: TextureWrap, val aniso: Int, val formats: List<GlFormat>) {
         RGBFilter(TextureFilter.Linear, TextureWrap.MirroredRepeat, 1024, listOf(GlFormat(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE))),
+        RGBAFilter(TextureFilter.Linear, TextureWrap.Repeat, 0, listOf(GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE))),
         RGBNoFilter(TextureFilter.Nearest, TextureWrap.Repeat, 0, listOf(GlFormat(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE))),
         RGBANoFilter(TextureFilter.Nearest, TextureWrap.Repeat, 0, listOf(GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE))),
         Depth(

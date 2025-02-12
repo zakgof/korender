@@ -26,7 +26,7 @@ fun FxaaExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         }
 
         if (doFxaa) {
-            Filter(fxaa())
+            PostProcess(fxaa())
         }
     }
 }

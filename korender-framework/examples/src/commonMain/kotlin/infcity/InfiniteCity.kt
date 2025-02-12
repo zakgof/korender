@@ -182,5 +182,5 @@ private fun FrameContext.sky() {
     }
     val moon = plugin("secsky", "infcity/moon.secsky.plugin.frag")
     Sky(sky, moon)
-    Filter(fog())
+    PostProcess(fog())
 }

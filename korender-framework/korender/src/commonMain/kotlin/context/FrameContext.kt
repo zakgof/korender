@@ -1,6 +1,5 @@
 package com.zakgof.korender.context
 
-import com.zakgof.korender.CompositionModifier
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
@@ -21,13 +20,13 @@ interface FrameContext : KorenderContext {
     fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, transparent: Boolean = false, block: InstancedBillboardsContext.() -> Unit)
     fun Gltf(resource: String, animation:Int = 0, transform: Transform = Transform(), time: Float? = null)
 
-    fun Filter(vararg materialModifiers: MaterialModifier)
+    fun PostProcess(vararg materialModifiers: MaterialModifier)
 
     fun DirectionalLight(direction: Vec3, color: ColorRGB = ColorRGB.White, block: ShadowContext.() -> Unit = {})
     fun PointLight(position: Vec3, color: ColorRGB = ColorRGB.White, attenuationLinear: Float = 0.1f, attenuationQuadratic: Float = 0.01f)
     fun AmbientLight(color: ColorRGB)
 
-    fun DeferredShading(vararg compositionModifiers: CompositionModifier)
+    fun DeferredShading(block: DeferredShadingContext.() -> Unit = {})
 
     fun CaptureEnv(slot: Int, resolution: Int, position: Vec3 = Vec3.ZERO, near: Float = 10f, far: Float = 1000f, block: FrameContext.() -> Unit)
 }

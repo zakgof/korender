@@ -3,7 +3,6 @@ package com.zakgof.korender.context
 import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
-import com.zakgof.korender.CompositionModifier
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
@@ -18,6 +17,7 @@ import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.OrthoProjectionDeclaration
+import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SmokeParams
@@ -99,7 +99,7 @@ interface KorenderContext {
     fun cubeSky(envSlot: Int): MaterialModifier
     fun fog(block: FogParams.() -> Unit = {}): MaterialModifier
     fun ibl(env: CubeTextureDeclaration): MaterialModifier
-    fun ssr(block: SsrParams.() -> Unit = {}): CompositionModifier
+    fun ssr(width: Int? = null, height: Int? = null, block: SsrParams.() -> Unit = {}): PostShadingEffect
 
     fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration
     fun ortho(width: Float, height: Float, near: Float, far: Float): OrthoProjectionDeclaration

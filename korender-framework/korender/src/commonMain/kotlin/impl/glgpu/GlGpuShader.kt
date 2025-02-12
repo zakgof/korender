@@ -106,9 +106,6 @@ internal class GlGpuShader(
         } else if (programLog.isNotEmpty()) {
             throw RuntimeException("Program linking warnings")
         }
-
-        println("Creating GPU Shader [$name] : $programHandle")
-
         uniformLocations = fetchUniforms()
     }
 

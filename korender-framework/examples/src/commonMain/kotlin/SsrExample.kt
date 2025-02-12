@@ -24,11 +24,16 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         "cube/room/pz.jpg"
     )
     Frame {
-        DeferredShading(ssr {
-            samples = 16
-            envTexture = env
-        })
-        DirectionalLight(Vec3(1f, -1f, 0f).normalize())
+        DeferredShading {
+            PostShading(ssr (width = width / 2, height = height / 2) {
+                samples = 16
+                envTexture = env
+            })
+        }
+
+        DirectionalLight(Vec3(1f, -1f, 0f).normalize()) {
+            // Cascade(512, 5f, 100f, -5f to 5f, pcss(8))
+        }
         Sky(cubeSky(env))
         Renderable(
             standart {
@@ -37,18 +42,33 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                 pbr.roughness = 0.2f
             },
             mesh = sphere(),
-            transform = translate(0f, -3f, -15f)
+            transform = translate(-2f, -1f, -5f)
+        )
+        Renderable(
+            standart {
+                baseColor = ColorRGBA.Green
+                pbr.metallic = 0.0f
+                pbr.roughness = 0.2f
+            },
+            mesh = sphere(),
+            transform = translate(2f, -1f, -5f)
         )
         Renderable(
             standart {
                 baseColorTexture = texture("texture/asphalt-albedo.jpg")
-                pbr.metallic = 0.8f
+                pbr.metallic = 0.3f
                 pbr.roughness = 0.2f
                 triplanarScale = 0.4f
             },
-            mesh = cube(1f),
-            transform = translate(-5.y).scale(100f, 1f, 100f)
+            mesh = cube(6f),
+            transform = translate(-8.y)
         )
+        Gui {
+            Column {
+                Filler()
+                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
+            }
+        }
     }
 }
 
