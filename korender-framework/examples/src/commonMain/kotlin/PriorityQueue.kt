@@ -6,6 +6,8 @@ class PriorityQueue<T>(private val priority: (T) -> Float) {
     private val indexMap = mutableMapOf<T, Int>()
 
     fun add(element: T) {
+        if (indexMap.containsKey(element))
+            return
         heap.add(element)
         indexMap[element] = heap.size - 1
         siftUp(heap.size - 1)

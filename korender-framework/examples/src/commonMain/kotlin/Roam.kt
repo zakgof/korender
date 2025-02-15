@@ -51,27 +51,33 @@ class Roam(val levels: Int, val tileSize: Int, val height: (Float, Float) -> Flo
         tiles.forEach { if (it.level > 0) splitQ.add(it) }
         mergeables.forEach { mergeQ.add(it) }
 
-        while (true) {
+        println("Iterating ${tiles.size}")
 
+        while (true) {
             val maxSplit = splitQ.peek()?.let { -pri(it) } ?: Float.NEGATIVE_INFINITY
             val minMerge = mergeQ.peek()?.let { pri(it) } ?: Float.POSITIVE_INFINITY
+
+            println("Metrics : ${-maxSplit} ${minMerge}")
+
             val crazy = -maxSplit > minMerge
-
-            if (tiles.size in 61..64 && !crazy)
+            if (!crazy)
                 break
+            mergeQ.peek()?.let { merge(it, splitQ, mergeQ) }
+        }
 
-            if (tiles.size > 65 || crazy) {
-                mergeQ.peek()?.let { merge(it, splitQ, mergeQ) }
-            }
-
-            if (tiles.size < 60) {
-                splitQ.peek()?.let { split(it, splitQ, mergeQ, true) }
-            }
-            break
+        while (tiles.size < 64) {
+            splitQ.peek()?.let { split(it, splitQ, mergeQ, true) }
+        }
+        while (tiles.size > 65) {
+            mergeQ.peek()?.let { merge(it, splitQ, mergeQ) }
         }
     }
 
+
     private fun merge(tile: Tile, splitQ: PriorityQueue<Tile>, mergeQ: PriorityQueue<Tile>) {
+
+        println("Merging $tile")
+
         mergeQ.remove(tile)
         mergeables.remove(tile)
         tile.children().forEach {

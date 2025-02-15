@@ -37,7 +37,7 @@ fun TerrainExample() =
                 }
             }
         }
-        camera = camera(Vec3(256 * 32 * 0.5f, 2048f, 256 * 32 * 0.5f), -1.y, 1.z)
+        camera = camera(Vec3(256 * 32 * 0.5f, 2048f, 256 * 32 * 0.5f + 50f), -1.y, 1.z)
         projection = frustum(5f, 5f * height / width, 1f, 2200f)
         Frame {
 
