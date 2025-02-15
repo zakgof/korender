@@ -37,23 +37,24 @@ fun TerrainExample() =
                 }
             }
         }
-        camera = camera(Vec3(256 * 32 * 0.5f, 2048f, 256 * 32 * 0.5f + 50f), -1.y, 1.z)
         projection = frustum(5f, 5f * height / width, 1f, 2200f)
         Frame {
 
             camera = camera(Vec3(256 * 32 * 0.5f + frameInfo.time * 100f, 2048f, 256 * 32 * 0.5f + 150f), -1.y, 1.z)
 
             AmbientLight(ColorRGB.White)
-            roam.update(camera.position)
-            roam.tiles.forEach { tile ->
-                Renderable(materialModifier, mesh = mesh,
-                    transform = scale(1.shl(tile.level).toFloat(), 1f, 1.shl(tile.level).toFloat())
-                        .translate(Vec3(36f * tile.x, 0f, 36f * tile.z)))
+            val tiles = roam.update(camera.position, 0.05f)
+            tiles.forEach { tile ->
+                Renderable(
+                    materialModifier, mesh = mesh,
+                    transform = scale(1.shl(tile.level).toFloat(), 1f, tile.size().toFloat())
+                        .translate(Vec3(36f * tile.x, 0f, 36f * tile.z))
+                )
             }
             Gui {
                 Column {
                     Filler()
-                    Text(id = "fps", text = "TILES ${roam.tiles.size} FPS ${frameInfo.avgFps}")
+                    Text(id = "fps", text = "TILES ${tiles.size} FPS ${frameInfo.avgFps.toInt()}")
                 }
             }
         }

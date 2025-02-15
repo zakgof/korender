@@ -1,17 +1,14 @@
 package com.zakgof.korender.examples
 
 import com.zakgof.korender.math.Vec3
+import kotlin.math.hypot
 
-class Roam(val levels: Int, val tileSize: Int, val height: (Float, Float) -> Float) {
-
-    val tiles = mutableSetOf<Tile>()
-    val mergeables = mutableSetOf<Tile>()
+class Roam(private val levels: Int, private val tileSize: Int, val height: (Float, Float) -> Float) {
 
     private val minMaxY = mutableMapOf<Tile, Pair<Float, Float>>()
 
     init {
         precalculateMaxDelta()
-        tiles += Tile(0, 0, levels)
     }
 
     private fun precalculateMaxDelta() {
@@ -40,95 +37,35 @@ class Roam(val levels: Int, val tileSize: Int, val height: (Float, Float) -> Flo
         return ch.minOf { minMaxY[it]!!.first } to ch.maxOf { minMaxY[it]!!.second }
     }
 
-    fun update(position: Vec3) {
+    fun update(position: Vec3, error: Float): Set<Tile> {
+        val tiles = mutableSetOf<Tile>()
+        val togo = mutableSetOf<Tile>()
+        val force = mutableSetOf<Tile>()
 
-        val cache = HashMap<Tile, Float>()
-        fun pri(tile: Tile) = cache.getOrPut(tile) { tile.size() / (tile.distanceTo(position) + 0.001f) }
+        fun pri(tile: Tile) = tile.size() / (tile.distanceTo(position) + 0.001f)
 
-        val splitQ = PriorityQueue<Tile> { -pri(it) }
-        val mergeQ = PriorityQueue<Tile> { pri(it) }
+        togo += Tile(0, 0, levels)
 
-        tiles.forEach { if (it.level > 0) splitQ.add(it) }
-        mergeables.forEach { mergeQ.add(it) }
-
-        println("Iterating ${tiles.size}")
-
-        while (true) {
-            val maxSplit = splitQ.peek()?.let { -pri(it) } ?: Float.NEGATIVE_INFINITY
-            val minMerge = mergeQ.peek()?.let { pri(it) } ?: Float.POSITIVE_INFINITY
-
-            println("Metrics : ${-maxSplit} ${minMerge}")
-
-            val crazy = -maxSplit > minMerge
-            if (!crazy)
-                break
-            mergeQ.peek()?.let { merge(it, splitQ, mergeQ) }
-        }
-
-        while (tiles.size < 64) {
-            splitQ.peek()?.let { split(it, splitQ, mergeQ, true) }
-        }
-        while (tiles.size > 65) {
-            mergeQ.peek()?.let { merge(it, splitQ, mergeQ) }
-        }
-    }
-
-
-    private fun merge(tile: Tile, splitQ: PriorityQueue<Tile>, mergeQ: PriorityQueue<Tile>) {
-
-        println("Merging $tile")
-
-        mergeQ.remove(tile)
-        mergeables.remove(tile)
-        tile.children().forEach {
-            tiles.remove(it)
-            splitQ.remove(it)
-        }
-        tiles.add(tile)
-        if (tile.level > 0) splitQ.add(tile)
-        tile.parent()?.let { parent ->
-            if (tiles.containsAll(parent.children())) {
-                mergeables.add(parent)
-                mergeQ.add(parent)
+        while (togo.isNotEmpty()) {
+            val t = togo.first()
+            togo.remove(t)
+            if (t.level == 0 || pri(t) < error && !force.contains(t)) {
+                tiles += t
+            } else {
+                togo += t.children()
+                t.neighbors()
+                    .mapNotNull { it.parent() }
+                    .filter { it != t.parent() }
+                    .forEach {
+                        if (tiles.remove(it)) {
+                            togo += it
+                        }
+                        force += it
+                    }
             }
         }
-        tile.neighbors()
-            .mapNotNull { it.parent() }
-            .forEach { parent ->
-                if (tiles.containsAll(parent.children())) {
-                    mergeables.add(parent)
-                    mergeQ.add(parent)
-                }
-            }
+        return tiles
     }
-
-    private fun split(tile: Tile, splitQ: PriorityQueue<Tile>, mergeQ: PriorityQueue<Tile>, isMergeable: Boolean) {
-
-        println("Splitting $tile")
-
-        tiles.remove(tile)
-        splitQ.remove(tile)
-        if (isMergeable) {
-            mergeables.add(tile)
-            mergeQ.add(tile)
-        }
-        tile.parent()?.let {
-            mergeables.remove(it)
-            mergeQ.remove(it)
-        }
-        tile.children().forEach {
-            tiles.add(it)
-            if (it.level > 0) splitQ.add(it)
-        }
-        tile.neighbors()
-            .mapNotNull { it.parent() }
-            .filter { tiles.contains(it) }
-            .forEach {
-                println("... force splitting $it")
-                split(it, splitQ, mergeQ, false)
-            }
-    }
-
 
     data class Tile(val x: Int, val z: Int, val level: Int) {
         fun children() = listOf(
@@ -137,7 +74,6 @@ class Roam(val levels: Int, val tileSize: Int, val height: (Float, Float) -> Flo
             Tile(x, z + 1.shl(level - 1), level - 1),
             Tile(x + 1.shl(level - 1), z + 1.shl(level - 1), level - 1)
         )
-
 
         fun size() = 1.shl(level)
 
@@ -151,9 +87,9 @@ class Roam(val levels: Int, val tileSize: Int, val height: (Float, Float) -> Flo
     }
 
     private fun Tile.distanceTo(position: Vec3): Float {
-        val npx = position.x.coerceIn((x * tileSize).toFloat(), ((x + 1.shl(level)) * tileSize).toFloat())
-        val npz = position.z.coerceIn((z * tileSize).toFloat(), ((z + 1.shl(level)) * tileSize).toFloat())
-        return (position.x - npx) * (position.x - npx) + (position.z - npz) * (position.z - npz)
+        val npx = position.x.coerceIn((x * tileSize).toFloat(), ((x + size()) * tileSize).toFloat())
+        val npz = position.z.coerceIn((z * tileSize).toFloat(), ((z + size()) * tileSize).toFloat())
+        return hypot(position.x - npx, position.z - npz)
     }
 
     private fun Tile.parent(): Tile? = if (level == levels)
@@ -166,8 +102,7 @@ class Roam(val levels: Int, val tileSize: Int, val height: (Float, Float) -> Flo
         Tile(x + size(), z, level),
         Tile(x, z - size(), level),
         Tile(x, z + size(), level)
-    ).filter { x >= 0 && z >= 0 && x < 1.shl(levels) && z < 1.shl(levels) }
-
+    ).filter { it.x >= 0 && it.z >= 0 && it.x < 1.shl(levels) && it.z < 1.shl(levels) }
 
 }
 
