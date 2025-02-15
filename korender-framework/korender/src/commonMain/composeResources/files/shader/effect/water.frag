@@ -8,8 +8,8 @@ uniform float transparency;
 uniform float waveScale;
 
 
-uniform sampler2D filterColorTexture;
-uniform sampler2D filterDepthTexture;
+uniform sampler2D colorTexture;
+uniform sampler2D depthTexture;
 uniform mat4 projection;
 uniform mat4 view;
 uniform vec3 cameraPos;
@@ -26,8 +26,8 @@ out vec4 fragColor;
 
 void main() {
 
-    vec3 color = texture(filterColorTexture, vtex).rgb;
-    float depth = texture(filterDepthTexture, vtex).r;
+    vec3 color = texture(colorTexture, vtex).rgb;
+    float depth = texture(depthTexture, vtex).r;
 
     vec2 csp = vec2(vtex * 2.0 - 1.0);
     vec4 w4 = inverse(projection * view) * vec4(csp, depth * 2.0 - 1.0, 1.0);
@@ -66,5 +66,5 @@ void main() {
     }
 
     fragColor = vec4(color, 1.0);
-    gl_FragDepth = texture(filterDepthTexture, vtex).r;
+    gl_FragDepth = texture(depthTexture, vtex).r;
 }

@@ -2,7 +2,7 @@
 
 in vec2 vtex;
 
-uniform sampler2D filterColorTexture;
+uniform sampler2D colorTexture;
 
 uniform sampler2D normalTexture;
 uniform sampler2D materialTexture;
@@ -81,7 +81,7 @@ vec3 ssr(vec3 vpos, vec3 N, vec3 V) {
                     return vec3(0.0, 0.0, 1.0);
                 }
 
-                return mix(dflt, texture(filterColorTexture, uv.xy).rgb, w) * pw;
+                return mix(dflt, texture(colorTexture, uv.xy).rgb, w) * pw;
             }
         }
     }

@@ -2,13 +2,13 @@
 
 in vec2 vtex;
 
-uniform sampler2D filterColorTexture;
+uniform sampler2D colorTexture;
 uniform sampler2D depthTexture;
 
 void main() {
 
     float depth = texture(depthTexture, vtex).r;
-    vec3 color = texture(filterColorTexture, vtex).rgb;
+    vec3 color = texture(colorTexture, vtex).rgb;
 
     float lumi = dot(color, vec3(0.2126, 0.7152, 0.0722));
     float threshold = 0.9; // TODO threshold

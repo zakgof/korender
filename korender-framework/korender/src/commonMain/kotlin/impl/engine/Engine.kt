@@ -62,7 +62,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
-import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.material.InternalAdjustParams
 import com.zakgof.korender.impl.material.InternalBloomParams
@@ -269,12 +268,14 @@ internal class Engine(
             "ssr",
             width ?: renderContext.width,
             height ?: renderContext.height,
-            GlGpuTexture.Preset.RGBFilter,
+            effectPassMaterialModifiers =
+            listOf(
+                InternalMaterialModifier {
+                    it.fragShaderFile = "!shader/effect/ssr.frag"
+                    InternalSsrParams().apply(block).collect(it)
+                }
+            ),
             "ssrTexture",
-            effectMaterialModifier = {
-                it.fragShaderFile = "!shader/effect/ssr.frag"
-                InternalSsrParams().apply(block).collect(it)
-            },
             compositionMaterialModifier = {
                 it.shaderDefs += "SSR"
             })
@@ -283,12 +284,23 @@ internal class Engine(
             "bloom",
             width ?: renderContext.width,
             height ?: renderContext.height,
-            GlGpuTexture.Preset.RGBMipmap,
+            effectPassMaterialModifiers = listOf(
+                InternalMaterialModifier {
+                    it.fragShaderFile = "!shader/effect/bloom.frag"
+                    InternalBloomParams().apply(block).collect(it)
+                },
+                InternalMaterialModifier {
+                    it.fragShaderFile = "!shader/effect/blurv.frag"
+                    it.uniforms["screenHeight"] = (width ?: renderContext.height).toFloat()
+                    it.uniforms["radius"] = 2.2f
+                },
+                InternalMaterialModifier {
+                    it.fragShaderFile = "!shader/effect/blurh.frag"
+                    it.uniforms["screenWidth"] = (height ?: renderContext.width).toFloat()
+                    it.uniforms["radius"] = 2.2f
+                }
+            ),
             "bloomTexture",
-            effectMaterialModifier = {
-                it.fragShaderFile = "!shader/effect/bloom.frag"
-                InternalBloomParams().apply(block).collect(it)
-            },
             compositionMaterialModifier = {
                 it.shaderDefs += "BLOOM"
             })

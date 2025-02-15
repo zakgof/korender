@@ -37,7 +37,7 @@ fun InfiniteCity() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         DeferredShading {
             PostShading (
-                bloom()
+                bloom(width = width / 4, height = height / 4)
             )
         }
 

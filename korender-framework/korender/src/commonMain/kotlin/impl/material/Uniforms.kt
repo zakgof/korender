@@ -19,7 +19,6 @@ import com.zakgof.korender.StandartParams.SpecularGlossiness
 import com.zakgof.korender.StarrySkyParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.WaterParams
-import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
@@ -286,8 +285,7 @@ internal class InternalPostShadingEffect(
     val name: String,
     val width: Int,
     val height: Int,
-    val colorPreset: GlGpuTexture.Preset,
-    val colorOutput: String,
-    val effectMaterialModifier: InternalMaterialModifier,
+    val effectPassMaterialModifiers: List<InternalMaterialModifier>,
+    val compositionColorOutput: String,
     val compositionMaterialModifier: InternalMaterialModifier,
 ) : PostShadingEffect

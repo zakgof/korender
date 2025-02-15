@@ -2,8 +2,8 @@
 
 in vec2 vtex;
 
-uniform sampler2D filterColorTexture;
+uniform sampler2D colorTexture;
 
 void main() {
-    gl_FragColor = texture(filterColorTexture, vtex);
+    gl_FragColor = texture(colorTexture, vtex);
 }

@@ -6,7 +6,7 @@
 
 in vec2 vtex;
 
-uniform sampler2D filterColorTexture;
+uniform sampler2D colorTexture;
 uniform float screenWidth;
 uniform float screenHeight;
 
@@ -16,11 +16,11 @@ void main() {
 
     vec2 rcpFrame = vec2(1. / screenWidth, 1. / screenHeight);
 
-    vec3 rgbNW = texture(filterColorTexture, vtex + (vec2(-1.0, -1.0) * rcpFrame)).xyz;
-    vec3 rgbNE = texture(filterColorTexture, vtex + (vec2(1.0, -1.0) * rcpFrame)).xyz;
-    vec3 rgbSW = texture(filterColorTexture, vtex + (vec2(-1.0, 1.0) * rcpFrame)).xyz;
-    vec3 rgbSE = texture(filterColorTexture, vtex + (vec2(1.0, 1.0) * rcpFrame)).xyz;
-    vec3 rgbM  = texture(filterColorTexture, vtex).xyz;
+    vec3 rgbNW = texture(colorTexture, vtex + (vec2(-1.0, -1.0) * rcpFrame)).xyz;
+    vec3 rgbNE = texture(colorTexture, vtex + (vec2(1.0, -1.0) * rcpFrame)).xyz;
+    vec3 rgbSW = texture(colorTexture, vtex + (vec2(-1.0, 1.0) * rcpFrame)).xyz;
+    vec3 rgbSE = texture(colorTexture, vtex + (vec2(1.0, 1.0) * rcpFrame)).xyz;
+    vec3 rgbM  = texture(colorTexture, vtex).xyz;
     vec3 luma  = vec3(0.299, 0.587, 0.114);
     
     float lumaNW = dot(rgbNW, luma);
@@ -44,11 +44,11 @@ void main() {
               dir * rcpDirMin)) * rcpFrame;
     
     vec3 rgbA = 0.5 * (
-        texture(filterColorTexture, vtex.xy + dir * (1./3. - 0.5)).xyz +
-        texture(filterColorTexture, vtex.xy + dir * (2./3. - 0.5)).xyz);
+        texture(colorTexture, vtex.xy + dir * (1./3. - 0.5)).xyz +
+        texture(colorTexture, vtex.xy + dir * (2./3. - 0.5)).xyz);
     vec3 rgbB = rgbA * 0.5 + 0.25 * (
-        texture(filterColorTexture, vtex.xy + dir * -0.5).xyz +
-        texture(filterColorTexture, vtex.xy + dir * 0.5).xyz );
+        texture(colorTexture, vtex.xy + dir * -0.5).xyz +
+        texture(colorTexture, vtex.xy + dir * 0.5).xyz );
 
     float lumaB = dot(rgbB, luma);
     

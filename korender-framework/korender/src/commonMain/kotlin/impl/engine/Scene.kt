@@ -126,28 +126,38 @@ internal class Scene(
             renderBucket(uniforms, Bucket.SKY)
         }?.let {
             uniforms["finalColorTexture"] = it.colorTextures[0]
+            uniforms["depthTexture"] = it.depthTexture
         }
     }
 
     private fun renderPostShadingEffect(effect: InternalPostShadingEffect, uniforms: MutableMap<String, Any?>) {
-        val fb = inventory.frameBuffer(
-            FrameBufferDeclaration(
-                "post-shading-effect-${effect.name}", effect.width, effect.height, listOf(effect.colorPreset), false
-            )
-        )
-        val material = materialDeclaration(BaseMaterial.Screen, true, effect.effectMaterialModifier)
-        // TODO return empty tex if not ready
-        fb?.exec {
-            renderFullscreen(material, uniforms, effect.width, effect.height)
+        effect.effectPassMaterialModifiers.forEachIndexed { passIndex, effectMM ->
+
+            val fbName = if (passIndex == effect.effectPassMaterialModifiers.size - 1)
+                "effect-${effect.name}"
+            else
+                "effect-${(effect.effectPassMaterialModifiers.size - 1 - passIndex) % 2}"
+
+            val fb = inventory.frameBuffer(
+                FrameBufferDeclaration(fbName, effect.width, effect.height, listOf(GlGpuTexture.Preset.RGBFilter), true)
+            ) ?: throw SkipRender
+            val material = materialDeclaration(BaseMaterial.Screen, true, effectMM)
+            fb.exec {
+                renderFullscreen(material, uniforms, effect.width, effect.height)
+            }
+            if (passIndex == effect.effectPassMaterialModifiers.size - 1) {
+                uniforms[effect.compositionColorOutput] = fb.colorTextures[0]
+            } else {
+                uniforms["colorTexture"] = fb.colorTextures[0]
+                uniforms["depthTexture"] = fb.depthTexture
+            }
         }
-        // TODO
-        uniforms[effect.colorOutput] = fb?.colorTextures?.get(0)
     }
 
     private fun renderComposition(uniforms: MutableMap<String, Any?>, fbIndex: Int?) {
         val compositionModifiers = sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects
-            .map {it as InternalPostShadingEffect}
-            .map {it.compositionMaterialModifier}
+            .map { it as InternalPostShadingEffect }
+            .map { it.compositionMaterialModifier }
             .toTypedArray()
 
         renderToReusableFb(fbIndex, uniforms) {
@@ -200,7 +210,6 @@ internal class Scene(
         uniforms["materialTexture"] = geometryBuffer.colorTextures[2]
         uniforms["emissionTexture"] = geometryBuffer.colorTextures[3]
         uniforms["depthTexture"] = geometryBuffer.depthTexture!!
-
     }
 
     private fun renderBucket(uniforms: Map<String, Any?>, bucket: Bucket, vararg defs: String) {
@@ -287,8 +296,10 @@ internal class Scene(
         m["pointLightAttenuation[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.attenuation })
     }
 
-    private fun renderFullscreen(filter: MaterialDeclaration, uniforms: Map<String, Any?>,
-                         width: Int = renderContext.width, height: Int = renderContext.height) {
+    private fun renderFullscreen(
+        filter: MaterialDeclaration, uniforms: Map<String, Any?>,
+        width: Int = renderContext.width, height: Int = renderContext.height
+    ) {
         val mesh = inventory.mesh(ScreenQuad)
         val shader = inventory.shader(filter.shader)
         glClearColor(0f, 0f, 0f, 1f)
@@ -302,7 +313,7 @@ internal class Scene(
         }
     }
 
-    private fun renderToReusableFb(index: Int?, m: MutableMap<String, Any?>, block: () -> Unit) : GlGpuFrameBuffer? {
+    private fun renderToReusableFb(index: Int?, m: MutableMap<String, Any?>, block: () -> Unit): GlGpuFrameBuffer? {
         if (index == null) {
             block()
             return null
@@ -310,8 +321,8 @@ internal class Scene(
             val number = index % 2
             val fb = inventory.frameBuffer(FrameBufferDeclaration("filter-$number", renderContext.width, renderContext.height, listOf(GlGpuTexture.Preset.RGBNoFilter), true)) ?: throw SkipRender
             fb.exec { block() }
-            m["filterColorTexture"] = fb.colorTextures[0]
-            m["filterDepthTexture"] = fb.depthTexture
+            m["colorTexture"] = fb.colorTextures[0]
+            m["depthTexture"] = fb.depthTexture
             return fb
         }
     }

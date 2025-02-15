@@ -179,8 +179,8 @@ internal object ShadowRenderer {
             }.collect(it)
         }
         )
-        uniforms["filterColorTexture"] = frameBuffer.colorTextures[0]
-        uniforms["filterDepthTexture"] = frameBuffer.depthTexture
+        uniforms["colorTexture"] = frameBuffer.colorTextures[0]
+        uniforms["depthTexture"] = frameBuffer.depthTexture
 
         blurFrameBuffer.exec {
             val mesh = inventory.mesh(ScreenQuad)
@@ -200,8 +200,8 @@ internal object ShadowRenderer {
                 }.collect(it)
             }
         )
-        uniforms["filterColorTexture"] = frameBuffer.colorTextures[0]
-        uniforms["filterDepthTexture"] = frameBuffer.depthTexture
+        uniforms["colorTexture"] = frameBuffer.colorTextures[0]
+        uniforms["depthTexture"] = frameBuffer.depthTexture
 
         frameBuffer.exec {
             val mesh = inventory.mesh(ScreenQuad)
