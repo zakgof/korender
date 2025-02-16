@@ -47,6 +47,11 @@ uniform sampler2D specularGlossinessTexture;
 uniform samplerCube cubeTexture;
 #endif
 
+#ifdef TERRAIN
+uniform vec3 tileOffsetAndScale;
+uniform sampler2D heightTexture;
+#endif
+
 //  TODO DETAIL FOR BASECOLOR
 
 uniform vec3 cameraPos;
@@ -97,6 +102,10 @@ float shadowRatios[MAX_SHADOWS];
 #import "!shader/lib/pbr.glsl"
 #import "!shader/lib/light.glsl"
 
+#ifdef TERRAIN
+#import "!shader/lib/terrain.glsl"
+#endif
+
 void main() {
 
 #ifdef BASE_COLOR_MAP
@@ -117,6 +126,10 @@ void main() {
     vec3 N = getNormalFromMap(vnormal, vtex, vpos);
 #else
     vec3 N = normalize(vnormal);
+#endif
+
+#ifdef TERRAIN
+    N = n(vtex);
 #endif
 
 #ifdef EMISSIVE_MAP

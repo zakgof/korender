@@ -39,7 +39,6 @@ import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
-import com.zakgof.korender.impl.checkGlError
 import com.zakgof.korender.impl.context.DefaultFrameContext
 import com.zakgof.korender.impl.engine.shadow.InternalHardParams
 import com.zakgof.korender.impl.engine.shadow.InternalPcssParams
@@ -364,6 +363,7 @@ internal class Engine(
         glDepthFunc(GL_LEQUAL)
         glEnable(GL_BLEND)
         glEnable(GL_DEPTH_TEST)
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
         ignoringGlError {
             glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS)
         }
@@ -381,7 +381,7 @@ internal class Engine(
         inventory.go {
             val scene = Scene(sd, inventory, renderContext)
             scene.render()
-            checkGlError("during rendering")
+            // checkGlError("during rendering")
             touchBoxes = scene.touchBoxes
         }
     }

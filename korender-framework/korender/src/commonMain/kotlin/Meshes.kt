@@ -34,6 +34,7 @@ object Attributes {
     val SCREEN = MeshAttribute("screen", 2, AttributeType.Float, 5)
     val SCALE = MeshAttribute("scale", 2, AttributeType.Float, 6)
     val PHI = MeshAttribute("phi", 1, AttributeType.Float, 7)
+    val I1 = MeshAttribute("i1", 1, AttributeType.Byte,8)
 }
 
 interface MeshDeclaration

@@ -37,12 +37,12 @@ class Roam(private val levels: Int, private val tileSize: Int, val height: (Floa
         return ch.minOf { minMaxY[it]!!.first } to ch.maxOf { minMaxY[it]!!.second }
     }
 
-    fun update(position: Vec3, error: Float): Set<Tile> {
+    fun tiles(position: Vec3, error: Float): Set<Tile> {
         val tiles = mutableSetOf<Tile>()
         val togo = mutableSetOf<Tile>()
         val force = mutableSetOf<Tile>()
 
-        fun pri(tile: Tile) = tile.size() / (tile.distanceTo(position) + 0.001f)
+        fun pri(tile: Tile) = tile.size() * tileSize / (tile.distanceTo(position) + 1f)
 
         togo += Tile(0, 0, levels)
 
@@ -52,6 +52,12 @@ class Roam(private val levels: Int, private val tileSize: Int, val height: (Floa
             if (t.level == 0 || pri(t) < error && !force.contains(t)) {
                 tiles += t
             } else {
+
+//                if (t.level > 0 && pri(t) < error)
+//                    println("Forced tile $t")
+//                if (t.level > 0 && ((error - pri(t)) / (0.2f * error)).coerceIn(0f, 1f) > 0.5f)
+//                    println("Shit tile $t")
+
                 togo += t.children()
                 t.neighbors()
                     .mapNotNull { it.parent() }
@@ -64,10 +70,19 @@ class Roam(private val levels: Int, private val tileSize: Int, val height: (Floa
                     }
             }
         }
+        tiles.forEach {
+            val p = pri(it)
+            val pp = it.parent()?.let { par -> pri(par) } ?: 0f
+
+            println("$p $pp $error")
+
+            it.w = ((error - pri(it)) / (0.95f * error)).coerceIn(0f, 1f)
+        }
         return tiles
     }
 
-    data class Tile(val x: Int, val z: Int, val level: Int) {
+    data class Tile(val x: Int, val z: Int, val level: Int, var w: Float = 1f) {
+
         fun children() = listOf(
             Tile(x, z, level - 1),
             Tile(x + 1.shl(level - 1), z, level - 1),
@@ -78,6 +93,11 @@ class Roam(private val levels: Int, private val tileSize: Int, val height: (Floa
         fun size() = 1.shl(level)
 
         override fun toString(): String = "$level: $x,$z"
+
+        override fun equals(other: Any?): Boolean =
+            (other is Tile && other.level == level && other.x == x && other.z == z)
+
+        override fun hashCode(): Int = level * 1000393 + 1999 * z + x
     }
 
     private fun Int.tiles(): List<Tile> = (0 until 1.shl(levels - this)).flatMap { x ->
