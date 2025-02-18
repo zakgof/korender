@@ -50,6 +50,7 @@ uniform samplerCube cubeTexture;
 #ifdef TERRAIN
 uniform vec3 tileOffsetAndScale;
 uniform sampler2D heightTexture;
+uniform sampler2D fbmTexture;
 #endif
 
 //  TODO DETAIL FOR BASECOLOR

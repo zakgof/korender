@@ -36,13 +36,13 @@ fun TerrainExample() =
             }
         }
         var prevtiles = mutableSetOf<Roam.Tile>()
-        projection = frustum(5f, 5f * height / width, 8f, 9000f)
+        projection = frustum(5f, 5f * height / width, 2f, 9000f)
         Frame {
 
-            camera = camera(Vec3(4095f, 384f, 8192f - (35f + frameInfo.time) * 100f), (-1.y + 2.z).normalize(), (2.y + 1.z).normalize())
+            camera = camera(Vec3(4096f, 1024f, 6000f - (35f + frameInfo.time * 0.4f) * 100f), (-1.y + 2.z).normalize(), (2.y + 1.z).normalize())
 
-            AmbientLight(ColorRGB.white(0.5f))
-            DirectionalLight(Vec3(1.0f, -1.0f, 0.0f).normalize(), ColorRGB.white(3.0f))
+            AmbientLight(ColorRGB.white(0.2f))
+            DirectionalLight(Vec3(1.0f, -1.0f, 0.0f).normalize(), ColorRGB.white(0.5f))
 
             val tiles = roam.tiles(camera.position, 4.5f)
 
@@ -58,9 +58,9 @@ fun TerrainExample() =
                 Renderable(
                     standart {
                         // baseColor = ColorRGBA(tile.w, 0f, 0f, 1f)
-                        baseColorTexture = texture("terrain/ground.png")
+                        // baseColorTexture = texture("terrain/ground.png")
                         pbr.metallic = 0.0f
-                        set("heightTexture", texture("terrain/hfrg.png", TextureFilter.MipMap, TextureWrap.MirroredRepeat))
+                        set("heightTexture", texture("terrain/hf-rg16-512.png", TextureFilter.MipMap, TextureWrap.MirroredRepeat))
                         set("tileOffsetAndScale", Vec3(tile.x.toFloat(), tile.z.toFloat(), tile.size().toFloat()))
                         set("antipop", tile.w)
                     },
