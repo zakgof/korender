@@ -60,7 +60,7 @@ fun TerrainExample() =
                         // baseColor = ColorRGBA(tile.w, 0f, 0f, 1f)
                         // baseColorTexture = texture("terrain/ground.png")
                         pbr.metallic = 0.0f
-                        set("heightTexture", texture("terrain/hf-rg16-512.png", TextureFilter.MipMap, TextureWrap.MirroredRepeat))
+                        set("heightTexture", texture("terrain/base-terrain.jpg", TextureFilter.MipMap, TextureWrap.MirroredRepeat))
                         set("tileOffsetAndScale", Vec3(tile.x.toFloat(), tile.z.toFloat(), tile.size().toFloat()))
                         set("antipop", tile.w)
                     },

@@ -1,9 +1,8 @@
-const float heightScale = 5.0;
+const float heightScale = 512.0;
 const float nstep = 1.0 / 8192.0;
 
 float h(vec2 uv) {
-    vec4 smpl = textureLod(heightTexture, uv, 2);
-    float m = (smpl.r * 255.0 + smpl.g) * heightScale;
+    float base = textureLod(heightTexture, uv, 2).r * heightScale;
 
     float noi =
         pow(texture(fbmTexture, uv * 0.25).r + 0.2, 12.0) * 1024.0 +
@@ -12,15 +11,17 @@ float h(vec2 uv) {
 
     float w = noi * 0.001;
 
-    // noi + w * texture(fbmTexture, uv * 16.0).r * 32.0;
+    float o128 = texture(fbmTexture, uv * 128.0).r;
+    float o32 = texture(fbmTexture, uv * 32.0).r;
+    float o8 = texture(fbmTexture, uv * 8.0).r;
+    float o2 = texture(fbmTexture, uv * 1.0).r;
 
 
-    return m
-        + texture(fbmTexture, uv * 64.0).r * 2.0
-        + texture(fbmTexture, uv * 16.0).r * 8.0
-        + smoothstep(150, 250, m) * texture(fbmTexture, uv * 4.0).r * 128.0
-        + smoothstep(100, 300, m) * texture(fbmTexture, uv * 1.0).r * 128.0;
-
+    return base - 64.0
+        + o128 * 8.0
+        + o32 * 16.0
+        + max(base-64, 0.05) * o8 *  0.4
+        + max(base-80, 0.1) * o2 *  1.6;
 }
 
 vec3 n(vec2 uv) {
