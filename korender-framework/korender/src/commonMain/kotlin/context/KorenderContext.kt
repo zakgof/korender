@@ -89,19 +89,22 @@ interface KorenderContext {
     fun blurHorz(block: BlurParams.() -> Unit = {}): MaterialModifier
     fun blurVert(block: BlurParams.() -> Unit = {}): MaterialModifier
     fun adjust(block: AdjustParams.() -> Unit): MaterialModifier
+    fun water(block: WaterParams.() -> Unit = {}): MaterialModifier
+    fun fog(block: FogParams.() -> Unit = {}): MaterialModifier
+    fun fxaa(): MaterialModifier
+
     fun fire(block: FireParams.() -> Unit = {}): MaterialModifier
     fun fireball(block: FireballParams.() -> Unit = {}): MaterialModifier
     fun smoke(block: SmokeParams.() -> Unit = {}): MaterialModifier
-    fun water(block: WaterParams.() -> Unit = {}): MaterialModifier
-    fun fxaa(): MaterialModifier
+
     fun fastCloudSky(block: FastCloudSkyParams.() -> Unit = {}): MaterialModifier
     fun starrySky(block: StarrySkyParams.() -> Unit = {}): MaterialModifier
     fun cubeSky(cubeTexture: CubeTextureDeclaration): MaterialModifier
     fun cubeSky(envSlot: Int): MaterialModifier
-    fun fog(block: FogParams.() -> Unit = {}): MaterialModifier
+
     fun ibl(env: CubeTextureDeclaration): MaterialModifier
 
-    fun ssr(width: Int? = null, height: Int? = null, block: SsrParams.() -> Unit = {}): PostShadingEffect
+    fun ssr(width: Int? = null, height: Int? = null, fxaa: Boolean = false, block: SsrParams.() -> Unit = {}): PostShadingEffect
     fun bloom(width: Int? = null, height: Int? = null, block: BloomParams.() -> Unit = {}): PostShadingEffect
 
     fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration

@@ -264,21 +264,28 @@ internal class Engine(
                 it.uniforms["cubeTexture"] = env
             }
 
-        override fun ssr(width: Int?, height: Int?, block: SsrParams.() -> Unit): PostShadingEffect = InternalPostShadingEffect(
-            "ssr",
-            width ?: renderContext.width,
-            height ?: renderContext.height,
-            effectPassMaterialModifiers =
-            listOf(
-                InternalMaterialModifier {
-                    it.fragShaderFile = "!shader/effect/ssr.frag"
-                    InternalSsrParams().apply(block).collect(it)
-                }
-            ),
-            "ssrTexture",
-            compositionMaterialModifier = {
-                it.shaderDefs += "SSR"
-            })
+        override fun ssr(width: Int?, height: Int?, fxaa: Boolean, block: SsrParams.() -> Unit): PostShadingEffect {
+            val w = width ?: renderContext.width
+            val h = height ?: renderContext.height
+            return InternalPostShadingEffect("ssr", w, h,
+                effectPassMaterialModifiers =
+                listOf(
+                    InternalMaterialModifier {
+                        it.fragShaderFile = "!shader/effect/ssr.frag"
+                        InternalSsrParams().apply(block).collect(it)
+                    }
+                ),
+                "ssrTexture",
+                "ssrDepthTexture",
+                compositionMaterialModifier = {
+                    it.shaderDefs += "SSR"
+                    if (fxaa) {
+                        it.shaderDefs += "SSR_FXAA"
+                        it.uniforms["ssrWidth"] = w.toFloat()
+                        it.uniforms["ssrHeight"] = h.toFloat()
+                    }
+                })
+        }
 
         override fun bloom(width: Int?, height: Int?, block: BloomParams.() -> Unit): PostShadingEffect = InternalPostShadingEffect(
             "bloom",
@@ -301,6 +308,7 @@ internal class Engine(
                 }
             ),
             "bloomTexture",
+            "bloomDepthTexture",
             compositionMaterialModifier = {
                 it.shaderDefs += "BLOOM"
             })

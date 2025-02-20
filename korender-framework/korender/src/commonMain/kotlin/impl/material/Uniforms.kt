@@ -261,11 +261,15 @@ internal class InternalFogParams : FogParams, InternalBaseParams() {
 
 internal class InternalSsrParams : SsrParams, InternalBaseParams() {
 
-    override var samples = 16
+    override var maxRayTravel = 100f
+    override var linearSteps = 12
+    override var binarySteps = 5
     override var envTexture: CubeTextureDeclaration? = null
 
     override fun collect(mb: MaterialBuilder) {
-        mb.uniforms["samples"] = samples
+        mb.uniforms["linearSteps"] = linearSteps
+        mb.uniforms["binarySteps"] = binarySteps
+        mb.uniforms["maxRayTravel"] = maxRayTravel
         envTexture?.let {
             mb.uniforms["envTexture"] = it
             mb.shaderDefs += "SSR_ENV"
@@ -280,12 +284,12 @@ internal class InternalBloomParams : BloomParams, InternalBaseParams() {
     }
 }
 
-
 internal class InternalPostShadingEffect(
     val name: String,
     val width: Int,
     val height: Int,
     val effectPassMaterialModifiers: List<InternalMaterialModifier>,
     val compositionColorOutput: String,
+    val compositionDepthOutput: String,
     val compositionMaterialModifier: InternalMaterialModifier,
 ) : PostShadingEffect

@@ -13,9 +13,15 @@ uniform vec3 cameraDir;
 uniform mat4 projection;
 uniform mat4 view;
 
+uniform float maxRayTravel;
+uniform int linearSteps;
+uniform int binarySteps;
+
 #ifdef SSR_ENV
 uniform samplerCube envTexture;
 #endif
+
+out vec4 fragColor;
 
 #import "!shader/lib/space.glsl"
 
@@ -36,14 +42,10 @@ vec3 ssr(vec3 vpos, vec3 N, vec3 V) {
 
     float w = 1.;
 
-    float maxRayTravel = 20.;
-    int linearSteps = 18;
-    int binarySteps = 4;
+    if (dot(rayDir, cameraDir) > 0.) {
 
-    if (dot(rayDir, cameraDir) > 0) {
-
-        float travel = 0;
-        float step = maxRayTravel / linearSteps;
+        float travel = 0.;
+        float step = maxRayTravel / float(linearSteps);
         vec3 rayPoint = vpos;
         vec3 rayStep = rayDir * step;
 
@@ -53,7 +55,7 @@ vec3 ssr(vec3 vpos, vec3 N, vec3 V) {
             travel += step;
 
             vec3 uv = wToS(rayPoint);
-            if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
+            if (uv.x < 0. || uv.x > 1. || uv.y < 0. || uv.y > 1.)
                 break;
 
             if (uv.z > texture(depthTexture, uv.xy).r) {
@@ -72,16 +74,10 @@ vec3 ssr(vec3 vpos, vec3 N, vec3 V) {
                 }
                 uv = wToS(rayPoint);
 
-                vec3 hitN = normalize(texture(normalTexture, uv.xy).rgb * 2.0 - 1.0);
-                w *= smoothstep(0.3, 0.4, -dot(cameraDir, hitN)) * (1. - travel/maxRayTravel);
-
-                float pw = 1.0; // smoothstep(1.0, 0.8, dot(N, V));
-
-                if (abs(dot(N, V)) < 0.1) {
-                    return vec3(0.0, 0.0, 1.0);
-                }
-
-                return mix(dflt, texture(colorTexture, uv.xy).rgb, w) * pw;
+                vec3 hitN = normalize(texture(normalTexture, uv.xy).rgb * 2. - 1.);
+                w *= smoothstep(0.21, 0.25, -dot(cameraDir, hitN))
+                    * (1. - smoothstep(0.8, 1.0, travel/maxRayTravel));
+                return mix(dflt, texture(colorTexture, uv.xy).rgb, w);
             }
         }
     }
@@ -102,15 +98,14 @@ void main() {
     vec3 V = normalize(cameraPos - vpos);
     vec3 N = normalize(normalTexel.rgb * 2.0 - 1.0);
 
-
     vec3 reflection = vec3(0.);
     if (depth < 0.9999) {
         reflection = ssr(vpos, N, V);
-        float NdotV = max(dot(N, V), 0.0);
+        float NdotV = clamp(dot(N, V), 0.2, 1.0);
         vec3 FR = F0 + (1. - F0) * pow(1. - NdotV, 5.);
         reflection *= FR;
     }
 
-    gl_FragColor = vec4(reflection, 1.0);
+    fragColor = vec4(reflection, 1.0);
     gl_FragDepth = depth;
 }

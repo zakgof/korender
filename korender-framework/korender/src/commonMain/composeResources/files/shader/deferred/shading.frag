@@ -8,10 +8,6 @@ uniform sampler2D materialTexture;
 uniform sampler2D emissionTexture;
 uniform sampler2D depthTexture;
 
-#ifdef SSR
-uniform sampler2D ssrTexture;
-#endif
-
 //////////
 
 uniform vec3 cameraPos;
@@ -19,6 +15,10 @@ uniform vec3 cameraDir;
 uniform vec3 ambientColor;
 uniform mat4 projection;
 uniform mat4 view;
+
+#ifdef IBL
+uniform samplerCube cubeTexture;
+#endif
 
 //////////
 
@@ -86,10 +86,6 @@ void main() {
 
     float plane = dot((vpos - cameraPos), cameraDir);
     populateShadowRatios(plane, vpos);
-
-#ifdef SSR
-    color += texture(ssrTexture, vtex).rgb;
-#endif
 
     for (int l=0; l<numDirectionalLights; l++)
         color += dirLight(l, N, V, c_diff, F0, rough);

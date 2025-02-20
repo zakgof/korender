@@ -24,11 +24,19 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         "cube/room/pz.jpg"
     )
     Frame {
+        val phase = frameInfo.time.toInt() % 3
         DeferredShading {
-            PostShading(ssr (width = width / 2, height = height / 2) {
-                samples = 16
-                envTexture = env
-            })
+            if (phase == 1) {
+                PostShading(ssr(width = width / 4, height = height / 4, fxaa = true) {
+                    maxRayTravel = 25f
+                    linearSteps = 18
+                    binarySteps = 5
+                    envTexture = env
+                })
+            }
+            if (phase == 2) {
+                Shading(ibl(env))
+            }
         }
 
         DirectionalLight(Vec3(1f, -1f, 0f).normalize()) {
@@ -64,8 +72,14 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             transform = translate(-8.y)
         )
         Gui {
+            val mode = when (phase) {
+                1 -> "SSR"
+                2 -> "IBL"
+                else -> ""
+            }
             Column {
                 Filler()
+                Text(id = "mode", text = mode)
                 Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
             }
         }

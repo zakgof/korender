@@ -101,7 +101,9 @@ interface FogParams : BaseParams {
 }
 
 interface SsrParams : BaseParams {
-    var samples: Int
+    var maxRayTravel: Float
+    var linearSteps: Int
+    var binarySteps: Int
     var envTexture: CubeTextureDeclaration?
 }
 

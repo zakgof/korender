@@ -121,7 +121,7 @@ internal class Scene(
 
     private fun renderDeferredShading(uniforms: MutableMap<String, Any?>, fbIndex: Int?) {
         renderToReusableFb(fbIndex, uniforms) {
-            val shadingMaterial = materialDeclaration(BaseMaterial.Shading, true)
+            val shadingMaterial = materialDeclaration(BaseMaterial.Shading, true, *sceneDeclaration.deferredShadingDeclaration!!.shadingModifiers.toTypedArray())
             renderFullscreen(shadingMaterial, uniforms)
             renderBucket(uniforms, Bucket.SKY)
         }?.let {
@@ -147,6 +147,7 @@ internal class Scene(
             }
             if (passIndex == effect.effectPassMaterialModifiers.size - 1) {
                 uniforms[effect.compositionColorOutput] = fb.colorTextures[0]
+                uniforms[effect.compositionDepthOutput] = fb.depthTexture
             } else {
                 uniforms["colorTexture"] = fb.colorTextures[0]
                 uniforms["depthTexture"] = fb.depthTexture

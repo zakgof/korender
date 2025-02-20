@@ -26,8 +26,9 @@ internal class SceneDeclaration {
     val captures = mutableMapOf<Int, CaptureContext>()
 }
 
-internal class DeferredShadingDeclaration {
+internal class DeferredShadingDeclaration() {
     var postShadingEffects = mutableListOf<PostShadingEffect>()
+    var shadingModifiers = mutableListOf<MaterialModifier>()
 }
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
