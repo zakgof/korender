@@ -1,8 +1,9 @@
 #import "!shader/lib/header.glsl"
 
 
-layout(location = 0) in vec3 pos;
-layout(location = 2) in vec2 tex;
+layout(location = 7) in float w;
+layout(location = 8) in int b1;
+layout(location = 9) in int b2;
 
 out vec3 vpos;
 out vec3 vnormal;
@@ -19,9 +20,11 @@ uniform float antipop;
 #import "!shader/lib/terrain.glsl"
 
 void main() {
-    vpos.xz = tileOffsetAndScale.xy * 32.0 + pos.xz * tileOffsetAndScale.z;
-    vtex = (vpos.xz + 0.5) / 8192.0;
-    vpos.y = h(vtex);
+    vpos.xz = tileOffsetAndScale.xy + vec2(float(b1), float(b2));
+    vtex = vec2(float(b1 + 8) / 16.0, float(b2 + 8) / 16.0);
+    vpos.y = 0.;//h(vtex);
+
+    /*
     int xx = int(round(pos.x) + 0.01);
     int zz = int(round(pos.z) + 0.01);
     if ((xx % 2) == 0 && (zz % 2) == 1) {
@@ -42,6 +45,7 @@ void main() {
         float hR = h(vtex + vec2(-step, -step));
         vpos.y = mix((hL + hR) * 0.5, h(vtex), antipop);
     }
+    */
     vnormal = vec3(0. ,1., 0.);
     gl_Position = projection * (view * vec4(vpos, 1.));
 }

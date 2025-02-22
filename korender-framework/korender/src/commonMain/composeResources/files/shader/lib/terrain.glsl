@@ -11,10 +11,10 @@ float h(vec2 uv) {
 
     float w = noi * 0.001;
 
-    float o128 = texture(fbmTexture, uv * 128.0).r;
-    float o32 = texture(fbmTexture, uv * 32.0).r;
-    float o8 = texture(fbmTexture, uv * 8.0).r;
-    float o2 = texture(fbmTexture, uv * 1.0).r;
+    float o128 = texture(fbmTexture, uv * 128.0).r - 0.5;
+    float o32 = texture(fbmTexture, uv * 32.0).r - 0.5;
+    float o8 = texture(fbmTexture, uv * 8.0).r - 0.5;
+    float o2 = texture(fbmTexture, uv * 1.0).r - 0.5;
 
 
     return base - 64.0

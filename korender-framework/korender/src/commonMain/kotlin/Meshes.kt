@@ -13,6 +13,9 @@ enum class AttributeType {
     Byte,
     Short,
     Int,
+    SignedByte,
+    SignedShort,
+    SignedInt,
     Float
 }
 
@@ -34,13 +37,16 @@ object Attributes {
     val SCREEN = MeshAttribute("screen", 2, AttributeType.Float, 5)
     val SCALE = MeshAttribute("scale", 2, AttributeType.Float, 6)
     val PHI = MeshAttribute("phi", 1, AttributeType.Float, 7)
-    val I1 = MeshAttribute("i1", 1, AttributeType.Byte,8)
+    val B1 = MeshAttribute("b1", 1, AttributeType.SignedByte,8)
+    val B2 = MeshAttribute("b2", 1, AttributeType.SignedByte,9)
+    val B3 = MeshAttribute("b3", 1, AttributeType.SignedByte,10)
 }
 
 interface MeshDeclaration
 
 interface MeshInitializer {
     fun attr(attr: MeshAttribute, vararg v: Float): MeshInitializer
+    fun attr(attr: MeshAttribute, vararg b: Byte): MeshInitializer
     fun pos(vararg position: Vec3): MeshInitializer
     fun pos(vararg v: Float): MeshInitializer
     fun normal(vararg position: Vec3): MeshInitializer
