@@ -136,7 +136,7 @@ internal object ShadowRenderer {
             declaration.fixedYRange?.second ?: 0f,
             mode(declaration),
             (declaration.algorithm as? InternalPcssParams)?.samples ?: 0,
-            (declaration.algorithm as? InternalPcssParams)?.blurRadius ?: 0f
+            ((declaration.algorithm as? InternalPcssParams)?.blurRadius ?: 0f) / shadowProjection.width
         )
     }
 
@@ -200,8 +200,8 @@ internal object ShadowRenderer {
                 }.collect(it)
             }
         )
-        uniforms["colorTexture"] = frameBuffer.colorTextures[0]
-        uniforms["depthTexture"] = frameBuffer.depthTexture
+        uniforms["colorTexture"] = blurFrameBuffer.colorTextures[0]
+        uniforms["depthTexture"] = blurFrameBuffer.depthTexture
 
         frameBuffer.exec {
             val mesh = inventory.mesh(ScreenQuad)
@@ -209,7 +209,7 @@ internal object ShadowRenderer {
             glClearColor(0f, 0f, 0f, 1f)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             if (mesh != null && shader != null) {
-                Renderable(mesh, shader, blur1.uniforms).render(uniforms, fixer)
+                Renderable(mesh, shader, blur2.uniforms).render(uniforms, fixer)
             }
         }
     }

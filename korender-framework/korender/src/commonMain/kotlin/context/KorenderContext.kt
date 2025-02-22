@@ -115,7 +115,7 @@ interface KorenderContext {
 
     fun vsm(blurRadius: Float? = null): ShadowAlgorithmDeclaration
     fun hard(): ShadowAlgorithmDeclaration
-    fun pcss(samples: Int = 32, blurRadius: Float = 0.002f): ShadowAlgorithmDeclaration
+    fun pcss(samples: Int = 32, blurRadius: Float = 0.05f): ShadowAlgorithmDeclaration
 
     val target: TargetPlatform
 

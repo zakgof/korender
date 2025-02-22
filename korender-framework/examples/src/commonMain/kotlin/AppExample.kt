@@ -36,6 +36,8 @@ import org.jetbrains.compose.resources.painterResource
 fun AppExample() {
     val options = listOf(
 
+        Demo("Shadows") { ShadowExample() },
+
         Demo("SSR") { SsrExample() },           // TODO
         Demo("IBL probe") { IblExample() },     // TODO
 
@@ -43,7 +45,7 @@ fun AppExample() {
         Demo("PBR") { MetallicRoughnessExample() },
         Demo("OBJ mesh") { ObjFileExample() },
         Demo("GLTF animation") { GltfExample() },
-        Demo("Shadows") { ShadowExample() },
+
 
         Demo("Effects") { EffectsExample() },
         Demo("Point lights") { LightsExample() },

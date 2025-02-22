@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.math.ColorRGB.Companion.white
-import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
@@ -25,7 +24,7 @@ fun ShadowExample() =
         camera = camera(Vec3(-2.0f, 5f, 30f), -1.z, 1.y)
         Frame {
             DirectionalLight(Vec3(1f, -1f, 2f).normalize(), white(5.0f)) {
-                Cascade(mapSize = 1024, near = 10.0f, 40.0f, 0f to 10f, vsm())
+                Cascade(mapSize = 1024, near = 10.0f, 40.0f, 0f to 10f, pcss())
             }
             DirectionalLight(Vec3(-1f, -1f, 2f).normalize(), white(3.0f)) {
                 Cascade(mapSize = 1024, near = 10.0f, 40.0f, 0f to 10f, vsm())
