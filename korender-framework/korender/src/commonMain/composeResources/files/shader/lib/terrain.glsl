@@ -2,6 +2,10 @@ const float heightScale = 512.0;
 const float nstep = 1.0 / 8192.0;
 
 float h(vec2 uv) {
+
+    if (uv.x < 0. || uv.x > 1. || uv.y < 0. || uv.y > 1.)
+        return 0.;
+
     float base = textureLod(heightTexture, uv, 2).r * heightScale;
 
     float noi =

@@ -12,6 +12,8 @@ expect object GL {
 
     fun glEnable(target: Int)
 
+    fun glPolygonMode(sides: Int, mode: Int)
+
     fun glDisable(target: Int)
 
     fun glBindTexture(target: Int, texture: GLTexture?)
@@ -44,7 +46,7 @@ expect object GL {
         pixels: NativeByteBuffer?
     )
 
-    fun glGetFloatv(pname: Int) : Float?
+    fun glGetFloatv(pname: Int): Float?
 
     fun glGetError(): Int
 
