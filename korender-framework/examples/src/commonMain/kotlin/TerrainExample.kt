@@ -35,7 +35,7 @@ fun TerrainExample() =
                         // baseColor = ColorRGBA(1f, i * 0.1f, 0f, 1f)
                         // baseColorTexture = texture("terrain/ground.png")
                         pbr.metallic = 0.0f
-                        set("heightTexture", texture("terrain/base-terrain.jpg", TextureFilter.MipMap, TextureWrap.MirroredRepeat))
+                        set("heightTexture", texture("terrain/base-terrain.jpg", TextureFilter.MipMap, TextureWrap.ClampToEdge))
                         set("tileOffsetAndScale", tile.offsetAndScale)
                     },
                     vertex("!shader/terrain.vert"),

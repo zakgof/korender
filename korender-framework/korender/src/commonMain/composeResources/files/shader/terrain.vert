@@ -8,6 +8,7 @@ layout(location = 9) in int b2;
 out vec3 vpos;
 out vec3 vnormal;
 out vec2 vtex;
+out vec3 code;
 
 uniform mat4 view;
 uniform mat4 projection;
@@ -15,7 +16,6 @@ uniform mat4 projection;
 uniform vec3 tileOffsetAndScale;
 uniform sampler2D heightTexture;
 uniform sampler2D fbmTexture;
-uniform float antipop;
 
 #import "!shader/lib/terrain.glsl"
 
@@ -23,9 +23,10 @@ void main() {
     float step = tileOffsetAndScale.z / 8192.0;
 
     vpos.xz = tileOffsetAndScale.xy + vec2(float(b1), float(b2)) * tileOffsetAndScale.z;
-    vtex = vpos.xz / 8192.0;
+    vtex = (vpos.xz + 0.5) / 8192.0;
     vpos.y = h(vtex);
 
+    code = vec3(w, 0, 0);
     if ((b1 % 2) == 0 && (b2 % 2) == 1) {
         float hD = h(vtex + vec2(0.,  step));
         float hU = h(vtex + vec2(0., -step));

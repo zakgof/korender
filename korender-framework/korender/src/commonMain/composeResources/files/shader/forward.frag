@@ -10,8 +10,8 @@ uniform float metallic;
 uniform float roughness;
 
 #ifdef SPECULAR_GLOSSINESS
-    uniform vec3 specularFactor;
-    uniform float glossinessFactor;
+uniform vec3 specularFactor;
+uniform float glossinessFactor;
 #endif
 
 #ifdef BASE_COLOR_MAP
@@ -51,6 +51,7 @@ uniform samplerCube cubeTexture;
 uniform vec3 tileOffsetAndScale;
 uniform sampler2D heightTexture;
 uniform sampler2D fbmTexture;
+in vec3 code;
 #endif
 
 //  TODO DETAIL FOR BASECOLOR
@@ -109,76 +110,76 @@ float shadowRatios[MAX_SHADOWS];
 
 void main() {
 
-#ifdef BASE_COLOR_MAP
+    #ifdef BASE_COLOR_MAP
     #ifdef TRIPLANAR
     vec4 albedo = triplanar(baseColorTexture, vpos * triplanarScale, vnormal) * baseColor;
     #else
     vec4 albedo = texture(baseColorTexture, vtex) * baseColor;
     #endif
-#else
+    #else
     vec4 albedo = baseColor;
-#endif
+    #endif
 
-#ifdef PLUGIN_ALBEDO
+    #ifdef PLUGIN_ALBEDO
     albedo = pluginAlbedo(albedo);
-#endif
+    #endif
 
-#ifdef NORMAL_MAP
+    #ifdef NORMAL_MAP
     vec3 N = getNormalFromMap(vnormal, vtex, vpos);
-#else
+    #else
     vec3 N = normalize(vnormal);
-#endif
+    #endif
 
-#ifdef TERRAIN
+    #ifdef TERRAIN
     N = n(vtex);
-#endif
+    #endif
 
-#ifdef EMISSIVE_MAP
+    #ifdef EMISSIVE_MAP
     #ifdef TRIPLANAR
     vec3 emission = triplanar(emissiveTexture, vpos * triplanarScale, vnormal).rgb * emissiveFactor;
     #else
     vec3 emission = texture(emissiveTexture, vtex).rgb * emissiveFactor;
     #endif
-#else
-    vec3 emission = emissiveFactor;
-#endif
-
-#ifdef PLUGIN_EMISSION
-    emission = pluginEmission(emission);
-#endif
-
-#ifdef SPECULAR_GLOSSINESS
-    #ifdef SPECULAR_GLOSSINESS_MAP
-        #ifdef TRIPLANAR
-            vec4 sgtexel = triplanar(specularGlossinessTexture, vtex, vpos, N);
-        #else
-            vec4 sgtexel = texture(specularGlossinessTexture, vtex);
-        #endif
-        vec3 specular = sgtexel.rgb * specularFactor;
-        float glossiness = sgtexel.a * glossinessFactor;
     #else
-        vec3 specular = specularFactor;
-        float glossiness = glossinessFactor;
+    vec3 emission = emissiveFactor;
+    #endif
+
+    #ifdef PLUGIN_EMISSION
+    emission = pluginEmission(emission);
+    #endif
+
+    #ifdef SPECULAR_GLOSSINESS
+    #ifdef SPECULAR_GLOSSINESS_MAP
+    #ifdef TRIPLANAR
+    vec4 sgtexel = triplanar(specularGlossinessTexture, vtex, vpos, N);
+    #else
+    vec4 sgtexel = texture(specularGlossinessTexture, vtex);
+    #endif
+    vec3 specular = sgtexel.rgb * specularFactor;
+    float glossiness = sgtexel.a * glossinessFactor;
+    #else
+    vec3 specular = specularFactor;
+    float glossiness = glossinessFactor;
     #endif
     vec3 c_diff = albedo.rgb * (1. - max(max(specular.r, specular.g), specular.b));
     vec3 F0 = specular;
     float rough = 1. - glossiness;
-#else
-    #ifdef METALLIC_ROUGHNESS_MAP
-        #ifdef TRIPLANAR
-        vec4 mrtexel = triplanar(metallicRoughnessTexture, vtex, vpos, N);
-        #else
-        vec4 mrtexel = texture(metallicRoughnessTexture, vtex);
-        #endif
-        float metal = mrtexel.b * metallic;
-        float rough = mrtexel.g * roughness;
     #else
-        float metal = metallic;
-        float rough = roughness;
+    #ifdef METALLIC_ROUGHNESS_MAP
+    #ifdef TRIPLANAR
+    vec4 mrtexel = triplanar(metallicRoughnessTexture, vtex, vpos, N);
+    #else
+    vec4 mrtexel = texture(metallicRoughnessTexture, vtex);
+    #endif
+    float metal = mrtexel.b * metallic;
+    float rough = mrtexel.g * roughness;
+    #else
+    float metal = metallic;
+    float rough = roughness;
     #endif
     vec3 c_diff = mix(albedo.rgb, vec3(0.), metal);
     vec3 F0 = mix(vec3(0.04), albedo.rgb, metal);
-#endif
+    #endif
 
     ///////////////////////
 
@@ -196,6 +197,10 @@ void main() {
     for (int l=0; l<numPointLights; l++) {
         color += pointLight(vpos, l, N, V, c_diff, F0, rough);
     }
+//
+//    #ifdef TERRAIN
+//    color = code;
+//    #endif
 
     fragColor = vec4(color, albedo.a);
 }

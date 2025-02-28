@@ -21,19 +21,19 @@ class Clipmaps(korenderContext: KorenderContext, id: String, private val hg: Int
         center = korenderContext.customMesh(
             "$id-center",
             (outer + 1) * (outer + 1),
-            outer * outer * 6 + inner * 3 * 4 + (inner - 1) * 6 * 4,
+            // outer * outer * 6 + inner * 3 * 4 + (inner - 1) * 6 * 4,
+            outer * outer * 6,
             B1, B2, PHI
         ) {
             buildBlock(hg, null)
         }
-        val ringVertices = (outer + 1) * (outer + 1)
         val ringIndices = (outer * outer - inner * inner) * 6 + inner * 3 * 4 + (inner - 1) * 6 * 4
         for (ox in 0..1) {
             for (oz in 0..1) {
                 ring[Offset(ox, oz)] = korenderContext.customMesh(
                     "$id-ring-$ox-$oz",
-                    ringVertices,
-                    ringIndices,
+                    (outer + 1) * (outer + 1),
+                    (outer * outer - inner * inner) * 6,
                     B1, B2, PHI
                 ) {
                     buildBlock(hg, Offset(ox, oz))
@@ -43,6 +43,25 @@ class Clipmaps(korenderContext: KorenderContext, id: String, private val hg: Int
     }
 
     private fun MeshInitializer.buildBlock(hg: Int, offset: Offset?) {
+        // Grid
+        for (x in 0..inner * 2) {
+            for (z in 0..inner * 2) {
+                p(x, z)
+            }
+        }
+        // Bulk
+        val bsize = inner * 2 + 1
+        for (x in 0..<inner * 2) {
+            for (z in 0..<inner * 2) {
+                if (offset == null || (x < 1 + hg + offset.x || x > hg + inner + offset.x || z < 1 + hg + offset.z || z > hg + inner + offset.z)) {
+                    val b = x * bsize + z
+                    index(b, b + 1, b + bsize + 1, b, b + bsize + 1, b + bsize)
+                }
+            }
+        }
+    }
+
+    private fun MeshInitializer.buildBlockTJunctions(hg: Int, offset: Offset?) {
         // Grid
         for (x in 0..inner * 2) {
             for (z in 0..inner * 2) {
@@ -101,18 +120,16 @@ class Clipmaps(korenderContext: KorenderContext, id: String, private val hg: Int
         attr(B1, x.toByte())
         attr(B2, z.toByte())
 
-        val alpha = 1.3f / (hg + 1.0f)
+        val alpha = 1.6f / (hg + 1.0f)
 
-        val m1 = (x * alpha).coerceIn(0f, 1f)
-        val m2 = (((inner * 2f) - x) * alpha).coerceIn(0f, 1f)
-        val n1 = (z * alpha).coerceIn(0f, 1f)
-        val n2 = (((inner * 2f) - z) * alpha).coerceIn(0f, 1f)
+        val m1 = ((x-4) * alpha).coerceIn(0f, 1f)
+        val m2 = (((inner * 2f) - (x+4)) * alpha).coerceIn(0f, 1f)
+        val n1 = ((z-4) * alpha).coerceIn(0f, 1f)
+        val n2 = (((inner * 2f) - (z+4)) * alpha).coerceIn(0f, 1f)
         val m = min(m1, m2)
         val n = min(n1, n2)
 
         attr(PHI, min(m, n))
-
-        println("x: $x  z: $z  phi: ${min(m, n)}")
     }
 
     fun meshes(position: Vec3): List<Me> {
