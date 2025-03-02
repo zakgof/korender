@@ -20,7 +20,7 @@ float h(vec2 uv) {
     float o8 = texture(fbmTexture, uv * 8.0).r - 0.5;
     float o2 = texture(fbmTexture, uv * 1.0).r - 0.5;
 
-    return 400 * sin(uv.x * 100) * cos (uv.y * 100);
+    // return 400 * sin(uv.x * 100) * cos (uv.y * 100);
 
     return base - 64.0
         + o128 * 8.0

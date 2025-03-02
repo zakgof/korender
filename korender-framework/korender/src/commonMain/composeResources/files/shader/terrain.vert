@@ -1,7 +1,6 @@
 #import "!shader/lib/header.glsl"
 
 
-layout(location = 7) in float w;
 layout(location = 8) in int b1;
 layout(location = 9) in int b2;
 
@@ -14,6 +13,9 @@ uniform mat4 view;
 uniform mat4 projection;
 
 uniform vec3 tileOffsetAndScale;
+uniform float px;
+uniform float pz;
+
 uniform sampler2D heightTexture;
 uniform sampler2D fbmTexture;
 
@@ -25,6 +27,12 @@ void main() {
     vpos.xz = tileOffsetAndScale.xy + vec2(float(b1), float(b2)) * tileOffsetAndScale.z;
     vtex = (vpos.xz + 0.5) / 8192.0;
     vpos.y = h(vtex);
+
+    float w =
+        smoothstep(px * 2.0, px * 2.0 + 3.0, float(b1)) *
+        smoothstep(pz * 2.0, pz * 2.0 + 3.0, float(b2)) *
+        smoothstep((1.0-px) * 2.0, (1.0-px) * 2.0 + 3.0, float(46-b1)) *
+        smoothstep((1.0-pz) * 2.0, (1.0-pz) * 2.0 + 3.0, float(46-b2));
 
     code = vec3(w, 0, 0);
     if ((b1 % 2) == 0 && (b2 % 2) == 1) {

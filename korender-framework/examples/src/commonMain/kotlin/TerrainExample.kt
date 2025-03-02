@@ -32,11 +32,13 @@ fun TerrainExample() =
             tiles.forEachIndexed { i, tile ->
                 Renderable(
                     standart {
-                        // baseColor = ColorRGBA(1f, i * 0.1f, 0f, 1f)
+                        // baseColor = ColorRGBA(1f, tile.pz, 0f, 1f)
                         // baseColorTexture = texture("terrain/ground.png")
                         pbr.metallic = 0.0f
                         set("heightTexture", texture("terrain/base-terrain.jpg", TextureFilter.MipMap, TextureWrap.ClampToEdge))
                         set("tileOffsetAndScale", tile.offsetAndScale)
+                        set("px", tile.px)
+                        set("pz", tile.pz)
                     },
                     vertex("!shader/terrain.vert"),
                     defs("TERRAIN"),
