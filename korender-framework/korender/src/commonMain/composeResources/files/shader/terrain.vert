@@ -10,6 +10,7 @@ out vec2 vtex;
 uniform mat4 view;
 uniform mat4 projection;
 
+uniform float cell;
 uniform vec3 tileOffsetAndScale;
 uniform vec3 antipop;
 
@@ -19,10 +20,13 @@ uniform sampler2D fbmTexture;
 #import "!shader/lib/terrain.glsl"
 
 void main() {
-    float step = tileOffsetAndScale.z / 8192.0;
 
-    vpos.xz = tileOffsetAndScale.xy + vec2(float(b1), float(b2)) * tileOffsetAndScale.z;
-    vtex = (vpos.xz) / 8192.0;
+    vec2 intpos = tileOffsetAndScale.xy + vec2(float(b1), float(b2)) * tileOffsetAndScale.z;
+
+    vpos.xz = intpos * cell;
+
+    vtex = intpos / 8192.0;
+    float step = tileOffsetAndScale.z / 8192.0;
     vpos.y = h(vtex);
 
     float w =

@@ -3,8 +3,6 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.TextureFilter
-import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.impl.geometry.terrain.Clipmaps
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Vec3
@@ -17,7 +15,7 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 fun TerrainExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-        val clipmaps = Clipmaps(this, "terrain", 10, 12)
+        val clipmaps = Clipmaps(this, "terrain", 2.0f,10, 12)
         val proj = frustum(5f, 5f * height / width, 2f, 9000f)
         projection = proj
         Frame {
@@ -27,29 +25,20 @@ fun TerrainExample() =
             AmbientLight(ColorRGB.white(0.2f))
             DirectionalLight(Vec3(1.0f, -1.0f, 0.0f).normalize(), ColorRGB.white(0.5f))
 
-            val tiles = clipmaps.meshes(camera.position)
+            clipmaps.render(this, standart {
+                pbr.metallic = 0.0f;
+            })
 
-            tiles.forEachIndexed { i, tile ->
-                Renderable(
-                    standart {
-                        // baseColor = ColorRGBA(1f, tile.pz, 0f, 1f)
-                        // baseColorTexture = texture("terrain/ground.png")
-                        pbr.metallic = 0.0f
-                        set("heightTexture", texture("terrain/base-terrain.jpg", TextureFilter.MipMap, TextureWrap.ClampToEdge))
-                        set("tileOffsetAndScale", tile.offsetAndScale)
-                        set("antipop", tile.antipop)
-                    },
-                    vertex("!shader/terrain.vert"),
-                    defs("TERRAIN"),
-                    mesh = tile.mesh
-                )
-            }
             Sky(fastCloudSky())
             PostProcess(water(), fastCloudSky())
+//            PostProcess(fog {
+//                density = 0.0001f
+//                color = ColorRGB(0x8090FF)
+//            })
             Gui {
                 Column {
                     Filler()
-                    Text(id = "fps", text = "TILES ${tiles.size} | FPS ${frameInfo.avgFps.toInt()}")
+                    Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
                 }
             }
         }

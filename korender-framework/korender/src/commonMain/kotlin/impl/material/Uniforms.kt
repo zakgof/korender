@@ -23,7 +23,7 @@ import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 
-internal abstract class InternalBaseParams : BaseParams {
+internal open class InternalBaseParams : BaseParams {
 
     val map = mutableMapOf<String, Any?>()
 

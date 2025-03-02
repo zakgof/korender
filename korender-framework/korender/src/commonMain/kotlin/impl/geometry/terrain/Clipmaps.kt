@@ -2,13 +2,15 @@ package com.zakgof.korender.impl.geometry.terrain
 
 import com.zakgof.korender.Attributes.B1
 import com.zakgof.korender.Attributes.B2
+import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
+import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.math.Vec3
 import kotlin.math.floor
 
-class Clipmaps(korenderContext: KorenderContext, id: String, private val hg: Int, private val rings: Int) {
+class Clipmaps(korenderContext: KorenderContext, id: String, private val cellSize: Float, private val hg: Int, private val rings: Int) {
 
     private val center: MeshDeclaration
     private val ring = mutableMapOf<Offset, MeshDeclaration>()
@@ -19,7 +21,6 @@ class Clipmaps(korenderContext: KorenderContext, id: String, private val hg: Int
         center = korenderContext.customMesh(
             "$id-center",
             (outer + 1) * (outer + 1),
-            // outer * outer * 6 + inner * 3 * 4 + (inner - 1) * 6 * 4,
             outer * outer * 6,
             B1, B2
         ) {
@@ -63,18 +64,21 @@ class Clipmaps(korenderContext: KorenderContext, id: String, private val hg: Int
         attr(B2, z.toByte())
     }
 
-    fun meshes(position: Vec3): List<Me> {
+    private fun meshes(camPos: Vec3): List<Me> {
+
+        val posx = camPos.x / cellSize
+        val posz = camPos.z / cellSize
 
         fun Float.snap(power: Int, offset: Int = 0) = floor(this - offset).toInt() and (Int.MAX_VALUE shl power)
         fun Float.fract(power: Int, offset: Int = 0) = (this - offset - snap(power, offset)) / (1 shl power)
 
         val list = mutableListOf<Me>()
 
-        var xpos = position.x.snap(1, inner)
-        var zpos = position.z.snap(1, inner)
+        var xpos = posx.snap(1, inner)
+        var zpos = posz.snap(1, inner)
 
-        val px = position.x.fract(1, inner)
-        val pz = position.z.fract(1, inner)
+        val px = posx.fract(1, inner)
+        val pz = posz.fract(1, inner)
 
         list += Me(
             center, Vec3(xpos.toFloat(), zpos.toFloat(), 1f),
@@ -86,11 +90,11 @@ class Clipmaps(korenderContext: KorenderContext, id: String, private val hg: Int
 
             val theOffset = (hg + 1) * (step - 1) * 2 + inner
 
-            val newxpos = position.x.snap(r + 1, theOffset)
-            val newzpos = position.z.snap(r + 1, theOffset)
+            val newxpos = posx.snap(r + 1, theOffset)
+            val newzpos = posz.snap(r + 1, theOffset)
 
-            val prx = position.x.fract(r + 1, theOffset)
-            val prz = position.z.fract(r + 1, theOffset)
+            val prx = posx.fract(r + 1, theOffset)
+            val prz = posz.fract(r + 1, theOffset)
 
             val offs = Offset((xpos - newxpos) / step - 1 - hg, (zpos - newzpos) / step - 1 - hg)
             list += Me(
@@ -104,7 +108,25 @@ class Clipmaps(korenderContext: KorenderContext, id: String, private val hg: Int
         return list
     }
 
-    data class Offset(val x: Int, val z: Int)
+    fun render(fc: FrameContext, vararg materialModifiers: MaterialModifier) = with(fc) {
+        val tiles = meshes(fc.camera.position)
+        tiles.forEach { tile ->
+            Renderable(
+                *materialModifiers,
+                uniforms {
+                    set("heightTexture", texture("terrain/base-terrain.jpg"))
+                    set("tileOffsetAndScale", tile.offsetAndScale)
+                    set("antipop", tile.antipop)
+                    set("cell", cellSize)
+                },
+                fc.vertex("!shader/terrain.vert"),
+                fc.defs("TERRAIN"),
+                mesh = tile.mesh
+            )
+        }
+    }
 
-    class Me(val mesh: MeshDeclaration, val offsetAndScale: Vec3, val antipop: Vec3)
+    private data class Offset(val x: Int, val z: Int)
+
+    private class Me(val mesh: MeshDeclaration, val offsetAndScale: Vec3, val antipop: Vec3)
 }

@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.AsyncContext
+import com.zakgof.korender.BaseParams
 import com.zakgof.korender.BloomParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
@@ -63,6 +64,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.material.InternalAdjustParams
+import com.zakgof.korender.impl.material.InternalBaseParams
 import com.zakgof.korender.impl.material.InternalBloomParams
 import com.zakgof.korender.impl.material.InternalBlurParams
 import com.zakgof.korender.impl.material.InternalFastCloudSkyParams
@@ -174,6 +176,10 @@ internal class Engine(
 
         override fun standart(block: StandartParams.() -> Unit) = InternalMaterialModifier {
             InternalStandartParams().apply(block).collect(it)
+        }
+
+        override fun uniforms(block: BaseParams.() -> Unit): MaterialModifier = InternalMaterialModifier {
+            InternalBaseParams().apply(block).collect(it)
         }
 
         override fun blurVert(block: BlurParams.() -> Unit) =

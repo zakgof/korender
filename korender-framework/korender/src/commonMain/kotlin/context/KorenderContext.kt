@@ -1,6 +1,7 @@
 package com.zakgof.korender.context
 
 import com.zakgof.korender.AdjustParams
+import com.zakgof.korender.BaseParams
 import com.zakgof.korender.BloomParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
@@ -85,6 +86,7 @@ interface KorenderContext {
     fun defs(vararg defs: String): MaterialModifier
     fun plugin(name: String, shaderFile: String): MaterialModifier
     fun standart(block: StandartParams.() -> Unit): MaterialModifier
+    fun uniforms(block: BaseParams.() -> Unit): MaterialModifier
 
     fun blurHorz(block: BlurParams.() -> Unit = {}): MaterialModifier
     fun blurVert(block: BlurParams.() -> Unit = {}): MaterialModifier
