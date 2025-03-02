@@ -78,10 +78,9 @@ class Clipmaps(korenderContext: KorenderContext, id: String, private val hg: Int
 
         list += Me(
             center, Vec3(xpos.toFloat(), zpos.toFloat(), 1f),
-            px, pz
+            Vec3(px, pz, inner * 2f)
         )
 
-        println("------------")
         for (r in 1..rings) {
             val step = 1 shl r
 
@@ -97,11 +96,8 @@ class Clipmaps(korenderContext: KorenderContext, id: String, private val hg: Int
             list += Me(
                 ring[offs]!!,
                 Vec3(newxpos.toFloat(), newzpos.toFloat(), step.toFloat()),
-                prx, prz
+                Vec3(prx, prz, inner * 2f)
             )
-            if (r == 3)
-                println("ring $r: pz: $prz zpos: $newzpos")
-
             xpos = newxpos
             zpos = newzpos
         }
@@ -110,5 +106,5 @@ class Clipmaps(korenderContext: KorenderContext, id: String, private val hg: Int
 
     data class Offset(val x: Int, val z: Int)
 
-    class Me(val mesh: MeshDeclaration, val offsetAndScale: Vec3, val px: Float, val pz: Float)
+    class Me(val mesh: MeshDeclaration, val offsetAndScale: Vec3, val antipop: Vec3)
 }

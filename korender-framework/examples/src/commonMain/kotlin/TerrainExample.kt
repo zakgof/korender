@@ -17,7 +17,7 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 fun TerrainExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-        val clipmaps = Clipmaps(this, "terrain", 10, 8)
+        val clipmaps = Clipmaps(this, "terrain", 10, 12)
         val proj = frustum(5f, 5f * height / width, 2f, 9000f)
         projection = proj
         Frame {
@@ -37,8 +37,7 @@ fun TerrainExample() =
                         pbr.metallic = 0.0f
                         set("heightTexture", texture("terrain/base-terrain.jpg", TextureFilter.MipMap, TextureWrap.ClampToEdge))
                         set("tileOffsetAndScale", tile.offsetAndScale)
-                        set("px", tile.px)
-                        set("pz", tile.pz)
+                        set("antipop", tile.antipop)
                     },
                     vertex("!shader/terrain.vert"),
                     defs("TERRAIN"),
@@ -46,7 +45,7 @@ fun TerrainExample() =
                 )
             }
             Sky(fastCloudSky())
-            //PostProcess(water(), fastCloudSky())
+            PostProcess(water(), fastCloudSky())
             Gui {
                 Column {
                     Filler()

@@ -1,20 +1,17 @@
 #import "!shader/lib/header.glsl"
 
-
 layout(location = 8) in int b1;
 layout(location = 9) in int b2;
 
 out vec3 vpos;
 out vec3 vnormal;
 out vec2 vtex;
-out vec3 code;
 
 uniform mat4 view;
 uniform mat4 projection;
 
 uniform vec3 tileOffsetAndScale;
-uniform float px;
-uniform float pz;
+uniform vec3 antipop;
 
 uniform sampler2D heightTexture;
 uniform sampler2D fbmTexture;
@@ -25,16 +22,15 @@ void main() {
     float step = tileOffsetAndScale.z / 8192.0;
 
     vpos.xz = tileOffsetAndScale.xy + vec2(float(b1), float(b2)) * tileOffsetAndScale.z;
-    vtex = (vpos.xz + 0.5) / 8192.0;
+    vtex = (vpos.xz) / 8192.0;
     vpos.y = h(vtex);
 
     float w =
-        smoothstep(px * 2.0, px * 2.0 + 3.0, float(b1)) *
-        smoothstep(pz * 2.0, pz * 2.0 + 3.0, float(b2)) *
-        smoothstep((1.0-px) * 2.0, (1.0-px) * 2.0 + 3.0, float(46-b1)) *
-        smoothstep((1.0-pz) * 2.0, (1.0-pz) * 2.0 + 3.0, float(46-b2));
+        smoothstep(antipop.x * 2.0, antipop.x * 2.0 + 3.0, float(b1)) *
+        smoothstep(antipop.y * 2.0, antipop.y * 2.0 + 3.0, float(b2)) *
+        smoothstep((1.0-antipop.x) * 2.0, (1.0-antipop.x) * 2.0 + 3.0, antipop.z-float(b1)) *
+        smoothstep((1.0-antipop.y) * 2.0, (1.0-antipop.y) * 2.0 + 3.0, antipop.z-float(b2));
 
-    code = vec3(w, 0, 0);
     if ((b1 % 2) == 0 && (b2 % 2) == 1) {
         float hD = h(vtex + vec2(0.,  step));
         float hU = h(vtex + vec2(0., -step));

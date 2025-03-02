@@ -12,7 +12,7 @@ expect object GL {
 
     fun glEnable(target: Int)
 
-    fun glPolygonMode(sides: Int, mode: Int)
+    // fun glPolygonMode(sides: Int, mode: Int)
 
     fun glDisable(target: Int)
 
