@@ -19,3 +19,7 @@ class FrameInfo(
     val dt: Float,
     val avgFps: Float,
 )
+
+interface Prefab {
+
+}

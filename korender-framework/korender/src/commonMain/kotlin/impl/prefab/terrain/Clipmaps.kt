@@ -1,4 +1,4 @@
-package com.zakgof.korender.impl.geometry.terrain
+package com.zakgof.korender.impl.prefab.terrain
 
 import com.zakgof.korender.Attributes.B1
 import com.zakgof.korender.Attributes.B2
@@ -7,10 +7,12 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.impl.prefab.InternalPrefab
 import com.zakgof.korender.math.Vec3
 import kotlin.math.floor
 
-class Clipmaps(korenderContext: KorenderContext, id: String, private val cellSize: Float, private val hg: Int, private val rings: Int) {
+internal class Clipmaps(korenderContext: KorenderContext, id: String, private val cellSize: Float, private val hg: Int, private val rings: Int)
+    : InternalPrefab {
 
     private val center: MeshDeclaration
     private val ring = mutableMapOf<Offset, MeshDeclaration>()
@@ -108,7 +110,7 @@ class Clipmaps(korenderContext: KorenderContext, id: String, private val cellSiz
         return list
     }
 
-    fun render(fc: FrameContext, vararg materialModifiers: MaterialModifier) = with(fc) {
+    override fun render(fc: FrameContext, vararg materialModifiers: MaterialModifier) = with(fc) {
         val tiles = meshes(fc.camera.position)
         tiles.forEach { tile ->
             Renderable(

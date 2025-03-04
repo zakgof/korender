@@ -20,6 +20,7 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.OrthoProjectionDeclaration
 import com.zakgof.korender.PostShadingEffect
+import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SmokeParams
@@ -115,6 +116,8 @@ interface KorenderContext {
     fun vsm(blurRadius: Float? = null): ShadowAlgorithmDeclaration
     fun hard(): ShadowAlgorithmDeclaration
     fun pcss(samples: Int = 32, blurRadius: Float = 0.002f): ShadowAlgorithmDeclaration
+
+    fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab
 
     val target: TargetPlatform
 

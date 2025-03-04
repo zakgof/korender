@@ -24,6 +24,7 @@ import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.OrthoProjectionDeclaration
 import com.zakgof.korender.Platform
 import com.zakgof.korender.PostShadingEffect
+import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SmokeParams
@@ -80,6 +81,7 @@ import com.zakgof.korender.impl.material.InternalStarrySkyParams
 import com.zakgof.korender.impl.material.InternalWaterParams
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
+import com.zakgof.korender.impl.prefab.terrain.Clipmaps
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.OrthoProjection
 import com.zakgof.korender.impl.projection.Projection
@@ -359,6 +361,8 @@ internal class Engine(
         override fun pcss(samples: Int, blurRadius: Float): ShadowAlgorithmDeclaration =
             InternalPcssParams(samples, blurRadius)
 
+        override fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab =
+            Clipmaps(this, id, cellSize, hg, rings)
     }
 
     init {
