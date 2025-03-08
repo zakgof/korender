@@ -31,6 +31,7 @@ import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.SsrParams
 import com.zakgof.korender.StandartParams
 import com.zakgof.korender.StarrySkyParams
+import com.zakgof.korender.TerrainParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -78,6 +79,7 @@ import com.zakgof.korender.impl.material.InternalSmokeParams
 import com.zakgof.korender.impl.material.InternalSsrParams
 import com.zakgof.korender.impl.material.InternalStandartParams
 import com.zakgof.korender.impl.material.InternalStarrySkyParams
+import com.zakgof.korender.impl.material.InternalTerrainParams
 import com.zakgof.korender.impl.material.InternalWaterParams
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
@@ -182,6 +184,10 @@ internal class Engine(
 
         override fun uniforms(block: BaseParams.() -> Unit): MaterialModifier = InternalMaterialModifier {
             InternalBaseParams().apply(block).collect(it)
+        }
+
+        override fun terrain(block: TerrainParams.() -> Unit): MaterialModifier = InternalMaterialModifier {
+            InternalTerrainParams().apply(block).collect(it)
         }
 
         override fun blurVert(block: BlurParams.() -> Unit) =

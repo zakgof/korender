@@ -17,11 +17,13 @@ import com.zakgof.korender.StandartParams
 import com.zakgof.korender.StandartParams.Pbr
 import com.zakgof.korender.StandartParams.SpecularGlossiness
 import com.zakgof.korender.StarrySkyParams
+import com.zakgof.korender.TerrainParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.WaterParams
 import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.math.Vec3
 
 internal open class InternalBaseParams : BaseParams {
 
@@ -280,6 +282,24 @@ internal class InternalBloomParams : BloomParams, InternalBaseParams() {
     }
 }
 
+internal class InternalTerrainParams : TerrainParams, InternalBaseParams() {
+
+    override var heightTexture: TextureDeclaration? = null
+    override var heightTextureSize: Int? = null
+    override var heightScale: Float = 10.0f
+    override var terrainCenter: Vec3 = Vec3.ZERO
+    override var outsideHeight: Float = 0f
+
+    override fun collect(mb: MaterialBuilder) {
+        mb.shaderDefs += "TERRAIN"
+        mb.uniforms["heightTexture"] = heightTexture
+        mb.uniforms["heightTextureSize"] = heightTextureSize
+        mb.uniforms["heightScale"] = heightScale
+        mb.uniforms["terrainCenter"] = terrainCenter
+        mb.uniforms["outsideHeight"] = outsideHeight
+        super.collect(mb)
+    }
+}
 
 internal class InternalPostShadingEffect(
     val name: String,

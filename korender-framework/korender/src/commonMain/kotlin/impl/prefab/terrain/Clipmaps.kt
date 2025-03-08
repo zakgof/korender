@@ -116,9 +116,9 @@ internal class Clipmaps(korenderContext: KorenderContext, id: String, private va
             Renderable(
                 *materialModifiers,
                 uniforms {
-                    set("heightTexture", texture("terrain/base-terrain.jpg"))
                     set("tileOffsetAndScale", tile.offsetAndScale)
                     set("antipop", tile.antipop)
+                    set("antipopSpan", hg.toFloat() - 1f)
                     set("cell", cellSize)
                 },
                 fc.vertex("!shader/terrain.vert"),

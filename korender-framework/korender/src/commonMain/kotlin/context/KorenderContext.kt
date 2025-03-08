@@ -27,6 +27,7 @@ import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.SsrParams
 import com.zakgof.korender.StandartParams
 import com.zakgof.korender.StarrySkyParams
+import com.zakgof.korender.TerrainParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -88,6 +89,7 @@ interface KorenderContext {
     fun plugin(name: String, shaderFile: String): MaterialModifier
     fun standart(block: StandartParams.() -> Unit): MaterialModifier
     fun uniforms(block: BaseParams.() -> Unit): MaterialModifier
+    fun terrain(block: TerrainParams.() -> Unit): MaterialModifier
 
     fun blurHorz(block: BlurParams.() -> Unit = {}): MaterialModifier
     fun blurVert(block: BlurParams.() -> Unit = {}): MaterialModifier

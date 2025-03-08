@@ -51,7 +51,10 @@ uniform samplerCube cubeTexture;
 uniform vec3 tileOffsetAndScale;
 uniform sampler2D heightTexture;
 uniform sampler2D fbmTexture;
-in vec3 code;
+uniform int heightTextureSize;
+uniform float heightScale;
+uniform float outsideHeight;
+uniform vec3 terrainCenter;
 #endif
 
 //  TODO DETAIL FOR BASECOLOR
@@ -131,7 +134,7 @@ void main() {
     #endif
 
     #ifdef TERRAIN
-    N = n(vtex);
+    N = normalAt(vtex);
     #endif
 
     #ifdef EMISSIVE_MAP
@@ -197,10 +200,10 @@ void main() {
     for (int l=0; l<numPointLights; l++) {
         color += pointLight(vpos, l, N, V, c_diff, F0, rough);
     }
-//
-//    #ifdef TERRAIN
-//    color = code;
-//    #endif
+
+    #ifdef TERRAIN
+    // color = vec3(vtex, 0.0);
+    #endif
 
     fragColor = vec4(color, albedo.a);
 }
