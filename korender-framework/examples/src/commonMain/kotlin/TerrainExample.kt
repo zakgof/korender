@@ -17,10 +17,9 @@ fun TerrainExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         val terrain = clipmapTerrain("terrain", 2.0f, 10, 6)
-        val proj = frustum(5f, 5f * height / width, 2f, 9000f)
-        projection = proj
         Frame {
 
+            projection = frustum(5f, 5f * height / width, 2f, 9000f)
             camera = camera(Vec3(0f, 240f, -500f-800f * cos(frameInfo.time * 0.1f)), (-1.y + 2.z).normalize(), (2.y + 1.z).normalize())
 
             AmbientLight(ColorRGB.white(0.2f))
@@ -38,7 +37,9 @@ fun TerrainExample() =
             }, prefab = terrain)
 
             Sky(fastCloudSky())
-            PostProcess(water(), fastCloudSky())
+            PostProcess(water {
+                waveScale = 1000.0f
+            }, fastCloudSky())
             Gui {
                 Column {
                     Filler()

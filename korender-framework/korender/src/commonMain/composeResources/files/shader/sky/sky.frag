@@ -1,11 +1,4 @@
 #import "!shader/lib/header.glsl"
-#import "!shader/lib/sky.glsl"
-
-#import "$sky"
-
-#ifdef PLUGIN_SECSKY
-    #import "$secsky"
-#endif
 
 in vec2 vtex;
 
@@ -15,20 +8,17 @@ uniform mat4 projection;
 
 out vec4 fragColor;
 
-void main() {
+#import "!shader/lib/space.glsl"
+#import "!shader/lib/sky.glsl"
+#import "$sky"
 
-#ifdef HEMISPHERE
-    #ifdef HTOP
-        vec3 look = lookfromskydisk(vtex, 1.5);
-    #endif
-    #ifdef HBOTTOM
-        vec3 look = lookfromskydisk(vtex, 1.5);
-        look.y = -look.y;
-    #endif
-#else
-    vec3 look = screentolook(vtex, projection * view, cameraPos);
+#ifdef PLUGIN_SECSKY
+#import "$secsky"
 #endif
 
+void main() {
+
+    vec3 look = screenToLook(vtex);
     vec3 color = sky(look);
 
     #ifdef PLUGIN_SECSKY

@@ -39,6 +39,7 @@ interface WaterParams : BaseParams {
     var waterColor: ColorRGB
     var transparency: Float
     var waveScale: Float
+    var waveMagnitude: Float
 }
 
 interface AdjustParams : BaseParams {

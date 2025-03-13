@@ -78,7 +78,6 @@ internal class GlGpuMesh(
             if (attr.primitiveType == AttributeType.Float)
                 glVertexAttribPointer(attr.location, attr.structSize, attr.primitiveType.toGL(), false, 0, 0)
             else {
-                println("" + vb[index].byte(0) + " " + vb[index].byte(1) + " " + vb[index].byte(2) + " " + vb[index].byte(3));
                 glVertexAttribIPointer(attr.location, attr.structSize, attr.primitiveType.toGL(), 0, 0)
             }
             glEnableVertexAttribArray(attr.location)

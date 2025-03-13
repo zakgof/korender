@@ -1,12 +1,11 @@
 #import "!shader/lib/header.glsl"
-#import "!shader/lib/sky.glsl"
 
 in vec2 vtex;
 
 uniform vec3 waterColor;
 uniform float transparency;
 uniform float waveScale;
-
+uniform float waveMagnitude;
 
 uniform sampler2D colorTexture;
 uniform sampler2D depthTexture;
@@ -18,6 +17,8 @@ uniform vec4 lightColor;
 
 out vec4 fragColor;
 
+#import "!shader/lib/space.glsl"
+#import "!shader/lib/sky.glsl"
 #import "$sky"
 
 #ifdef PLUGIN_SECSKY
@@ -29,20 +30,21 @@ void main() {
     vec3 color = texture(colorTexture, vtex).rgb;
     float depth = texture(depthTexture, vtex).r;
 
-    vec2 csp = vec2(vtex * 2.0 - 1.0);
-    vec4 w4 = inverse(projection * view) * vec4(csp, depth * 2.0 - 1.0, 1.0);
-    vec3 world = w4.xyz / w4.w;
-    vec3 look = normalize(world - cameraPos);
+    vec3 look = screenToLook(vtex);
+    vec3 world = screenToWorldSpace(vtex, depth);
+    if (depth > 0.9999) {
+        world = cameraPos + look * 10000000.0;
+    }
 
     vec3 surface = cameraPos - look * cameraPos.y / look.y;
 
-    float fbmA = fbm2(surface.xz * waveScale - 0.03 * time) - 0.5;
-    if (world.y < 0.4 * fbmA) {
+    float fbmA = fbm2(surface.xz / waveScale - 0.03 * time) - 0.5;
+    if (world.y < waveMagnitude * fbmA) {
 
         vec3 normal = normalize(vec3(
-            0.3 * fbmA,
+            waveMagnitude * fbmA,
             1.0f,
-            0.3 * (fbm2(surface.xz * 0.03 + 0.04 * time) - 0.5)
+            waveMagnitude * (fbm2((msw * surface.xz) / waveScale  + 0.04 * time) - 0.5)
         ));
 
         vec3 reflecteddir = reflect(look, normal);

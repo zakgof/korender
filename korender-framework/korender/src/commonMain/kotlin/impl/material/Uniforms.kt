@@ -112,12 +112,14 @@ internal class InternalWaterParams : WaterParams, InternalBaseParams() {
 
     override var waterColor: ColorRGB = ColorRGB(0.1f, 0.2f, 0.3f)
     override var transparency: Float = 0.1f
-    override var waveScale: Float = 0.04f
+    override var waveScale: Float = 25.0f
+    override var waveMagnitude: Float = 0.3f
 
     override fun collect(mb: MaterialBuilder) {
         mb.uniforms["waterColor"] = waterColor
         mb.uniforms["transparency"] = transparency
         mb.uniforms["waveScale"] = waveScale
+        mb.uniforms["waveMagnitude"] = waveMagnitude
         super.collect(mb)
     }
 }
