@@ -2,6 +2,7 @@ package com.zakgof.korender
 
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.math.Vec3
 
 interface MaterialModifier
 
@@ -38,6 +39,7 @@ interface WaterParams : BaseParams {
     var waterColor: ColorRGB
     var transparency: Float
     var waveScale: Float
+    var waveMagnitude: Float
 }
 
 interface AdjustParams : BaseParams {
@@ -108,5 +110,12 @@ interface SsrParams : BaseParams {
 }
 
 interface BloomParams : BaseParams {
-    
+}
+
+interface TerrainParams : BaseParams {
+    var heightTexture: TextureDeclaration?
+    var heightTextureSize: Int?
+    var heightScale: Float
+    var terrainCenter: Vec3
+    var outsideHeight: Float
 }

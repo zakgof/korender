@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.AsyncContext
+import com.zakgof.korender.BaseParams
 import com.zakgof.korender.BloomParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
@@ -23,12 +24,14 @@ import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.OrthoProjectionDeclaration
 import com.zakgof.korender.Platform
 import com.zakgof.korender.PostShadingEffect
+import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.SsrParams
 import com.zakgof.korender.StandartParams
 import com.zakgof.korender.StarrySkyParams
+import com.zakgof.korender.TerrainParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -39,7 +42,6 @@ import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
-import com.zakgof.korender.impl.checkGlError
 import com.zakgof.korender.impl.context.DefaultFrameContext
 import com.zakgof.korender.impl.engine.shadow.InternalHardParams
 import com.zakgof.korender.impl.engine.shadow.InternalPcssParams
@@ -64,6 +66,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.material.InternalAdjustParams
+import com.zakgof.korender.impl.material.InternalBaseParams
 import com.zakgof.korender.impl.material.InternalBloomParams
 import com.zakgof.korender.impl.material.InternalBlurParams
 import com.zakgof.korender.impl.material.InternalFastCloudSkyParams
@@ -76,9 +79,11 @@ import com.zakgof.korender.impl.material.InternalSmokeParams
 import com.zakgof.korender.impl.material.InternalSsrParams
 import com.zakgof.korender.impl.material.InternalStandartParams
 import com.zakgof.korender.impl.material.InternalStarrySkyParams
+import com.zakgof.korender.impl.material.InternalTerrainParams
 import com.zakgof.korender.impl.material.InternalWaterParams
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
+import com.zakgof.korender.impl.prefab.terrain.Clipmaps
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.OrthoProjection
 import com.zakgof.korender.impl.projection.Projection
@@ -175,6 +180,14 @@ internal class Engine(
 
         override fun standart(block: StandartParams.() -> Unit) = InternalMaterialModifier {
             InternalStandartParams().apply(block).collect(it)
+        }
+
+        override fun uniforms(block: BaseParams.() -> Unit): MaterialModifier = InternalMaterialModifier {
+            InternalBaseParams().apply(block).collect(it)
+        }
+
+        override fun terrain(block: TerrainParams.() -> Unit): MaterialModifier = InternalMaterialModifier {
+            InternalTerrainParams().apply(block).collect(it)
         }
 
         override fun blurVert(block: BlurParams.() -> Unit) =
@@ -362,6 +375,8 @@ internal class Engine(
         override fun pcss(samples: Int, blurRadius: Float): ShadowAlgorithmDeclaration =
             InternalPcssParams(samples, blurRadius)
 
+        override fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab =
+            Clipmaps(this, id, cellSize, hg, rings)
     }
 
     init {
@@ -372,6 +387,7 @@ internal class Engine(
         glDepthFunc(GL_LEQUAL)
         glEnable(GL_BLEND)
         glEnable(GL_DEPTH_TEST)
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
         ignoringGlError {
             glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS)
         }
@@ -389,7 +405,7 @@ internal class Engine(
         inventory.go {
             val scene = Scene(sd, inventory, renderContext)
             scene.render()
-            checkGlError("during rendering")
+            // checkGlError("during rendering")
             touchBoxes = scene.touchBoxes
         }
     }

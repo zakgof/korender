@@ -1,6 +1,7 @@
 package com.zakgof.korender.context
 
 import com.zakgof.korender.AdjustParams
+import com.zakgof.korender.BaseParams
 import com.zakgof.korender.BloomParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
@@ -19,12 +20,14 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.OrthoProjectionDeclaration
 import com.zakgof.korender.PostShadingEffect
+import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.SsrParams
 import com.zakgof.korender.StandartParams
 import com.zakgof.korender.StarrySkyParams
+import com.zakgof.korender.TerrainParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -85,6 +88,8 @@ interface KorenderContext {
     fun defs(vararg defs: String): MaterialModifier
     fun plugin(name: String, shaderFile: String): MaterialModifier
     fun standart(block: StandartParams.() -> Unit): MaterialModifier
+    fun uniforms(block: BaseParams.() -> Unit): MaterialModifier
+    fun terrain(block: TerrainParams.() -> Unit): MaterialModifier
 
     fun blurHorz(block: BlurParams.() -> Unit = {}): MaterialModifier
     fun blurVert(block: BlurParams.() -> Unit = {}): MaterialModifier
@@ -116,6 +121,8 @@ interface KorenderContext {
     fun vsm(blurRadius: Float? = null): ShadowAlgorithmDeclaration
     fun hard(): ShadowAlgorithmDeclaration
     fun pcss(samples: Int = 32, blurRadius: Float = 0.05f): ShadowAlgorithmDeclaration
+
+    fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab
 
     val target: TargetPlatform
 

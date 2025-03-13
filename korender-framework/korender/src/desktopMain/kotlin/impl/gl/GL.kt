@@ -20,6 +20,8 @@ actual object GL {
 
     actual fun glEnable(target: Int) = GL11.glEnable(target)
 
+    // actual fun glPolygonMode(sides: Int, mode: Int) = GL11.glPolygonMode(sides, mode)
+
     actual fun glDisable(target: Int) = GL11.glDisable(target)
 
     actual fun glBindTexture(target: Int, texture: GLTexture?) =

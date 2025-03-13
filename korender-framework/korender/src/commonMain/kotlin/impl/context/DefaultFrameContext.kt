@@ -3,6 +3,7 @@ package com.zakgof.korender.impl.context
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.Prefab
 import com.zakgof.korender.context.DeferredShadingContext
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.GuiContainerContext
@@ -24,6 +25,7 @@ import com.zakgof.korender.impl.engine.ShadowDeclaration
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.ScreenQuad
+import com.zakgof.korender.impl.prefab.InternalPrefab
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.translate
@@ -46,6 +48,10 @@ internal class DefaultFrameContext(
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean) {
         sceneDeclaration.renderables += RenderableDeclaration(BaseMaterial.Renderable, materialModifiers.asList(), mesh,  transform, if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE)
+    }
+
+    override fun Renderable(vararg materialModifiers: MaterialModifier, prefab: Prefab) {
+        (prefab as InternalPrefab).render(this, *materialModifiers)
     }
 
     override fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3, transparent: Boolean) {

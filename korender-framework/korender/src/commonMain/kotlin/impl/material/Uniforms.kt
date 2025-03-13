@@ -17,13 +17,15 @@ import com.zakgof.korender.StandartParams
 import com.zakgof.korender.StandartParams.Pbr
 import com.zakgof.korender.StandartParams.SpecularGlossiness
 import com.zakgof.korender.StarrySkyParams
+import com.zakgof.korender.TerrainParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.WaterParams
 import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.math.Vec3
 
-internal abstract class InternalBaseParams : BaseParams {
+internal open class InternalBaseParams : BaseParams {
 
     val map = mutableMapOf<String, Any?>()
 
@@ -110,12 +112,14 @@ internal class InternalWaterParams : WaterParams, InternalBaseParams() {
 
     override var waterColor: ColorRGB = ColorRGB(0.1f, 0.2f, 0.3f)
     override var transparency: Float = 0.1f
-    override var waveScale: Float = 0.04f
+    override var waveScale: Float = 25.0f
+    override var waveMagnitude: Float = 0.3f
 
     override fun collect(mb: MaterialBuilder) {
         mb.uniforms["waterColor"] = waterColor
         mb.uniforms["transparency"] = transparency
         mb.uniforms["waveScale"] = waveScale
+        mb.uniforms["waveMagnitude"] = waveMagnitude
         super.collect(mb)
     }
 }
@@ -280,6 +284,25 @@ internal class InternalSsrParams : SsrParams, InternalBaseParams() {
 
 internal class InternalBloomParams : BloomParams, InternalBaseParams() {
     override fun collect(mb: MaterialBuilder) {
+        super.collect(mb)
+    }
+}
+
+internal class InternalTerrainParams : TerrainParams, InternalBaseParams() {
+
+    override var heightTexture: TextureDeclaration? = null
+    override var heightTextureSize: Int? = null
+    override var heightScale: Float = 10.0f
+    override var terrainCenter: Vec3 = Vec3.ZERO
+    override var outsideHeight: Float = 0f
+
+    override fun collect(mb: MaterialBuilder) {
+        mb.shaderDefs += "TERRAIN"
+        mb.uniforms["heightTexture"] = heightTexture
+        mb.uniforms["heightTextureSize"] = heightTextureSize
+        mb.uniforms["heightScale"] = heightScale
+        mb.uniforms["terrainCenter"] = terrainCenter
+        mb.uniforms["outsideHeight"] = outsideHeight
         super.collect(mb)
     }
 }

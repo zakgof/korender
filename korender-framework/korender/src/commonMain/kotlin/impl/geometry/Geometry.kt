@@ -35,9 +35,9 @@ fun IndexType.size() = when (this) {
 }
 
 fun AttributeType.size() = when (this) {
-    AttributeType.Byte -> 1
-    AttributeType.Short -> 2
-    AttributeType.Int -> 4
+    AttributeType.Byte, AttributeType.SignedByte -> 1
+    AttributeType.Short, AttributeType.SignedShort -> 2
+    AttributeType.Int, AttributeType.SignedInt -> 4
     AttributeType.Float -> 4
 }
 
@@ -144,6 +144,11 @@ internal object Geometry {
 
         override fun attr(attr: MeshAttribute, vararg v: Float): MeshInitializer {
             v.forEach { attrMap[attr]!!.put(it) }
+            return this
+        }
+
+        override fun attr(attr: MeshAttribute, vararg b: Byte): MeshInitializer {
+            b.forEach { attrMap[attr]!!.put(it) }
             return this
         }
 

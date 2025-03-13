@@ -17,9 +17,12 @@ import com.zakgof.korender.impl.gl.GL.glGenVertexArrays
 import com.zakgof.korender.impl.gl.GL.glVertexAttribIPointer
 import com.zakgof.korender.impl.gl.GL.glVertexAttribPointer
 import com.zakgof.korender.impl.gl.GLConstants.GL_ARRAY_BUFFER
+import com.zakgof.korender.impl.gl.GLConstants.GL_BYTE
 import com.zakgof.korender.impl.gl.GLConstants.GL_DYNAMIC_DRAW
 import com.zakgof.korender.impl.gl.GLConstants.GL_ELEMENT_ARRAY_BUFFER
 import com.zakgof.korender.impl.gl.GLConstants.GL_FLOAT
+import com.zakgof.korender.impl.gl.GLConstants.GL_INT
+import com.zakgof.korender.impl.gl.GLConstants.GL_SHORT
 import com.zakgof.korender.impl.gl.GLConstants.GL_STATIC_DRAW
 import com.zakgof.korender.impl.gl.GLConstants.GL_TRIANGLES
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_BYTE
@@ -30,6 +33,9 @@ internal fun AttributeType.toGL(): Int = when (this) {
     AttributeType.Byte -> GL_UNSIGNED_BYTE
     AttributeType.Short -> GL_UNSIGNED_SHORT
     AttributeType.Int -> GL_UNSIGNED_INT
+    AttributeType.SignedByte -> GL_BYTE
+    AttributeType.SignedShort -> GL_SHORT
+    AttributeType.SignedInt -> GL_INT
     AttributeType.Float -> GL_FLOAT
 }
 
@@ -72,7 +78,6 @@ internal class GlGpuMesh(
             if (attr.primitiveType == AttributeType.Float)
                 glVertexAttribPointer(attr.location, attr.structSize, attr.primitiveType.toGL(), false, 0, 0)
             else {
-                println("" + vb[index].byte(0) + " " + vb[index].byte(1) + " " + vb[index].byte(2) + " " + vb[index].byte(3));
                 glVertexAttribIPointer(attr.location, attr.structSize, attr.primitiveType.toGL(), 0, 0)
             }
             glEnableVertexAttribArray(attr.location)
