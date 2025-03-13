@@ -95,7 +95,7 @@ internal class DefaultFrameContext(
     override fun DirectionalLight(direction: Vec3, color: ColorRGB, block: ShadowContext.() -> Unit) {
         val shadowDeclaration = ShadowDeclaration()
         DefaultShadowContext(shadowDeclaration).apply(block)
-        sceneDeclaration.directionalLights += DirectionalLightDeclaration(direction, color, shadowDeclaration)
+        sceneDeclaration.directionalLights += DirectionalLightDeclaration(direction.normalize(), color, shadowDeclaration)
     }
 
     override fun PointLight(position: Vec3, color: ColorRGB, attenuationLinear: Float, attenuationQuadratic: Float) {

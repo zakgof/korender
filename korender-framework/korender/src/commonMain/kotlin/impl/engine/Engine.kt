@@ -333,7 +333,7 @@ internal class Engine(
             OrthoProjection(width, height, near, far)
 
         override fun camera(position: Vec3, direction: Vec3, up: Vec3): CameraDeclaration =
-            DefaultCamera(position, direction, up)
+            DefaultCamera(position, direction.normalize(), up.normalize())
 
         override var camera: CameraDeclaration
             get() = renderContext.camera

@@ -36,16 +36,17 @@ import org.jetbrains.compose.resources.painterResource
 fun AppExample() {
     val options = listOf(
 
-        Demo("Shadows") { ShadowExample() },
-
-        Demo("SSR") { SsrExample() },           // TODO
-        Demo("IBL probe") { IblExample() },     // TODO
-
+        Demo("Terrain") { TerrainExample() },
         Demo("City demo") { InfiniteCity() },
+
+        Demo("SSR") { SsrExample() },       // TODO
+        Demo("IBL probe") { IblExample() }, // TODO
+
+
         Demo("PBR") { MetallicRoughnessExample() },
         Demo("OBJ mesh") { ObjFileExample() },
         Demo("GLTF animation") { GltfExample() },
-
+        Demo("Shadows") { ShadowExample() },
 
         Demo("Effects") { EffectsExample() },
         Demo("Point lights") { LightsExample() },

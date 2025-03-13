@@ -20,10 +20,10 @@ fun TerrainExample() =
         Frame {
 
             projection = frustum(5f, 5f * height / width, 2f, 9000f)
-            camera = camera(Vec3(0f, 240f, -500f-800f * cos(frameInfo.time * 0.1f)), (-1.y + 2.z).normalize(), (2.y + 1.z).normalize())
+            camera = camera(Vec3(0f, 240f, -500f-800f * cos(frameInfo.time * 0.1f)), 1.y + 2.z, 2.y + 1.z)
 
             AmbientLight(ColorRGB.white(0.2f))
-            DirectionalLight(Vec3(1.0f, -1.0f, 0.0f).normalize(), ColorRGB.white(0.5f))
+            DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(0.5f))
 
             Renderable(standart {
                 pbr.metallic = 0.0f

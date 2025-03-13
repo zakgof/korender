@@ -1,5 +1,4 @@
 #import "!shader/lib/header.glsl"
-#import "!shader/lib/sky.glsl"
 
 in vec2 vtex;
 
@@ -14,14 +13,15 @@ uniform float density;
 
 out vec4 fragColor;
 
+#import "!shader/lib/space.glsl"
+#import "!shader/lib/sky.glsl"
+
 void main() {
 
     vec3 color = texture(colorTexture, vtex).rgb;
     float depth = texture(depthTexture, vtex).r;
 
-    vec2 csp = vec2(vtex * 2.0 - 1.0);
-    vec4 w4 = inverse(projection * view) * vec4(csp, depth * 2.0 - 1.0, 1.0);
-    vec3 world = w4.xyz / w4.w;
+    vec3 world = screenToWorldSpace(vtex, depth);
 
     float distance = length(world - cameraPos);
 
