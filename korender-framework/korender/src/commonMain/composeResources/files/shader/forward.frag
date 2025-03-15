@@ -3,6 +3,9 @@
 in vec3 vpos;
 in vec3 vnormal;
 in vec2 vtex;
+#ifdef VCOLOR
+in vec4 vcolor;
+#endif
 
 uniform vec4 baseColor;
 uniform vec3 emissiveFactor;
@@ -113,14 +116,20 @@ float shadowRatios[MAX_SHADOWS];
 
 void main() {
 
+    #ifdef VCOLOR
+    vec4 bcolor = baseColor * vcolor;
+    #else
+    vec4 bcolor = baseColor;
+    #endif
+
     #ifdef BASE_COLOR_MAP
     #ifdef TRIPLANAR
-    vec4 albedo = triplanar(baseColorTexture, vpos * triplanarScale, vnormal) * baseColor;
+    vec4 albedo = triplanar(baseColorTexture, vpos * triplanarScale, vnormal) * bcolor;
     #else
-    vec4 albedo = texture(baseColorTexture, vtex) * baseColor;
+    vec4 albedo = texture(baseColorTexture, vtex) * bcolor;
     #endif
     #else
-    vec4 albedo = baseColor;
+    vec4 albedo = bcolor;
     #endif
 
     #ifdef PLUGIN_ALBEDO
