@@ -6,6 +6,7 @@ import com.zakgof.korender.Attributes.PHI
 import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Korender
+import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
@@ -20,11 +21,16 @@ import kotlin.random.Random
 fun GrassExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
 
+        val cam = FreeCamera(this, Vec3(0f, 4f, 20f), -1.z)
+
+        OnKey { cam.handle(it) }
+        OnTouch { cam.touch(it) }
+
         Frame {
 
-            camera = camera(Vec3(0f, 4f, 20f), -1.z, 1.y)
+            camera = cam.camera(projection, width, height, frameInfo.dt)
 
-            DirectionalLight(Vec3(1.0f, -1.0f, 1.0f), ColorRGB.white(0.5f))
+            DirectionalLight(Vec3(1.0f, -1.0f, 1.0f), ColorRGB.white(2.5f))
 
             Renderable(
                 standart {
@@ -33,14 +39,14 @@ fun GrassExample() =
                     pbr.metallic = 0.2f
                 },
                 mesh = cube(1f),
-                transform = scale(100f, 1f, 100f).translate(-1.y)
+                transform = scale(30f, 1f, 30f).translate(-1.y)
             )
 
             Renderable(
                 vertex("!shader/effect/grass.vert"),
                 defs("VCOLOR"),
                 standart {
-                    pbr.metallic = 0.2f
+                    pbr.metallic = 0.0f
                 },
                 mesh = customMesh("grassblade", 9, 42, POS, TEX, PHI) {
                     pos(Vec3.ZERO).tex(0f, 0f)
@@ -63,9 +69,9 @@ fun GrassExample() =
                     index(5, 4, 6, 7, 5, 6)
                     index(7, 6, 8)
                 },
-                instancing = positionInstancing("grass",1000, true) {
+                instancing = positionInstancing("grass", 5000, true) {
                     val r = Random(0L)
-                    for (i in 0 until 1000) {
+                    for (i in 0 until 5000) {
                         Instance(translate(r.nextFloat() * 20f - 10f, 0f, r.nextFloat() * 40f - 20f))
                     }
                 }
