@@ -124,6 +124,8 @@ interface KorenderContext {
 
     fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab
 
+    fun positionInstancing(id: String, instanceCount: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit): InstancingDeclaration
+
     val target: TargetPlatform
 
     enum class TargetPlatform {

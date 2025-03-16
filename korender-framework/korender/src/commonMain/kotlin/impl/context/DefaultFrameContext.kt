@@ -9,6 +9,7 @@ import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.GuiContainerContext
 import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedRenderablesContext
+import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.context.ShadowContext
 import com.zakgof.korender.impl.engine.BaseMaterial
@@ -18,6 +19,7 @@ import com.zakgof.korender.impl.engine.DeferredShadingDeclaration
 import com.zakgof.korender.impl.engine.DirectionalLightDeclaration
 import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.GltfDeclaration
+import com.zakgof.korender.impl.engine.InternalInstancingDeclaration
 import com.zakgof.korender.impl.engine.PointLightDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.SceneDeclaration
@@ -46,8 +48,9 @@ internal class DefaultFrameContext(
         sceneDeclaration.gltfs += GltfDeclaration(resource, animation, transform, time ?: frameInfo.time)
     }
 
-    override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean) {
-        sceneDeclaration.renderables += RenderableDeclaration(BaseMaterial.Renderable, materialModifiers.asList(), mesh,  transform, if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE)
+    override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean, instancing: InstancingDeclaration?) {
+        val meshDeclaration = (instancing as? InternalInstancingDeclaration)?.let { InstancedMesh(instancing.id, instancing.instanceCount, mesh, !instancing.dynamic, transparent, instancing.block) } ?: mesh;
+        sceneDeclaration.renderables += RenderableDeclaration(BaseMaterial.Renderable, materialModifiers.asList(), meshDeclaration, transform, if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE)
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, prefab: Prefab) {

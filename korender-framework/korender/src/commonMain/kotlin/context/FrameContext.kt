@@ -12,7 +12,7 @@ interface FrameContext : KorenderContext {
 
     val frameInfo: FrameInfo
 
-    fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform = Transform(), transparent: Boolean = false)
+    fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform = Transform(), transparent: Boolean = false, instancing: InstancingDeclaration? = null)
     fun Renderable(vararg materialModifiers: MaterialModifier, prefab: Prefab)
 
     fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3 = Vec3.ZERO, transparent: Boolean = false)

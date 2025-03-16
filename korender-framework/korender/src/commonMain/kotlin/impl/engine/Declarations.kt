@@ -5,6 +5,8 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TouchHandler
+import com.zakgof.korender.context.InstancedRenderablesContext
+import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.math.ColorRGB
@@ -128,3 +130,5 @@ internal class GltfDeclaration(val gltfResource: String, val animation: Int, val
 internal class PointLightDeclaration(val position: Vec3, val color: ColorRGB, val attenuation: Vec3)
 
 internal class DirectionalLightDeclaration(val direction: Vec3, val color: ColorRGB, val shadowDeclaration: ShadowDeclaration)
+
+internal class InternalInstancingDeclaration(val id: String, val instanceCount: Int, val dynamic: Boolean, val block: InstancedRenderablesContext.() -> Unit) : InstancingDeclaration

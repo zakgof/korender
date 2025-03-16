@@ -39,6 +39,8 @@ import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.WaterParams
 import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.context.InstancedRenderablesContext
+import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
@@ -374,6 +376,9 @@ internal class Engine(
 
         override fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab =
             Clipmaps(this, id, cellSize, hg, rings)
+
+        override fun positionInstancing(id: String, instanceCount: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit): InstancingDeclaration =
+            InternalInstancingDeclaration(id, instanceCount, dynamic, block)
     }
 
     init {
