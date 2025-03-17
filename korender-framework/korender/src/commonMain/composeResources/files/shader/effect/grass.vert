@@ -19,9 +19,8 @@ out vec4 vcolor;
 
 void main() {
 
-    vec3 color1 = vec3(0.00, 0.40, 0.14);
-    vec3 color2 = vec3(0.00, 0.80, 0.14);
-
+    vec3 color1 = vec3(0.40, 0.44, 0.21);
+    vec3 color2 = vec3(0.40, 0.44, 0.21);
 
     float PHI = 1.618034;
     float r1 = fract(tan(distance(33.13*pos.xz*PHI, 32.98*pos.xz)*0.13)*pos.x);
@@ -32,7 +31,8 @@ void main() {
 
     float rot = (r1+r2) * 6.28;
 
-    vec2 wind = vec2(-1.0, 0.0)
+
+    vec2 wind = vec2(1.4, 0.0)
                 + vec2(sin(r1 * 4.0 + time * (1.2 + r1)),
                        sin(r2 * 4.0 + time * (1.2 + r2))) * 0.3;
 
@@ -45,11 +45,12 @@ void main() {
     float bend = dot(stilln, wind);
 
     float offset = tex.y * tex.y * bend;
-    float theta = atan(len, 2.0 * tex.y * bend);
+    float theta = atan(2.0 * tex.y * bend, len);
 
-    vnormal = vec3(stilln.x * sin(theta), cos(theta), stilln.y * sin(theta));
+    vnormal = vec3(stilln.x * cos(theta), sin(theta), stilln.y * cos(theta)) * float(1 - phi * 2);
 
     vpos = pos +
+        vec3(r2 * 0.2, 0.0, r1 * 0.2) +
         vec3(w * tex.x * cos(rot), len * tex.y, w * tex.x * sin(rot)) -
         vec3(stilln.x, 0.3 * tex.y, stilln.y) * offset;
 

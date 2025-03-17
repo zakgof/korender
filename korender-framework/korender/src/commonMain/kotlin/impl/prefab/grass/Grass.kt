@@ -17,21 +17,29 @@ internal class Grass(
     private val filter: (Vec3) -> Boolean
 ) : InternalPrefab {
 
-    private val mesh = korenderContext.customMesh(id, segments * 2 + 1, segments * 12 - 6, POS, TEX, PHI) {
-        for (s in 0 until segments) {
-            val h = s.toFloat() / segments
-            pos(Vec3.ZERO).tex(0f, h)
-            pos(Vec3.ZERO).tex(1f, h)
+    private val mesh = korenderContext.customMesh(id, segments * 4 + 2, segments * 12 - 6, POS, TEX, PHI) {
+        for (b1 in 0..1) {
+            for (s in 0 until segments) {
+                val h = s.toFloat() / segments
+                pos(Vec3.ZERO).tex(0f, h).phi(b1.toFloat())
+                pos(Vec3.ZERO).tex(1f, h).phi(b1.toFloat())
+            }
+            pos(Vec3.ZERO).tex(0.5f, 1.0f).phi(b1.toFloat())
         }
-        pos(Vec3.ZERO).tex(0.5f, 1.0f)
         for (s in 0 until segments - 1) {
             val b = s * 2
             index(b + 0, b + 1, b + 2, b + 1, b + 3, b + 2)
+        }
+        val bt = (segments - 1) * 2
+        index(bt + 0, bt + 1, bt + 2)
+
+        val bb = (segments * 2 + 1)
+        for (s in 0 until segments - 1) {
+            val b = bb + s * 2
             index(b + 1, b + 0, b + 2, b + 3, b + 1, b + 2)
         }
-        val b = (segments - 1) * 2
-        index(b + 0, b + 1, b + 2)
-        index(b + 1, b + 0, b + 2)
+        val bt2 = bb + (segments - 1) * 2
+        index(bt2 + 1, bt2 + 0, bt2 + 2)
     }
 
     override fun render(fc: FrameContext, vararg materialModifiers: MaterialModifier) = with(fc) {
@@ -45,6 +53,7 @@ internal class Grass(
             defs("VCOLOR"),
             standart {
                 pbr.metallic = 0.0f
+                pbr.roughness = 0.9f
                 set("grassCutoffDepth", depth)
             },
             mesh = mesh,

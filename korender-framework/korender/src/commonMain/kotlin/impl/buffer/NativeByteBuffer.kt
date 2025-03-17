@@ -42,6 +42,9 @@ fun NativeByteBuffer.vec3(index: Int): Vec3 {
     return Vec3(x, y, z)
 }
 
+fun NativeByteBuffer.debugBytes(): String =
+    (0 until size()).take(1000).map { byte(it) }.toString()
+
 fun NativeByteBuffer.debugFloats(): String =
     (0 until size() / 4).take(1000).map { float(it) }.toString()
 

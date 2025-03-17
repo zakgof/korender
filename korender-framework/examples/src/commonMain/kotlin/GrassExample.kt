@@ -29,13 +29,14 @@ fun GrassExample() =
             projection = frustum(3f * width / height, 3f, 3f, 1000f)
             camera = cam.camera(projection, width, height, frameInfo.dt)
 
-            DirectionalLight(Vec3(1.0f, -1.0f, 1.0f), ColorRGB.white(2.5f))
+            DirectionalLight(Vec3(0.0f, -1.0f, 0.0f), ColorRGB.white(2.5f))
 
             Renderable(
                 standart {
-                    baseColorTexture = texture("texture/asphalt-albedo.jpg")
-                    normalTexture = texture("texture/asphalt-normal.jpg")
-                    pbr.metallic = 0.2f
+                    baseColorTexture = texture("texture/grass.jpg")
+                    triplanarScale = 0.04f
+                    pbr.metallic = 0f
+                    pbr.roughness = 0.9f
                 },
                 mesh = cube(1f),
                 transform = scale(30f, 1f, 30f).translate(-1.y)
