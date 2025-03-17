@@ -123,6 +123,7 @@ interface KorenderContext {
     fun pcss(samples: Int = 32, blurRadius: Float = 0.05f): ShadowAlgorithmDeclaration
 
     fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab
+    fun grass(id: String, segments: Int, filter: (Vec3) -> Boolean): Prefab
 
     fun positionInstancing(id: String, instanceCount: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit): InstancingDeclaration
 

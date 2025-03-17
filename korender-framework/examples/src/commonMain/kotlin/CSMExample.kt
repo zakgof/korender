@@ -5,7 +5,6 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.math.ColorRGB.Companion.white
-import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.ColorRGBA.Companion.Red
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
@@ -58,9 +57,6 @@ fun CSMExample() =
                 mesh = cube(),
                 transform = scale(2f, 10f, 2f).translate(Vec3(-7f, 5f, -10f))
             )
-
-
-
             Renderable(
                 standart { baseColor = Red },
                 mesh = sphere(0.1f),

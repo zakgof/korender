@@ -82,6 +82,7 @@ import com.zakgof.korender.impl.material.InternalTerrainParams
 import com.zakgof.korender.impl.material.InternalWaterParams
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
+import com.zakgof.korender.impl.prefab.grass.Grass
 import com.zakgof.korender.impl.prefab.terrain.Clipmaps
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.OrthoProjection
@@ -376,6 +377,9 @@ internal class Engine(
 
         override fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab =
             Clipmaps(this, id, cellSize, hg, rings)
+
+        override fun grass(id: String, segments: Int, filter: (Vec3) -> Boolean): Prefab =
+            Grass(this, id, segments, filter)
 
         override fun positionInstancing(id: String, instanceCount: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit): InstancingDeclaration =
             InternalInstancingDeclaration(id, instanceCount, dynamic, block)

@@ -7,6 +7,8 @@ layout(location = 7) in float phi;
 uniform mat4 view;
 uniform mat4 projection;
 uniform float time;
+uniform float grassCutoffDepth;
+uniform vec3 cameraPos;
 
 out vec3 vpos;
 out vec3 vnormal;
@@ -20,19 +22,24 @@ void main() {
     vec3 color1 = vec3(0.00, 0.40, 0.14);
     vec3 color2 = vec3(0.00, 0.80, 0.14);
 
-    // vec3 color2 = vec3(1.00, 0.91, 0.50);
 
     float PHI = 1.618034;
-    float r1 = fract(tan(distance(3.0*pos.xz*PHI, 3.0*pos.xz)*0.13)*pos.x);
-    float r2 = fract(tan(distance(3.0*pos.xz*PHI, 3.0*pos.xz)*0.43)*pos.x);
+    float r1 = fract(tan(distance(33.13*pos.xz*PHI, 32.98*pos.xz)*0.13)*pos.x);
+    float r2 = fract(tan(distance(31.22*pos.xz*PHI, 33.41*pos.xz)*0.43)*pos.z);
 
     float w = 0.1;
     float len = 1.3 + 0.3 * r2;
-    float rot = r1 * 6.28;
+
+    float rot = (r1+r2) * 6.28;
 
     vec2 wind = vec2(-1.0, 0.0)
                 + vec2(sin(r1 * 4.0 + time * (1.2 + r1)),
                        sin(r2 * 4.0 + time * (1.2 + r2))) * 0.3;
+
+    float fade = 1.0 - smoothstep(grassCutoffDepth * 0.70, grassCutoffDepth * 1.00, length(cameraPos - pos));
+    len *= fade;
+    w *= fade;
+    wind *= fade;
 
     vec2 stilln = vec2(-sin(rot), cos(rot));
     float bend = dot(stilln, wind);
