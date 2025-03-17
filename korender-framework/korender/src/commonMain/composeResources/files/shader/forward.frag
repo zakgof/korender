@@ -3,8 +3,11 @@
 in vec3 vpos;
 in vec3 vnormal;
 in vec2 vtex;
-#ifdef VCOLOR
+#ifdef VERTEX_COLOR
 in vec4 vcolor;
+#endif
+#ifdef VERTEX_OCCLUSION
+in float vocclusion;
 #endif
 
 uniform vec4 baseColor;
@@ -116,7 +119,7 @@ float shadowRatios[MAX_SHADOWS];
 
 void main() {
 
-    #ifdef VCOLOR
+    #ifdef VERTEX_COLOR
     vec4 bcolor = baseColor * vcolor;
     #else
     vec4 bcolor = baseColor;
@@ -201,13 +204,19 @@ void main() {
 
     float plane = dot((vpos - cameraPos), cameraDir);
 
+    #ifdef VERTEX_OCCLUSION
+    float occlusion = vocclusion;
+    #else
+    float occlusion = 1.0;
+    #endif
+
     populateShadowRatios(plane, vpos);
 
     for (int l=0; l<numDirectionalLights; l++) {
-        color += dirLight(l, N, V, c_diff, F0, rough);
+        color += dirLight(l, N, V, c_diff, F0, rough, occlusion);
     }
     for (int l=0; l<numPointLights; l++) {
-        color += pointLight(vpos, l, N, V, c_diff, F0, rough);
+        color += pointLight(vpos, l, N, V, c_diff, F0, rough, occlusion);
     }
 
     #ifdef TERRAIN

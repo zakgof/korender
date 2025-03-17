@@ -88,10 +88,10 @@ void main() {
     populateShadowRatios(plane, vpos);
 
     for (int l=0; l<numDirectionalLights; l++)
-        color += dirLight(l, N, V, c_diff, F0, rough);
+        color += dirLight(l, N, V, c_diff, F0, rough, 1.0);
 
     for (int l=0; l<numPointLights; l++)
-        color += pointLight(vpos, l, N, V, c_diff, F0, rough);
+        color += pointLight(vpos, l, N, V, c_diff, F0, rough, 1.0);
 
 #ifdef PLUGIN_COLOR
     color = pluginColor(vpos, color, depth);

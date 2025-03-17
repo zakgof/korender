@@ -29,7 +29,8 @@ fun GrassExample() =
             projection = frustum(3f * width / height, 3f, 3f, 1000f)
             camera = cam.camera(projection, width, height, frameInfo.dt)
 
-            DirectionalLight(Vec3(0.0f, -1.0f, 0.0f), ColorRGB.white(2.5f))
+            AmbientLight(ColorRGB.white(0.3f))
+            DirectionalLight(Vec3(0.0f, -1.0f, 0.0f), ColorRGB.white(1.0f))
 
             Renderable(
                 standart {

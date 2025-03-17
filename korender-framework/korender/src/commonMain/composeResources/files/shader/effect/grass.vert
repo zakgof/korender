@@ -14,12 +14,13 @@ out vec3 vpos;
 out vec3 vnormal;
 out vec2 vtex;
 out vec4 vcolor;
+out float vocclusion;
 
 #import "!shader/lib/noise.glsl"
 
 void main() {
 
-    vec3 color1 = vec3(0.40, 0.44, 0.21);
+    vec3 color1 = vec3(0.60, 0.64, 0.31);
     vec3 color2 = vec3(0.40, 0.44, 0.21);
 
     float PHI = 1.618034;
@@ -36,7 +37,7 @@ void main() {
                 + vec2(sin(r1 * 4.0 + time * (1.2 + r1)),
                        sin(r2 * 4.0 + time * (1.2 + r2))) * 0.3;
 
-    float fade = 1.0 - smoothstep(grassCutoffDepth * 0.70, grassCutoffDepth * 1.00, length(cameraPos - pos));
+    float fade = 1.0 - smoothstep(grassCutoffDepth * 0.60, grassCutoffDepth * 1.00, length(cameraPos - pos));
     len *= fade;
     w *= fade;
     wind *= fade;
@@ -47,7 +48,8 @@ void main() {
     float offset = tex.y * tex.y * bend;
     float theta = atan(2.0 * tex.y * bend, len);
 
-    vnormal = vec3(stilln.x * cos(theta), sin(theta), stilln.y * cos(theta)) * float(1 - phi * 2);
+    vec3 n = vec3(stilln.x * cos(theta), sin(theta), stilln.y * cos(theta)) * float(1 - phi * 2);
+    vnormal = mix(n, vec3(0., 1., 0.), fade);
 
     vpos = pos +
         vec3(r2 * 0.2, 0.0, r1 * 0.2) +
@@ -56,5 +58,6 @@ void main() {
 
     vtex = tex;
     vcolor = vec4(mix(color1, color2, r1 * r2), 1.0);
+    vocclusion = tex.y * tex.y;
     gl_Position = projection * (view * vec4(vpos, 1.0));
 }

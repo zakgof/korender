@@ -50,7 +50,7 @@ internal class Grass(
 
         Renderable(
             vertex("!shader/effect/grass.vert"),
-            defs("VCOLOR"),
+            defs("VERTEX_COLOR", "VERTEX_OCCLUSION"),
             standart {
                 pbr.metallic = 0.0f
                 pbr.roughness = 0.9f
