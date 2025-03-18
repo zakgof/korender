@@ -10,6 +10,7 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
+import kotlin.math.round
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
@@ -17,8 +18,10 @@ fun GrassExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         val cam = FreeCamera(this, Vec3(0f, 5f, 0f), -1.z)
-        val grass = grass("grass", 6) {
-            it.x * it.x + it.z * it.z < 25 * 25f
+        val grass = grassPrefab("grass", 4, 0.4f, 200) {
+            val xsnap = round(it.x / 20f) * 20f
+            val zsnap = round(it.z / 20f) * 20f
+            (it.x - xsnap) * (it.x - xsnap) + (it.z - zsnap) * (it.z - zsnap) < 9*9
         }
 
         OnKey { cam.handle(it) }
@@ -40,10 +43,13 @@ fun GrassExample() =
                     pbr.roughness = 0.9f
                 },
                 mesh = cube(1f),
-                transform = scale(30f, 1f, 30f).translate(-1.y)
+                transform = scale(300f, 1f, 300f).translate(-1.y)
             )
 
-            Renderable(prefab = grass)
+            Renderable(
+                grass(),
+                prefab = grass
+            )
 
             Sky(fastCloudSky())
 

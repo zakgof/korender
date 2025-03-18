@@ -12,6 +12,7 @@ import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
 import com.zakgof.korender.FogParams
 import com.zakgof.korender.FrustumProjectionDeclaration
+import com.zakgof.korender.GrassParams
 import com.zakgof.korender.Image
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KeyEvent
@@ -75,6 +76,7 @@ import com.zakgof.korender.impl.material.InternalFastCloudSkyParams
 import com.zakgof.korender.impl.material.InternalFireParams
 import com.zakgof.korender.impl.material.InternalFireballParams
 import com.zakgof.korender.impl.material.InternalFogParams
+import com.zakgof.korender.impl.material.InternalGrassParams
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalSmokeParams
@@ -232,6 +234,11 @@ internal class Engine(
                 InternalSmokeParams().apply(block).collect(it)
             }
 
+        override fun grass(block: GrassParams.() -> Unit) =
+            InternalMaterialModifier {
+                InternalGrassParams().apply(block).collect(it)
+            }
+
         override fun water(block: WaterParams.() -> Unit) =
             InternalMaterialModifier {
                 it.fragShaderFile = "!shader/effect/water.frag"
@@ -378,11 +385,11 @@ internal class Engine(
         override fun pcss(samples: Int, blurRadius: Float): ShadowAlgorithmDeclaration =
             InternalPcssParams(samples, blurRadius)
 
-        override fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab =
+        override fun clipmapTerrainPrefab(id: String, cellSize: Float, hg: Int, rings: Int): Prefab =
             Clipmaps(this, id, cellSize, hg, rings)
 
-        override fun grass(id: String, segments: Int, filter: (Vec3) -> Boolean): Prefab =
-            Grass(this, id, segments, filter)
+        override fun grassPrefab(id: String, segments: Int, cell: Float, side: Int, filter: (Vec3) -> Boolean): Prefab =
+            Grass(this, id, segments, cell, side, filter)
 
         override fun positionInstancing(id: String, instanceCount: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit): InstancingDeclaration =
             InternalInstancingDeclaration(id, instanceCount, dynamic, block)

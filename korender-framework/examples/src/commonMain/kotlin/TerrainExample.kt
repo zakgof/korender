@@ -16,7 +16,7 @@ import kotlin.math.cos
 fun TerrainExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-        val terrain = clipmapTerrain("terrain", 2.0f, 10, 6)
+        val terrain = clipmapTerrainPrefab("terrain", 2.0f, 10, 6)
         Frame {
 
             projection = frustum(5f, 5f * height / width, 2f, 9000f)

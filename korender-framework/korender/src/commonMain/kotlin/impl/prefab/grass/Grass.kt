@@ -13,8 +13,10 @@ import com.zakgof.korender.math.Vec3
 internal class Grass(
     korenderContext: KorenderContext,
     private val id: String,
-    private val segments: Int,
-    private val filter: (Vec3) -> Boolean
+    private val segments: Int = 4,
+    private val cell: Float = 0.4f,
+    private val side: Int = 200,
+    private val filter: (Vec3) -> Boolean = { true }
 ) : InternalPrefab {
 
     private val mesh = korenderContext.customMesh(id, segments * 4 + 2, segments * 12 - 6, POS, TEX, PHI) {
@@ -44,8 +46,6 @@ internal class Grass(
 
     override fun render(fc: FrameContext, vararg materialModifiers: MaterialModifier) = with(fc) {
 
-        val cell = 0.3f
-        val side = 160
         val depth = cell * side * 0.5f
 
         Renderable(
@@ -55,7 +55,9 @@ internal class Grass(
                 pbr.metallic = 0.0f
                 pbr.roughness = 0.9f
                 set("grassCutoffDepth", depth)
+                set("grassCell", cell)
             },
+            *materialModifiers,
             mesh = mesh,
             instancing = positionInstancing("$id-instancing", side * side, true) {
                 val xsnap = (fc.camera.position.x / cell).toInt() * cell
@@ -67,7 +69,7 @@ internal class Grass(
                             0f,
                             zsnap + (zz - side / 2) * cell
                         )
-                        if (filter(pos)) {
+                        if (filter(pos) && (pos - fc.camera.position) * fc.camera.direction > 0f) {
                             Instance(translate(pos))
                         }
                     }

@@ -10,6 +10,7 @@ import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
 import com.zakgof.korender.FogParams
+import com.zakgof.korender.GrassParams
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.SsrParams
@@ -316,3 +317,18 @@ internal class InternalPostShadingEffect(
     val compositionDepthOutput: String,
     val compositionMaterialModifier: InternalMaterialModifier,
 ) : PostShadingEffect
+
+internal class InternalGrassParams : GrassParams, InternalBaseParams() {
+
+    override var grassColor1 = ColorRGB(0.60f, 0.64f, 0.31f)
+    override var grassColor2 = ColorRGB(0.40f, 0.74f, 0.21f)
+    override var bladeWidth = 0.1f
+    override var bladeLength = 1.5f
+
+    override fun collect(mb: MaterialBuilder) {
+        mb.uniforms["grassColor1"] = grassColor1
+        mb.uniforms["grassColor2"] = grassColor2
+        mb.uniforms["bladeWidth"] = bladeWidth
+        mb.uniforms["bladeLength"] = bladeLength
+    }
+}

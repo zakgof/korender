@@ -11,6 +11,7 @@ import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
 import com.zakgof.korender.FogParams
 import com.zakgof.korender.FrustumProjectionDeclaration
+import com.zakgof.korender.GrassParams
 import com.zakgof.korender.Image
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KeyHandler
@@ -101,6 +102,7 @@ interface KorenderContext {
     fun fire(block: FireParams.() -> Unit = {}): MaterialModifier
     fun fireball(block: FireballParams.() -> Unit = {}): MaterialModifier
     fun smoke(block: SmokeParams.() -> Unit = {}): MaterialModifier
+    fun grass(block: GrassParams.() -> Unit = {}): MaterialModifier
 
     fun fastCloudSky(block: FastCloudSkyParams.() -> Unit = {}): MaterialModifier
     fun starrySky(block: StarrySkyParams.() -> Unit = {}): MaterialModifier
@@ -122,8 +124,8 @@ interface KorenderContext {
     fun hard(): ShadowAlgorithmDeclaration
     fun pcss(samples: Int = 32, blurRadius: Float = 0.05f): ShadowAlgorithmDeclaration
 
-    fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab
-    fun grass(id: String, segments: Int, filter: (Vec3) -> Boolean): Prefab
+    fun clipmapTerrainPrefab(id: String, cellSize: Float, hg: Int, rings: Int): Prefab
+    fun grassPrefab(id: String, segments: Int, cell: Float, side: Int, filter: (Vec3) -> Boolean): Prefab
 
     fun positionInstancing(id: String, instanceCount: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit): InstancingDeclaration
 

@@ -119,3 +119,10 @@ interface TerrainParams : BaseParams {
     var terrainCenter: Vec3
     var outsideHeight: Float
 }
+
+interface GrassParams : BaseParams {
+    var grassColor1: ColorRGB
+    var grassColor2: ColorRGB
+    var bladeWidth: Float
+    var bladeLength: Float
+}
