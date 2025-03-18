@@ -76,14 +76,14 @@ void main() {
     vec4 albedo = baseColor;
     #endif
 
-    #ifdef PLUGIN_ALBEDO
-    albedo = pluginAlbedo(albedo);
-    #endif
-
     #ifdef NORMAL_MAP
     vec3 N = getNormalFromMap(vnormal, vtex, vpos);
     #else
     vec3 N = normalize(vnormal);
+    #endif
+
+    #ifdef PLUGIN_ALBEDO
+    albedo = pluginAlbedo(vtex, vpos, N, albedo);
     #endif
 
     #ifdef EMISSIVE_MAP

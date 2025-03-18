@@ -35,8 +35,6 @@ void main() {
     float h = heightAt(vtex);
     vpos.y = h;
 
-
-
     float w =
         smoothstep(antipop.x * 2.0, antipop.x * 2.0 + antipopSpan, float(b1)) *
         smoothstep(antipop.y * 2.0, antipop.y * 2.0 + antipopSpan, float(b2)) *

@@ -56,7 +56,6 @@ uniform samplerCube cubeTexture;
 #ifdef TERRAIN
 uniform vec3 tileOffsetAndScale;
 uniform sampler2D heightTexture;
-uniform sampler2D fbmTexture;
 uniform int heightTextureSize;
 uniform float heightScale;
 uniform float outsideHeight;
@@ -96,14 +95,6 @@ uniform int i1[MAX_SHADOWS];
 
 out vec4 fragColor;
 
-#ifdef PLUGIN_ALBEDO
-#import "$albedo"
-#endif
-
-#ifdef PLUGIN_EMISSION
-#import "$emission"
-#endif
-
 #import "!shader/lib/triplanar.glsl"
 #import "!shader/lib/normalmap.glsl"
 
@@ -115,6 +106,14 @@ float shadowRatios[MAX_SHADOWS];
 
 #ifdef TERRAIN
 #import "!shader/lib/terrain.glsl"
+#endif
+
+#ifdef PLUGIN_ALBEDO
+#import "$albedo"
+#endif
+
+#ifdef PLUGIN_EMISSION
+#import "$emission"
 #endif
 
 void main() {
@@ -135,10 +134,6 @@ void main() {
     vec4 albedo = bcolor;
     #endif
 
-    #ifdef PLUGIN_ALBEDO
-    albedo = pluginAlbedo(albedo);
-    #endif
-
     #ifdef NORMAL_MAP
     vec3 N = getNormalFromMap(vnormal, vtex, vpos);
     #else
@@ -146,7 +141,11 @@ void main() {
     #endif
 
     #ifdef TERRAIN
-    N = normalAt(vtex);
+    N = normalAt(vtex, float(heightTextureSize));
+    #endif
+
+    #ifdef PLUGIN_ALBEDO
+    albedo = pluginAlbedo(vtex, vpos, N, albedo);
     #endif
 
     #ifdef EMISSIVE_MAP
