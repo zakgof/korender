@@ -36,8 +36,10 @@ import org.jetbrains.compose.resources.painterResource
 fun AppExample() {
     val options = listOf(
 
-        Demo("PTerrain") { ProcTerrainExample() },
+        Demo("Hybrid Terrain") { HybridTerrainExample() },
+
         Demo("Terrain") { TerrainExample() },
+        Demo("Procedural Terrain") { ProcTerrainExample() },
 
         Demo("City demo") { InfiniteCity() },
 

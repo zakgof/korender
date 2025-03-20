@@ -99,11 +99,14 @@ internal class Clipmaps(korenderContext: KorenderContext, id: String, private va
             val prz = posz.fract(r + 1, theOffset)
 
             val offs = Offset((xpos - newxpos) / step - 1 - hg, (zpos - newzpos) / step - 1 - hg)
-            list += Me(
-                ring[offs]!!,
-                Vec3(newxpos.toFloat(), newzpos.toFloat(), step.toFloat()),
-                Vec3(prx, prz, inner * 2f)
-            )
+            val rrr = ring[offs]
+            rrr?.let {
+                list += Me(
+                    it,
+                    Vec3(newxpos.toFloat(), newzpos.toFloat(), step.toFloat()),
+                    Vec3(prx, prz, inner * 2f)
+                )
+            }
             xpos = newxpos
             zpos = newzpos
         }

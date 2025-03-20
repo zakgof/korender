@@ -1,0 +1,53 @@
+package com.zakgof.korender.examples
+
+import androidx.compose.runtime.Composable
+import com.zakgof.app.resources.Res
+import com.zakgof.korender.Korender
+import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
+import org.jetbrains.compose.resources.ExperimentalResourceApi
+import kotlin.math.sin
+
+@OptIn(ExperimentalResourceApi::class)
+@Composable
+fun HybridTerrainExample() =
+    Korender(appResourceLoader = { Res.readBytes(it) }) {
+
+        val terrain = clipmapTerrainPrefab("terrain", 2.0f, 16, 12)
+        Frame {
+
+            projection = frustum(5f, 5f * height / width, 2f, 32000f)
+            camera = camera(Vec3(100.0f, 1000f, -3000.0f + 5000.0f * sin(0.5f * frameInfo.time)),
+                1.z,  1.y)
+
+            AmbientLight(ColorRGB.white(0.2f))
+            DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(0.5f))
+            Renderable(
+                standart {
+                    pbr.metallic = 0.0f
+                },
+                terrain {
+                    heightTextureSize = 8192
+                    heightTexture = texture("hybridterrain/base-height.jpg")
+                },
+                plugin("terrain", "hybridterrain/height.glsl"),
+                plugin("albedo", "hybridterrain/albedo.glsl"),
+
+                prefab = terrain
+            )
+            Sky(fastCloudSky())
+            PostProcess(water(), fastCloudSky())
+            PostProcess(fog {
+                color = ColorRGB(0x808090)
+                density = 0.00003f
+            })
+            Gui {
+                Column {
+                    Filler()
+                    Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
+                }
+            }
+        }
+    }

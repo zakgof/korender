@@ -1,0 +1,26 @@
+
+vec4 pluginAlbedo(vec2 tex, vec3 pos, vec3 normal, vec4 albedo) {
+
+    vec3 sand = vec3(0.89, 0.79, 0.46) + 0.3 * sin(fbm2(tex *  64.0));
+    vec3 grass = vec3(0.2, 0.6, 0.3);
+    vec3 snow = vec3(0.9, 0.9, 0.9);
+    vec3 rock = vec3(0.5, 0.4, 0.4);
+
+    float sandW = 1.0 - smoothstep(40.0, 70.0, pos.y - 20.0 * fbm2(tex * 18.0));
+    float snowW = smoothstep(100.0, 200.0, pos.y - 96.0 * fbm2(tex * 4.0));
+    float rockW = smoothstep(-0.45, -0.44, -normal.y);
+    float grassW = clamp(1.0 - sandW - rockW - snowW, 0.0, 1.0);
+
+    vec3 color = (sand * sandW +
+                 snow * snowW +
+                 rock * rockW +
+                 grass * grassW) / (sandW + snowW + rockW + grassW);
+
+
+    float c = 0.25 +
+              fbm2(tex *  64.0) * 0.5 +
+              fbm2(tex * 128.0) * 0.25;
+
+    return vec4(color + 0.25, 1.0);
+
+}
