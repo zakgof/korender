@@ -43,6 +43,7 @@ import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.RoiTexturesContext
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.context.DefaultFrameContext
@@ -79,6 +80,7 @@ import com.zakgof.korender.impl.material.InternalFogParams
 import com.zakgof.korender.impl.material.InternalGrassParams
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
+import com.zakgof.korender.impl.material.InternalRoiTexturesContext
 import com.zakgof.korender.impl.material.InternalSmokeParams
 import com.zakgof.korender.impl.material.InternalSsrParams
 import com.zakgof.korender.impl.material.InternalStandartParams
@@ -285,6 +287,12 @@ internal class Engine(
             InternalMaterialModifier {
                 it.shaderDefs += "IBL"
                 it.uniforms["cubeTexture"] = env
+            }
+
+        override fun roiTextures(block: RoiTexturesContext.() -> Unit): MaterialModifier =
+            InternalMaterialModifier {
+                it.shaderDefs += "ROI"
+                InternalRoiTexturesContext().apply(block).collect(it)
             }
 
         override fun ssr(width: Int?, height: Int?, fxaa: Boolean, block: SsrParams.() -> Unit): PostShadingEffect {

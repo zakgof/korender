@@ -8,10 +8,12 @@ float heightAt(vec2 uv) {
     float samp = texture(heightTexture, uv).r;
     float base = samp * 800.0;
 
+    float hs = clamp(samp - 0.1, 0.0, 1.0);
+
     float height =  -90.0 + base
-        +    8.0 * fbm2(uv * 64.0)
-        +   16.0 * fbm2(uv * 16.0) * samp
-        +  512.0 * fbm2(uv *  4.0) * samp * samp;
+        +    8.0 * fbm2(uv * 64.0) * hs
+        +   16.0 * fbm2(uv * 16.0) * hs
+        +  512.0 * fbm2(uv *  4.0) * hs * hs;
 
     return height;
 }

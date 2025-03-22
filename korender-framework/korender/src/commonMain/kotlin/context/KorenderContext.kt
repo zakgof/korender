@@ -111,6 +111,8 @@ interface KorenderContext {
 
     fun ibl(env: CubeTextureDeclaration): MaterialModifier
 
+    fun roiTextures(block: RoiTexturesContext.() -> Unit): MaterialModifier
+
     fun ssr(width: Int? = null, height: Int? = null, fxaa: Boolean = false, block: SsrParams.() -> Unit = {}): PostShadingEffect
     fun bloom(width: Int? = null, height: Int? = null, block: BloomParams.() -> Unit = {}): PostShadingEffect
 
