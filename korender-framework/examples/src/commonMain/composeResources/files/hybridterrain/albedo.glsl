@@ -14,6 +14,7 @@ vec4 roi(vec2 uv) {
     return color;
 }
 
+uniform sampler2D sdf;
 
 vec4 pluginAlbedo(vec2 tex, vec3 pos, vec3 normal, vec4 albedo) {
 
@@ -38,6 +39,15 @@ vec4 pluginAlbedo(vec2 tex, vec3 pos, vec3 normal, vec4 albedo) {
               fbm2(tex * 128.0) * 0.25;
 
     vec4 roiColor = roi(tex);
+
+    vec4 tx = texture(sdf, tex) * 2.0 - 1.0;
+
+    float v = dot(tex, tx.rg) - dot((tx.ba+tex), tx.rg);
+
+
+    if (abs(v) < 0.005) {
+        return vec4(1.0, abs(v) / 0.005, 0.0, 1.0);
+    }
 
     return vec4(mix(color + 0.25, roiColor.rgb, roiColor.a), 1.0);
 }
