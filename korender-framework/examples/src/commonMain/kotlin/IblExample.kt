@@ -23,7 +23,7 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             scene()
         }
         camera = freeCamera.camera(projection, width, height, 0f)
-        if (fract(frameInfo.time * 0.5f) < 0.5f) {
+        if (fract(frameInfo.time * 0.5f) < 10.5f) {
             Sky(cubeSky(0))
         } else {
             scene()
@@ -41,5 +41,19 @@ private fun FrameContext.scene() {
         },
         mesh = sphere(0.5f),
         transform = translate(2.y - 15.z)
+    )
+    Renderable(
+        standart {
+            baseColor = ColorRGBA.Green
+        },
+        mesh = sphere(2.5f),
+        transform = translate(4.y - 30.z)
+    )
+    Renderable(
+        standart {
+            baseColor = ColorRGBA.Blue
+        },
+        mesh = sphere(5.5f),
+        transform = translate(6.y - 60.z)
     )
 }

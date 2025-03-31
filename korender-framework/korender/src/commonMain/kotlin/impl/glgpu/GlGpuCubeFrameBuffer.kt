@@ -14,7 +14,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_ATTACHMENT0
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_ATTACHMENT
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER_COMPLETE
-import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_2D
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP
 import com.zakgof.korender.impl.gl.GLFrameBuffer
 
@@ -28,27 +27,25 @@ internal class GlGpuCubeFrameBuffer(
     private val fbHandle: GLFrameBuffer = glGenFramebuffers()
 
     val colorTexture: GlGpuCubeTexture
-    val depthTexture: GlGpuTexture?
+    val depthTexture: GlGpuCubeTexture?
 
     init {
         println("Creating GPU Cube Framebuffer $this")
         glBindFramebuffer(GL_FRAMEBUFFER, fbHandle)
-        colorTexture = GlGpuCubeTexture(width, height)
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP, colorTexture.glHandle, 0)
-
-
-        if (useDepthBuffer) {
-            depthTexture = GlGpuTexture("$name-depth", width, height, GlGpuTexture.Preset.Depth)
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_DEPTH_ATTACHMENT,
-                GL_TEXTURE_2D,
-                depthTexture.glHandle,
-                0
-            )
-        } else {
-            depthTexture = null
+        colorTexture = GlGpuCubeTexture(width, height, GlGpuTexture.Preset.RGBFilter)
+        colorTexture.sides.forEach {
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, it, colorTexture.glHandle, 0)
         }
+
+        depthTexture = if (useDepthBuffer) {
+            GlGpuCubeTexture(width, height, GlGpuTexture.Preset.Depth).apply {
+                sides.forEach {
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, it, glHandle,0)
+                }
+            }
+        } else
+            null
+
         glDrawBuffers(GL_COLOR_ATTACHMENT0)
         val err: Int = glCheckFramebufferStatus(GL_FRAMEBUFFER)
         if (err != GL_FRAMEBUFFER_COMPLETE) {
@@ -58,7 +55,7 @@ internal class GlGpuCubeFrameBuffer(
     }
 
     override fun close() {
-        println("Destroying GPU Cube Framebuffer [$name] $fbHandle ")
+        println("Destroying GPU Cube Framebuffer [$name] $fbHandle")
         glDeleteFramebuffers(fbHandle)
         colorTexture.close()
         depthTexture?.close()
@@ -71,7 +68,10 @@ internal class GlGpuCubeFrameBuffer(
 
     private fun bind(glSide: Int) {
         glBindFramebuffer(GL_FRAMEBUFFER, fbHandle)
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, glSide, colorTexture.glHandle, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, glSide, colorTexture.glHandle, 0)
+        if (depthTexture != null) {
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, glSide, depthTexture.glHandle, 0)
+        }
         glViewport(0, 0, width, height)
     }
 

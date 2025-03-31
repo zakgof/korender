@@ -84,6 +84,7 @@ internal class Scene(
                 Scene(kv.value.sceneDeclaration, inventory, renderContext, kv.key).renderToEnv(uniforms, kv.value)
             } catch (_: SkipRender) {
                 println("Env probing skipped as framebuffer is not ready")
+                return
             }
         }
 
@@ -353,6 +354,7 @@ internal class Scene(
         }
         probeFb.finish()
         uniforms["envTexture$envSlot"] = probeFb.colorTexture
+        uniforms["envDepthTexture$envSlot"] = probeFb.depthTexture
     }
 }
 

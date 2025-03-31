@@ -36,6 +36,7 @@ import org.jetbrains.compose.resources.painterResource
 fun AppExample() {
     val options = listOf(
 
+        Demo("IBL probe") { IblExample() }, // TODO
         Demo("Hybrid Terrain") { HybridTerrainExample() },
 
         Demo("Terrain") { TerrainExample() },
@@ -45,7 +46,7 @@ fun AppExample() {
 
         Demo("Grass") { GrassExample() },
         Demo("SSR") { SsrExample() },       // TODO
-        Demo("IBL probe") { IblExample() }, // TODO
+
 
         Demo("PBR") { MetallicRoughnessExample() },
         Demo("OBJ mesh") { ObjFileExample() },

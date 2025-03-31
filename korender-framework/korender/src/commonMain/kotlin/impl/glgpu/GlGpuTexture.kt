@@ -49,25 +49,25 @@ import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.image.InternalImage
 import kotlin.math.min
 
-private val filterMinMap = mapOf(
+internal val filterMinMap = mapOf(
     TextureFilter.Nearest to GL_NEAREST,
     TextureFilter.Linear to GL_LINEAR,
     TextureFilter.MipMap to GL_LINEAR_MIPMAP_LINEAR,
 )
 
-private val filterMagMap = mapOf(
+internal val filterMagMap = mapOf(
     TextureFilter.Nearest to GL_NEAREST,
     TextureFilter.Linear to GL_LINEAR,
     TextureFilter.MipMap to GL_LINEAR,
 )
 
-private val wrapMap = mapOf(
+internal val wrapMap = mapOf(
     TextureWrap.MirroredRepeat to GL_MIRRORED_REPEAT,
     TextureWrap.ClampToEdge to GL_CLAMP_TO_EDGE,
     TextureWrap.Repeat to GL_REPEAT
 )
 
-private val formatMap = mapOf(
+internal val formatMap = mapOf(
     Image.Format.RGBA to GlGpuTexture.GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE),
     Image.Format.RGB to GlGpuTexture.GlFormat(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE),
     Image.Format.Gray to GlGpuTexture.GlFormat(GL_R8, GL_RED, GL_UNSIGNED_BYTE),
@@ -96,7 +96,7 @@ internal class GlGpuTexture(
 
         initTexImage(formats, width, height, image)
 
-        if (filter == TextureFilter.MipMap && image != null) {
+        if (mipmapped && image != null) {
             glGenerateMipmap(GL_TEXTURE_2D)
         }
 
