@@ -7,5 +7,6 @@ internal class CaptureContext(
     val position: Vec3,
     val near: Float,
     val far: Float,
+    val insideOut: Boolean,
     val sceneDeclaration: SceneDeclaration
 )

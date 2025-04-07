@@ -1,11 +1,13 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.Image
+import com.zakgof.korender.KorenderException
 import com.zakgof.korender.impl.gl.GL
 import com.zakgof.korender.impl.gl.GL.glActiveTexture
 import com.zakgof.korender.impl.gl.GL.glBindTexture
 import com.zakgof.korender.impl.gl.GL.glGenTextures
 import com.zakgof.korender.impl.gl.GL.glGenerateMipmap
+import com.zakgof.korender.impl.gl.GL.glGetError
 import com.zakgof.korender.impl.gl.GL.glGetFloatv
 import com.zakgof.korender.impl.gl.GL.glTexImage2D
 import com.zakgof.korender.impl.gl.GL.glTexParameteri
@@ -76,17 +78,17 @@ internal class GlGpuCubeTexture : AutoCloseable {
         glBindTexture(GL_TEXTURE_CUBE_MAP, null)
     }
 
-    constructor(width: Int, height: Int) {
+    constructor(width: Int, height: Int, preset: GlGpuTexture.Preset) {
         println("Creating GPU Cube Texture $this")
 
         glBindTexture(GL_TEXTURE_CUBE_MAP, glHandle)
 
-        initSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, width, height)
-        initSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, width, height)
-        initSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, width, height)
-        initSide(GL_TEXTURE_CUBE_MAP_POSITIVE_X, width, height)
-        initSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, width, height)
-        initSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, width, height)
+        initSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, width, height, preset)
+        initSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, width, height, preset)
+        initSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, width, height, preset)
+        initSide(GL_TEXTURE_CUBE_MAP_POSITIVE_X, width, height, preset)
+        initSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, width, height, preset)
+        initSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, width, height, preset)
 
         setupFiltering()
 
@@ -114,8 +116,19 @@ internal class GlGpuCubeTexture : AutoCloseable {
         glTexImage2D(glSide, 0, glFormat.internal, image.width, image.height, 0, glFormat.format, glFormat.type, image.bytes)
     }
 
-    private fun initSide(glSide: Int, width: Int, height: Int) =
-        glTexImage2D(glSide, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, null)
+    @OptIn(ExperimentalStdlibApi::class)
+    private fun initSide(glSide: Int, width: Int, height: Int, preset: GlGpuTexture.Preset) {
+        for (glFormat in preset.formats) {
+            glTexImage2D(glSide, 0, glFormat.internal, width, height, 0, glFormat.format, glFormat.type, null)
+            val errcode = glGetError()
+            if (errcode != 0) {
+                println("Could not create a cube texture side with format 0x${glFormat.internal.toHexString()}. Falling back to next format when creating texture")
+                continue
+            }
+            return
+        }
+        throw KorenderException("Could not create GL cube texture side")
+    }
 
     fun bind(unit: Int) {
         glActiveTexture(GLConstants.GL_TEXTURE0 + unit)

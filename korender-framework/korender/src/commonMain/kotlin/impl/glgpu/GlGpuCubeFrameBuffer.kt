@@ -6,6 +6,7 @@ import com.zakgof.korender.impl.gl.GL.glBindTexture
 import com.zakgof.korender.impl.gl.GL.glCheckFramebufferStatus
 import com.zakgof.korender.impl.gl.GL.glDeleteFramebuffers
 import com.zakgof.korender.impl.gl.GL.glDrawBuffers
+import com.zakgof.korender.impl.gl.GL.glFramebufferTexture
 import com.zakgof.korender.impl.gl.GL.glFramebufferTexture2D
 import com.zakgof.korender.impl.gl.GL.glGenFramebuffers
 import com.zakgof.korender.impl.gl.GL.glGenerateMipmap
@@ -14,7 +15,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_ATTACHMENT0
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_ATTACHMENT
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER_COMPLETE
-import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_2D
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP
 import com.zakgof.korender.impl.gl.GLFrameBuffer
 
@@ -28,24 +28,17 @@ internal class GlGpuCubeFrameBuffer(
     private val fbHandle: GLFrameBuffer = glGenFramebuffers()
 
     val colorTexture: GlGpuCubeTexture
-    val depthTexture: GlGpuTexture?
+    val depthTexture: GlGpuCubeTexture?
 
     init {
         println("Creating GPU Cube Framebuffer $this")
         glBindFramebuffer(GL_FRAMEBUFFER, fbHandle)
-        colorTexture = GlGpuCubeTexture(width, height)
+        colorTexture = GlGpuCubeTexture(width, height, GlGpuTexture.Preset.RGBFilter)
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP, colorTexture.glHandle, 0)
 
-
         if (useDepthBuffer) {
-            depthTexture = GlGpuTexture("$name-depth", width, height, GlGpuTexture.Preset.Depth)
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_DEPTH_ATTACHMENT,
-                GL_TEXTURE_2D,
-                depthTexture.glHandle,
-                0
-            )
+            depthTexture = GlGpuCubeTexture(width, height, GlGpuTexture.Preset.SimpleDepth)
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture.glHandle,0)
         } else {
             depthTexture = null
         }

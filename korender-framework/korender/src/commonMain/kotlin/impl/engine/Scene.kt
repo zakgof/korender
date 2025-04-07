@@ -8,13 +8,18 @@ import com.zakgof.korender.impl.engine.shadow.uniforms
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glClearColor
+import com.zakgof.korender.impl.gl.GL.glClearDepth
+import com.zakgof.korender.impl.gl.GL.glDepthFunc
 import com.zakgof.korender.impl.gl.GL.glDepthMask
 import com.zakgof.korender.impl.gl.GL.glDisable
 import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GL.glViewport
 import com.zakgof.korender.impl.gl.GLConstants.GL_BLEND
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
+import com.zakgof.korender.impl.gl.GLConstants.GL_CULL_FACE
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
+import com.zakgof.korender.impl.gl.GLConstants.GL_GEQUAL
+import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_NEGATIVE_X
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
@@ -223,9 +228,10 @@ internal class Scene(
             }
     }
 
-    private fun renderForwardOpaques(uniforms: Map<String, Any?>, w: Int, h: Int, vararg defs: String) {
+    private fun renderForwardOpaques(uniforms: Map<String, Any?>, w: Int, h: Int, clearDepth: Float = 1.0f, vararg defs: String) {
         val back = renderContext.backgroundColor
         glClearColor(back.r, back.g, back.b, 1.0f)
+        glClearDepth(clearDepth)
         glViewport(0, 0, w, h)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         renderBucket(uniforms, Bucket.OPAQUE, *defs)
@@ -347,12 +353,21 @@ internal class Scene(
             probeUniforms["cameraPos"] = it.value.position
             probeUniforms["cameraDir"] = it.value.direction
             probeFb.exec(it.key) {
-                renderForwardOpaques(probeUniforms, captureContext.resolution, captureContext.resolution)
+                if (captureContext.insideOut) {
+                    glDisable(GL_CULL_FACE)
+                    glDepthFunc(GL_GEQUAL)
+                }
+                renderForwardOpaques(probeUniforms, captureContext.resolution, captureContext.resolution, 0.0f)
                 renderTransparents(probeUniforms, it.value)
+                if (captureContext.insideOut) {
+                    glEnable(GL_CULL_FACE)
+                    glDepthFunc(GL_LEQUAL)
+                }
             }
         }
         probeFb.finish()
         uniforms["envTexture$envSlot"] = probeFb.colorTexture
+        uniforms["envDepthTexture$envSlot"] = probeFb.depthTexture
     }
 }
 

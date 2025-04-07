@@ -31,5 +31,5 @@ interface FrameContext : KorenderContext {
 
     fun DeferredShading(block: DeferredShadingContext.() -> Unit = {})
 
-    fun CaptureEnv(slot: Int, resolution: Int, position: Vec3 = Vec3.ZERO, near: Float = 10f, far: Float = 1000f, block: FrameContext.() -> Unit)
+    fun CaptureEnv(slot: Int, resolution: Int, position: Vec3 = Vec3.ZERO, near: Float = 10f, far: Float = 1000f, insideOut: Boolean = false, block: FrameContext.() -> Unit)
 }

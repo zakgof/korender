@@ -89,6 +89,9 @@ actual object GL {
     actual fun glClearColor(fl: Float, fl1: Float, fl2: Float, fl3: Float) =
         gl!!.clearColor(fl, fl1, fl2, fl3)
 
+    actual fun glClearDepth(fl: Float) =
+        gl!!.clearDepth(fl)
+
     actual fun glActiveTexture(texture: Int) = gl!!.activeTexture(texture)
 
     actual fun glBindBuffer(target: Int, buffer: GLBuffer) =

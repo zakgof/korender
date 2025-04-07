@@ -113,9 +113,9 @@ internal class DefaultFrameContext(
         sceneDeclaration.filters += materialModifiers.asList()
     }
 
-    override fun CaptureEnv(slot: Int, resolution: Int, position: Vec3, near: Float, far: Float, block: FrameContext.() -> Unit) {
+    override fun CaptureEnv(slot: Int, resolution: Int, position: Vec3, near: Float, far: Float, insideOut: Boolean, block: FrameContext.() -> Unit) {
         val captureSceneDeclaration = SceneDeclaration()
-        val captureContext = CaptureContext(resolution, position, near, far, captureSceneDeclaration)
+        val captureContext = CaptureContext(resolution, position, near, far, insideOut, captureSceneDeclaration)
         DefaultFrameContext(korenderContext, captureSceneDeclaration, frameInfo).apply(block)
         sceneDeclaration.captures[slot] = captureContext
     }

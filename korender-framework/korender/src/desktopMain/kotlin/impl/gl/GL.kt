@@ -6,6 +6,7 @@ import org.lwjgl.opengl.GL13
 import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
+import org.lwjgl.opengl.GL32
 import java.nio.ByteBuffer
 
 actual object GL {
@@ -62,6 +63,9 @@ actual object GL {
 
     actual fun glClearColor(fl: Float, fl1: Float, fl2: Float, fl3: Float) =
         GL11.glClearColor(fl, fl1, fl2, fl3)
+
+    actual fun glClearDepth(fl: Float) =
+        GL11.glClearDepth(fl.toDouble())
 
     actual fun glViewport(x: Int, y: Int, w: Int, h: Int) = GL11.glViewport(x, y, w, h)
 
@@ -185,9 +189,11 @@ actual object GL {
     actual fun glGenFramebuffers(): GLFrameBuffer =
         GLFrameBuffer(GL30.glGenFramebuffers())
 
-    actual fun glFramebufferTexture2D(
-        target: Int, attachment: Int, textarget: Int, texture: GLTexture, level: Int
-    ) = GL30.glFramebufferTexture2D(target, attachment, textarget, texture.glHandle, level)
+    actual fun glFramebufferTexture2D(target: Int, attachment: Int, textarget: Int, texture: GLTexture, level: Int) =
+        GL30.glFramebufferTexture2D(target, attachment, textarget, texture.glHandle, level)
+
+    actual fun glFramebufferTexture(target: Int, attachment: Int, texture: GLTexture, level: Int) =
+        GL32.glFramebufferTexture(target, attachment, texture.glHandle, level)
 
     actual fun glDeleteFramebuffers(framebuffer: GLFrameBuffer) =
         GL30.glDeleteFramebuffers(framebuffer.glHandle)

@@ -177,6 +177,12 @@ internal class GlGpuTexture(
                 GlFormat(GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT),
             )
         ),
+        SimpleDepth(
+            TextureFilter.Nearest, TextureWrap.Repeat, 0,
+            listOf(
+                GlFormat(GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT)
+            )
+        ),
         VSM(
             TextureFilter.Linear, TextureWrap.MirroredRepeat, 1024, listOf(
                 // TODO: still want this on Desktop

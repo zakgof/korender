@@ -60,6 +60,8 @@ expect object GL {
 
     fun glClearColor(fl: Float, fl1: Float, fl2: Float, fl3: Float)
 
+    fun glClearDepth(fl: Float)
+
     fun glActiveTexture(texture: Int)
 
     fun glBindBuffer(target: Int, buffer: GLBuffer)
@@ -157,6 +159,8 @@ expect object GL {
         texture: GLTexture,
         level: Int
     )
+
+    fun glFramebufferTexture(target: Int, attachment: Int, texture: GLTexture, level: Int)
 
     fun glDeleteFramebuffers(framebuffer: GLFrameBuffer)
 
