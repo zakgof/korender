@@ -13,8 +13,6 @@ import com.zakgof.korender.impl.gl.GL.glTexImage2D
 import com.zakgof.korender.impl.gl.GL.glTexParameteri
 import com.zakgof.korender.impl.gl.GLConstants
 import com.zakgof.korender.impl.gl.GLConstants.GL_CLAMP_TO_EDGE
-import com.zakgof.korender.impl.gl.GLConstants.GL_LINEAR
-import com.zakgof.korender.impl.gl.GLConstants.GL_LINEAR_MIPMAP_LINEAR
 import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_TEXTURE_MAX_ANISOTROPY
 import com.zakgof.korender.impl.gl.GLConstants.GL_R16
 import com.zakgof.korender.impl.gl.GLConstants.GL_R8
@@ -39,10 +37,20 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_SHORT
 import com.zakgof.korender.impl.gl.GLTexture
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.image.InternalImage
+import kotlin.math.min
 
 internal class GlGpuCubeTexture : AutoCloseable {
 
     val glHandle: GLTexture = glGenTextures()
+
+    val sides = listOf(
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+    )
 
     private val formatMap = mapOf(
         Image.Format.RGBA to GlGpuTexture.GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE),
@@ -71,8 +79,7 @@ internal class GlGpuCubeTexture : AutoCloseable {
         loadSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, imagePy)
         loadSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, imagePz)
 
-        setupFiltering()
-
+        setupFiltering(GlGpuTexture.Preset.RGBFilter)
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP)
 
         glBindTexture(GL_TEXTURE_CUBE_MAP, null)
@@ -83,33 +90,30 @@ internal class GlGpuCubeTexture : AutoCloseable {
 
         glBindTexture(GL_TEXTURE_CUBE_MAP, glHandle)
 
-        initSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, width, height, preset)
-        initSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, width, height, preset)
-        initSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, width, height, preset)
-        initSide(GL_TEXTURE_CUBE_MAP_POSITIVE_X, width, height, preset)
-        initSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, width, height, preset)
-        initSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, width, height, preset)
-
-        setupFiltering()
+        sides.forEach { initSide(it, width, height, preset) }
+        setupFiltering(preset)
 
         glBindTexture(GL_TEXTURE_CUBE_MAP, null)
     }
 
-    private fun setupFiltering() {
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    private fun setupFiltering(preset: GlGpuTexture.Preset) {
+
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, filterMinMap[preset.filter]!!)
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, filterMagMap[preset.filter]!!)
+
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE)
 
-        ignoringGlError {
-            val anisoMax = glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY) ?: 0f
-            if (anisoMax > 0) {
-                glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_ANISOTROPY, anisoMax.toInt())
+        if (preset.aniso > 0) {
+            ignoringGlError {
+                val anisoMax = glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY) ?: 0f
+                if (anisoMax > 0) {
+                    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_ANISOTROPY, min(preset.aniso, anisoMax.toInt()))
+                }
             }
         }
     }
-
 
     private fun loadSide(glSide: Int, image: InternalImage) {
         val glFormat = formatMap[image.format]!!
@@ -122,12 +126,12 @@ internal class GlGpuCubeTexture : AutoCloseable {
             glTexImage2D(glSide, 0, glFormat.internal, width, height, 0, glFormat.format, glFormat.type, null)
             val errcode = glGetError()
             if (errcode != 0) {
-                println("Could not create a cube texture side with format 0x${glFormat.internal.toHexString()}. Falling back to next format when creating texture")
+                println("Could not create a cube texture with format 0x${glFormat.internal.toHexString()}. Falling back to next format when creating texture")
                 continue
             }
             return
         }
-        throw KorenderException("Could not create GL cube texture side")
+        throw KorenderException("Could not create GL texture")
     }
 
     fun bind(unit: Int) {

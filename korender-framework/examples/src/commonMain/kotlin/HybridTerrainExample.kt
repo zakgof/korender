@@ -3,6 +3,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
+import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -22,14 +23,11 @@ fun HybridTerrainExample() =
         Frame {
             projection = frustum(5f, 5f * height / width, 2f, 32000f)
 
-//            camera = camera(Vec3(-6700.0f, 170f, 5900.0f), 1.x - 0.2f.z,  1.y)
-//            camera = camera(
-//                Vec3(-6400.0f, 600f, 6300.0f),
-//                (-1).y, 1.z
-//            )
+            // camera = camera(Vec3(-6100.0f, 600f, 6000.0f), (-1).y, 1.z)
+            // camera = camera(Vec3(0.0f, 8000f, 0.0f), -1.y,  1.z)
 
-            camera = camera(Vec3(0000.0f, 8000f, 0.0f),
-                -1.y,  1.z)
+            camera = camera(Vec3(23.0f, 1000f, -2000.0f), 1.z - 1.y, 1.z + 1.y)
+
 
 
             AmbientLight(ColorRGB.white(0.2f))
@@ -41,7 +39,8 @@ fun HybridTerrainExample() =
                 terrain {
                     heightTextureSize = 8192
                     heightTexture = texture("hybridterrain/base-height.jpg")
-                    set("sdf", texture("hybridterrain/sdf.png"))
+                    set("sdf", texture("hybridterrain/sdf.png", TextureFilter.Linear))
+                    set("road", texture("infcity/road.jpg"))
                 },
                 roiTextures,
                 plugin("terrain", "hybridterrain/height.glsl"),

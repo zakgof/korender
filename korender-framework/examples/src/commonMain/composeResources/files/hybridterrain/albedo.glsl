@@ -15,6 +15,7 @@ vec4 roi(vec2 uv) {
 }
 
 uniform sampler2D sdf;
+uniform sampler2D road;
 
 vec4 pluginAlbedo(vec2 tex, vec3 pos, vec3 normal, vec4 albedo) {
 
@@ -29,24 +30,21 @@ vec4 pluginAlbedo(vec2 tex, vec3 pos, vec3 normal, vec4 albedo) {
     float grassW = clamp(1.0 - sandW - rockW - snowW, 0.0, 1.0);
 
     vec3 color = (sand * sandW +
-                 snow * snowW +
-                 rock * rockW +
-                 grass * grassW) / (sandW + snowW + rockW + grassW);
+    snow * snowW +
+    rock * rockW +
+    grass * grassW) / (sandW + snowW + rockW + grassW);
 
 
     float c = 0.25 +
-              fbm2(tex *  64.0) * 0.5 +
-              fbm2(tex * 128.0) * 0.25;
+    fbm2(tex *  64.0) * 0.5 +
+    fbm2(tex * 128.0) * 0.25;
 
     vec4 roiColor = roi(tex);
 
-    vec4 tx = texture(sdf, tex) * 2.0 - 1.0;
-
-    float v = dot(tex, tx.rg) - dot((tx.ba+tex), tx.rg);
-
-
-    if (abs(v) < 0.005) {
-        return vec4(1.0, abs(v) / 0.005, 0.0, 1.0);
+    vec4 tx = texture(sdf, tex);
+    float v = (tx.r - 0.5) * 2.0 * 6.0 / 128.0;
+    if (abs(v) < 0.001) {
+        return texture(road, vec2(0.5 + v / 0.001, tx.b));
     }
 
     return vec4(mix(color + 0.25, roiColor.rgb, roiColor.a), 1.0);
