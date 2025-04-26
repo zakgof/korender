@@ -32,7 +32,7 @@ internal class GlGpuCubeFrameBuffer(
     init {
         println("Creating GPU Cube Framebuffer $this")
         glBindFramebuffer(GL_FRAMEBUFFER, fbHandle)
-        colorTexture = GlGpuCubeTexture(width, height, GlGpuTexture.Preset.RGBFilter)
+        colorTexture = GlGpuCubeTexture(width, height, GlGpuTexture.Preset.RGBAFilter)
         colorTexture.sides.forEach {
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, it, colorTexture.glHandle, 0)
         }

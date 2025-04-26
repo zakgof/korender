@@ -218,8 +218,8 @@ void main() {
         color += pointLight(vpos, l, N, V, c_diff, F0, rough, occlusion);
     }
 
-    #ifdef TERRAIN
-    // color = vec3(vtex, 0.0);
+    #ifdef DEPTH_TO_ALPHA
+        albedo.a = gl_FragCoord.z;
     #endif
 
     fragColor = vec4(color, albedo.a);

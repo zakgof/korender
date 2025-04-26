@@ -340,7 +340,7 @@ internal class Scene(
         val probeFb = inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$envSlot", captureContext.resolution, captureContext.resolution, true)) ?: throw SkipRender
         val probeUniforms = mutableMapOf<String, Any?>()
         probeUniforms += uniforms
-        val projection = FrustumProjection(2f * captureContext.near, 2f * captureContext.near, captureContext.near, captureContext.far)
+        val projection = FrustumProjection(1f * captureContext.near, 1f * captureContext.near, captureContext.near, captureContext.far)
         mapOf(
             GL_TEXTURE_CUBE_MAP_NEGATIVE_X to DefaultCamera(captureContext.position, -1.x, -1.y),
             GL_TEXTURE_CUBE_MAP_NEGATIVE_Y to DefaultCamera(captureContext.position, -1.y, -1.z),
@@ -358,7 +358,7 @@ internal class Scene(
                     glDisable(GL_CULL_FACE)
                     glDepthFunc(GL_GEQUAL)
                 }
-                renderForwardOpaques(probeUniforms, captureContext.resolution, captureContext.resolution, 0.0f)
+                renderForwardOpaques(probeUniforms, captureContext.resolution, captureContext.resolution, 0.0f, "SUPPORT_FUNCTION")
                 renderTransparents(probeUniforms, it.value)
                 if (captureContext.insideOut) {
                     glEnable(GL_CULL_FACE)

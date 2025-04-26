@@ -5,8 +5,8 @@ layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 tex;
 
 #ifdef SKINNING
-layout(location = 3) in uvec4 joints;
-layout(location = 4) in vec4 weights;
+    layout(location = 3) in uvec4 joints;
+    layout(location = 4) in vec4 weights;
 #endif
 
 out vec3 vpos;
@@ -16,14 +16,11 @@ out vec2 vtex;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform vec3 cameraPos;
 
 #ifdef SKINNING
     const int MAX_JOINTS = 32;
     uniform mat4 jntMatrices[MAX_JOINTS];
-#endif
-
-#ifdef HEMISPHERE
-    #import "!shader/lib/sky.glsl"
 #endif
 
 void main() {
@@ -46,5 +43,11 @@ void main() {
     vtex = tex;
 
     gl_Position = projection * (view * worldPos);
+
+#ifdef SUPPORT_FUNCTION
+    float depth = length(vpos - cameraPos);
+    float ndcDepth = (2.0f * depth - 103.0) / 97.0;
+    gl_Position.z = gl_Position.w * ndcDepth;
+#endif
 
 }
