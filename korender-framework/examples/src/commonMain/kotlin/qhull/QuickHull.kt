@@ -1,7 +1,6 @@
 package com.zakgof.korender.examples.qhull
 
 import com.zakgof.korender.math.Vec3
-import kotlin.math.abs
 
 class QHMesh(val points: List<QHPoint>, val indexes: List<Int>)
 
@@ -20,9 +19,11 @@ class QuickHull(private val points: List<Vec3>) {
 
         val normal: Vec3 = ((b - a) % (c - a)).normalize()
 
-        fun isAbove(point: Vec3) = (point - a) * normal > 0
+        fun isAbove(point: Vec3) = distance(point) > 0
 
-        fun distance(point: Vec3) = abs((point - a) * normal)
+        fun distance(point: Vec3) = (point - a) * normal
+
+        fun edges() = setOf(ia to ib, ib to ic, ic to ia)
 
     }
 
@@ -47,85 +48,66 @@ class QuickHull(private val points: List<Vec3>) {
 
         // Add initial hull faces
         val faces = mutableListOf(
-            Face(ia, ib, ic),
+            Face(ia, ic, ib),
             Face(ia, ib, id),
-            Face(ia, ic, id),
-            Face(ib, ic, id)
+            Face(ib, ic, id),
+            Face(ic, ia, id)
         )
 
-        // Step 3: Collect points outside the hull for each face
-        val outsidePoints = faces.associateWith { face ->
-            points.indices.filter { face.isAbove(points[it]) }.toMutableList()
-        }.toMutableMap()
+        do {
+            val (face, pt) = faces.flatMap { f -> points.indices.map { p -> (f to p) } }
+                .maxByOrNull { it.first.distance(points[it.second]) }!!
+            val maxDist = face.distance(points[pt])
+            println("Max distance: $maxDist")
+            if (maxDist < 1e-6f)
+                break
+            appendPoint(faces, face, pt)
 
-        // Step 4: QuickHull iteration
-        while (outsidePoints.isNotEmpty()) {
-            val (face, exteriorPoints) = outsidePoints.filter { it.value.isNotEmpty() }.maxByOrNull { it.value.size }!!
-            val farthestPointIndex = exteriorPoints.maxByOrNull { face.distance(points[it]) }!!
-            val farthestPoint = points[farthestPointIndex]
+        } while (true)
 
-            // Update hull by removing the face and forming new faces with the farthest point
-            val visibleFaces = faces.filter { it.isAbove(farthestPoint) }
-            val horizonEdges = findHorizonEdges(visibleFaces, faces)
+        val originalIndexesFromHull = faces
+            .flatMap { listOf(it.ia, it.ib, it.ic) }
+            .distinct()
+            .sorted()
 
-            // Remove visible faces from the hull
-            faces.removeAll(visibleFaces)
+        val originalIndexToIndex = originalIndexesFromHull
+            .withIndex()
+            .associate { it.value to it.index }
 
-            // Add new faces to the hull
-            for ((edgeStart, edgeEnd) in horizonEdges) {
-                faces.add(Face(edgeStart, edgeEnd, farthestPointIndex))
-            }
-
-            // Reassign points outside the removed faces and new faces
-            visibleFaces.forEach { outsidePoints.remove(it) }
-            for (newFace in faces) {
-                if (newFace !in outsidePoints) {
-                    outsidePoints[newFace] = mutableListOf()
-                }
-                val exteriors = exteriorPoints.filter { face.isAbove(points[it]) }
-                outsidePoints[newFace]!! += exteriors
-            }
+        val normalAccumulators = Array(originalIndexesFromHull.size) { Vec3.ZERO }
+        faces.forEach {
+            val n = it.normal
+            normalAccumulators[originalIndexToIndex[it.ia]!!] += n
+            normalAccumulators[originalIndexToIndex[it.ib]!!] += n
+            normalAccumulators[originalIndexToIndex[it.ic]!!] += n
         }
 
-        // Step 5: Generate final QHMesh
-        val faceIndexes = mutableListOf<Int>()
-        val facePoints = faces.flatMap { face ->
-            listOf(face.a, face.b, face.c)
-        }.distinct()
-
-        val pointToIndex = facePoints.withIndex().associate { it.value to it.index }
-        for (face in faces) {
-            faceIndexes.add(pointToIndex[face.a]!!)
-            faceIndexes.add(pointToIndex[face.b]!!)
-            faceIndexes.add(pointToIndex[face.c]!!)
+        val vertices = originalIndexesFromHull.map {
+            QHPoint(points[it], normalAccumulators[it].normalize())
         }
-
-        val qhPoints = facePoints.map { QHPoint(it, Vec3.ZERO) } // Normal can be computed later
-        return QHMesh(qhPoints, faceIndexes)
+        val indexes = faces.flatMap { listOf(it.ia, it.ib, it.ic) }
+            .map { originalIndexToIndex[it]!! }
+        return QHMesh(vertices, indexes)
     }
 
+    private fun appendPoint(faces: MutableList<Face>, face: Face, index: Int) {
+        val pt = points[index]
+        val visibleFaces = faces.filter { it.isAbove(pt) }
+        val horizonEdges = visibleFaces.flatMap { it.edges() }
+            .groupingBy { it }
+            .eachCount()
+            .filter { it.value == 1 }
+            .keys
+
+        faces -= visibleFaces.toSet()
+        faces += horizonEdges.map { Face(it.first, it.second, index) }.toSet()
+    }
 
     private fun findFourthPoint(ia: Int, ib: Int, ic: Int): Int {
-        val planeNormal = Face(ia, ib, ic).normal
-        return points.indices.find { ((points[it] - points[ia]) * (planeNormal)) != 0f } ?: throw IllegalArgumentException("Points are coplanar")
+        val face = Face(ia, ib, ic)
+        return points.indices.find {
+            face.distance(points[it]) > 0
+        } ?: throw IllegalArgumentException("Points are poor")
     }
 
-    private fun findHorizonEdges(visibleFaces: List<Face>, faces: List<Face>): List<Pair<Int, Int>> {
-        val sharedEdges = mutableSetOf<Pair<Int, Int>>()
-        for (face in visibleFaces) {
-            val edges = listOf(
-                face.ia to face.ib,
-                face.ib to face.ic,
-                face.ic to face.ia
-            )
-            for (edge in edges) {
-                if (edge in sharedEdges) {
-                    sharedEdges.remove(edge)
-                } else {
-                    sharedEdges.add(edge)
-                }
-            }
-        }
-        return sharedEdges.toList()
-    }
 }
