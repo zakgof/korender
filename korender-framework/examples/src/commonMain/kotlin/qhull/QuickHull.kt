@@ -65,9 +65,9 @@ class QuickHull(private val points: List<Vec3>) {
                 .maxByOrNull { it.first.distance(points[it.second]) }!!
             val maxDist = face.distance(points[pt])
             println("Max distance: $maxDist")
-            if (maxDist < 1e-6f)
+            if (maxDist < 1e-4f)
                 break
-            appendPoint(faces, face, pt)
+            appendPoint(faces, pt)
 
         } while (true)
 
@@ -96,9 +96,12 @@ class QuickHull(private val points: List<Vec3>) {
         return QHMesh(vertices, indexes)
     }
 
-    private fun appendPoint(faces: MutableList<Face>, face: Face, index: Int) {
+    private fun appendPoint(faces: MutableList<Face>, index: Int) {
         val pt = points[index]
-        val visibleFaces = faces.filter { it.isAbove(pt) }
+        val visibleFaces = faces
+            .filter { it.ia != index && it.ib != index && it.ic != index }
+            .filter { it.isAbove(pt) }
+
         val horizonEdges = mutableSetOf<Pair<Int, Int>>()
         visibleFaces.flatMap { it.edges() }
             .forEach {

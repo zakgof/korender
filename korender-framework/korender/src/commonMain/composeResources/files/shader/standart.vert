@@ -46,7 +46,7 @@ void main() {
 
 #ifdef SUPPORT_FUNCTION
     float depth = length(vpos - cameraPos);
-    float ndcDepth = (2.0f * depth - 103.0) / 97.0;
+    float ndcDepth = (2.0f * depth - 103.0) / 97.0; // -1..1
     gl_Position.z = gl_Position.w * ndcDepth;
 #endif
 
