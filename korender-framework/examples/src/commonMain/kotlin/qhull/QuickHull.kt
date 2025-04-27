@@ -54,6 +54,12 @@ class QuickHull(private val points: List<Vec3>) {
             Face(ic, ia, id)
         )
 
+        val centroid = (points[ia] + points[ib] + points[ic] + points[id]) * 0.25f
+        faces.forEach {
+            val d = it.distance(centroid)
+            println("Distance to centroid $d")
+        }
+
         do {
             val (face, pt) = faces.flatMap { f -> points.indices.map { p -> (f to p) } }
                 .maxByOrNull { it.first.distance(points[it.second]) }!!
@@ -93,12 +99,13 @@ class QuickHull(private val points: List<Vec3>) {
     private fun appendPoint(faces: MutableList<Face>, face: Face, index: Int) {
         val pt = points[index]
         val visibleFaces = faces.filter { it.isAbove(pt) }
-        val horizonEdges = visibleFaces.flatMap { it.edges() }
-            .groupingBy { it }
-            .eachCount()
-            .filter { it.value == 1 }
-            .keys
-
+        val horizonEdges = mutableSetOf<Pair<Int, Int>>()
+        visibleFaces.flatMap { it.edges() }
+            .forEach {
+                if (!horizonEdges.remove(it.second to it.first)) {
+                    horizonEdges.add(it)
+                }
+            }
         faces -= visibleFaces.toSet()
         faces += horizonEdges.map { Face(it.first, it.second, index) }.toSet()
     }
