@@ -16,6 +16,8 @@ class QuickHull(private val points: List<Vec3>) {
             get() = points[ib]
         val c: Vec3
             get() = points[ic]
+        val vertexi: List<Int>
+            get() = listOf(ia, ib, ic)
 
         val normal: Vec3 = ((b - a) % (c - a)).normalize()
 
@@ -72,7 +74,7 @@ class QuickHull(private val points: List<Vec3>) {
         } while (true)
 
         val originalIndexesFromHull = faces
-            .flatMap { listOf(it.ia, it.ib, it.ic) }
+            .flatMap { it.vertexi }
             .distinct()
             .sorted()
 
@@ -88,10 +90,14 @@ class QuickHull(private val points: List<Vec3>) {
             normalAccumulators[originalIndexToIndex[it.ic]!!] += n
         }
 
-        val vertices = originalIndexesFromHull.map {
-            QHPoint(points[it], normalAccumulators[it].normalize())
+        val div = 1f / originalIndexesFromHull.size
+        val cntrd = originalIndexesFromHull.indices.map {points[originalIndexesFromHull[it]]}
+            .fold(Vec3.ZERO) { acc, it -> (acc + it) * div}
+
+        val vertices = originalIndexesFromHull.indices.map {
+            QHPoint(points[originalIndexesFromHull[it]] - cntrd, normalAccumulators[it].normalize())
         }
-        val indexes = faces.flatMap { listOf(it.ia, it.ib, it.ic) }
+        val indexes = faces.flatMap { it.vertexi }
             .map { originalIndexToIndex[it]!! }
         return QHMesh(vertices, indexes)
     }
