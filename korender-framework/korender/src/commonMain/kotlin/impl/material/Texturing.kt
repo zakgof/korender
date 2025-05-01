@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.CubeTextureDeclaration
+import com.zakgof.korender.Image
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Platform
 import com.zakgof.korender.ResourceLoader
@@ -64,10 +65,20 @@ internal object Texturing {
         val extension = resource.split(".").last()
         return Platform.loadImage(bytes, extension)
     }
+
+    fun cube(decl: ImageCubeTextureDeclaration): GlGpuCubeTexture =
+        GlGpuCubeTexture(
+            decl.nxImage as InternalImage,
+            decl.nyImage as InternalImage,
+            decl.nzImage as InternalImage,
+            decl.pxImage as InternalImage,
+            decl.pyImage as InternalImage,
+            decl.pzImage as InternalImage
+        )
+
 }
 
 internal interface InternalTexture {
-
     val id: String
     val filter: TextureFilter
     val wrap: TextureWrap
@@ -109,3 +120,18 @@ internal data class ResourceCubeTextureDeclaration(
     val pyResource: String,
     val pzResource: String
 ) : CubeTextureDeclaration
+
+internal class ImageCubeTextureDeclaration(
+    val id: String,
+    val nxImage: Image,
+    val nyImage: Image,
+    val nzImage: Image,
+    val pxImage: Image,
+    val pyImage: Image,
+    val pzImage: Image
+) : CubeTextureDeclaration {
+    override fun equals(other: Any?): Boolean =
+        (other is ImageCubeTextureDeclaration && other.id == id)
+
+    override fun hashCode(): Int = id.hashCode()
+}

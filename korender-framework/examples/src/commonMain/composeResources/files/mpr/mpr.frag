@@ -13,9 +13,8 @@ out vec4 fragColor;
 
 vec3 support(vec3 dir) {
     float depthSample = texture(envDepthTexture0, dir).r;
-    float depth = 1.0 * 100.0 / (100.0 - 97.0 * depthSample);
     vec3 center = vec3(0.0, 0.0, -20.0);
-    return center + normalize(dir) * depth * 2.2;
+    return center + normalize(dir) * depthSample * 6.0;
 }
 
 void main() {
@@ -34,8 +33,8 @@ void main() {
         return;
     }
 
-//    fragColor = vec4(0., 1., 0., 1.);
-//    return;
+    fragColor = vec4(0., 1., 0., 1.);
+    return;
 
     for (int i=0; i<5; i++) {
         vec3 v = normalize(v0 + v1);

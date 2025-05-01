@@ -8,6 +8,10 @@ actual class NativeByteBuffer(val byteBuffer: ByteBuffer) {
     actual constructor(size: Int) :
             this(ByteBuffer.allocateDirect(size).order(ByteOrder.LITTLE_ENDIAN))
 
+    actual operator fun set(index: Int, byte: Byte) {
+        byteBuffer.put(index, byte)
+    }
+
     actual fun put(v: Float) {
         val intBits = v.toBits()
         put(intBits)

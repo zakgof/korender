@@ -4,6 +4,8 @@ import com.zakgof.korender.math.Vec3
 
 expect class NativeByteBuffer(size: Int) {
 
+    operator fun set(index: Int, byte: Byte)
+
     fun put(v: Float)
 
     fun put(v: Byte)

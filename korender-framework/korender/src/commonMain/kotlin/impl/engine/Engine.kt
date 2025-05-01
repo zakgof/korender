@@ -69,6 +69,8 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
 import com.zakgof.korender.impl.ignoringGlError
+import com.zakgof.korender.impl.image.InternalImage
+import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.InternalAdjustParams
 import com.zakgof.korender.impl.material.InternalBaseParams
 import com.zakgof.korender.impl.material.InternalBloomParams
@@ -142,6 +144,9 @@ internal class Engine(
 
         override fun cubeTexture(nxResource: String, nyResource: String, nzResource: String, pxResource: String, pyResource: String, pzResource: String): CubeTextureDeclaration =
             ResourceCubeTextureDeclaration(nxResource, nyResource, nzResource, pxResource, pyResource, pzResource)
+
+        override fun cubeTexture(id: String, nxImage: Image, nyImage: Image, nzImage: Image, pxImage: Image, pyImage: Image, pzImage: Image): CubeTextureDeclaration =
+            ImageCubeTextureDeclaration(id, nxImage, nyImage, nzImage, pxImage, pyImage, pzImage)
 
         override fun cube(halfSide: Float): MeshDeclaration = Cube(halfSide)
 
@@ -376,6 +381,9 @@ internal class Engine(
 
         override val height: Int
             get() = renderContext.height
+
+        override fun createImage(width: Int, height: Int, format: Image.Format): Image =
+            Platform.createImage(width, height, format)
 
         override fun loadImage(imageResource: String): Deferred<Image> {
             return asyncContext.call {

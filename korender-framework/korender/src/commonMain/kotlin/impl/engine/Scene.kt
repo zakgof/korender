@@ -32,6 +32,7 @@ import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Vec3List
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
+import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedCubeTexture
@@ -62,6 +63,7 @@ internal class Scene(
         when (value) {
             is InternalTexture -> inventory.texture(value) ?: NotYetLoadedTexture
             is ResourceCubeTextureDeclaration -> inventory.cubeTexture(value) ?: NotYetLoadedCubeTexture
+            is ImageCubeTextureDeclaration -> inventory.cubeTexture(value) ?: NotYetLoadedCubeTexture
             else -> value
         }
     }
@@ -340,7 +342,7 @@ internal class Scene(
         val probeFb = inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$envSlot", captureContext.resolution, captureContext.resolution, true)) ?: throw SkipRender
         val probeUniforms = mutableMapOf<String, Any?>()
         probeUniforms += uniforms
-        val projection = FrustumProjection(1f * captureContext.near, 1f * captureContext.near, captureContext.near, captureContext.far)
+        val projection = FrustumProjection(2f * captureContext.near, 2f * captureContext.near, captureContext.near, captureContext.far)
         mapOf(
             GL_TEXTURE_CUBE_MAP_NEGATIVE_X to DefaultCamera(captureContext.position, -1.x, -1.y),
             GL_TEXTURE_CUBE_MAP_NEGATIVE_Y to DefaultCamera(captureContext.position, -1.y, -1.z),

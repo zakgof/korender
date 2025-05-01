@@ -9,11 +9,14 @@ internal expect object Platform {
 
     val target: KorenderContext.TargetPlatform
 
+    internal fun createImage(width: Int, height: Int, format: Image.Format): Image
+
     internal fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage>
 
     internal fun loadFont(bytes: ByteArray): Deferred<FontDef>
 
     fun nanoTime(): Long
+
 }
 
 internal interface AsyncContext {

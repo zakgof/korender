@@ -61,6 +61,12 @@ interface KorenderContext {
         pxResource: String, pyResource: String, pzResource: String
     ): CubeTextureDeclaration
 
+    fun cubeTexture(
+        id: String,
+        nxImage: Image, nyImage: Image, nzImage: Image,
+        pxImage: Image, pyImage: Image, pzImage: Image
+    ): CubeTextureDeclaration
+
     fun cube(halfSide: Float = 0.5f): MeshDeclaration
     fun sphere(radius: Float = 1.0f): MeshDeclaration
     fun obj(objFile: String): MeshDeclaration
@@ -120,6 +126,7 @@ interface KorenderContext {
     fun ortho(width: Float, height: Float, near: Float, far: Float): OrthoProjectionDeclaration
     fun camera(position: Vec3, direction: Vec3, up: Vec3): CameraDeclaration
 
+    fun createImage(width: Int, height: Int, format: Image.Format): Image
     fun loadImage(imageResource: String): Deferred<Image>
 
     fun vsm(blurRadius: Float? = null): ShadowAlgorithmDeclaration

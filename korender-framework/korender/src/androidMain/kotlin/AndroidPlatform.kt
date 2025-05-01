@@ -63,7 +63,6 @@ internal actual object Platform {
             else -> throw KorenderException("Unsupported image format $format")
         }
         return AndroidImage(
-            bitmap,
             bitmap.width,
             bitmap.height,
             NativeByteBuffer(gpuBytes),
@@ -112,18 +111,11 @@ internal actual object Platform {
 }
 
 internal class AndroidImage(
-    private val bitmap: Bitmap,
     override val width: Int,
     override val height: Int,
     override val bytes: NativeByteBuffer,
     override val format: Image.Format
-) : InternalImage {
-    override fun pixel(x: Int, y: Int): com.zakgof.korender.math.ColorRGBA {
-        // TODO: performance optimization
-        val androidColor = bitmap.getPixel(x, y)
-        return com.zakgof.korender.math.ColorRGBA(androidColor.toLong())
-    }
-}
+) : InternalImage
 
 @OptIn(DelicateCoroutinesApi::class)
 @Composable

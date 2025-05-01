@@ -62,14 +62,17 @@ class QuickHull(private val points: List<Vec3>) {
             println("Distance to centroid $d")
         }
 
+        val outPointIndexes = points.indices.toMutableList()
+
         do {
-            val (face, pt) = faces.flatMap { f -> points.indices.map { p -> (f to p) } }
-                .maxByOrNull { it.first.distance(points[it.second]) }!!
-            val maxDist = face.distance(points[pt])
-            println("Max distance: $maxDist")
-            if (maxDist < 1e-4f)
+            val ptod = outPointIndexes.associateWith { p -> faces.maxOfOrNull { it.distance(points[p]) }!! }
+            outPointIndexes.removeAll { ptod[it]!! < 1e-4f }
+
+            val bestEntry = ptod.maxByOrNull { it.value }!!
+            println("Max distance: ${bestEntry.value}; remaining points: ${outPointIndexes.size}")
+            if (outPointIndexes.isEmpty() || bestEntry.value < 1e-3f)
                 break
-            appendPoint(faces, pt)
+            appendPoint(faces, bestEntry.key)
 
         } while (true)
 
@@ -91,8 +94,9 @@ class QuickHull(private val points: List<Vec3>) {
         }
 
         val div = 1f / originalIndexesFromHull.size
-        val cntrd = originalIndexesFromHull.indices.map {points[originalIndexesFromHull[it]]}
-            .fold(Vec3.ZERO) { acc, it -> (acc + it) * div}
+        val cntrd = originalIndexesFromHull.indices
+            .map { points[originalIndexesFromHull[it]] }
+            .fold(Vec3.ZERO) { acc, it -> (acc + it * div) }
 
         val vertices = originalIndexesFromHull.indices.map {
             QHPoint(points[originalIndexesFromHull[it]] - cntrd, normalAccumulators[it].normalize())

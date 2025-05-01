@@ -37,7 +37,6 @@ import java.awt.event.MouseMotionAdapter
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferByte
 import java.awt.image.DataBufferUShort
-import java.awt.image.Raster
 import java.io.ByteArrayInputStream
 import javax.imageio.ImageIO
 import javax.swing.SwingUtilities
@@ -69,7 +68,7 @@ actual fun Korender(
         ey: Int
     ) {
         GlobalScope.launch {
-            engine?.pushTouch(TouchEvent(type, button,ex * pixelRatio[0], ey * pixelRatio[1]))
+            engine?.pushTouch(TouchEvent(type, button, ex * pixelRatio[0], ey * pixelRatio[1]))
         }
     }
 
@@ -132,7 +131,7 @@ actual fun Korender(
                 }
             }
 
-            fun Int.toButton() : TouchEvent.Button = when(this) {
+            fun Int.toButton(): TouchEvent.Button = when (this) {
                 BUTTON1 -> TouchEvent.Button.LEFT
                 BUTTON3 -> TouchEvent.Button.RIGHT
                 else -> TouchEvent.Button.NONE
@@ -156,6 +155,7 @@ actual fun Korender(
                 override fun keyPressed(e: KeyEvent) {
                     sendKey(com.zakgof.korender.KeyEvent.Type.DOWN, e.keyChar.toString()) // TODO all keycodes
                 }
+
                 override fun keyReleased(e: KeyEvent) {
                     sendKey(com.zakgof.korender.KeyEvent.Type.UP, e.keyChar.toString()) // TODO all keycodes
                 }
@@ -181,6 +181,9 @@ internal actual object Platform {
     actual val target = KorenderContext.TargetPlatform.Desktop
 
     actual fun nanoTime() = System.nanoTime()
+
+    internal actual fun createImage(width: Int, height: Int, format: Image.Format): Image =
+        image(BufferedImage(width, height, format.toBufferedImageType()))
 
     internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage> =
         CompletableDeferred(image(ImageIO.read(ByteArrayInputStream(bytes))))
@@ -272,7 +275,6 @@ internal actual object Platform {
             else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
         }
         return JvmImage(
-            bufferedImage.raster,
             bufferedImage.width,
             bufferedImage.height,
             bytes,
@@ -283,13 +285,16 @@ internal actual object Platform {
 }
 
 internal class JvmImage(
-    private val raster: Raster,
     override val width: Int,
     override val height: Int,
     override val bytes: NativeByteBuffer,
     override val format: Image.Format
-) : InternalImage {
+) : InternalImage
 
-
+fun Image.Format.toBufferedImageType() = when (this) {
+    Image.Format.RGB -> BufferedImage.TYPE_3BYTE_BGR
+    Image.Format.RGBA -> BufferedImage.TYPE_4BYTE_ABGR
+    Image.Format.Gray -> BufferedImage.TYPE_BYTE_GRAY
+    Image.Format.Gray16 -> BufferedImage.TYPE_USHORT_GRAY
 }
 
