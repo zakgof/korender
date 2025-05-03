@@ -2,8 +2,6 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
-import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.Image
 import com.zakgof.korender.Korender
@@ -11,7 +9,6 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.examples.camera.FreeCamera
-import com.zakgof.korender.examples.qhull.QuickHull
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.FloatMath.PI
@@ -23,7 +20,6 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 @OptIn(ExperimentalResourceApi::class)
@@ -49,24 +45,37 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 //        Vec3(x, y, z)
 //    }
 
-    val metaball = Metaball(20f) { sqrt(it * 0.05f) * (1f - it * 0.05f) * 10f }
-    val qhMesh = QuickHull(metaball.points).run()
-    val supportCubeTexture = SupportFunctionCalculator(this, qhMesh.points.map { it.pos }, 128, 30f).cubeTexture()
+//    val metaball = Metaball(20f) { sqrt(it * 0.05f) * (1f - it * 0.05f) * 10f }
 
-    val hullMesh = customMesh("hull", qhMesh.points.size, qhMesh.indexes.size, POS, NORMAL) {
-        qhMesh.points.forEach {
-            pos(it.pos)
-            normal(it.normal)
-        }
-        qhMesh.indexes.forEach {
-            index(it)
-        }
-    }
+    val points = listOf(
+        Vec3(-20f, -20f, -20f),
+        Vec3(-20f, -20f, 20f),
+        Vec3(-20f, 20f, -20f),
+        Vec3(20f, -20f, -20f),
+        Vec3(20f, 20f, -20f),
+        Vec3(-20f, 20f, 20f),
+        Vec3(20f, -20f, 20f),
+        Vec3(20f, 20f, 20f)
+    )
+    //val qhMesh = QuickHull(points).run()
+//    val supportCubeTexture = SupportFunctionCalculator(this, qhMesh.points.map { it.pos }, 128, 20f).cubeTexture()
+    val supportCubeTexture = SupportFunctionCalculator(this, points, 128, 40f).cubeTexture()
+
+
+//    val hullMesh = customMesh("hull", qhMesh.points.size, qhMesh.indexes.size, POS, NORMAL) {
+//        qhMesh.points.forEach {
+//            pos(it.pos)
+//            normal(it.normal)
+//        }
+//        qhMesh.indexes.forEach {
+//            index(it)
+//        }
+//    }
 
     Frame {
-        camera = camera(70.z, -1.z, 1.y)
-        scene(metaball, hullMesh)
-        return@Frame
+//        camera = camera(70.z, -1.z, 1.y)
+//        scene(metaball, hullMesh)
+//        return@Frame
 
 //        CaptureEnv(0, 512, Vec3.ZERO, 3f, 100f, insideOut = true) {
 //            scene(metaball, hullMesh)

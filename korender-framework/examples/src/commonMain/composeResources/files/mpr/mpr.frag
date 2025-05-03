@@ -10,10 +10,10 @@ uniform vec3 cameraPos;
 
 out vec4 fragColor;
 
+vec3 center = vec3(0.0, 0.0, -20.0);
 
 vec3 support(vec3 dir) {
     float depthSample = texture(envDepthTexture0, dir).r;
-    vec3 center = vec3(0.0, 0.0, -20.0);
     return center + normalize(dir) * depthSample * 6.0;
 }
 
@@ -21,6 +21,23 @@ void main() {
 
     vec3 look = normalize(vpos - cameraPos);
 
+    vec3 p = cameraPos;
+
+    for (int i=0; i<100; i++) {
+        vec3 v = support(p - center);
+        float distance = length(p - v);
+        if (distance < 0.001) {
+            fragColor = vec4(0., 1., 0., 1.);
+            return;
+        }
+        p += look * distance;
+    }
+    fragColor = vec4(0.);
+    return;
+}
+
+/*
+    vec3 look = normalize(vpos - cameraPos);
     vec3 v1 = -look;
     vec3 p1 = support(v1);
     vec3 r = cameraPos + look * dot (p1 - cameraPos, look);
@@ -33,8 +50,8 @@ void main() {
         return;
     }
 
-    fragColor = vec4(0., 1., 0., 1.);
-    return;
+//    fragColor = vec4(0., 1., 0., 1.);
+//    return;
 
     for (int i=0; i<5; i++) {
         vec3 v = normalize(v0 + v1);
@@ -64,5 +81,4 @@ void main() {
     }
 
     fragColor = texture(envTexture0, p1);
-
-}
+*/
