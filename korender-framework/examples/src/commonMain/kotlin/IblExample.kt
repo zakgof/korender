@@ -7,7 +7,6 @@ import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.Image
 import com.zakgof.korender.Korender
-import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.examples.qhull.QuickHull
@@ -25,7 +24,6 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.exp
-import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.random.Random
 
@@ -35,8 +33,10 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val freeCamera = FreeCamera(this, ZERO, -1.z)
     OnTouch { freeCamera.touch(it) }
 
-    // val metaball = Metaball(20f) { sqrt(it * 0.05f) * (1f - it * 0.05f) * 10f }
-    val metaball = Metaball(20f, 1.0f) { (it * 0.05f).pow(0.1f) * (1f - it * 0.05f) * 10f }
+    // val metaball = Metaball(20f, 1.0f) { sqrt(it * 0.05f) * (1f - it * 0.05f) * 10f }
+    // val metaball = Metaball(20f, 1.0f) { (it * 0.05f).pow(0.1f) * (1f - it * 0.05f) * 10f }
+    val metaball = Metaball(20f, 2.0f) { (it * 0.05f) * (1f - it * 0.05f) * 20f }
+
 
     val points = metaball.points
     val hull = QuickHull(points).run()
@@ -45,7 +45,6 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         hull.indexes.forEach { index(it) }
     }
 
-    // val supportCubeTexture = SupportFunctionCalculator(this, points, 128, 40f).cubeTexture()
     Frame {
         projection = frustum(3f * width / height, 3f, 3f, 100f)
         AmbientLight(white(0.3f))
@@ -63,10 +62,35 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                 mesh = hullMesh
             )
         }
+        CaptureEnv(
+            slot = 1, resolution = 256, near = 0.2f, far = 30f, insideOut = true,
+            defs = setOf("NORMAL_CAPTURE")
+        ) {
+            metaball.spheres.forEach {
+                Renderable(
+                    standart {},
+                    mesh = sphere(it.r),
+                    transform = translate(-hull.center + it.pos)
+                )
+            }
+        }
+        CaptureEnv(
+            slot = 2, resolution = 256, near = 0.2f, far = 30f, insideOut = true
+        ) {
+            AmbientLight(white(1f))
+            metaball.spheres.forEach {
+                Renderable(
+                    standart {
+                        baseColor = ColorRGBA.Green
+                    },
+                    mesh = sphere(it.r),
+                    transform = translate(-hull.center + it.pos)
+                )
+            }
+        }
 
         Billboard(
             standart {
-                baseColorTexture = texture("texture/grass.jpg")
                 xscale = 3.0f
                 yscale = 3.0f
             },
@@ -88,7 +112,7 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                     baseColor = ColorRGBA.Green
                 },
                 mesh = sphere(it.r / 10f),
-                transform = translate(-2.x - 6.z + it.pos * 0.1f)
+                transform = translate(-2.x - 6.z + it.pos * 0.1f - hull.center * 0.1f)
             )
         }
 
@@ -103,26 +127,6 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     }
 }
 
-private fun FrameContext.scene(metaball: Metaball) {
-    AmbientLight(white(0.3f))
-    DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(2f))
-    metaball.spheres.forEach {
-        Renderable(
-            standart {
-                baseColor = ColorRGBA.Green
-            },
-            mesh = sphere(it.r),
-            transform = translate(it.pos)
-        )
-    }
-//    Renderable(
-//        standart {
-//            baseColor = ColorRGBA.Red
-//        },
-//        mesh = hullMesh
-//    )
-}
-
 class Metaball(private val height: Float, private val radius: Float, private val shape: (Float) -> Float) {
 
     val spheres: List<Sphere>
@@ -130,11 +134,11 @@ class Metaball(private val height: Float, private val radius: Float, private val
 
     init {
         val rnd = Random(1)
-        spheres = (0 until 20480).flatMap {
+        spheres = (0 until 40960).flatMap {
             val phi = rnd.nextFloat() * 2f * PI
             val h = rnd.nextFloat() * height
             val r = rnd.nextFloat() * height
-            if (abs(r - shape(h)) > 0.4f)
+            if (abs(r - shape(h)) > 0.6f * radius)
                 listOf()
             else
                 listOf(Vec3(r * sin(phi), h, r * cos(phi)))

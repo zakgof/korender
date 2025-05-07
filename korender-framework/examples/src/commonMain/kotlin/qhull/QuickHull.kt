@@ -2,7 +2,7 @@ package com.zakgof.korender.examples.qhull
 
 import com.zakgof.korender.math.Vec3
 
-class QHMesh(val points: List<QHPoint>, val indexes: List<Int>)
+class QHMesh(val points: List<QHPoint>, val indexes: List<Int>, val center: Vec3)
 
 class QHPoint(val pos: Vec3, val normal: Vec3)
 
@@ -103,7 +103,7 @@ class QuickHull(private val points: List<Vec3>) {
         }
         val indexes = faces.flatMap { it.vertexi }
             .map { originalIndexToIndex[it]!! }
-        return QHMesh(vertices, indexes)
+        return QHMesh(vertices, indexes, cntrd)
     }
 
     private fun appendPoint(faces: MutableList<Face>, index: Int) {

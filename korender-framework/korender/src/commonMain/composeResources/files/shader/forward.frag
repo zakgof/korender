@@ -225,17 +225,23 @@ void main() {
     #ifdef RADIAL_CAPTURE
         float radiant = length(cameraPos - vpos) / 15.0;
 
-        // N = V;
-        // radiant = 1.0;
+//        vec3 nn = -N / (abs(N.x) + abs(N.y) + abs(N.z));
+//        if (nn.z < 0.0) {
+//            nn.xy = (1.0 - abs(nn.yx)) * sign(nn.xy);
+//        }
+//        vec2 octa = nn.xy * 0.5 + 0.5;
 
-        vec3 nn = -N / (abs(N.x) + abs(N.y) + abs(N.z));
-        if (nn.z < 0.0) {
-            nn.xy = (1.0 - abs(nn.yx)) * sign(nn.xy);
-        }
-        vec2 octa = nn.xy * 0.5 + 0.5;
+        float PI = 3.1415926;
+        float theta = atan(-N.y, -N.x);
+        float phi = acos(-N.z);
+        vec2 octa = vec2(theta / (2.0 * PI) + 0.5, phi / PI);
 
         fragColor = vec4(octa, radiant, 1.0);
     #else
         fragColor = vec4(color, albedo.a);
+    #endif
+
+    #ifdef NORMAL_CAPTURE
+        fragColor = vec4((N + 1.) * 0.5, 1.0);
     #endif
 }
