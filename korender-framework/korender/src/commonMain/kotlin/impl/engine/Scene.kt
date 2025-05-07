@@ -360,7 +360,7 @@ internal class Scene(
                     glDisable(GL_CULL_FACE)
                     glDepthFunc(GL_GEQUAL)
                 }
-                renderForwardOpaques(probeUniforms, captureContext.resolution, captureContext.resolution, 0.0f, "SUPPORT_FUNCTION")
+                renderForwardOpaques(probeUniforms, captureContext.resolution, captureContext.resolution, 0.0f, *captureContext.defs.toTypedArray())
                 renderTransparents(probeUniforms, it.value)
                 if (captureContext.insideOut) {
                     glEnable(GL_CULL_FACE)

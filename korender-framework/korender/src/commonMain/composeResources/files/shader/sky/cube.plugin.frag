@@ -1,7 +1,7 @@
 #import "!shader/lib/noise.glsl"
 
 #ifdef SKY_CUBE_ENV0
-uniform samplerCube envDepthTexture0;
+uniform samplerCube envTexture0;
 #endif
 #ifdef SKY_CUBE_ENV1
 uniform samplerCube envTexture1;
@@ -30,7 +30,7 @@ uniform samplerCube cubeTexture;
 
 vec3 sky(vec3 look) {
     #ifdef SKY_CUBE_ENV0
-    return texture(envDepthTexture0, look).rgb;
+    return texture(envTexture0, look).rgb;
     #endif
     #ifdef SKY_CUBE_ENV1
     return texture(envTexture1, look).rgb;

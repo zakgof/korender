@@ -222,5 +222,20 @@ void main() {
         albedo.a = gl_FragCoord.z;
     #endif
 
-    fragColor = vec4(color, albedo.a);
+    #ifdef RADIAL_CAPTURE
+        float radiant = length(cameraPos - vpos) / 15.0;
+
+        // N = V;
+        // radiant = 1.0;
+
+        vec3 nn = -N / (abs(N.x) + abs(N.y) + abs(N.z));
+        if (nn.z < 0.0) {
+            nn.xy = (1.0 - abs(nn.yx)) * sign(nn.xy);
+        }
+        vec2 octa = nn.xy * 0.5 + 0.5;
+
+        fragColor = vec4(octa, radiant, 1.0);
+    #else
+        fragColor = vec4(color, albedo.a);
+    #endif
 }

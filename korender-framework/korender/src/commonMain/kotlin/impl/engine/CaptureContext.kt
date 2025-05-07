@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.math.Vec3
 
 internal class CaptureContext(
@@ -8,5 +9,6 @@ internal class CaptureContext(
     val near: Float,
     val far: Float,
     val insideOut: Boolean,
+    val defs: Set<String>,
     val sceneDeclaration: SceneDeclaration
 )

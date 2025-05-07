@@ -1,21 +1,15 @@
 #import "!shader/lib/header.glsl"
 
 in vec2 vtex;
+in vec3 vcenter;
 in vec3 vpos;
 
 uniform samplerCube envTexture0;
-uniform samplerCube envDepthTexture0;
 uniform float time;
 uniform vec3 cameraPos;
 
 out vec4 fragColor;
 
-vec3 center = vec3(0.0, 0.0, -20.0);
-
-vec3 support(vec3 dir) {
-    float depthSample = texture(envDepthTexture0, dir).r;
-    return center + normalize(dir) * depthSample * 6.0;
-}
 
 void main() {
 
@@ -23,62 +17,41 @@ void main() {
 
     vec3 p = cameraPos;
 
-    for (int i=0; i<100; i++) {
-        vec3 v = support(p - center);
-        float distance = length(p - v);
-        if (distance < 0.001) {
-            fragColor = vec4(0., 1., 0., 1.);
-            return;
+    float diff;
+    vec3 n;
+
+    for (int i=0; i<8; i++) {
+        vec3 ctop = p - vcenter;
+        float cl = length(ctop);
+        vec3 dir = ctop/cl;
+
+        vec4 smpl = texture(envTexture0, dir);
+        float radiant = 1.0 * smpl.b;
+        // n = normalize(smpl.rgb * 2.0 - 1.0);
+
+        n = vec3(smpl.rg * 2.0 - 1.0, 0.0);
+        n.z = 1.0 - abs(n.x) - abs(n.y);
+        if (n.z < 0.0) {
+            n.xy = (1.0 - abs(n.yx)) * sign(n.xy);
         }
-        p += look * distance;
+        n = normalize(n);
+
+        // radiant = 1.0;
+        // n = normalize(dir);
+
+        diff = cl - radiant;
+        float lambda = - diff * dot (n, dir) / dot(n, look);
+        if (i > 0) {
+            lambda = clamp(lambda, -0.05/i, 1.5/i);
+        }
+
+        p = p + look * lambda;
     }
-    fragColor = vec4(0.);
-    return;
-}
-
-/*
-    vec3 look = normalize(vpos - cameraPos);
-    vec3 v1 = -look;
-    vec3 p1 = support(v1);
-    vec3 r = cameraPos + look * dot (p1 - cameraPos, look);
-    vec3 v0 = normalize(r - p1);
-    vec3 p0 = support(v0);
-
-
-    if (dot(v0, p0 - r) < 0.) {
+    if (diff < 0.008) {
+        float c = 0.1 + 0.9 * clamp(dot(n, normalize(vec3(1., 0., -1.))), 0., 1.);
+        fragColor = vec4(0., c, 0., 1.);
+    } else {
         fragColor = vec4(0.);
-        return;
     }
 
-//    fragColor = vec4(0., 1., 0., 1.);
-//    return;
-
-    for (int i=0; i<5; i++) {
-        vec3 v = normalize(v0 + v1);
-        vec3 p = support(v);
-
-        float looks = dot(v, look);
-        float dotty = dot(v, p - r);
-
-        if (looks >= 0.0 && dotty < 0.0) {
-            fragColor = vec4(0.);
-            return;
-        }
-        if (looks < 0.0 && dotty < 0.0) {
-            r = r + look * (dotty / looks);
-        }
-
-        float d0 = dot(r - p0, r - p0);
-        float d1 = dot(r - p1, r - p1);
-
-        if (d0 > d1) {
-            v0 = v;
-            p0 = p;
-        } else {
-            v1 = v;
-            p1 = p;
-        }
-    }
-
-    fragColor = texture(envTexture0, p1);
-*/
+}

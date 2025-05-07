@@ -31,9 +31,9 @@ void main() {
         weights.y * jntMatrices[joints.y] +
         weights.z * jntMatrices[joints.z] +
         weights.w * jntMatrices[joints.w];
-
     vec4 worldPos = (skinningMatrix * vec4(pos, 1.0));
     vnormal = mat3(transpose(inverse(skinningMatrix))) * normal;
+
 #else
     vec4 worldPos = model * vec4(pos, 1.0);
     vnormal = mat3(transpose(inverse(model))) * normal;
@@ -43,11 +43,4 @@ void main() {
     vtex = tex;
 
     gl_Position = projection * (view * worldPos);
-
-#ifdef SUPPORT_FUNCTION
-    float depth = length(vpos - cameraPos);
-    float ndcDepth = (2.0f * depth - 103.0) / 97.0; // -1..1
-    gl_Position.z = gl_Position.w * ndcDepth;
-#endif
-
 }
