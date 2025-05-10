@@ -1,4 +1,3 @@
-
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
@@ -65,12 +64,13 @@ kotlin {
             implementation(libs.lwjgl)
             implementation(libs.lwjgl.opengl)
             implementation(libs.lwjgl.jawt)
-            implementation(libs.lwjgl3.awt)
-
-            implementation("org.lwjgl:lwjgl:3.3.3:natives-windows")
-            implementation("org.lwjgl:lwjgl-opengl:3.3.3:natives-windows")
-            implementation("org.lwjgl:lwjgl:3.3.3:natives-linux")
-            implementation("org.lwjgl:lwjgl-opengl:3.3.3:natives-linux")
+            implementation(libs.lwjgl3.awt.get().toString()) {
+                exclude(group = "org.lwjgl")
+            }
+            listOf("windows", "linux", "macos").forEach {
+                runtimeOnly(dependencies.variantOf(libs.lwjgl) { classifier("natives-$it") })
+                runtimeOnly(dependencies.variantOf(libs.lwjgl.opengl) { classifier("natives-$it") })
+            }
         }
         wasmJsMain.dependencies {
             implementation(libs.kotlinx.browser)

@@ -49,11 +49,11 @@ interface MeshInitializer {
     fun attr(attr: MeshAttribute, vararg b: Byte): MeshInitializer
     fun pos(vararg position: Vec3): MeshInitializer
     fun pos(vararg v: Float): MeshInitializer
-    fun normal(vararg position: Vec3): MeshInitializer
+    fun normal(vararg normal: Vec3): MeshInitializer
     fun normal(vararg v: Float): MeshInitializer
-    fun tex(vararg position: Vec2): MeshInitializer
+    fun tex(vararg tex: Vec2): MeshInitializer
     fun tex(vararg v: Float): MeshInitializer
-    fun scale(vararg position: Vec2): MeshInitializer
+    fun scale(vararg scale: Vec2): MeshInitializer
     fun scale(vararg v: Float): MeshInitializer
     fun phi(vararg v: Float): MeshInitializer
     fun index(vararg indices: Int): MeshInitializer
