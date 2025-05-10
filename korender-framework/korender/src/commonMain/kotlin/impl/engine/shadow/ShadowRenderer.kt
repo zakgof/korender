@@ -10,7 +10,7 @@ import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.engine.Renderable
 import com.zakgof.korender.impl.engine.RenderableDeclaration
-import com.zakgof.korender.impl.engine.ShaderDeclaration
+import com.zakgof.korender.impl.engine.InternalShaderDeclaration
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glClearColor
@@ -98,7 +98,7 @@ internal object ShadowRenderer {
                     is InternalPcssParams -> defs += "PCSS_SHADOW"
                 }
 
-                val modifiedShaderDeclaration = ShaderDeclaration(
+                val modifiedShaderDeclaration = InternalShaderDeclaration(
                     "!shader/caster.vert", "!shader/caster.frag",
                     defs,
                     materialDeclaration.shader.plugins

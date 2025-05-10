@@ -90,7 +90,7 @@ internal class GuiRenderer(
 
     private fun createImage(declaration: ElementDeclaration.Image, x: Int, y: Int) {
 
-        val mesh = inventory.mesh(ImageQuad)
+        val mesh = inventory.mesh(InternalMeshDeclaration(ImageQuad, KeepForeverRetentionPolicy))
         val shader = inventory.shader(Shaders.imageQuadDeclaration)
 
         if (mesh != null && shader != null) {

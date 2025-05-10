@@ -4,6 +4,7 @@ import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.Prefab
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
@@ -31,5 +32,7 @@ interface FrameContext : KorenderContext {
 
     fun DeferredShading(block: DeferredShadingContext.() -> Unit = {})
 
-    fun CaptureEnv(slot: Int, resolution: Int, position: Vec3 = Vec3.ZERO, near: Float = 10f, far: Float = 1000f, insideOut: Boolean = false, defs: Set<String> = setOf(), block: FrameContext.() -> Unit)
+    fun CaptureEnv(probeName: String, resolution: Int, position: Vec3 = Vec3.ZERO, near: Float = 10f, far: Float = 1000f, insideOut: Boolean = false, defs: Set<String> = setOf(), block: FrameContext.() -> Unit)
+
+    fun Retention(policy: RetentionPolicy = forever(), generation: Int = 0, block: () -> Unit)
 }

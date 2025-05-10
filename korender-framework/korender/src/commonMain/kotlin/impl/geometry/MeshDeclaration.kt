@@ -4,10 +4,15 @@ import com.zakgof.korender.IndexType
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedRenderablesContext
+import com.zakgof.korender.impl.engine.Retentionable
 
-internal data class Cube(val halfSide: Float) : MeshDeclaration
+internal class InternalMeshDeclaration(override val retentionPolicy: RetentionPolicy)
+    : MeshDeclaration, Retentionable
+
+internal data class Cube(val halfSide: Float) : InternalMeshDeclaration()
 internal data class Sphere(val radius: Float) : MeshDeclaration
 internal data class ObjMesh(val objFile: String) : MeshDeclaration
 internal data object Billboard : MeshDeclaration

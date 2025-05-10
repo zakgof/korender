@@ -43,24 +43,26 @@ internal object Rendering {
         val mesh = inventory.mesh(declaration.mesh) ?: return
         val shader = inventory.shader(materialDeclaration.shader) ?: return
 
-        if (declaration.mesh is CustomMesh && declaration.mesh.dynamic) {
-            (mesh as Geometry.DefaultMesh).updateMesh(declaration.mesh.block)
+        val meshDeclaration = declaration.mesh.meshDeclaration
+
+        if (meshDeclaration is CustomMesh && meshDeclaration.dynamic) {
+            (mesh as Geometry.DefaultMesh).updateMesh(meshDeclaration.block)
         }
-        if (declaration.mesh is InstancedBillboard) {
+        if (meshDeclaration is InstancedBillboard) {
             // TODO: static
             val instances = mutableListOf<BillboardInstance>();
-            DefaultInstancedBillboardsContext(instances).apply(declaration.mesh.block)
-            if (declaration.mesh.transparent) {
+            DefaultInstancedBillboardsContext(instances).apply(meshDeclaration.block)
+            if (meshDeclaration.transparent) {
                 instances.sortBy { (camera.mat4 * it.pos).z }
             }
             (mesh as Geometry.MultiMesh).updateBillboardInstances(instances)
         }
-        if (declaration.mesh is InstancedMesh) {
+        if (meshDeclaration is InstancedMesh) {
             mesh as Geometry.MultiMesh
-            if (!declaration.mesh.static || !mesh.isInitialized()) {
+            if (!meshDeclaration.static || !mesh.isInitialized()) {
                 val instances = mutableListOf<MeshInstance>()
-                DefaultInstancedRenderablesContext(instances).apply(declaration.mesh.block)
-                if (declaration.mesh.transparent) {
+                DefaultInstancedRenderablesContext(instances).apply(meshDeclaration.block)
+                if (meshDeclaration.transparent) {
                     instances.sortBy { (camera.mat4 * it.transform.offset()).z }
                 }
                 mesh.updateInstances(instances)

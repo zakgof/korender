@@ -4,6 +4,7 @@ import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.Prefab
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.context.DeferredShadingContext
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.GuiContainerContext
@@ -19,7 +20,9 @@ import com.zakgof.korender.impl.engine.DeferredShadingDeclaration
 import com.zakgof.korender.impl.engine.DirectionalLightDeclaration
 import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.GltfDeclaration
+import com.zakgof.korender.impl.engine.ImmediatelyFreeRetentionPolicy
 import com.zakgof.korender.impl.engine.InternalInstancingDeclaration
+import com.zakgof.korender.impl.engine.InternalMeshDeclaration
 import com.zakgof.korender.impl.engine.PointLightDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.SceneDeclaration
@@ -39,18 +42,20 @@ internal class DefaultFrameContext(
     override val frameInfo: FrameInfo,
 ) : FrameContext, KorenderContext by korenderContext {
 
+    private var retentionPolicy: RetentionPolicy = ImmediatelyFreeRetentionPolicy
+
     override fun DeferredShading(block: DeferredShadingContext.() -> Unit) {
         sceneDeclaration.deferredShadingDeclaration = DeferredShadingDeclaration()
         DefaultDeferredShadingContext(sceneDeclaration.deferredShadingDeclaration!!).apply(block)
     }
 
     override fun Gltf(resource: String, animation: Int, transform: Transform, time: Float?) {
-        sceneDeclaration.gltfs += GltfDeclaration(resource, animation, transform, time ?: frameInfo.time)
+        sceneDeclaration.gltfs += GltfDeclaration(retentionPolicy, resource, animation, transform, time ?: frameInfo.time)
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean, instancing: InstancingDeclaration?) {
-        val meshDeclaration = (instancing as? InternalInstancingDeclaration)?.let { InstancedMesh(instancing.id, instancing.instanceCount, mesh, !instancing.dynamic, transparent, instancing.block) } ?: mesh;
-        sceneDeclaration.renderables += RenderableDeclaration(BaseMaterial.Renderable, materialModifiers.asList(), meshDeclaration, transform, if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE)
+        val meshDeclaration = (instancing as? InternalInstancingDeclaration)?.let { InstancedMesh(instancing.id, instancing.instanceCount, mesh, !instancing.dynamic, transparent, instancing.block) } ?: mesh
+        sceneDeclaration.renderables += RenderableDeclaration(BaseMaterial.Renderable, materialModifiers.asList(), meshDeclaration as InternalMeshDeclaration, transform, if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE)
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, prefab: Prefab) {
@@ -113,10 +118,20 @@ internal class DefaultFrameContext(
         sceneDeclaration.filters += materialModifiers.asList()
     }
 
-    override fun CaptureEnv(slot: Int, resolution: Int, position: Vec3, near: Float, far: Float, insideOut: Boolean, defs: Set<String>, block: FrameContext.() -> Unit) {
+    override fun CaptureEnv(probeName: String, resolution: Int, position: Vec3, near: Float, far: Float, insideOut: Boolean, defs: Set<String>, block: FrameContext.() -> Unit) {
         val captureSceneDeclaration = SceneDeclaration()
         val captureContext = CaptureContext(resolution, position, near, far, insideOut, defs, captureSceneDeclaration)
         DefaultFrameContext(korenderContext, captureSceneDeclaration, frameInfo).apply(block)
-        sceneDeclaration.captures[slot] = captureContext
+        sceneDeclaration.captures[probeName] = captureContext
+    }
+
+    override fun Retention(policy: RetentionPolicy, generation: Int, block: () -> Unit) {
+        val previousRetentionPolicy = retentionPolicy
+        val previousRetentionGeneration = retentionGeneration
+        retentionPolicy = policy
+        retentionGeneration = generation
+        block()
+        retentionPolicy = previousRetentionPolicy
+        retentionGeneration = previousRetentionGeneration
     }
 }

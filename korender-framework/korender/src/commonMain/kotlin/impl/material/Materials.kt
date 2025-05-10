@@ -3,7 +3,7 @@ package com.zakgof.korender.impl.material
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.MaterialDeclaration
-import com.zakgof.korender.impl.engine.ShaderDeclaration
+import com.zakgof.korender.impl.engine.InternalShaderDeclaration
 
 internal fun interface InternalMaterialModifier : MaterialModifier {
     fun applyTo(builder: MaterialBuilder)
@@ -30,7 +30,7 @@ internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean) {
     var uniforms: MutableMap<String, Any?> = mutableMapOf()
 
     fun toMaterialDeclaration(): MaterialDeclaration = MaterialDeclaration(
-        shader = ShaderDeclaration(vertShaderFile, fragShaderFile, shaderDefs, plugins),
+        shader = InternalShaderDeclaration(vertShaderFile, fragShaderFile, shaderDefs, plugins),
         uniforms = uniforms
     )
 }

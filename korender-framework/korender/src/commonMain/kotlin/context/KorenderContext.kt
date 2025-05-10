@@ -23,6 +23,7 @@ import com.zakgof.korender.OrthoProjectionDeclaration
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.SsrParams
@@ -66,6 +67,8 @@ interface KorenderContext {
         nxImage: Image, nyImage: Image, nzImage: Image,
         pxImage: Image, pyImage: Image, pzImage: Image
     ): CubeTextureDeclaration
+
+    fun cubeProbe(probeName: String): CubeTextureDeclaration
 
     fun cube(halfSide: Float = 0.5f): MeshDeclaration
     fun sphere(radius: Float = 1.0f): MeshDeclaration
@@ -113,7 +116,6 @@ interface KorenderContext {
     fun fastCloudSky(block: FastCloudSkyParams.() -> Unit = {}): MaterialModifier
     fun starrySky(block: StarrySkyParams.() -> Unit = {}): MaterialModifier
     fun cubeSky(cubeTexture: CubeTextureDeclaration): MaterialModifier
-    fun cubeSky(envSlot: Int): MaterialModifier
 
     fun ibl(env: CubeTextureDeclaration): MaterialModifier
 
@@ -137,6 +139,11 @@ interface KorenderContext {
     fun grassPrefab(id: String, segments: Int, cell: Float, side: Int, filter: (Vec3) -> Boolean): Prefab
 
     fun positionInstancing(id: String, instanceCount: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit): InstancingDeclaration
+
+    fun freeImmediately(): RetentionPolicy
+    fun forever(): RetentionPolicy
+    fun time(seconds: Float): RetentionPolicy
+    fun until(generation: Int): RetentionPolicy
 
     val target: TargetPlatform
 

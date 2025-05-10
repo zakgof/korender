@@ -27,6 +27,7 @@ import com.zakgof.korender.Platform
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.SsrParams
@@ -68,8 +69,8 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
+import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.ignoringGlError
-import com.zakgof.korender.impl.image.InternalImage
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.InternalAdjustParams
 import com.zakgof.korender.impl.material.InternalBaseParams
@@ -89,6 +90,7 @@ import com.zakgof.korender.impl.material.InternalStandartParams
 import com.zakgof.korender.impl.material.InternalStarrySkyParams
 import com.zakgof.korender.impl.material.InternalTerrainParams
 import com.zakgof.korender.impl.material.InternalWaterParams
+import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.prefab.grass.Grass
@@ -111,9 +113,10 @@ internal class Engine(
 
     private val touchQueue = Channel<TouchEvent>(Channel.UNLIMITED)
     private val keyQueue = Channel<KeyEvent>(Channel.UNLIMITED)
-    private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
+    private var frameBlock : (FrameContext.() -> Unit)? = null
     private val inventory = Inventory(asyncContext)
     private val renderContext = RenderContext(width, height)
+    private val probes = mutableMapOf<String, GlGpuCubeTexture>()
 
     private var touchBoxes: List<TouchBox> = listOf()
     private var pressedTouchBoxIds = setOf<Any>()
@@ -126,9 +129,9 @@ internal class Engine(
         override val target: KorenderContext.TargetPlatform = Platform.target
 
         override fun Frame(block: FrameContext.() -> Unit) {
-            if (frameBlocks.isNotEmpty())
+            if (frameBlock != null)
                 throw KorenderException("Only one Frame declaration is allowed")
-            frameBlocks.add(block)
+            frameBlock = block
         }
 
         override fun OnTouch(handler: (TouchEvent) -> Unit) {
@@ -147,6 +150,8 @@ internal class Engine(
 
         override fun cubeTexture(id: String, nxImage: Image, nyImage: Image, nzImage: Image, pxImage: Image, pyImage: Image, pzImage: Image): CubeTextureDeclaration =
             ImageCubeTextureDeclaration(id, nxImage, nyImage, nzImage, pxImage, pyImage, pzImage)
+
+        override fun cubeProbe(probeName: String): CubeTextureDeclaration = ProbeCubeTextureDeclaration(probeName)
 
         override fun cube(halfSide: Float): MeshDeclaration = Cube(halfSide)
 
@@ -276,12 +281,6 @@ internal class Engine(
                 it.uniforms["cubeTexture"] = cubeTexture
             }
 
-        override fun cubeSky(envSlot: Int) =
-            InternalMaterialModifier {
-                it.plugins["sky"] = "!shader/sky/cube.plugin.frag"
-                it.shaderDefs += "SKY_CUBE_ENV$envSlot"
-            }
-
         override fun fog(block: FogParams.() -> Unit) =
             InternalMaterialModifier {
                 it.fragShaderFile = "!shader/effect/fog.frag"
@@ -409,6 +408,14 @@ internal class Engine(
 
         override fun positionInstancing(id: String, instanceCount: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit): InstancingDeclaration =
             InternalInstancingDeclaration(id, instanceCount, dynamic, block)
+
+        override fun freeImmediately(): RetentionPolicy = ImmediatelyFreeRetentionPolicy
+
+        override fun forever(): RetentionPolicy = KeepForeverRetentionPolicy
+
+        override fun until(generation: Int): RetentionPolicy = UntilGenerationRetentionPolicy(generation)
+
+        override fun time(seconds: Float): RetentionPolicy = TimeRetentionPolicy(seconds)
     }
 
     init {
@@ -431,14 +438,14 @@ internal class Engine(
         processTouches()
         processKeys()
         val sd = SceneDeclaration()
-        frameBlocks.forEach {
+        frameBlock?.let {
             DefaultFrameContext(kc, sd, frameInfo).apply(it)
-        }
-        inventory.go {
-            val scene = Scene(sd, inventory, renderContext)
-            scene.render()
-            // checkGlError("during rendering")
-            touchBoxes = scene.touchBoxes
+            inventory.go(frameInfo.time) {
+                val scene = Scene(sd, inventory, renderContext, probes)
+                scene.render()
+                // checkGlError("during rendering")
+                touchBoxes = scene.touchBoxes
+            }
         }
     }
 

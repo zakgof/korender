@@ -1,13 +1,11 @@
 #import "!shader/lib/header.glsl"
 
-in vec2 vtex;
 in vec3 vcenter;
 in vec3 vpos;
 
-uniform samplerCube envTexture0;
-uniform samplerCube envTexture1;
-uniform samplerCube envTexture2;
-uniform float time;
+uniform samplerCube radiantTexture;
+uniform samplerCube colorTexture;
+uniform samplerCube normalTexture;
 uniform vec3 cameraPos;
 
 out vec4 fragColor;
@@ -28,15 +26,9 @@ void main() {
         float cl = length(ctop);
         dir = ctop/cl;
 
-        vec4 smpl = texture(envTexture0, dir);
+        vec4 smpl = texture(radiantTexture, dir);
         float radiant = 1.5 * smpl.b;
 
-//        n = vec3(smpl.rg * 2.0 - 1.0, 0.0);
-//        n.z = 1.0 - abs(n.x) - abs(n.y);
-//        if (n.z < 0.0) {
-//            n.xy = (1.0 - abs(n.yx)) * sign(n.xy);
-//        }
-//        n = normalize(n);
         float PI = 3.1415926;
         float theta = (smpl.r - 0.5) * 2.0 * PI;
         float phi = smpl.g * PI;
@@ -52,8 +44,8 @@ void main() {
     }
     fragColor = vec4(0.);
     if (diff < 0.008) {
-        vec3 normal = texture(envTexture1, dir).rgb * 2. - 1.;
-        vec3 albedo = texture(envTexture2, dir).rgb;
+        vec3 normal = texture(normalTexture, dir).rgb * 2. - 1.;
+        vec3 albedo = texture(colorTexture, dir).rgb;
         float light = 0.3 + 0.7 * clamp(dot(normal, normalize(vec3(1., 0., 1.))), 0., 1.);
         fragColor = vec4(light * albedo, 1.);
     }

@@ -51,41 +51,45 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         DirectionalLight(Vec3(1.0f, 0.0f, -1.0f), white(2f))
         camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
-        CaptureEnv(
-            slot = 0, resolution = 128, near = 0.2f, far = 30f, insideOut = true,
-            defs = setOf("RADIAL_CAPTURE")
-        ) {
-            Renderable(
-                standart {
-                    baseColor = ColorRGBA.Green
-                },
-                mesh = hullMesh
-            )
-        }
-        CaptureEnv(
-            slot = 1, resolution = 256, near = 0.2f, far = 30f, insideOut = true,
-            defs = setOf("NORMAL_CAPTURE")
-        ) {
-            metaball.spheres.forEach {
-                Renderable(
-                    standart {},
-                    mesh = sphere(it.r),
-                    transform = translate(-hull.center + it.pos)
-                )
-            }
-        }
-        CaptureEnv(
-            slot = 2, resolution = 256, near = 0.2f, far = 30f, insideOut = true
-        ) {
-            AmbientLight(white(1f))
-            metaball.spheres.forEach {
-                Renderable(
-                    standart {
-                        baseColor = ColorRGBA.Green
-                    },
-                    mesh = sphere(it.r),
-                    transform = translate(-hull.center + it.pos)
-                )
+        if (frameInfo.frame == 0L) {
+            Retention(time(10f)) {
+                CaptureEnv(
+                    probeName = "radiant", resolution = 128, near = 0.2f, far = 30f, insideOut = true,
+                    defs = setOf("RADIAL_CAPTURE")
+                ) {
+                    Renderable(
+                        standart {
+                            baseColor = ColorRGBA.Green
+                        },
+                        mesh = hullMesh
+                    )
+                }
+                CaptureEnv(
+                    probeName = "normal", resolution = 256, near = 0.2f, far = 30f, insideOut = true,
+                    defs = setOf("NORMAL_CAPTURE")
+                ) {
+                    metaball.spheres.forEach {
+                        Renderable(
+                            standart {},
+                            mesh = sphere(it.r),
+                            transform = translate(-hull.center + it.pos)
+                        )
+                    }
+                }
+                CaptureEnv(
+                    probeName = "albedo", resolution = 256, near = 0.2f, far = 30f, insideOut = true
+                ) {
+                    AmbientLight(white(1f))
+                    metaball.spheres.forEach {
+                        Renderable(
+                            standart {
+                                baseColor = ColorRGBA.Green
+                            },
+                            mesh = sphere(it.r),
+                            transform = translate(-hull.center + it.pos)
+                        )
+                    }
+                }
             }
         }
 
@@ -93,6 +97,9 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             standart {
                 xscale = 3.0f
                 yscale = 3.0f
+                set("radiantTexture", cubeProbe("radiant"))
+                set("colorTexture", cubeProbe("albedo"))
+                set("normalTexture", cubeProbe("normal"))
             },
             fragment("mpr/mpr.frag"),
             position = -6.z
@@ -116,7 +123,7 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             )
         }
 
-        Sky(cubeSky(0))
+        Sky(cubeSky(cubeProbe("normal")))
 
         Gui {
             Column {

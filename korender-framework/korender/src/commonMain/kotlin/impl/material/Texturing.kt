@@ -5,9 +5,11 @@ import com.zakgof.korender.Image
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Platform
 import com.zakgof.korender.ResourceLoader
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
+import com.zakgof.korender.impl.engine.Retentionable
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.image.InternalImage
@@ -78,7 +80,7 @@ internal object Texturing {
 
 }
 
-internal interface InternalTexture {
+internal interface InternalTexture : Retentionable {
     val id: String
     val filter: TextureFilter
     val wrap: TextureWrap
@@ -86,6 +88,7 @@ internal interface InternalTexture {
 }
 
 internal class ResourceTextureDeclaration(
+    override val retentionPolicy: RetentionPolicy,
     val textureResource: String,
     override val filter: TextureFilter = TextureFilter.MipMap,
     override val wrap: TextureWrap = TextureWrap.Repeat,
@@ -99,6 +102,7 @@ internal class ResourceTextureDeclaration(
 }
 
 internal class ByteArrayTextureDeclaration(
+    override val retentionPolicy: RetentionPolicy,
     override val id: String,
     override val filter: TextureFilter,
     override val wrap: TextureWrap,
@@ -113,15 +117,24 @@ internal class ByteArrayTextureDeclaration(
 }
 
 internal data class ResourceCubeTextureDeclaration(
+    override val retentionPolicy: RetentionPolicy,
     val nxResource: String,
     val nyResource: String,
     val nzResource: String,
     val pxResource: String,
     val pyResource: String,
     val pzResource: String
-) : CubeTextureDeclaration
+) : CubeTextureDeclaration, Retentionable {
+    private val hashi = "$nxResource:$nyResource:$nzResource:$pxResource:$pyResource:$pzResource"
+
+    override fun equals(other: Any?): Boolean =
+        (other is ResourceCubeTextureDeclaration && other.hashi == hashi)
+
+    override fun hashCode(): Int = hashi.hashCode()
+}
 
 internal class ImageCubeTextureDeclaration(
+    override val retentionPolicy: RetentionPolicy,
     val id: String,
     val nxImage: Image,
     val nyImage: Image,
@@ -129,9 +142,11 @@ internal class ImageCubeTextureDeclaration(
     val pxImage: Image,
     val pyImage: Image,
     val pzImage: Image
-) : CubeTextureDeclaration {
+) : CubeTextureDeclaration, Retentionable {
     override fun equals(other: Any?): Boolean =
         (other is ImageCubeTextureDeclaration && other.id == id)
 
     override fun hashCode(): Int = id.hashCode()
 }
+
+internal data class ProbeCubeTextureDeclaration(val probeName: String) : CubeTextureDeclaration

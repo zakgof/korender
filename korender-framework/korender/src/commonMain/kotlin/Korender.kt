@@ -20,6 +20,6 @@ class FrameInfo(
     val avgFps: Float,
 )
 
-interface Prefab {
+interface Prefab
 
-}
+interface RetentionPolicy

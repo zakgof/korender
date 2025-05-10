@@ -1,9 +1,9 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.AsyncContext
-import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.impl.font.Font
 import com.zakgof.korender.impl.font.Fonts
+import com.zakgof.korender.impl.font.InternalRetentionableId
 import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.Mesh
 import com.zakgof.korender.impl.glgpu.GlGpuCubeFrameBuffer
@@ -23,19 +23,18 @@ internal class Inventory(asyncContext: AsyncContext) {
 
     private val zeroTex = GlGpuTexture.zeroTex()
 
-    private val meshes = Registry<MeshDeclaration, Mesh>(asyncContext) { Geometry.create(it, asyncContext.appResourceLoader) }
-    private val shaders = Registry<ShaderDeclaration, GlGpuShader>(asyncContext) { Shaders.create(it, asyncContext.appResourceLoader, zeroTex) }
+    private val meshes = Registry<InternalMeshDeclaration, Mesh>(asyncContext) { Geometry.create(it.meshDeclaration, asyncContext.appResourceLoader) }
+    private val shaders = Registry<InternalShaderDeclaration, GlGpuShader>(asyncContext) { Shaders.create(it, asyncContext.appResourceLoader, zeroTex) }
     private val textures = Registry<InternalTexture, GlGpuTexture>(asyncContext) { Texturing.create(it, asyncContext.appResourceLoader) }
     private val resourceCubeTextures = Registry<ResourceCubeTextureDeclaration, GlGpuCubeTexture>(asyncContext) { Texturing.cube(it, asyncContext.appResourceLoader) }
     private val imageCubeTextures = Registry<ImageCubeTextureDeclaration, GlGpuCubeTexture>(asyncContext) { Texturing.cube(it) }
-    private val fonts = Registry<String, Font>(asyncContext) { Fonts.load(it, asyncContext.appResourceLoader) }
-    private val fontMeshes = Registry<Any, Geometry.MultiMesh>(asyncContext) { Geometry.font(256) }
+    private val fonts = Registry<InternalRetentionableId, Font>(asyncContext) { Fonts.load(it.id, asyncContext.appResourceLoader) }
+    private val fontMeshes = Registry<InternalRetentionableId, Geometry.MultiMesh>(asyncContext) { Geometry.font(256) }
     private val frameBuffers = Registry<FrameBufferDeclaration, GlGpuFrameBuffer>(asyncContext) { GlGpuFrameBuffer(it.id, it.width, it.height, it.colorTexturePresets, it.withDepth) }
     private val cubeFrameBuffers = Registry<CubeFrameBufferDeclaration, GlGpuCubeFrameBuffer>(asyncContext) { GlGpuCubeFrameBuffer(it.id, it.width, it.height, it.withDepth) }
-
     private val gltfs = Registry<GltfDeclaration, GltfLoaded>(asyncContext) { GltfLoader.load(it, asyncContext.appResourceLoader) }
 
-    fun go(block: Inventory.() -> Unit) {
+    fun go(time: Float, generation: Int, block: Inventory.() -> Unit) {
         meshes.begin()
         shaders.begin()
         textures.begin()
@@ -45,23 +44,23 @@ internal class Inventory(asyncContext: AsyncContext) {
         cubeFrameBuffers.begin()
         gltfs.begin()
         block.invoke(this)
-        meshes.end()
-        shaders.end()
-        textures.end()
-        fonts.end()
-        fontMeshes.end()
-        frameBuffers.end()
-        cubeFrameBuffers.end()
-        gltfs.end()
+        meshes.end(time, generation)
+        shaders.end(time, generation)
+        textures.end(time, generation)
+        fonts.end(time, generation)
+        fontMeshes.end(time, generation)
+        frameBuffers.end(time, generation)
+        cubeFrameBuffers.end(time, generation)
+        gltfs.end(time, generation)
     }
 
-    fun mesh(decl: MeshDeclaration): Mesh? = meshes[decl]
-    fun shader(decl: ShaderDeclaration): GlGpuShader? = shaders[decl]
+    fun mesh(decl: InternalMeshDeclaration): Mesh? = meshes[decl]
+    fun shader(decl: InternalShaderDeclaration): GlGpuShader? = shaders[decl]
     fun texture(decl: InternalTexture): GlGpuTexture? = textures[decl]
     fun cubeTexture(decl: ResourceCubeTextureDeclaration): GlGpuCubeTexture? = resourceCubeTextures[decl]
     fun cubeTexture(decl: ImageCubeTextureDeclaration): GlGpuCubeTexture? = imageCubeTextures[decl]
-    fun font(fontResource: String): Font? = fonts[fontResource]
-    fun fontMesh(id: Any): Geometry.MultiMesh? = fontMeshes[id]
+    fun font(fontResource: InternalRetentionableId): Font? = fonts[fontResource]
+    fun fontMesh(id: InternalRetentionableId): Geometry.MultiMesh? = fontMeshes[id]
     fun frameBuffer(decl: FrameBufferDeclaration): GlGpuFrameBuffer? = frameBuffers[decl]
     fun cubeFrameBuffer(decl: CubeFrameBufferDeclaration): GlGpuCubeFrameBuffer? = cubeFrameBuffers[decl]
     fun gltf(decl: GltfDeclaration): GltfLoaded? = gltfs[decl]

@@ -3,6 +3,7 @@ package com.zakgof.korender.impl.engine
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostShadingEffect
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.context.InstancedRenderablesContext
@@ -25,7 +26,7 @@ internal class SceneDeclaration {
     val gltfs = mutableListOf<GltfDeclaration>()
     var filters = mutableListOf<List<MaterialModifier>>()
     var deferredShadingDeclaration: DeferredShadingDeclaration? = null
-    val captures = mutableMapOf<Int, CaptureContext>()
+    val captures = mutableMapOf<String, CaptureContext>()
 }
 
 internal class DeferredShadingDeclaration() {
@@ -37,17 +38,18 @@ internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val
 
 internal class MeshInstance(val transform: Transform)
 
-internal data class ShaderDeclaration(
+internal data class InternalShaderDeclaration(
+    override val retentionPolicy: RetentionPolicy,
     val vertFile: String,
     val fragFile: String,
     val defs: Set<String> = setOf(),
     val plugins: Map<String, String> = mapOf()
-)
+) : Retentionable
 
 internal class RenderableDeclaration(
     val base: BaseMaterial,
     val materialModifiers: List<MaterialModifier>,
-    val mesh: MeshDeclaration,
+    val mesh: InternalMeshDeclaration,
     val transform: Transform = Transform(),
     val bucket: Bucket = Bucket.OPAQUE
 )
@@ -62,7 +64,7 @@ internal enum class BaseMaterial {
 }
 
 internal class MaterialDeclaration(
-    val shader: ShaderDeclaration,
+    val shader: InternalShaderDeclaration,
     val uniforms: Map<String, Any?>
 )
 
@@ -102,19 +104,27 @@ internal sealed class ElementDeclaration {
 }
 
 internal data class FrameBufferDeclaration(
+    override val retentionPolicy: RetentionPolicy,
     val id: String,
     val width: Int,
     val height: Int,
     val colorTexturePresets: List<GlGpuTexture.Preset>,
     val withDepth: Boolean
-)
+) : Retentionable {
+    override fun equals(other: Any?): Boolean = (other is FrameBufferDeclaration && other.id == id)
+    override fun hashCode(): Int = id.hashCode()
+}
 
 internal data class CubeFrameBufferDeclaration(
+    override val retentionPolicy: RetentionPolicy,
     val id: String,
     val width: Int,
     val height: Int,
     val withDepth: Boolean
-)
+) : Retentionable {
+    override fun equals(other: Any?): Boolean = (other is CubeFrameBufferDeclaration && other.id == id)
+    override fun hashCode(): Int = id.hashCode()
+}
 
 internal class ShadowDeclaration {
     val cascades = mutableListOf<CascadeDeclaration>()
@@ -122,7 +132,7 @@ internal class ShadowDeclaration {
 
 internal data class CascadeDeclaration(val mapSize: Int, val near: Float, val far: Float, val fixedYRange: Pair<Float, Float>?, val algorithm: ShadowAlgorithmDeclaration)
 
-internal class GltfDeclaration(val gltfResource: String, val animation: Int, val transform: Transform, val time: Float) {
+internal class GltfDeclaration(override val retentionPolicy: RetentionPolicy, val gltfResource: String, val animation: Int, val transform: Transform, val time: Float) : Retentionable {
     override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.gltfResource == gltfResource)
     override fun hashCode(): Int = gltfResource.hashCode()
 }
@@ -132,3 +142,5 @@ internal class PointLightDeclaration(val position: Vec3, val color: ColorRGB, va
 internal class DirectionalLightDeclaration(val direction: Vec3, val color: ColorRGB, val shadowDeclaration: ShadowDeclaration)
 
 internal class InternalInstancingDeclaration(val id: String, val instanceCount: Int, val dynamic: Boolean, val block: InstancedRenderablesContext.() -> Unit) : InstancingDeclaration
+
+internal interface InternalMeshDeclaration : MeshDeclaration, Retentionable
