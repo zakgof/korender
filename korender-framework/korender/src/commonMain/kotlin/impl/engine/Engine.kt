@@ -68,8 +68,8 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
+import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.ignoringGlError
-import com.zakgof.korender.impl.image.InternalImage
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.InternalAdjustParams
 import com.zakgof.korender.impl.material.InternalBaseParams
@@ -89,6 +89,7 @@ import com.zakgof.korender.impl.material.InternalStandartParams
 import com.zakgof.korender.impl.material.InternalStarrySkyParams
 import com.zakgof.korender.impl.material.InternalTerrainParams
 import com.zakgof.korender.impl.material.InternalWaterParams
+import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.prefab.grass.Grass
@@ -114,6 +115,7 @@ internal class Engine(
     private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
     private val inventory = Inventory(asyncContext)
     private val renderContext = RenderContext(width, height)
+    private val probes = mutableMapOf<String, GlGpuCubeTexture>()
 
     private var touchBoxes: List<TouchBox> = listOf()
     private var pressedTouchBoxIds = setOf<Any>()
@@ -147,6 +149,8 @@ internal class Engine(
 
         override fun cubeTexture(id: String, nxImage: Image, nyImage: Image, nzImage: Image, pxImage: Image, pyImage: Image, pzImage: Image): CubeTextureDeclaration =
             ImageCubeTextureDeclaration(id, nxImage, nyImage, nzImage, pxImage, pyImage, pzImage)
+
+        override fun cubeProbe(probeName: String): CubeTextureDeclaration = ProbeCubeTextureDeclaration(probeName)
 
         override fun cube(halfSide: Float): MeshDeclaration = Cube(halfSide)
 
@@ -274,12 +278,6 @@ internal class Engine(
                 it.plugins["sky"] = "!shader/sky/cube.plugin.frag"
                 it.shaderDefs += "SKY_CUBE"
                 it.uniforms["cubeTexture"] = cubeTexture
-            }
-
-        override fun cubeSky(envSlot: Int) =
-            InternalMaterialModifier {
-                it.plugins["sky"] = "!shader/sky/cube.plugin.frag"
-                it.shaderDefs += "SKY_CUBE_ENV$envSlot"
             }
 
         override fun fog(block: FogParams.() -> Unit) =
@@ -435,7 +433,7 @@ internal class Engine(
             DefaultFrameContext(kc, sd, frameInfo).apply(it)
         }
         inventory.go {
-            val scene = Scene(sd, inventory, renderContext)
+            val scene = Scene(sd, inventory, renderContext, probes)
             scene.render()
             // checkGlError("during rendering")
             touchBoxes = scene.touchBoxes

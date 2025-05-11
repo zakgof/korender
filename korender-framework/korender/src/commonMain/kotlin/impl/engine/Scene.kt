@@ -27,6 +27,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_X
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_Y
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_Z
 import com.zakgof.korender.impl.glgpu.Color3List
+import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.IntList
@@ -37,6 +38,7 @@ import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedCubeTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
+import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
@@ -50,7 +52,8 @@ internal class Scene(
     private val sceneDeclaration: SceneDeclaration,
     private val inventory: Inventory,
     private val renderContext: RenderContext,
-    private val envSlot: Int? = null
+    private val probes: MutableMap<String, GlGpuCubeTexture>,
+    private val probeName: String? = null,
 ) {
 
     private var guiRenderers: List<GuiRenderer>
@@ -64,6 +67,7 @@ internal class Scene(
             is InternalTexture -> inventory.texture(value) ?: NotYetLoadedTexture
             is ResourceCubeTextureDeclaration -> inventory.cubeTexture(value) ?: NotYetLoadedCubeTexture
             is ImageCubeTextureDeclaration -> inventory.cubeTexture(value) ?: NotYetLoadedCubeTexture
+            is ProbeCubeTextureDeclaration -> probes[value.probeName] ?: NotYetLoadedCubeTexture
             else -> value
         }
     }
@@ -88,7 +92,8 @@ internal class Scene(
 
         sceneDeclaration.captures.forEach { kv ->
             try {
-                Scene(kv.value.sceneDeclaration, inventory, renderContext, kv.key).renderToEnv(uniforms, kv.value)
+                Scene(kv.value.sceneDeclaration, inventory, renderContext, probes, kv.key)
+                    .renderToEnv(uniforms, kv.value)
             } catch (_: SkipRender) {
                 println("Env probing skipped as framebuffer is not ready")
                 return
@@ -339,7 +344,7 @@ internal class Scene(
 
     private fun renderToEnv(uniforms: MutableMap<String, Any?>, captureContext: CaptureContext) {
         renderShadows(uniforms, true)
-        val probeFb = inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$envSlot", captureContext.resolution, captureContext.resolution, true)) ?: throw SkipRender
+        val probeFb = inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", captureContext.resolution, captureContext.resolution, true)) ?: throw SkipRender
         val probeUniforms = mutableMapOf<String, Any?>()
         probeUniforms += uniforms
         val projection = FrustumProjection(2f * captureContext.near, 2f * captureContext.near, captureContext.near, captureContext.far)
@@ -369,8 +374,7 @@ internal class Scene(
             }
         }
         probeFb.finish()
-        uniforms["envTexture$envSlot"] = probeFb.colorTexture
-        uniforms["envDepthTexture$envSlot"] = probeFb.depthTexture
+        probes[probeName!!] = probeFb.colorTexture
     }
 }
 

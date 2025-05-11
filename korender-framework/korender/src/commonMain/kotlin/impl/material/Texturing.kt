@@ -135,3 +135,5 @@ internal class ImageCubeTextureDeclaration(
 
     override fun hashCode(): Int = id.hashCode()
 }
+
+internal data class ProbeCubeTextureDeclaration(val probeName: String) : CubeTextureDeclaration
