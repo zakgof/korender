@@ -37,8 +37,8 @@ internal object ObjLoader {
             vertmap.getOrPut(it.toList()) {
                 vertices += ObjModel.Vertex(
                     positions[it[0] - 1],
-                    normals[it[2] - 1],
-                    texes[it[1] - 1]
+                    normals[(if (it.size == 1) it[0] else it[2]) - 1],
+                    texes[(if (it.size == 1) it[0] else it[1]) - 1],
                 )
                 vertices.size - 1
             }

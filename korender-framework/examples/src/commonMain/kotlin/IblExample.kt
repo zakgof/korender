@@ -14,7 +14,6 @@ import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Transform.Companion.scale
-import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.Vec3.Companion.ZERO
 import com.zakgof.korender.math.x
@@ -30,8 +29,14 @@ import kotlin.random.Random
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+
+    val loadedMesh = loadMesh(obj("model/tupelo.obj"))
+
+
+
     val freeCamera = FreeCamera(this, ZERO, -1.z)
     OnTouch { freeCamera.touch(it) }
+
 
     // val metaball = Metaball(20f, 1.0f) { sqrt(it * 0.05f) * (1f - it * 0.05f) * 10f }
     // val metaball = Metaball(20f, 1.0f) { (it * 0.05f).pow(0.1f) * (1f - it * 0.05f) * 10f }
@@ -47,47 +52,46 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
     Frame {
         projection = frustum(3f * width / height, 3f, 3f, 100f)
-        AmbientLight(white(0.3f))
-        DirectionalLight(Vec3(1.0f, 0.0f, -1.0f), white(2f))
+        AmbientLight(white(0.7f))
+        DirectionalLight(Vec3(1.0f, 0.0f, -1.0f), white(4f))
         camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
-        if (frameInfo.frame > 0L) {
-            CaptureEnv(
-                probeName = "radiant", resolution = 128, near = 0.2f, far = 30f, insideOut = true,
-                defs = setOf("RADIAL_CAPTURE")
-            ) {
+        /*
+        CaptureEnv(
+            probeName = "radiant", resolution = 128, near = 0.2f, far = 30f, insideOut = true,
+            defs = setOf("RADIAL_CAPTURE")
+        ) {
+            Renderable(
+                standart {
+                    baseColor = ColorRGBA.Green
+                },
+                mesh = hullMesh
+            )
+        }
+        CaptureEnv(
+            probeName = "normal", resolution = 256, near = 0.2f, far = 30f, insideOut = true,
+            defs = setOf("NORMAL_CAPTURE")
+        ) {
+            metaball.spheres.forEach {
+                Renderable(
+                    standart {},
+                    mesh = sphere(it.r),
+                    transform = translate(-hull.center + it.pos)
+                )
+            }
+        }
+        CaptureEnv(
+            probeName = "albedo", resolution = 256, near = 0.2f, far = 30f, insideOut = true
+        ) {
+            AmbientLight(white(1f))
+            metaball.spheres.forEach {
                 Renderable(
                     standart {
                         baseColor = ColorRGBA.Green
                     },
-                    mesh = hullMesh
+                    mesh = sphere(it.r),
+                    transform = translate(-hull.center + it.pos)
                 )
-            }
-            CaptureEnv(
-                probeName = "normal", resolution = 256, near = 0.2f, far = 30f, insideOut = true,
-                defs = setOf("NORMAL_CAPTURE")
-            ) {
-                metaball.spheres.forEach {
-                    Renderable(
-                        standart {},
-                        mesh = sphere(it.r),
-                        transform = translate(-hull.center + it.pos)
-                    )
-                }
-            }
-            CaptureEnv(
-                probeName = "albedo", resolution = 256, near = 0.2f, far = 30f, insideOut = true
-            ) {
-                AmbientLight(white(1f))
-                metaball.spheres.forEach {
-                    Renderable(
-                        standart {
-                            baseColor = ColorRGBA.Green
-                        },
-                        mesh = sphere(it.r),
-                        transform = translate(-hull.center + it.pos)
-                    )
-                }
             }
         }
 
@@ -110,18 +114,29 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             mesh = hullMesh,
             transform = scale(0.1f).translate(2.x - 6.z)
         )
+         */
 
-        metaball.spheres.forEach {
-            Renderable(
-                standart {
-                    baseColor = ColorRGBA.Green
-                },
-                mesh = sphere(it.r / 10f),
-                transform = translate(-2.x - 6.z + it.pos * 0.1f - hull.center * 0.1f)
-            )
-        }
+        Renderable(
+            standart {
+                baseColorTexture = texture("model/leaf.png")
+                pbr.metallic = 0.0f
+                pbr.roughness = 0.9f
+            },
+            mesh = obj("model/tupelo.obj"),
+            transform = scale(0.2f).translate(- 6.z - 2.y)
+        )
+//
+//        metaball.spheres.forEach {
+//            Renderable(
+//                standart {
+//                    baseColor = ColorRGBA.Green
+//                },
+//                mesh = sphere(it.r / 10f),
+//                transform = translate(-2.x - 6.z + it.pos * 0.1f - hull.center * 0.1f)
+//            )
+//        }
 
-        Sky(cubeSky(cubeProbe("albedo")))
+   //     Sky(cubeSky(cubeProbe("albedo")))
 
         Gui {
             Column {

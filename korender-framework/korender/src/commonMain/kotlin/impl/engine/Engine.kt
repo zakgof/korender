@@ -62,7 +62,6 @@ import com.zakgof.korender.impl.gl.GL.glDepthFunc
 import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
 import com.zakgof.korender.impl.gl.GLConstants.GL_BLEND
-import com.zakgof.korender.impl.gl.GLConstants.GL_CULL_FACE
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
@@ -412,7 +411,7 @@ internal class Engine(
     init {
         println("Engine init $width x $height")
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glEnable(GL_CULL_FACE)
+        //glEnable(GL_CULL_FACE)
         glCullFace(GL_BACK)
         glDepthFunc(GL_LEQUAL)
         glEnable(GL_BLEND)
