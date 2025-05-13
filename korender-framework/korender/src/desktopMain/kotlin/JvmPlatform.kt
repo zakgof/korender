@@ -50,7 +50,12 @@ private fun detectDevicePixelRatio(): List<Float> {
         ?.call(device) as Float?
     val scaleY = device::class.members.firstOrNull { it.name == "getDefaultScaleY" }
         ?.call(device) as Float?
-    return listOf(scaleX ?: 1.0f, scaleY ?: 1.0f)
+    val scaleFactor = device::class.members.firstOrNull { it.name == "getScaleFactor" }
+        ?.call(device) as Int?
+    return listOf(
+        scaleX ?: scaleFactor?.toFloat() ?: 1.0f,
+        scaleY ?: scaleFactor?.toFloat() ?: 1.0f
+    )
 }
 
 @OptIn(DelicateCoroutinesApi::class)

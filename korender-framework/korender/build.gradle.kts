@@ -67,7 +67,7 @@ kotlin {
             implementation(libs.lwjgl3.awt.get().toString()) {
                 exclude(group = "org.lwjgl")
             }
-            listOf("windows", "linux", "macos").forEach {
+            listOf("windows", "linux", "macos", "macos-arm64").forEach {
                 runtimeOnly(dependencies.variantOf(libs.lwjgl) { classifier("natives-$it") })
                 runtimeOnly(dependencies.variantOf(libs.lwjgl.opengl) { classifier("natives-$it") })
             }
