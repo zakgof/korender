@@ -90,7 +90,7 @@ internal object Geometry {
         name: String,
         vertexNumber: Int,
         indexNumber: Int,
-        vararg attrs: MeshAttribute,
+        vararg attrs: MeshAttribute<*>,
         indexType: IndexType? = null,
         block: MeshBuilder.() -> Unit
     ) =
@@ -118,7 +118,7 @@ internal object Geometry {
         val name: String,
         val vertexNumber: Int,
         val indexNumber: Int,
-        val attrs: List<MeshAttribute>,
+        val attrs: List<MeshAttribute<*>>,
         val attributeBuffers: List<NativeByteBuffer>,
         indexType: IndexType?
     ) : MeshInitializer {
@@ -131,7 +131,7 @@ internal object Geometry {
             name: String,
             vertexNumber: Int,
             indexNumber: Int,
-            attrs: List<MeshAttribute>,
+            attrs: List<MeshAttribute<*>>,
             indexType: IndexType?
         ) : this(
             name,
@@ -142,12 +142,12 @@ internal object Geometry {
             indexType
         )
 
-        override fun attr(attr: MeshAttribute, vararg v: Float): MeshInitializer {
+        override fun attr(attr: MeshAttribute<*>, vararg v: Float): MeshInitializer {
             v.forEach { attrMap[attr]!!.put(it) }
             return this
         }
 
-        override fun attr(attr: MeshAttribute, vararg b: Byte): MeshInitializer {
+        override fun attr(attr: MeshAttribute<*>, vararg b: Byte): MeshInitializer {
             b.forEach { attrMap[attr]!!.put(it) }
             return this
         }
@@ -198,7 +198,7 @@ internal object Geometry {
             return this
         }
 
-        override fun attrBytes(attr: MeshAttribute, rawBytes: ByteArray): MeshInitializer {
+        override fun attrBytes(attr: MeshAttribute<*>, rawBytes: ByteArray): MeshInitializer {
             attrMap[attr]!!.put(rawBytes)
             return this
         }
@@ -244,7 +244,7 @@ internal object Geometry {
     ) : Mesh {
 
         final override val gpuMesh: GlGpuMesh =
-            GlGpuMesh(name, data.attrs, isDynamic, data.realIndexType)
+            GlGpuMesh(data.attrs, isDynamic, data.realIndexType)
 
         final override val modelBoundingBox: BoundingBox?
         override fun close() = gpuMesh.close()
@@ -557,13 +557,13 @@ internal object Geometry {
     ) =
         create("billboard", 4, 6, POS, TEX, SCALE, PHI) {
             pos(position)
-            tex(0f, 0f).scale(scaleX, scaleY).phi(phi)
+            tex(0f, 0f).scale(1f, 1f).phi(phi)
             pos(position)
-            tex(0f, 1f).scale(scaleX, scaleY).phi(phi)
+            tex(0f, 1f).scale(1f, 1f).phi(phi)
             pos(position)
-            tex(1f, 1f).scale(scaleX, scaleY).phi(phi)
+            tex(1f, 1f).scale(1f, 1f).phi(phi)
             pos(position)
-            tex(1f, 0f).scale(scaleX, scaleY).phi(phi)
+            tex(1f, 0f).scale(1f, 1f).phi(phi)
             index(0, 2, 1, 0, 3, 2)
         }
 

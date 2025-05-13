@@ -40,7 +40,7 @@ internal data class CustomMesh(
     val id: Any,
     val vertexCount: Int,
     val indexCount: Int,
-    val attributes: List<MeshAttribute>,
+    val attributes: List<MeshAttribute<*>>,
     val dynamic: Boolean,
     val indexType: IndexType?,
     val block: MeshInitializer.() -> Unit

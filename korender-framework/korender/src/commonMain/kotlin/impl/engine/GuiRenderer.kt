@@ -3,6 +3,7 @@ package com.zakgof.korender.impl.engine
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.geometry.ImageQuad
+import com.zakgof.korender.impl.geometry.NewInstancedMesh
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.material.Shaders
@@ -96,7 +97,7 @@ internal class GuiRenderer(
         if (mesh != null && shader != null) {
             renderables.add(
                 Renderable(
-                    mesh = mesh,
+                    mesh = mesh.gpuMesh,
                     shader = shader,
                     uniforms =
                     mapOf<String, Any?>(
@@ -130,11 +131,12 @@ internal class GuiRenderer(
     }
 
     private fun createText(declaration: ElementDeclaration.Text, x: Int, y: Int, w: Int) {
-        val mesh = inventory.fontMesh(declaration.id)
+        val meshLink = inventory.fontMesh(declaration.id)
         val font = inventory.font(declaration.fontResource)
         val shader = inventory.shader(Fonts.shaderDeclaration)
-        if (mesh != null && font != null && shader != null) {
-            if (!declaration.static || !mesh.isInitialized()) {
+        if (meshLink != null && font != null && shader != null) {
+            val mesh = meshLink.cpuMesh as NewInstancedMesh
+            if (!declaration.static || !mesh.initialized) {
                 mesh.updateFont(
                     declaration.text,
                     declaration.height.toFloat() / height,
@@ -143,10 +145,11 @@ internal class GuiRenderer(
                     1.0f - y.toFloat() / height,
                     font.widths
                 )
+                meshLink.updateGpu(declaration.text.length * 4,declaration.text.length * 6)
             }
             renderables.add(
                 Renderable(
-                    mesh = mesh,
+                    mesh = meshLink.gpuMesh,
                     shader = shader,
                     uniforms = mapOf(
                         "color" to declaration.color,

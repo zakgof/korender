@@ -78,7 +78,7 @@ interface KorenderContext {
         id: Any,
         vertexCount: Int,
         indexCount: Int,
-        vararg attributes: MeshAttribute,
+        vararg attributes: MeshAttribute<*>,
         dynamic: Boolean = false,
         indexType: IndexType? = null,
         block: MeshInitializer.() -> Unit

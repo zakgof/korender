@@ -163,7 +163,7 @@ internal class Engine(
             id: Any,
             vertexCount: Int,
             indexCount: Int,
-            vararg attributes: MeshAttribute,
+            vararg attributes: MeshAttribute<*>,
             dynamic: Boolean,
             indexType: IndexType?,
             block: MeshInitializer.() -> Unit

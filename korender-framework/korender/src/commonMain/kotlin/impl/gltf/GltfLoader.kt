@@ -406,7 +406,7 @@ internal class GltfSceneBuilder(
         }
     }
 
-    private fun attributeForAccessor(key: String, accessor: Gltf.Accessor): MeshAttribute? {
+    private fun attributeForAccessor(key: String, accessor: Gltf.Accessor): MeshAttribute<*>? {
         val candidates = when (key) {
             "POSITION" -> listOf(POS)
             "NORMAL" -> listOf(NORMAL)

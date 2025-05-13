@@ -40,8 +40,7 @@ internal fun AttributeType.toGL(): Int = when (this) {
 }
 
 internal class GlGpuMesh(
-    private val name: String,
-    val attrs: List<MeshAttribute>,
+    val attrs: List<MeshAttribute<*>>,
     isDynamic: Boolean = false,
     private val indexType: IndexType
 ) : AutoCloseable {
@@ -55,7 +54,7 @@ internal class GlGpuMesh(
     private var indices: Int = -1
 
     init {
-        println("Creating GPU Mesh [$name] $vao/$vbos/$ebo")
+        println("Creating GPU Mesh [$vao/$vbos/$ebo]")
     }
 
     fun bind() = glBindVertexArray(vao)
@@ -84,7 +83,7 @@ internal class GlGpuMesh(
         }
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
-        ib?.let {glBufferData(GL_ELEMENT_ARRAY_BUFFER, it, usage)}
+        ib?.let { glBufferData(GL_ELEMENT_ARRAY_BUFFER, it, usage) }
 
         glBindVertexArray(null)
     }
@@ -110,7 +109,7 @@ internal class GlGpuMesh(
     }
 
     override fun close() {
-        println("Destroying GPU Mesh [$name] $vao/$vbos/$ebo")
+        println("Destroying GPU Mesh [$vao/$vbos/$ebo]")
         vbos.forEach { glDeleteBuffers(it) }
         glDeleteBuffers(ebo)
         glDeleteVertexArrays(vao)

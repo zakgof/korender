@@ -105,7 +105,7 @@ internal object ShadowRenderer {
                 )
                 val shader = inventory.shader(modifiedShaderDeclaration)
                 if (mesh != null && shader != null) {
-                    Renderable(mesh, shader, materialDeclaration.uniforms, renderableDeclaration.transform)
+                    Renderable(mesh.gpuMesh, shader, materialDeclaration.uniforms, renderableDeclaration.transform)
                         .render(casterUniforms + uniforms, fixer)
                 }
             }
@@ -188,7 +188,7 @@ internal object ShadowRenderer {
             glClearColor(0f, 0f, 0f, 1f)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             if (mesh != null && shader != null) {
-                Renderable(mesh, shader, blur1.uniforms).render(uniforms, fixer)
+                Renderable(mesh.gpuMesh, shader, blur1.uniforms).render(uniforms, fixer)
             }
         }
         val blur2 = materialDeclaration(BaseMaterial.Screen, false,
@@ -209,7 +209,7 @@ internal object ShadowRenderer {
             glClearColor(0f, 0f, 0f, 1f)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             if (mesh != null && shader != null) {
-                Renderable(mesh, shader, blur2.uniforms).render(uniforms, fixer)
+                Renderable(mesh.gpuMesh, shader, blur2.uniforms).render(uniforms, fixer)
             }
         }
     }

@@ -60,14 +60,59 @@ object Byte4BufferAccessor : BufferAccessor<ByteArray> {
     }
 }
 
+object Short4BufferAccessor : BufferAccessor<ShortArray> {
+    override fun get(buffer: NativeByteBuffer, index: Int) =
+        shortArrayOf(buffer.short(index), buffer.short(index + 1), buffer.short(index + 2), buffer.short(index + 3))
+
+    override fun put(buffer: NativeByteBuffer, index: Int, value: ShortArray) {
+        // TODO
+    }
+}
+
+object Int4BufferAccessor : BufferAccessor<IntArray> {
+    override fun get(buffer: NativeByteBuffer, index: Int) =
+        intArrayOf(buffer.int(index), buffer.int(index + 1), buffer.int(index + 2), buffer.int(index + 3))
+
+    override fun put(buffer: NativeByteBuffer, index: Int, value: IntArray) {
+        // TODO
+    }
+}
+
+object Float4BufferAccessor : BufferAccessor<FloatArray> {
+    override fun get(buffer: NativeByteBuffer, index: Int) =
+        floatArrayOf(buffer.float(index), buffer.float(index + 1), buffer.float(index + 2), buffer.float(index + 3))
+
+    override fun put(buffer: NativeByteBuffer, index: Int, value: FloatArray) {
+        // TODO
+    }
+}
+
+object FloatBufferAccessor : BufferAccessor<Float> {
+    override fun get(buffer: NativeByteBuffer, index: Int) =
+        buffer.float(index)
+
+    override fun put(buffer: NativeByteBuffer, index: Int, value: Float) {
+        // TODO
+    }
+}
+
+object ByteBufferAccessor : BufferAccessor<Byte> {
+    override fun get(buffer: NativeByteBuffer, index: Int) =
+        buffer.byte(index)
+
+    override fun put(buffer: NativeByteBuffer, index: Int, value: Byte) {
+        // TODO
+    }
+}
+
 object Attributes {
     val POS = MeshAttribute<Vec3>("pos", 3, AttributeType.Float, 0, Vec3BufferAccessor)
     val NORMAL = MeshAttribute<Vec3>("normal", 3, AttributeType.Float, 1, Vec3BufferAccessor)
     val TEX = MeshAttribute<Vec2>("tex", 2, AttributeType.Float, 2, Vec2BufferAccessor)
     val JOINTS_BYTE = MeshAttribute<ByteArray>("joints", 4, AttributeType.Byte, 3, Byte4BufferAccessor)
     val JOINTS_SHORT = MeshAttribute<ShortArray>("joints", 4, AttributeType.Short, 3, Short4BufferAccessor)
-    val JOINTS_INT = MeshAttribute<IntArray>("joints", 4, AttributeType.Int, 3)
-    val WEIGHTS = MeshAttribute<FloatArray>("weights", 4, AttributeType.Float, 4)
+    val JOINTS_INT = MeshAttribute<IntArray>("joints", 4, AttributeType.Int, 3, Int4BufferAccessor)
+    val WEIGHTS = MeshAttribute<FloatArray>("weights", 4, AttributeType.Float, 4, Float4BufferAccessor)
     val SCREEN = MeshAttribute<Vec2>("screen", 2, AttributeType.Float, 5, Vec2BufferAccessor)
     val SCALE = MeshAttribute<Vec2>("scale", 2, AttributeType.Float, 6, Vec2BufferAccessor)
     val PHI = MeshAttribute<Float>("phi", 1, AttributeType.Float, 7, FloatBufferAccessor)
@@ -79,8 +124,8 @@ object Attributes {
 interface MeshDeclaration
 
 interface MeshInitializer {
-    fun attr(attr: MeshAttribute<Any>, vararg v: Float): MeshInitializer
-    fun attr(attr: MeshAttribute<Any>, vararg b: Byte): MeshInitializer
+    fun attr(attr: MeshAttribute<*>, vararg v: Float): MeshInitializer
+    fun attr(attr: MeshAttribute<*>, vararg b: Byte): MeshInitializer
     fun pos(vararg position: Vec3): MeshInitializer
     fun pos(vararg v: Float): MeshInitializer
     fun normal(vararg position: Vec3): MeshInitializer
@@ -92,7 +137,7 @@ interface MeshInitializer {
     fun phi(vararg v: Float): MeshInitializer
     fun index(vararg indices: Int): MeshInitializer
     fun indexBytes(rawBytes: ByteArray): MeshInitializer
-    fun attrBytes(attr: MeshAttribute<Any>, rawBytes: ByteArray): MeshInitializer
+    fun attrBytes(attr: MeshAttribute<*>, rawBytes: ByteArray): MeshInitializer
 }
 
 interface CpuMesh {

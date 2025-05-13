@@ -4,17 +4,17 @@ import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.context.DefaultInstancedBillboardsContext
 import com.zakgof.korender.impl.context.DefaultInstancedRenderablesContext
 import com.zakgof.korender.impl.geometry.CustomMesh
-import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
-import com.zakgof.korender.impl.geometry.Mesh
+import com.zakgof.korender.impl.geometry.NewInstancedMesh
+import com.zakgof.korender.impl.glgpu.GlGpuMesh
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.math.Transform
 
 internal class Renderable(
-    val mesh: Mesh,
+    val mesh: GlGpuMesh,
     val shader: GlGpuShader,
     val uniforms: Map<String, Any?>,
     val transform: Transform = Transform()
@@ -22,7 +22,7 @@ internal class Renderable(
     fun render(contextUniforms: Map<String, Any?>, fixer: (Any?) -> Any?) {
         shader.render(
             { fixer(uniforms[it] ?: contextUniforms[it] ?: if (it == "model") transform.mat4 else null )},
-            mesh.gpuMesh
+            mesh
         )
     }
 }
@@ -40,11 +40,12 @@ internal object Rendering {
     ) {
         val materialDeclaration = materialDeclaration(declaration.base, deferredShading, *declaration.materialModifiers.toTypedArray(), InternalMaterialModifier { it.shaderDefs += defs })
 
-        val mesh = inventory.mesh(declaration.mesh) ?: return
+        val meshLink = inventory.mesh(declaration.mesh) ?: return
         val shader = inventory.shader(materialDeclaration.shader) ?: return
 
         if (declaration.mesh is CustomMesh && declaration.mesh.dynamic) {
-            (mesh as Geometry.DefaultMesh).updateMesh(declaration.mesh.block)
+            meshLink.cpuMesh.updateMesh(declaration.mesh.block)
+            meshLink.updateGpu()
         }
         if (declaration.mesh is InstancedBillboard) {
             // TODO: static
@@ -53,22 +54,24 @@ internal object Rendering {
             if (declaration.mesh.transparent) {
                 instances.sortBy { (camera.mat4 * it.pos).z }
             }
-            (mesh as Geometry.MultiMesh).updateBillboardInstances(instances)
+            (meshLink.cpuMesh as NewInstancedMesh).updateBillboardInstances(instances)
+            meshLink.updateGpu(instances.size * 4,instances.size * 6)
         }
         if (declaration.mesh is InstancedMesh) {
-            mesh as Geometry.MultiMesh
-            if (!declaration.mesh.static || !mesh.isInitialized()) {
+            val mesh = meshLink.cpuMesh as NewInstancedMesh
+            if (!declaration.mesh.static || !mesh.initialized) {
                 val instances = mutableListOf<MeshInstance>()
                 DefaultInstancedRenderablesContext(instances).apply(declaration.mesh.block)
                 if (declaration.mesh.transparent) {
                     instances.sortBy { (camera.mat4 * it.transform.offset()).z }
                 }
                 mesh.updateInstances(instances)
+                meshLink.updateGpu(mesh.prototype.vertexCount * instances.size, mesh.prototype.indexCount * instances.size)
             }
         }
         shader.render(
             { fixer(materialDeclaration.uniforms[it] ?: contextUniforms[it] ?: if (it == "model") declaration.transform.mat4 else null) },
-            mesh.gpuMesh
+            meshLink.gpuMesh
         )
     }
 }
