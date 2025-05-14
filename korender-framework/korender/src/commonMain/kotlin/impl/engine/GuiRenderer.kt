@@ -3,7 +3,7 @@ package com.zakgof.korender.impl.engine
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.geometry.ImageQuad
-import com.zakgof.korender.impl.geometry.NewInstancedMesh
+import com.zakgof.korender.impl.geometry.MultiMesh
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.material.Shaders
@@ -135,7 +135,7 @@ internal class GuiRenderer(
         val font = inventory.font(declaration.fontResource)
         val shader = inventory.shader(Fonts.shaderDeclaration)
         if (meshLink != null && font != null && shader != null) {
-            val mesh = meshLink.cpuMesh as NewInstancedMesh
+            val mesh = meshLink.cpuMesh as MultiMesh
             if (!declaration.static || !mesh.initialized) {
                 mesh.updateFont(
                     declaration.text,

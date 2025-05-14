@@ -6,7 +6,7 @@ import com.zakgof.korender.impl.context.DefaultInstancedRenderablesContext
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
-import com.zakgof.korender.impl.geometry.NewInstancedMesh
+import com.zakgof.korender.impl.geometry.MultiMesh
 import com.zakgof.korender.impl.glgpu.GlGpuMesh
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.material.InternalMaterialModifier
@@ -54,11 +54,11 @@ internal object Rendering {
             if (declaration.mesh.transparent) {
                 instances.sortBy { (camera.mat4 * it.pos).z }
             }
-            (meshLink.cpuMesh as NewInstancedMesh).updateBillboardInstances(instances)
+            (meshLink.cpuMesh as MultiMesh).updateBillboardInstances(instances)
             meshLink.updateGpu(instances.size * 4,instances.size * 6)
         }
         if (declaration.mesh is InstancedMesh) {
-            val mesh = meshLink.cpuMesh as NewInstancedMesh
+            val mesh = meshLink.cpuMesh as MultiMesh
             if (!declaration.mesh.static || !mesh.initialized) {
                 val instances = mutableListOf<MeshInstance>()
                 DefaultInstancedRenderablesContext(instances).apply(declaration.mesh.block)

@@ -56,7 +56,8 @@ fun AppExample() {
         Demo("Effects") { EffectsExample() },
         Demo("Point lights") { LightsExample() },
         Demo("GUI") { GuiExample() },
-        Demo("Particles") { InstancedBillboardsExample() },
+        Demo("Particles / Billboards") { InstancedBillboardsExample() },
+        Demo("Particles / Cubes") { InstancedCubesExample() },
         Demo("Blur") { BlurExample() },
     )
 

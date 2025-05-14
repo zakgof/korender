@@ -1,5 +1,7 @@
 package com.zakgof.korender.math
 
+import com.zakgof.korender.KorenderException
+
 class Mat4(
     val m00: Float,
     val m01: Float,
@@ -108,4 +110,34 @@ class Mat4(
         m30 * mat.m02 + m31 * mat.m12 + m32 * mat.m22 + m33 * mat.m32,
         m30 * mat.m03 + m31 * mat.m13 + m32 * mat.m23 + m33 * mat.m33
     )
+
+    fun invTranspose(): Mat3 {
+        val determinant = m00 * (m11 * m22 - m12 * m21) -
+                m01 * (m10 * m22 - m12 * m20) +
+                m02 * (m10 * m21 - m11 * m20)
+
+        if (determinant == 0.0f) {
+            throw KorenderException("Singular matrix")
+        }
+
+        val invDet = 1.0f / determinant
+
+        val adj00 = (m11 * m22 - m12 * m21) * invDet
+        val adj01 = (m02 * m21 - m01 * m22) * invDet
+        val adj02 = (m01 * m12 - m02 * m11) * invDet
+
+        val adj10 = (m12 * m20 - m10 * m22) * invDet
+        val adj11 = (m00 * m22 - m02 * m20) * invDet
+        val adj12 = (m02 * m10 - m00 * m12) * invDet
+
+        val adj20 = (m10 * m21 - m11 * m20) * invDet
+        val adj21 = (m01 * m20 - m00 * m21) * invDet
+        val adj22 = (m00 * m11 - m01 * m10) * invDet
+
+        return Mat3(
+            adj00, adj10, adj20,
+            adj01, adj11, adj21,
+            adj02, adj12, adj22
+        )
+    }
 }
