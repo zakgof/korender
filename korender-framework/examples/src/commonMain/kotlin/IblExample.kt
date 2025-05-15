@@ -30,8 +30,7 @@ import kotlin.random.Random
 @Composable
 fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-    // val loadedMesh = loadMesh(obj("model/tupelo.obj"))
-
+    val loadedMesh = loadMesh(obj("model/tupelo.obj"))
 
 
     val freeCamera = FreeCamera(this, ZERO, -1.z)

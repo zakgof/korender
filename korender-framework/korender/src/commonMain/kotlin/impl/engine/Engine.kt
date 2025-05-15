@@ -6,6 +6,7 @@ import com.zakgof.korender.BaseParams
 import com.zakgof.korender.BloomParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
+import com.zakgof.korender.Mesh
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
@@ -51,8 +52,11 @@ import com.zakgof.korender.impl.engine.shadow.InternalHardParams
 import com.zakgof.korender.impl.engine.shadow.InternalPcssParams
 import com.zakgof.korender.impl.engine.shadow.InternalVsmParams
 import com.zakgof.korender.impl.geometry.Cube
+import com.zakgof.korender.impl.geometry.CustomCpuMesh
 import com.zakgof.korender.impl.geometry.CustomMesh
+import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.HeightField
+import com.zakgof.korender.impl.geometry.CMesh
 import com.zakgof.korender.impl.geometry.ObjMesh
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.geometry.Sphere
@@ -178,6 +182,14 @@ internal class Engine(
             height: (Int, Int) -> Float
         ): MeshDeclaration =
             HeightField(id, cellsX, cellsZ, cellWidth, height)
+
+        override fun loadMesh(meshDeclaration: MeshDeclaration): Deferred<Mesh> =
+            asyncContext.call {
+                Geometry.createCpuMesh(meshDeclaration, asyncContext.appResourceLoader)
+            }
+
+        override fun mesh(id: String, mesh: Mesh): MeshDeclaration =
+            CustomCpuMesh(id, mesh as CMesh)
 
         override fun vertex(vertShaderFile: String): InternalMaterialModifier =
             InternalMaterialModifier { it.vertShaderFile = vertShaderFile }
@@ -382,12 +394,11 @@ internal class Engine(
         override fun createImage(width: Int, height: Int, format: Image.Format): Image =
             Platform.createImage(width, height, format)
 
-        override fun loadImage(imageResource: String): Deferred<Image> {
-            return asyncContext.call {
+        override fun loadImage(imageResource: String): Deferred<Image> =
+            asyncContext.call {
                 val bytes = resourceBytes(asyncContext.appResourceLoader, imageResource)
                 Platform.loadImage(bytes, imageResource.split(".").last()).await()
             }
-        }
 
         override fun vsm(blurRadius: Float?): ShadowAlgorithmDeclaration =
             InternalVsmParams(blurRadius)

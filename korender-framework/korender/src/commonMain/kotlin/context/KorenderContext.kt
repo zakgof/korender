@@ -5,6 +5,7 @@ import com.zakgof.korender.BaseParams
 import com.zakgof.korender.BloomParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
+import com.zakgof.korender.Mesh
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
@@ -73,6 +74,8 @@ interface KorenderContext {
     fun sphere(radius: Float = 1.0f): MeshDeclaration
     fun obj(objFile: String): MeshDeclaration
     fun screenQuad(): MeshDeclaration
+    fun loadMesh(meshDeclaration: MeshDeclaration): Deferred<Mesh>
+    fun mesh(id: String, mesh: Mesh): MeshDeclaration
 
     fun customMesh(
         id: Any,

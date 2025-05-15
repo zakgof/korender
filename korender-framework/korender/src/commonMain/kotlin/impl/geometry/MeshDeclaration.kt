@@ -49,6 +49,14 @@ internal data class CustomMesh(
     override fun hashCode(): Int = id.hashCode()
 }
 
+internal data class CustomCpuMesh(
+    val id: Any,
+    val mesh: CMesh
+) : MeshDeclaration {
+    override fun equals(other: Any?): Boolean = (other is CustomCpuMesh && other.id == id)
+    override fun hashCode(): Int = id.hashCode()
+}
+
 internal data class HeightField(
     val id: Any,
     val cellsX: Int,

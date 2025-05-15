@@ -6,7 +6,7 @@ import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.SCALE
 import com.zakgof.korender.Attributes.SCREEN
 import com.zakgof.korender.Attributes.TEX
-import com.zakgof.korender.CpuMesh
+import com.zakgof.korender.Mesh
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshInitializer
@@ -18,12 +18,12 @@ import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
-internal open class Mesh(
+internal open class CMesh(
     val vertexCount: Int,
     val indexCount: Int,
     val attributes: List<MeshAttribute<*>>,
     indexType: IndexType? = null
-) : CpuMesh, MeshInitializer {
+) : Mesh, MeshInitializer {
 
     val attributeBuffers: List<NativeByteBuffer> = attributes.map { NativeByteBuffer(vertexCount * it.primitiveType.size() * it.structSize) }
     val attrMap: Map<MeshAttribute<*>, NativeByteBuffer> = attributes.indices.associate { attributes[it] to attributeBuffers[it] }
@@ -31,11 +31,11 @@ internal open class Mesh(
     val actualIndexType: IndexType = convertIndexType(indexType, indexCount)
     val indexBuffer: NativeByteBuffer? = if (indexCount > 0) NativeByteBuffer(indexCount * actualIndexType.size()) else null
 
-    override val vertices: CpuMesh.Vertices = object : CpuMesh.Vertices {
+    override val vertices: Mesh.Vertices = object : Mesh.Vertices {
 
         override val size = vertexCount
 
-        override fun get(index: Int): CpuMesh.Vertex = object : CpuMesh.Vertex {
+        override fun get(index: Int): Mesh.Vertex = object : Mesh.Vertex {
 
             override fun pos() = value(POS)
             override fun normal() = value(NORMAL)
@@ -48,7 +48,7 @@ internal open class Mesh(
         }
 
     }
-    override val indices: CpuMesh.Indices? = if (indexCount > 0) object : CpuMesh.Indices {
+    override val indices: Mesh.Indices? = if (indexCount > 0) object : Mesh.Indices {
         override val size = indexCount
         override fun get(index: Int): Int = when (actualIndexType) {
             IndexType.Byte -> indexBuffer!!.byte(index).toInt()
@@ -142,8 +142,8 @@ internal open class Mesh(
     }
 }
 
-internal class MultiMesh(val prototype: Mesh, instances: Int) :
-    Mesh(prototype.vertexCount * instances, prototype.indexCount * instances, prototype.attributes) {
+internal class MultiMesh(val prototype: CMesh, instances: Int) :
+    CMesh(prototype.vertexCount * instances, prototype.indexCount * instances, prototype.attributes) {
 
     var initialized = false
 

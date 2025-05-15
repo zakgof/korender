@@ -140,7 +140,7 @@ interface MeshInitializer {
     fun attrBytes(attr: MeshAttribute<*>, rawBytes: ByteArray): MeshInitializer
 }
 
-interface CpuMesh {
+interface Mesh {
 
     val vertices: Vertices
     val indices: Indices?

@@ -17,7 +17,7 @@ import com.zakgof.korender.math.Vec3
 import kotlin.math.cos
 import kotlin.math.sin
 
-internal class MeshLink(val cpuMesh: Mesh, dynamic: Boolean) : AutoCloseable {
+internal class MeshLink(val cpuMesh: CMesh, dynamic: Boolean) : AutoCloseable {
 
     val gpuMesh: GlGpuMesh = GlGpuMesh(cpuMesh.attributes, dynamic, cpuMesh.actualIndexType)
 
@@ -47,13 +47,13 @@ internal object Geometry {
     }
 
     fun font(reservedLength: Int): MeshLink {
-        val prototype = Mesh(4, 6, TEX, SCREEN) {
+        val prototype = CMesh(4, 6, TEX, SCREEN) {
             index(0, 2, 1, 0, 3, 2)
         }
         return MeshLink(MultiMesh(prototype, reservedLength), true)
     }
 
-    private suspend fun createCpuMesh(meshDeclaration: MeshDeclaration, appResourceLoader: ResourceLoader): Mesh =
+    suspend fun createCpuMesh(meshDeclaration: MeshDeclaration, appResourceLoader: ResourceLoader): CMesh =
         when (meshDeclaration) {
             is Sphere -> sphere(meshDeclaration.radius)
             is Cube -> cube(meshDeclaration.halfSide)
@@ -61,15 +61,16 @@ internal object Geometry {
             is Billboard -> billboard()
             is ImageQuad -> imageQuad()
             is ObjMesh -> obj(meshDeclaration.objFile, appResourceLoader)
-            is CustomMesh -> Mesh(meshDeclaration.vertexCount, meshDeclaration.indexCount, attributes = meshDeclaration.attributes.toTypedArray(), meshDeclaration.indexType, meshDeclaration.block)
+            is CustomCpuMesh -> meshDeclaration.mesh
+            is CustomMesh -> CMesh(meshDeclaration.vertexCount, meshDeclaration.indexCount, attributes = meshDeclaration.attributes.toTypedArray(), meshDeclaration.indexType, meshDeclaration.block)
             is InstancedMesh -> MultiMesh(createCpuMesh(meshDeclaration.mesh, appResourceLoader), meshDeclaration.count)
             is InstancedBillboard -> MultiMesh(billboard(), meshDeclaration.count)
             else -> throw KorenderException("Unknown mesh type $meshDeclaration")
         }
 
-    private suspend fun obj(objFile: String, appResourceLoader: ResourceLoader): Mesh {
+    private suspend fun obj(objFile: String, appResourceLoader: ResourceLoader): CMesh {
         val model: ObjModel = ObjLoader.load(objFile, appResourceLoader)
-        return Mesh(model.vertices.size, model.indices.size, POS, NORMAL, TEX) {
+        return CMesh(model.vertices.size, model.indices.size, POS, NORMAL, TEX) {
             model.vertices.forEach {
                 pos(it.pos).normal(it.normal).tex(it.tex.x, it.tex.y)
             }
@@ -80,7 +81,7 @@ internal object Geometry {
     }
 
     private fun sphere(radius: Float, slices: Int = 32, sectors: Int = 32) =
-        Mesh(
+        CMesh(
             2 + (slices - 1) * sectors,
             sectors * 3 * 2 + (slices - 2) * sectors * 6,
             POS, NORMAL, TEX
@@ -118,14 +119,14 @@ internal object Geometry {
         }
 
     private fun screenQuad() =
-        Mesh(4, 6, TEX) {
+        CMesh(4, 6, TEX) {
             tex(0f, 0f).tex(0f, 1f)
             tex(1f, 1f).tex(1f, 0f)
             index(0, 2, 1, 0, 3, 2)
         }
 
     private fun cube(halfSide: Float) =
-        Mesh(24, 36, POS, NORMAL, TEX) {
+        CMesh(24, 36, POS, NORMAL, TEX) {
             pos(-halfSide, -halfSide, -halfSide).normal(-1f, 0f, 0f).tex(0f, 0f)
             pos(-halfSide, halfSide, -halfSide).normal(-1f, 0f, 0f).tex(0f, 1f)
             pos(-halfSide, halfSide, halfSide).normal(-1f, 0f, 0f).tex(1f, 1f)
@@ -160,7 +161,7 @@ internal object Geometry {
         }
 
     private fun billboard() =
-        Mesh(4, 6, POS, TEX, SCALE, PHI) {
+        CMesh(4, 6, POS, TEX, SCALE, PHI) {
             pos(Vec3.ZERO)
             tex(0f, 0f).scale(1f, 1f).phi(0f)
             pos(Vec3.ZERO)
@@ -173,7 +174,7 @@ internal object Geometry {
         }
 
     private fun imageQuad() =
-        Mesh(4, 6, TEX) {
+        CMesh(4, 6, TEX) {
             tex(0f, 0f)
             tex(0f, 1f)
             tex(1f, 1f)
