@@ -4,16 +4,23 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.POS
+import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.Image
 import com.zakgof.korender.Korender
+import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.examples.camera.FreeCamera
+import com.zakgof.korender.examples.qhull.QHMesh
 import com.zakgof.korender.examples.qhull.QuickHull
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.FloatMath.PI
+import com.zakgof.korender.math.Quaternion
+import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Transform.Companion.scale
+import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.Vec3.Companion.ZERO
 import com.zakgof.korender.math.x
@@ -23,6 +30,7 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.exp
+import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.random.Random
 
@@ -30,40 +38,45 @@ import kotlin.random.Random
 @Composable
 fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-    val loadedMesh = loadMesh(obj("model/tupelo.obj"))
-
-
     val freeCamera = FreeCamera(this, ZERO, -1.z)
     OnTouch { freeCamera.touch(it) }
 
 
     // val metaball = Metaball(20f, 1.0f) { sqrt(it * 0.05f) * (1f - it * 0.05f) * 10f }
-    // val metaball = Metaball(20f, 1.0f) { (it * 0.05f).pow(0.1f) * (1f - it * 0.05f) * 10f }
-    val metaball = Metaball(20f, 2.0f) { (it * 0.05f) * (1f - it * 0.05f) * 20f }
+    val metaball = Metaball(20f, 4.0f, 8196, 32) { (it * 0.05f).pow(0.1f) * (1f - it * 0.05f) * 10f }
+    // val metaball = Metaball(20f, 4.0f, 4096, 32) { (it * 0.05f) * (1f - it * 0.05f) * 20f }
 
 
-    val points = metaball.points
-    val hull = QuickHull(points).run()
+    val hull = QuickHull(metaball.points).run()
     val hullMesh = customMesh("hull", hull.points.size, hull.indexes.size, POS, NORMAL) {
         hull.points.forEach { pos(it.pos).normal(it.normal) }
         hull.indexes.forEach { index(it) }
     }
+    val leaf = customMesh("leaf", 4, 6, POS, NORMAL, TEX) {
+        pos(Vec3(-0.5f, -0.5f, 0f)).normal(1.z).tex(0f, 0f)
+        pos(Vec3(0.5f, -0.5f, 0f)).normal(1.z).tex(1f, 0f)
+        pos(Vec3(0.5f, 0.5f, 0f)).normal(1.z).tex(1f, 1f)
+        pos(Vec3(-0.5f, 0.5f, 0f)).normal(1.z).tex(0f, 1f)
+
+        index(0, 1, 2, 0, 2, 3)
+    }
 
     Frame {
         projection = frustum(3f * width / height, 3f, 3f, 100f)
-        AmbientLight(white(0.7f))
-        DirectionalLight(Vec3(1.0f, 0.0f, -1.0f), white(4f))
+        AmbientLight(white(0.6f))
+        DirectionalLight(Vec3(1.0f, 0.0f, -10.0f), white(2f))
         camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
-        /*
+        meta(metaball, hull)
+        tree(leaf, metaball, hull)
+
+
         CaptureEnv(
             probeName = "radiant", resolution = 128, near = 0.2f, far = 30f, insideOut = true,
             defs = setOf("RADIAL_CAPTURE")
         ) {
             Renderable(
-                standart {
-                    baseColor = ColorRGBA.Green
-                },
+                standart {},
                 mesh = hullMesh
             )
         }
@@ -113,17 +126,19 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             mesh = hullMesh,
             transform = scale(0.1f).translate(2.x - 6.z)
         )
-         */
 
-        Renderable(
-            standart {
-                baseColorTexture = texture("model/leaf.png")
-                pbr.metallic = 0.0f
-                pbr.roughness = 0.9f
-            },
-            mesh = obj("model/tupelo.obj"),
-            transform = scale(0.2f).translate(- 6.z - 2.y)
-        )
+
+//        Renderable(
+//            standart {
+//                baseColorTexture = texture("model/leaf.png")
+//                pbr.metallic = 0.0f
+//                pbr.roughness = 0.9f
+//            },
+//            mesh = obj("model/tupelo.obj"),
+//            transform = scale(0.2f).translate(-6.z - 2.y)
+//        )
+
+
 //
 //        metaball.spheres.forEach {
 //            Renderable(
@@ -135,7 +150,7 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 //            )
 //        }
 
-   //     Sky(cubeSky(cubeProbe("albedo")))
+        //     Sky(cubeSky(cubeProbe("albedo")))
 
         Gui {
             Column {
@@ -146,14 +161,58 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     }
 }
 
-class Metaball(private val height: Float, private val radius: Float, private val shape: (Float) -> Float) {
+private fun FrameContext.meta(metaball: Metaball, hull: QHMesh) {
+    InstancedRenderables(
+        standart {
+            baseColor = ColorRGBA.Green
+        },
+        mesh = sphere(1f),
+        id = "metaball",
+        count = metaball.spheres.size
+    ) {
+        metaball.spheres.forEach {
+            Instance(scale(0.1f * it.r).translate(-2.x - 6.z + (it.pos - hull.center) * 0.1f))
+        }
+    }
+}
+
+private fun FrameContext.tree(leaf: MeshDeclaration, metaball: Metaball, hull: QHMesh) {
+    InstancedRenderables(
+        standart {
+            baseColorTexture = texture("model/leaf.png")
+        },
+        mesh = leaf,
+        id = "metapoints",
+        transparent = true,
+        count = metaball.points.size,
+        static = true
+    ) {
+        metaball.points.forEachIndexed { index, pt ->
+            val random = Random(index)
+            val axis = Vec3(random.nextFloat(), random.nextFloat(), random.nextFloat()).normalize()
+            Instance(
+                rotate(Quaternion.fromAxisAngle(axis, random.nextFloat() * 100f))
+                    .scale(0.1f)
+                    .translate(2.x - 6.z + (pt - hull.center) * 0.1f)
+            )
+        }
+    }
+}
+
+class Metaball(
+    private val height: Float,
+    private val radius: Float,
+    private val sphereCount: Int = 4096,
+    private val pointCount: Int = 64,
+    private val shape: (Float) -> Float
+) {
 
     val spheres: List<Sphere>
     val points: List<Vec3>
 
     init {
         val rnd = Random(1)
-        spheres = (0 until 40960).flatMap {
+        spheres = (0 until sphereCount).flatMap {
             val phi = rnd.nextFloat() * 2f * PI
             val h = rnd.nextFloat() * height
             val r = rnd.nextFloat() * height
@@ -165,7 +224,7 @@ class Metaball(private val height: Float, private val radius: Float, private val
             Sphere(radius, it)
         }
         points = spheres.flatMap { s ->
-            (0..64).map { s.pos + Vec3.random() * s.r }
+            (0 until pointCount).map { s.pos + Vec3.random() * s.r }
         }
     }
 

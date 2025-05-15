@@ -13,7 +13,6 @@ import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
-import com.zakgof.korender.impl.gl.GL.glClearColor
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.glgpu.Color4List
@@ -74,7 +73,9 @@ internal object ShadowRenderer {
         casterUniforms["cameraDir"] = shadowCamera.direction
 
         frameBuffer.exec {
-            glClearColor(1f, 1f, 0f, 1f)
+            renderContext.state.set {
+                clearColor(ColorRGBA(1f, 1f, 0f, 1f))
+            }
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             shadowCasterDeclarations.filter {
                 // TODO: renderable or material flag to disable shadow casting
@@ -185,7 +186,7 @@ internal object ShadowRenderer {
         blurFrameBuffer.exec {
             val mesh = inventory.mesh(ScreenQuad)
             val shader = inventory.shader(blur1.shader)
-            glClearColor(0f, 0f, 0f, 1f)
+            renderContext.state.set { }
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             if (mesh != null && shader != null) {
                 Renderable(mesh.gpuMesh, shader, blur1.uniforms).render(uniforms, fixer)
@@ -206,7 +207,7 @@ internal object ShadowRenderer {
         frameBuffer.exec {
             val mesh = inventory.mesh(ScreenQuad)
             val shader = inventory.shader(blur2.shader)
-            glClearColor(0f, 0f, 0f, 1f)
+            renderContext.state.set { }
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             if (mesh != null && shader != null) {
                 Renderable(mesh.gpuMesh, shader, blur2.uniforms).render(uniforms, fixer)

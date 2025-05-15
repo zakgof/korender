@@ -148,6 +148,9 @@ void main() {
     albedo = pluginAlbedo(vtex, vpos, N, albedo);
     #endif
 
+    if (albedo.a < 0.001)
+        discard;
+
     #ifdef EMISSIVE_MAP
     #ifdef TRIPLANAR
     vec3 emission = triplanar(emissiveTexture, vpos * triplanarScale, vnormal).rgb * emissiveFactor;
@@ -217,10 +220,6 @@ void main() {
     for (int l=0; l<numPointLights; l++) {
         color += pointLight(vpos, l, N, V, c_diff, F0, rough, occlusion);
     }
-
-    #ifdef DEPTH_TO_ALPHA
-        albedo.a = gl_FragCoord.z;
-    #endif
 
     #ifdef RADIAL_CAPTURE
         float radiant = length(cameraPos - vpos) / 15.0;

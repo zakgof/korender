@@ -6,7 +6,6 @@ import com.zakgof.korender.BaseParams
 import com.zakgof.korender.BloomParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
-import com.zakgof.korender.Mesh
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
@@ -20,6 +19,7 @@ import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.KeyHandler
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MaterialModifier
+import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
@@ -51,25 +51,16 @@ import com.zakgof.korender.impl.context.DefaultFrameContext
 import com.zakgof.korender.impl.engine.shadow.InternalHardParams
 import com.zakgof.korender.impl.engine.shadow.InternalPcssParams
 import com.zakgof.korender.impl.engine.shadow.InternalVsmParams
+import com.zakgof.korender.impl.geometry.CMesh
 import com.zakgof.korender.impl.geometry.Cube
 import com.zakgof.korender.impl.geometry.CustomCpuMesh
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.HeightField
-import com.zakgof.korender.impl.geometry.CMesh
 import com.zakgof.korender.impl.geometry.ObjMesh
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.geometry.Sphere
-import com.zakgof.korender.impl.gl.GL.glBlendFunc
-import com.zakgof.korender.impl.gl.GL.glCullFace
-import com.zakgof.korender.impl.gl.GL.glDepthFunc
 import com.zakgof.korender.impl.gl.GL.glEnable
-import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
-import com.zakgof.korender.impl.gl.GLConstants.GL_BLEND
-import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
-import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
-import com.zakgof.korender.impl.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
-import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.ignoringGlError
@@ -421,13 +412,6 @@ internal class Engine(
 
     init {
         println("Engine init $width x $height")
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        //glEnable(GL_CULL_FACE)
-        glCullFace(GL_BACK)
-        glDepthFunc(GL_LEQUAL)
-        glEnable(GL_BLEND)
-        glEnable(GL_DEPTH_TEST)
-        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
         ignoringGlError {
             glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS)
         }

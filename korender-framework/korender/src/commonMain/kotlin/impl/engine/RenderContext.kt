@@ -22,6 +22,7 @@ internal class RenderContext(var width: Int, var height: Int) {
     var backgroundColor = ColorRGB.Black
 
     val frameInfoManager = FrameInfoManager()
+    val state = GlState()
 
     fun uniforms(m: MutableMap<String, Any?>) {
         m["noiseTexture"] = ResourceTextureDeclaration("!noise.png")

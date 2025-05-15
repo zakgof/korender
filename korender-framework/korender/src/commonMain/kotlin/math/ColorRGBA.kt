@@ -9,7 +9,7 @@ data class ColorRGBA(val r: Float, val g: Float, val b: Float, val a: Float) {
         rgba.and(0xFF).toFloat() / 255f
     )
 
-    fun toRBG() = ColorRGB(r, g, b)
+    fun toRGB() = ColorRGB(r, g, b)
 
     companion object {
         val Transparent = ColorRGBA(0f, 0f, 0f, 0f)
