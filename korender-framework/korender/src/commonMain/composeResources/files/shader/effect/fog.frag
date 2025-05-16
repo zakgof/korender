@@ -25,8 +25,8 @@ void main() {
 
     float distance = length(world - cameraPos);
 
-    // float fogFactor = (depth >= 0.9999) ? 1.0 : exp( -density * distance);
-    float fogFactor = exp( -density * distance);
+    float fogFactor = (depth >= 0.9999) ? 1.0 : exp( -density * distance);
+    // float fogFactor = exp( -density * distance);
 
     color = mix(fogColor.rgb, color, fogFactor);
 

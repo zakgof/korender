@@ -10,6 +10,7 @@ import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glViewport
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
+import com.zakgof.korender.impl.gl.GLConstants.GL_FRONT
 import com.zakgof.korender.impl.gl.GLConstants.GL_GEQUAL
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_NEGATIVE_X
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
@@ -227,10 +228,10 @@ internal class Scene(
             }
     }
 
-    private fun renderForwardOpaques(uniforms: Map<String, Any?>, w: Int, h: Int, clearDepth: Float = 1.0f, vararg defs: String) {
+    private fun renderForwardOpaques(uniforms: Map<String, Any?>, w: Int, h: Int, vararg defs: String, stateFix: GlState.StateContext.() -> Unit = {}) {
         renderContext.state.set {
             clearColor(renderContext.backgroundColor.toRGBA())
-            clearDepth(clearDepth)
+            stateFix()
         }
         glViewport(0, 0, w, h)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
@@ -238,9 +239,10 @@ internal class Scene(
         renderBucket(uniforms, Bucket.SKY, *defs)
     }
 
-    private fun renderTransparents(uniforms: MutableMap<String, Any?>, camera: Camera) {
+    private fun renderTransparents(uniforms: MutableMap<String, Any?>, camera: Camera, stateFix: GlState.StateContext.() -> Unit = {}) {
         renderContext.state.set {
             depthMask(false)
+            stateFix()
         }
         sceneDeclaration.renderables
             .filter { it.bucket == Bucket.TRANSPARENT }
@@ -353,14 +355,15 @@ internal class Scene(
             probeUniforms["cameraPos"] = it.value.position
             probeUniforms["cameraDir"] = it.value.direction
             probeFb.exec(it.key) {
-                if (captureContext.insideOut) {
-                    renderContext.state.set {
-                        cullFace(false)
-                        depthFunc(GL_GEQUAL)
-                    }
-                }
-                renderForwardOpaques(probeUniforms, captureContext.resolution, captureContext.resolution, 0.0f, *captureContext.defs.toTypedArray())
-                renderTransparents(probeUniforms, it.value)
+
+                val stateFix : GlState.StateContext.() -> Unit = if (captureContext.insideOut) ({
+                    cullFaceMode(GL_FRONT)
+                    depthFunc(GL_GEQUAL)
+                    clearDepth(0.0f)
+                }) else ({})
+
+                renderForwardOpaques(probeUniforms, captureContext.resolution, captureContext.resolution, *captureContext.defs.toTypedArray(), stateFix = stateFix)
+                renderTransparents(probeUniforms, it.value, stateFix = stateFix)
             }
         }
         probeFb.finish()

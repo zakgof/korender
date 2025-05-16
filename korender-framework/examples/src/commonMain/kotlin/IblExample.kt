@@ -38,16 +38,16 @@ import kotlin.random.Random
 @Composable
 fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-    val freeCamera = FreeCamera(this, ZERO, -1.z)
+    val freeCamera = FreeCamera(this, 50.z, (-1).z)
     OnTouch { freeCamera.touch(it) }
 
 
     // val metaball = Metaball(20f, 1.0f) { sqrt(it * 0.05f) * (1f - it * 0.05f) * 10f }
-    val metaball = Metaball(20f, 4.0f, 8196, 32) { (it * 0.05f).pow(0.1f) * (1f - it * 0.05f) * 10f }
+    val metaball = Metaball(20f, 3.0f, 8000, 32) { (it * 0.05f).pow(0.1f) * (1f - it * 0.05f) * 10f }
     // val metaball = Metaball(20f, 4.0f, 4096, 32) { (it * 0.05f) * (1f - it * 0.05f) * 20f }
 
 
-    val hull = QuickHull(metaball.points).run()
+    val hull = QuickHull(metaball.points.map { it.pos }).run()
     val hullMesh = customMesh("hull", hull.points.size, hull.indexes.size, POS, NORMAL) {
         hull.points.forEach { pos(it.pos).normal(it.normal) }
         hull.indexes.forEach { index(it) }
@@ -63,94 +63,67 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
     Frame {
         projection = frustum(3f * width / height, 3f, 3f, 100f)
-        AmbientLight(white(0.6f))
-        DirectionalLight(Vec3(1.0f, 0.0f, -10.0f), white(2f))
         camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
-        meta(metaball, hull)
-        tree(leaf, metaball, hull)
+        AmbientLight(white(0.2f))
+        DirectionalLight(Vec3(2.0f, 0.0f, -1.0f), white(3f))
 
+        // renderMeta(metaball, hull, (-20).x)
+        // renderTree(leaf, metaball, hull, 20.x)
+        // renderHull(hullMesh, 40.x)
 
         CaptureEnv(
             probeName = "radiant", resolution = 128, near = 0.2f, far = 30f, insideOut = true,
-            defs = setOf("RADIAL_CAPTURE")
+            defs = setOf("RADIANT_CAPTURE")
         ) {
-            Renderable(
-                standart {},
-                mesh = hullMesh
-            )
+            renderHull(hullMesh)
         }
         CaptureEnv(
-            probeName = "normal", resolution = 256, near = 0.2f, far = 30f, insideOut = true,
+            probeName = "radiant-normal", resolution = 256, near = 0.2f, far = 30f, insideOut = true,
             defs = setOf("NORMAL_CAPTURE")
         ) {
-            metaball.spheres.forEach {
-                Renderable(
-                    standart {},
-                    mesh = sphere(it.r),
-                    transform = translate(-hull.center + it.pos)
-                )
-            }
+            renderHull(hullMesh)
         }
         CaptureEnv(
-            probeName = "albedo", resolution = 256, near = 0.2f, far = 30f, insideOut = true
+            probeName = "normal", resolution = 1024, near = 0.2f, far = 30f, insideOut = true,
+            defs = setOf("NORMAL_CAPTURE")
+        ) {
+            renderTree(leaf, metaball, hull)
+        }
+        CaptureEnv(
+            probeName = "albedo", resolution = 512, near = 0.2f, far = 30f, insideOut = true
         ) {
             AmbientLight(white(1f))
-            metaball.spheres.forEach {
-                Renderable(
-                    standart {
-                        baseColor = ColorRGBA.Green
-                    },
-                    mesh = sphere(it.r),
-                    transform = translate(-hull.center + it.pos)
-                )
-            }
+            renderTree(leaf, metaball, hull)
         }
 
         Billboard(
             standart {
-                xscale = 3.0f
-                yscale = 3.0f
+                xscale = 20.0f
+                yscale = 20.0f
                 set("radiantTexture", cubeProbe("radiant"))
+                set("radiantNormalTexture", cubeProbe("radiant-normal"))
                 set("colorTexture", cubeProbe("albedo"))
                 set("normalTexture", cubeProbe("normal"))
             },
             fragment("mpr/mpr.frag"),
-            position = -6.z
+            position = ZERO
         )
 
-        Renderable(
+        Billboard(
             standart {
-                baseColor = ColorRGBA.Red
+                xscale = 20.0f
+                yscale = 20.0f
+                set("radiantTexture", cubeProbe("radiant"))
+                set("radiantNormalTexture", cubeProbe("radiant-normal"))
+                set("colorTexture", cubeProbe("albedo"))
+                set("normalTexture", cubeProbe("normal"))
             },
-            mesh = hullMesh,
-            transform = scale(0.1f).translate(2.x - 6.z)
+            fragment("mpr/mpr.frag"),
+            position = 10.x
         )
 
-
-//        Renderable(
-//            standart {
-//                baseColorTexture = texture("model/leaf.png")
-//                pbr.metallic = 0.0f
-//                pbr.roughness = 0.9f
-//            },
-//            mesh = obj("model/tupelo.obj"),
-//            transform = scale(0.2f).translate(-6.z - 2.y)
-//        )
-
-
-//
-//        metaball.spheres.forEach {
-//            Renderable(
-//                standart {
-//                    baseColor = ColorRGBA.Green
-//                },
-//                mesh = sphere(it.r / 10f),
-//                transform = translate(-2.x - 6.z + it.pos * 0.1f - hull.center * 0.1f)
-//            )
-//        }
-
-        //     Sky(cubeSky(cubeProbe("albedo")))
+        // Sky(cubeSky(cubeProbe("normal")))
 
         Gui {
             Column {
@@ -161,7 +134,17 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     }
 }
 
-private fun FrameContext.meta(metaball: Metaball, hull: QHMesh) {
+private fun FrameContext.renderHull(hullMesh: MeshDeclaration, offset: Vec3 = ZERO) {
+    Renderable(
+        standart {
+            baseColor = ColorRGBA.Red
+        },
+        mesh = hullMesh,
+        transform = translate(offset)
+    )
+}
+
+private fun FrameContext.renderMeta(metaball: Metaball, hull: QHMesh, offset: Vec3) {
     InstancedRenderables(
         standart {
             baseColor = ColorRGBA.Green
@@ -171,29 +154,34 @@ private fun FrameContext.meta(metaball: Metaball, hull: QHMesh) {
         count = metaball.spheres.size
     ) {
         metaball.spheres.forEach {
-            Instance(scale(0.1f * it.r).translate(-2.x - 6.z + (it.pos - hull.center) * 0.1f))
+            Instance(scale(it.r).translate(offset + (it.pos - hull.center)))
         }
     }
 }
 
-private fun FrameContext.tree(leaf: MeshDeclaration, metaball: Metaball, hull: QHMesh) {
+private fun FrameContext.renderTree(leaf: MeshDeclaration, metaball: Metaball, hull: QHMesh, offset: Vec3 = ZERO) {
     InstancedRenderables(
         standart {
             baseColorTexture = texture("model/leaf.png")
         },
         mesh = leaf,
         id = "metapoints",
-        transparent = true,
+        transparent = false,
         count = metaball.points.size,
         static = true
     ) {
         metaball.points.forEachIndexed { index, pt ->
-            val random = Random(index)
-            val axis = Vec3(random.nextFloat(), random.nextFloat(), random.nextFloat()).normalize()
+            val quaternion = (0..640)
+                .map { index * 1023 + it }
+                .map { Quaternion.fromAxisAngle(Vec3.random(it), Random(index * 777 + it).nextFloat() * 100f) }
+                .maxBy { (it * 1.z) * pt.n }
+
+            // println(" DOT IZ ${(quaternion * 1.z) * pt.n}")
+
             Instance(
-                rotate(Quaternion.fromAxisAngle(axis, random.nextFloat() * 100f))
-                    .scale(0.1f)
-                    .translate(2.x - 6.z + (pt - hull.center) * 0.1f)
+                rotate(quaternion)
+                    .scale(0.6f)
+                    .translate(offset + (pt.pos - hull.center))
             )
         }
     }
@@ -208,7 +196,7 @@ class Metaball(
 ) {
 
     val spheres: List<Sphere>
-    val points: List<Vec3>
+    val points: List<Pt>
 
     init {
         val rnd = Random(1)
@@ -224,11 +212,15 @@ class Metaball(
             Sphere(radius, it)
         }
         points = spheres.flatMap { s ->
-            (0 until pointCount).map { s.pos + Vec3.random() * s.r }
+            (0 until pointCount).map {
+                val n = Vec3.random()
+                Pt(s.pos + n * s.r, n)
+            }
         }
     }
 
     class Sphere(val r: Float, val pos: Vec3)
+    class Pt(val pos: Vec3, val n: Vec3)
 }
 
 class SupportFunctionCalculator(private val kc: KorenderContext, points: List<Vec3>, private val size: Int, private val far: Float) {

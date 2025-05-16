@@ -4,6 +4,7 @@ in vec3 vcenter;
 in vec3 vpos;
 
 uniform samplerCube radiantTexture;
+uniform samplerCube radiantNormalTexture;
 uniform samplerCube colorTexture;
 uniform samplerCube normalTexture;
 uniform vec3 cameraPos;
@@ -26,18 +27,13 @@ void main() {
         float cl = length(ctop);
         dir = ctop/cl;
 
-        vec4 smpl = texture(radiantTexture, dir);
-        float radiant = 1.5 * smpl.b;
-
-        float PI = 3.1415926;
-        float theta = (smpl.r - 0.5) * 2.0 * PI;
-        float phi = smpl.g * PI;
-        n = vec3(sin(phi) * cos(theta), sin(phi) * sin(theta), cos(phi));
+        float radiant = 10.0 * texture(radiantTexture, dir).r;
+        n = texture(radiantNormalTexture, dir).rgb * 2. - 1.;
 
         diff = cl - radiant;
         float lambda = - diff * dot (n, dir) / dot(n, look);
         if (i > 0) {
-            lambda = clamp(lambda, -0.05/i, 1.5/i);
+            lambda = clamp(lambda, -0.05 * 20.0 /i, 1.5 * 20.0 /i);
         }
 
         p = p + look * lambda;
@@ -46,7 +42,7 @@ void main() {
     if (diff < 0.008) {
         vec3 normal = texture(normalTexture, dir).rgb * 2. - 1.;
         vec3 albedo = texture(colorTexture, dir).rgb;
-        float light = 0.3 + 0.7 * clamp(dot(normal, normalize(vec3(1., 0., 1.))), 0., 1.);
+        float light = 0.4 + 1.7 * clamp(dot(normal, normalize(vec3(-1., 0., 1.))), 0., 1.);
         fragColor = vec4(light * albedo, 1.);
     }
 }
