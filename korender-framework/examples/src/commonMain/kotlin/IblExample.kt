@@ -18,6 +18,7 @@ import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Quaternion
+import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
@@ -27,6 +28,8 @@ import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.exp
@@ -34,7 +37,7 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.random.Random
 
-@OptIn(ExperimentalResourceApi::class)
+@OptIn(ExperimentalResourceApi::class, ExperimentalEncodingApi::class)
 @Composable
 fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
@@ -43,7 +46,7 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
 
     // val metaball = Metaball(20f, 1.0f) { sqrt(it * 0.05f) * (1f - it * 0.05f) * 10f }
-    val metaball = Metaball(20f, 3.0f, 8000, 32) { (it * 0.05f).pow(0.1f) * (1f - it * 0.05f) * 10f }
+    val metaball = Metaball(20f, 3.0f, 8000, 48) { (it * 0.05f).pow(0.1f) * (1f - it * 0.05f) * 10f }
     // val metaball = Metaball(20f, 4.0f, 4096, 32) { (it * 0.05f) * (1f - it * 0.05f) * 20f }
 
 
@@ -60,6 +63,16 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         index(0, 1, 2, 0, 2, 3)
     }
+    val leafInstances = metaball.points.mapIndexed { index, pt ->
+        val quaternion = (0..640)
+            .map { index * 1023 + it }
+            .map { Quaternion.fromAxisAngle(Vec3.random(it), Random(index * 777 + it).nextFloat() * 100f) }
+            .maxBy { (it * 1.z) * pt.n }
+
+            rotate(quaternion)
+                .scale(0.6f)
+                .translate((pt.pos - hull.center))
+    }
 
     Frame {
         projection = frustum(3f * width / height, 3f, 3f, 100f)
@@ -72,36 +85,48 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         // renderTree(leaf, metaball, hull, 20.x)
         // renderHull(hullMesh, 40.x)
 
+        // renderTree(leaf, metaball, hull)
+        // return@Frame
+
+//        CaptureEnv(
+//            probeName = "radiant", resolution = 128, near = 0.2f, far = 30f, insideOut = true,
+//            defs = setOf("RADIANT_CAPTURE")
+//        ) {
+//            renderHull(hullMesh)
+//        }
+
         CaptureEnv(
-            probeName = "radiant", resolution = 128, near = 0.2f, far = 30f, insideOut = true,
-            defs = setOf("RADIANT_CAPTURE")
-        ) {
-            renderHull(hullMesh)
-        }
-        CaptureEnv(
-            probeName = "radiant-normal", resolution = 256, near = 0.2f, far = 30f, insideOut = true,
+            probeName = "radiant-normal", resolution = 128, near = 0.2f, far = 30f, insideOut = true,
             defs = setOf("NORMAL_CAPTURE")
         ) {
             renderHull(hullMesh)
         }
         CaptureEnv(
-            probeName = "normal", resolution = 1024, near = 0.2f, far = 30f, insideOut = true,
+            probeName = "normal", resolution = 128, near = 0.2f, far = 30f, insideOut = true,
             defs = setOf("NORMAL_CAPTURE")
         ) {
-            renderTree(leaf, metaball, hull)
+            renderTree(leaf, leafInstances)
         }
         CaptureEnv(
-            probeName = "albedo", resolution = 512, near = 0.2f, far = 30f, insideOut = true
+            probeName = "albedo", resolution = 256, near = 0.2f, far = 30f, insideOut = true
         ) {
             AmbientLight(white(1f))
-            renderTree(leaf, metaball, hull)
+            renderTree(leaf, leafInstances)
+        }
+
+        if (frameInfo.frame == 5L) {
+            val tNormal: List<Image> = fetchProbeCubeTexture("radiant-normal")
+            tNormal.forEach {
+                val b64 = Base64.encode(it.toTga())
+                println("[$b64]")
+            }
         }
 
         Billboard(
             standart {
-                xscale = 20.0f
-                yscale = 20.0f
-                set("radiantTexture", cubeProbe("radiant"))
+                xscale = 40.0f
+                yscale = 40.0f
+                set("radiantTexture", cubeTexture("holotree/radiant-nx.jpg", "holotree/radiant-ny.jpg", "holotree/radiant-nz.jpg", "holotree/radiant-px.jpg", "holotree/radiant-py.jpg", "holotree/radiant-pz.jpg"))
                 set("radiantNormalTexture", cubeProbe("radiant-normal"))
                 set("colorTexture", cubeProbe("albedo"))
                 set("normalTexture", cubeProbe("normal"))
@@ -110,20 +135,7 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             position = ZERO
         )
 
-        Billboard(
-            standart {
-                xscale = 20.0f
-                yscale = 20.0f
-                set("radiantTexture", cubeProbe("radiant"))
-                set("radiantNormalTexture", cubeProbe("radiant-normal"))
-                set("colorTexture", cubeProbe("albedo"))
-                set("normalTexture", cubeProbe("normal"))
-            },
-            fragment("mpr/mpr.frag"),
-            position = 10.x
-        )
-
-        // Sky(cubeSky(cubeProbe("normal")))
+        Sky(cubeSky(cubeProbe("albedo")))
 
         Gui {
             Column {
@@ -159,31 +171,18 @@ private fun FrameContext.renderMeta(metaball: Metaball, hull: QHMesh, offset: Ve
     }
 }
 
-private fun FrameContext.renderTree(leaf: MeshDeclaration, metaball: Metaball, hull: QHMesh, offset: Vec3 = ZERO) {
+private fun FrameContext.renderTree(leaf: MeshDeclaration, leafInstances: List<Transform>) {
     InstancedRenderables(
         standart {
             baseColorTexture = texture("model/leaf.png")
         },
         mesh = leaf,
         id = "metapoints",
-        transparent = false,
-        count = metaball.points.size,
+        transparent = true,
+        count = leafInstances.size,
         static = true
     ) {
-        metaball.points.forEachIndexed { index, pt ->
-            val quaternion = (0..640)
-                .map { index * 1023 + it }
-                .map { Quaternion.fromAxisAngle(Vec3.random(it), Random(index * 777 + it).nextFloat() * 100f) }
-                .maxBy { (it * 1.z) * pt.n }
-
-            // println(" DOT IZ ${(quaternion * 1.z) * pt.n}")
-
-            Instance(
-                rotate(quaternion)
-                    .scale(0.6f)
-                    .translate(offset + (pt.pos - hull.center))
-            )
-        }
+        leafInstances.forEach { Instance(it) }
     }
 }
 

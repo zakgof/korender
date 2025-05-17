@@ -36,7 +36,8 @@ internal object Rendering {
         deferredShading: Boolean,
         contextUniforms: Map<String, Any?>,
         fixer: (Any?) -> Any?,
-        vararg defs: String
+        defs: Set<String>,
+        reverseZ: Boolean = false
     ) {
         val materialDeclaration = materialDeclaration(declaration.base, deferredShading, *declaration.materialModifiers.toTypedArray(), InternalMaterialModifier { it.shaderDefs += defs })
 
@@ -51,19 +52,21 @@ internal object Rendering {
             // TODO: static
             val instances = mutableListOf<BillboardInstance>();
             DefaultInstancedBillboardsContext(instances).apply(declaration.mesh.block)
+            val sortFactor = if (reverseZ) -1f else 1f
             if (declaration.mesh.transparent) {
-                instances.sortBy { (camera.mat4 * it.pos).z }
+                instances.sortBy { (camera.mat4 * it.pos).z * sortFactor}
             }
             (meshLink.cpuMesh as MultiMesh).updateBillboardInstances(instances)
             meshLink.updateGpu(instances.size * 4,instances.size * 6)
         }
         if (declaration.mesh is InstancedMesh) {
             val mesh = meshLink.cpuMesh as MultiMesh
-            if (!declaration.mesh.static || !mesh.initialized) {
+            if (!declaration.mesh.static || !mesh.initialized || declaration.mesh.transparent) {
                 val instances = mutableListOf<MeshInstance>()
                 DefaultInstancedRenderablesContext(instances).apply(declaration.mesh.block)
+                val sortFactor = if (reverseZ) -1f else 1f
                 if (declaration.mesh.transparent) {
-                    instances.sortBy { (camera.mat4 * it.transform.offset()).z }
+                    instances.sortBy { (camera.mat4 * it.transform.offset()).z * sortFactor}
                 }
                 mesh.updateInstances(instances)
                 meshLink.updateGpu(mesh.prototype.vertexCount * instances.size, mesh.prototype.indexCount * instances.size)

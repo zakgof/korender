@@ -4,9 +4,12 @@ import com.zakgof.korender.Image
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.math.ColorRGBA
 
-internal interface InternalImage : Image {
-
-    val bytes: NativeByteBuffer
+internal class InternalImage(
+    override val width: Int,
+    override val height: Int,
+    val bytes: NativeByteBuffer,
+    override val format: Image.Format
+) : Image {
 
     override fun pixel(x: Int, y: Int): ColorRGBA =
         when (format) {
@@ -70,4 +73,5 @@ internal interface InternalImage : Image {
 
     fun floatToWord(float: Float): Short = (float * 65535).toUInt().toShort()
 
+    override fun toTga(): ByteArray = Tga.encode(width, height, format, bytes)
 }

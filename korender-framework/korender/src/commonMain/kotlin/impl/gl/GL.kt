@@ -169,4 +169,6 @@ expect object GL {
     fun glCheckFramebufferStatus(target: Int): Int
 
     fun glDrawBuffers(vararg targets: Int)
+
+    fun glReadPixels(x:Int, y:Int, width: Int, height: Int, format: Int, type: Int, data: NativeByteBuffer)
 }

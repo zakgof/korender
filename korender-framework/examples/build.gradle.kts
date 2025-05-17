@@ -61,6 +61,7 @@ kotlin {
             implementation(compose.material)
             implementation(compose.ui)
             implementation(compose.components.resources)
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

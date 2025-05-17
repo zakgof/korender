@@ -81,7 +81,8 @@ actual fun Korender(
         }
     }
 
-    SwingPanel(modifier = Modifier.fillMaxSize(),
+    SwingPanel(
+        modifier = Modifier.fillMaxSize(),
         update = {
             val renderLoop: Runnable = object : Runnable {
                 override fun run() {
@@ -182,7 +183,7 @@ internal actual object Platform {
 
     actual fun nanoTime() = System.nanoTime()
 
-    internal actual fun createImage(width: Int, height: Int, format: Image.Format): Image =
+    internal actual fun createImage(width: Int, height: Int, format: Image.Format) =
         image(BufferedImage(width, height, format.toBufferedImageType()))
 
     internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage> =
@@ -274,22 +275,14 @@ internal actual object Platform {
             BufferedImage.TYPE_USHORT_GRAY -> Image.Format.Gray16
             else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
         }
-        return JvmImage(
+        return InternalImage(
             bufferedImage.width,
             bufferedImage.height,
             bytes,
             format
         )
     }
-
 }
-
-internal class JvmImage(
-    override val width: Int,
-    override val height: Int,
-    override val bytes: NativeByteBuffer,
-    override val format: Image.Format
-) : InternalImage
 
 fun Image.Format.toBufferedImageType() = when (this) {
     Image.Format.RGB -> BufferedImage.TYPE_3BYTE_BGR

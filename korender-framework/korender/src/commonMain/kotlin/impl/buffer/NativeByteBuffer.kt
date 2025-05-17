@@ -44,6 +44,10 @@ fun NativeByteBuffer.vec3(index: Int): Vec3 {
     return Vec3(x, y, z)
 }
 
+// TODO: can be optimized ?
+fun NativeByteBuffer.toByteArray(): ByteArray =
+    ByteArray(size()) { byte(it) }
+
 fun NativeByteBuffer.debugBytes(): String =
     (0 until size()).take(1000).map { byte(it) }.toString()
 

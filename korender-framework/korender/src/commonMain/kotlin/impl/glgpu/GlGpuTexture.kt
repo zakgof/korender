@@ -202,15 +202,18 @@ internal class GlGpuTexture(
     )
 
     companion object {
-        fun zeroTex(): GlGpuTexture = GlGpuTexture("zero", object : InternalImage {
-            override val bytes: NativeByteBuffer = NativeByteBuffer(14).apply {
-                put(byteArrayOf(0, 0, 0, 255.toByte(), 0, 0,
-                    0, 255.toByte(), 0, 0, 0, 0, 0, 0))
-                rewind()
-            }
-            override val width = 2
-            override val height = 2
-            override val format = Image.Format.RGB
-        })
+        fun zeroTex(): GlGpuTexture = GlGpuTexture(
+            "zero", InternalImage(
+                2, 2, NativeByteBuffer(14).apply {
+                    put(
+                        byteArrayOf(
+                            0, 0, 0, 255.toByte(), 0, 0,
+                            0, 255.toByte(), 0, 0, 0, 0, 0, 0
+                        )
+                    )
+                    rewind()
+                }, Image.Format.RGB
+            )
+        )
     }
 }

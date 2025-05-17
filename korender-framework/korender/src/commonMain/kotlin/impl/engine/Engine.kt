@@ -146,6 +146,8 @@ internal class Engine(
 
         override fun cubeProbe(probeName: String): CubeTextureDeclaration = ProbeCubeTextureDeclaration(probeName)
 
+        override fun fetchProbeCubeTexture(probeName: String): List<Image> = probes[probeName]!!.fetch()
+
         override fun cube(halfSide: Float): MeshDeclaration = Cube(halfSide)
 
         override fun sphere(radius: Float): MeshDeclaration = Sphere(radius)

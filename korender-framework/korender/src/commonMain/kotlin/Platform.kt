@@ -9,7 +9,7 @@ internal expect object Platform {
 
     val target: KorenderContext.TargetPlatform
 
-    internal fun createImage(width: Int, height: Int, format: Image.Format): Image
+    internal fun createImage(width: Int, height: Int, format: Image.Format): InternalImage
 
     internal fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage>
 

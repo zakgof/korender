@@ -218,43 +218,49 @@ internal class Scene(
         uniforms["depthTexture"] = geometryBuffer.depthTexture!!
     }
 
-    private fun renderBucket(uniforms: Map<String, Any?>, bucket: Bucket, vararg defs: String) {
+    private fun renderBucket(uniforms: Map<String, Any?>, bucket: Bucket, defs: Set<String> = setOf()) {
         sceneDeclaration.renderables
             .filter { it.bucket == bucket }
             .forEach {
                 Rendering.render(
-                    inventory, it, renderContext.camera, deferredShading, uniforms, fixer, *defs
+                    inventory, it, renderContext.camera, deferredShading, uniforms, fixer, defs
                 )
             }
     }
 
-    private fun renderForwardOpaques(uniforms: Map<String, Any?>, w: Int, h: Int, vararg defs: String, stateFix: GlState.StateContext.() -> Unit = {}) {
+    private fun renderForwardOpaques(uniforms: Map<String, Any?>, w: Int, h: Int, defs: Set<String> = setOf(), insideOut: Boolean = false) {
         renderContext.state.set {
             clearColor(renderContext.backgroundColor.toRGBA())
-            stateFix()
+            if (insideOut) {
+                cullFaceMode(GL_FRONT)
+                depthFunc(GL_GEQUAL)
+                clearDepth(0.0f)
+            }
         }
         glViewport(0, 0, w, h)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-        renderBucket(uniforms, Bucket.OPAQUE, *defs)
-        renderBucket(uniforms, Bucket.SKY, *defs)
+        renderBucket(uniforms, Bucket.OPAQUE, defs)
+        renderBucket(uniforms, Bucket.SKY, defs)
     }
 
-    private fun renderTransparents(uniforms: MutableMap<String, Any?>, camera: Camera, stateFix: GlState.StateContext.() -> Unit = {}) {
+    private fun renderTransparents(uniforms: MutableMap<String, Any?>, camera: Camera, defs: Set<String> = setOf(), insideOut: Boolean = false) {
         renderContext.state.set {
             depthMask(false)
-            stateFix()
+            if (insideOut) {
+                cullFaceMode(GL_FRONT)
+                depthFunc(GL_GEQUAL)
+            }
         }
+        val reverse = if (insideOut) -1f else 1f
         sceneDeclaration.renderables
             .filter { it.bucket == Bucket.TRANSPARENT }
-            .sortedByDescending { (camera.mat4 * it.transform.offset()).z }
+            .sortedByDescending { (camera.mat4 * it.transform.offset()).z * reverse }
             .forEach {
-                Rendering.render(
-                    inventory, it, camera, deferredShading,
-                    uniforms, fixer
-                )
+                Rendering.render(inventory, it, camera, deferredShading,
+                    uniforms, fixer, defs, insideOut)
             }
 
-        renderBucket(uniforms, Bucket.SCREEN)
+        renderBucket(uniforms, Bucket.SCREEN, defs)
         guiRenderers.flatMap { it.renderables }.forEach {
             it.render(uniforms, fixer)
         }
@@ -355,15 +361,8 @@ internal class Scene(
             probeUniforms["cameraPos"] = it.value.position
             probeUniforms["cameraDir"] = it.value.direction
             probeFb.exec(it.key) {
-
-                val stateFix : GlState.StateContext.() -> Unit = if (captureContext.insideOut) ({
-                    cullFaceMode(GL_FRONT)
-                    depthFunc(GL_GEQUAL)
-                    clearDepth(0.0f)
-                }) else ({})
-
-                renderForwardOpaques(probeUniforms, captureContext.resolution, captureContext.resolution, *captureContext.defs.toTypedArray(), stateFix = stateFix)
-                renderTransparents(probeUniforms, it.value, stateFix = stateFix)
+                renderForwardOpaques(probeUniforms, captureContext.resolution, captureContext.resolution, captureContext.defs, captureContext.insideOut)
+                renderTransparents(probeUniforms, it.value, captureContext.defs, captureContext.insideOut)
             }
         }
         probeFb.finish()

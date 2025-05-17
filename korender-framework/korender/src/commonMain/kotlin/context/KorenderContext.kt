@@ -5,7 +5,6 @@ import com.zakgof.korender.BaseParams
 import com.zakgof.korender.BloomParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
-import com.zakgof.korender.Mesh
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
@@ -17,6 +16,7 @@ import com.zakgof.korender.Image
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KeyHandler
 import com.zakgof.korender.MaterialModifier
+import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
@@ -69,6 +69,7 @@ interface KorenderContext {
     ): CubeTextureDeclaration
 
     fun cubeProbe(probeName: String): CubeTextureDeclaration
+    fun fetchProbeCubeTexture(probeName: String): List<Image>
 
     fun cube(halfSide: Float = 0.5f): MeshDeclaration
     fun sphere(radius: Float = 1.0f): MeshDeclaration

@@ -27,7 +27,7 @@ void main() {
         float cl = length(ctop);
         dir = ctop/cl;
 
-        float radiant = 10.0 * texture(radiantTexture, dir).r;
+        float radiant = 16.0 * texture(radiantTexture, dir).r;
         n = texture(radiantNormalTexture, dir).rgb * 2. - 1.;
 
         diff = cl - radiant;
@@ -39,7 +39,7 @@ void main() {
         p = p + look * lambda;
     }
     fragColor = vec4(0.);
-    if (diff < 0.008) {
+    if (diff < 0.1) {
         vec3 normal = texture(normalTexture, dir).rgb * 2. - 1.;
         vec3 albedo = texture(colorTexture, dir).rgb;
         float light = 0.4 + 1.7 * clamp(dot(normal, normalize(vec3(-1., 0., 1.))), 0., 1.);

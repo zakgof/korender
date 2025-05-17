@@ -220,4 +220,7 @@ actual object GL {
 
     actual fun glDrawBuffers(vararg targets: Int) =
         GL30.glDrawBuffers(targets)
+
+    actual fun glReadPixels(x:Int, y:Int, width: Int, height: Int, format: Int, type: Int, data: NativeByteBuffer) =
+        GL11.glReadPixels(x, y, width, height, format, type, data.byteBuffer)
 }

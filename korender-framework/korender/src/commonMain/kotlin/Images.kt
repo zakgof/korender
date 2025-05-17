@@ -19,4 +19,5 @@ interface Image {
         Gray16
     }
 
+    fun toTga(): ByteArray
 }

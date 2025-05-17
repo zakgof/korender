@@ -2,17 +2,27 @@ package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.Image
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.Platform
 import com.zakgof.korender.impl.gl.GL
 import com.zakgof.korender.impl.gl.GL.glActiveTexture
+import com.zakgof.korender.impl.gl.GL.glBindFramebuffer
 import com.zakgof.korender.impl.gl.GL.glBindTexture
+import com.zakgof.korender.impl.gl.GL.glCheckFramebufferStatus
+import com.zakgof.korender.impl.gl.GL.glDeleteFramebuffers
+import com.zakgof.korender.impl.gl.GL.glFramebufferTexture2D
+import com.zakgof.korender.impl.gl.GL.glGenFramebuffers
 import com.zakgof.korender.impl.gl.GL.glGenTextures
 import com.zakgof.korender.impl.gl.GL.glGenerateMipmap
 import com.zakgof.korender.impl.gl.GL.glGetError
 import com.zakgof.korender.impl.gl.GL.glGetFloatv
+import com.zakgof.korender.impl.gl.GL.glReadPixels
 import com.zakgof.korender.impl.gl.GL.glTexImage2D
 import com.zakgof.korender.impl.gl.GL.glTexParameteri
 import com.zakgof.korender.impl.gl.GLConstants
 import com.zakgof.korender.impl.gl.GLConstants.GL_CLAMP_TO_EDGE
+import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_ATTACHMENT0
+import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER
+import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER_COMPLETE
 import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_TEXTURE_MAX_ANISOTROPY
 import com.zakgof.korender.impl.gl.GLConstants.GL_R16
 import com.zakgof.korender.impl.gl.GLConstants.GL_R8
@@ -43,6 +53,11 @@ internal class GlGpuCubeTexture : AutoCloseable {
 
     val glHandle: GLTexture = glGenTextures()
 
+    private var width: Int? = null
+    private var height: Int? = null
+    private var format: Image.Format? = null
+    private var glFormat: GlGpuTexture.GlFormat? = null
+
     val sides = listOf(
         GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
         GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
@@ -59,6 +74,13 @@ internal class GlGpuCubeTexture : AutoCloseable {
         Image.Format.Gray16 to GlGpuTexture.GlFormat(GL_R16, GL_RED, GL_UNSIGNED_SHORT)
     )
 
+    private val backFormatMap = mapOf(
+        GL_RGBA to Image.Format.RGBA,
+        GL_RGB to Image.Format.RGB,
+        GL_R8 to Image.Format.Gray,
+        GL_R16 to Image.Format.Gray16
+    )
+
     constructor(
         imageNx: InternalImage,
         imageNy: InternalImage,
@@ -71,6 +93,11 @@ internal class GlGpuCubeTexture : AutoCloseable {
         println("Creating GPU Cube Texture $this")
 
         glBindTexture(GL_TEXTURE_CUBE_MAP, glHandle)
+
+        width = imageNx.width
+        height = imageNx.height
+        format = imageNx.format
+        glFormat = formatMap[format]!!
 
         loadSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, imageNx)
         loadSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, imageNy)
@@ -129,6 +156,12 @@ internal class GlGpuCubeTexture : AutoCloseable {
                 println("Could not create a cube texture with format 0x${glFormat.internal.toHexString()}. Falling back to next format when creating texture")
                 continue
             }
+            if (glSide == GL_TEXTURE_CUBE_MAP_NEGATIVE_X) {
+                this.width = width
+                this.height = height
+                this.glFormat = glFormat
+                this.format = backFormatMap[glFormat.format]
+            }
             return
         }
         throw KorenderException("Could not create GL texture")
@@ -145,4 +178,26 @@ internal class GlGpuCubeTexture : AutoCloseable {
     }
 
     override fun toString() = "$glHandle"
+
+    fun fetch(): List<Image> {
+        val fb = glGenFramebuffers()
+        glBindFramebuffer(GL_FRAMEBUFFER, fb)
+
+        val images = sides.map {
+            // Attach cube face to framebuffer
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, it, glHandle, 0)
+            val status = glCheckFramebufferStatus(GL_FRAMEBUFFER)
+            if (status != GL_FRAMEBUFFER_COMPLETE) {
+                throw KorenderException("Framebuffer not complete for face $it: status=$status")
+            }
+            val img = Platform.createImage(width!!, height!!, format!!)
+            glReadPixels(0, 0, width!!, height!!, glFormat!!.format, GL_UNSIGNED_BYTE, img.bytes)
+            img
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, null)
+        glDeleteFramebuffers(fb)
+
+        return images
+    }
 }
