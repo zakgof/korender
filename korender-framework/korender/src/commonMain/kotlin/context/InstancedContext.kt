@@ -8,7 +8,7 @@ interface InstancingDeclaration {
 }
 
 interface InstancedBillboardsContext {
-    fun Instance(pos: Vec3, scale: Vec2 = Vec2.ZERO, rotation: Float = 0f)
+    fun Instance(pos: Vec3, scale: Vec2 = Vec2(1f, 1f), rotation: Float = 0f)
 }
 
 interface InstancedRenderablesContext {

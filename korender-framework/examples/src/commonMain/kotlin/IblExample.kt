@@ -5,12 +5,9 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
-import com.zakgof.korender.CubeTextureDeclaration
-import com.zakgof.korender.Image
 import com.zakgof.korender.Korender
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.context.FrameContext
-import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.examples.qhull.QHMesh
 import com.zakgof.korender.examples.qhull.QuickHull
@@ -24,14 +21,11 @@ import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.Vec3.Companion.ZERO
-import com.zakgof.korender.math.x
-import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.math.abs
 import kotlin.math.cos
-import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.random.Random
@@ -112,18 +106,18 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             renderTree(leaf, leafInstances)
         }
 
-        Billboard(
-            standart {
-                xscale = 40.0f
-                yscale = 40.0f
-                set("radiantTexture", cubeTexture("holotree/radiant-nx.jpg", "holotree/radiant-ny.jpg", "holotree/radiant-nz.jpg", "holotree/radiant-px.jpg", "holotree/radiant-py.jpg", "holotree/radiant-pz.jpg"))
-                set("radiantNormalTexture", cubeProbe("radiant-normal"))
-                set("colorTexture", cubeProbe("albedo"))
-                set("normalTexture", cubeProbe("normal"))
-            },
-            fragment("mpr/mpr.frag"),
-            position = ZERO
-        )
+//        Billboard(
+//            standart {
+//                xscale = 40.0f
+//                yscale = 40.0f
+//                set("radiantTexture", cubeTexture("holotree/radiant-nx.jpg", "holotree/radiant-ny.jpg", "holotree/radiant-nz.jpg", "holotree/radiant-px.jpg", "holotree/radiant-py.jpg", "holotree/radiant-pz.jpg"))
+//                set("radiantNormalTexture", cubeProbe("radiant-normal"))
+//                set("colorTexture", cubeProbe("albedo"))
+//                set("normalTexture", cubeProbe("normal"))
+//            },
+//            fragment("mpr/mpr.frag"),
+//            position = ZERO
+//        )
 
         Sky(cubeSky(cubeProbe("albedo")))
 
@@ -210,66 +204,4 @@ class Metaball(
 
     class Sphere(val r: Float, val pos: Vec3)
     class Pt(val pos: Vec3, val n: Vec3)
-}
-
-class SupportFunctionCalculator(private val kc: KorenderContext, points: List<Vec3>, private val size: Int, private val far: Float) {
-
-
-    private val hull = QuickHull(points).run()
-
-    fun cubeTexture(): CubeTextureDeclaration {
-
-        val hullIndexes = hull.points.indices.toMutableList()
-
-        val cameras = listOf(
-            listOf(-1.x, -1.y),
-            listOf(-1.y, -1.z),
-            listOf(-1.z, -1.y),
-            listOf(1.x, -1.y),
-            listOf(1.y, 1.z),
-            listOf(1.z, -1.y)
-        )
-        val faces = cameras.map { renderFace(it[0], it[1], hullIndexes) }
-        return kc.cubeTexture("support", faces[0], faces[1], faces[2], faces[3], faces[4], faces[5])
-
-    }
-
-    private fun renderFace(look: Vec3, up: Vec3, hullIndexes: MutableList<Int>): Image {
-        val right = (look % up).normalize()
-        val image = kc.createImage(size, size, Image.Format.RGBA)
-        (0 until size).forEach { x ->
-            (0 until size).forEach { y ->
-                val dir = (
-                        look +
-                                right * (-1.0f + 2.0f * (x + 0.5f) / size) +
-                                up * (-1.0f + 2.0f * (y + 0.5f) / size)
-                        ).normalize()
-
-                hullIndexes.sortBy {
-                    val r = hull.points[it].pos
-                    if (r * dir > 0f) (dir * (r * dir) - r).lengthSquared() else 1e9f
-                }
-                val wcnt = 21
-                val nearestPoints = (0 until wcnt).map { hullIndexes[it] }.map { hull.points[it] }
-                val weights = nearestPoints
-                    .map { (dir * (it.pos * dir) - it.pos).length() }
-                    .map { exp(-0.4f * it) }
-                val norma = 1f / weights.sum()
-                val radiant = nearestPoints.indices.sumOf { (nearestPoints[it].pos.length() * weights[it] * norma).toDouble() }.toFloat()
-                val normal = nearestPoints.indices.map { nearestPoints[it].normal * weights[it] }.fold(ZERO) { a, i -> a + i }.normalize()
-
-                image.setPixel(
-                    x, y, ColorRGBA(
-                        (normal.x + 1f) * 0.5f,
-                        (normal.y + 1f) * 0.5f,
-                        (normal.z + 1f) * 0.5f,
-                        radiant / far
-                    )
-                )
-            }
-            println("$x")
-        }
-        return image
-    }
-
 }

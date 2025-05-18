@@ -2,18 +2,22 @@
 
 in vec3 vcenter;
 in vec3 vpos;
+in vec2 vsize;
 
 uniform samplerCube radiantTexture;
 uniform samplerCube radiantNormalTexture;
 uniform samplerCube colorTexture;
 uniform samplerCube normalTexture;
 uniform vec3 cameraPos;
+uniform mat4 projection;
+uniform mat4 view;
 
 out vec4 fragColor;
 
 
 void main() {
 
+    float radius = vsize.x * 0.5;
     vec3 look = normalize(vpos - cameraPos);
 
     vec3 p = cameraPos;
@@ -27,22 +31,26 @@ void main() {
         float cl = length(ctop);
         dir = ctop/cl;
 
-        float radiant = 5.0 * texture(radiantTexture, dir).r;
+        float radiant = radius * texture(radiantTexture, dir).r;
         n = texture(radiantNormalTexture, dir).rgb * 2. - 1.;
 
         diff = cl - radiant;
         float lambda = - diff * dot (n, dir) / dot(n, look);
         if (i > 0) {
-            lambda = clamp(lambda, -0.05 * 20.0 /i, 1.5 * 20.0 /i);
+            lambda = clamp(lambda, -0.05 * radius/float(i), 1.5 * radius /float(i));
         }
 
         p = p + look * lambda;
     }
-    fragColor = vec4(0.);
-    if (diff < 0.1) {
+    if (diff < 0.01 * radius) {
         vec3 normal = texture(normalTexture, dir).rgb * 2. - 1.;
         vec3 albedo = texture(colorTexture, dir).rgb;
-        float light = 0.4 + 1.7 * clamp(dot(normal, normalize(vec3(-1., 0., 1.))), 0., 1.);
+        float light = 0.4 + 1.7 * clamp(dot(normal, normalize(-vec3(-1., 0., 1.))), 0., 1.);
         fragColor = vec4(light * albedo, 1.);
+
+        vec4 vclip = projection * (view * vec4(p, 1.0));
+        gl_FragDepth = 0.5 * vclip.z / vclip.w + 0.5;
+    } else {
+        discard;
     }
 }

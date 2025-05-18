@@ -49,15 +49,17 @@ internal object Rendering {
             meshLink.updateGpu()
         }
         if (declaration.mesh is InstancedBillboard) {
-            // TODO: static
-            val instances = mutableListOf<BillboardInstance>();
-            DefaultInstancedBillboardsContext(instances).apply(declaration.mesh.block)
-            val sortFactor = if (reverseZ) -1f else 1f
-            if (declaration.mesh.transparent) {
-                instances.sortBy { (camera.mat4 * it.pos).z * sortFactor}
+            val mesh = meshLink.cpuMesh as MultiMesh
+            if (!declaration.mesh.static || !mesh.initialized || declaration.mesh.transparent) {
+                val instances = mutableListOf<BillboardInstance>();
+                DefaultInstancedBillboardsContext(instances).apply(declaration.mesh.block)
+                val sortFactor = if (reverseZ) -1f else 1f
+                if (declaration.mesh.transparent) {
+                    instances.sortBy { (camera.mat4 * it.pos).z * sortFactor }
+                }
+                (meshLink.cpuMesh as MultiMesh).updateBillboardInstances(instances)
+                meshLink.updateGpu(instances.size * 4, instances.size * 6)
             }
-            (meshLink.cpuMesh as MultiMesh).updateBillboardInstances(instances)
-            meshLink.updateGpu(instances.size * 4,instances.size * 6)
         }
         if (declaration.mesh is InstancedMesh) {
             val mesh = meshLink.cpuMesh as MultiMesh

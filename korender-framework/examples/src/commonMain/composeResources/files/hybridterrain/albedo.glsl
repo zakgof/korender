@@ -4,13 +4,13 @@ uniform int roiCount;
 
 vec4 roi(vec2 uv) {
     vec4 color = vec4(0.);
-    for (int r=0; r<roiCount; r++) {
-        vec3 r3 = roiuvs[r];
-        vec2 roiuv = (uv - r3.xy) / r3.z;
-        if (roiuv.x >= 0.0 && roiuv.x <= 1.0 && roiuv.y >= 0.0 && roiuv.y <= 1.0) {
-            color += texture(roiTextures[r], roiuv);
-        }
-    }
+//    for (int r=0; r<roiCount; r++) {
+//        vec3 r3 = roiuvs[r];
+//        vec2 roiuv = (uv - r3.xy) / r3.z;
+//        if (roiuv.x >= 0.0 && roiuv.x <= 1.0 && roiuv.y >= 0.0 && roiuv.y <= 1.0) {
+//            color += texture(roiTextures[r], roiuv);
+//        }
+//    }
     return color;
 }
 
@@ -43,9 +43,11 @@ vec4 pluginAlbedo(vec2 tex, vec3 pos, vec3 normal, vec4 albedo) {
 
     vec4 tx = texture(sdf, tex);
     float v = (tx.r - 0.5) * 2.0 * 6.0 / 128.0;
+
+    vec4 finalColor = vec4(mix(color + 0.25, roiColor.rgb, roiColor.a), 1.0);
     if (abs(v) < 0.001) {
-        return texture(road, vec2(0.5 + v / 0.001, tx.b));
+        finalColor = texture(road, vec2(0.5 + v / 0.001, tx.b));
     }
 
-    return vec4(mix(color + 0.25, roiColor.rgb, roiColor.a), 1.0);
+    return finalColor;
 }

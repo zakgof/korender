@@ -29,6 +29,7 @@ internal data class InstancedMesh(
 internal data class InstancedBillboard(
     val id: Any,
     val count: Int,
+    val static: Boolean,
     val transparent: Boolean,
     val block: InstancedBillboardsContext.() -> Unit
 ) : MeshDeclaration {

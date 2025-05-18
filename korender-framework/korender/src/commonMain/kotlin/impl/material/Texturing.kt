@@ -1,7 +1,9 @@
 package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.CubeTextureDeclaration
-import com.zakgof.korender.Image
+import com.zakgof.korender.CubeTextureImages
+import com.zakgof.korender.CubeTextureResources
+import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Platform
 import com.zakgof.korender.ResourceLoader
@@ -49,15 +51,11 @@ internal object Texturing {
     }
 
     suspend fun cube(decl: ResourceCubeTextureDeclaration, appResourceLoader: ResourceLoader): GlGpuCubeTexture {
-        val images = listOf(
-            toImage(appResourceLoader, decl.nxResource),
-            toImage(appResourceLoader, decl.nyResource),
-            toImage(appResourceLoader, decl.nzResource),
-            toImage(appResourceLoader, decl.pxResource),
-            toImage(appResourceLoader, decl.pyResource),
-            toImage(appResourceLoader, decl.pzResource)
-        ).awaitAll()
-        return GlGpuCubeTexture(images[0], images[1], images[2], images[3], images[4], images[5])
+        val images = CubeTextureSide.entries
+            .map { toImage(appResourceLoader, decl.resources[it]!!) }
+            .awaitAll()
+            .let { CubeTextureSide.entries.zip(it).toMap() }
+        return GlGpuCubeTexture(images)
     }
 
     private suspend fun toImage(appResourceLoader: ResourceLoader, resource: String): Deferred<InternalImage> {
@@ -67,14 +65,7 @@ internal object Texturing {
     }
 
     fun cube(decl: ImageCubeTextureDeclaration): GlGpuCubeTexture =
-        GlGpuCubeTexture(
-            decl.nxImage as InternalImage,
-            decl.nyImage as InternalImage,
-            decl.nzImage as InternalImage,
-            decl.pxImage as InternalImage,
-            decl.pyImage as InternalImage,
-            decl.pzImage as InternalImage
-        )
+        GlGpuCubeTexture(decl.images)
 
 }
 
@@ -112,23 +103,11 @@ internal class ByteArrayTextureDeclaration(
     override fun hashCode(): Int = id.hashCode()
 }
 
-internal data class ResourceCubeTextureDeclaration(
-    val nxResource: String,
-    val nyResource: String,
-    val nzResource: String,
-    val pxResource: String,
-    val pyResource: String,
-    val pzResource: String
-) : CubeTextureDeclaration
+internal data class ResourceCubeTextureDeclaration(val resources: CubeTextureResources) : CubeTextureDeclaration
 
 internal class ImageCubeTextureDeclaration(
     val id: String,
-    val nxImage: Image,
-    val nyImage: Image,
-    val nzImage: Image,
-    val pxImage: Image,
-    val pyImage: Image,
-    val pzImage: Image
+    val images: CubeTextureImages
 ) : CubeTextureDeclaration {
     override fun equals(other: Any?): Boolean =
         (other is ImageCubeTextureDeclaration && other.id == id)

@@ -1,5 +1,7 @@
 package com.zakgof.korender.impl.glgpu
 
+import com.zakgof.korender.CubeTextureImages
+import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.Image
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Platform
@@ -81,30 +83,20 @@ internal class GlGpuCubeTexture : AutoCloseable {
         GL_R16 to Image.Format.Gray16
     )
 
-    constructor(
-        imageNx: InternalImage,
-        imageNy: InternalImage,
-        imageNz: InternalImage,
-        imagePx: InternalImage,
-        imagePy: InternalImage,
-        imagePz: InternalImage,
-    ) {
+    constructor(images: CubeTextureImages) {
 
         println("Creating GPU Cube Texture $this")
 
         glBindTexture(GL_TEXTURE_CUBE_MAP, glHandle)
 
-        width = imageNx.width
-        height = imageNx.height
-        format = imageNx.format
+        width = images[CubeTextureSide.NX]!!.width
+        height = images[CubeTextureSide.NX]!!.height
+        format = images[CubeTextureSide.NX]!!.format
         glFormat = formatMap[format]!!
 
-        loadSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, imageNx)
-        loadSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, imageNy)
-        loadSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, imageNz)
-        loadSide(GL_TEXTURE_CUBE_MAP_POSITIVE_X, imagePx)
-        loadSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, imagePy)
-        loadSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, imagePz)
+        sides.forEachIndexed{ index, glSide ->
+            loadSide(glSide, images[CubeTextureSide.entries[index]]!! as InternalImage)
+        }
 
         setupFiltering(GlGpuTexture.Preset.RGBFilter)
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP)
@@ -179,21 +171,21 @@ internal class GlGpuCubeTexture : AutoCloseable {
 
     override fun toString() = "$glHandle"
 
-    fun fetch(): List<Image> {
+    fun fetch(): CubeTextureImages {
         val fb = glGenFramebuffers()
         glBindFramebuffer(GL_FRAMEBUFFER, fb)
 
-        val images = sides.map {
+        val images = sides.mapIndexed() { index, side ->
             // Attach cube face to framebuffer
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, it, glHandle, 0)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, side, glHandle, 0)
             val status = glCheckFramebufferStatus(GL_FRAMEBUFFER)
             if (status != GL_FRAMEBUFFER_COMPLETE) {
-                throw KorenderException("Framebuffer not complete for face $it: status=$status")
+                throw KorenderException("Framebuffer not complete for face $side: status=$status")
             }
             val img = Platform.createImage(width!!, height!!, format!!)
             glReadPixels(0, 0, width!!, height!!, glFormat!!.format, GL_UNSIGNED_BYTE, img.bytes)
-            img
-        }
+            CubeTextureSide.entries[index] to img
+        }.toMap()
 
         glBindFramebuffer(GL_FRAMEBUFFER, null)
         glDeleteFramebuffers(fb)

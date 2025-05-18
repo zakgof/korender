@@ -43,13 +43,6 @@ import org.w3c.dom.get
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-internal class WasmImage(
-    override val width: Int,
-    override val height: Int,
-    override val bytes: NativeByteBuffer,
-    override val format: Image.Format = Image.Format.RGBA
-) : InternalImage
-
 internal actual object Platform {
 
     actual val target = KorenderContext.TargetPlatform.Web
@@ -97,10 +90,11 @@ internal actual object Platform {
             )
             val uint8ClampedArray: Uint8ClampedArray = imageData.data
             val uint8Array = Uint8Array(uint8ClampedArray.buffer, uint8ClampedArray.byteOffset, uint8ClampedArray.length)
-            val image = WasmImage(
+            val image = InternalImage(
                 ctx.canvas.width,
                 ctx.canvas.height,
-                NativeByteBuffer(uint8Array)
+                NativeByteBuffer(uint8Array),
+                Image.Format.RGBA
             )
             FontDef(image, widths)
         }
@@ -130,9 +124,20 @@ internal actual object Platform {
             )
             val uint8ClampedArray: Uint8ClampedArray = imageData.data
             val uint8Array = Uint8Array(uint8ClampedArray.buffer, uint8ClampedArray.byteOffset, uint8ClampedArray.length)
-            result.complete(WasmImage(imageData.width, imageData.height, NativeByteBuffer(uint8Array)))
+            result.complete(InternalImage(imageData.width, imageData.height, NativeByteBuffer(uint8Array), Image.Format.RGBA))
         }
         return result
+    }
+
+    actual fun createImage(width: Int, height: Int, format: Image.Format): InternalImage {
+        val pixelBytes = when(format) {
+            Image.Format.RGB -> 3
+            Image.Format.RGBA -> 4
+            Image.Format.Gray -> 1
+            Image.Format.Gray16 -> 2
+        }
+        val buffer = NativeByteBuffer(width * height * pixelBytes)
+        return InternalImage(width, height, buffer, format)
     }
 
     actual fun nanoTime(): Long =

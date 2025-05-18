@@ -85,11 +85,11 @@ internal class DefaultFrameContext(
             )
     }
 
-    override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, transparent: Boolean, block: InstancedBillboardsContext.() -> Unit) {
+    override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, static: Boolean, transparent: Boolean, block: InstancedBillboardsContext.() -> Unit) {
         sceneDeclaration.renderables +=
             RenderableDeclaration(
                 BaseMaterial.Billboard, materialModifiers.asList(),
-                InstancedBillboard(id, count, transparent, block),
+                InstancedBillboard(id, count, static, transparent, block),
                 transform = Transform(),
                 if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE
             )

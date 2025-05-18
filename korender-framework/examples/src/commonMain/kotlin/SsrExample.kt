@@ -2,6 +2,7 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
+import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.Korender
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.math.ColorRGB.Companion.white
@@ -15,14 +16,7 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
-    val env = cubeTexture(
-        "cube/room/nx.jpg",
-        "cube/room/ny.jpg",
-        "cube/room/nz.jpg",
-        "cube/room/px.jpg",
-        "cube/room/py.jpg",
-        "cube/room/pz.jpg"
-    )
+    val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })
     Frame {
         val phase = frameInfo.time.toInt() % 3
         DeferredShading {

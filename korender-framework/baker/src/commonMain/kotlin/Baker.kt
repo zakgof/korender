@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
-import com.zakgof.korender.Image
+import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.Korender
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.baker.resources.Res
@@ -98,21 +98,20 @@ fun Baker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             standart {
                 xscale = 10.0f
                 yscale = 10.0f
-                set("radiantTexture", cubeTexture("radiant", radiantImages[0], radiantImages[1], radiantImages[2], radiantImages[3], radiantImages[4], radiantImages[5]))
-                set("radiantNormalTexture", cubeTexture("radiant-normal", radiantNormalImages[0], radiantNormalImages[1], radiantNormalImages[2], radiantNormalImages[3], radiantNormalImages[4], radiantNormalImages[5]))
-                set("colorTexture", cubeTexture("albedo", albedoImages[0], albedoImages[1], albedoImages[2], albedoImages[3], albedoImages[4], albedoImages[5]))
-                set("normalTexture", cubeTexture("normal", normalImages[0], normalImages[1], normalImages[2], normalImages[3], normalImages[4], normalImages[5]))
+                set("radiantTexture", cubeTexture("radiant", radiantImages))
+                set("radiantNormalTexture", cubeTexture("radiant-normal", radiantNormalImages))
+                set("colorTexture", cubeTexture("albedo", albedoImages))
+                set("normalTexture", cubeTexture("normal", normalImages))
             },
             fragment("!shader/effect/radial.frag"),
             position = ZERO
         )
     }
-
 }
 
-fun saveCubeMap(images: List<Image>, pathPrefix: String) {
-    val suffixes = listOf("nx", "ny", "nz", "px", "py", "pz")
-    images.mapIndexed { index, img ->
+fun saveCubeMap(images: CubeTextureImages, pathPrefix: String) {
+    images.entries.map {
+        val img = it.value
         val bytes = img.toRaw()
         val bi = BufferedImage(img.width, img.height, TYPE_INT_RGB)
         val raster = bi.raster
@@ -125,7 +124,7 @@ fun saveCubeMap(images: List<Image>, pathPrefix: String) {
                 raster.setPixel(x, y, pixel)
             }
         }
-        ImageIO.write(bi, "jpg", File("${pathPrefix}${suffixes[index]}.jpg"))
+        ImageIO.write(bi, "jpg", File("${pathPrefix}${it.key.toString().lowercase()}.jpg"))
     }
 }
 

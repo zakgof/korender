@@ -20,7 +20,7 @@ interface FrameContext : KorenderContext {
     fun Sky(vararg materialModifiers: MaterialModifier)
     fun Gui(block: GuiContainerContext.() -> Unit)
     fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: Any, count: Int, mesh: MeshDeclaration, static: Boolean = false, transparent: Boolean = false, block: InstancedRenderablesContext.() -> Unit)
-    fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, transparent: Boolean = false, block: InstancedBillboardsContext.() -> Unit)
+    fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, static: Boolean = false, transparent: Boolean = false, block: InstancedBillboardsContext.() -> Unit)
     fun Gltf(resource: String, animation:Int = 0, transform: Transform = Transform(), time: Float? = null)
 
     fun PostProcess(vararg materialModifiers: MaterialModifier)

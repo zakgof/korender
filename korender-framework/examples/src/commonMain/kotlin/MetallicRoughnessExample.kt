@@ -2,6 +2,7 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
+import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.Korender
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
@@ -13,14 +14,7 @@ import kotlin.math.max
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun MetallicRoughnessExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
-    val env = cubeTexture(
-        "cube/room/nx.jpg",
-        "cube/room/ny.jpg",
-        "cube/room/nz.jpg",
-        "cube/room/px.jpg",
-        "cube/room/py.jpg",
-        "cube/room/pz.jpg"
-    )
+    val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })
     Frame {
         projection = frustum(width = 3f * width / height, height = 3f, near = 3f, far = 1000f)
         Sky(cubeSky(env))

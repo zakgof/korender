@@ -20,6 +20,10 @@ actual class NativeByteBuffer(val array: Uint8Array) {
         array[position++] = v
     }
 
+    actual operator fun set(index: Int, byte: Byte) {
+        array[index] = byte
+    }
+
     actual fun put(v: Short) {
         val vi = v.toInt()
         put((vi and 0xFF).toByte())

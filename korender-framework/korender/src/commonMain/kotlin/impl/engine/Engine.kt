@@ -7,6 +7,8 @@ import com.zakgof.korender.BloomParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.CubeTextureDeclaration
+import com.zakgof.korender.CubeTextureImages
+import com.zakgof.korender.CubeTextureResources
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
@@ -139,26 +141,24 @@ internal class Engine(
         override fun texture(textureResource: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureDeclaration =
             ResourceTextureDeclaration(textureResource, filter, wrap, aniso)
 
-        override fun cubeTexture(nxResource: String, nyResource: String, nzResource: String, pxResource: String, pyResource: String, pzResource: String): CubeTextureDeclaration =
-            ResourceCubeTextureDeclaration(nxResource, nyResource, nzResource, pxResource, pyResource, pzResource)
+        override fun cubeTexture(resources: CubeTextureResources) = ResourceCubeTextureDeclaration(resources)
 
-        override fun cubeTexture(id: String, nxImage: Image, nyImage: Image, nzImage: Image, pxImage: Image, pyImage: Image, pzImage: Image): CubeTextureDeclaration =
-            ImageCubeTextureDeclaration(id, nxImage, nyImage, nzImage, pxImage, pyImage, pzImage)
+        override fun cubeTexture(id: String, images: CubeTextureImages) = ImageCubeTextureDeclaration(id, images)
 
         override fun cubeProbe(probeName: String): CubeTextureDeclaration = ProbeCubeTextureDeclaration(probeName)
 
-        override fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3, insideOut: Boolean, defs: Set<String>, block: FrameContext.() -> Unit): List<Image> {
+        override fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3, insideOut: Boolean, defs: Set<String>, block: FrameContext.() -> Unit): CubeTextureImages {
             val sd = SceneDeclaration()
             block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f)))
-            val images = mutableListOf<Image>()
+            var images: CubeTextureImages? = null
             inventory.go {
                 val scene = Scene(sd, inventory, renderContext, probes)
                 val uniforms = mutableMapOf<String, Any?>()
                 renderContext.uniforms(uniforms)
                 val cubeTexture = scene.renderToEnv(uniforms, CaptureContext(resolution, position, near, far, insideOut, defs, sd), "#immediate")
-                images += cubeTexture.fetch()
+                images = cubeTexture.fetch()
             }
-            return images
+            return images!!
         }
 
         override fun cube(halfSide: Float): MeshDeclaration = Cube(halfSide)
@@ -318,14 +318,15 @@ internal class Engine(
         override fun ssr(width: Int?, height: Int?, fxaa: Boolean, block: SsrParams.() -> Unit): PostShadingEffect {
             val w = width ?: renderContext.width
             val h = height ?: renderContext.height
-            return InternalPostShadingEffect("ssr", w, h,
+            return InternalPostShadingEffect(
+                "ssr", w, h,
                 effectPassMaterialModifiers =
-                listOf(
-                    InternalMaterialModifier {
-                        it.fragShaderFile = "!shader/effect/ssr.frag"
-                        InternalSsrParams().apply(block).collect(it)
-                    }
-                ),
+                    listOf(
+                        InternalMaterialModifier {
+                            it.fragShaderFile = "!shader/effect/ssr.frag"
+                            InternalSsrParams().apply(block).collect(it)
+                        }
+                    ),
                 "ssrTexture",
                 "ssrDepthTexture",
                 compositionMaterialModifier = {

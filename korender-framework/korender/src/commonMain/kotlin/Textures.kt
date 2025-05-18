@@ -15,3 +15,11 @@ enum class TextureWrap {
     ClampToEdge,
     Repeat
 }
+
+enum class CubeTextureSide {
+    NX, NY, NZ, PX, PY, PZ
+}
+
+typealias CubeTextureResources = Map<CubeTextureSide, String>
+
+typealias CubeTextureImages = Map<CubeTextureSide, Image>

@@ -40,10 +40,10 @@ fun ProcTerrainExample() =
                 prefab = terrain
             )
             Sky(fastCloudSky())
-            PostProcess(fog {
-                color = ColorRGB(0x8080F0)
-                density = 0.00003f
-            })
+//            PostProcess(fog {
+//                color = ColorRGB(0x8080F0)
+//                density = 0.00003f
+//            })
             Gui {
                 Column {
                     Filler()

@@ -6,6 +6,8 @@ import com.zakgof.korender.BloomParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.CubeTextureDeclaration
+import com.zakgof.korender.CubeTextureImages
+import com.zakgof.korender.CubeTextureResources
 import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
@@ -57,19 +59,11 @@ interface KorenderContext {
         wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024
     ): TextureDeclaration
 
-    fun cubeTexture(
-        nxResource: String, nyResource: String, nzResource: String,
-        pxResource: String, pyResource: String, pzResource: String
-    ): CubeTextureDeclaration
-
-    fun cubeTexture(
-        id: String,
-        nxImage: Image, nyImage: Image, nzImage: Image,
-        pxImage: Image, pyImage: Image, pzImage: Image
-    ): CubeTextureDeclaration
+    fun cubeTexture(resources: CubeTextureResources): CubeTextureDeclaration
+    fun cubeTexture(id: String, images: CubeTextureImages): CubeTextureDeclaration
 
     fun cubeProbe(probeName: String): CubeTextureDeclaration
-    fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3 = Vec3.ZERO, insideOut: Boolean = false, defs: Set<String> = setOf(), block: FrameContext.() -> Unit): List<Image>
+    fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3 = Vec3.ZERO, insideOut: Boolean = false, defs: Set<String> = setOf(), block: FrameContext.() -> Unit): CubeTextureImages
 
     fun cube(halfSide: Float = 0.5f): MeshDeclaration
     fun sphere(radius: Float = 1.0f): MeshDeclaration
