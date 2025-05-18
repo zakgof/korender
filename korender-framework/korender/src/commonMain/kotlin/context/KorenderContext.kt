@@ -69,7 +69,7 @@ interface KorenderContext {
     ): CubeTextureDeclaration
 
     fun cubeProbe(probeName: String): CubeTextureDeclaration
-    fun fetchProbeCubeTexture(probeName: String): List<Image>
+    fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3 = Vec3.ZERO, insideOut: Boolean = false, defs: Set<String> = setOf(), block: FrameContext.() -> Unit): List<Image>
 
     fun cube(halfSide: Float = 0.5f): MeshDeclaration
     fun sphere(radius: Float = 1.0f): MeshDeclaration

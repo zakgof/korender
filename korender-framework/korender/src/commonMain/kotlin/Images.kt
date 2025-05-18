@@ -20,4 +20,6 @@ interface Image {
     }
 
     fun toTga(): ByteArray
+
+    fun toRaw(): ByteArray
 }

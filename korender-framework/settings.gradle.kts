@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 include(":korender")
 include(":examples")
+include(":baker")

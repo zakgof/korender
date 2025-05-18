@@ -11,6 +11,7 @@ import com.zakgof.korender.FastCloudSkyParams
 import com.zakgof.korender.FireParams
 import com.zakgof.korender.FireballParams
 import com.zakgof.korender.FogParams
+import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.FrustumProjectionDeclaration
 import com.zakgof.korender.GrassParams
 import com.zakgof.korender.Image
@@ -146,7 +147,19 @@ internal class Engine(
 
         override fun cubeProbe(probeName: String): CubeTextureDeclaration = ProbeCubeTextureDeclaration(probeName)
 
-        override fun fetchProbeCubeTexture(probeName: String): List<Image> = probes[probeName]!!.fetch()
+        override fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3, insideOut: Boolean, defs: Set<String>, block: FrameContext.() -> Unit): List<Image> {
+            val sd = SceneDeclaration()
+            block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f)))
+            val images = mutableListOf<Image>()
+            inventory.go {
+                val scene = Scene(sd, inventory, renderContext, probes)
+                val uniforms = mutableMapOf<String, Any?>()
+                renderContext.uniforms(uniforms)
+                val cubeTexture = scene.renderToEnv(uniforms, CaptureContext(resolution, position, near, far, insideOut, defs, sd), "#immediate")
+                images += cubeTexture.fetch()
+            }
+            return images
+        }
 
         override fun cube(halfSide: Float): MeshDeclaration = Cube(halfSide)
 

@@ -28,7 +28,6 @@ import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
-import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.math.abs
 import kotlin.math.cos
@@ -43,7 +42,6 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
     val freeCamera = FreeCamera(this, 50.z, (-1).z)
     OnTouch { freeCamera.touch(it) }
-
 
     // val metaball = Metaball(20f, 1.0f) { sqrt(it * 0.05f) * (1f - it * 0.05f) * 10f }
     val metaball = Metaball(20f, 3.0f, 8000, 48) { (it * 0.05f).pow(0.1f) * (1f - it * 0.05f) * 10f }
@@ -112,14 +110,6 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         ) {
             AmbientLight(white(1f))
             renderTree(leaf, leafInstances)
-        }
-
-        if (frameInfo.frame == 5L) {
-            val tNormal: List<Image> = fetchProbeCubeTexture("radiant-normal")
-            tNormal.forEach {
-                val b64 = Base64.encode(it.toTga())
-                println("[$b64]")
-            }
         }
 
         Billboard(

@@ -4,10 +4,10 @@ in vec3 vpos;
 in vec3 vnormal;
 in vec2 vtex;
 #ifdef VERTEX_COLOR
-in vec4 vcolor;
+    in vec4 vcolor;
 #endif
 #ifdef VERTEX_OCCLUSION
-in float vocclusion;
+    in float vocclusion;
 #endif
 
 uniform vec4 baseColor;
@@ -16,50 +16,50 @@ uniform float metallic;
 uniform float roughness;
 
 #ifdef SPECULAR_GLOSSINESS
-uniform vec3 specularFactor;
-uniform float glossinessFactor;
+    uniform vec3 specularFactor;
+    uniform float glossinessFactor;
 #endif
 
 #ifdef BASE_COLOR_MAP
-uniform sampler2D baseColorTexture;
+    uniform sampler2D baseColorTexture;
 #endif
 
 #ifdef NORMAL_MAP
-uniform sampler2D normalTexture;
+    uniform sampler2D normalTexture;
 #endif
 
 #ifdef EMISSIVE_MAP
-uniform sampler2D emissiveTexture;
+    uniform sampler2D emissiveTexture;
 #endif
 
 #ifdef TRIPLANAR
-uniform float triplanarScale;
+    uniform float triplanarScale;
 #endif
 
 #ifdef DETAIL
-uniform sampler2D detailTexture;
-uniform float detailScale;
-uniform float detailRatio;
+    uniform sampler2D detailTexture;
+    uniform float detailScale;
+    uniform float detailRatio;
 #endif
 
 #ifdef METALLIC_ROUGHNESS_MAP
-uniform sampler2D metallicRoughnessTexture;
+    uniform sampler2D metallicRoughnessTexture;
 #endif
 #ifdef SPECULAR_GLOSSINESS_MAP
-uniform sampler2D specularGlossinessTexture;
+    uniform sampler2D specularGlossinessTexture;
 #endif
 
 #ifdef IBL
-uniform samplerCube cubeTexture;
+    uniform samplerCube cubeTexture;
 #endif
 
 #ifdef TERRAIN
-uniform vec3 tileOffsetAndScale;
-uniform sampler2D heightTexture;
-uniform int heightTextureSize;
-uniform float heightScale;
-uniform float outsideHeight;
-uniform vec3 terrainCenter;
+    uniform vec3 tileOffsetAndScale;
+    uniform sampler2D heightTexture;
+    uniform int heightTextureSize;
+    uniform float heightScale;
+    uniform float outsideHeight;
+    uniform vec3 terrainCenter;
 #endif
 
 //  TODO DETAIL FOR BASECOLOR
@@ -105,97 +105,97 @@ float shadowRatios[MAX_SHADOWS];
 #import "!shader/lib/light.glsl"
 
 #ifdef TERRAIN
-#import "!shader/lib/terrain.glsl"
+    #import "!shader/lib/terrain.glsl"
 #endif
 
 #ifdef PLUGIN_ALBEDO
-#import "$albedo"
+    #import "$albedo"
 #endif
 
 #ifdef PLUGIN_EMISSION
-#import "$emission"
+    #import "$emission"
 #endif
 
 void main() {
 
     #ifdef VERTEX_COLOR
-    vec4 bcolor = baseColor * vcolor;
+        vec4 bcolor = baseColor * vcolor;
     #else
-    vec4 bcolor = baseColor;
+        vec4 bcolor = baseColor;
     #endif
 
     #ifdef BASE_COLOR_MAP
-    #ifdef TRIPLANAR
-    vec4 albedo = triplanar(baseColorTexture, vpos * triplanarScale, vnormal) * bcolor;
+        #ifdef TRIPLANAR
+            vec4 albedo = triplanar(baseColorTexture, vpos * triplanarScale, vnormal) * bcolor;
+        #else
+            vec4 albedo = texture(baseColorTexture, vtex) * bcolor;
+        #endif
     #else
-    vec4 albedo = texture(baseColorTexture, vtex) * bcolor;
-    #endif
-    #else
-    vec4 albedo = bcolor;
+        vec4 albedo = bcolor;
     #endif
 
     #ifdef NORMAL_MAP
-    vec3 N = getNormalFromMap(vnormal, vtex, vpos);
+        vec3 N = getNormalFromMap(vnormal, vtex, vpos);
     #else
-    vec3 N = normalize(vnormal);
+        vec3 N = normalize(vnormal);
     #endif
 
     #ifdef TERRAIN
-    N = normalAt(vtex, float(heightTextureSize));
+        N = normalAt(vtex, float(heightTextureSize));
     #endif
 
     #ifdef PLUGIN_ALBEDO
-    albedo = pluginAlbedo(vtex, vpos, N, albedo);
+        albedo = pluginAlbedo(vtex, vpos, N, albedo);
     #endif
 
     if (albedo.a < 0.001)
         discard;
 
     #ifdef EMISSIVE_MAP
-    #ifdef TRIPLANAR
-    vec3 emission = triplanar(emissiveTexture, vpos * triplanarScale, vnormal).rgb * emissiveFactor;
+        #ifdef TRIPLANAR
+            vec3 emission = triplanar(emissiveTexture, vpos * triplanarScale, vnormal).rgb * emissiveFactor;
+        #else
+            vec3 emission = texture(emissiveTexture, vtex).rgb * emissiveFactor;
+        #endif
     #else
-    vec3 emission = texture(emissiveTexture, vtex).rgb * emissiveFactor;
-    #endif
-    #else
-    vec3 emission = emissiveFactor;
+        vec3 emission = emissiveFactor;
     #endif
 
     #ifdef PLUGIN_EMISSION
-    emission = pluginEmission(emission);
+        emission = pluginEmission(emission);
     #endif
 
     #ifdef SPECULAR_GLOSSINESS
-    #ifdef SPECULAR_GLOSSINESS_MAP
-    #ifdef TRIPLANAR
-    vec4 sgtexel = triplanar(specularGlossinessTexture, vtex, vpos, N);
+        #ifdef SPECULAR_GLOSSINESS_MAP
+            #ifdef TRIPLANAR
+                vec4 sgtexel = triplanar(specularGlossinessTexture, vtex, vpos, N);
+            #else
+                vec4 sgtexel = texture(specularGlossinessTexture, vtex);
+            #endif
+            vec3 specular = sgtexel.rgb * specularFactor;
+            float glossiness = sgtexel.a * glossinessFactor;
+        #else
+            vec3 specular = specularFactor;
+            float glossiness = glossinessFactor;
+        #endif
+        vec3 c_diff = albedo.rgb * (1. - max(max(specular.r, specular.g), specular.b));
+        vec3 F0 = specular;
+        float rough = 1. - glossiness;
     #else
-    vec4 sgtexel = texture(specularGlossinessTexture, vtex);
-    #endif
-    vec3 specular = sgtexel.rgb * specularFactor;
-    float glossiness = sgtexel.a * glossinessFactor;
-    #else
-    vec3 specular = specularFactor;
-    float glossiness = glossinessFactor;
-    #endif
-    vec3 c_diff = albedo.rgb * (1. - max(max(specular.r, specular.g), specular.b));
-    vec3 F0 = specular;
-    float rough = 1. - glossiness;
-    #else
-    #ifdef METALLIC_ROUGHNESS_MAP
-    #ifdef TRIPLANAR
-    vec4 mrtexel = triplanar(metallicRoughnessTexture, vtex, vpos, N);
-    #else
-    vec4 mrtexel = texture(metallicRoughnessTexture, vtex);
-    #endif
-    float metal = mrtexel.b * metallic;
-    float rough = mrtexel.g * roughness;
-    #else
-    float metal = metallic;
-    float rough = roughness;
-    #endif
-    vec3 c_diff = mix(albedo.rgb, vec3(0.), metal);
-    vec3 F0 = mix(vec3(0.04), albedo.rgb, metal);
+        #ifdef METALLIC_ROUGHNESS_MAP
+            #ifdef TRIPLANAR
+                vec4 mrtexel = triplanar(metallicRoughnessTexture, vtex, vpos, N);
+            #else
+                vec4 mrtexel = texture(metallicRoughnessTexture, vtex);
+            #endif
+            float metal = mrtexel.b * metallic;
+            float rough = mrtexel.g * roughness;
+        #else
+            float metal = metallic;
+            float rough = roughness;
+        #endif
+        vec3 c_diff = mix(albedo.rgb, vec3(0.), metal);
+        vec3 F0 = mix(vec3(0.04), albedo.rgb, metal);
     #endif
 
     ///////////////////////
@@ -207,9 +207,9 @@ void main() {
     float plane = dot((vpos - cameraPos), cameraDir);
 
     #ifdef VERTEX_OCCLUSION
-    float occlusion = vocclusion;
+        float occlusion = vocclusion;
     #else
-    float occlusion = 1.0;
+        float occlusion = 1.0;
     #endif
 
     populateShadowRatios(plane, vpos);

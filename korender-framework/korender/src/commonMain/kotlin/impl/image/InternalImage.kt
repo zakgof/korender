@@ -74,4 +74,7 @@ internal class InternalImage(
     fun floatToWord(float: Float): Short = (float * 65535).toUInt().toShort()
 
     override fun toTga(): ByteArray = Tga.encode(width, height, format, bytes)
+
+    override fun toRaw(): ByteArray = ByteArray(bytes.size()) { bytes.byte(it) }
+
 }

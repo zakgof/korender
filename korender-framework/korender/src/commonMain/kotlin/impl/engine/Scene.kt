@@ -45,7 +45,6 @@ internal class Scene(
     private val inventory: Inventory,
     private val renderContext: RenderContext,
     private val probes: MutableMap<String, GlGpuCubeTexture>,
-    private val probeName: String? = null,
 ) {
 
     private var guiRenderers: List<GuiRenderer>
@@ -84,8 +83,8 @@ internal class Scene(
 
         sceneDeclaration.captures.forEach { kv ->
             try {
-                Scene(kv.value.sceneDeclaration, inventory, renderContext, probes, kv.key)
-                    .renderToEnv(uniforms, kv.value)
+                probes[kv.key] = Scene(kv.value.sceneDeclaration, inventory, renderContext, probes)
+                    .renderToEnv(uniforms, kv.value, kv.key)
             } catch (_: SkipRender) {
                 println("Env probing skipped as framebuffer is not ready")
                 return
@@ -342,7 +341,7 @@ internal class Scene(
         }
     }
 
-    private fun renderToEnv(uniforms: MutableMap<String, Any?>, captureContext: CaptureContext) {
+    fun renderToEnv(uniforms: MutableMap<String, Any?>, captureContext: CaptureContext, probeName: String): GlGpuCubeTexture {
         renderShadows(uniforms, true)
         val probeFb = inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", captureContext.resolution, captureContext.resolution, true)) ?: throw SkipRender
         val probeUniforms = mutableMapOf<String, Any?>()
@@ -366,7 +365,7 @@ internal class Scene(
             }
         }
         probeFb.finish()
-        probes[probeName!!] = probeFb.colorTexture
+        return probeFb.colorTexture;
     }
 }
 
