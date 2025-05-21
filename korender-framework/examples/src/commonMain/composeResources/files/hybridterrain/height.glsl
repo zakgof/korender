@@ -1,9 +1,19 @@
 #import "!shader/lib/noise.glsl"
 
-float heightAt(vec2 uv) {
+uniform sampler2D heightTexture;
+
+vec3 pluginTerrainCenter() {
+    return vec3(0.);
+}
+
+int pluginTerrainTextureSize() {
+    return 8192;
+}
+
+float pluginTerrainHeight(vec2 uv) {
 
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
-    return -100.0;
+        return -100.0;
 
     float samp = texture(heightTexture, uv).r;
     float base = samp * 800.0;

@@ -29,6 +29,14 @@ internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean) {
     val plugins: MutableMap<String, String> = mutableMapOf()
     var uniforms: MutableMap<String, Any?> = mutableMapOf()
 
+    init {
+        if (base == BaseMaterial.Billboard) {
+            uniforms["xscale"] = 1.0f
+            uniforms["yscale"] = 1.0f
+            uniforms["rotation"] = 0.0f
+        }
+    }
+
     fun toMaterialDeclaration(): MaterialDeclaration = MaterialDeclaration(
         shader = ShaderDeclaration(vertShaderFile, fragShaderFile, shaderDefs, plugins),
         uniforms = uniforms

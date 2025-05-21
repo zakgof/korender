@@ -11,58 +11,16 @@ in vec2 vtex;
 #endif
 
 uniform vec4 baseColor;
-uniform vec3 emissiveFactor;
-uniform float metallic;
-uniform float roughness;
-
-#ifdef SPECULAR_GLOSSINESS
-    uniform vec3 specularFactor;
-    uniform float glossinessFactor;
-#endif
-
 #ifdef BASE_COLOR_MAP
     uniform sampler2D baseColorTexture;
 #endif
 
-#ifdef NORMAL_MAP
-    uniform sampler2D normalTexture;
-#endif
-
-#ifdef EMISSIVE_MAP
-    uniform sampler2D emissiveTexture;
-#endif
-
-#ifdef TRIPLANAR
-    uniform float triplanarScale;
-#endif
-
-#ifdef DETAIL
-    uniform sampler2D detailTexture;
-    uniform float detailScale;
-    uniform float detailRatio;
-#endif
-
-#ifdef METALLIC_ROUGHNESS_MAP
-    uniform sampler2D metallicRoughnessTexture;
-#endif
-#ifdef SPECULAR_GLOSSINESS_MAP
-    uniform sampler2D specularGlossinessTexture;
-#endif
+uniform float metallicFactor;
+uniform float roughnessFactor;
 
 #ifdef IBL
-    uniform samplerCube cubeTexture;
+uniform samplerCube cubeTexture;
 #endif
-
-#ifdef TERRAIN
-    uniform vec3 tileOffsetAndScale;
-    uniform sampler2D heightTexture;
-    uniform int heightTextureSize;
-    uniform float heightScale;
-    uniform float outsideHeight;
-    uniform vec3 terrainCenter;
-#endif
-
-//  TODO DETAIL FOR BASECOLOR
 
 uniform vec3 cameraPos;
 uniform vec3 cameraDir;
@@ -95,130 +53,109 @@ uniform int i1[MAX_SHADOWS];
 
 out vec4 fragColor;
 
-#import "!shader/lib/triplanar.glsl"
-#import "!shader/lib/normalmap.glsl"
-
 float shadowRatios[MAX_SHADOWS];
 
 #import "!shader/lib/shadow.glsl"
 #import "!shader/lib/pbr.glsl"
 #import "!shader/lib/light.glsl"
 
-#ifdef TERRAIN
-    #import "!shader/lib/terrain.glsl"
+#ifdef PLUGIN_TEXTURING
+#import "$texturing"
 #endif
 
 #ifdef PLUGIN_ALBEDO
-    #import "$albedo"
+#import "$albedo"
 #endif
 
 #ifdef PLUGIN_EMISSION
-    #import "$emission"
+#import "$emission"
+#endif
+
+#ifdef PLUGIN_NORMAL
+#import "$normal"
+#endif
+
+#ifdef PLUGIN_METALLIC_ROUGHNESS
+#import "$metallic_roughness"
+#endif
+
+#ifdef PLUGIN_SPECULAR_GLOSSINESS
+#import "$specular_glossiness"
 #endif
 
 void main() {
 
+    vec4 albedo = baseColor;
+
     #ifdef VERTEX_COLOR
-        vec4 bcolor = baseColor * vcolor;
-    #else
-        vec4 bcolor = baseColor;
+        albedo *= vcolor;
     #endif
 
-    #ifdef BASE_COLOR_MAP
-        #ifdef TRIPLANAR
-            vec4 albedo = triplanar(baseColorTexture, vpos * triplanarScale, vnormal) * bcolor;
-        #else
-            vec4 albedo = texture(baseColorTexture, vtex) * bcolor;
+    #ifdef PLUGIN_TEXTURING
+        albedo *= pluginTexturing();
+    #else
+        #ifdef BASE_COLOR_MAP
+            albedo *= texture(baseColorTexture, vtex);
         #endif
-    #else
-        vec4 albedo = bcolor;
     #endif
 
-    #ifdef NORMAL_MAP
-        vec3 N = getNormalFromMap(vnormal, vtex, vpos);
+    #ifdef PLUGIN_NORMAL
+        vec3 normal = pluginNormal();
     #else
-        vec3 N = normalize(vnormal);
-    #endif
-
-    #ifdef TERRAIN
-        N = normalAt(vtex, float(heightTextureSize));
+        vec3 normal = normalize(vnormal);
     #endif
 
     #ifdef PLUGIN_ALBEDO
-        albedo = pluginAlbedo(vtex, vpos, N, albedo);
+        albedo = pluginAlbedo(albedo);
     #endif
 
     if (albedo.a < 0.001)
         discard;
 
-    #ifdef EMISSIVE_MAP
-        #ifdef TRIPLANAR
-            vec3 emission = triplanar(emissiveTexture, vpos * triplanarScale, vnormal).rgb * emissiveFactor;
-        #else
-            vec3 emission = texture(emissiveTexture, vtex).rgb * emissiveFactor;
-        #endif
-    #else
-        vec3 emission = emissiveFactor;
-    #endif
-
+    vec3 emission = vec3(0.);
     #ifdef PLUGIN_EMISSION
-        emission = pluginEmission(emission);
+        emission = pluginEmission();
     #endif
 
-    #ifdef SPECULAR_GLOSSINESS
-        #ifdef SPECULAR_GLOSSINESS_MAP
-            #ifdef TRIPLANAR
-                vec4 sgtexel = triplanar(specularGlossinessTexture, vtex, vpos, N);
-            #else
-                vec4 sgtexel = texture(specularGlossinessTexture, vtex);
-            #endif
-            vec3 specular = sgtexel.rgb * specularFactor;
-            float glossiness = sgtexel.a * glossinessFactor;
-        #else
-            vec3 specular = specularFactor;
-            float glossiness = glossinessFactor;
-        #endif
-        vec3 c_diff = albedo.rgb * (1. - max(max(specular.r, specular.g), specular.b));
-        vec3 F0 = specular;
-        float rough = 1. - glossiness;
-    #else
-        #ifdef METALLIC_ROUGHNESS_MAP
-            #ifdef TRIPLANAR
-                vec4 mrtexel = triplanar(metallicRoughnessTexture, vtex, vpos, N);
-            #else
-                vec4 mrtexel = texture(metallicRoughnessTexture, vtex);
-            #endif
-            float metal = mrtexel.b * metallic;
-            float rough = mrtexel.g * roughness;
-        #else
-            float metal = metallic;
-            float rough = roughness;
-        #endif
-        vec3 c_diff = mix(albedo.rgb, vec3(0.), metal);
-        vec3 F0 = mix(vec3(0.04), albedo.rgb, metal);
+    float metallic = metallicFactor;
+    float roughness = roughnessFactor;
+
+    #ifdef PLUGIN_METALLIC_ROUGHNESS
+        vec2 mr = pluginMetallicRoughness();
+        metallic = mr.x;
+        roughness = mr.y;
+    #endif
+
+    vec3 diffuse = mix(albedo.rgb, vec3(0.), metallic);
+    vec3 f0 = mix(vec3(0.04), albedo.rgb, metallic);
+
+    #ifdef PLUGIN_SPECULAR_GLOSSINESS
+        vec4 sg = pluginSpecularGlossiness();
+        diffuse = albedo.rgb * (1. - max(max(sg.r, sg.g), sg.b));
+        f0 = sg.rgb;
+        roughness = 1. - sg.a;
     #endif
 
     ///////////////////////
 
     vec3 V = normalize(cameraPos - vpos);
 
-    vec3 color = c_diff * ambientColor + emission;
+    vec3 color = diffuse * ambientColor + emission;
 
     float plane = dot((vpos - cameraPos), cameraDir);
 
+    float occlusion = 1.0;
     #ifdef VERTEX_OCCLUSION
-        float occlusion = vocclusion;
-    #else
-        float occlusion = 1.0;
+        occlusion *= vocclusion;
     #endif
 
     populateShadowRatios(plane, vpos);
 
     for (int l=0; l<numDirectionalLights; l++) {
-        color += dirLight(l, N, V, c_diff, F0, rough, occlusion);
+        color += dirLight(l, normal, V, diffuse, f0, roughness, occlusion);
     }
     for (int l=0; l<numPointLights; l++) {
-        color += pointLight(vpos, l, N, V, c_diff, F0, rough, occlusion);
+        color += pointLight(vpos, l, normal, V, diffuse, f0, roughness, occlusion);
     }
 
     fragColor = vec4(color, albedo.a);

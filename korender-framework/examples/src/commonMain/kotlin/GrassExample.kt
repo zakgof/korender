@@ -36,12 +36,8 @@ fun GrassExample() =
             DirectionalLight(Vec3(0.0f, -1.0f, 0.0f), ColorRGB.white(1.0f))
 
             Renderable(
-                standart {
-                    baseColorTexture = texture("texture/grass.jpg")
-                    triplanarScale = 0.04f
-                    pbr.metallic = 0f
-                    pbr.roughness = 0.9f
-                },
+                base(colorTexture = texture("texture/grass.jpg"), metallicFactor = 0f, roughnessFactor = 0.9f),
+                triplanar(0.04f),
                 mesh = cube(1f),
                 transform = scale(300f, 1f, 300f).translate(-1.y)
             )

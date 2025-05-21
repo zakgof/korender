@@ -20,23 +20,19 @@ fun ProcTerrainExample() =
         Frame {
 
             projection = frustum(5f, 5f * height / width, 2f, 32000f)
-            camera = camera(Vec3(frameInfo.time * 200.0f, 1500f + 100f * sin(frameInfo.time), frameInfo.time * 300.0f),
+            camera = camera(
+                Vec3(frameInfo.time * 200.0f, 1500f + 100f * sin(frameInfo.time), frameInfo.time * 300.0f),
                 2.x + 3.z,
-                1.y)
+                1.y
+            )
 
             AmbientLight(ColorRGB.white(0.2f))
             DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(0.5f))
             Renderable(
-                standart {
-                    pbr.metallic = 0.0f
-                },
-                terrain {
-                    heightTextureSize = 1024
-                    terrainCenter = Vec3(0f, -14f, 0f);
-                },
+                base(metallicFactor = 0.0f),
+                plugin("normal", "!shader/plugin/normal.terrain.frag"),
                 plugin("terrain", "procterrain/height.glsl"),
                 plugin("albedo", "procterrain/albedo.glsl"),
-
                 prefab = terrain
             )
             Sky(fastCloudSky())

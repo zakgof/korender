@@ -95,7 +95,7 @@ fun Baker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         AmbientLight(white(0.2f))
         DirectionalLight(Vec3(2.0f, 0.0f, -1.0f), white(3f))
         Billboard(
-            standart {
+            base(
                 xscale = 10.0f
                 yscale = 10.0f
                 set("radiantTexture", cubeTexture("radiant", radiantImages))
@@ -130,8 +130,8 @@ fun saveCubeMap(images: CubeTextureImages, pathPrefix: String) {
 
 private fun FrameContext.renderHull(hullMesh: MeshDeclaration, offset: Vec3 = ZERO) {
     Renderable(
-        standart {
-            baseColor = ColorRGBA.Red
+        base(
+            color = ColorRGBA.Red
         },
         mesh = hullMesh,
         transform = translate(offset)
@@ -140,8 +140,8 @@ private fun FrameContext.renderHull(hullMesh: MeshDeclaration, offset: Vec3 = ZE
 
 private fun FrameContext.renderTree(leaf: MeshDeclaration, leafInstances: List<Transform>) {
     InstancedRenderables(
-        standart {
-            baseColorTexture = texture("model/leaf.png")
+        base(
+            colorTexture = texture("model/leaf.png")
         },
         mesh = leaf,
         id = "metapoints",

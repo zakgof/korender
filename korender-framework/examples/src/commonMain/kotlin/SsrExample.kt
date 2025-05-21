@@ -38,30 +38,18 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         }
         Sky(cubeSky(env))
         Renderable(
-            standart {
-                baseColor = ColorRGBA.Red
-                pbr.metallic = 0.0f
-                pbr.roughness = 0.2f
-            },
+            base(color = ColorRGBA.Red, metallicFactor = 0f, roughnessFactor = 0.2f),
             mesh = sphere(),
             transform = translate(-2f, -1f, -5f)
         )
         Renderable(
-            standart {
-                baseColor = ColorRGBA.Green
-                pbr.metallic = 0.0f
-                pbr.roughness = 0.2f
-            },
+            base(color = ColorRGBA.Green, metallicFactor = 0f, roughnessFactor = 0.2f),
             mesh = sphere(),
             transform = translate(2f, -1f, -5f)
         )
         Renderable(
-            standart {
-                baseColorTexture = texture("texture/asphalt-albedo.jpg")
-                pbr.metallic = 0.3f
-                pbr.roughness = 0.2f
-                triplanarScale = 0.4f
-            },
+            base(colorTexture = texture("texture/asphalt-albedo.jpg"), metallicFactor = 0.3f, roughnessFactor = 0.2f),
+            triplanar(0.4f),
             mesh = cube(6f),
             transform = translate(-8.y)
         )
@@ -85,9 +73,7 @@ private fun FrameContext.scene() {
     DirectionalLight(Vec3(1.0f, -1.0f, -1.0f).normalize())
     Sky(fastCloudSky())
     Renderable(
-        standart {
-            baseColor = ColorRGBA.Red
-        },
+        base(color = ColorRGBA.Red),
         mesh = sphere(0.5f),
         transform = translate(2.y - 15.z)
     )

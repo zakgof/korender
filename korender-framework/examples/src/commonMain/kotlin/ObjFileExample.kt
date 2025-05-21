@@ -23,11 +23,7 @@ fun ObjFileExample() {
             DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(3f))
             camera = orbitCamera.camera(projection, width, height)
             Renderable(
-                standart {
-                    baseColorTexture = texture("model/head.jpg")
-                    pbr.metallic = 0.3f
-                    pbr.roughness = 0.5f
-                },
+                base(colorTexture = texture("model/head.jpg"), metallicFactor = 0.3f, roughnessFactor = 0.5f),
                 mesh = obj("model/head.obj"),
                 transform = scale(7.0f).rotate(1.y, -PIdiv2)
             )

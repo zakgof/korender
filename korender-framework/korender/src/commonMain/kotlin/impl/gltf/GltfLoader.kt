@@ -26,7 +26,6 @@ import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.impl.glgpu.toGL
 import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
 import com.zakgof.korender.impl.material.InternalMaterialModifier
-import com.zakgof.korender.impl.material.InternalStandartParams
 import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
@@ -298,13 +297,13 @@ internal class GltfSceneBuilder(
     ) {
         mesh.primitives.forEachIndexed { primitiveIndex, primitive ->
             val meshDeclaration = createMeshDeclaration(primitive, meshIndex, primitiveIndex)
-            val materialModifiers = createMaterialModifiers(
+            val materialModifier = createMaterialModifiers(
                 primitive,
                 skinIndex
             )
             val renderableDeclaration = RenderableDeclaration(
                 BaseMaterial.Renderable,
-                listOf(materialModifiers),
+                listOf(materialModifier),
                 mesh = meshDeclaration,
                 transform = transform,
                 bucket = Bucket.OPAQUE // TODO transparent mode
@@ -319,63 +318,54 @@ internal class GltfSceneBuilder(
     ): MaterialModifier {
 
         // TODO: split into 2 parts, precompute textures modifier, calc only skin modifier
-
         val material = primitive.material?.let { gltfLoaded.model.materials!![it] }
         val matPbr = material?.pbrMetallicRoughness
-
-        val metallic = matPbr?.metallicFactor ?: 0.2f
-        val roughness = matPbr?.roughnessFactor ?: 0.3f
-        val emissiveFactor =
-            material?.emissiveFactor?.let { ColorRGB(it[0], it[1], it[2]) } ?: ColorRGB.Black
-        val baseColor =
-            matPbr?.baseColorFactor?.let { ColorRGBA(it[0], it[1], it[2], it[3]) } ?: ColorRGBA.White
-        val albedoTexture = matPbr?.baseColorTexture?.let { getTexture(it) }
-        val metallicRoughnessTexture = matPbr?.metallicRoughnessTexture?.let { getTexture(it) }
-        val normalTexture = material?.normalTexture?.let { getTexture(it) }
-        val occlusionTexture = material?.occlusionTexture?.let { getTexture(it) }
-        val emissiveTexture = material?.emissiveTexture?.let { getTexture(it) }
-
         val matSpecularGlossiness = material?.extensions?.get("KHR_materials_pbrSpecularGlossiness")
                 as? Gltf.KHRMaterialsPbrSpecularGlossiness
-        val diffuseFactor = matSpecularGlossiness?.diffuseFactor?.let { ColorRGB(it[0], it[1], it[2]) } ?: ColorRGB.White
-        val diffuseTexture = matSpecularGlossiness?.diffuseTexture?.let { getTexture(it) }
-        val specularFactor = matSpecularGlossiness?.specularFactor?.let { ColorRGB(it[0], it[1], it[2]) } ?: ColorRGB.White
-        val glossinessFactor = matSpecularGlossiness?.glossinessFactor ?: 0.2f
-        val specularGlossinessTexture = matSpecularGlossiness?.specularGlossinessTexture?.let { getTexture(it) }
+
 
         // TODO: Precreate all except jointMatrices
-        return InternalMaterialModifier {
-            InternalStandartParams().apply {
+        return InternalMaterialModifier { mb ->
 
-                this.baseColor = baseColor
-                this.normalTexture = normalTexture
+            if (skinIndex != null) {
+                mb.shaderDefs += "SKINNING"
+                mb.uniforms["jntMatrices[0]"] = Mat4List(
+                    loadedSkins[skinIndex].jointMatrices.mapIndexed { ind, jm ->
+                        jm * loadedSkins[skinIndex].inverseBindMatrices[ind]
+                    }
+                )
+            }
 
-                if (matPbr != null) {
-                    this.baseColorTexture = albedoTexture
-                    this.pbr.metallic = metallic
-                    this.pbr.roughness = roughness
-                    this.pbr.metallicRoughnessTexture = metallicRoughnessTexture
-                    this.emissiveFactor = emissiveFactor
-                    this.emissiveTexture = emissiveTexture
-//                this.pbr.occlusionTexture = occlusionTexture
-                }
+            mb.uniforms["baseColor"] = (matSpecularGlossiness?.diffuseFactor ?: matPbr?.baseColorFactor)?.let {
+                ColorRGBA(it[0], it[1], it[2], it[3])
+            } ?: ColorRGBA.White
 
-                if (matSpecularGlossiness != null) {
-                    this.baseColor = diffuseFactor.toRGBA()
-                    this.baseColorTexture = diffuseTexture
-                    this.specularGlossiness.specularFactor = specularFactor
-                    this.specularGlossiness.glossinessFactor = glossinessFactor
-                    this.specularGlossiness.specularGlossinessTexture = specularGlossinessTexture
-                }
+            matPbr?.baseColorTexture ?: matSpecularGlossiness?.diffuseTexture?.let { getTexture(it) }?.let {
+                mb.uniforms["baseColorTexture"] = it
+                mb.shaderDefs += "BASE_COLOR_MAP";
+            }
 
-                if (skinIndex != null) {
-                    this.jntMatrices = Mat4List(
-                        loadedSkins[skinIndex].jointMatrices.mapIndexed { ind, jm ->
-                            jm * loadedSkins[skinIndex].inverseBindMatrices[ind]
-                        }
-                    )
-                }
-            }.collect(it)
+            mb.uniforms["metallicFactor"] = matPbr?.metallicFactor ?: 0.1f
+            mb.uniforms["roughnessFactor"] = matPbr?.roughnessFactor ?: 0.5f
+
+            material?.normalTexture?.let { getTexture(it) }?.let {
+                mb.plugins["normal"] = "!shader/plugin/normal.texture.frag"
+                mb.uniforms["normalTexture"] = it
+            }
+            matPbr?.metallicRoughnessTexture?.let { getTexture(it) }?.let {
+                mb.plugins["metallic_roughness"] = "!shader/plugin/metallic_roughness.texture.frag"
+                mb.uniforms["metallicRoughnessTexture"] = it
+            }
+
+            // TODO
+            val occlusionTexture = material?.occlusionTexture?.let { getTexture(it) }
+            val emissiveTexture = material?.emissiveTexture?.let { getTexture(it) }
+
+            matSpecularGlossiness?.let { sg ->
+                mb.plugins["specular_glossiness"] = "!shader/plugin/specular_glossiness.factor.frag"
+                mb.uniforms["specularFactor"] = sg.specularFactor.let { ColorRGB(it[0], it[1], it[2]) }
+                mb.uniforms["glossinessFactor"] = sg.glossinessFactor
+            }
         }
     }
 

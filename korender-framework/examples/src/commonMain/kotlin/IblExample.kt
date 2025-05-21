@@ -107,7 +107,7 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         }
 
 //        Billboard(
-//            standart {
+//            base(
 //                xscale = 40.0f
 //                yscale = 40.0f
 //                set("radiantTexture", cubeTexture("holotree/radiant-nx.jpg", "holotree/radiant-ny.jpg", "holotree/radiant-nz.jpg", "holotree/radiant-px.jpg", "holotree/radiant-py.jpg", "holotree/radiant-pz.jpg"))
@@ -132,9 +132,7 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
 private fun FrameContext.renderHull(hullMesh: MeshDeclaration, offset: Vec3 = ZERO) {
     Renderable(
-        standart {
-            baseColor = ColorRGBA.Red
-        },
+        base(color = ColorRGBA.Red),
         mesh = hullMesh,
         transform = translate(offset)
     )
@@ -142,9 +140,7 @@ private fun FrameContext.renderHull(hullMesh: MeshDeclaration, offset: Vec3 = ZE
 
 private fun FrameContext.renderMeta(metaball: Metaball, hull: QHMesh, offset: Vec3) {
     InstancedRenderables(
-        standart {
-            baseColor = ColorRGBA.Green
-        },
+        base(color = ColorRGBA.Green),
         mesh = sphere(1f),
         id = "metaball",
         count = metaball.spheres.size
@@ -157,9 +153,7 @@ private fun FrameContext.renderMeta(metaball: Metaball, hull: QHMesh, offset: Ve
 
 private fun FrameContext.renderTree(leaf: MeshDeclaration, leafInstances: List<Transform>) {
     InstancedRenderables(
-        standart {
-            baseColorTexture = texture("model/leaf.png")
-        },
+        base(colorTexture = texture("model/leaf.png")),
         mesh = leaf,
         id = "metapoints",
         transparent = true,

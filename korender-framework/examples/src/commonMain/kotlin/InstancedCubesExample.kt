@@ -22,10 +22,7 @@ fun InstancedCubesExample() = Korender(appResourceLoader = { Res.readBytes(it) }
         DirectionalLight(Vec3(1f, 1f, -2f), ColorRGB.White)
         camera = freeCamera.camera(projection, width, height, frameInfo.dt)
         InstancedRenderables(
-            standart {
-                baseColorTexture = texture("texture/asphalt-albedo.jpg")
-                pbr.metallic = 0.1f
-            },
+            base(colorTexture = texture("texture/asphalt-albedo.jpg"), metallicFactor = 0.1f),
             id = "particles",
             count = 21 * 21,
             mesh = cube(0.3f)

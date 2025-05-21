@@ -34,9 +34,7 @@ import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.SsrParams
-import com.zakgof.korender.StandartParams
 import com.zakgof.korender.StarrySkyParams
-import com.zakgof.korender.TerrainParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -82,9 +80,7 @@ import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalRoiTexturesContext
 import com.zakgof.korender.impl.material.InternalSmokeParams
 import com.zakgof.korender.impl.material.InternalSsrParams
-import com.zakgof.korender.impl.material.InternalStandartParams
 import com.zakgof.korender.impl.material.InternalStarrySkyParams
-import com.zakgof.korender.impl.material.InternalTerrainParams
 import com.zakgof.korender.impl.material.InternalWaterParams
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
@@ -96,6 +92,7 @@ import com.zakgof.korender.impl.projection.OrthoProjection
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec3
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.channels.Channel
@@ -208,19 +205,66 @@ internal class Engine(
 
         override fun plugin(name: String, shaderFile: String) = InternalMaterialModifier {
             it.plugins[name] = shaderFile
-            it.shaderDefs += "PLUGIN_" + name.uppercase()
         }
 
-        override fun standart(block: StandartParams.() -> Unit) = InternalMaterialModifier {
-            InternalStandartParams().apply(block).collect(it)
+        override fun base(color: ColorRGBA, colorTexture: TextureDeclaration?, metallicFactor: Float, roughnessFactor: Float) = InternalMaterialModifier {
+            it.uniforms["baseColor"] = color
+            it.uniforms["baseColorTexture"] = colorTexture
+            it.uniforms["metallicFactor"] = metallicFactor
+            it.uniforms["roughnessFactor"] = roughnessFactor
+            if (colorTexture != null) {
+                it.shaderDefs += "BASE_COLOR_MAP";
+            }
+        }
+
+        override fun triplanar(scale: Float): MaterialModifier = InternalMaterialModifier {
+            it.plugins["texturing"] = "!shader/plugin/texturing.triplanar.frag"
+            it.uniforms["triplanarScale"] = scale
+        }
+
+        override fun normalTexture(normalTexture: TextureDeclaration) = InternalMaterialModifier {
+            it.plugins["normal"] = "!shader/plugin/normal.texture.frag"
+            it.uniforms["normalTexture"] = normalTexture
+        }
+
+        override fun emission(factor: ColorRGB): MaterialModifier = InternalMaterialModifier {
+            it.plugins["emission"] = "!shader/plugin/emission.factor.frag"
+            it.uniforms["emissionFactor"] = factor
+        }
+
+        override fun metallicRoughnessTexture(texture: TextureDeclaration) = InternalMaterialModifier {
+            it.plugins["metallic_roughness"] = "!shader/plugin/metallic_roughness.texture.frag"
+            it.uniforms["metallicRoughnessTexture"] = texture
+        }
+
+        override fun specularGlossiness(specularFactor: ColorRGB, glossinessFactor: Float) = InternalMaterialModifier {
+            it.plugins["specular_glossiness"] = "!shader/plugin/specular_glossiness.factor.frag"
+            it.uniforms["specularFactor"] = specularFactor
+            it.uniforms["glossinessFactor"] = glossinessFactor
+        }
+
+        override fun specularGlossinessTexture(texture: TextureDeclaration) = InternalMaterialModifier {
+            it.plugins["specular_glossiness"] = "!shader/plugin/specular_glossiness.texture.frag"
+            it.uniforms["specularGlossinessTexture"] = texture
+        }
+
+        override fun billboard(xscale: Float, yscale: Float)= InternalMaterialModifier {
+            it.uniforms["xscale"] = xscale
+            it.uniforms["yscale"] = yscale
         }
 
         override fun uniforms(block: BaseParams.() -> Unit): MaterialModifier = InternalMaterialModifier {
             InternalBaseParams().apply(block).collect(it)
         }
 
-        override fun terrain(block: TerrainParams.() -> Unit): MaterialModifier = InternalMaterialModifier {
-            InternalTerrainParams().apply(block).collect(it)
+        override fun terrain(heightTexture: TextureDeclaration, heightTextureSize: Int, heightScale: Float, outsideHeight: Float, terrainCenter: Vec3) = InternalMaterialModifier {
+            it.plugins["normal"] = "!shader/plugin/normal.terrain.frag"
+            it.plugins["terrain"] = "!shader/plugin/terrain.texture.frag"
+            it.uniforms["heightTexture"] = heightTexture
+            it.uniforms["heightTextureSize"] = heightTextureSize
+            it.uniforms["heightScale"] = heightScale
+            it.uniforms["outsideHeight"] = outsideHeight
+            it.uniforms["terrainCenter"] = terrainCenter
         }
 
         override fun blurVert(block: BlurParams.() -> Unit) =

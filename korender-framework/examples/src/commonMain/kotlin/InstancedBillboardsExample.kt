@@ -22,10 +22,10 @@ fun InstancedBillboardsExample() = Korender(appResourceLoader = { Res.readBytes(
     Frame {
         AmbientLight(White)
         InstancedBillboards(
-            standart {
-                baseColor = ColorRGBA.Red
-                baseColorTexture = texture("texture/splat.png")
-            },
+            base(
+                color = ColorRGBA.Red,
+                colorTexture = texture("texture/splat.png")
+            ),
             id = "particles",
             count = particleNum,
             transparent = true

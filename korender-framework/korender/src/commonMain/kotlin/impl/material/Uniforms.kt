@@ -14,17 +14,12 @@ import com.zakgof.korender.GrassParams
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.SsrParams
-import com.zakgof.korender.StandartParams
-import com.zakgof.korender.StandartParams.Pbr
-import com.zakgof.korender.StandartParams.SpecularGlossiness
 import com.zakgof.korender.StarrySkyParams
 import com.zakgof.korender.TerrainParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.WaterParams
 import com.zakgof.korender.context.RoiTexturesContext
-import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.math.ColorRGB
-import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec3
 
 internal open class InternalBaseParams : BaseParams {
@@ -163,96 +158,96 @@ internal class InternalStarrySkyParams : StarrySkyParams, InternalBaseParams() {
         super.collect(mb)
     }
 }
-
-internal class InternalStandartParams : StandartParams, InternalBaseParams() {
-
-    private var _specularGlossiness: SpecularGlossiness? = null
-
-    override var baseColor = ColorRGBA.white(1.0f)
-    override var emissiveFactor = ColorRGB.Black
-    override var baseColorTexture: TextureDeclaration? = null
-    override var triplanarScale: Float? = null
-
-    override var normalTexture: TextureDeclaration? = null
-    override var shadowTexture: TextureDeclaration? = null
-    override var emissiveTexture: TextureDeclaration? = null
-
-    override val pbr = InternalPbr()
-
-    override val specularGlossiness: SpecularGlossiness
-        get() {
-            if (_specularGlossiness == null) {
-                _specularGlossiness = InternalSpecularGlossiness()
-            }
-            return _specularGlossiness!!
-        }
-
-    var jntMatrices: Mat4List? = null
-
-    override var xscale = 1f
-    override var yscale = 1f
-    override var rotation = 0f
-
-    override fun collect(mb: MaterialBuilder) {
-
-        mb.uniforms["baseColor"] = baseColor
-        mb.uniforms["baseColorTexture"] = baseColorTexture
-
-        mb.uniforms["metallic"] = pbr.metallic
-        mb.uniforms["roughness"] = pbr.roughness
-        mb.uniforms["metallicRoughnessTexture"] = pbr.metallicRoughnessTexture
-
-        mb.uniforms["emissiveFactor"] = emissiveFactor
-        mb.uniforms["emissiveTexture"] = emissiveTexture
-
-//            mb.uniforms["occlusionTexture"] = _pbr!!.occlusionTexture
-
-        pbr.metallicRoughnessTexture?.let { mb.shaderDefs += "METALLIC_ROUGHNESS_MAP" }
-//          _pbr!!.occlusionTexture?.let { defs += "OCCLUSION_MAP" }
-
-        if (_specularGlossiness != null) {
-            mb.uniforms["specularFactor"] = _specularGlossiness!!.specularFactor
-            mb.uniforms["glossinessFactor"] = _specularGlossiness!!.glossinessFactor
-            mb.uniforms["specularGlossinessTexture"] = _specularGlossiness!!.specularGlossinessTexture
-            mb.shaderDefs += "SPECULAR_GLOSSINESS"
-            _specularGlossiness!!.specularGlossinessTexture?.let { mb.shaderDefs += "SPECULAR_GLOSSINESS_MAP" }
-        }
-
-        mb.uniforms["normalTexture"] = normalTexture
-        mb.uniforms["shadowTexture"] = shadowTexture
-        mb.uniforms["triplanarScale"] = triplanarScale
-
-        mb.uniforms["jntMatrices[0]"] = jntMatrices
-
-        mb.uniforms["xscale"] = xscale
-        mb.uniforms["yscale"] = yscale
-        mb.uniforms["rotation"] = rotation
-
-        baseColorTexture?.let { mb.shaderDefs += "BASE_COLOR_MAP" }
-        normalTexture?.let { mb.shaderDefs += "NORMAL_MAP" }
-        emissiveTexture?.let { mb.shaderDefs += "EMISSIVE_MAP" }
-
-        jntMatrices?.let { mb.shaderDefs += "SKINNING" }
-        triplanarScale?.let { mb.shaderDefs += "TRIPLANAR" }
-
-        super.collect(mb)
-    }
-
-    internal class InternalPbr : Pbr {
-        override var metallic = 0.1f
-        override var roughness = 0.5f
-        override var metallicRoughnessTexture: TextureDeclaration? = null
-
-//        override var occlusionTexture: TextureDeclaration? = null
-
-    }
-
-    internal class InternalSpecularGlossiness : SpecularGlossiness {
-        override var specularFactor: ColorRGB = ColorRGB.White
-        override var glossinessFactor: Float = 0.2f
-        override var specularGlossinessTexture: TextureDeclaration? = null
-    }
-}
+//
+//internal class InternalStandartParams : StandartParams, InternalBaseParams() {
+//
+//    private var _specularGlossiness: SpecularGlossiness? = null
+//
+//    override var color = ColorRGBA.white(1.0f)
+//    override var emissiveFactor = ColorRGB.Black
+//    override var baseColorTexture: TextureDeclaration? = null
+//    override var triplanarScale: Float? = null
+//
+//    override var normalTexture: TextureDeclaration? = null
+//    override var shadowTexture: TextureDeclaration? = null
+//    override var emissiveTexture: TextureDeclaration? = null
+//
+//    override val pbr = InternalPbr()
+//
+//    override val specularGlossiness: SpecularGlossiness
+//        get() {
+//            if (_specularGlossiness == null) {
+//                _specularGlossiness = InternalSpecularGlossiness()
+//            }
+//            return _specularGlossiness!!
+//        }
+//
+//    var jntMatrices: Mat4List? = null
+//
+//    override var xscale = 1f
+//    override var yscale = 1f
+//    override var rotation = 0f
+//
+//    override fun collect(mb: MaterialBuilder) {
+//
+//        mb.uniforms["baseColor"] = baseColor
+//        mb.uniforms["baseColorTexture"] = baseColorTexture
+//
+//        mb.uniforms["metallic"] = pbr.metallic
+//        mb.uniforms["roughness"] = pbr.roughness
+//        mb.uniforms["metallicRoughnessTexture"] = pbr.metallicRoughnessTexture
+//
+//        mb.uniforms["emissiveFactor"] = emissiveFactor
+//        mb.uniforms["emissiveTexture"] = emissiveTexture
+//
+////            mb.uniforms["occlusionTexture"] = _pbr!!.occlusionTexture
+//
+//        pbr.metallicRoughnessTexture?.let { mb.shaderDefs += "METALLIC_ROUGHNESS_MAP" }
+////          _pbr!!.occlusionTexture?.let { defs += "OCCLUSION_MAP" }
+//
+//        if (_specularGlossiness != null) {
+//            mb.uniforms["specularFactor"] = _specularGlossiness!!.specularFactor
+//            mb.uniforms["glossinessFactor"] = _specularGlossiness!!.glossinessFactor
+//            mb.uniforms["specularGlossinessTexture"] = _specularGlossiness!!.specularGlossinessTexture
+//            mb.shaderDefs += "SPECULAR_GLOSSINESS"
+//            _specularGlossiness!!.specularGlossinessTexture?.let { mb.shaderDefs += "SPECULAR_GLOSSINESS_MAP" }
+//        }
+//
+//        mb.uniforms["normalTexture"] = normalTexture
+//        mb.uniforms["shadowTexture"] = shadowTexture
+//        mb.uniforms["triplanarScale"] = triplanarScale
+//
+//        mb.uniforms["jntMatrices[0]"] = jntMatrices
+//
+//        mb.uniforms["xscale"] = xscale
+//        mb.uniforms["yscale"] = yscale
+//        mb.uniforms["rotation"] = rotation
+//
+//        baseColorTexture?.let { mb.shaderDefs += "BASE_COLOR_MAP" }
+//        normalTexture?.let { mb.shaderDefs += "NORMAL_MAP" }
+//        emissiveTexture?.let { mb.shaderDefs += "EMISSIVE_MAP" }
+//
+//        jntMatrices?.let { mb.shaderDefs += "SKINNING" }
+//        triplanarScale?.let { mb.shaderDefs += "TRIPLANAR" }
+//
+//        super.collect(mb)
+//    }
+//
+//    internal class InternalPbr : Pbr {
+//        override var metallicFactor = 0.1f
+//        override var roughnessFactor = 0.5f
+//        override var metallicRoughnessTexture: TextureDeclaration? = null
+//
+////        override var occlusionTexture: TextureDeclaration? = null
+//
+//    }
+//
+//    internal class InternalSpecularGlossiness : SpecularGlossiness {
+//        override var specularFactor: ColorRGB = ColorRGB.White
+//        override var glossinessFactor: Float = 0.2f
+//        override var specularGlossinessTexture: TextureDeclaration? = null
+//    }
+//}
 
 internal class InternalFogParams : FogParams, InternalBaseParams() {
 

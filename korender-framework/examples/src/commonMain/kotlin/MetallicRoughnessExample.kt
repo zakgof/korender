@@ -23,11 +23,11 @@ fun MetallicRoughnessExample() = Korender(appResourceLoader = { Res.readBytes(it
         for (m in 0..4) {
             for (r in 0..4) {
                 Renderable(
-                    standart {
-                        baseColor = ColorRGBA(0x80A0FFFF)
-                        pbr.metallic = r / 4.0f
-                        pbr.roughness = max(m / 4.0f, 0.05f)
-                    },
+                    base(
+                        color = ColorRGBA(0x80A0FFFF),
+                        metallicFactor = r / 4.0f,
+                        roughnessFactor = max(m / 4.0f, 0.05f)
+                    ),
                     ibl(env),
                     mesh = sphere(0.8f),
                     transform = translate((m - 2) * 1.7f, (r - 2) * 1.7f, 8f)

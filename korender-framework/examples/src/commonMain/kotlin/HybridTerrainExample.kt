@@ -33,28 +33,24 @@ fun HybridTerrainExample() =
             AmbientLight(ColorRGB.white(0.2f))
             DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(1.5f))
             Renderable(
-                standart {
-                    pbr.metallic = 0.0f
-                },
-                terrain {
-                    heightTextureSize = 8192
-                    heightTexture = texture("hybridterrain/base-height.jpg")
+                base(metallicFactor = 0.0f),
+                roiTextures,
+                plugin("normal", "!shader/plugin/normal.terrain.frag"),
+                plugin("terrain", "hybridterrain/height.glsl"),
+                plugin("albedo", "hybridterrain/albedo.glsl"),
+                uniforms {
+                    set("heightTexture", texture("hybridterrain/base-height.jpg"))
                     set("sdf", texture("hybridterrain/sdf.png", TextureFilter.Linear))
                     set("road", texture("infcity/road.jpg"))
                 },
-                roiTextures,
-                plugin("terrain", "hybridterrain/height.glsl"),
-                plugin("albedo", "hybridterrain/albedo.glsl"),
-
                 prefab = terrain
             )
 
             fun cubTex(prefix: String) = cubeTexture(CubeTextureSide.entries.associateWith { "hybridterrain/tree/$prefix-${it.toString().lowercase()}.jpg" })
 
             InstancedBillboards(
-                standart {
-                    xscale = 100.0f
-                    yscale = 100.0f
+                billboard(xscale = 100.0f, yscale = 100.0f),
+                uniforms {
                     set("radiantTexture", cubTex("radiant"))
                     set("radiantNormalTexture", cubTex("radiant-normal"))
                     set("colorTexture", cubTex("albedo"))

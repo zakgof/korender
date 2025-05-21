@@ -1,3 +1,5 @@
+#import "!shader/lib/noise.glsl"
+
 uniform sampler2D roiTextures[2];
 uniform vec3[2] roiuvs;
 uniform int roiCount;
@@ -17,16 +19,16 @@ vec4 roi(vec2 uv) {
 uniform sampler2D sdf;
 uniform sampler2D road;
 
-vec4 pluginAlbedo(vec2 tex, vec3 pos, vec3 normal, vec4 albedo) {
+vec4 pluginAlbedo(vec4 base) {
 
-    vec3 sand = vec3(0.89, 0.79, 0.46) + 0.3 * sin(fbm2(tex *  64.0));
+    vec3 sand = vec3(0.89, 0.79, 0.46) + 0.3 * sin(fbm2(vtex *  64.0));
     vec3 grass = vec3(0.2, 0.6, 0.3);
     vec3 snow = vec3(0.9, 0.9, 0.9);
     vec3 rock = vec3(0.5, 0.4, 0.4);
 
-    float sandW = 1.0 - smoothstep(40.0, 70.0, pos.y - 20.0 * fbm2(tex * 18.0));
-    float snowW = smoothstep(100.0, 200.0, pos.y - 96.0 * fbm2(tex * 4.0));
-    float rockW = smoothstep(-0.45, -0.44, -normal.y);
+    float sandW = 1.0 - smoothstep(40.0, 70.0, vpos.y - 20.0 * fbm2(vtex * 18.0));
+    float snowW = smoothstep(100.0, 200.0, vpos.y - 96.0 * fbm2(vtex * 4.0));
+    float rockW = smoothstep(-0.45, -0.44, -vnormal.y);
     float grassW = clamp(1.0 - sandW - rockW - snowW, 0.0, 1.0);
 
     vec3 color = (sand * sandW +
@@ -36,12 +38,12 @@ vec4 pluginAlbedo(vec2 tex, vec3 pos, vec3 normal, vec4 albedo) {
 
 
     float c = 0.25 +
-    fbm2(tex *  64.0) * 0.5 +
-    fbm2(tex * 128.0) * 0.25;
+    fbm2(vtex *  64.0) * 0.5 +
+    fbm2(vtex * 128.0) * 0.25;
 
-    vec4 roiColor = roi(tex);
+    vec4 roiColor = roi(vtex);
 
-    vec4 tx = texture(sdf, tex);
+    vec4 tx = texture(sdf, vtex);
     float v = (tx.r - 0.5) * 2.0 * 6.0 / 128.0;
 
     vec4 finalColor = vec4(mix(color + 0.25, roiColor.rgb, roiColor.a), 1.0);

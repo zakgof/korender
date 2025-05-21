@@ -14,9 +14,7 @@ fun FxaaExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
         AmbientLight(White)
         Renderable(
-            standart {
-                baseColor = Green
-            },
+            base(color = Green),
             mesh = sphere(4f),
         )
         val doFxaa = (frameInfo.time.toInt() % 6 < 3)

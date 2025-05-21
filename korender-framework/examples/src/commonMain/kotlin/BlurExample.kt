@@ -14,9 +14,7 @@ fun BlurExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
         AmbientLight(White)
         Renderable(
-            standart {
-                baseColorTexture = texture("texture/asphalt-albedo.jpg")
-            },
+            base(colorTexture = texture("texture/asphalt-albedo.jpg")),
             mesh = sphere(3f)
         )
         val radius = 5.0f + 5.0f * sin(frameInfo.time)

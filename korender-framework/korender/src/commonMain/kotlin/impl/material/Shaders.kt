@@ -21,7 +21,7 @@ internal object Shaders {
         appResourceLoader: ResourceLoader,
         zeroTex: GlGpuTexture
     ): GlGpuShader {
-        val defs = declaration.defs + shaderEnv
+        val defs = declaration.defs + shaderEnv + declaration.plugins.keys.map {"PLUGIN_" + it.uppercase()}
         val title = "${declaration.vertFile}:${declaration.fragFile} $defs"
         val vertDebugInfo = ShaderDebugInfo(declaration.vertFile)
         val fragDebugInfo = ShaderDebugInfo(declaration.fragFile)
@@ -37,10 +37,11 @@ internal object Shaders {
         defs: Set<String>,
         debugInfo: ShaderDebugInfo,
         plugins: Map<String, String>,
-        appResourceLoader: ResourceLoader
+        appResourceLoader: ResourceLoader,
+        includedFnames: MutableSet<String> = mutableSetOf()
     ): String {
         val content = resourceBytes(appResourceLoader, fname).decodeToString()
-        return preprocess(content, defs, fname, debugInfo, plugins, appResourceLoader)
+        return preprocess(content, defs, fname, debugInfo, plugins, appResourceLoader, includedFnames)
     }
 
     private suspend fun preprocess(
@@ -49,7 +50,8 @@ internal object Shaders {
         fname: String,
         debugInfo: ShaderDebugInfo,
         plugins: Map<String, String>,
-        appResourceLoader: ResourceLoader
+        appResourceLoader: ResourceLoader,
+        includedFnames: MutableSet<String>
     ): String {
         val outputLines = mutableListOf<String>()
         val ifdefs = mutableListOf<String>()
@@ -59,7 +61,7 @@ internal object Shaders {
         content.lines().forEach {
             val line = it.trim()
             debugInfo.incSourceLine()
-            preprocessLine(line, defs, ifdefs, passes, plugins, outputLines, debugInfo, appResourceLoader)
+            preprocessLine(line, defs, ifdefs, passes, plugins, outputLines, debugInfo, appResourceLoader, includedFnames)
         }
         debugInfo.finish(fname)
         return outputLines.joinToString("\n") // TODO check on Linux
@@ -73,7 +75,8 @@ internal object Shaders {
         plugins: Map<String, String>,
         outputLines: MutableList<String>,
         debugInfo: ShaderDebugInfo,
-        appResourceLoader: ResourceLoader
+        appResourceLoader: ResourceLoader,
+        includedFnames: MutableSet<String>
     ) {
         val ifdefMatcher = Regex("#ifdef (.+)").find(line)
         if (ifdefMatcher != null) {
@@ -121,12 +124,16 @@ internal object Shaders {
         if (includeMatcher != null) {
             val include = includeMatcher.groups[1]!!.value
             val includeFname = includeToFile(include, plugins)
+            if (includedFnames.contains(includeFname))
+                return
+            includedFnames += includeFname;
             val includeContent = preprocessFile(
                 includeFname,
                 defs,
                 debugInfo,
                 plugins,
-                appResourceLoader
+                appResourceLoader,
+                includedFnames
             )
             outputLines.add(includeContent)
             return
@@ -137,8 +144,7 @@ internal object Shaders {
 
     private fun includeToFile(include: String, plugins: Map<String, String>): String {
         return if (include.startsWith("$")) {
-            plugins[include.substring(1)]
-                ?: throw KorenderException("Cannot find shader plugin $include")
+            plugins[include.substring(1)] ?: throw KorenderException("Cannot find shader plugin $include")
         } else {
             include
         }

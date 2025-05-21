@@ -21,9 +21,7 @@ fun MeshesExample() {
     Korender(appResourceLoader = { Res.readBytes(it) }) {
         val orbitCamera = OrbitCamera(this, 20.z, 2.y)
         OnTouch { orbitCamera.touch(it) }
-        val materialModifier = standart {
-            baseColor = ColorRGBA.Blue
-        }
+        val materialModifier = base(color = ColorRGBA.Blue)
         Frame {
             AmbientLight(White)
             camera = orbitCamera.camera(projection, width, height)

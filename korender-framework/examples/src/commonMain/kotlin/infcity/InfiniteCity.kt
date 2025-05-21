@@ -102,16 +102,16 @@ private fun FrameContext.building(buildingId: Int, z: Float, x: Float) {
 
     val building = buildings[buildingId]
 
-    val roof = standart {
-        baseColorTexture = texture("infcity/roof.jpg")
-        pbr.metallic = 0.6f
-    }
-    val windows = standart {
-        baseColorTexture = texture("infcity/dw.jpg")
-        emissiveFactor = White
-        set("windowTexture", texture("infcity/lw.jpg", wrap = TextureWrap.MirroredRepeat))
-        pbr.metallic = 0.3f
-    }
+    val roof = arrayOf(
+        base(colorTexture = texture("infcity/roof.jpg"), metallicFactor = 0.6f),
+    )
+    val windows = arrayOf(
+        base(colorTexture = texture("infcity/dw.jpg"), metallicFactor = 0.3f),
+        emission(White),
+        uniforms {
+            set("windowTexture", texture("infcity/lw.jpg", wrap = TextureWrap.MirroredRepeat))
+        },
+    )
 
     fun Triangulation.toCustomMesh(id: String) = customMesh(id, this.points.size, this.indexes.size, POS, NORMAL, TEX) {
         pos(*points.toTypedArray())
@@ -121,12 +121,12 @@ private fun FrameContext.building(buildingId: Int, z: Float, x: Float) {
     }
 
     Renderable(
-        roof,
+        *roof,
         mesh = building.rf().toCustomMesh("roof-$buildingId"),
         transform = translate(x, 0f, z + 8f)
     )
     Renderable(
-        windows,
+        *windows,
         plugin("emission", "infcity/window.emission.plugin.frag"),
         mesh = building.lw().toCustomMesh("wnd-$buildingId"),
         transform = translate(x, 0f, z + 8f)
@@ -134,9 +134,7 @@ private fun FrameContext.building(buildingId: Int, z: Float, x: Float) {
 }
 
 private fun FrameContext.road(startZ: Float) = Renderable(
-    standart {
-        baseColorTexture = texture("infcity/road.jpg")
-    },
+    base(colorTexture = texture("infcity/road.jpg")),
     mesh = roadMesh(),
     transform = translate(startZ.z)
 )
@@ -150,10 +148,8 @@ private fun FrameContext.roadMesh() = customMesh("road", 4, 6, POS, NORMAL, TEX)
 }
 
 private fun FrameContext.sidewalk(z: Float, x: Float) = Renderable(
-    standart {
-        baseColorTexture = texture("infcity/roof.jpg")
-        triplanarScale = 0.5f
-    },
+    base(colorTexture = texture("infcity/roof.jpg")),
+    triplanar(0.5f),
     mesh = grassMesh(),
     transform = translate(x, 0f, z)
 )

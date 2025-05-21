@@ -23,9 +23,7 @@ fun TransparencyExample() {
             AmbientLight(ColorRGB.White)
             camera = orbitCamera.camera(projection, width, height)
             fun semitransparent(color: ColorRGBA, position: Vec3) = Renderable(
-                standart {
-                    baseColor = color
-                },
+                base(color = color),
                 mesh = cube(),
                 transform = scale(5.0f, 5.0f, 0.1f).translate(position),
                 transparent = true

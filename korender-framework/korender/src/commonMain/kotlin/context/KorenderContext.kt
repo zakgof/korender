@@ -29,16 +29,16 @@ import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SmokeParams
 import com.zakgof.korender.SsrParams
-import com.zakgof.korender.StandartParams
 import com.zakgof.korender.StarrySkyParams
-import com.zakgof.korender.TerrainParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.WaterParams
 import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.Vec3.Companion.ZERO
 import kotlinx.coroutines.Deferred
 
 interface KorenderContext {
@@ -94,9 +94,19 @@ interface KorenderContext {
     fun fragment(fragShaderFile: String): MaterialModifier
     fun defs(vararg defs: String): MaterialModifier
     fun plugin(name: String, shaderFile: String): MaterialModifier
-    fun standart(block: StandartParams.() -> Unit): MaterialModifier
+
+    fun base(color: ColorRGBA = ColorRGBA.White, colorTexture: TextureDeclaration? = null, metallicFactor: Float = 0.1f, roughnessFactor: Float = 0.5f): MaterialModifier
+    fun triplanar(scale: Float = 1.0f): MaterialModifier
+    fun normalTexture(normalTexture: TextureDeclaration): MaterialModifier
+    fun emission(factor: ColorRGB): MaterialModifier
+    fun metallicRoughnessTexture(texture: TextureDeclaration): MaterialModifier
+    fun specularGlossinessTexture(texture: TextureDeclaration): MaterialModifier
+    fun specularGlossiness(specularFactor: ColorRGB, glossinessFactor: Float): MaterialModifier
+
+    fun billboard(xscale: Float = 1.0f, yscale: Float = 1.0f): MaterialModifier
+
     fun uniforms(block: BaseParams.() -> Unit): MaterialModifier
-    fun terrain(block: TerrainParams.() -> Unit): MaterialModifier
+    fun terrain(heightTexture: TextureDeclaration, heightTextureSize: Int, heightScale: Float, outsideHeight: Float, terrainCenter: Vec3 = ZERO): MaterialModifier
 
     fun blurHorz(block: BlurParams.() -> Unit = {}): MaterialModifier
     fun blurVert(block: BlurParams.() -> Unit = {}): MaterialModifier

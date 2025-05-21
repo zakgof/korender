@@ -37,10 +37,9 @@ fun AppExample() {
     val options = listOf(
 
         // Demo("IBL probe") { IblExample() }, // TODO
-        Demo("Hybrid Terrain") { HybridTerrainExample() },
-
-        Demo("Terrain") { TerrainExample() },
+        Demo("Heightmap Terrain") { HeightmapTerrainExample() },
         Demo("Procedural Terrain") { ProcTerrainExample() },
+        Demo("Hybrid Terrain") { HybridTerrainExample() },
 
         Demo("City demo") { InfiniteCity() },
 

@@ -51,9 +51,8 @@ internal class Grass(
         Renderable(
             vertex("!shader/effect/grass.vert"),
             defs("VERTEX_COLOR", "VERTEX_OCCLUSION"),
-            standart {
-                pbr.metallic = 0.0f
-                pbr.roughness = 0.9f
+            base(metallicFactor = 0.0f, roughnessFactor = 0.9f),
+            uniforms {
                 set("grassCutoffDepth", depth)
                 set("grassCell", cell)
             },
