@@ -20,7 +20,6 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.floor
@@ -28,7 +27,6 @@ import kotlin.math.floor
 private val buildings = (0 until 10).map { generateBuilding() }
 
 @Composable
-@OptIn(ExperimentalResourceApi::class)
 fun InfiniteCity() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
     Frame {
@@ -54,7 +52,7 @@ private fun FrameContext.light() {
     AmbientLight(white(0.7f))
     DirectionalLight(Vec3(0.1f, -1f, -1f).normalize(), white(2f)) {
         if (target == KorenderContext.TargetPlatform.Desktop) {
-            Cascade(1024, 0.3f, 3.0f, 0f to 60f, pcss(12))
+            Cascade(1024, 0.3f, 3.0f, 0f to 60f, pcss(12, 0.01f))
             Cascade(1024, 2.5f, 12.0f, 0f to 60f, vsm())
             Cascade(1024, 10.0f, 50.0f, 0f to 60f, vsm())
         } else {
