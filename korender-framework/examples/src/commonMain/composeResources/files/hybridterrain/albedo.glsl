@@ -19,7 +19,7 @@ vec4 roi(vec2 uv) {
 uniform sampler2D sdf;
 uniform sampler2D road;
 
-vec4 pluginAlbedo(vec4 base) {
+vec4 pluginAlbedo() {
 
     vec3 sand = vec3(0.89, 0.79, 0.46) + 0.3 * sin(fbm2(vtex *  64.0));
     vec3 grass = vec3(0.2, 0.6, 0.3);

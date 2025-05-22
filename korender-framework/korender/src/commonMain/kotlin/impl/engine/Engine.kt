@@ -2,7 +2,6 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.AsyncContext
-import com.zakgof.korender.BaseParams
 import com.zakgof.korender.BloomParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
@@ -67,7 +66,6 @@ import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.InternalAdjustParams
-import com.zakgof.korender.impl.material.InternalBaseParams
 import com.zakgof.korender.impl.material.InternalBloomParams
 import com.zakgof.korender.impl.material.InternalBlurParams
 import com.zakgof.korender.impl.material.InternalFastCloudSkyParams
@@ -248,13 +246,9 @@ internal class Engine(
             it.uniforms["specularGlossinessTexture"] = texture
         }
 
-        override fun billboard(xscale: Float, yscale: Float)= InternalMaterialModifier {
+        override fun billboard(xscale: Float, yscale: Float) = InternalMaterialModifier {
             it.uniforms["xscale"] = xscale
             it.uniforms["yscale"] = yscale
-        }
-
-        override fun uniforms(block: BaseParams.() -> Unit): MaterialModifier = InternalMaterialModifier {
-            InternalBaseParams().apply(block).collect(it)
         }
 
         override fun terrain(heightTexture: TextureDeclaration, heightTextureSize: Int, heightScale: Float, outsideHeight: Float, terrainCenter: Vec3) = InternalMaterialModifier {
@@ -265,6 +259,32 @@ internal class Engine(
             it.uniforms["heightScale"] = heightScale
             it.uniforms["outsideHeight"] = outsideHeight
             it.uniforms["terrainCenter"] = terrainCenter
+        }
+
+        override fun radiant(radiantTexture: CubeTextureDeclaration, radiantNormalTexture: CubeTextureDeclaration, colorTexture: CubeTextureDeclaration, normalTexture: CubeTextureDeclaration) = InternalMaterialModifier {
+            it.plugins["position"] = "!shader/plugin/position.radiant.frag"
+            it.plugins["normal"] = "!shader/plugin/normal.radiant.frag"
+            it.plugins["albedo"] = "!shader/plugin/albedo.radiant.frag"
+            it.plugins["depth"] = "!shader/plugin/depth.radiant.frag"
+            it.uniforms["radiantTexture"] = radiantTexture
+            it.uniforms["radiantNormalTexture"] = radiantNormalTexture
+            it.uniforms["colorCubeTexture"] = colorTexture
+            it.uniforms["normalCubeTexture"] = normalTexture
+        }
+
+        override fun radiantCapture(radiantMax: Float) = InternalMaterialModifier {
+            it.plugins["output"] = "!shader/plugin/output.radiant.frag"
+            it.uniforms["radiantMax"] = radiantMax
+        }
+
+        override fun normalCapture() = InternalMaterialModifier {
+            it.plugins["output"] = "!shader/plugin/output.normal.frag"
+        }
+
+        override fun uniforms(vararg pairs: Pair<String, Any?>) = InternalMaterialModifier { mb ->
+            pairs.forEach {
+                mb.uniforms[it.first] = it.second
+            }
         }
 
         override fun blurVert(block: BlurParams.() -> Unit) =
@@ -365,12 +385,12 @@ internal class Engine(
             return InternalPostShadingEffect(
                 "ssr", w, h,
                 effectPassMaterialModifiers =
-                    listOf(
-                        InternalMaterialModifier {
-                            it.fragShaderFile = "!shader/effect/ssr.frag"
-                            InternalSsrParams().apply(block).collect(it)
-                        }
-                    ),
+                listOf(
+                    InternalMaterialModifier {
+                        it.fragShaderFile = "!shader/effect/ssr.frag"
+                        InternalSsrParams().apply(block).collect(it)
+                    }
+                ),
                 "ssrTexture",
                 "ssrDepthTexture",
                 compositionMaterialModifier = {

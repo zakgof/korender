@@ -52,7 +52,7 @@ void main() {
     float offset = tex.y * tex.y * bend;
     float theta = atan(2.0 * tex.y * bend, len);
 
-    vec3 n = vec3(stilln.x * cos(theta), sin(theta), stilln.y * cos(theta)) * float(1 - phi * 2);
+    vec3 n = vec3(stilln.x * cos(theta), sin(theta), stilln.y * cos(theta)) * (1. - phi * 2.);
     vnormal = mix(n, vec3(0., 1., 0.), fade);
 
     vpos = pos +

@@ -1,6 +1,6 @@
 #import "!shader/lib/noise.glsl"
 
-vec4 pluginAlbedo(vec4 base) {
+vec4 pluginAlbedo() {
 
     vec3 snow = vec3(0.9, 0.9, 0.9);
     vec3 rock = vec3(0.5, 0.4, 0.4);

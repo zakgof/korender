@@ -11,8 +11,7 @@ import com.zakgof.korender.impl.prefab.InternalPrefab
 import com.zakgof.korender.math.Vec3
 import kotlin.math.floor
 
-internal class Clipmaps(korenderContext: KorenderContext, id: String, private val cellSize: Float, private val hg: Int, private val rings: Int)
-    : InternalPrefab {
+internal class Clipmaps(korenderContext: KorenderContext, id: String, private val cellSize: Float, private val hg: Int, private val rings: Int) : InternalPrefab {
 
     private val center: MeshDeclaration
     private val ring = mutableMapOf<Offset, MeshDeclaration>()
@@ -118,12 +117,12 @@ internal class Clipmaps(korenderContext: KorenderContext, id: String, private va
         tiles.forEach { tile ->
             Renderable(
                 *materialModifiers,
-                uniforms {
-                    set("tileOffsetAndScale", tile.offsetAndScale)
-                    set("antipop", tile.antipop)
-                    set("antipopSpan", hg.toFloat() - 1f)
-                    set("cell", cellSize)
-                },
+                uniforms(
+                    "tileOffsetAndScale" to tile.offsetAndScale,
+                    "antipop" to tile.antipop,
+                    "antipopSpan" to hg.toFloat() - 1f,
+                    "cell" to cellSize
+                ),
                 fc.vertex("!shader/terrain.vert"),
                 fc.defs("TERRAIN"),
                 mesh = tile.mesh

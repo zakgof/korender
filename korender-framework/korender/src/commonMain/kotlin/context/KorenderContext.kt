@@ -1,7 +1,6 @@
 package com.zakgof.korender.context
 
 import com.zakgof.korender.AdjustParams
-import com.zakgof.korender.BaseParams
 import com.zakgof.korender.BloomParams
 import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
@@ -105,8 +104,12 @@ interface KorenderContext {
 
     fun billboard(xscale: Float = 1.0f, yscale: Float = 1.0f): MaterialModifier
 
-    fun uniforms(block: BaseParams.() -> Unit): MaterialModifier
+    fun uniforms(vararg pairs: Pair<String, Any?>): MaterialModifier
     fun terrain(heightTexture: TextureDeclaration, heightTextureSize: Int, heightScale: Float, outsideHeight: Float, terrainCenter: Vec3 = ZERO): MaterialModifier
+    fun radiant(radiantTexture: CubeTextureDeclaration, radiantNormalTexture: CubeTextureDeclaration, colorTexture: CubeTextureDeclaration, normalTexture: CubeTextureDeclaration): MaterialModifier
+
+    fun radiantCapture(radiantMax: Float): MaterialModifier
+    fun normalCapture(): MaterialModifier
 
     fun blurHorz(block: BlurParams.() -> Unit = {}): MaterialModifier
     fun blurVert(block: BlurParams.() -> Unit = {}): MaterialModifier

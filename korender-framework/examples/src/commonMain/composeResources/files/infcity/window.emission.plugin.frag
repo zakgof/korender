@@ -1,7 +1,7 @@
 uniform float time;
 uniform sampler2D windowTexture;
 
-vec3 pluginEmission(vec3 dummy) {
+vec3 pluginEmission() {
 
     vec2 uv = 0.05 * floor(vpos.xy) + 0.13 * floor(vpos.zy);
 

@@ -6,6 +6,7 @@ import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.Korender
+import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.context.FrameContext
@@ -67,18 +68,18 @@ fun Baker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             .translate((pt.pos - hull.center))
     }
 
-    val radiantImages = captureEnv(resolution = 128, near = 0.2f, far = 30f, insideOut = true, defs = setOf("RADIANT_CAPTURE")) {
-        renderHull(hullMesh)
+    val radiantImages = captureEnv(resolution = 128, near = 0.2f, far = 30f, insideOut = true) {
+        renderHull(hullMesh, ZERO, radiantCapture(30f))
     }
     saveCubeMap(radiantImages, basePath + "radiant-")
 
-    val radiantNormalImages = captureEnv(resolution = 128, near = 0.2f, far = 30f, insideOut = true, defs = setOf("NORMAL_CAPTURE")) {
-        renderHull(hullMesh)
+    val radiantNormalImages = captureEnv(resolution = 128, near = 0.2f, far = 30f, insideOut = true) {
+        renderHull(hullMesh, ZERO, normalCapture())
     }
     saveCubeMap(radiantNormalImages, basePath + "radiant-normal-")
 
-    val normalImages = captureEnv(resolution = 128, near = 0.2f, far = 30f, insideOut = true, defs = setOf("NORMAL_CAPTURE")) {
-        renderTree(leaf, leafInstances)
+    val normalImages = captureEnv(resolution = 128, near = 0.2f, far = 30f, insideOut = true) {
+        renderTree(leaf, leafInstances, normalCapture())
     }
     saveCubeMap(normalImages, basePath + "normal-")
 
@@ -91,18 +92,16 @@ fun Baker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
         projection = frustum(3f * width / height, 3f, 3f, 100f)
         camera = camera(20.z, -1.z, 1.y)
-
         AmbientLight(white(0.2f))
         DirectionalLight(Vec3(2.0f, 0.0f, -1.0f), white(3f))
         Billboard(
-            base(
-                xscale = 10.0f
-                yscale = 10.0f
-                set("radiantTexture", cubeTexture("radiant", radiantImages))
-                set("radiantNormalTexture", cubeTexture("radiant-normal", radiantNormalImages))
-                set("colorTexture", cubeTexture("albedo", albedoImages))
-                set("normalTexture", cubeTexture("normal", normalImages))
-            },
+            billboard(xscale = 10.0f, yscale = 10.0f),
+            uniforms(
+                "radiantTexture" to cubeTexture("radiant", radiantImages),
+                "radiantNormalTexture" to cubeTexture("radiant-normal", radiantNormalImages),
+                "colorTexture" to cubeTexture("albedo", albedoImages),
+                "normalTexture" to cubeTexture("normal", normalImages)
+            ),
             fragment("!shader/effect/radial.frag"),
             position = ZERO
         )
@@ -128,21 +127,19 @@ fun saveCubeMap(images: CubeTextureImages, pathPrefix: String) {
     }
 }
 
-private fun FrameContext.renderHull(hullMesh: MeshDeclaration, offset: Vec3 = ZERO) {
+private fun FrameContext.renderHull(hullMesh: MeshDeclaration, offset: Vec3 = ZERO, vararg mods: MaterialModifier) {
     Renderable(
-        base(
-            color = ColorRGBA.Red
-        },
+        base(color = ColorRGBA.Red),
+        *mods,
         mesh = hullMesh,
         transform = translate(offset)
     )
 }
 
-private fun FrameContext.renderTree(leaf: MeshDeclaration, leafInstances: List<Transform>) {
+private fun FrameContext.renderTree(leaf: MeshDeclaration, leafInstances: List<Transform>, vararg mods: MaterialModifier) {
     InstancedRenderables(
-        base(
-            colorTexture = texture("model/leaf.png")
-        },
+        base(colorTexture = texture("model/leaf.png")),
+        *mods,
         mesh = leaf,
         id = "metapoints",
         transparent = true,

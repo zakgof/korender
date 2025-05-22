@@ -340,7 +340,7 @@ internal class GltfSceneBuilder(
                 ColorRGBA(it[0], it[1], it[2], it[3])
             } ?: ColorRGBA.White
 
-            matPbr?.baseColorTexture ?: matSpecularGlossiness?.diffuseTexture?.let { getTexture(it) }?.let {
+            (matPbr?.baseColorTexture ?: matSpecularGlossiness?.diffuseTexture)?.let { getTexture(it) }?.let {
                 mb.uniforms["baseColorTexture"] = it
                 mb.shaderDefs += "BASE_COLOR_MAP";
             }

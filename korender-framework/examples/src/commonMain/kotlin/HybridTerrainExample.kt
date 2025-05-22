@@ -38,11 +38,11 @@ fun HybridTerrainExample() =
                 plugin("normal", "!shader/plugin/normal.terrain.frag"),
                 plugin("terrain", "hybridterrain/height.glsl"),
                 plugin("albedo", "hybridterrain/albedo.glsl"),
-                uniforms {
-                    set("heightTexture", texture("hybridterrain/base-height.jpg"))
-                    set("sdf", texture("hybridterrain/sdf.png", TextureFilter.Linear))
-                    set("road", texture("infcity/road.jpg"))
-                },
+                uniforms(
+                    "heightTexture" to texture("hybridterrain/base-height.jpg"),
+                    "sdf" to texture("hybridterrain/sdf.png", TextureFilter.Linear),
+                    "road" to texture("infcity/road.jpg")
+                ),
                 prefab = terrain
             )
 
@@ -50,18 +50,18 @@ fun HybridTerrainExample() =
 
             InstancedBillboards(
                 billboard(xscale = 100.0f, yscale = 100.0f),
-                uniforms {
-                    set("radiantTexture", cubTex("radiant"))
-                    set("radiantNormalTexture", cubTex("radiant-normal"))
-                    set("colorTexture", cubTex("albedo"))
-                    set("normalTexture", cubTex("normal"))
-                },
-                fragment("!shader/effect/radial.frag"),
+                base(metallicFactor = 0f, roughnessFactor = 0.9f),
+                radiant(
+                    radiantTexture = cubTex("radiant"),
+                    radiantNormalTexture = cubTex("radiant-normal"),
+                    colorTexture = cubTex("albedo"),
+                    normalTexture = cubTex("normal")
+                ),
                 id = "trees",
                 static = true,
-                count = 20000
+                count = 2000
             ) {
-                (0 until 20000).forEach {
+                (0 until 2000).forEach {
                     val r = Random(it)
                     Instance(pos = Vec3(r.nextFloat() * 5000f - 600f, 450f, r.nextFloat() * 3000f - 1610f))
                 }

@@ -59,6 +59,21 @@ float shadowRatios[MAX_SHADOWS];
 #import "!shader/lib/pbr.glsl"
 #import "!shader/lib/light.glsl"
 
+vec3 position;
+vec4 albedo;
+vec3 normal;
+vec3 emission;
+float metallic;
+float roughness;
+vec3 diffuse;
+vec3 f0;
+vec3 color;
+vec3 look;
+
+#ifdef PLUGIN_POSITION
+#import "$position"
+#endif
+
 #ifdef PLUGIN_TEXTURING
 #import "$texturing"
 #endif
@@ -83,12 +98,26 @@ float shadowRatios[MAX_SHADOWS];
 #import "$specular_glossiness"
 #endif
 
+#ifdef PLUGIN_OUTPUT
+#import "$output"
+#endif
+
+#ifdef PLUGIN_DEPTH
+#import "$depth"
+#endif
+
 void main() {
 
-    vec4 albedo = baseColor;
+    albedo = baseColor;
 
     #ifdef VERTEX_COLOR
         albedo *= vcolor;
+    #endif
+
+    #ifdef PLUGIN_POSITION
+        position = pluginPosition();
+    #else
+        position = vpos;
     #endif
 
     #ifdef PLUGIN_TEXTURING
@@ -100,25 +129,25 @@ void main() {
     #endif
 
     #ifdef PLUGIN_NORMAL
-        vec3 normal = pluginNormal();
+        normal = pluginNormal();
     #else
-        vec3 normal = normalize(vnormal);
+        normal = normalize(vnormal);
     #endif
 
     #ifdef PLUGIN_ALBEDO
-        albedo = pluginAlbedo(albedo);
+        albedo = pluginAlbedo();
     #endif
 
     if (albedo.a < 0.001)
         discard;
 
-    vec3 emission = vec3(0.);
+    emission = vec3(0.);
     #ifdef PLUGIN_EMISSION
         emission = pluginEmission();
     #endif
 
-    float metallic = metallicFactor;
-    float roughness = roughnessFactor;
+    metallic = metallicFactor;
+    roughness = roughnessFactor;
 
     #ifdef PLUGIN_METALLIC_ROUGHNESS
         vec2 mr = pluginMetallicRoughness();
@@ -126,8 +155,8 @@ void main() {
         roughness = mr.y;
     #endif
 
-    vec3 diffuse = mix(albedo.rgb, vec3(0.), metallic);
-    vec3 f0 = mix(vec3(0.04), albedo.rgb, metallic);
+    diffuse = mix(albedo.rgb, vec3(0.), metallic);
+    f0 = mix(vec3(0.04), albedo.rgb, metallic);
 
     #ifdef PLUGIN_SPECULAR_GLOSSINESS
         vec4 sg = pluginSpecularGlossiness();
@@ -138,33 +167,32 @@ void main() {
 
     ///////////////////////
 
-    vec3 V = normalize(cameraPos - vpos);
+    look = normalize(cameraPos - position);
+    color = diffuse * ambientColor + emission;
 
-    vec3 color = diffuse * ambientColor + emission;
-
-    float plane = dot((vpos - cameraPos), cameraDir);
+    float plane = dot((position - cameraPos), cameraDir);
 
     float occlusion = 1.0;
     #ifdef VERTEX_OCCLUSION
         occlusion *= vocclusion;
     #endif
 
-    populateShadowRatios(plane, vpos);
+    populateShadowRatios(plane, position);
 
     for (int l=0; l<numDirectionalLights; l++) {
-        color += dirLight(l, normal, V, diffuse, f0, roughness, occlusion);
+        color += dirLight(l, normal, look, diffuse, f0, roughness, occlusion);
     }
     for (int l=0; l<numPointLights; l++) {
-        color += pointLight(vpos, l, normal, V, diffuse, f0, roughness, occlusion);
+        color += pointLight(vpos, l, normal, look, diffuse, f0, roughness, occlusion);
     }
 
-    fragColor = vec4(color, albedo.a);
-
-    #ifdef RADIANT_CAPTURE
-        float radiant = length(cameraPos - vpos) / 15.0;
-        fragColor = vec4(radiant, radiant, radiant, 1.0);
+    #ifdef PLUGIN_OUTPUT
+        fragColor = pluginOutput();
+    #else
+        fragColor = vec4(color, albedo.a);
     #endif
-    #ifdef NORMAL_CAPTURE
-        fragColor = vec4((N + 1.) * 0.5, 1.0);
+
+    #ifdef PLUGIN_DEPTH
+        gl_FragDepth = pluginDepth();
     #endif
 }

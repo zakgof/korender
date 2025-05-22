@@ -108,9 +108,9 @@ private fun FrameContext.building(buildingId: Int, z: Float, x: Float) {
     val windows = arrayOf(
         base(colorTexture = texture("infcity/dw.jpg"), metallicFactor = 0.3f),
         emission(White),
-        uniforms {
-            set("windowTexture", texture("infcity/lw.jpg", wrap = TextureWrap.MirroredRepeat))
-        },
+        uniforms(
+            "windowTexture" to texture("infcity/lw.jpg", wrap = TextureWrap.MirroredRepeat)
+        ),
     )
 
     fun Triangulation.toCustomMesh(id: String) = customMesh(id, this.points.size, this.indexes.size, POS, NORMAL, TEX) {

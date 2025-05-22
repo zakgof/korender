@@ -4,7 +4,7 @@
 
 vec3 pluginNormal() {
 
-    float nstep = 1.0 / pluginTerrainTextureSize();
+    float nstep = 1.0 / float(pluginTerrainTextureSize());
 
     float hL = pluginTerrainHeight(vtex + vec2(-nstep, 0.));
     float hR = pluginTerrainHeight(vtex + vec2(nstep, 0.));

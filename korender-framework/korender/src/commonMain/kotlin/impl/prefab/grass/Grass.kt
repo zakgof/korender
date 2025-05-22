@@ -52,10 +52,10 @@ internal class Grass(
             vertex("!shader/effect/grass.vert"),
             defs("VERTEX_COLOR", "VERTEX_OCCLUSION"),
             base(metallicFactor = 0.0f, roughnessFactor = 0.9f),
-            uniforms {
-                set("grassCutoffDepth", depth)
-                set("grassCell", cell)
-            },
+            uniforms(
+                "grassCutoffDepth" to depth,
+                "grassCell" to cell
+            ),
             *materialModifiers,
             mesh = mesh,
             instancing = positionInstancing("$id-instancing", side * side, true) {
