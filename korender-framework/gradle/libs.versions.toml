@@ -1,16 +1,16 @@
 [versions]
-agp = "8.5.2"
-android-compileSdk = "34"
+agp = "8.10.0"
+android-compileSdk = "35"
 android-minSdk = "29"
-android-targetSdk = "34"
-androidx-activityCompose = "1.9.3"
-compose-plugin = "1.7.0"
-kotlin = "2.1.0"
-kotlinxCoroutinesCore = "1.9.0"
+android-targetSdk = "35"
+androidx-activityCompose = "1.10.1"
+compose-plugin = "1.8.0"
+kotlin = "2.1.20"
+kotlinxCoroutinesCore = "1.10.2"
 kotlinxBrowser = "0.3"
-kotlinxSerializationJson = "1.7.1"
-lwjgl3-awt = "0.1.8"
-lwjgl = "3.3.3"
+kotlinxSerializationJson = "1.8.1"
+lwjgl3-awt = "0.2.3"
+lwjgl = "3.3.5"
 
 [libraries]
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
