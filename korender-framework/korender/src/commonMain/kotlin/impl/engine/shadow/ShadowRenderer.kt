@@ -22,7 +22,6 @@ import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Mat4List
-import com.zakgof.korender.impl.material.InternalBlurParams
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
@@ -175,11 +174,9 @@ internal object ShadowRenderer {
         val blur1 = materialDeclaration(BaseMaterial.Screen, false, InternalMaterialModifier {
             it.vertShaderFile = "!shader/screen.vert"
             it.fragShaderFile = "!shader/effect/blurv.frag"
-            InternalBlurParams().apply {
-                radius = texBlurRadius
-            }.collect(it)
-        }
-        )
+            it.uniforms["radius"] = texBlurRadius
+        })
+
         uniforms["colorTexture"] = frameBuffer.colorTextures[0]
         uniforms["depthTexture"] = frameBuffer.depthTexture
 
@@ -192,13 +189,13 @@ internal object ShadowRenderer {
                 Renderable(mesh.gpuMesh, shader, blur1.uniforms).render(uniforms, fixer)
             }
         }
-        val blur2 = materialDeclaration(BaseMaterial.Screen, false,
+
+        val blur2 = materialDeclaration(
+            BaseMaterial.Screen, false,
             InternalMaterialModifier {
                 it.vertShaderFile = "!shader/screen.vert"
                 it.fragShaderFile = "!shader/effect/blurh.frag"
-                InternalBlurParams().apply {
-                    radius = texBlurRadius
-                }.collect(it)
+                it.uniforms["radius"] = texBlurRadius
             }
         )
         uniforms["colorTexture"] = blurFrameBuffer.colorTextures[0]

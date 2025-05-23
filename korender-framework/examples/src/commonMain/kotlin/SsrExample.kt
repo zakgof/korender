@@ -21,12 +21,17 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         val phase = frameInfo.time.toInt() % 3
         DeferredShading {
             if (phase == 1) {
-                PostShading(ssr(width = width / 4, height = height / 4, fxaa = true) {
-                    maxRayTravel = 25f
-                    linearSteps = 18
-                    binarySteps = 5
-                    envTexture = env
-                })
+                PostShading(
+                    ssr(
+                        width = width / 4,
+                        height = height / 4,
+                        fxaa = true,
+                        maxRayTravel = 25f,
+                        linearSteps = 18,
+                        binarySteps = 5,
+                        envTexture = env
+                    )
+                )
             }
             if (phase == 2) {
                 Shading(ibl(env))

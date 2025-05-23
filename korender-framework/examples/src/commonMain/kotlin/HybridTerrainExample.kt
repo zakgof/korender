@@ -9,10 +9,8 @@ import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.random.Random
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun HybridTerrainExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
@@ -68,10 +66,7 @@ fun HybridTerrainExample() =
             }
             Sky(fastCloudSky())
             PostProcess(water(), fastCloudSky())
-            PostProcess(fog {
-                color = ColorRGB(0x808090)
-                density = 0.00003f
-            })
+            PostProcess(fog(color = ColorRGB(0x808090), density = 0.00003f))
             Gui {
                 Column {
                     Filler()

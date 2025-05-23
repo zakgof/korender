@@ -18,10 +18,6 @@ interface BillboardVertexParams : BaseParams {
     var rotation: Float
 }
 
-interface BlurParams : BaseParams {
-    var radius: Float
-}
-
 interface FireParams : BillboardVertexParams {
     var strength: Float
 }

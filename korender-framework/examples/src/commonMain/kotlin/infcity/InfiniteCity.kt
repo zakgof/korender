@@ -168,13 +168,10 @@ private fun FrameContext.gui() = Gui {
 }
 
 private fun FrameContext.sky() {
-    val sky = starrySky {
-        colorness = 0.4f
-        density = 20f
-        size = 20f
-        set("moonTexture", texture("infcity/moon.png"))
-    }
-    val moon = plugin("secsky", "infcity/moon.secsky.plugin.frag")
-    Sky(sky, moon)
+    Sky(
+        starrySky(colorness = 0.4f, density = 20f, size = 20f),
+        plugin("secsky", "infcity/moon.secsky.plugin.frag"),
+        uniforms("moonTexture" to texture("infcity/moon.png"))
+    )
     PostProcess(fog())
 }

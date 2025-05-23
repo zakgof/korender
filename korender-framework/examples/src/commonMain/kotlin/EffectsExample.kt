@@ -35,10 +35,8 @@ fun EffectsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 }
 
 private fun FrameContext.fireDemo() = Billboard(
-    fire {
-        yscale = 10f
-        xscale = 2f
-    },
+    billboard(xscale = 2f, yscale = 10f),
+    fire(),
     position = (-5).x + 5.y,
     transparent = true
 )
@@ -48,12 +46,8 @@ private fun FrameContext.smokeDemo() {
     for (i in 1..n) {
         val phase = fract(frameInfo.time * 0.5f + n.toFloat() / i)
         Billboard(
-            smoke {
-                xscale = 5f * phase + 0.5f
-                yscale = 5f * phase + 0.5f
-                seed = i / n.toFloat()
-                density = 1.0f - phase
-            },
+            billboard(xscale = 5f * phase + 0.5f, yscale = 5f * phase + 0.5f),
+            smoke(seed = i / n.toFloat(), density = 1.0f - phase),
             position = (6.0f + phase * phase * 8f + phase * 2f - 4f).y,
             transparent = true
         )
@@ -63,11 +57,8 @@ private fun FrameContext.smokeDemo() {
 private fun FrameContext.fireballDemo() {
     val phase = fract(frameInfo.time)
     Billboard(
-        fireball {
-            xscale = 8f * phase
-            yscale = 8f * phase
-            power = phase
-        },
+        billboard(xscale = 8f * phase, yscale = 8f * phase),
+        fireball(power = phase),
         transparent = true,
         position = 5.x + 3.y
     )

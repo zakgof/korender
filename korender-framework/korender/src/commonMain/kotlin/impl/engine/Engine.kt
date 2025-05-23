@@ -1,20 +1,12 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.AdjustParams
 import com.zakgof.korender.AsyncContext
-import com.zakgof.korender.BloomParams
-import com.zakgof.korender.BlurParams
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureResources
-import com.zakgof.korender.FastCloudSkyParams
-import com.zakgof.korender.FireParams
-import com.zakgof.korender.FireballParams
-import com.zakgof.korender.FogParams
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.FrustumProjectionDeclaration
-import com.zakgof.korender.GrassParams
 import com.zakgof.korender.Image
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KeyEvent
@@ -31,15 +23,11 @@ import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ShadowAlgorithmDeclaration
-import com.zakgof.korender.SmokeParams
-import com.zakgof.korender.SsrParams
-import com.zakgof.korender.StarrySkyParams
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.WaterParams
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.InstancingDeclaration
@@ -65,21 +53,9 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
-import com.zakgof.korender.impl.material.InternalAdjustParams
-import com.zakgof.korender.impl.material.InternalBloomParams
-import com.zakgof.korender.impl.material.InternalBlurParams
-import com.zakgof.korender.impl.material.InternalFastCloudSkyParams
-import com.zakgof.korender.impl.material.InternalFireParams
-import com.zakgof.korender.impl.material.InternalFireballParams
-import com.zakgof.korender.impl.material.InternalFogParams
-import com.zakgof.korender.impl.material.InternalGrassParams
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalRoiTexturesContext
-import com.zakgof.korender.impl.material.InternalSmokeParams
-import com.zakgof.korender.impl.material.InternalSsrParams
-import com.zakgof.korender.impl.material.InternalStarrySkyParams
-import com.zakgof.korender.impl.material.InternalWaterParams
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
@@ -164,32 +140,18 @@ internal class Engine(
 
         override fun screenQuad(): MeshDeclaration = ScreenQuad
 
-        override fun customMesh(
-            id: Any,
-            vertexCount: Int,
-            indexCount: Int,
-            vararg attributes: MeshAttribute<*>,
-            dynamic: Boolean,
-            indexType: IndexType?,
-            block: MeshInitializer.() -> Unit
-        ): MeshDeclaration =
+        override fun customMesh(id: String, vertexCount: Int, indexCount: Int, vararg attributes: MeshAttribute<*>, dynamic: Boolean, indexType: IndexType?, block: MeshInitializer.() -> Unit): MeshDeclaration =
             CustomMesh(id, vertexCount, indexCount, attributes.asList(), dynamic, indexType, block)
 
-        override fun heightField(
-            id: Any,
-            cellsX: Int,
-            cellsZ: Int,
-            cellWidth: Float,
-            height: (Int, Int) -> Float
-        ): MeshDeclaration =
+        override fun heightField(id: String, cellsX: Int, cellsZ: Int, cellWidth: Float, height: (Int, Int) -> Float): MeshDeclaration =
             HeightField(id, cellsX, cellsZ, cellWidth, height)
 
-        override fun loadMesh(meshDeclaration: MeshDeclaration): Deferred<Mesh> =
+        override fun loadMesh(meshDeclaration: MeshDeclaration) =
             asyncContext.call {
                 Geometry.createCpuMesh(meshDeclaration, asyncContext.appResourceLoader)
             }
 
-        override fun mesh(id: String, mesh: Mesh): MeshDeclaration =
+        override fun mesh(id: String, mesh: Mesh) =
             CustomCpuMesh(id, mesh as CMesh)
 
         override fun vertex(vertShaderFile: String): InternalMaterialModifier =
@@ -287,72 +249,79 @@ internal class Engine(
             }
         }
 
-        override fun blurVert(block: BlurParams.() -> Unit) =
-            InternalMaterialModifier {
-                it.fragShaderFile = "!shader/effect/blurh.frag"
-                InternalBlurParams().apply(block).collect(it)
-            }
+        override fun blurVert(radius: Float) = InternalMaterialModifier {
+            it.fragShaderFile = "!shader/effect/blurh.frag"
+            it.uniforms["radius"] = radius
+        }
 
-        override fun blurHorz(block: BlurParams.() -> Unit) =
-            InternalMaterialModifier {
-                it.fragShaderFile = "!shader/effect/blurv.frag"
-                InternalBlurParams().apply(block).collect(it)
-            }
+        override fun blurHorz(radius: Float) = InternalMaterialModifier {
+            it.fragShaderFile = "!shader/effect/blurv.frag"
+            it.uniforms["radius"] = radius
+        }
 
-        override fun adjust(block: AdjustParams.() -> Unit): MaterialModifier =
-            InternalMaterialModifier {
-                it.fragShaderFile = "!shader/effect/adjust.frag"
-                InternalAdjustParams().apply(block).collect(it)
-            }
+        override fun adjust(brightness: Float, contrast: Float, saturation: Float) = InternalMaterialModifier {
+            it.fragShaderFile = "!shader/effect/adjust.frag"
+            it.uniforms["brightness"] = brightness
+            it.uniforms["contrast"] = contrast
+            it.uniforms["saturation"] = saturation
+        }
 
-        override fun fire(block: FireParams.() -> Unit) =
-            InternalMaterialModifier {
-                it.vertShaderFile = "!shader/billboard.vert"
-                it.fragShaderFile = "!shader/effect/fire.frag"
-                InternalFireParams().apply(block).collect(it)
-            }
+        override fun fire(strength: Float): MaterialModifier = InternalMaterialModifier {
+            it.vertShaderFile = "!shader/billboard.vert"
+            it.fragShaderFile = "!shader/effect/fire.frag"
+            it.uniforms["strength"] = strength
+        }
 
-        override fun fireball(block: FireballParams.() -> Unit) =
-            InternalMaterialModifier {
-                it.vertShaderFile = "!shader/billboard.vert"
-                it.fragShaderFile = "!shader/effect/fireball.frag"
-                InternalFireballParams().apply(block).collect(it)
-            }
+        override fun fireball(power: Float) = InternalMaterialModifier {
+            it.vertShaderFile = "!shader/billboard.vert"
+            it.fragShaderFile = "!shader/effect/fireball.frag"
+            it.uniforms["power"] = power
+        }
 
-        override fun smoke(block: SmokeParams.() -> Unit) =
-            InternalMaterialModifier {
-                it.vertShaderFile = "!shader/billboard.vert"
-                it.fragShaderFile = "!shader/effect/smoke.frag"
-                InternalSmokeParams().apply(block).collect(it)
-            }
+        override fun smoke(density: Float, seed: Float) = InternalMaterialModifier {
+            it.vertShaderFile = "!shader/billboard.vert"
+            it.fragShaderFile = "!shader/effect/smoke.frag"
+            it.uniforms["density"] = density
+            it.uniforms["seed"] = seed
+        }
 
-        override fun grass(block: GrassParams.() -> Unit) =
-            InternalMaterialModifier {
-                InternalGrassParams().apply(block).collect(it)
-            }
+        override fun grass(grassColor1: ColorRGB, grassColor2: ColorRGB, bladeWidth: Float, bladeLength: Float) = InternalMaterialModifier {
+            it.uniforms["grassColor1"] = grassColor1
+            it.uniforms["grassColor2"] = grassColor2
+            it.uniforms["bladeWidth"] = bladeWidth
+            it.uniforms["bladeLength"] = bladeLength
+        }
 
-        override fun water(block: WaterParams.() -> Unit) =
-            InternalMaterialModifier {
-                it.fragShaderFile = "!shader/effect/water.frag"
-                InternalWaterParams().apply(block).collect(it)
-            }
+        override fun water(waterColor: ColorRGB, transparency: Float, waveScale: Float, waveMagnitude: Float) = InternalMaterialModifier {
+            it.fragShaderFile = "!shader/effect/water.frag"
+            it.uniforms["waterColor"] = waterColor
+            it.uniforms["transparency"] = transparency
+            it.uniforms["waveScale"] = waveScale
+            it.uniforms["waveMagnitude"] = waveMagnitude
+        }
 
-        override fun fxaa() =
-            InternalMaterialModifier {
-                it.fragShaderFile = "!shader/effect/fxaa.frag"
-            }
+        override fun fxaa() = InternalMaterialModifier {
+            it.fragShaderFile = "!shader/effect/fxaa.frag"
+        }
 
-        override fun fastCloudSky(block: FastCloudSkyParams.() -> Unit) =
-            InternalMaterialModifier {
-                it.plugins["sky"] = "!shader/sky/fastcloud.plugin.frag"
-                InternalFastCloudSkyParams().apply(block).collect(it)
-            }
+        override fun fastCloudSky(density: Float, thickness: Float, scale: Float, rippleamount: Float, ripplescale: Float, darkblue: ColorRGB, lightblue: ColorRGB) = InternalMaterialModifier {
+            it.plugins["sky"] = "!shader/sky/fastcloud.plugin.frag"
+            it.uniforms["density"] = density
+            it.uniforms["thickness"] = thickness
+            it.uniforms["scale"] = scale
+            it.uniforms["darkblue"] = darkblue
+            it.uniforms["lightblue"] = lightblue
+            it.uniforms["rippleamount"] = rippleamount
+            it.uniforms["ripplescale"] = ripplescale
+        }
 
-        override fun starrySky(block: StarrySkyParams.() -> Unit) =
-            InternalMaterialModifier {
-                it.plugins["sky"] = "!shader/sky/starry.plugin.frag"
-                InternalStarrySkyParams().apply(block).collect(it)
-            }
+        override fun starrySky(colorness: Float, density: Float, speed: Float, size: Float) = InternalMaterialModifier {
+            it.plugins["sky"] = "!shader/sky/starry.plugin.frag"
+            it.uniforms["colorness"] = colorness
+            it.uniforms["density"] = density
+            it.uniforms["speed"] = speed
+            it.uniforms["size"] = size
+        }
 
         override fun cubeSky(cubeTexture: CubeTextureDeclaration) =
             InternalMaterialModifier {
@@ -361,11 +330,11 @@ internal class Engine(
                 it.uniforms["cubeTexture"] = cubeTexture
             }
 
-        override fun fog(block: FogParams.() -> Unit) =
-            InternalMaterialModifier {
-                it.fragShaderFile = "!shader/effect/fog.frag"
-                InternalFogParams().apply(block).collect(it)
-            }
+        override fun fog(density: Float, color: ColorRGB) = InternalMaterialModifier {
+            it.fragShaderFile = "!shader/effect/fog.frag"
+            it.uniforms["density"] = density
+            it.uniforms["fogColor"] = color
+        }
 
         override fun ibl(env: CubeTextureDeclaration): MaterialModifier =
             InternalMaterialModifier {
@@ -373,24 +342,29 @@ internal class Engine(
                 it.uniforms["cubeTexture"] = env
             }
 
-        override fun roiTextures(block: RoiTexturesContext.() -> Unit): MaterialModifier =
-            InternalMaterialModifier {
-                it.shaderDefs += "ROI"
-                InternalRoiTexturesContext().apply(block).collect(it)
-            }
+        override fun roiTextures(block: RoiTexturesContext.() -> Unit) = InternalMaterialModifier {
+            it.shaderDefs += "ROI"
+            InternalRoiTexturesContext().apply(block).collect(it)
+        }
 
-        override fun ssr(width: Int?, height: Int?, fxaa: Boolean, block: SsrParams.() -> Unit): PostShadingEffect {
+        override fun ssr(width: Int?, height: Int?, fxaa: Boolean, maxRayTravel: Float, linearSteps: Int, binarySteps: Int, envTexture: CubeTextureDeclaration?): PostShadingEffect {
             val w = width ?: renderContext.width
             val h = height ?: renderContext.height
             return InternalPostShadingEffect(
                 "ssr", w, h,
                 effectPassMaterialModifiers =
-                listOf(
-                    InternalMaterialModifier {
-                        it.fragShaderFile = "!shader/effect/ssr.frag"
-                        InternalSsrParams().apply(block).collect(it)
-                    }
-                ),
+                    listOf(
+                        InternalMaterialModifier {
+                            it.fragShaderFile = "!shader/effect/ssr.frag"
+                            it.uniforms["linearSteps"] = linearSteps
+                            it.uniforms["binarySteps"] = binarySteps
+                            it.uniforms["maxRayTravel"] = maxRayTravel
+                            envTexture?.let { et ->
+                                it.uniforms["envTexture"] = et
+                                it.shaderDefs += "SSR_ENV"
+                            }
+                        }
+                    ),
                 "ssrTexture",
                 "ssrDepthTexture",
                 compositionMaterialModifier = {
@@ -403,14 +377,13 @@ internal class Engine(
                 })
         }
 
-        override fun bloom(width: Int?, height: Int?, block: BloomParams.() -> Unit): PostShadingEffect = InternalPostShadingEffect(
+        override fun bloom(width: Int?, height: Int?) = InternalPostShadingEffect(
             "bloom",
             width ?: renderContext.width,
             height ?: renderContext.height,
             effectPassMaterialModifiers = listOf(
                 InternalMaterialModifier {
                     it.fragShaderFile = "!shader/effect/bloom.frag"
-                    InternalBloomParams().apply(block).collect(it)
                 },
                 InternalMaterialModifier {
                     it.fragShaderFile = "!shader/effect/blurv.frag"

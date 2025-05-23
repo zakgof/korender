@@ -30,7 +30,7 @@ fun HeightmapTerrainExample() =
                     colorTexture = texture("terrain/terrain-albedo.jpg", wrap = TextureWrap.ClampToEdge),
                     metallicFactor = 0.0f
                 ),
-                terrain (
+                terrain(
                     heightTexture = texture("terrain/terrain-height.png"),
                     heightTextureSize = 1024,
                     heightScale = 200.0f,
@@ -41,9 +41,7 @@ fun HeightmapTerrainExample() =
             )
 
             Sky(fastCloudSky())
-            PostProcess(water {
-                waveScale = 1000.0f
-            }, fastCloudSky())
+            PostProcess(water(waveScale = 1000.0f), fastCloudSky())
             Gui {
                 Column {
                     Filler()
