@@ -1,9 +1,11 @@
 package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.PostShadingEffect
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.context.RoiTexturesContext
 import com.zakgof.korender.math.Vec3
+import impl.engine.Retentionable
 
 internal class InternalPostShadingEffect(
     val name: String,
@@ -13,7 +15,8 @@ internal class InternalPostShadingEffect(
     val compositionColorOutput: String,
     val compositionDepthOutput: String,
     val compositionMaterialModifier: InternalMaterialModifier,
-) : PostShadingEffect
+    override val retentionPolicy: RetentionPolicy
+) : PostShadingEffect, Retentionable
 
 internal class InternalRoiTexturesContext : RoiTexturesContext {
 

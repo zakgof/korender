@@ -28,29 +28,34 @@ private val buildings = (0 until 10).map { generateBuilding() }
 
 @Composable
 fun InfiniteCity() = Korender(appResourceLoader = { Res.readBytes(it) }) {
-
     Frame {
-
-        val z = frameInfo.time * 0.2f
-
-        DeferredShading()
-
-        projection = frustum(0.3f * width / height, 0.3f, 0.3f, 200f)
-        camera = camera(Vec3(0.05f, 0.3f, z - 1f), Quaternion.fromAxisAngle(1.y, 0.05f * cos(frameInfo.time)) * 1.z, 1.y)
-
-        light()
-
-        character(z)
-        city(z)
-        sky()
-        gui()
+//        val loaded = preload {
+//            gltf("infcity/swat-woman.glb")
+//            texture("infcity/road.jpg")
+//        }
+//        if (loaded) frame() else loader()
+        frame()
     }
+}
 
+private fun FrameContext.frame() {
+    val z = frameInfo.time * 0.2f
+
+    DeferredShading()
+
+    projection = frustum(0.3f * width / height, 0.3f, 0.3f, 200f)
+    camera = camera(Vec3(0.05f, 0.3f, z - 1f), Quaternion.fromAxisAngle(1.y, 0.05f * cos(frameInfo.time)) * 1.z, 1.y)
+
+    light()
+    character(z)
+    city(z)
+    sky()
+    gui()
 }
 
 private fun FrameContext.light() {
     AmbientLight(white(0.7f))
-    DirectionalLight(Vec3(0.1f, -1f, -1f).normalize(), white(2f)) {
+    DirectionalLight(Vec3(0.1f, -1f, -1f), white(2f)) {
         if (target == KorenderContext.TargetPlatform.Desktop) {
             Cascade(1024, 0.3f, 3.0f, 0f to 60f, pcss(12, 0.01f))
             Cascade(1024, 2.5f, 12.0f, 0f to 60f, vsm())

@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.shadow.ShadowRenderer
@@ -44,6 +45,7 @@ internal class Scene(
     private val sceneDeclaration: SceneDeclaration,
     private val inventory: Inventory,
     private val renderContext: RenderContext,
+    private val currentRetentionPolicy: RetentionPolicy,
     private val probes: MutableMap<String, GlGpuCubeTexture>,
 ) {
 
@@ -62,7 +64,7 @@ internal class Scene(
             else -> value
         }
     }
-    private val filters = sceneDeclaration.filters.map { materialDeclaration(BaseMaterial.Screen, deferredShading, *it.toTypedArray()) }
+    private val filters = sceneDeclaration.filters.map { materialDeclaration(BaseMaterial.Screen, deferredShading, it.retentionPolicy, it.modifiers) }
 
     init {
         sceneDeclaration.gltfs.forEach {
@@ -83,7 +85,7 @@ internal class Scene(
 
         sceneDeclaration.captures.forEach { kv ->
             try {
-                probes[kv.key] = Scene(kv.value.sceneDeclaration, inventory, renderContext, probes)
+                probes[kv.key] = Scene(kv.value.sceneDeclaration, inventory, renderContext, currentRetentionPolicy, probes)
                     .renderToEnv(uniforms, kv.value, kv.key)
             } catch (_: SkipRender) {
                 println("Env probing skipped as framebuffer is not ready")
@@ -125,7 +127,7 @@ internal class Scene(
 
     private fun renderDeferredShading(uniforms: MutableMap<String, Any?>, fbIndex: Int?) {
         renderToReusableFb(fbIndex, uniforms) {
-            val shadingMaterial = materialDeclaration(BaseMaterial.Shading, true, *sceneDeclaration.deferredShadingDeclaration!!.shadingModifiers.toTypedArray())
+            val shadingMaterial = materialDeclaration(BaseMaterial.Shading, true, currentRetentionPolicy, sceneDeclaration.deferredShadingDeclaration!!.shadingModifiers)
             renderFullscreen(shadingMaterial, uniforms)
             renderBucket(uniforms, Bucket.SKY)
         }?.let {
@@ -143,9 +145,9 @@ internal class Scene(
                 "effect-${(effect.effectPassMaterialModifiers.size - 1 - passIndex) % 2}"
 
             val fb = inventory.frameBuffer(
-                FrameBufferDeclaration(fbName, effect.width, effect.height, listOf(GlGpuTexture.Preset.RGBFilter), true)
+                FrameBufferDeclaration(fbName, effect.width, effect.height, listOf(GlGpuTexture.Preset.RGBFilter), true, TransientProperty(effect.retentionPolicy))
             ) ?: throw SkipRender
-            val material = materialDeclaration(BaseMaterial.Screen, true, effectMM)
+            val material = materialDeclaration(BaseMaterial.Screen, true, currentRetentionPolicy, listOf(effectMM))
             fb.exec {
                 renderFullscreen(material, uniforms, effect.width, effect.height)
             }
@@ -163,10 +165,9 @@ internal class Scene(
         val compositionModifiers = sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects
             .map { it as InternalPostShadingEffect }
             .map { it.compositionMaterialModifier }
-            .toTypedArray()
 
         renderToReusableFb(fbIndex, uniforms) {
-            val shadingMaterial = materialDeclaration(BaseMaterial.Composition, true, *compositionModifiers)
+            val shadingMaterial = materialDeclaration(BaseMaterial.Composition, true, currentRetentionPolicy, compositionModifiers)
             renderFullscreen(shadingMaterial, uniforms)
         }
     }
@@ -199,7 +200,7 @@ internal class Scene(
                     GlGpuTexture.Preset.RGBANoFilter,
                     GlGpuTexture.Preset.RGBANoFilter,
                 ),
-                true
+                true, TransientProperty(currentRetentionPolicy)
             )
         ) ?: throw SkipRender
         geometryBuffer.exec {
@@ -314,7 +315,7 @@ internal class Scene(
         filter: MaterialDeclaration, uniforms: Map<String, Any?>,
         width: Int = renderContext.width, height: Int = renderContext.height
     ) {
-        val mesh = inventory.mesh(ScreenQuad)
+        val mesh = inventory.mesh(ScreenQuad(currentRetentionPolicy))
         val shader = inventory.shader(filter.shader)
         renderContext.state.set {}
         glViewport(0, 0, width, height)
@@ -333,7 +334,7 @@ internal class Scene(
             return null
         } else {
             val number = index % 2
-            val fb = inventory.frameBuffer(FrameBufferDeclaration("filter-$number", renderContext.width, renderContext.height, listOf(GlGpuTexture.Preset.RGBNoFilter), true)) ?: throw SkipRender
+            val fb = inventory.frameBuffer(FrameBufferDeclaration("filter-$number", renderContext.width, renderContext.height, listOf(GlGpuTexture.Preset.RGBNoFilter), true, TransientProperty(currentRetentionPolicy))) ?: throw SkipRender
             fb.exec { block() }
             m["colorTexture"] = fb.colorTextures[0]
             m["depthTexture"] = fb.depthTexture
@@ -343,7 +344,7 @@ internal class Scene(
 
     fun renderToEnv(uniforms: MutableMap<String, Any?>, captureContext: CaptureContext, probeName: String): GlGpuCubeTexture {
         renderShadows(uniforms, true)
-        val probeFb = inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", captureContext.resolution, captureContext.resolution, true)) ?: throw SkipRender
+        val probeFb = inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", captureContext.resolution, captureContext.resolution, true, TransientProperty(currentRetentionPolicy))) ?: throw SkipRender
         val probeUniforms = mutableMapOf<String, Any?>()
         probeUniforms += uniforms
         val projection = FrustumProjection(2f * captureContext.near, 2f * captureContext.near, captureContext.near, captureContext.far)

@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.MaterialModifier
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.ShaderDeclaration
@@ -9,7 +10,7 @@ internal fun interface InternalMaterialModifier : MaterialModifier {
     fun applyTo(builder: MaterialBuilder)
 }
 
-internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean) {
+internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean, private val retentionPolicy: RetentionPolicy) {
 
     var vertShaderFile: String = when (base) {
         BaseMaterial.Renderable -> "!shader/standart.vert"
@@ -38,16 +39,16 @@ internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean) {
     }
 
     fun toMaterialDeclaration(): MaterialDeclaration = MaterialDeclaration(
-        shader = ShaderDeclaration(vertShaderFile, fragShaderFile, shaderDefs, plugins),
+        shader = ShaderDeclaration(vertShaderFile, fragShaderFile, shaderDefs, plugins, retentionPolicy),
         uniforms = uniforms
     )
 }
 
-internal fun materialDeclaration(base: BaseMaterial, deferredShading: Boolean, vararg materialModifiers: MaterialModifier) =
-    materialDeclarationBuilder(base, deferredShading, *materialModifiers).toMaterialDeclaration()
+internal fun materialDeclaration(base: BaseMaterial, deferredShading: Boolean, retentionPolicy: RetentionPolicy, materialModifiers: List<MaterialModifier>) =
+    materialDeclarationBuilder(base, deferredShading, retentionPolicy, materialModifiers).toMaterialDeclaration()
 
-internal fun materialDeclarationBuilder(base: BaseMaterial, deferredShading: Boolean, vararg materialModifiers: MaterialModifier) =
-    materialModifiers.fold(MaterialBuilder(base, deferredShading)) { acc, mod ->
+internal fun materialDeclarationBuilder(base: BaseMaterial, deferredShading: Boolean, retentionPolicy: RetentionPolicy, materialModifiers: List<MaterialModifier>) =
+    materialModifiers.fold(MaterialBuilder(base, deferredShading, retentionPolicy)) { acc, mod ->
         (mod as InternalMaterialModifier).applyTo(acc)
         acc
     }

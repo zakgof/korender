@@ -6,6 +6,7 @@ import com.zakgof.korender.impl.context.DefaultInstancedRenderablesContext
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
+import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
 import com.zakgof.korender.impl.geometry.MultiMesh
 import com.zakgof.korender.impl.glgpu.GlGpuMesh
 import com.zakgof.korender.impl.glgpu.GlGpuShader
@@ -39,9 +40,9 @@ internal object Rendering {
         defs: Set<String>,
         reverseZ: Boolean = false
     ) {
-        val materialDeclaration = materialDeclaration(declaration.base, deferredShading, *declaration.materialModifiers.toTypedArray(), InternalMaterialModifier { it.shaderDefs += defs })
+        val materialDeclaration = materialDeclaration(declaration.base, deferredShading, declaration.retentionPolicy, declaration.materialModifiers + InternalMaterialModifier { it.shaderDefs += defs })
 
-        val meshLink = inventory.mesh(declaration.mesh) ?: return
+        val meshLink = inventory.mesh(declaration.mesh as InternalMeshDeclaration) ?: return
         val shader = inventory.shader(materialDeclaration.shader) ?: return
 
         if (declaration.mesh is CustomMesh && declaration.mesh.dynamic) {

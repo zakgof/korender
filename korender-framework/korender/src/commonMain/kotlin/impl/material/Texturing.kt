@@ -7,6 +7,7 @@ import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Platform
 import com.zakgof.korender.ResourceLoader
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -14,6 +15,7 @@ import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.image.InternalImage
 import com.zakgof.korender.impl.resourceBytes
+import impl.engine.Retentionable
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.awaitAll
 
@@ -69,7 +71,7 @@ internal object Texturing {
 
 }
 
-internal interface InternalTexture {
+internal interface InternalTexture : Retentionable {
     val id: String
     val filter: TextureFilter
     val wrap: TextureWrap
@@ -80,7 +82,8 @@ internal class ResourceTextureDeclaration(
     val textureResource: String,
     override val filter: TextureFilter = TextureFilter.MipMap,
     override val wrap: TextureWrap = TextureWrap.Repeat,
-    override val aniso: Int = 1024
+    override val aniso: Int = 1024,
+    override val retentionPolicy: RetentionPolicy
 ) : TextureDeclaration, InternalTexture {
     override val id = textureResource
     override fun equals(other: Any?): Boolean =
@@ -95,7 +98,8 @@ internal class ByteArrayTextureDeclaration(
     override val wrap: TextureWrap,
     override val aniso: Int,
     val fileBytes: ByteArray,
-    val extension: String
+    val extension: String,
+    override val retentionPolicy: RetentionPolicy
 ) : TextureDeclaration, InternalTexture {
     override fun equals(other: Any?): Boolean =
         (other is ByteArrayTextureDeclaration && other.id == id)
@@ -103,12 +107,18 @@ internal class ByteArrayTextureDeclaration(
     override fun hashCode(): Int = id.hashCode()
 }
 
-internal data class ResourceCubeTextureDeclaration(val resources: CubeTextureResources) : CubeTextureDeclaration
+internal data class ResourceCubeTextureDeclaration(val resources: CubeTextureResources, override val retentionPolicy: RetentionPolicy) : CubeTextureDeclaration, Retentionable {
+    override fun equals(other: Any?): Boolean =
+        (other is ResourceCubeTextureDeclaration && other.resources == resources)
+
+    override fun hashCode(): Int = resources.hashCode()
+}
 
 internal class ImageCubeTextureDeclaration(
     val id: String,
-    val images: CubeTextureImages
-) : CubeTextureDeclaration {
+    val images: CubeTextureImages,
+    override val retentionPolicy: RetentionPolicy
+) : CubeTextureDeclaration, Retentionable {
     override fun equals(other: Any?): Boolean =
         (other is ImageCubeTextureDeclaration && other.id == id)
 

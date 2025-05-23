@@ -4,67 +4,76 @@ import com.zakgof.korender.IndexType
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedRenderablesContext
+import impl.engine.Retentionable
 
-internal data class Cube(val halfSide: Float) : MeshDeclaration
-internal data class Sphere(val radius: Float) : MeshDeclaration
-internal data class ObjMesh(val objFile: String) : MeshDeclaration
-internal data object Billboard : MeshDeclaration
-internal data object ImageQuad : MeshDeclaration
-internal data object ScreenQuad : MeshDeclaration
+internal interface InternalMeshDeclaration : MeshDeclaration, Retentionable
+
+internal data class Cube(val halfSide: Float, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
+internal data class Sphere(val radius: Float, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
+internal data class ObjMesh(val objFile: String, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
+internal data class Billboard(override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
+internal data class ImageQuad(override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
+internal data class ScreenQuad(override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 
 internal data class InstancedMesh(
-    val id: Any,
+    val id: String,
     val count: Int,
     val mesh: MeshDeclaration,
     val static: Boolean,
     val transparent: Boolean,
+    override val retentionPolicy: RetentionPolicy,
     val block: InstancedRenderablesContext.() -> Unit
-) : MeshDeclaration {
+) : InternalMeshDeclaration {
     override fun equals(other: Any?): Boolean = (other is InstancedMesh && other.id == id)
     override fun hashCode(): Int = id.hashCode()
 }
 
 internal data class InstancedBillboard(
-    val id: Any,
+    val id: String,
     val count: Int,
     val static: Boolean,
     val transparent: Boolean,
+    override val retentionPolicy: RetentionPolicy,
     val block: InstancedBillboardsContext.() -> Unit
-) : MeshDeclaration {
+) : InternalMeshDeclaration {
     override fun equals(other: Any?): Boolean = (other is InstancedBillboard && other.id == id)
     override fun hashCode(): Int = id.hashCode()
 }
 
 internal data class CustomMesh(
-    val id: Any,
+    val id: String,
     val vertexCount: Int,
     val indexCount: Int,
     val attributes: List<MeshAttribute<*>>,
     val dynamic: Boolean,
     val indexType: IndexType?,
+    override val retentionPolicy: RetentionPolicy,
     val block: MeshInitializer.() -> Unit
-) : MeshDeclaration {
+) : InternalMeshDeclaration {
     override fun equals(other: Any?): Boolean = (other is CustomMesh && other.id == id)
     override fun hashCode(): Int = id.hashCode()
 }
 
 internal data class CustomCpuMesh(
-    val id: Any,
-    val mesh: CMesh
-) : MeshDeclaration {
+    val id: String,
+    val mesh: CMesh,
+    override val retentionPolicy: RetentionPolicy
+) : InternalMeshDeclaration {
     override fun equals(other: Any?): Boolean = (other is CustomCpuMesh && other.id == id)
     override fun hashCode(): Int = id.hashCode()
 }
 
 internal data class HeightField(
-    val id: Any,
+    val id: String,
     val cellsX: Int,
     val cellsZ: Int,
     val cellWidth: Float,
-    val height: (Int, Int) -> Float
-) : MeshDeclaration {
+    val height: (Int, Int) -> Float,
+    override val retentionPolicy: RetentionPolicy
+) : InternalMeshDeclaration {
     override fun equals(other: Any?): Boolean = (other is HeightField && other.id == id)
     override fun hashCode(): Int = id.hashCode()
 }
