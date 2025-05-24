@@ -22,6 +22,7 @@ import kotlinx.coroutines.runBlocking
 import org.lwjgl.opengl.GL.createCapabilities
 import org.lwjgl.opengl.awt.AWTGLCanvas
 import org.lwjgl.opengl.awt.GLData
+import org.lwjgl.system.Configuration
 import java.awt.Color
 import java.awt.Font
 import java.awt.GraphicsEnvironment
@@ -99,6 +100,8 @@ actual fun Korender(
             SwingUtilities.invokeLater(renderLoop)
         },
         factory = {
+            Configuration.DEBUG.set(true)
+            Configuration.DEBUG_LOADER.set(true)
             val data = GLData()
             data.swapInterval = 0
             data.majorVersion = 3
