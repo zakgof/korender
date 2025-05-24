@@ -12,6 +12,9 @@ import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
+import com.zakgof.korender.impl.gl.GLConstants.GL_RENDERER
+import com.zakgof.korender.impl.gl.GLConstants.GL_VENDOR
+import com.zakgof.korender.impl.gl.GLConstants.GL_VERSION
 import com.zakgof.korender.impl.image.InternalImage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
@@ -20,8 +23,10 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.lwjgl.opengl.GL.createCapabilities
+import org.lwjgl.opengl.GL11.glGetString
 import org.lwjgl.opengl.awt.AWTGLCanvas
 import org.lwjgl.opengl.awt.GLData
+import org.lwjgl.system.Configuration
 import java.awt.Color
 import java.awt.Font
 import java.awt.GraphicsEnvironment
@@ -99,6 +104,8 @@ actual fun Korender(
             SwingUtilities.invokeLater(renderLoop)
         },
         factory = {
+            Configuration.DEBUG.set(true)
+            Configuration.DEBUG_LOADER.set(true)
             val data = GLData()
             data.swapInterval = 0
             data.majorVersion = 3
@@ -114,8 +121,8 @@ actual fun Korender(
                     })
 
                 override fun initGL() {
-                    println("OpenGL version: ${effective.majorVersion}.${effective.minorVersion} (Profile: ${effective.profile})")
                     createCapabilities()
+                    println("OpenGL Vendor:[${glGetString(GL_VENDOR)}] Renderer:[${glGetString(GL_RENDERER)}] Version:[${glGetString(GL_VERSION)}] Effective context version: [${effective.majorVersion}.${effective.minorVersion} (Profile: ${effective.profile})]")
 
                     val async = object : AsyncContext {
                         override val appResourceLoader = appResourceLoader
