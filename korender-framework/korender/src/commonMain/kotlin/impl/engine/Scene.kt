@@ -64,7 +64,6 @@ internal class Scene(
             else -> value
         }
     }
-    private val filters = sceneDeclaration.filters.map { materialDeclaration(BaseMaterial.Screen, deferredShading, it.retentionPolicy, it.modifiers) }
 
     init {
         sceneDeclaration.gltfs.forEach {
@@ -111,25 +110,26 @@ internal class Scene(
         renderDeferredOpaques(uniforms)
 
         val postShadingEffects = sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects
-        renderDeferredShading(uniforms, if (postShadingEffects.isEmpty() && filters.isEmpty()) null else filters.size + 1)
+        renderDeferredShading(uniforms, if (postShadingEffects.isEmpty() && sceneDeclaration.filters.isEmpty()) null else sceneDeclaration.filters.size + 1)
 
         if (postShadingEffects.isNotEmpty()) {
             postShadingEffects.forEach { renderPostShadingEffect(it as InternalPostShadingEffect, uniforms) }
-            renderComposition(uniforms, if (filters.isEmpty()) null else filters.size)
+            renderComposition(uniforms, if (sceneDeclaration.filters.isEmpty()) null else sceneDeclaration.filters.size)
         }
-        filters.forEachIndexed { filterIndex, filter ->
-            renderToReusableFb(if (filters.size - 1 == filterIndex) null else filters.size - 1 - filterIndex, uniforms) {
-                renderFullscreen(filter, uniforms)
+        sceneDeclaration.filters.forEachIndexed { filterIndex, filter ->
+            renderToReusableFb(if (sceneDeclaration.filters.size - 1 == filterIndex) null else sceneDeclaration.filters.size - 1 - filterIndex, uniforms) {
+                renderPostProcess(filter, uniforms)
             }
         }
-        renderTransparents(uniforms, renderContext.camera)
+        // TODO fog over transparents ??
+        renderTransparents(sceneDeclaration, uniforms, renderContext.camera)
     }
 
     private fun renderDeferredShading(uniforms: MutableMap<String, Any?>, fbIndex: Int?) {
         renderToReusableFb(fbIndex, uniforms) {
             val shadingMaterial = materialDeclaration(BaseMaterial.Shading, true, currentRetentionPolicy, sceneDeclaration.deferredShadingDeclaration!!.shadingModifiers)
             renderFullscreen(shadingMaterial, uniforms)
-            renderBucket(uniforms, Bucket.SKY)
+            renderBucket(sceneDeclaration, uniforms, Bucket.SKY)
         }?.let {
             uniforms["finalColorTexture"] = it.colorTextures[0]
             uniforms["depthTexture"] = it.depthTexture
@@ -174,19 +174,22 @@ internal class Scene(
 
     private fun renderSceneForward(uniforms: MutableMap<String, Any?>) {
         if (sceneDeclaration.filters.isEmpty()) {
-            renderForwardOpaques(uniforms, renderContext.width, renderContext.height)
-            renderTransparents(uniforms, renderContext.camera)
+            prepareScene()
+            renderForwardOpaques(sceneDeclaration, uniforms)
+            renderTransparents(sceneDeclaration, uniforms, renderContext.camera)
         } else {
             renderToReusableFb(0, uniforms) {
-                renderForwardOpaques(uniforms, renderContext.width, renderContext.height)
+                prepareScene()
+                renderForwardOpaques(sceneDeclaration, uniforms)
             }
-            filters.dropLast(1).forEachIndexed { index, filter ->
+            sceneDeclaration.filters.dropLast(1).forEachIndexed { index, filter ->
                 renderToReusableFb(index + 1, uniforms) {
-                    renderFullscreen(filter, uniforms)
+                    renderPostProcess(filter, uniforms)
                 }
             }
-            renderFullscreen(filters.last(), uniforms)
-            renderTransparents(uniforms, renderContext.camera)
+            renderPostProcess(sceneDeclaration.filters.last(), uniforms)
+            // TODO: fog over transparents !!!
+            renderTransparents(sceneDeclaration, uniforms, renderContext.camera)
         }
     }
 
@@ -209,7 +212,7 @@ internal class Scene(
             }
             glViewport(0, 0, renderContext.width, renderContext.height)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-            renderBucket(uniforms, Bucket.OPAQUE)
+            renderBucket(sceneDeclaration, uniforms, Bucket.OPAQUE)
         }
         uniforms["cdiffTexture"] = geometryBuffer.colorTextures[0]
         uniforms["normalTexture"] = geometryBuffer.colorTextures[1]
@@ -218,7 +221,7 @@ internal class Scene(
         uniforms["depthTexture"] = geometryBuffer.depthTexture!!
     }
 
-    private fun renderBucket(uniforms: Map<String, Any?>, bucket: Bucket, defs: Set<String> = setOf()) {
+    private fun renderBucket(sceneDeclaration: SceneDeclaration, uniforms: Map<String, Any?>, bucket: Bucket, defs: Set<String> = setOf()) {
         sceneDeclaration.renderables
             .filter { it.bucket == bucket }
             .forEach {
@@ -228,7 +231,11 @@ internal class Scene(
             }
     }
 
-    private fun renderForwardOpaques(uniforms: Map<String, Any?>, w: Int, h: Int, defs: Set<String> = setOf(), insideOut: Boolean = false) {
+    private fun prepareScene(
+        w: Int = renderContext.width,
+        h: Int = renderContext.height,
+        insideOut: Boolean = false
+    ) {
         renderContext.state.set {
             clearColor(renderContext.backgroundColor.toRGBA())
             if (insideOut) {
@@ -239,11 +246,18 @@ internal class Scene(
         }
         glViewport(0, 0, w, h)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-        renderBucket(uniforms, Bucket.OPAQUE, defs)
-        renderBucket(uniforms, Bucket.SKY, defs)
     }
 
-    private fun renderTransparents(uniforms: MutableMap<String, Any?>, camera: Camera, defs: Set<String> = setOf(), insideOut: Boolean = false) {
+    private fun renderForwardOpaques(
+        sceneDeclaration: SceneDeclaration,
+        uniforms: Map<String, Any?>,
+        defs: Set<String> = setOf(),
+    ) {
+        renderBucket(sceneDeclaration, uniforms, Bucket.OPAQUE, defs)
+        renderBucket(sceneDeclaration, uniforms, Bucket.SKY, defs)
+    }
+
+    private fun renderTransparents(sceneDeclaration: SceneDeclaration, uniforms: MutableMap<String, Any?>, camera: Camera, defs: Set<String> = setOf(), insideOut: Boolean = false) {
         renderContext.state.set {
             depthMask(false)
             if (insideOut) {
@@ -256,11 +270,13 @@ internal class Scene(
             .filter { it.bucket == Bucket.TRANSPARENT }
             .sortedByDescending { (camera.mat4 * it.transform.offset()).z * reverse }
             .forEach {
-                Rendering.render(inventory, it, camera, deferredShading,
-                    uniforms, fixer, defs, insideOut)
+                Rendering.render(
+                    inventory, it, camera, deferredShading,
+                    uniforms, fixer, defs, insideOut
+                )
             }
 
-        renderBucket(uniforms, Bucket.SCREEN, defs)
+        renderBucket(sceneDeclaration, uniforms, Bucket.SCREEN, defs)
         guiRenderers.flatMap { it.renderables }.forEach {
             it.render(uniforms, fixer)
         }
@@ -309,6 +325,12 @@ internal class Scene(
         m["pointLightPos[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.position })
         m["pointLightColor[0]"] = Color3List(sceneDeclaration.pointLights.map { it.color })
         m["pointLightAttenuation[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.attenuation })
+    }
+
+    private fun renderPostProcess(filterDeclaration: InternalFilterDeclaration, uniforms: Map<String, Any?>) {
+        val filterMaterial = materialDeclaration(BaseMaterial.Screen, deferredShading, filterDeclaration.retentionPolicy, filterDeclaration.modifiers)
+        renderFullscreen(filterMaterial, uniforms)
+        renderForwardOpaques(filterDeclaration.sceneDeclaration, uniforms)
     }
 
     private fun renderFullscreen(
@@ -361,8 +383,9 @@ internal class Scene(
             probeUniforms["cameraPos"] = it.value.position
             probeUniforms["cameraDir"] = it.value.direction
             probeFb.exec(it.key) {
-                renderForwardOpaques(probeUniforms, captureContext.resolution, captureContext.resolution, captureContext.defs, captureContext.insideOut)
-                renderTransparents(probeUniforms, it.value, captureContext.defs, captureContext.insideOut)
+                prepareScene(captureContext.resolution, captureContext.resolution, captureContext.insideOut)
+                renderForwardOpaques(sceneDeclaration, probeUniforms, captureContext.defs)
+                renderTransparents(sceneDeclaration, probeUniforms, it.value, captureContext.defs, captureContext.insideOut)
             }
         }
         probeFb.finish()

@@ -49,7 +49,7 @@ private fun FrameContext.frame() {
     light()
     character(z)
     city(z)
-    sky()
+    atmosphere()
     gui()
 }
 
@@ -165,18 +165,19 @@ private fun FrameContext.grassMesh() = customMesh("grass", 4, 6, POS, NORMAL, TE
     index(0, 1, 2, 0, 2, 3)
 }
 
-private fun FrameContext.gui() = Gui {
-    Column {
-        Filler()
-        Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40, color = ColorRGBA(0x66FF55A0))
+private fun FrameContext.gui() =
+    Gui {
+        Column {
+            Filler()
+            Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40, color = ColorRGBA(0x66FF55A0))
+        }
     }
-}
 
-private fun FrameContext.sky() {
-    Sky(
-        starrySky(colorness = 0.4f, density = 20f, size = 20f),
-        plugin("secsky", "infcity/moon.secsky.plugin.frag"),
-        uniforms("moonTexture" to texture("infcity/moon.png"))
-    )
-    PostProcess(fog())
-}
+private fun FrameContext.atmosphere() =
+    PostProcess(fog(density = 0.06f, color = white(0.05f))) {
+        Sky(
+            starrySky(colorness = 0.4f, density = 20f, size = 20f),
+            plugin("secsky", "infcity/moon.secsky.plugin.frag"),
+            uniforms("moonTexture" to texture("infcity/moon.png"))
+        )
+    }

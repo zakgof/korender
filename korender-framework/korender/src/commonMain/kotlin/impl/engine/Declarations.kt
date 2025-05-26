@@ -150,4 +150,4 @@ internal class DirectionalLightDeclaration(val direction: Vec3, val color: Color
 
 internal class InternalInstancingDeclaration(val id: String, val instanceCount: Int, val dynamic: Boolean, val block: InstancedRenderablesContext.() -> Unit) : InstancingDeclaration
 
-internal class InternalFilterDeclaration(val modifiers: List<MaterialModifier>, override val retentionPolicy: RetentionPolicy) : Retentionable
+internal class InternalFilterDeclaration(val modifiers: List<MaterialModifier>, val sceneDeclaration: SceneDeclaration, override val retentionPolicy: RetentionPolicy) : Retentionable

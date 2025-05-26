@@ -120,8 +120,11 @@ internal class DefaultFrameContext(
         sceneDeclaration.ambientLightColor = color
     }
 
-    override fun PostProcess(vararg materialModifiers: MaterialModifier) {
-        sceneDeclaration.filters += InternalFilterDeclaration(materialModifiers.asList(), korenderContext.currentRetentionPolicy)
+    override fun PostProcess(vararg materialModifiers: MaterialModifier, block: FrameContext.() -> Unit) {
+        val sd = SceneDeclaration()
+        val fc = DefaultFrameContext(korenderContext, sd, frameInfo)
+        fc.apply(block)
+        sceneDeclaration.filters += InternalFilterDeclaration(materialModifiers.asList(), sd, korenderContext.currentRetentionPolicy)
     }
 
     override fun CaptureEnv(probeName: String, resolution: Int, position: Vec3, near: Float, far: Float, insideOut: Boolean, defs: Set<String>, block: FrameContext.() -> Unit) {

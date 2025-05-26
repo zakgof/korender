@@ -86,8 +86,8 @@ interface KorenderContext {
     fun blurHorz(radius: Float): MaterialModifier
     fun blurVert(radius: Float): MaterialModifier
     fun adjust(brightness: Float = 0.0f, contrast: Float = 1.0f, saturation: Float = 1.0f): MaterialModifier
-    fun water(waterColor: ColorRGB = ColorRGB(0x00183A), transparency: Float = 0.1f, waveScale: Float = 25.0f, waveMagnitude: Float = 0.3f): MaterialModifier
-    fun fog(density: Float = 0.02f, color: ColorRGB = ColorRGB.white(0.01f)): MaterialModifier
+    fun water(waterColor: ColorRGB = ColorRGB(0x00182A), transparency: Float = 0.1f, waveScale: Float = 25.0f, waveMagnitude: Float = 0.3f): MaterialModifier
+    fun fog(density: Float = 0.00003f, color: ColorRGB = ColorRGB(0xB8CAE9)): MaterialModifier
     fun fxaa(): MaterialModifier
 
     fun fire(strength: Float = 3.0f): MaterialModifier

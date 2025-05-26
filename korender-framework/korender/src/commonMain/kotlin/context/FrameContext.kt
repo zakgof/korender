@@ -23,7 +23,7 @@ interface FrameContext : KorenderContext {
     fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: String, count: Int, static: Boolean = false, transparent: Boolean = false, block: InstancedBillboardsContext.() -> Unit)
     fun Gltf(resource: String, animation:Int = 0, transform: Transform = Transform(), time: Float? = null)
 
-    fun PostProcess(vararg materialModifiers: MaterialModifier)
+    fun PostProcess(vararg materialModifiers: MaterialModifier, block: FrameContext.() -> Unit = {})
 
     fun DirectionalLight(direction: Vec3, color: ColorRGB = ColorRGB.White, block: ShadowContext.() -> Unit = {})
     fun PointLight(position: Vec3, color: ColorRGB = ColorRGB.White, attenuationLinear: Float = 0.1f, attenuationQuadratic: Float = 0.01f)

@@ -35,11 +35,9 @@ fun ProcTerrainExample() =
                 plugin("albedo", "procterrain/albedo.glsl"),
                 prefab = terrain
             )
-            Sky(fastCloudSky())
-//            PostProcess(fog {
-//                color = ColorRGB(0x8080F0)
-//                density = 0.00003f
-//            })
+            PostProcess(fog(density = 0.00004f, color = ColorRGB(0xB8CAE9))) {
+                Sky(fastCloudSky())
+            }
             Gui {
                 Column {
                     Filler()
