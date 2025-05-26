@@ -306,7 +306,8 @@ internal class GltfSceneBuilder(
                 listOf(materialModifier),
                 mesh = meshDeclaration,
                 transform = transform,
-                bucket = Bucket.OPAQUE // TODO transparent mode
+                bucket = Bucket.OPAQUE, // TODO transparent mode
+                declaration.retentionPolicy
             )
             renderableDeclarations += renderableDeclaration
         }
@@ -387,7 +388,8 @@ internal class GltfSceneBuilder(
             indicesAccessor?.count ?: 0,
             verticesAttributeAccessors.map { it.first },
             false,
-            accessorComponentTypeToIndexType(indicesAccessor?.componentType)
+            accessorComponentTypeToIndexType(indicesAccessor?.componentType),
+            declaration.retentionPolicy
         ) {
             indicesAccessor?.let { indexBytes(getAccessorBytes(it)) }
             verticesAttributeAccessors.forEach {
@@ -479,7 +481,8 @@ internal class GltfSceneBuilder(
                 TextureWrap.Repeat,
                 1024,
                 bytes,
-                img.mimeType!!.split("/").last()
+                img.mimeType!!.split("/").last(),
+                declaration.retentionPolicy
             )
         }
     }

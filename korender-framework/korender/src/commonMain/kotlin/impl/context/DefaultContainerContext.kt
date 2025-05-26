@@ -8,7 +8,7 @@ import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.math.ColorRGBA
 
 internal class DefaultContainerContext(
-    private val frameContext: FrameContext,
+    private val frameContext: DefaultFrameContext,
     private val declaration: ElementDeclaration.Container
 ) : GuiContainerContext, FrameContext by frameContext {
 
@@ -30,7 +30,7 @@ internal class DefaultContainerContext(
         declaration.add(stack)
     }
 
-    override fun Text(id: Any, text: String, style: TextStyle?, fontResource: String?, height: Int?, color: ColorRGBA?, static: Boolean, onTouch: TouchHandler) {
+    override fun Text(id: String, text: String, style: TextStyle?, fontResource: String?, height: Int?, color: ColorRGBA?, static: Boolean, onTouch: TouchHandler) {
         declaration.add(
             ElementDeclaration.Text(
                 id,
@@ -39,7 +39,8 @@ internal class DefaultContainerContext(
                 text,
                 color ?: style?.color ?: ColorRGBA(0x66FF55A0),
                 static,
-                onTouch
+                onTouch,
+                frameContext.korenderContext.currentRetentionPolicy
             )
         )
     }
@@ -48,8 +49,8 @@ internal class DefaultContainerContext(
         declaration.add(ElementDeclaration.Filler())
     }
 
-    override fun Image(id: Any?, imageResource: String, width: Int, height: Int, marginTop: Int, marginBottom: Int, marginLeft: Int, marginRight: Int, onTouch: TouchHandler) {
-        declaration.add(ElementDeclaration.Image(id, imageResource, width, height, marginTop, marginBottom, marginLeft, marginRight, onTouch))
+    override fun Image(id: String, imageResource: String, width: Int, height: Int, marginTop: Int, marginBottom: Int, marginLeft: Int, marginRight: Int, onTouch: TouchHandler) {
+        declaration.add(ElementDeclaration.Image(id, imageResource, width, height, marginTop, marginBottom, marginLeft, marginRight, onTouch, frameContext.korenderContext.currentRetentionPolicy))
     }
 }
 

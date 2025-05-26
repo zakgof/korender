@@ -21,3 +21,5 @@ class FrameInfo(
 )
 
 interface Prefab
+
+interface RetentionPolicy

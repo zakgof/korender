@@ -2,12 +2,14 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.font.Fonts
+import com.zakgof.korender.impl.font.InternalFontDeclaration
+import com.zakgof.korender.impl.font.InternalFontMeshDeclaration
 import com.zakgof.korender.impl.geometry.ImageQuad
 import com.zakgof.korender.impl.geometry.MultiMesh
-import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.math.Vec2
+import impl.engine.ImmediatelyFreeRetentionPolicy
 import kotlin.math.max
 
 internal class GuiRenderer(
@@ -91,7 +93,7 @@ internal class GuiRenderer(
 
     private fun createImage(declaration: ElementDeclaration.Image, x: Int, y: Int) {
 
-        val mesh = inventory.mesh(ImageQuad)
+        val mesh = inventory.mesh(ImageQuad(ImmediatelyFreeRetentionPolicy))
         val shader = inventory.shader(Shaders.imageQuadDeclaration)
 
         if (mesh != null && shader != null) {
@@ -109,11 +111,7 @@ internal class GuiRenderer(
                             declaration.width.toFloat() / width,
                             declaration.height.toFloat() / height
                         ),
-                        "imageTexture" to (inventory.texture(
-                            ResourceTextureDeclaration(
-                                declaration.imageResource
-                            )
-                        ) ?: NotYetLoadedTexture)
+                        "imageTexture" to ResourceTextureDeclaration(declaration.imageResource, retentionPolicy = declaration.retentionPolicy)
                     )
                 )
             )
@@ -131,8 +129,8 @@ internal class GuiRenderer(
     }
 
     private fun createText(declaration: ElementDeclaration.Text, x: Int, y: Int, w: Int) {
-        val meshLink = inventory.fontMesh(declaration.id)
-        val font = inventory.font(declaration.fontResource)
+        val meshLink = inventory.fontMesh(InternalFontMeshDeclaration(declaration.id, declaration.retentionPolicy))
+        val font = inventory.font(InternalFontDeclaration( declaration.fontResource, declaration.retentionPolicy))
         val shader = inventory.shader(Fonts.shaderDeclaration)
         if (meshLink != null && font != null && shader != null) {
             val mesh = meshLink.cpuMesh as MultiMesh
@@ -233,7 +231,7 @@ internal class GuiRenderer(
     private fun textSize(
         textDeclaration: ElementDeclaration.Text
     ): Size {
-        val font = inventory.font(textDeclaration.fontResource)
+        val font = inventory.font(InternalFontDeclaration(textDeclaration.fontResource, textDeclaration.retentionPolicy))
         return Size(
             font?.textWidth(textDeclaration.height, textDeclaration.text) ?: 0,
             textDeclaration.height

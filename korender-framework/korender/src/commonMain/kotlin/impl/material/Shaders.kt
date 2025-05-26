@@ -7,6 +7,7 @@ import com.zakgof.korender.impl.gl.GL.shaderEnv
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.resourceBytes
+import impl.engine.ImmediatelyFreeRetentionPolicy
 
 internal fun <T> MutableList<T>.peek(): T = this.last()
 internal fun <T> MutableList<T>.pop(): T = this.removeAt(this.size - 1)
@@ -14,7 +15,7 @@ internal fun <T> MutableList<T>.pop(): T = this.removeAt(this.size - 1)
 internal object Shaders {
 
     val imageQuadDeclaration: ShaderDeclaration =
-        ShaderDeclaration("!shader/gui/image.vert", "!shader/gui/image.frag")
+        ShaderDeclaration("!shader/gui/image.vert", "!shader/gui/image.frag", retentionPolicy = ImmediatelyFreeRetentionPolicy)
 
     suspend fun create(
         declaration: ShaderDeclaration,

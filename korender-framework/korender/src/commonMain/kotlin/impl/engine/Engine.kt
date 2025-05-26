@@ -22,6 +22,7 @@ import com.zakgof.korender.Platform
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
@@ -68,6 +69,7 @@ import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec3
+import impl.engine.TimeRetentionPolicy
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.channels.Channel
 
@@ -93,6 +95,8 @@ internal class Engine(
 
     inner class KorenderContextImpl : KorenderContext {
 
+        var currentRetentionPolicy: RetentionPolicy = TimeRetentionPolicy(10f)
+        var currentRetentionGeneration: Int = 0
         override val target: KorenderContext.TargetPlatform = Platform.target
 
         override fun Frame(block: FrameContext.() -> Unit) {
@@ -110,11 +114,11 @@ internal class Engine(
         }
 
         override fun texture(textureResource: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureDeclaration =
-            ResourceTextureDeclaration(textureResource, filter, wrap, aniso)
+            ResourceTextureDeclaration(textureResource, filter, wrap, aniso, currentRetentionPolicy)
 
-        override fun cubeTexture(resources: CubeTextureResources) = ResourceCubeTextureDeclaration(resources)
+        override fun cubeTexture(resources: CubeTextureResources) = ResourceCubeTextureDeclaration(resources, currentRetentionPolicy)
 
-        override fun cubeTexture(id: String, images: CubeTextureImages) = ImageCubeTextureDeclaration(id, images)
+        override fun cubeTexture(id: String, images: CubeTextureImages) = ImageCubeTextureDeclaration(id, images, currentRetentionPolicy)
 
         override fun cubeProbe(probeName: String): CubeTextureDeclaration = ProbeCubeTextureDeclaration(probeName)
 
@@ -122,8 +126,8 @@ internal class Engine(
             val sd = SceneDeclaration()
             block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f)))
             var images: CubeTextureImages? = null
-            inventory.go {
-                val scene = Scene(sd, inventory, renderContext, probes)
+            inventory.go(0f,0) {
+                val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy, probes)
                 val uniforms = mutableMapOf<String, Any?>()
                 renderContext.uniforms(uniforms)
                 val cubeTexture = scene.renderToEnv(uniforms, CaptureContext(resolution, position, near, far, insideOut, defs, sd), "#immediate")
@@ -132,19 +136,19 @@ internal class Engine(
             return images!!
         }
 
-        override fun cube(halfSide: Float): MeshDeclaration = Cube(halfSide)
+        override fun cube(halfSide: Float): MeshDeclaration = Cube(halfSide, currentRetentionPolicy)
 
-        override fun sphere(radius: Float): MeshDeclaration = Sphere(radius)
+        override fun sphere(radius: Float): MeshDeclaration = Sphere(radius, currentRetentionPolicy)
 
-        override fun obj(objFile: String): MeshDeclaration = ObjMesh(objFile)
+        override fun obj(objFile: String): MeshDeclaration = ObjMesh(objFile, currentRetentionPolicy)
 
-        override fun screenQuad(): MeshDeclaration = ScreenQuad
+        override fun screenQuad(): MeshDeclaration = ScreenQuad(currentRetentionPolicy)
 
         override fun customMesh(id: String, vertexCount: Int, indexCount: Int, vararg attributes: MeshAttribute<*>, dynamic: Boolean, indexType: IndexType?, block: MeshInitializer.() -> Unit): MeshDeclaration =
-            CustomMesh(id, vertexCount, indexCount, attributes.asList(), dynamic, indexType, block)
+            CustomMesh(id, vertexCount, indexCount, attributes.asList(), dynamic, indexType, currentRetentionPolicy, block)
 
         override fun heightField(id: String, cellsX: Int, cellsZ: Int, cellWidth: Float, height: (Int, Int) -> Float): MeshDeclaration =
-            HeightField(id, cellsX, cellsZ, cellWidth, height)
+            HeightField(id, cellsX, cellsZ, cellWidth, height, currentRetentionPolicy)
 
         override fun loadMesh(meshDeclaration: MeshDeclaration) =
             asyncContext.call {
@@ -152,7 +156,7 @@ internal class Engine(
             }
 
         override fun mesh(id: String, mesh: Mesh) =
-            CustomCpuMesh(id, mesh as CMesh)
+            CustomCpuMesh(id, mesh as CMesh, currentRetentionPolicy)
 
         override fun vertex(vertShaderFile: String): InternalMaterialModifier =
             InternalMaterialModifier { it.vertShaderFile = vertShaderFile }
@@ -374,7 +378,7 @@ internal class Engine(
                         it.uniforms["ssrWidth"] = w.toFloat()
                         it.uniforms["ssrHeight"] = h.toFloat()
                     }
-                })
+                }, currentRetentionPolicy)
         }
 
         override fun bloom(width: Int?, height: Int?) = InternalPostShadingEffect(
@@ -400,7 +404,7 @@ internal class Engine(
             "bloomDepthTexture",
             compositionMaterialModifier = {
                 it.shaderDefs += "BLOOM"
-            })
+            }, currentRetentionPolicy)
 
         override fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration =
             FrustumProjection(width, height, near, far)
@@ -479,8 +483,8 @@ internal class Engine(
         frameBlocks.forEach {
             DefaultFrameContext(kc, sd, frameInfo).apply(it)
         }
-        inventory.go {
-            val scene = Scene(sd, inventory, renderContext, probes)
+        inventory.go(frameInfo.time, kc.currentRetentionGeneration) {
+            val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy, probes)
             scene.render()
             // checkGlError("during rendering")
             touchBoxes = scene.touchBoxes

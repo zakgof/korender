@@ -18,7 +18,9 @@ import com.zakgof.korender.impl.engine.CaptureContext
 import com.zakgof.korender.impl.engine.DeferredShadingDeclaration
 import com.zakgof.korender.impl.engine.DirectionalLightDeclaration
 import com.zakgof.korender.impl.engine.ElementDeclaration
+import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.engine.GltfDeclaration
+import com.zakgof.korender.impl.engine.InternalFilterDeclaration
 import com.zakgof.korender.impl.engine.InternalInstancingDeclaration
 import com.zakgof.korender.impl.engine.PointLightDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
@@ -34,7 +36,7 @@ import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 
 internal class DefaultFrameContext(
-    private val korenderContext: KorenderContext,
+    val korenderContext: Engine.KorenderContextImpl,
     private val sceneDeclaration: SceneDeclaration,
     override val frameInfo: FrameInfo,
 ) : FrameContext, KorenderContext by korenderContext {
@@ -45,12 +47,12 @@ internal class DefaultFrameContext(
     }
 
     override fun Gltf(resource: String, animation: Int, transform: Transform, time: Float?) {
-        sceneDeclaration.gltfs += GltfDeclaration(resource, animation, transform, time ?: frameInfo.time)
+        sceneDeclaration.gltfs += GltfDeclaration(resource, animation, transform, time ?: frameInfo.time, korenderContext.currentRetentionPolicy)
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean, instancing: InstancingDeclaration?) {
-        val meshDeclaration = (instancing as? InternalInstancingDeclaration)?.let { InstancedMesh(instancing.id, instancing.instanceCount, mesh, !instancing.dynamic, transparent, instancing.block) } ?: mesh;
-        sceneDeclaration.renderables += RenderableDeclaration(BaseMaterial.Renderable, materialModifiers.asList(), meshDeclaration, transform, if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE)
+        val meshDeclaration = (instancing as? InternalInstancingDeclaration)?.let { InstancedMesh(instancing.id, instancing.instanceCount, mesh, !instancing.dynamic, transparent, korenderContext.currentRetentionPolicy, instancing.block) } ?: mesh;
+        sceneDeclaration.renderables += RenderableDeclaration(BaseMaterial.Renderable, materialModifiers.asList(), meshDeclaration, transform, if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE, korenderContext.currentRetentionPolicy)
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, prefab: Prefab) {
@@ -58,15 +60,22 @@ internal class DefaultFrameContext(
     }
 
     override fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3, transparent: Boolean) {
-        sceneDeclaration.renderables += RenderableDeclaration(BaseMaterial.Billboard, materialModifiers.asList(), com.zakgof.korender.impl.geometry.Billboard, translate(position), if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE)
+        sceneDeclaration.renderables += RenderableDeclaration(
+            BaseMaterial.Billboard,
+            materialModifiers.asList(),
+            com.zakgof.korender.impl.geometry.Billboard(korenderContext.currentRetentionPolicy),
+            translate(position),
+            if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE,
+            korenderContext.currentRetentionPolicy
+        )
     }
 
     override fun Screen(vararg materialModifiers: MaterialModifier) {
-        sceneDeclaration.renderables += RenderableDeclaration(BaseMaterial.Screen, materialModifiers.asList(),  ScreenQuad, Transform(), Bucket.SCREEN)
+        sceneDeclaration.renderables += RenderableDeclaration(BaseMaterial.Screen, materialModifiers.asList(), ScreenQuad(korenderContext.currentRetentionPolicy), Transform(), Bucket.SCREEN, korenderContext.currentRetentionPolicy)
     }
 
     override fun Sky(vararg materialModifiers: MaterialModifier) {
-        sceneDeclaration.renderables += RenderableDeclaration(BaseMaterial.Sky, materialModifiers.asList(), ScreenQuad, Transform(), Bucket.SKY)
+        sceneDeclaration.renderables += RenderableDeclaration(BaseMaterial.Sky, materialModifiers.asList(), ScreenQuad(korenderContext.currentRetentionPolicy), Transform(), Bucket.SKY, korenderContext.currentRetentionPolicy)
     }
 
     override fun Gui(block: GuiContainerContext.() -> Unit) {
@@ -75,23 +84,25 @@ internal class DefaultFrameContext(
         sceneDeclaration.guis += root
     }
 
-    override fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: Any, count: Int, mesh: MeshDeclaration, static: Boolean, transparent: Boolean, block: InstancedRenderablesContext.() -> Unit) {
+    override fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: String, count: Int, mesh: MeshDeclaration, static: Boolean, transparent: Boolean, block: InstancedRenderablesContext.() -> Unit) {
         sceneDeclaration.renderables +=
             RenderableDeclaration(
                 BaseMaterial.Renderable, materialModifiers.asList(),
-                InstancedMesh(id, count, mesh, static, transparent, block),
+                InstancedMesh(id, count, mesh, static, transparent, korenderContext.currentRetentionPolicy, block),
                 transform = Transform(),
-                if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE
+                if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE,
+                korenderContext.currentRetentionPolicy
             )
     }
 
-    override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: Any, count: Int, static: Boolean, transparent: Boolean, block: InstancedBillboardsContext.() -> Unit) {
+    override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: String, count: Int, static: Boolean, transparent: Boolean, block: InstancedBillboardsContext.() -> Unit) {
         sceneDeclaration.renderables +=
             RenderableDeclaration(
                 BaseMaterial.Billboard, materialModifiers.asList(),
-                InstancedBillboard(id, count, static, transparent, block),
+                InstancedBillboard(id, count, static, transparent, korenderContext.currentRetentionPolicy, block),
                 transform = Transform(),
-                if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE
+                if (transparent) Bucket.TRANSPARENT else Bucket.OPAQUE,
+                korenderContext.currentRetentionPolicy
             )
     }
 
@@ -110,7 +121,7 @@ internal class DefaultFrameContext(
     }
 
     override fun PostProcess(vararg materialModifiers: MaterialModifier) {
-        sceneDeclaration.filters += materialModifiers.asList()
+        sceneDeclaration.filters += InternalFilterDeclaration(materialModifiers.asList(), korenderContext.currentRetentionPolicy)
     }
 
     override fun CaptureEnv(probeName: String, resolution: Int, position: Vec3, near: Float, far: Float, insideOut: Boolean, defs: Set<String>, block: FrameContext.() -> Unit) {
