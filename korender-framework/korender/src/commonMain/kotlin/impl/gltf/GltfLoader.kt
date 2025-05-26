@@ -17,7 +17,6 @@ import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.impl.absolutizeResource
 import com.zakgof.korender.impl.engine.BaseMaterial
-import com.zakgof.korender.impl.engine.Bucket
 import com.zakgof.korender.impl.engine.GltfDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.geometry.CustomMesh
@@ -306,7 +305,6 @@ internal class GltfSceneBuilder(
                 listOf(materialModifier),
                 mesh = meshDeclaration,
                 transform = transform,
-                bucket = Bucket.OPAQUE, // TODO transparent mode
                 declaration.retentionPolicy
             )
             renderableDeclarations += renderableDeclaration

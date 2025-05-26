@@ -68,7 +68,8 @@ internal class Scene(
     init {
         sceneDeclaration.gltfs.forEach {
             inventory.gltf(it)?.let { gltfLoaded ->
-                sceneDeclaration.renderables += GltfSceneBuilder(it, gltfLoaded).build(it.time)
+                // TODO: support transparency
+                sceneDeclaration.opaques += GltfSceneBuilder(it, gltfLoaded).build(it.time)
             }
         }
         guiRenderers = sceneDeclaration.guis.map {
@@ -129,7 +130,7 @@ internal class Scene(
         renderToReusableFb(fbIndex, uniforms) {
             val shadingMaterial = materialDeclaration(BaseMaterial.Shading, true, currentRetentionPolicy, sceneDeclaration.deferredShadingDeclaration!!.shadingModifiers)
             renderFullscreen(shadingMaterial, uniforms)
-            renderBucket(sceneDeclaration, uniforms, Bucket.SKY)
+            renderBucket(sceneDeclaration.skies, uniforms)
         }?.let {
             uniforms["finalColorTexture"] = it.colorTextures[0]
             uniforms["depthTexture"] = it.depthTexture
@@ -212,7 +213,7 @@ internal class Scene(
             }
             glViewport(0, 0, renderContext.width, renderContext.height)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-            renderBucket(sceneDeclaration, uniforms, Bucket.OPAQUE)
+            renderBucket(sceneDeclaration.opaques, uniforms)
         }
         uniforms["cdiffTexture"] = geometryBuffer.colorTextures[0]
         uniforms["normalTexture"] = geometryBuffer.colorTextures[1]
@@ -221,14 +222,10 @@ internal class Scene(
         uniforms["depthTexture"] = geometryBuffer.depthTexture!!
     }
 
-    private fun renderBucket(sceneDeclaration: SceneDeclaration, uniforms: Map<String, Any?>, bucket: Bucket, defs: Set<String> = setOf()) {
-        sceneDeclaration.renderables
-            .filter { it.bucket == bucket }
-            .forEach {
-                Rendering.render(
-                    inventory, it, renderContext.camera, deferredShading, uniforms, fixer, defs
-                )
-            }
+    private fun renderBucket(renderables: List<RenderableDeclaration>, uniforms: Map<String, Any?>, defs: Set<String> = setOf()) {
+        renderables.forEach {
+            Rendering.render(inventory, it, renderContext.camera, deferredShading, uniforms, fixer, defs)
+        }
     }
 
     private fun prepareScene(
@@ -253,8 +250,8 @@ internal class Scene(
         uniforms: Map<String, Any?>,
         defs: Set<String> = setOf(),
     ) {
-        renderBucket(sceneDeclaration, uniforms, Bucket.OPAQUE, defs)
-        renderBucket(sceneDeclaration, uniforms, Bucket.SKY, defs)
+        renderBucket(sceneDeclaration.opaques, uniforms, defs)
+        renderBucket(sceneDeclaration.skies, uniforms, defs)
     }
 
     private fun renderTransparents(sceneDeclaration: SceneDeclaration, uniforms: MutableMap<String, Any?>, camera: Camera, defs: Set<String> = setOf(), insideOut: Boolean = false) {
@@ -266,8 +263,7 @@ internal class Scene(
             }
         }
         val reverse = if (insideOut) -1f else 1f
-        sceneDeclaration.renderables
-            .filter { it.bucket == Bucket.TRANSPARENT }
+        sceneDeclaration.transparents
             .sortedByDescending { (camera.mat4 * it.transform.offset()).z * reverse }
             .forEach {
                 Rendering.render(
@@ -276,7 +272,6 @@ internal class Scene(
                 )
             }
 
-        renderBucket(sceneDeclaration, uniforms, Bucket.SCREEN, defs)
         guiRenderers.flatMap { it.renderables }.forEach {
             it.render(uniforms, fixer)
         }
@@ -300,7 +295,7 @@ internal class Scene(
                         dl.shadowDeclaration.cascades,
                         ci,
                         renderContext,
-                        sceneDeclaration.renderables,
+                        sceneDeclaration.opaques + sceneDeclaration.transparents,
                         fixer
                     )?.let {
                         shadowData += it

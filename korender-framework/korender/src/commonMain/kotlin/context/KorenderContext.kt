@@ -17,6 +17,7 @@ import com.zakgof.korender.OrthoProjectionDeclaration
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
@@ -37,6 +38,8 @@ interface KorenderContext {
     var camera: CameraDeclaration
     var projection: ProjectionDeclaration
     var background: ColorRGB
+    var retentionPolicy: RetentionPolicy
+    var retentionGeneration: Int
 
     val width: Int
     val height: Int

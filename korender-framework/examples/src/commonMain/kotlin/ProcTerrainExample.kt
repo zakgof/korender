@@ -16,18 +16,18 @@ import kotlin.math.sin
 fun ProcTerrainExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-        val terrain = clipmapTerrainPrefab("terrain", 2.0f, 16, 12)
+        val terrain = clipmapTerrainPrefab("terrain", 2.0f, 16, 13)
         Frame {
 
-            projection = frustum(5f, 5f * height / width, 2f, 32000f)
+            projection = frustum(5f, 5f * height / width, 2f, 40000f)
             camera = camera(
-                Vec3(frameInfo.time * 200.0f, 1500f + 100f * sin(frameInfo.time), frameInfo.time * 300.0f),
+                Vec3(frameInfo.time * 200.0f, 1500f + 100f * sin(frameInfo.time), frameInfo.time * 600.0f),
                 2.x + 3.z,
                 1.y
             )
 
             AmbientLight(ColorRGB.white(0.2f))
-            DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(0.5f))
+            DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.White)
             Renderable(
                 base(metallicFactor = 0.0f),
                 plugin("normal", "!shader/plugin/normal.terrain.frag"),
@@ -35,7 +35,7 @@ fun ProcTerrainExample() =
                 plugin("albedo", "procterrain/albedo.glsl"),
                 prefab = terrain
             )
-            PostProcess(fog(density = 0.00004f, color = ColorRGB(0xB8CAE9))) {
+            PostProcess(fog(density = 0.00006f, color = ColorRGB(0xB8CAE9))) {
                 Sky(fastCloudSky())
             }
             Gui {

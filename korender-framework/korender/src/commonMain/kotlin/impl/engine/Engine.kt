@@ -415,6 +415,18 @@ internal class Engine(
         override fun camera(position: Vec3, direction: Vec3, up: Vec3): CameraDeclaration =
             DefaultCamera(position, direction.normalize(), up.normalize())
 
+        override var retentionPolicy: RetentionPolicy
+            get() = currentRetentionPolicy
+            set(value) {
+                currentRetentionPolicy = value
+            }
+
+        override var retentionGeneration: Int
+            get() = currentRetentionGeneration
+            set(value) {
+                currentRetentionGeneration = value
+            }
+
         override var camera: CameraDeclaration
             get() = renderContext.camera
             set(value) {

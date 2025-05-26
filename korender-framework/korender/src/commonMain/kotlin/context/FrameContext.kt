@@ -16,7 +16,6 @@ interface FrameContext : KorenderContext {
     fun Renderable(vararg materialModifiers: MaterialModifier, prefab: Prefab)
 
     fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3 = Vec3.ZERO, transparent: Boolean = false)
-    fun Screen(vararg materialModifiers: MaterialModifier)
     fun Sky(vararg materialModifiers: MaterialModifier)
     fun Gui(block: GuiContainerContext.() -> Unit)
     fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: String, count: Int, mesh: MeshDeclaration, static: Boolean = false, transparent: Boolean = false, block: InstancedRenderablesContext.() -> Unit)

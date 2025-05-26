@@ -22,7 +22,11 @@ internal class SceneDeclaration {
     val pointLights = mutableListOf<PointLightDeclaration>()
     val directionalLights = mutableListOf<DirectionalLightDeclaration>()
     var ambientLightColor = white(0.3f)
-    val renderables = mutableListOf<RenderableDeclaration>()
+
+    val opaques = mutableListOf<RenderableDeclaration>()
+    val transparents = mutableListOf<RenderableDeclaration>()
+    val skies = mutableListOf<RenderableDeclaration>()
+
     val guis = mutableListOf<ElementDeclaration.Container>()
     val gltfs = mutableListOf<GltfDeclaration>()
     var filters = mutableListOf<InternalFilterDeclaration>()
@@ -52,7 +56,6 @@ internal class RenderableDeclaration(
     val materialModifiers: List<MaterialModifier>,
     val mesh: MeshDeclaration,
     val transform: Transform = Transform(),
-    val bucket: Bucket = Bucket.OPAQUE,
     override val retentionPolicy: RetentionPolicy
 ) : Retentionable
 
