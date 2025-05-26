@@ -40,8 +40,9 @@ fun HeightmapTerrainExample() =
                 prefab = terrain
             )
 
-            Sky(fastCloudSky())
-            PostProcess(water(waveScale = 1000.0f), fastCloudSky())
+            val sky = fastCloudSky()
+            Sky(sky)
+            PostProcess(water(waveScale = 1000.0f), sky)
             Gui {
                 Column {
                     Filler()

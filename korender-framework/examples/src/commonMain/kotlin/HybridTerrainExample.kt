@@ -66,7 +66,7 @@ fun HybridTerrainExample() =
             }
             Sky(fastCloudSky())
             PostProcess(water(), fastCloudSky())
-            PostProcess(fog(color = ColorRGB(0x808090), density = 0.00003f))
+            PostProcess(fog(color = ColorRGB(0x9BB4C8), density = 0.00003f))
             Gui {
                 Column {
                     Filler()

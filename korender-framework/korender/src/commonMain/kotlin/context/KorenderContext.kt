@@ -86,7 +86,7 @@ interface KorenderContext {
     fun blurHorz(radius: Float): MaterialModifier
     fun blurVert(radius: Float): MaterialModifier
     fun adjust(brightness: Float = 0.0f, contrast: Float = 1.0f, saturation: Float = 1.0f): MaterialModifier
-    fun water(waterColor: ColorRGB = ColorRGB(0.1f, 0.2f, 0.3f), transparency: Float = 0.1f, waveScale: Float = 25.0f, waveMagnitude: Float = 0.3f): MaterialModifier
+    fun water(waterColor: ColorRGB = ColorRGB(0x00183A), transparency: Float = 0.1f, waveScale: Float = 25.0f, waveMagnitude: Float = 0.3f): MaterialModifier
     fun fog(density: Float = 0.02f, color: ColorRGB = ColorRGB.white(0.01f)): MaterialModifier
     fun fxaa(): MaterialModifier
 
@@ -95,7 +95,7 @@ interface KorenderContext {
     fun smoke(density: Float = 0.5f, seed: Float = 0f): MaterialModifier
     fun grass(grassColor1: ColorRGB = ColorRGB(0.60f, 0.64f, 0.31f), grassColor2: ColorRGB = ColorRGB(0.40f, 0.74f, 0.21f), bladeWidth: Float = 0.1f, bladeLength: Float = 1.5f): MaterialModifier
 
-    fun fastCloudSky(density: Float = 3.0f, thickness: Float = 10.0f, scale: Float = 1.0f, rippleamount: Float = 0.3f, ripplescale: Float = 4.0f, darkblue: ColorRGB = ColorRGB(0.2f, 0.4f, 0.6f), lightblue: ColorRGB = ColorRGB(0.4f, 0.6f, 1.0f)): MaterialModifier
+    fun fastCloudSky(density: Float = 3.0f, thickness: Float = 10.0f, scale: Float = 1.0f, rippleamount: Float = 0.3f, ripplescale: Float = 4.0f, zenithcolor: ColorRGB = ColorRGB(0x3F6FC3), horizoncolor: ColorRGB = ColorRGB(0xB8CAE9)): MaterialModifier
     fun starrySky(colorness: Float = 0.8f, density: Float = 20.0f, speed: Float = 1.0f, size: Float = 15.0f): MaterialModifier
     fun cubeSky(cubeTexture: CubeTextureDeclaration): MaterialModifier
 
