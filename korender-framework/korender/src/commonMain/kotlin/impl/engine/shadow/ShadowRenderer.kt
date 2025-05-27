@@ -81,36 +81,38 @@ internal object ShadowRenderer {
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             shadowCasterDeclarations.filter {
                 // TODO: renderable or material flag to disable shadow casting
-                it.base == BaseMaterial.Renderable
+                it.base == BaseMaterial.Renderable || it.base == BaseMaterial.Billboard
             }.forEach { renderableDeclaration ->
 
-                val materialDeclaration = materialDeclaration(renderableDeclaration.base, false, renderableDeclaration.retentionPolicy, renderableDeclaration.materialModifiers)
+                val originalMaterialDeclaration = materialDeclaration(renderableDeclaration.base, false, renderableDeclaration.retentionPolicy, renderableDeclaration.materialModifiers)
 
                 val mesh = inventory.mesh(renderableDeclaration.mesh as InternalMeshDeclaration)
-                val uniforms = mutableMapOf<String, Any?>()
-                val defs = mutableSetOf<String>()
-                defs += materialDeclaration.shader.defs
+                val additionalDefs = mutableSetOf<String>()
+                val additionalPlugins = mutableMapOf<String, String>()
+                val additionalUniforms = mutableMapOf<String, Any?>()
+
                 if (declaration.fixedYRange != null) {
-                    defs += "FIXED_SHADOW_Y_RANGE"
-                    uniforms["fixedYMin"] = declaration.fixedYRange.first
-                    uniforms["fixedYMax"] = declaration.fixedYRange.second
+                    additionalPlugins["voutput"] = "!shader/plugin/voutput.fixedyrange.vert"
+                    additionalUniforms["fixedYMin"] = declaration.fixedYRange.first
+                    additionalUniforms["fixedYMax"] = declaration.fixedYRange.second
                 }
                 when (declaration.algorithm) {
-                    is InternalVsmParams -> defs += "VSM_SHADOW"
-                    is InternalHardParams -> defs += "HARD_SHADOW"
-                    is InternalPcssParams -> defs += "PCSS_SHADOW"
+                    is InternalVsmParams -> additionalDefs += "VSM_SHADOW"
+                    is InternalHardParams -> additionalDefs += "HARD_SHADOW"
+                    is InternalPcssParams -> additionalDefs += "PCSS_SHADOW"
                 }
 
                 val modifiedShaderDeclaration = ShaderDeclaration(
-                    "!shader/caster.vert", "!shader/caster.frag",
-                    defs,
-                    materialDeclaration.shader.plugins,
+                    if (renderableDeclaration.base == BaseMaterial.Billboard) "!shader/billboard.vert" else "!shader/base.vert",
+                    "!shader/caster.frag",
+                    originalMaterialDeclaration.shader.defs + additionalDefs,
+                    originalMaterialDeclaration.shader.plugins + additionalPlugins,
                     ImmediatelyFreeRetentionPolicy
                 )
                 val shader = inventory.shader(modifiedShaderDeclaration)
                 if (mesh != null && shader != null) {
-                    Renderable(mesh.gpuMesh, shader, materialDeclaration.uniforms, renderableDeclaration.transform)
-                        .render(casterUniforms + uniforms, fixer)
+                    Renderable(mesh.gpuMesh, shader, originalMaterialDeclaration.uniforms, renderableDeclaration.transform)
+                        .render(casterUniforms + additionalUniforms, fixer)
                 }
             }
         }

@@ -11,7 +11,6 @@ import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.sin
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun ProcTerrainExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {

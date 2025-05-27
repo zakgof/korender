@@ -2,6 +2,7 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
+import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.math.ColorRGB.Companion.white
@@ -79,6 +80,19 @@ fun CSMExample() =
                 base(color = Red),
                 mesh = sphere(0.5f),
                 transform = translate(2f, 0.5f, -3f),
+            )
+            fun cubTex(prefix: String) = cubeTexture(CubeTextureSide.entries.associateWith { "hybridterrain/tree/$prefix-${it.toString().lowercase()}.jpg" })
+
+            Billboard(
+                billboard(xscale = 5.0f, yscale = 5.0f),
+                base(metallicFactor = 0f, roughnessFactor = 0.9f),
+                radiant(
+                    radiantTexture = cubTex("radiant"),
+                    radiantNormalTexture = cubTex("radiant-normal"),
+                    colorTexture = cubTex("albedo"),
+                    normalTexture = cubTex("normal")
+                ),
+                position = Vec3(5f, 2f, -10f)
             )
 
             Gui {

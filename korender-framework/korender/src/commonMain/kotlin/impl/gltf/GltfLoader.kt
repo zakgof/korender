@@ -322,12 +322,12 @@ internal class GltfSceneBuilder(
         val matSpecularGlossiness = material?.extensions?.get("KHR_materials_pbrSpecularGlossiness")
                 as? Gltf.KHRMaterialsPbrSpecularGlossiness
 
-
         // TODO: Precreate all except jointMatrices
         return InternalMaterialModifier { mb ->
 
             if (skinIndex != null) {
-                mb.shaderDefs += "SKINNING"
+                mb.plugins["vposition"] = "!shader/plugin/vposition.skinning.vert"
+                mb.plugins["vnormal"] = "!shader/plugin/vnormal.skinning.vert"
                 mb.uniforms["jntMatrices[0]"] = Mat4List(
                     loadedSkins[skinIndex].jointMatrices.mapIndexed { ind, jm ->
                         jm * loadedSkins[skinIndex].inverseBindMatrices[ind]

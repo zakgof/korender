@@ -9,6 +9,8 @@ out vec4 fragColor;
 void main() {
     // TODO: fully transparent pixels should not cast shadows, get color, sample textures and cut
 
+
+
 #ifdef VSM_SHADOW
     float d = gl_FragCoord.z;
     float m1 = d * d;
