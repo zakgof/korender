@@ -3,10 +3,12 @@ package com.zakgof.korender.impl.engine
 import com.zakgof.korender.Platform
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
+import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
+import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.Projection
-import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import impl.engine.ImmediatelyFreeRetentionPolicy
@@ -20,10 +22,12 @@ internal class RenderContext(var width: Int, var height: Int) {
         set(newProjection) {
             _projection = newProjection
         }
-    var backgroundColor = ColorRGB.Black
+    var backgroundColor = ColorRGBA.Transparent
 
     val frameInfoManager = FrameInfoManager()
     val state = GlState()
+    val envProbes = mutableMapOf<String, GlGpuCubeTexture>()
+    val frameProbes = mutableMapOf<String, GlGpuTexture>()
 
     fun uniforms(m: MutableMap<String, Any?>) {
         m["noiseTexture"] = ResourceTextureDeclaration("!noise.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)

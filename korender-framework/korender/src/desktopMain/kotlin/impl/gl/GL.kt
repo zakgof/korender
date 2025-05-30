@@ -28,6 +28,9 @@ actual object GL {
     actual fun glBindTexture(target: Int, texture: GLTexture?) =
         GL11.glBindTexture(target, texture?.glHandle ?: 0)
 
+    actual fun glGetTexImage(tex: Int, level: Int, format: Int, type: Int, pixels: NativeByteBuffer) =
+        GL11.glGetTexImage(tex, level, format, type, pixels.byteBuffer)
+
     actual fun glTexParameterf(target: Int, pname: Int, param: Float) =
         GL11.glTexParameterf(target, pname, param)
 

@@ -51,13 +51,15 @@ import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.geometry.Sphere
 import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
-import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.ignoringGlError
+import com.zakgof.korender.impl.image.InternalImage
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
+import com.zakgof.korender.impl.material.ImageTextureDeclaration
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalRoiTexturesContext
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
+import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.prefab.grass.Grass
@@ -85,7 +87,6 @@ internal class Engine(
     private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
     private val inventory = Inventory(asyncContext)
     private val renderContext = RenderContext(width, height)
-    private val probes = mutableMapOf<String, GlGpuCubeTexture>()
 
     private var touchBoxes: List<TouchBox> = listOf()
     private var pressedTouchBoxIds = setOf<Any>()
@@ -113,27 +114,46 @@ internal class Engine(
             keyHandlers.add(handler)
         }
 
-        override fun texture(textureResource: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureDeclaration =
+        override fun texture(textureResource: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int) =
             ResourceTextureDeclaration(textureResource, filter, wrap, aniso, currentRetentionPolicy)
+
+        override fun texture(id: String, image: Image, filter: TextureFilter, wrap: TextureWrap, aniso: Int) =
+            ImageTextureDeclaration(id, image as InternalImage, filter, wrap, aniso, currentRetentionPolicy)
+
+        override fun textureProbe(frameProbeName: String): TextureDeclaration = ProbeTextureDeclaration(frameProbeName)
 
         override fun cubeTexture(resources: CubeTextureResources) = ResourceCubeTextureDeclaration(resources, currentRetentionPolicy)
 
         override fun cubeTexture(id: String, images: CubeTextureImages) = ImageCubeTextureDeclaration(id, images, currentRetentionPolicy)
 
-        override fun cubeProbe(probeName: String): CubeTextureDeclaration = ProbeCubeTextureDeclaration(probeName)
+        override fun cubeTextureProbe(envProbeName: String): CubeTextureDeclaration = ProbeCubeTextureDeclaration(envProbeName)
 
         override fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3, insideOut: Boolean, defs: Set<String>, block: FrameContext.() -> Unit): CubeTextureImages {
             val sd = SceneDeclaration()
             block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f)))
             var images: CubeTextureImages? = null
-            inventory.go(0f,0) {
-                val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy, probes)
+            inventory.go(0f, 0) {
+                val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
                 val uniforms = mutableMapOf<String, Any?>()
                 renderContext.uniforms(uniforms)
-                val cubeTexture = scene.renderToEnv(uniforms, CaptureContext(resolution, position, near, far, insideOut, defs, sd), "#immediate")
+                val cubeTexture = scene.renderToEnvProbe(uniforms, EnvCaptureContext(resolution, position, near, far, insideOut, defs, sd), "#immediate")
                 images = cubeTexture.fetch()
             }
             return images!!
+        }
+
+        override fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameContext.() -> Unit): Image {
+            val sd = SceneDeclaration()
+            block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f)))
+            var image: Image? = null
+            inventory.go(0f, 0) {
+                val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
+                val uniforms = mutableMapOf<String, Any?>()
+                renderContext.uniforms(uniforms)
+                val texture = scene.renderToFrameProbe(uniforms, FrameCaptureContext(width, height, camera as Camera, projection as Projection, sd), "#immediate")
+                image = texture.fetch()
+            }
+            return image!!
         }
 
         override fun cube(halfSide: Float): MeshDeclaration = Cube(halfSide, currentRetentionPolicy)
@@ -378,7 +398,8 @@ internal class Engine(
                         it.uniforms["ssrWidth"] = w.toFloat()
                         it.uniforms["ssrHeight"] = h.toFloat()
                     }
-                }, currentRetentionPolicy)
+                }, currentRetentionPolicy
+            )
         }
 
         override fun bloom(width: Int?, height: Int?) = InternalPostShadingEffect(
@@ -404,7 +425,8 @@ internal class Engine(
             "bloomDepthTexture",
             compositionMaterialModifier = {
                 it.shaderDefs += "BLOOM"
-            }, currentRetentionPolicy)
+            }, currentRetentionPolicy
+        )
 
         override fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration =
             FrustumProjection(width, height, near, far)
@@ -439,7 +461,7 @@ internal class Engine(
                 renderContext.projection = value as Projection
             }
 
-        override var background: ColorRGB
+        override var background: ColorRGBA
             get() = renderContext.backgroundColor
             set(value) {
                 renderContext.backgroundColor = value
@@ -496,7 +518,7 @@ internal class Engine(
             DefaultFrameContext(kc, sd, frameInfo).apply(it)
         }
         inventory.go(frameInfo.time, kc.currentRetentionGeneration) {
-            val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy, probes)
+            val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
             scene.render()
             // checkGlError("during rendering")
             touchBoxes = scene.touchBoxes

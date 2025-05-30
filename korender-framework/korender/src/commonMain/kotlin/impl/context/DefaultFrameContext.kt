@@ -1,9 +1,11 @@
 package com.zakgof.korender.impl.context
 
+import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.Prefab
+import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.context.DeferredShadingContext
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.GuiContainerContext
@@ -12,12 +14,14 @@ import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.context.ShadowContext
+import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.engine.BaseMaterial
-import com.zakgof.korender.impl.engine.CaptureContext
 import com.zakgof.korender.impl.engine.DeferredShadingDeclaration
 import com.zakgof.korender.impl.engine.DirectionalLightDeclaration
 import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.Engine
+import com.zakgof.korender.impl.engine.EnvCaptureContext
+import com.zakgof.korender.impl.engine.FrameCaptureContext
 import com.zakgof.korender.impl.engine.GltfDeclaration
 import com.zakgof.korender.impl.engine.InternalFilterDeclaration
 import com.zakgof.korender.impl.engine.InternalInstancingDeclaration
@@ -29,6 +33,7 @@ import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.prefab.InternalPrefab
+import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.translate
@@ -128,10 +133,17 @@ internal class DefaultFrameContext(
         sceneDeclaration.filters += InternalFilterDeclaration(materialModifiers.asList(), sd, korenderContext.currentRetentionPolicy)
     }
 
-    override fun CaptureEnv(probeName: String, resolution: Int, position: Vec3, near: Float, far: Float, insideOut: Boolean, defs: Set<String>, block: FrameContext.() -> Unit) {
+    override fun CaptureEnv(envProbeName: String, resolution: Int, position: Vec3, near: Float, far: Float, insideOut: Boolean, defs: Set<String>, block: FrameContext.() -> Unit) {
         val captureSceneDeclaration = SceneDeclaration()
-        val captureContext = CaptureContext(resolution, position, near, far, insideOut, defs, captureSceneDeclaration)
+        val envCaptureContext = EnvCaptureContext(resolution, position, near, far, insideOut, defs, captureSceneDeclaration)
         DefaultFrameContext(korenderContext, captureSceneDeclaration, frameInfo).apply(block)
-        sceneDeclaration.captures[probeName] = captureContext
+        sceneDeclaration.envCaptures[envProbeName] = envCaptureContext
+    }
+
+    override fun CaptureFrame(frameProbeName: String, width: Int, height: Int, cameraDeclaration: CameraDeclaration, projectionDeclaration: ProjectionDeclaration, block: FrameContext.() -> Unit) {
+        val captureSceneDeclaration = SceneDeclaration()
+        val frameCaptureContext = FrameCaptureContext(width, height, cameraDeclaration as Camera, projectionDeclaration as Projection, captureSceneDeclaration)
+        DefaultFrameContext(korenderContext, captureSceneDeclaration, frameInfo).apply(block)
+        sceneDeclaration.frameCaptures[frameProbeName] = frameCaptureContext
     }
 }

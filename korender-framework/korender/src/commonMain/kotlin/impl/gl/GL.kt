@@ -46,6 +46,8 @@ expect object GL {
         pixels: NativeByteBuffer?
     )
 
+    fun glGetTexImage(tex: Int, level: Int, format: Int, type: Int, pixels: NativeByteBuffer)
+
     fun glGetFloatv(pname: Int): Float?
 
     fun glGetError(): Int

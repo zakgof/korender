@@ -37,7 +37,7 @@ internal class GlGpuFrameBuffer(
         glBindFramebuffer(GL_FRAMEBUFFER, fbHandle)
 
         colorTextures = colorTexturePresets.mapIndexed { index, preset ->
-            val tex = GlGpuTexture( "$name-color-$index", width, height, preset)
+            val tex = GlGpuTexture(width, height, preset)
             glFramebufferTexture2D(
                 GL_FRAMEBUFFER,
                 GL_COLOR_ATTACHMENT0 + index,
@@ -50,7 +50,7 @@ internal class GlGpuFrameBuffer(
         println("Framebuffer textures [${colorTextures.map { it.glHandle }}]")
 
         if (useDepthBuffer) {
-            depthTexture = GlGpuTexture("$name-depth", width, height, GlGpuTexture.Preset.Depth)
+            depthTexture = GlGpuTexture(width, height, GlGpuTexture.Preset.Depth)
             glFramebufferTexture2D(
                 GL_FRAMEBUFFER,
                 GL_DEPTH_ATTACHMENT,

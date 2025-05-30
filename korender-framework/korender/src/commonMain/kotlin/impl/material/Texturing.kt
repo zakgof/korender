@@ -26,31 +26,23 @@ internal object Texturing {
 
     suspend fun create(declaration: InternalTexture, appResourceLoader: ResourceLoader): GlGpuTexture {
 
-        val bytes = when (declaration) {
-            is ByteArrayTextureDeclaration -> declaration.fileBytes
-            is ResourceTextureDeclaration -> resourceBytes(
-                appResourceLoader,
-                declaration.textureResource
-            )
-
+        val image = when (declaration) {
+            is ByteArrayTextureDeclaration -> Platform.loadImage(declaration.fileBytes, declaration.extension).await()
+            is ResourceTextureDeclaration -> Platform.loadImage(
+                resourceBytes(appResourceLoader, declaration.textureResource),
+                declaration.textureResource.split(".").last()
+            ).await()
+            is ImageTextureDeclaration -> declaration.image
             else -> throw KorenderException("Internal error")
         }
-
-        val extension = when (declaration) {
-            is ByteArrayTextureDeclaration -> declaration.extension
-            is ResourceTextureDeclaration -> declaration.textureResource.split(".").last()
-            else -> throw KorenderException("Internal error")
-        }
-
-        val image = Platform.loadImage(bytes, extension).await()
-
         return GlGpuTexture(
-            declaration.id, image,
+            image,
             declaration.filter,
             declaration.wrap,
             declaration.aniso
         )
     }
+
 
     suspend fun cube(decl: ResourceCubeTextureDeclaration, appResourceLoader: ResourceLoader): GlGpuCubeTexture {
         val images = CubeTextureSide.entries
@@ -72,7 +64,6 @@ internal object Texturing {
 }
 
 internal interface InternalTexture : Retentionable {
-    val id: String
     val filter: TextureFilter
     val wrap: TextureWrap
     val aniso: Int
@@ -85,15 +76,29 @@ internal class ResourceTextureDeclaration(
     override val aniso: Int = 1024,
     override val retentionPolicy: RetentionPolicy
 ) : TextureDeclaration, InternalTexture {
-    override val id = textureResource
     override fun equals(other: Any?): Boolean =
         (other is ResourceTextureDeclaration && other.textureResource == textureResource)
 
     override fun hashCode(): Int = textureResource.hashCode()
 }
 
+internal class ImageTextureDeclaration(
+    val id: String,
+    val image: InternalImage,
+    override val filter: TextureFilter = TextureFilter.MipMap,
+    override val wrap: TextureWrap = TextureWrap.Repeat,
+    override val aniso: Int = 1024,
+    override val retentionPolicy: RetentionPolicy
+) : TextureDeclaration, InternalTexture {
+    override fun equals(other: Any?): Boolean =
+        (other is ImageTextureDeclaration && other.id == id)
+    override fun hashCode(): Int = id.hashCode()
+}
+
+internal data class ProbeTextureDeclaration (val frameProbeName: String) : TextureDeclaration
+
 internal class ByteArrayTextureDeclaration(
-    override val id: String,
+    private val id: String,
     override val filter: TextureFilter,
     override val wrap: TextureWrap,
     override val aniso: Int,
@@ -125,4 +130,4 @@ internal class ImageCubeTextureDeclaration(
     override fun hashCode(): Int = id.hashCode()
 }
 
-internal data class ProbeCubeTextureDeclaration(val probeName: String) : CubeTextureDeclaration
+internal data class ProbeCubeTextureDeclaration(val envProbeName: String) : CubeTextureDeclaration

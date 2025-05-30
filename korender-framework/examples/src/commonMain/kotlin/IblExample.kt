@@ -86,6 +86,7 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 //        ) {
 //            renderHull(hullMesh)
 //        }
+        /*
 
         CaptureEnv(
             probeName = "radiant-normal", resolution = 128, near = 0.2f, far = 30f, insideOut = true,
@@ -105,6 +106,7 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             AmbientLight(white(1f))
             renderTree(leaf, leafInstances)
         }
+        */
 
 //        Billboard(
 //            base(
@@ -119,7 +121,7 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 //            position = ZERO
 //        )
 
-        Sky(cubeSky(cubeProbe("albedo")))
+        Sky(cubeSky(cubeTextureProbe("albedo")))
 
         Gui {
             Column {

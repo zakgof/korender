@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.Image
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.Platform
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
@@ -12,6 +13,7 @@ import com.zakgof.korender.impl.gl.GL.glGenTextures
 import com.zakgof.korender.impl.gl.GL.glGenerateMipmap
 import com.zakgof.korender.impl.gl.GL.glGetError
 import com.zakgof.korender.impl.gl.GL.glGetFloatv
+import com.zakgof.korender.impl.gl.GL.glGetTexImage
 import com.zakgof.korender.impl.gl.GL.glTexImage2D
 import com.zakgof.korender.impl.gl.GL.glTexParameteri
 import com.zakgof.korender.impl.gl.GLConstants.GL_CLAMP_TO_EDGE
@@ -74,11 +76,17 @@ internal val formatMap = mapOf(
     Image.Format.Gray16 to GlGpuTexture.GlFormat(GL_R16, GL_RED, GL_UNSIGNED_SHORT)
 )
 
+internal val backFormatMap = mapOf(
+    GL_RGBA to Image.Format.RGBA,
+    GL_RGB to Image.Format.RGB,
+    GL_R8 to Image.Format.Gray,
+    GL_R16 to Image.Format.Gray16
+)
+
 internal class GlGpuTexture(
-    private val name: String,
     image: InternalImage?,
-    width: Int,
-    height: Int,
+    private val width: Int,
+    private val height: Int,
     filter: TextureFilter,
     wrap: TextureWrap,
     aniso: Int,
@@ -87,6 +95,9 @@ internal class GlGpuTexture(
 
     val glHandle: GLTexture = glGenTextures()
     val mipmapped = filter == TextureFilter.MipMap
+
+    private var format: Image.Format? = null
+    private var glFormat: GlGpuTexture.GlFormat? = null
 
     init {
         println("Creating GPU Texture $this")
@@ -118,22 +129,20 @@ internal class GlGpuTexture(
     }
 
     constructor(
-        name: String,
         image: InternalImage,
         filter: TextureFilter = TextureFilter.MipMap,
         wrap: TextureWrap = TextureWrap.Repeat,
         aniso: Int = 1024
     ) : this(
-        name, image, image.width, image.height, filter, wrap, aniso, listOf(formatMap[image.format]!!)
+        image, image.width, image.height, filter, wrap, aniso, listOf(formatMap[image.format]!!)
     )
 
     constructor(
-        name: String,
         width: Int,
         height: Int,
         preset: Preset
     ) : this(
-        name, null, width, height, preset.filter, preset.wrap, preset.aniso, preset.formats
+        null, width, height, preset.filter, preset.wrap, preset.aniso, preset.formats
     )
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -145,6 +154,8 @@ internal class GlGpuTexture(
                 println("Could not create a texture with format 0x${glFormat.internal.toHexString()}. Falling back to next format when creating texture")
                 continue
             }
+            this.glFormat = glFormat
+            this.format = backFormatMap[glFormat.format]
             return
         }
         throw KorenderException("Could not create GL texture")
@@ -155,12 +166,20 @@ internal class GlGpuTexture(
         glBindTexture(GL_TEXTURE_2D, glHandle)
     }
 
+    fun fetch(): Image {
+        glBindTexture(GL_TEXTURE_2D, glHandle)
+        val img = Platform.createImage(width, height, format!!)
+        glGetTexImage(GL_TEXTURE_2D, 0, glFormat!!.format, glFormat!!.type, img.bytes)
+        glBindTexture(GL_TEXTURE_2D, null)
+        return img
+    }
+
     override fun close() {
         println("Destroying GPU Texture $this")
         glDeleteTextures(glHandle)
     }
 
-    override fun toString() = "[$name] $glHandle"
+    override fun toString() = "$glHandle"
 
     enum class Preset(val filter: TextureFilter, val wrap: TextureWrap, val aniso: Int, val formats: List<GlFormat>) {
         RGBMipmap(TextureFilter.MipMap, TextureWrap.Repeat, 1024, listOf(GlFormat(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE))),
@@ -203,7 +222,7 @@ internal class GlGpuTexture(
 
     companion object {
         fun zeroTex(): GlGpuTexture = GlGpuTexture(
-            "zero", InternalImage(
+            InternalImage(
                 2, 2, NativeByteBuffer(14).apply {
                     put(
                         byteArrayOf(

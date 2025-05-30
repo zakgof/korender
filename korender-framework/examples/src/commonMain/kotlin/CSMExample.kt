@@ -25,7 +25,18 @@ fun CSMExample() =
         val freeCamera = FreeCamera(this, Vec3(0f, 2f, 5f), (-1).z)
         OnTouch { freeCamera.touch(it) }
         OnKey { freeCamera.handle(it) }
+
         Frame {
+
+            CaptureFrame("oak", 1024, 1024, camera(-50.z, 1.z, 1.y), ortho(50f, 50f, 1f, 100f)) {
+                AmbientLight(white(0.6f))
+                Gltf("infcity/tree.glb")
+                Renderable(
+                    base(color = Red),
+                    mesh = sphere(10f)
+                )
+            }
+
             projection = frustum(4f * width / height, 4f, 4f, 10000f)
             camera = freeCamera.camera(projection, width, height, frameInfo.dt)
             DirectionalLight(Vec3(1f, -1f, 0.3f).normalize(), white(5.0f)) {
@@ -83,14 +94,24 @@ fun CSMExample() =
             )
             fun cubTex(prefix: String) = cubeTexture(CubeTextureSide.entries.associateWith { "hybridterrain/tree/$prefix-${it.toString().lowercase()}.jpg" })
 
+//            Billboard(
+//                billboard(xscale = 5.0f, yscale = 5.0f),
+//                base(metallicFactor = 0f, roughnessFactor = 0.9f),
+//                radiant(
+//                    radiantTexture = cubTex("radiant"),
+//                    radiantNormalTexture = cubTex("radiant-normal"),
+//                    colorTexture = cubTex("albedo"),
+//                    normalTexture = cubTex("normal")
+//                ),
+//                position = Vec3(5f, 2f, -10f)
+//            )
+
             Billboard(
                 billboard(xscale = 5.0f, yscale = 5.0f),
-                base(metallicFactor = 0f, roughnessFactor = 0.9f),
-                radiant(
-                    radiantTexture = cubTex("radiant"),
-                    radiantNormalTexture = cubTex("radiant-normal"),
-                    colorTexture = cubTex("albedo"),
-                    normalTexture = cubTex("normal")
+                base(
+                    colorTexture = textureProbe("oak"),
+                    metallicFactor = 0f,
+                    roughnessFactor = 0.9f
                 ),
                 position = Vec3(5f, 2f, -10f)
             )

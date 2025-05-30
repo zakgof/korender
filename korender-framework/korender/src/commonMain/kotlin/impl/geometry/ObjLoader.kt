@@ -55,8 +55,8 @@ internal object ObjLoader {
 
     private fun parse2(line: String): Vec2 {
         val tokens = line.split(" ").filter { it.isNotBlank() }
-        if (tokens.size != 2)
-            throw KorenderException("Obj vt expects 2 coordinates")
+        if (tokens.size != 2 && tokens.size != 3)
+            throw KorenderException("Obj vt expects 2 (or 3) coordinates")
         return Vec2(tokens[0].toFloat(), 1f - tokens[1].toFloat())
     }
 

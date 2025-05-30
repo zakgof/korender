@@ -8,7 +8,7 @@ data class ColorRGB(val r: Float, val g: Float, val b: Float) {
         rgb.and(0xFF).toFloat() / 255f
     )
 
-    fun toRGBA() = ColorRGBA(r, g, b, 1f)
+    fun toRGBA(a: Float) = ColorRGBA(r, g, b, a)
 
     companion object {
         fun white(intensity: Float) = ColorRGB(intensity, intensity, intensity)

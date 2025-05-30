@@ -31,7 +31,8 @@ internal class SceneDeclaration {
     val gltfs = mutableListOf<GltfDeclaration>()
     var filters = mutableListOf<InternalFilterDeclaration>()
     var deferredShadingDeclaration: DeferredShadingDeclaration? = null
-    val captures = mutableMapOf<String, CaptureContext>()
+    val envCaptures = mutableMapOf<String, EnvCaptureContext>()
+    val frameCaptures = mutableMapOf<String, FrameCaptureContext>()
 }
 
 internal class DeferredShadingDeclaration() {

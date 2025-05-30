@@ -26,11 +26,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_ATTACHMENT0
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER_COMPLETE
 import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_TEXTURE_MAX_ANISOTROPY
-import com.zakgof.korender.impl.gl.GLConstants.GL_R16
-import com.zakgof.korender.impl.gl.GLConstants.GL_R8
-import com.zakgof.korender.impl.gl.GLConstants.GL_RED
-import com.zakgof.korender.impl.gl.GLConstants.GL_RGB
-import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_NEGATIVE_X
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
@@ -45,7 +40,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_R
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_S
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_T
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_BYTE
-import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_SHORT
 import com.zakgof.korender.impl.gl.GLTexture
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.image.InternalImage
@@ -67,20 +61,6 @@ internal class GlGpuCubeTexture : AutoCloseable {
         GL_TEXTURE_CUBE_MAP_POSITIVE_X,
         GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
         GL_TEXTURE_CUBE_MAP_POSITIVE_Z
-    )
-
-    private val formatMap = mapOf(
-        Image.Format.RGBA to GlGpuTexture.GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE),
-        Image.Format.RGB to GlGpuTexture.GlFormat(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE),
-        Image.Format.Gray to GlGpuTexture.GlFormat(GL_R8, GL_RED, GL_UNSIGNED_BYTE),
-        Image.Format.Gray16 to GlGpuTexture.GlFormat(GL_R16, GL_RED, GL_UNSIGNED_SHORT)
-    )
-
-    private val backFormatMap = mapOf(
-        GL_RGBA to Image.Format.RGBA,
-        GL_RGB to Image.Format.RGB,
-        GL_R8 to Image.Format.Gray,
-        GL_R16 to Image.Format.Gray16
     )
 
     constructor(images: CubeTextureImages) {

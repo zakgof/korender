@@ -37,23 +37,23 @@ interface KorenderContext {
 
     var camera: CameraDeclaration
     var projection: ProjectionDeclaration
-    var background: ColorRGB
+    var background: ColorRGBA
     var retentionPolicy: RetentionPolicy
     var retentionGeneration: Int
 
     val width: Int
     val height: Int
 
-    fun texture(
-        textureResource: String, filter: TextureFilter = TextureFilter.MipMap,
-        wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024
-    ): TextureDeclaration
+    fun texture(textureResource: String, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): TextureDeclaration
+    fun texture(id: String, image: Image, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): TextureDeclaration
+    fun textureProbe(frameProbeName: String): TextureDeclaration
 
     fun cubeTexture(resources: CubeTextureResources): CubeTextureDeclaration
     fun cubeTexture(id: String, images: CubeTextureImages): CubeTextureDeclaration
+    fun cubeTextureProbe(envProbeName: String): CubeTextureDeclaration
 
-    fun cubeProbe(probeName: String): CubeTextureDeclaration
     fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3 = ZERO, insideOut: Boolean = false, defs: Set<String> = setOf(), block: FrameContext.() -> Unit): CubeTextureImages
+    fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameContext.() -> Unit): Image
 
     fun cube(halfSide: Float = 0.5f): MeshDeclaration
     fun sphere(radius: Float = 1.0f): MeshDeclaration

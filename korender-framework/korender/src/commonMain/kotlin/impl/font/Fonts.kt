@@ -14,7 +14,7 @@ internal object Fonts {
 
     suspend fun load(fontResource: String, appResourceLoader: ResourceLoader): Font {
         val fontDef = Platform.loadFont(resourceBytes(appResourceLoader, fontResource)).await()
-        val gpuTexture = GlGpuTexture(fontResource, fontDef.image)
+        val gpuTexture = GlGpuTexture(fontDef.image)
         return Font(gpuTexture, fontDef.widths)
     }
 }

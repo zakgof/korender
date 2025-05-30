@@ -32,6 +32,7 @@ import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedCubeTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
+import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
@@ -45,8 +46,7 @@ internal class Scene(
     private val sceneDeclaration: SceneDeclaration,
     private val inventory: Inventory,
     private val renderContext: RenderContext,
-    private val currentRetentionPolicy: RetentionPolicy,
-    private val probes: MutableMap<String, GlGpuCubeTexture>,
+    private val currentRetentionPolicy: RetentionPolicy
 ) {
 
     private var guiRenderers: List<GuiRenderer>
@@ -58,9 +58,10 @@ internal class Scene(
     private val fixer = { value: Any? ->
         when (value) {
             is InternalTexture -> inventory.texture(value) ?: NotYetLoadedTexture
+            is ProbeTextureDeclaration -> renderContext.frameProbes[value.frameProbeName] ?: NotYetLoadedTexture
             is ResourceCubeTextureDeclaration -> inventory.cubeTexture(value) ?: NotYetLoadedCubeTexture
             is ImageCubeTextureDeclaration -> inventory.cubeTexture(value) ?: NotYetLoadedCubeTexture
-            is ProbeCubeTextureDeclaration -> probes[value.probeName] ?: NotYetLoadedCubeTexture
+            is ProbeCubeTextureDeclaration -> renderContext.envProbes[value.envProbeName] ?: NotYetLoadedCubeTexture
             else -> value
         }
     }
@@ -83,15 +84,8 @@ internal class Scene(
         val uniforms = mutableMapOf<String, Any?>()
         renderContext.uniforms(uniforms)
 
-        sceneDeclaration.captures.forEach { kv ->
-            try {
-                probes[kv.key] = Scene(kv.value.sceneDeclaration, inventory, renderContext, currentRetentionPolicy, probes)
-                    .renderToEnv(uniforms, kv.value, kv.key)
-            } catch (_: SkipRender) {
-                println("Env probing skipped as framebuffer is not ready")
-                return
-            }
-        }
+        renderEnvProbes(uniforms)
+        renderFrameProbes(uniforms)
 
         renderShadows(uniforms, false)
 
@@ -103,6 +97,30 @@ internal class Scene(
             }
         } catch (_: SkipRender) {
             println("Scene rendering skipped as framebuffers are not ready")
+        }
+    }
+
+    private fun renderEnvProbes(uniforms: MutableMap<String, Any?>) {
+        sceneDeclaration.envCaptures.forEach { kv ->
+            try {
+                renderContext.envProbes[kv.key] = Scene(kv.value.sceneDeclaration, inventory, renderContext, currentRetentionPolicy)
+                    .renderToEnvProbe(uniforms, kv.value, kv.key)
+            } catch (_: SkipRender) {
+                println("Env probing skipped as framebuffer is not ready")
+                return
+            }
+        }
+    }
+
+    private fun renderFrameProbes(uniforms: MutableMap<String, Any?>) {
+        sceneDeclaration.frameCaptures.forEach { kv ->
+            try {
+                renderContext.frameProbes[kv.key] = Scene(kv.value.sceneDeclaration, inventory, renderContext, currentRetentionPolicy)
+                    .renderToFrameProbe(uniforms, kv.value, kv.key)
+            } catch (_: SkipRender) {
+                println("Frame probing skipped as framebuffer is not ready")
+                return
+            }
         }
     }
 
@@ -234,7 +252,7 @@ internal class Scene(
         insideOut: Boolean = false
     ) {
         renderContext.state.set {
-            clearColor(renderContext.backgroundColor.toRGBA())
+            clearColor(renderContext.backgroundColor)
             if (insideOut) {
                 cullFaceMode(GL_FRONT)
                 depthFunc(GL_GEQUAL)
@@ -359,32 +377,49 @@ internal class Scene(
         }
     }
 
-    fun renderToEnv(uniforms: MutableMap<String, Any?>, captureContext: CaptureContext, probeName: String): GlGpuCubeTexture {
+    fun renderToEnvProbe(uniforms: MutableMap<String, Any?>, envCaptureContext: EnvCaptureContext, probeName: String): GlGpuCubeTexture {
         renderShadows(uniforms, true)
-        val probeFb = inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", captureContext.resolution, captureContext.resolution, true, TransientProperty(currentRetentionPolicy))) ?: throw SkipRender
+        val probeFb = inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", envCaptureContext.resolution, envCaptureContext.resolution, true, TransientProperty(currentRetentionPolicy))) ?: throw SkipRender
         val probeUniforms = mutableMapOf<String, Any?>()
         probeUniforms += uniforms
-        val projection = FrustumProjection(2f * captureContext.near, 2f * captureContext.near, captureContext.near, captureContext.far)
+        val projection = FrustumProjection(2f * envCaptureContext.near, 2f * envCaptureContext.near, envCaptureContext.near, envCaptureContext.far)
         mapOf(
-            GL_TEXTURE_CUBE_MAP_NEGATIVE_X to DefaultCamera(captureContext.position, -1.x, -1.y),
-            GL_TEXTURE_CUBE_MAP_NEGATIVE_Y to DefaultCamera(captureContext.position, -1.y, -1.z),
-            GL_TEXTURE_CUBE_MAP_NEGATIVE_Z to DefaultCamera(captureContext.position, -1.z, -1.y),
-            GL_TEXTURE_CUBE_MAP_POSITIVE_X to DefaultCamera(captureContext.position, 1.x, -1.y),
-            GL_TEXTURE_CUBE_MAP_POSITIVE_Y to DefaultCamera(captureContext.position, 1.y, 1.z),
-            GL_TEXTURE_CUBE_MAP_POSITIVE_Z to DefaultCamera(captureContext.position, 1.z, -1.y),
+            GL_TEXTURE_CUBE_MAP_NEGATIVE_X to DefaultCamera(envCaptureContext.position, -1.x, -1.y),
+            GL_TEXTURE_CUBE_MAP_NEGATIVE_Y to DefaultCamera(envCaptureContext.position, -1.y, -1.z),
+            GL_TEXTURE_CUBE_MAP_NEGATIVE_Z to DefaultCamera(envCaptureContext.position, -1.z, -1.y),
+            GL_TEXTURE_CUBE_MAP_POSITIVE_X to DefaultCamera(envCaptureContext.position, 1.x, -1.y),
+            GL_TEXTURE_CUBE_MAP_POSITIVE_Y to DefaultCamera(envCaptureContext.position, 1.y, 1.z),
+            GL_TEXTURE_CUBE_MAP_POSITIVE_Z to DefaultCamera(envCaptureContext.position, 1.z, -1.y),
         ).forEach {
             probeUniforms["view"] = it.value.mat4
             probeUniforms["projection"] = projection.mat4
             probeUniforms["cameraPos"] = it.value.position
             probeUniforms["cameraDir"] = it.value.direction
             probeFb.exec(it.key) {
-                prepareScene(captureContext.resolution, captureContext.resolution, captureContext.insideOut)
-                renderForwardOpaques(sceneDeclaration, probeUniforms, captureContext.defs)
-                renderTransparents(sceneDeclaration, probeUniforms, it.value, captureContext.defs, captureContext.insideOut)
+                prepareScene(envCaptureContext.resolution, envCaptureContext.resolution, envCaptureContext.insideOut)
+                renderForwardOpaques(sceneDeclaration, probeUniforms, envCaptureContext.defs)
+                renderTransparents(sceneDeclaration, probeUniforms, it.value, envCaptureContext.defs, envCaptureContext.insideOut)
             }
         }
         probeFb.finish()
         return probeFb.colorTexture;
+    }
+
+    fun renderToFrameProbe(uniforms: MutableMap<String, Any?>, frameCaptureContext: FrameCaptureContext, frameProbeName: String): GlGpuTexture {
+        renderShadows(uniforms, true)
+        val probeFb = inventory.frameBuffer(FrameBufferDeclaration("probe-$frameProbeName", frameCaptureContext.width, frameCaptureContext.height, listOf(GlGpuTexture.Preset.RGBAFilter), true, TransientProperty(currentRetentionPolicy))) ?: throw SkipRender
+        val probeUniforms = mutableMapOf<String, Any?>()
+        probeUniforms += uniforms
+        probeUniforms["view"] = frameCaptureContext.camera.mat4
+        probeUniforms["projection"] = frameCaptureContext.projection.mat4
+        probeUniforms["cameraPos"] = frameCaptureContext.camera.position
+        probeUniforms["cameraDir"] = frameCaptureContext.camera.direction
+        probeFb.exec {
+            prepareScene(frameCaptureContext.width, frameCaptureContext.height)
+            renderForwardOpaques(sceneDeclaration, probeUniforms)
+            renderTransparents(sceneDeclaration, probeUniforms, frameCaptureContext.camera)
+        }
+        return probeFb.colorTextures[0]
     }
 }
 
