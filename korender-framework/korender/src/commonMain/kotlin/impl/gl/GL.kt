@@ -162,8 +162,6 @@ expect object GL {
         level: Int
     )
 
-    fun glFramebufferTexture(target: Int, attachment: Int, texture: GLTexture, level: Int)
-
     fun glDeleteFramebuffers(framebuffer: GLFrameBuffer)
 
     fun glBindFramebuffer(target: Int, framebuffer: GLFrameBuffer?)

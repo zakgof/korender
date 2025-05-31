@@ -261,9 +261,6 @@ actual object GL {
     actual fun glDrawBuffers(vararg targets: Int) =
         gl!!.drawBuffers(targets.toTypedArray().map { it.toJsNumber() }.toJsArray())
 
-    actual fun glFramebufferTexture(target: Int, attachment: Int, texture: GLTexture, level: Int) =
-        gl!!.framebufferTexture(target, attachment, texture.texture, level)
-
     actual fun glReadPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, data: NativeByteBuffer) =
         gl!!.readPixels(x, y, width, height, format, type, data.array)
 }

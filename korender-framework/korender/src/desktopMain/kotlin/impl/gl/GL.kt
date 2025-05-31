@@ -195,9 +195,6 @@ actual object GL {
     actual fun glFramebufferTexture2D(target: Int, attachment: Int, textarget: Int, texture: GLTexture, level: Int) =
         GL30.glFramebufferTexture2D(target, attachment, textarget, texture.glHandle, level)
 
-    actual fun glFramebufferTexture(target: Int, attachment: Int, texture: GLTexture, level: Int) =
-        GL32.glFramebufferTexture(target, attachment, texture.glHandle, level)
-
     actual fun glDeleteFramebuffers(framebuffer: GLFrameBuffer) =
         GL30.glDeleteFramebuffers(framebuffer.glHandle)
 
