@@ -126,6 +126,8 @@ internal class GlGpuTexture(
                 }
             }
         }
+
+        glBindTexture(GL_TEXTURE_2D, null)
     }
 
     constructor(

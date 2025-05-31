@@ -140,9 +140,9 @@ internal class DefaultFrameContext(
         sceneDeclaration.envCaptures[envProbeName] = envCaptureContext
     }
 
-    override fun CaptureFrame(frameProbeName: String, width: Int, height: Int, cameraDeclaration: CameraDeclaration, projectionDeclaration: ProjectionDeclaration, block: FrameContext.() -> Unit) {
+    override fun CaptureFrame(frameProbeName: String, width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameContext.() -> Unit) {
         val captureSceneDeclaration = SceneDeclaration()
-        val frameCaptureContext = FrameCaptureContext(width, height, cameraDeclaration as Camera, projectionDeclaration as Projection, captureSceneDeclaration)
+        val frameCaptureContext = FrameCaptureContext(width, height, camera as Camera, projection as Projection, captureSceneDeclaration)
         DefaultFrameContext(korenderContext, captureSceneDeclaration, frameInfo).apply(block)
         sceneDeclaration.frameCaptures[frameProbeName] = frameCaptureContext
     }

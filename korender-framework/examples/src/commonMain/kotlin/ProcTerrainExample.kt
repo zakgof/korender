@@ -8,7 +8,6 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.sin
 
 @Composable
@@ -26,7 +25,7 @@ fun ProcTerrainExample() =
             )
 
             AmbientLight(ColorRGB.white(0.2f))
-            DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.White)
+            DirectionalLight(Vec3(1.0f, -1.0f, 0.0f))
             Renderable(
                 base(metallicFactor = 0.0f),
                 plugin("normal", "!shader/plugin/normal.terrain.frag"),
@@ -34,7 +33,7 @@ fun ProcTerrainExample() =
                 plugin("albedo", "procterrain/albedo.glsl"),
                 prefab = terrain
             )
-            PostProcess(fog(density = 0.00006f, color = ColorRGB(0xB8CAE9))) {
+            PostProcess(fog(density = 0.00004f, color = ColorRGB(0xB8CAE9))) {
                 Sky(fastCloudSky())
             }
             Gui {

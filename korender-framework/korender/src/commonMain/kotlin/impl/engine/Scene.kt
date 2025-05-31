@@ -49,10 +49,9 @@ internal class Scene(
     private val currentRetentionPolicy: RetentionPolicy
 ) {
 
-    private var guiRenderers: List<GuiRenderer>
     private val deferredShading = sceneDeclaration.deferredShadingDeclaration != null
 
-    val touchBoxes: List<TouchBox>
+    val touchBoxes = mutableListOf<TouchBox>()
 
     // TODO (backlog): ugly
     private val fixer = { value: Any? ->
@@ -73,10 +72,6 @@ internal class Scene(
                 sceneDeclaration.opaques += GltfSceneBuilder(it, gltfLoaded).build(it.time)
             }
         }
-        guiRenderers = sceneDeclaration.guis.map {
-            GuiRenderer(inventory, renderContext.width, renderContext.height, it)
-        }
-        touchBoxes = guiRenderers.flatMap { it.touchBoxes }
     }
 
     fun render() {
@@ -272,7 +267,15 @@ internal class Scene(
         renderBucket(sceneDeclaration.skies, uniforms, defs)
     }
 
-    private fun renderTransparents(sceneDeclaration: SceneDeclaration, uniforms: MutableMap<String, Any?>, camera: Camera, defs: Set<String> = setOf(), insideOut: Boolean = false) {
+    private fun renderTransparents(
+        sceneDeclaration: SceneDeclaration,
+        uniforms: MutableMap<String, Any?>,
+        camera: Camera,
+        defs: Set<String> = setOf(),
+        insideOut: Boolean = false,
+        width: Int = renderContext.width,
+        height: Int = renderContext.height
+    ) {
         renderContext.state.set {
             depthMask(false)
             if (insideOut) {
@@ -290,6 +293,10 @@ internal class Scene(
                 )
             }
 
+        val guiRenderers = sceneDeclaration.guis.map {
+            GuiRenderer(inventory, width, height, it)
+        }
+        touchBoxes += guiRenderers.flatMap { it.touchBoxes }
         guiRenderers.flatMap { it.renderables }.forEach {
             it.render(uniforms, fixer)
         }
@@ -417,7 +424,8 @@ internal class Scene(
         probeFb.exec {
             prepareScene(frameCaptureContext.width, frameCaptureContext.height)
             renderForwardOpaques(sceneDeclaration, probeUniforms)
-            renderTransparents(sceneDeclaration, probeUniforms, frameCaptureContext.camera)
+            renderTransparents(sceneDeclaration, probeUniforms, frameCaptureContext.camera,
+                width = frameCaptureContext.width, height = frameCaptureContext.height)
         }
         return probeFb.colorTextures[0]
     }

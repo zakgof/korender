@@ -68,6 +68,9 @@ actual object GL {
         target, level, internalformat, width, height, border, format, type, pixels?.array
     )
 
+    actual fun glGetTexImage(tex: Int, level: Int, format: Int, type: Int, pixels: NativeByteBuffer) =
+        gl!!.getTexImage(tex, level, format, type, pixels.array)
+
     actual fun glGetFloatv(pname: Int): Float? {
         val paramValue = gl!!.getParameter(pname)
         return (paramValue as JsNumber?)?.toDouble()?.toFloat()

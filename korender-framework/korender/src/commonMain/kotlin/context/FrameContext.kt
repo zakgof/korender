@@ -33,5 +33,5 @@ interface FrameContext : KorenderContext {
     fun DeferredShading(block: DeferredShadingContext.() -> Unit = {})
 
     fun CaptureEnv(envProbeName: String, resolution: Int, position: Vec3 = Vec3.ZERO, near: Float = 10f, far: Float = 1000f, insideOut: Boolean = false, defs: Set<String> = setOf(), block: FrameContext.() -> Unit)
-    fun CaptureFrame(frameProbeName: String, width: Int, height: Int, cameraDeclaration: CameraDeclaration, projectionDeclaration: ProjectionDeclaration, block: FrameContext.() -> Unit)
+    fun CaptureFrame(frameProbeName: String, width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameContext.() -> Unit)
 }

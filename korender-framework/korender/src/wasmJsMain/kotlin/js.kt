@@ -1,6 +1,7 @@
 package com.zakgof.korender
 
 import org.khronos.webgl.Int8Array
+import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.WebGLObject
 import org.khronos.webgl.WebGLRenderingContextBase
 import org.khronos.webgl.WebGLTexture
@@ -15,6 +16,7 @@ abstract external class WebGL2RenderingContext : WebGLRenderingContextBase, Rend
     abstract fun vertexAttribIPointer(index: Int, size: Int, type: Int, stride: Int, pointer: Int)
     abstract fun drawBuffers(targets: JsArray<JsNumber>)
     abstract fun framebufferTexture(target: Int, attachment: Int, texture: WebGLTexture?, level: Int)
+    abstract fun getTexImage(tex: Int, level: Int, format: Int, type: Int, array: Uint8Array)
 }
 
 abstract external class WebGLVertexArray : WebGLObject, JsAny
