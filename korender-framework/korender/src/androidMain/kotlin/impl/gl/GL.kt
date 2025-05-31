@@ -26,35 +26,31 @@ actual object GL {
     actual fun glDeleteTextures(texture: GLTexture) =
         GLES30.glDeleteTextures(1, intArrayOf(texture.texture), 0)
 
-    actual fun glPixelStorei(pname: Int, param: Int) = GLES30.glPixelStorei(pname, param)
-    actual fun glGenTextures(): GLTexture = GLTexture(IntArray(1).also {
+    actual fun glPixelStorei(pname: Int, param: Int) =
+        GLES30.glPixelStorei(pname, param)
+
+    actual fun glGenTextures() =
+        GLTexture(IntArray(1).also {
             GLES30.glGenTextures(1, it, 0)
         }[0])
 
-    actual fun glBlendFunc(sfactor: Int, dfactor: Int) = GLES30.glBlendFunc(sfactor, dfactor)
+    actual fun glBlendFunc(sfactor: Int, dfactor: Int) =
+        GLES30.glBlendFunc(sfactor, dfactor)
 
-    actual fun glDepthFunc(func: Int) = GLES30.glDepthFunc(func)
-    actual fun glDepthMask(flag: Boolean) = GLES30.glDepthMask(flag)
-    actual fun glCullFace(mode: Int) = GLES30.glCullFace(mode)
-    actual fun glTexImage2D(
-        target: Int,
-        level: Int,
-        internalformat: Int,
-        width: Int,
-        height: Int,
-        border: Int,
-        format: Int,
-        type: Int,
-        pixels: NativeByteBuffer?
-    ) = GLES30.glTexImage2D(
-        target, level, internalformat, width, height, border, format, type, pixels?.byteBuffer
-    )
+    actual fun glDepthFunc(func: Int) =
+        GLES30.glDepthFunc(func)
 
-    actual fun glGetFloatv(pname: Int): Float? {
-        val fa = FloatArray(1)
-        GLES30.glGetFloatv(pname, fa, 0)
-        return fa[0]
-    }
+    actual fun glDepthMask(flag: Boolean) =
+        GLES30.glDepthMask(flag)
+
+    actual fun glCullFace(mode: Int) =
+        GLES30.glCullFace(mode)
+
+    actual fun glTexImage2D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, border: Int, format: Int, type: Int, pixels: NativeByteBuffer?) =
+        GLES30.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels?.byteBuffer)
+
+    actual fun glGetFloatv(pname: Int): Float? =
+        FloatArray(1).also { GLES30.glGetFloatv(pname, it, 0) }[0]
 
     actual fun glGetError(): Int = GLES30.glGetError()
 
@@ -80,28 +76,25 @@ actual object GL {
         GLES30.glBufferData(target, data.byteBuffer.remaining(), data.byteBuffer, usage)
 
     actual fun glGenBuffers() =
-        com.zakgof.korender.impl.gl.GLBuffer(IntArray(1).also { GLES30.glGenBuffers(1, it, 0) }[0])
+        GLBuffer(IntArray(1).also { GLES30.glGenBuffers(1, it, 0) }[0])
 
     actual fun glDeleteBuffers(buffer: GLBuffer) =
         GLES30.glDeleteBuffers(1, intArrayOf(buffer.buffer), 0)
 
-    actual fun glCreateProgram() = com.zakgof.korender.impl.gl.GLProgram(GLES30.glCreateProgram())
+    actual fun glCreateProgram() =
+        GLProgram(GLES30.glCreateProgram())
 
     actual fun glCreateShader(type: Int) =
-        com.zakgof.korender.impl.gl.GLShader(GLES30.glCreateShader(type))
+        GLShader(GLES30.glCreateShader(type))
 
     actual fun glAttachShader(program: GLProgram, shader: GLShader) =
         GLES30.glAttachShader(program.program, shader.glHandle)
 
-    actual fun glLinkProgram(
-        program: GLProgram
-    ) = GLES30.glLinkProgram(program.program)
+    actual fun glLinkProgram(program: GLProgram) =
+        GLES30.glLinkProgram(program.program)
 
-    actual fun glUseProgram(
-        program: GLProgram?
-    ) = GLES30.glUseProgram(
-        program?.program ?: 0
-    )
+    actual fun glUseProgram(program: GLProgram?) =
+        GLES30.glUseProgram(program?.program ?: 0)
 
     actual fun glValidateProgram(program: GLProgram) =
         GLES30.glValidateProgram(program.program)
@@ -116,16 +109,13 @@ actual object GL {
         GLES30.glGetProgramInfoLog(program.program)
 
     actual fun glGetActiveUniform(program: GLProgram, index: Int): String =
-        GLES30.glGetActiveUniform(program.program, index, IntArray(1) { 0 }, 0, IntArray(1) { 0 }, 0)
+        GLES30.glGetActiveUniform(program.program, index, IntArray(1), 0, IntArray(1), 0)
 
     actual fun glGetActiveAttrib(program: GLProgram, index: Int): String =
-        GLES30.glGetActiveAttrib(program.program, index, IntArray(1) { 0 }, 0, IntArray(1) { 0 }, 0)
+        GLES30.glGetActiveAttrib(program.program, index, IntArray(1), 0, IntArray(1), 0)
 
-    actual fun glShaderSource(
-        shader: GLShader, source: String
-    ) = GLES30.glShaderSource(
-        shader.glHandle, source
-    )
+    actual fun glShaderSource(shader: GLShader, source: String) =
+        GLES30.glShaderSource(shader.glHandle, source)
 
     actual fun glCompileShader(shader: GLShader) =
         GLES30.glCompileShader(shader.glHandle)
@@ -133,13 +123,8 @@ actual object GL {
     actual fun glEnableVertexAttribArray(index: Int) =
         GLES30.glEnableVertexAttribArray(index)
 
-    actual fun glGetUniformLocation(program: GLProgram, name: String): GLUniformLocation =
-        com.zakgof.korender.impl.gl.GLUniformLocation(
-            GLES30.glGetUniformLocation(
-                program.program,
-                name
-            )
-        )
+    actual fun glGetUniformLocation(program: GLProgram, name: String) =
+        GLUniformLocation(GLES30.glGetUniformLocation(program.program, name))
 
     actual fun glGetAttribLocation(program: GLProgram, name: String) =
         GLES30.glGetAttribLocation(program.program, name)
@@ -162,7 +147,7 @@ actual object GL {
     actual fun glUniform4f(location: GLUniformLocation, v0: Float, v1: Float, v2: Float, v3: Float) =
         GLES30.glUniform4f(location.glHandle, v0, v1, v2, v3)
 
-    actual fun glUniform1fv(location: GLUniformLocation, value: FloatArray)=
+    actual fun glUniform1fv(location: GLUniformLocation, value: FloatArray) =
         GLES30.glUniform1fv(location.glHandle, value.size, value, 0)
 
     actual fun glUniform3fv(location: GLUniformLocation, value: FloatArray) =
@@ -180,23 +165,10 @@ actual object GL {
     actual fun glUniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, value: FloatArray) =
         GLES30.glUniformMatrix4fv(location.glHandle, value.size / 16, transpose, value, 0)
 
-    actual fun glVertexAttribPointer(
-        index: Int,
-        size: Int,
-        type: Int,
-        normalized: Boolean,
-        stride: Int,
-        pointer: Int
-    ) =
+    actual fun glVertexAttribPointer(index: Int, size: Int, type: Int, normalized: Boolean, stride: Int, pointer: Int) =
         GLES30.glVertexAttribPointer(index, size, type, normalized, stride, pointer)
 
-    actual fun glVertexAttribIPointer(
-        index: Int,
-        size: Int,
-        type: Int,
-        stride: Int,
-        pointer: Int
-    ) =
+    actual fun glVertexAttribIPointer(index: Int, size: Int, type: Int, stride: Int, pointer: Int) =
         GLES30.glVertexAttribIPointer(index, size, type, stride, pointer)
 
     actual fun glGetShaderi(shader: GLShader, pname: Int): Int =
@@ -212,13 +184,7 @@ actual object GL {
         GLES30.glGenerateMipmap(target)
 
     actual fun glGenFramebuffers(): GLFrameBuffer =
-        com.zakgof.korender.impl.gl.GLFrameBuffer(intViaArray {
-            GLES30.glGenFramebuffers(
-                1,
-                it,
-                0
-            )
-        })
+        GLFrameBuffer(intViaArray { GLES30.glGenFramebuffers(1, it, 0) })
 
     actual fun glFramebufferTexture2D(target: Int, attachment: Int, textarget: Int, texture: GLTexture, level: Int) =
         GLES30.glFramebufferTexture2D(target, attachment, textarget, texture.texture, level)
@@ -232,8 +198,6 @@ actual object GL {
     actual fun glCheckFramebufferStatus(target: Int) =
         GLES30.glCheckFramebufferStatus(target)
 
-    private fun intViaArray(function: (IntArray) -> Unit) = IntArray(1).apply(function)[0]
-
     actual fun glBindVertexArray(vertexArray: GLVertexArray?) =
         GLES30.glBindVertexArray(vertexArray?.glHandle ?: 0)
 
@@ -241,9 +205,7 @@ actual object GL {
         GLES30.glBindAttribLocation(program.program, index, attr)
 
     actual fun glGenVertexArrays(): GLVertexArray =
-        GLVertexArray(IntArray(1).also {
-            GLES30.glGenVertexArrays(1, it, 0)
-        }[0])
+        GLVertexArray(IntArray(1).also { GLES30.glGenVertexArrays(1, it, 0) }[0])
 
     actual fun glDeleteVertexArrays(vertexArray: GLVertexArray) =
         GLES30.glDeleteVertexArrays(1, intArrayOf(vertexArray.glHandle), 0)
@@ -261,4 +223,8 @@ actual object GL {
 
     actual fun glReadPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, data: NativeByteBuffer) =
         GLES30.glReadPixels(x, y, width, height, format, type, data.byteBuffer)
+
+    private fun intViaArray(function: (IntArray) -> Unit) =
+        IntArray(1).apply(function)[0]
 }
+
