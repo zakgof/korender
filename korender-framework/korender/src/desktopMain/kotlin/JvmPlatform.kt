@@ -26,7 +26,6 @@ import org.lwjgl.opengl.GL.createCapabilities
 import org.lwjgl.opengl.GL11.glGetString
 import org.lwjgl.opengl.awt.AWTGLCanvas
 import org.lwjgl.opengl.awt.GLData
-import org.lwjgl.system.Configuration
 import org.lwjgl.system.Platform
 import java.awt.Color
 import java.awt.Font
@@ -97,9 +96,12 @@ actual fun Korender(
         update = {
             val renderLoop: Runnable = object : Runnable {
                 override fun run() {
-                    if (!it.isValid) return
-                    it.render()
-                    SwingUtilities.invokeLater(this)
+                    if (it.isValid) {
+                        it.render()
+                    }
+                    if (it.isDisplayable) {
+                        SwingUtilities.invokeLater(this)
+                    }
                 }
             }
             SwingUtilities.invokeLater(renderLoop)
