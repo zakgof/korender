@@ -21,5 +21,11 @@ class Vec2(val x: Float, val y: Float) {
     fun normalize(): Vec2 = this * (1f / length())
 
     override fun toString(): String = "($x, $y)"
+
+    override fun equals(other: Any?) =
+        (other is Vec3) && x near other.x && y near other.y
+
+    override fun hashCode() =
+        x.hashCode() + 31 * y.hashCode()
 }
 

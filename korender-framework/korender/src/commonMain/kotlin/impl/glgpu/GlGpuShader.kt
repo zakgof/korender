@@ -59,6 +59,7 @@ internal class GlGpuShader(
     private val vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER)
     private val fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER)
     private val uniformLocations: Map<String, GLUniformLocation>
+    private val uniformCache = mutableMapOf<String, Any>()
 
     init {
 
@@ -146,12 +147,24 @@ internal class GlGpuShader(
     }
 
     private fun bindUniforms(uniforms: (String) -> Any?) {
+        // println("----------------------")
         var currentTexUnit = 0
         uniformLocations.forEach {
-            val uniformValue =
-                requireNotNull(uniforms(it.key)) { "Material ${toString()} does not provide value for the uniform ${it.key}" }
-            currentTexUnit += bind(it.key, uniformValue, it.value, currentTexUnit)
+            val uniformValue = requireNotNull(uniforms(it.key)) { "Material ${toString()} does not provide value for the uniform ${it.key}" }
+            currentTexUnit += bindFromCache(it.key, uniformValue, it.value, currentTexUnit)
         }
+    }
+
+    private fun bindFromCache(name: String, value: Any, location: GLUniformLocation, currentTexUnit: Int): Int {
+        val cached = uniformCache[name]
+        if (value is GlGpuTexture || value is GlGpuCubeTexture || value is GlGpuTextureList || cached != value)  {
+            val inc = bind(name, value, location, currentTexUnit)
+            uniformCache[name] = value
+            // println("Uniform cache miss: $name - $value")
+            return inc
+        }
+        // println("Uniform cache hit: $name - $value")
+        return 0
     }
 
     private fun bind(name: String, value: Any, location: GLUniformLocation, currentTexUnit: Int): Int {

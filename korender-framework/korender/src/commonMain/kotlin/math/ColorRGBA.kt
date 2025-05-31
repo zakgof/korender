@@ -22,4 +22,10 @@ data class ColorRGBA(val r: Float, val g: Float, val b: Float, val a: Float) {
     }
 
     override fun toString(): String = "Color $r,$g,$b/$a"
+
+    override fun equals(other: Any?) =
+        (other is ColorRGBA) && r near other.r && g near other.g && b near other.b && a near other.a
+
+    override fun hashCode() =
+        r.hashCode() + 31 * g.hashCode() + 197 * b.hashCode() + 1123 * a.hashCode()
 }

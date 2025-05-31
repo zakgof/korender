@@ -40,6 +40,12 @@ class Vec3(val x: Float, val y: Float, val z: Float) {
     fun length() = sqrt(lengthSquared())
     fun normalize(): Vec3 = this * (1f / length())
 
+    override fun equals(other: Any?) =
+        (other is Vec3) && x near other.x && y near other.y && z near other.z
+
+    override fun hashCode() =
+        x.hashCode() + 31 * y.hashCode() + 197 * z.hashCode()
+
     override fun toString(): String = "($x, $y, $z)"
 }
 

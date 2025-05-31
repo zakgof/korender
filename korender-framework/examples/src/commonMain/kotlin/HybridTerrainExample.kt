@@ -57,9 +57,9 @@ fun HybridTerrainExample() =
                 ),
                 id = "trees",
                 static = true,
-                count = 2000
+                count = 20000
             ) {
-                (0 until 2000).forEach {
+                (0 until 20000).forEach {
                     val r = Random(it)
                     Instance(pos = Vec3(r.nextFloat() * 5000f - 600f, 450f, r.nextFloat() * 3000f - 1610f))
                 }
