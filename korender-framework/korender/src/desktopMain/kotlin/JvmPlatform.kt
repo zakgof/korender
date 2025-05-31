@@ -105,10 +105,6 @@ actual fun Korender(
             SwingUtilities.invokeLater(renderLoop)
         },
         factory = {
-            Configuration.DEBUG.set(true)
-            Configuration.DEBUG_LOADER.set(true)
-            Configuration.OPENGL_CONTEXT_API.set("OSMesa")
-            Configuration.OPENGL_OSMESA_LIBRARY_NAME.set("/usr/local/Cellar/mesa/25.1.1/lib/libGL.dylib")
             val data = GLData()
             data.swapInterval = 0
             data.majorVersion = 3
