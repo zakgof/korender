@@ -74,7 +74,7 @@ internal class Scene(
         }
     }
 
-    fun render() {
+    fun render(): Boolean {
 
         val uniforms = mutableMapOf<String, Any?>()
         renderContext.uniforms(uniforms)
@@ -82,16 +82,17 @@ internal class Scene(
         renderEnvProbes(uniforms)
         renderFrameProbes(uniforms)
 
-        renderShadows(uniforms, false)
-
         try {
+            renderShadows(uniforms, false)
             if (deferredShading) {
                 renderSceneDeferred(uniforms)
             } else {
                 renderSceneForward(uniforms)
             }
-        } catch (_: SkipRender) {
-            println("Scene rendering skipped as framebuffers are not ready")
+            return true
+        } catch (sr: SkipRender) {
+            println("Scene rendering skipped as resource not ready: [${sr.text}]")
+            return false
         }
     }
 
@@ -100,8 +101,8 @@ internal class Scene(
             try {
                 renderContext.envProbes[kv.key] = Scene(kv.value.sceneDeclaration, inventory, renderContext, currentRetentionPolicy)
                     .renderToEnvProbe(uniforms, kv.value, kv.key)
-            } catch (_: SkipRender) {
-                println("Env probing skipped as framebuffer is not ready")
+            } catch (sr: SkipRender) {
+                println("Env probing skipped as resource not ready: [${sr.text}]")
                 return
             }
         }
@@ -112,8 +113,8 @@ internal class Scene(
             try {
                 renderContext.frameProbes[kv.key] = Scene(kv.value.sceneDeclaration, inventory, renderContext, currentRetentionPolicy)
                     .renderToFrameProbe(uniforms, kv.value, kv.key)
-            } catch (_: SkipRender) {
-                println("Frame probing skipped as framebuffer is not ready")
+            } catch (sr: SkipRender) {
+                println("Frame probing skipped as resource not ready: [${sr.text}]")
                 return
             }
         }
@@ -160,7 +161,7 @@ internal class Scene(
 
             val fb = inventory.frameBuffer(
                 FrameBufferDeclaration(fbName, effect.width, effect.height, listOf(GlGpuTexture.Preset.RGBFilter), true, TransientProperty(effect.retentionPolicy))
-            ) ?: throw SkipRender
+            ) ?: throw SkipRender("Post-shading effect FB $fbName")
             val material = materialDeclaration(BaseMaterial.Screen, true, currentRetentionPolicy, listOf(effectMM))
             fb.exec {
                 renderFullscreen(material, uniforms, effect.width, effect.height)
@@ -219,7 +220,7 @@ internal class Scene(
                 ),
                 true, TransientProperty(currentRetentionPolicy)
             )
-        ) ?: throw SkipRender
+        ) ?: throw SkipRender("Geometry FB")
         geometryBuffer.exec {
             renderContext.state.set {
                 blend(false)
@@ -376,7 +377,7 @@ internal class Scene(
             return null
         } else {
             val number = index % 2
-            val fb = inventory.frameBuffer(FrameBufferDeclaration("filter-$number", renderContext.width, renderContext.height, listOf(GlGpuTexture.Preset.RGBNoFilter), true, TransientProperty(currentRetentionPolicy))) ?: throw SkipRender
+            val fb = inventory.frameBuffer(FrameBufferDeclaration("filter-$number", renderContext.width, renderContext.height, listOf(GlGpuTexture.Preset.RGBNoFilter), true, TransientProperty(currentRetentionPolicy))) ?: throw SkipRender("Reusable FB 'filter-$number'")
             fb.exec { block() }
             m["colorTexture"] = fb.colorTextures[0]
             m["depthTexture"] = fb.depthTexture
@@ -386,7 +387,7 @@ internal class Scene(
 
     fun renderToEnvProbe(uniforms: MutableMap<String, Any?>, envCaptureContext: EnvCaptureContext, probeName: String): GlGpuCubeTexture {
         renderShadows(uniforms, true)
-        val probeFb = inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", envCaptureContext.resolution, envCaptureContext.resolution, true, TransientProperty(currentRetentionPolicy))) ?: throw SkipRender
+        val probeFb = inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", envCaptureContext.resolution, envCaptureContext.resolution, true, TransientProperty(currentRetentionPolicy))) ?: throw SkipRender("Env probe FB 'probe-$probeName'")
         val probeUniforms = mutableMapOf<String, Any?>()
         probeUniforms += uniforms
         val projection = FrustumProjection(2f * envCaptureContext.near, 2f * envCaptureContext.near, envCaptureContext.near, envCaptureContext.far)
@@ -414,7 +415,7 @@ internal class Scene(
 
     fun renderToFrameProbe(uniforms: MutableMap<String, Any?>, frameCaptureContext: FrameCaptureContext, frameProbeName: String): GlGpuTexture {
         renderShadows(uniforms, true)
-        val probeFb = inventory.frameBuffer(FrameBufferDeclaration("probe-$frameProbeName", frameCaptureContext.width, frameCaptureContext.height, listOf(GlGpuTexture.Preset.RGBAFilter), true, TransientProperty(currentRetentionPolicy))) ?: throw SkipRender
+        val probeFb = inventory.frameBuffer(FrameBufferDeclaration("probe-$frameProbeName", frameCaptureContext.width, frameCaptureContext.height, listOf(GlGpuTexture.Preset.RGBAFilter), true, TransientProperty(currentRetentionPolicy))) ?: throw SkipRender("Frame probe FB 'probe-$frameProbeName'")
         val probeUniforms = mutableMapOf<String, Any?>()
         probeUniforms += uniforms
         probeUniforms["view"] = frameCaptureContext.camera.mat4
@@ -431,5 +432,5 @@ internal class Scene(
     }
 }
 
-internal object SkipRender : RuntimeException()
+internal class SkipRender(val text: String) : RuntimeException()
 

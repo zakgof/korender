@@ -36,7 +36,7 @@ internal class Inventory(asyncContext: AsyncContext) {
     private val cubeFrameBuffers = Registry<CubeFrameBufferDeclaration, GlGpuCubeFrameBuffer>(asyncContext) { GlGpuCubeFrameBuffer(it.id, it.width, it.height, it.withDepth) }
     private val gltfs = Registry<GltfDeclaration, GltfLoaded>(asyncContext) { GltfLoader.load(it, asyncContext.appResourceLoader) }
 
-    fun go(time: Float, generation: Int, block: Inventory.() -> Unit) {
+    fun go(time: Float, generation: Int, block: Inventory.() -> Boolean) {
         meshes.begin()
         shaders.begin()
         textures.begin()
@@ -45,15 +45,17 @@ internal class Inventory(asyncContext: AsyncContext) {
         frameBuffers.begin()
         cubeFrameBuffers.begin()
         gltfs.begin()
-        block.invoke(this)
-        meshes.end(time, generation)
-        shaders.end(time, generation)
-        textures.end(time, generation)
-        fonts.end(time, generation)
-        fontMeshes.end(time, generation)
-        frameBuffers.end(time, generation)
-        cubeFrameBuffers.end(time, generation)
-        gltfs.end(time, generation)
+        val ok = block.invoke(this)
+        if (ok) {
+            meshes.end(time, generation)
+            shaders.end(time, generation)
+            textures.end(time, generation)
+            fonts.end(time, generation)
+            fontMeshes.end(time, generation)
+            frameBuffers.end(time, generation)
+            cubeFrameBuffers.end(time, generation)
+            gltfs.end(time, generation)
+        }
     }
 
     fun mesh(decl: InternalMeshDeclaration): MeshLink? = meshes[decl]

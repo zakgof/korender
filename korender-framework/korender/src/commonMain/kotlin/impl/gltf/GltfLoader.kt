@@ -472,13 +472,12 @@ internal class GltfSceneBuilder(
             ?.let { src -> gltfLoaded.model.images!![src] }
 
         return image?.let { img ->
-            val bytes = getImageBytes(img)
             ByteArrayTextureDeclaration(
                 img.uri ?: "${gltfLoaded.id} ${ti.index}", // TODO !!!
                 TextureFilter.MipMap,
                 TextureWrap.Repeat,
                 1024,
-                bytes,
+                { getImageBytes(img) },
                 img.mimeType!!.split("/").last(),
                 declaration.retentionPolicy
             )

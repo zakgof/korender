@@ -138,6 +138,7 @@ internal class Engine(
                 renderContext.uniforms(uniforms)
                 val cubeTexture = scene.renderToEnvProbe(uniforms, EnvCaptureContext(resolution, position, near, far, insideOut, defs, sd), "#immediate")
                 images = cubeTexture.fetch()
+                true
             }
             return images!!
         }
@@ -152,6 +153,7 @@ internal class Engine(
                 renderContext.uniforms(uniforms)
                 val texture = scene.renderToFrameProbe(uniforms, FrameCaptureContext(width, height, camera as Camera, projection as Projection, sd), "#immediate")
                 image = texture.fetch()
+                true
             }
             return image!!
         }
@@ -519,9 +521,10 @@ internal class Engine(
         }
         inventory.go(frameInfo.time, kc.currentRetentionGeneration) {
             val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
-            scene.render()
+            val renderOk = scene.render()
             // checkGlError("during rendering")
             touchBoxes = scene.touchBoxes
+            renderOk
         }
     }
 

@@ -224,9 +224,9 @@ internal class GlGpuShader(
                 glUniform1iv(location, *units.toIntArray())
             }
 
-            is NotYetLoadedTexture -> throw SkipRender
+            is NotYetLoadedTexture -> throw SkipRender("Texture for uniform '$name'")
 
-            is NotYetLoadedCubeTexture -> throw SkipRender
+            is NotYetLoadedCubeTexture -> throw SkipRender("Cube texture for uniform '$name'")
 
             else -> {
                 throw KorenderException("Unsupported uniform value $value of type ${value::class} for uniform $name")

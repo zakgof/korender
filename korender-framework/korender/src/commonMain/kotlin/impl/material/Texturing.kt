@@ -27,7 +27,7 @@ internal object Texturing {
     suspend fun create(declaration: InternalTexture, appResourceLoader: ResourceLoader): GlGpuTexture {
 
         val image = when (declaration) {
-            is ByteArrayTextureDeclaration -> Platform.loadImage(declaration.fileBytes, declaration.extension).await()
+            is ByteArrayTextureDeclaration -> Platform.loadImage(declaration.fileBytesLoader(), declaration.extension).await()
             is ResourceTextureDeclaration -> Platform.loadImage(
                 resourceBytes(appResourceLoader, declaration.textureResource),
                 declaration.textureResource.split(".").last()
@@ -102,7 +102,7 @@ internal class ByteArrayTextureDeclaration(
     override val filter: TextureFilter,
     override val wrap: TextureWrap,
     override val aniso: Int,
-    val fileBytes: ByteArray,
+    val fileBytesLoader: () -> ByteArray,
     val extension: String,
     override val retentionPolicy: RetentionPolicy
 ) : TextureDeclaration, InternalTexture {

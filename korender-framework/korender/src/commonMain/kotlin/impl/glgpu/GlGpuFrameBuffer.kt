@@ -47,7 +47,7 @@ internal class GlGpuFrameBuffer(
             )
             tex
         }
-        println("Framebuffer textures [${colorTextures.map { it.glHandle }}]")
+        println(" - FB color textures [${colorTextures.map { it.glHandle }}]")
 
         if (useDepthBuffer) {
             depthTexture = GlGpuTexture(width, height, GlGpuTexture.Preset.Depth)
@@ -58,6 +58,7 @@ internal class GlGpuFrameBuffer(
                 depthTexture.glHandle,
                 0
             )
+            println(" - FB depth textures [${depthTexture.glHandle}]")
         } else {
             depthTexture = null
         }
@@ -79,9 +80,12 @@ internal class GlGpuFrameBuffer(
     }
 
     fun exec(block: () -> Unit) {
-        bind()
-        block.invoke()
-        unbind()
+        try {
+            bind()
+            block.invoke()
+        } finally {
+            unbind()
+        }
     }
 
     private fun bind() {
