@@ -27,6 +27,7 @@ import org.lwjgl.opengl.GL11.glGetString
 import org.lwjgl.opengl.awt.AWTGLCanvas
 import org.lwjgl.opengl.awt.GLData
 import org.lwjgl.system.Configuration
+import org.lwjgl.system.Platform
 import java.awt.Color
 import java.awt.Font
 import java.awt.GraphicsEnvironment
@@ -138,6 +139,11 @@ actual fun Korender(
                         async,
                         block
                     )
+
+                    if (Platform.get() == Platform.MACOSX) {
+                        setSize(size.width + 1, size.height)
+                        validate()
+                    }
                 }
 
                 override fun paintGL() {
