@@ -12,9 +12,7 @@ import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun CSMExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
@@ -28,9 +26,12 @@ fun CSMExample() =
 
         Frame {
 
-            CaptureFrame("oak", 1024, 1024, camera(-50.z, 1.z, 1.y), ortho(50f, 50f, 1f, 100f)) {
-                AmbientLight(white(0.6f))
-                Gltf("infcity/tree.glb")
+            CaptureFrame("oak", 1024, 1024, camera(50.z, -1.z, 1.y), ortho(50f, 50f, 1f, 100f)) {
+                AmbientLight(white(1.6f))
+                Gltf(
+                    resource = "gltf/ai/swat.glb",
+                    transform = scale(0.1f)
+                )
                 Renderable(
                     base(color = Red),
                     mesh = sphere(10f)
@@ -94,27 +95,27 @@ fun CSMExample() =
             )
             fun cubTex(prefix: String) = cubeTexture(CubeTextureSide.entries.associateWith { "hybridterrain/tree/$prefix-${it.toString().lowercase()}.jpg" })
 
-//            Billboard(
-//                billboard(xscale = 5.0f, yscale = 5.0f),
-//                base(metallicFactor = 0f, roughnessFactor = 0.9f),
-//                radiant(
-//                    radiantTexture = cubTex("radiant"),
-//                    radiantNormalTexture = cubTex("radiant-normal"),
-//                    colorTexture = cubTex("albedo"),
-//                    normalTexture = cubTex("normal")
-//                ),
-//                position = Vec3(5f, 2f, -10f)
-//            )
-
             Billboard(
                 billboard(xscale = 5.0f, yscale = 5.0f),
-                base(
-                    colorTexture = textureProbe("oak"),
-                    metallicFactor = 0f,
-                    roughnessFactor = 0.9f
+                base(metallicFactor = 0f, roughnessFactor = 0.9f),
+                radiant(
+                    radiantTexture = cubTex("radiant"),
+                    radiantNormalTexture = cubTex("radiant-normal"),
+                    colorTexture = cubTex("albedo"),
+                    normalTexture = cubTex("normal")
                 ),
                 position = Vec3(5f, 2f, -10f)
             )
+
+//            Billboard(
+//                billboard(xscale = 5.0f, yscale = 5.0f),
+//                base(
+//                    colorTexture = textureProbe("oak"),
+//                    metallicFactor = 0f,
+//                    roughnessFactor = 0.9f
+//                ),
+//                position = Vec3(5f, 2f, -10f)
+//            )
 
             Gui {
                 Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")

@@ -74,37 +74,35 @@ internal class GlGpuShader(
         glAttachShader(programHandle, fragmentShaderHandle)
 
         glLinkProgram(programHandle)
-        // glValidateProgram(programHandle)
 
+        var errorLog = "\n"
         val vertexLog: String = glGetShaderInfoLog(vertexShaderHandle)
         if (vertexLog.isNotEmpty()) {
-            println("Vertex shader log [${vertDebugInfo.file}]\n\n" + vertDebugInfo.decorate(vertexLog))
+            errorLog += "\n > Vertex shader log [${vertDebugInfo.file}]\n" + vertDebugInfo.decorate(vertexLog) + "\n"
         }
 
         val fragmentLog: String = glGetShaderInfoLog(fragmentShaderHandle)
         if (fragmentLog.isNotEmpty()) {
-            println("Fragment shader log [${fragDebugInfo.file}]\n\n" + fragDebugInfo.decorate(fragmentLog))
+            errorLog += "\n >> Fragment shader log [${fragDebugInfo.file}]\n" + fragDebugInfo.decorate(fragmentLog) + "\n"
         }
 
         val programLog: String = glGetProgramInfoLog(programHandle)
         if (programLog.isNotEmpty()) {
-            println("\nProgram log $name\n\n$programLog")
+            errorLog += "\n >> Program log [$name]\n${programLog.lines().joinToString("\n") { "       $it" }}\n"
         }
 
         if (glGetShaderi(vertexShaderHandle, GL_COMPILE_STATUS) == 0)
-            throw RuntimeException("Vertex shader compilation failure")
+            throw KorenderException("Vertex shader compilation failure $errorLog")
         if (glGetShaderi(fragmentShaderHandle, GL_COMPILE_STATUS) == 0) {
-            throw RuntimeException("Fragment shader compilation failure")
+            throw KorenderException("Fragment shader compilation failure $errorLog")
         } else if (glGetProgrami(programHandle, GL_LINK_STATUS) == 0) {
-            throw RuntimeException("Program linking failure")
-//        } else if (glGetProgrami(programHandle, GL_VALIDATE_STATUS) == 0) {
-//            throw RuntimeException("Program validation failure")
+            throw KorenderException("Program linking failure $errorLog")
         } else if (vertexLog.isNotEmpty()) {
-            throw RuntimeException("Vertex shader compilation warnings")
+            throw KorenderException("Vertex shader compilation warnings $errorLog")
         } else if (fragmentLog.isNotEmpty()) {
-            throw RuntimeException("Fragment shader compilation warnings")
+            throw KorenderException("Fragment shader compilation warnings $errorLog")
         } else if (programLog.isNotEmpty()) {
-            throw RuntimeException("Program linking warnings")
+            throw KorenderException("Program linking warnings $errorLog")
         }
         uniformLocations = fetchUniforms()
     }

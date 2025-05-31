@@ -11,11 +11,12 @@ class ShaderDebugInfo(val file: String) {
     private var srcLine = -1
 
     fun decorate(log: String): String {
-//        return log.lines().flatMap {
-//            listOf(it, debug(it))
-//        }.joinToString("\n")
-
-        return log
+        return log.lines()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .flatMap {
+                listOf(it, debug(it))
+            }.joinToString("\n") { "       $it" }
     }
 
     private fun debug(line: String): String {
@@ -27,10 +28,10 @@ class ShaderDebugInfo(val file: String) {
             // int col = Integer.parseInt(matcher.group(1));
             val row = matcher.groups[2]!!.value.toInt()
             val entry = lines[row - 1]
-            val info = entry.file + ":" + entry.srclineNo + "   " + entry.line
+            val info = "[${entry.file}:${entry.srclineNo}  ${entry.line}]"
             return info
         }
-        return "[Error parsing shader log]"
+        return ""
     }
 
     fun start(fname: String) {

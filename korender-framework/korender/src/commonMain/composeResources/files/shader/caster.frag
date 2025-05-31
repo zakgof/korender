@@ -3,12 +3,65 @@
 in vec3 vpos;
 in vec3 vnormal;
 in vec2 vtex;
+#ifdef VERTEX_COLOR
+    in vec4 vcolor;
+#endif
+
+uniform vec4 baseColor;
+#ifdef BASE_COLOR_MAP
+    uniform sampler2D baseColorTexture;
+#endif
+
+uniform vec3 cameraPos;
+uniform vec3 cameraDir;
+uniform mat4 projection;
+uniform mat4 view;
 
 out vec4 fragColor;
 
-void main() {
-    // TODO: fully transparent pixels should not cast shadows, get color, sample textures and cut
+vec3 position;
+vec4 albedo;
 
+#ifdef PLUGIN_POSITION
+#import "$position"
+#endif
+
+#ifdef PLUGIN_TEXTURING
+#import "$texturing"
+#endif
+
+#ifdef PLUGIN_ALBEDO
+#import "$albedo"
+#endif
+
+void main() {
+
+    albedo = baseColor;
+
+    #ifdef VERTEX_COLOR
+        albedo *= vcolor;
+    #endif
+
+    #ifdef PLUGIN_POSITION
+        position = pluginPosition();
+    #else
+        position = vpos;
+    #endif
+
+    #ifdef PLUGIN_TEXTURING
+        albedo *= pluginTexturing();
+    #else
+        #ifdef BASE_COLOR_MAP
+            albedo *= texture(baseColorTexture, vtex);
+        #endif
+    #endif
+
+    #ifdef PLUGIN_ALBEDO
+        albedo = pluginAlbedo();
+    #endif
+
+    if (albedo.a < 0.001)
+    discard;
 
 
 #ifdef VSM_SHADOW
