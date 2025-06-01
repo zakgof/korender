@@ -36,6 +36,8 @@ import org.jetbrains.compose.resources.painterResource
 fun AppExample() {
     val options = listOf(
 
+        Demo("GLTF crowd") { GltfCrowdExample() },
+
         Demo("Heightmap Terrain") { HeightmapTerrainExample() },
         Demo("Procedural Terrain") { ProcTerrainExample() },
         Demo("Hybrid Terrain") { HybridTerrainExample() },
@@ -47,6 +49,7 @@ fun AppExample() {
         Demo("PBR") { MetallicRoughnessExample() },
         Demo("OBJ mesh") { ObjFileExample() },
         Demo("GLTF animation") { GltfExample() },
+        Demo("GLTF crowd") { GltfCrowdExample() },
         Demo("Shadows") { ShadowExample() },
         Demo("Render to texture") { RenderToTextureExample() },
         Demo("Effects") { EffectsExample() },

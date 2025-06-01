@@ -42,7 +42,9 @@ internal class DeferredShadingDeclaration() {
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
 
-internal class MeshInstance(val transform: Transform)
+internal class MeshInstance(
+    val transform: Transform,
+)
 
 internal data class ShaderDeclaration(
     val vertFile: String,
@@ -143,10 +145,12 @@ internal class ShadowDeclaration {
 
 internal data class CascadeDeclaration(val mapSize: Int, val near: Float, val far: Float, val fixedYRange: Pair<Float, Float>?, val algorithm: ShadowAlgorithmDeclaration)
 
-internal class GltfDeclaration(val gltfResource: String, val animation: Int, val transform: Transform, val time: Float, override val retentionPolicy: RetentionPolicy) : Retentionable {
+internal class GltfDeclaration(val gltfResource: String, override val retentionPolicy: RetentionPolicy, val instanceCount: Int?, val instances: List<GltfInstanceDeclaration>) : Retentionable {
     override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.gltfResource == gltfResource)
     override fun hashCode(): Int = gltfResource.hashCode()
 }
+
+internal class GltfInstanceDeclaration(val animation: Int, val transform: Transform, val time: Float)
 
 internal class PointLightDeclaration(val position: Vec3, val color: ColorRGB, val attenuation: Vec3)
 

@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.engine
 
+import GltfSceneBuilder
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
@@ -25,7 +26,6 @@ import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Vec3List
-import com.zakgof.korender.impl.gltf.GltfSceneBuilder
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalTexture
@@ -69,7 +69,7 @@ internal class Scene(
         sceneDeclaration.gltfs.forEach {
             inventory.gltf(it)?.let { gltfLoaded ->
                 // TODO: support transparency
-                sceneDeclaration.opaques += GltfSceneBuilder(it, gltfLoaded).build(it.time)
+                sceneDeclaration.opaques += GltfSceneBuilder(it, gltfLoaded).build()
             }
         }
     }

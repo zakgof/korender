@@ -9,11 +9,9 @@ import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
-fun GltfExample() = Korender (appResourceLoader = { Res.readBytes(it) }) {
+fun GltfExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val orbitCamera = OrbitCamera(this, 20.z, 2.y)
     OnTouch { orbitCamera.touch(it) }
     Frame {

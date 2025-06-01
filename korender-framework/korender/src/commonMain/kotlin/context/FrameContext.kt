@@ -16,13 +16,15 @@ interface FrameContext : KorenderContext {
 
     fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform = Transform(), transparent: Boolean = false, instancing: InstancingDeclaration? = null)
     fun Renderable(vararg materialModifiers: MaterialModifier, prefab: Prefab)
+    fun Gltf(resource: String, animation:Int = 0, transform: Transform = Transform(), time: Float? = null)
 
     fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3 = Vec3.ZERO, transparent: Boolean = false)
     fun Sky(vararg materialModifiers: MaterialModifier)
     fun Gui(block: GuiContainerContext.() -> Unit)
+
     fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: String, count: Int, mesh: MeshDeclaration, static: Boolean = false, transparent: Boolean = false, block: InstancedRenderablesContext.() -> Unit)
     fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: String, count: Int, static: Boolean = false, transparent: Boolean = false, block: InstancedBillboardsContext.() -> Unit)
-    fun Gltf(resource: String, animation:Int = 0, transform: Transform = Transform(), time: Float? = null)
+    fun InstancedGltf(resource: String, count: Int, block: InstancedGltfContext.() -> Unit)
 
     fun PostProcess(vararg materialModifiers: MaterialModifier, block: FrameContext.() -> Unit = {})
 

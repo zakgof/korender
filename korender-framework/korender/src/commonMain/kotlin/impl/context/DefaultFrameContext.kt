@@ -10,6 +10,7 @@ import com.zakgof.korender.context.DeferredShadingContext
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.GuiContainerContext
 import com.zakgof.korender.context.InstancedBillboardsContext
+import com.zakgof.korender.context.InstancedGltfContext
 import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.context.KorenderContext
@@ -23,6 +24,7 @@ import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.engine.EnvCaptureContext
 import com.zakgof.korender.impl.engine.FrameCaptureContext
 import com.zakgof.korender.impl.engine.GltfDeclaration
+import com.zakgof.korender.impl.engine.GltfInstanceDeclaration
 import com.zakgof.korender.impl.engine.InternalFilterDeclaration
 import com.zakgof.korender.impl.engine.InternalInstancingDeclaration
 import com.zakgof.korender.impl.engine.PointLightDeclaration
@@ -51,7 +53,8 @@ internal class DefaultFrameContext(
     }
 
     override fun Gltf(resource: String, animation: Int, transform: Transform, time: Float?) {
-        sceneDeclaration.gltfs += GltfDeclaration(resource, animation, transform, time ?: frameInfo.time, korenderContext.currentRetentionPolicy)
+        val gltfInstance = GltfInstanceDeclaration(animation, transform, time ?: frameInfo.time)
+        sceneDeclaration.gltfs += GltfDeclaration(resource, korenderContext.currentRetentionPolicy, null, listOf(gltfInstance))
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean, instancing: InstancingDeclaration?) {
@@ -103,6 +106,12 @@ internal class DefaultFrameContext(
                 korenderContext.currentRetentionPolicy
             )
         addToScene(transparent, rd)
+    }
+
+    override fun InstancedGltf(resource: String, count: Int, block: InstancedGltfContext.() -> Unit) {
+        val instances = mutableListOf<GltfInstanceDeclaration>()
+        DefaultInstancedGltfContext(instances, frameInfo.time).apply(block)
+        sceneDeclaration.gltfs += GltfDeclaration(resource, korenderContext.currentRetentionPolicy, count, instances)
     }
 
     private fun addToScene(transparent: Boolean, rd: RenderableDeclaration) {

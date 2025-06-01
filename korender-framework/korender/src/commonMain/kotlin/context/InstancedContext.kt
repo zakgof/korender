@@ -14,3 +14,7 @@ interface InstancedBillboardsContext {
 interface InstancedRenderablesContext {
     fun Instance(transform: Transform)
 }
+
+interface InstancedGltfContext {
+    fun Instance(transform: Transform, time: Float? = null)
+}
