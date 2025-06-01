@@ -58,7 +58,7 @@ internal class Grass(
             ),
             *materialModifiers,
             mesh = mesh,
-            instancing = positionInstancing("$id-instancing", side * side, true) {
+            instancing = instancing("$id-instancing", side * side, true) {
                 val xsnap = (fc.camera.position.x / cell).toInt() * cell
                 val zsnap = (fc.camera.position.z / cell).toInt() * cell
                 for (xx in 0 until side) {

@@ -61,9 +61,9 @@ fun IblExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             .map { Quaternion.fromAxisAngle(Vec3.random(it), Random(index * 777 + it).nextFloat() * 100f) }
             .maxBy { (it * 1.z) * pt.n }
 
-            rotate(quaternion)
-                .scale(0.6f)
-                .translate((pt.pos - hull.center))
+        rotate(quaternion)
+            .scale(0.6f)
+            .translate((pt.pos - hull.center))
     }
 
     Frame {
@@ -141,29 +141,34 @@ private fun FrameContext.renderHull(hullMesh: MeshDeclaration, offset: Vec3 = ZE
 }
 
 private fun FrameContext.renderMeta(metaball: Metaball, hull: QHMesh, offset: Vec3) {
-    InstancedRenderables(
+    Renderable(
         base(color = ColorRGBA.Green),
         mesh = sphere(1f),
-        id = "metaball",
-        count = metaball.spheres.size
-    ) {
-        metaball.spheres.forEach {
-            Instance(scale(it.r).translate(offset + (it.pos - hull.center)))
+        instancing = instancing(
+            id = "metaball",
+            count = metaball.spheres.size,
+            dynamic = false
+        ) {
+            metaball.spheres.forEach {
+                Instance(scale(it.r).translate(offset + (it.pos - hull.center)))
+            }
         }
-    }
+    )
 }
 
 private fun FrameContext.renderTree(leaf: MeshDeclaration, leafInstances: List<Transform>) {
-    InstancedRenderables(
+    Renderable(
         base(colorTexture = texture("model/leaf.png")),
         mesh = leaf,
-        id = "metapoints",
         transparent = true,
-        count = leafInstances.size,
-        static = true
-    ) {
-        leafInstances.forEach { Instance(it) }
-    }
+        instancing = instancing(
+            id = "metapoints",
+            count = leafInstances.size,
+            dynamic = false
+        ) {
+            leafInstances.forEach { Instance(it) }
+        }
+    )
 }
 
 class Metaball(

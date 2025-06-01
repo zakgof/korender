@@ -30,13 +30,15 @@ import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.context.InstancedGltfContext
 import com.zakgof.korender.context.InstancedRenderablesContext
-import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.context.RoiTexturesContext
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.context.DefaultFrameContext
+import com.zakgof.korender.impl.context.DefaultInstancedGltfContext
+import com.zakgof.korender.impl.context.DefaultInstancedRenderablesContext
 import com.zakgof.korender.impl.engine.shadow.InternalHardParams
 import com.zakgof.korender.impl.engine.shadow.InternalPcssParams
 import com.zakgof.korender.impl.engine.shadow.InternalVsmParams
@@ -499,8 +501,21 @@ internal class Engine(
         override fun grassPrefab(id: String, segments: Int, cell: Float, side: Int, filter: (Vec3) -> Boolean): Prefab =
             Grass(this, id, segments, cell, side, filter)
 
-        override fun positionInstancing(id: String, instanceCount: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit): InstancingDeclaration =
-            InternalInstancingDeclaration(id, instanceCount, dynamic, block)
+        override fun instancing(id: String, count: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit) =
+            InternalInstancingDeclaration(id, count, dynamic) {
+                val instances = mutableListOf<MeshInstance>()
+                val context = DefaultInstancedRenderablesContext(instances)
+                block.invoke(context)
+                instances
+            }
+
+        override fun gltfInstancing(id: String, count: Int, dynamic: Boolean, block: InstancedGltfContext.() -> Unit) =
+            InternalGltfInstancingDeclaration(id, count, dynamic) {
+                val instances = mutableListOf<GltfInstance>()
+                val context = DefaultInstancedGltfContext(instances)
+                block.invoke(context)
+                instances
+            }
     }
 
     init {

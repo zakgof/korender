@@ -44,6 +44,9 @@ fun NativeByteBuffer.vec3(index: Int): Vec3 {
     return Vec3(x, y, z)
 }
 
+fun NativeByteBuffer.floatChunk(startIndex: Int, length: Int) =
+    FloatArray(length) { float(startIndex + it) }
+
 // TODO: can be optimized ?
 fun NativeByteBuffer.toByteArray(): ByteArray =
     ByteArray(size()) { byte(it) }

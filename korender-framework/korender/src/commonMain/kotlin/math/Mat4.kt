@@ -44,34 +44,50 @@ class Mat4(
         val IDENTITY: Mat4 = Mat4(1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f)
     }
 
-    operator fun times(a: Float): Mat4 {
-        return Mat4(
-            m00 * a,
-            m01 * a,
-            m02 * a,
-            m03 * a,
-            m10 * a,
-            m11 * a,
-            m12 * a,
-            m13 * a,
-            m20 * a,
-            m21 * a,
-            m22 * a,
-            m23 * a,
-            m30 * a,
-            m31 * a,
-            m32 * a,
-            m33 * a
+    operator fun plus(a: Mat4) =
+        Mat4(
+            m00 + a.m00,
+            m01 + a.m01,
+            m02 + a.m02,
+            m03 + a.m03,
+            m10 + a.m10,
+            m11 + a.m11,
+            m12 + a.m12,
+            m13 + a.m13,
+            m20 + a.m20,
+            m21 + a.m21,
+            m22 + a.m22,
+            m23 + a.m23,
+            m30 + a.m30,
+            m31 + a.m31,
+            m32 + a.m32,
+            m33 + a.m33
         )
-    }
 
-    operator fun times(vec: Vec3): Vec3 {
-        return Vec3(
-            (m00 * vec.x + m01 * vec.y + m02 * vec.z + m03),
-            (m10 * vec.x + m11 * vec.y + m12 * vec.z + m13),
-            (m20 * vec.x + m21 * vec.y + m22 * vec.z + m23)
-        )
-    }
+    operator fun times(a: Float) = Mat4(
+        m00 * a,
+        m01 * a,
+        m02 * a,
+        m03 * a,
+        m10 * a,
+        m11 * a,
+        m12 * a,
+        m13 * a,
+        m20 * a,
+        m21 * a,
+        m22 * a,
+        m23 * a,
+        m30 * a,
+        m31 * a,
+        m32 * a,
+        m33 * a
+    )
+
+    operator fun times(vec: Vec3) = Vec3(
+        (m00 * vec.x + m01 * vec.y + m02 * vec.z + m03),
+        (m10 * vec.x + m11 * vec.y + m12 * vec.z + m13),
+        (m20 * vec.x + m21 * vec.y + m22 * vec.z + m23)
+    )
 
     fun project(vec: Vec3): Vec3 {
         val winv: Float = 1.0f / (m30 * vec.x + m31 * vec.y + m32 * vec.z + m33)

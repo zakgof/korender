@@ -1,16 +1,21 @@
 package com.zakgof.korender.impl.geometry
 
+import com.zakgof.korender.Attributes.JOINTS_BYTE
+import com.zakgof.korender.Attributes.JOINTS_INT
+import com.zakgof.korender.Attributes.JOINTS_SHORT
 import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.PHI
 import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.SCALE
 import com.zakgof.korender.Attributes.SCREEN
 import com.zakgof.korender.Attributes.TEX
-import com.zakgof.korender.Mesh
+import com.zakgof.korender.Attributes.WEIGHTS
 import com.zakgof.korender.IndexType
+import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.impl.buffer.floatChunk
 import com.zakgof.korender.impl.buffer.put
 import com.zakgof.korender.impl.buffer.vec3
 import com.zakgof.korender.impl.engine.BillboardInstance
@@ -143,15 +148,17 @@ internal open class CMesh(
 }
 
 internal class MultiMesh(val prototype: CMesh, instances: Int) :
-    CMesh(prototype.vertexCount * instances, prototype.indexCount * instances, prototype.attributes) {
+    CMesh(
+        prototype.vertexCount * instances, prototype.indexCount * instances, prototype.attributes
+            .filter { it.name != "joints" }) {
 
     var initialized = false
 
     init {
         attributeBuffers.forEach { it.rewind() }
         for (i in 0 until instances) {
-            prototype.attributeBuffers.forEachIndexed { index, prototypeAttrBuffer ->
-                attributeBuffers[index].put(prototypeAttrBuffer.rewind())
+            attrMap.forEach {
+                it.value.put(prototype.attrMap[it.key]!!.rewind())
             }
             for (ind in 0 until prototype.indexCount) {
                 index(prototype.indices!![ind] + i * prototype.vertexCount)
@@ -203,21 +210,41 @@ internal class MultiMesh(val prototype: CMesh, instances: Int) :
 
     fun updateInstances(instances: List<MeshInstance>) {
         val protoPosBuffer = prototype.attrMap[POS]!!
-        val dataPosBuffer = attrMap[POS]!!
         val protoNormalBuffer = prototype.attrMap[NORMAL]
+        val protoWeightsBuffer = prototype.attrMap[WEIGHTS]
+        val protoJointsByteBuffer = prototype.attrMap[JOINTS_BYTE]
+        val protoJointsShortBuffer = prototype.attrMap[JOINTS_SHORT]
+        val protoJointsIntBuffer = prototype.attrMap[JOINTS_INT]
+        val dataPosBuffer = attrMap[POS]!!
         val dataNormalBuffer = attrMap[NORMAL]
         dataPosBuffer.rewind()
         dataNormalBuffer?.rewind()
         instances.indices.map {
             val instance = instances[it]
-            val normalMatrix = instance.transform.mat4.invTranspose()
+
             for (v in 0 until prototype.vertexCount) {
-                val newPos = instance.transform.mat4.project(protoPosBuffer.vec3(v))
-                dataPosBuffer.put(newPos)
+                var newPos = protoPosBuffer.vec3(v)
+                val skinningMatrix = if (instance.jointMatrices != null && protoWeightsBuffer != null) {
+                    val weights = protoWeightsBuffer.floatChunk(v * 4, 4)
+                    val joints =
+                        protoJointsIntBuffer?.let { intBuffer -> IntArray(4) { i -> intBuffer.int(v * 4 + i) } }
+                            ?: protoJointsShortBuffer?.let { shortBuffer -> IntArray(4) { i -> shortBuffer.short(v * 4 + i).toInt() } }
+                            ?: protoJointsByteBuffer?.let { byteBuffer -> IntArray(4) { i -> byteBuffer.byte(v * 4 + i).toInt() } }
+
+                    instance.jointMatrices[joints!![0]] * weights[0] +
+                            instance.jointMatrices[joints[1]] * weights[1] +
+                            instance.jointMatrices[joints[2]] * weights[2] +
+                            instance.jointMatrices[joints[3]] * weights[3]
+                } else null
+
+                newPos = instance.transform.mat4.project(newPos)
                 if (protoNormalBuffer != null) {
-                    val newNormal = normalMatrix * protoNormalBuffer.vec3(v)
+                    val normalMatrix = instance.transform.mat4.invTranspose()
+                    var newNormal = normalMatrix * protoNormalBuffer.vec3(v)
+                    skinningMatrix?.let { newNormal = skinningMatrix.invTranspose() * newNormal }
                     dataNormalBuffer!!.put(newNormal)
                 }
+                dataPosBuffer.put(newPos)
             }
         }
         initialized = true

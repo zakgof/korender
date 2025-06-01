@@ -21,23 +21,26 @@ fun InstancedCubesExample() = Korender(appResourceLoader = { Res.readBytes(it) }
     Frame {
         DirectionalLight(Vec3(1f, 1f, -2f), ColorRGB.White)
         camera = freeCamera.camera(projection, width, height, frameInfo.dt)
-        InstancedRenderables(
+        Renderable(
             base(colorTexture = texture("texture/asphalt-albedo.jpg"), metallicFactor = 0.1f),
-            id = "particles",
-            count = 21 * 21,
-            mesh = cube(0.3f)
-        ) {
-            for (x in -10..10) {
-                for (y in -10..10) {
-                    val random = Random(x + 100 * y)
-                    val axis = Vec3(random.nextFloat(), random.nextFloat(), random.nextFloat()).normalize()
-                    Instance(
-                        transform = rotate(Quaternion.fromAxisAngle(axis, frameInfo.time * 3f))
-                            .translate(Vec3(x.toFloat(), y.toFloat(), 0f))
-                    )
+            mesh = cube(0.3f),
+            instancing = instancing(
+                id = "particles",
+                count = 21 * 21,
+                dynamic = true
+            ) {
+                for (x in -10..10) {
+                    for (y in -10..10) {
+                        val random = Random(x + 100 * y)
+                        val axis = Vec3(random.nextFloat(), random.nextFloat(), random.nextFloat()).normalize()
+                        Instance(
+                            transform = rotate(Quaternion.fromAxisAngle(axis, frameInfo.time * 3f))
+                                .translate(Vec3(x.toFloat(), y.toFloat(), 0f))
+                        )
+                    }
                 }
             }
-        }
+        )
         Gui {
             Column {
                 Filler()

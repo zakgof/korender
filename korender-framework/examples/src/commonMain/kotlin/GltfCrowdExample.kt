@@ -22,17 +22,18 @@ fun GltfCrowdExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         val rnd = Random(1)
 
-        InstancedGltf(resource = "gltf/ai/swat.glb", count = 10) {
-            (0 until 10).forEach { _ ->
-                Instance(
-                    time = rnd.nextFloat() + frameInfo.time,
-                    transform = scale(0.01f)
-                )
+        Gltf(
+            resource = "gltf/ai/swat.glb",
+            instancing = gltfInstancing("crowd", 10, false) {
+                (0 until 10).forEach { _ ->
+                    Instance(
+                        time = rnd.nextFloat() + frameInfo.time,
+                        transform = scale(0.01f)
+                    )
+                }
             }
-        }
-
-
- //       Gltf(resource = "gltf/ai/swat.glb", transform = scale(0.01f))
+        )
+        //       Gltf(resource = "gltf/ai/swat.glb", transform = scale(0.01f))
 //
 //        Gui {
 //            Column {

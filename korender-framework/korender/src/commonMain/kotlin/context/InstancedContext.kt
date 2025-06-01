@@ -4,8 +4,9 @@ import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
-interface InstancingDeclaration {
-}
+interface InstancingDeclaration
+
+interface GltfInstancingDeclaration
 
 interface InstancedBillboardsContext {
     fun Instance(pos: Vec3, scale: Vec2 = Vec2(1f, 1f), rotation: Float = 0f)
@@ -16,5 +17,5 @@ interface InstancedRenderablesContext {
 }
 
 interface InstancedGltfContext {
-    fun Instance(transform: Transform, time: Float? = null)
+    fun Instance(transform: Transform, time: Float? = null, animation: Int? = null)
 }

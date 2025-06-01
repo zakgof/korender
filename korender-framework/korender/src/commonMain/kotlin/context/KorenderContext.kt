@@ -123,7 +123,8 @@ interface KorenderContext {
     fun clipmapTerrainPrefab(id: String, cellSize: Float, hg: Int, rings: Int): Prefab
     fun grassPrefab(id: String, segments: Int, cell: Float, side: Int, filter: (Vec3) -> Boolean): Prefab
 
-    fun positionInstancing(id: String, instanceCount: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit): InstancingDeclaration
+    fun instancing(id: String, count: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit): InstancingDeclaration
+    fun gltfInstancing(id: String, count: Int, dynamic: Boolean, block: InstancedGltfContext.() -> Unit): GltfInstancingDeclaration
 
     val target: TargetPlatform
 

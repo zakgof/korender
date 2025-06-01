@@ -2,7 +2,6 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.context.DefaultInstancedBillboardsContext
-import com.zakgof.korender.impl.context.DefaultInstancedRenderablesContext
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
@@ -58,18 +57,17 @@ internal object Rendering {
                 if (declaration.mesh.transparent) {
                     instances.sortBy { (camera.mat4 * it.pos).z * sortFactor }
                 }
-                (meshLink.cpuMesh as MultiMesh).updateBillboardInstances(instances)
+                meshLink.cpuMesh.updateBillboardInstances(instances)
                 meshLink.updateGpu(instances.size * 4, instances.size * 6)
             }
         }
         if (declaration.mesh is InstancedMesh) {
             val mesh = meshLink.cpuMesh as MultiMesh
             if (!declaration.mesh.static || !mesh.initialized || declaration.mesh.transparent) {
-                val instances = mutableListOf<MeshInstance>()
-                DefaultInstancedRenderablesContext(instances).apply(declaration.mesh.block)
+                var instances = declaration.mesh.instancer()
                 val sortFactor = if (reverseZ) -1f else 1f
                 if (declaration.mesh.transparent) {
-                    instances.sortBy { (camera.mat4 * it.transform.offset()).z * sortFactor}
+                    instances = instances.sortedBy { (camera.mat4 * it.transform.offset()).z * sortFactor}
                 }
                 mesh.updateInstances(instances)
                 meshLink.updateGpu(mesh.prototype.vertexCount * instances.size, mesh.prototype.indexCount * instances.size)

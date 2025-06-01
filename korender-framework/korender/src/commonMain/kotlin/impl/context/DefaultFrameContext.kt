@@ -8,10 +8,9 @@ import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.context.DeferredShadingContext
 import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.context.GltfInstancingDeclaration
 import com.zakgof.korender.context.GuiContainerContext
 import com.zakgof.korender.context.InstancedBillboardsContext
-import com.zakgof.korender.context.InstancedGltfContext
-import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.context.ShadowContext
@@ -24,8 +23,8 @@ import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.engine.EnvCaptureContext
 import com.zakgof.korender.impl.engine.FrameCaptureContext
 import com.zakgof.korender.impl.engine.GltfDeclaration
-import com.zakgof.korender.impl.engine.GltfInstanceDeclaration
 import com.zakgof.korender.impl.engine.InternalFilterDeclaration
+import com.zakgof.korender.impl.engine.InternalGltfInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalInstancingDeclaration
 import com.zakgof.korender.impl.engine.PointLightDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
@@ -52,13 +51,14 @@ internal class DefaultFrameContext(
         DefaultDeferredShadingContext(sceneDeclaration.deferredShadingDeclaration!!).apply(block)
     }
 
-    override fun Gltf(resource: String, animation: Int, transform: Transform, time: Float?) {
-        val gltfInstance = GltfInstanceDeclaration(animation, transform, time ?: frameInfo.time)
-        sceneDeclaration.gltfs += GltfDeclaration(resource, korenderContext.currentRetentionPolicy, null, listOf(gltfInstance))
+    override fun Gltf(resource: String, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?) {
+        sceneDeclaration.gltfs += GltfDeclaration(resource, transform, time?: frameInfo.time, animation?:0, instancing as InternalGltfInstancingDeclaration?, korenderContext.currentRetentionPolicy)
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean, instancing: InstancingDeclaration?) {
-        val meshDeclaration = (instancing as? InternalInstancingDeclaration)?.let { InstancedMesh(instancing.id, instancing.instanceCount, mesh, !instancing.dynamic, transparent, korenderContext.currentRetentionPolicy, instancing.block) } ?: mesh;
+        val meshDeclaration = (instancing as? InternalInstancingDeclaration)?.let {
+            InstancedMesh(instancing.id, instancing.count, mesh, !instancing.dynamic, transparent, korenderContext.currentRetentionPolicy, instancing.instancer)
+        } ?: mesh
         val rd = RenderableDeclaration(BaseMaterial.Renderable, materialModifiers.asList(), meshDeclaration, transform, korenderContext.currentRetentionPolicy)
         addToScene(transparent, rd)
     }
@@ -88,15 +88,18 @@ internal class DefaultFrameContext(
         sceneDeclaration.guis += root
     }
 
-    override fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: String, count: Int, mesh: MeshDeclaration, static: Boolean, transparent: Boolean, block: InstancedRenderablesContext.() -> Unit) {
-        val rd = RenderableDeclaration(
-                BaseMaterial.Renderable, materialModifiers.asList(),
-                InstancedMesh(id, count, mesh, static, transparent, korenderContext.currentRetentionPolicy, block),
-                transform = Transform(),
-                korenderContext.currentRetentionPolicy
-            )
-        addToScene(transparent, rd)
-    }
+//    override fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: String, count: Int, mesh: MeshDeclaration, static: Boolean, transparent: Boolean, block: InstancedRenderablesContext.() -> Unit) {
+//        val instances = mutableListOf<MeshInstance>()
+//        val irc = DefaultInstancedRenderablesContext(instances)
+//        block.invoke(irc)
+//        val rd = RenderableDeclaration(
+//                BaseMaterial.Renderable, materialModifiers.asList(),
+//                InstancedMesh(id, count, mesh, static, transparent, korenderContext.currentRetentionPolicy, instances),
+//                transform = Transform(),
+//                korenderContext.currentRetentionPolicy
+//            )
+//        addToScene(transparent, rd)
+//    }
 
     override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: String, count: Int, static: Boolean, transparent: Boolean, block: InstancedBillboardsContext.() -> Unit) {
         val rd = RenderableDeclaration(
@@ -108,11 +111,11 @@ internal class DefaultFrameContext(
         addToScene(transparent, rd)
     }
 
-    override fun InstancedGltf(resource: String, count: Int, block: InstancedGltfContext.() -> Unit) {
-        val instances = mutableListOf<GltfInstanceDeclaration>()
-        DefaultInstancedGltfContext(instances, frameInfo.time).apply(block)
-        sceneDeclaration.gltfs += GltfDeclaration(resource, korenderContext.currentRetentionPolicy, count, instances)
-    }
+//    override fun InstancedGltf(resource: String, count: Int, block: InstancedGltfContext.() -> Unit) {
+//        val instances = mutableListOf<GltfInstance>()
+//        DefaultInstancedGltfContext(instances, frameInfo.time).apply(block)
+//        sceneDeclaration.gltfs += GltfDeclaration(resource, korenderContext.currentRetentionPolicy, count, instances)
+//    }
 
     private fun addToScene(transparent: Boolean, rd: RenderableDeclaration) {
         if (transparent)
