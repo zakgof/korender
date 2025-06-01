@@ -25,8 +25,6 @@ import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import kotlin.math.floor
 
-internal class LoadedSkin(val inverseBindMatrices: List<Mat4>, var jointMatrices: List<Mat4>)
-
 internal class GltfSceneBuilder(
     private val declaration: GltfDeclaration,
     private val gltfLoaded: GltfLoaded,
@@ -34,19 +32,10 @@ internal class GltfSceneBuilder(
     private val nodeMatrices = mutableMapOf<Int, Transform>()
     private val meshes = mutableListOf<Pair<Int, Int>>()
     private val nodeAnimations = mutableMapOf<Int, MutableMap<String, List<Float>>>()
-    private val loadedSkins = mutableListOf<LoadedSkin>()
 
     fun build(time: Float): List<RenderableDeclaration> {
         val model = gltfLoaded.model
         val scene = model.scenes!![model.scene]
-
-        // TODO preload it!
-        model.skins?.map { skin ->
-            // TODO validate accessor type map4
-            val inverseBindMatrices = getAccessorBytes(gltfLoaded.model.accessors!![skin.inverseBindMatrices!!])
-                .asNativeMat4List()
-            LoadedSkin(inverseBindMatrices, listOf()) // TODO separate these two things
-        }?.let { loadedSkins.addAll(it) }
 
         if (declaration.animation < (model.animations?.size ?: 0)) {
             val animation = model.animations!![declaration.animation]
@@ -65,49 +54,29 @@ internal class GltfSceneBuilder(
                 model.nodes!![nodeIndex]
             )
         }
-        model.skins?.mapIndexed { skinIndex, skin ->
-            loadedSkins[skinIndex].jointMatrices = skin.joints.map { nodeMatrices[it]!!.mat4 }
+        val jointMatrices = model.skins?.map { skin ->
+            skin.joints.map { nodeMatrices[it]!!.mat4 }
         }
         return meshes.flatMap {
             processMesh(
                 nodeMatrices[it.second]!!,
                 gltfLoaded.model.meshes!![it.first],
                 it.first,
-                gltfLoaded.model.nodes!![it.second].skin
+                gltfLoaded.model.nodes!![it.second].skin,
+                jointMatrices
             )
         }
     }
 
-    // TODO move me
-    private fun ByteArray.asNativeFloatList(): List<Float> = List(size / 4) {
-        Float.fromBits(
-            (this[it * 4 + 0].toInt() and 0xFF) or
-                    ((this[it * 4 + 1].toInt() and 0xFF) shl 8) or
-                    ((this[it * 4 + 2].toInt() and 0xFF) shl 16) or
-                    ((this[it * 4 + 3].toInt() and 0xFF) shl 24)
-        )
-    }
+    private fun getSamplerValue(sampler: Gltf.Animation.AnimationSampler, currentTime: Float): List<Float> {
 
-    // TODO move me and optimize by avoiding copy
-    private fun ByteArray.asNativeMat4List(): List<Mat4> = List(size / 64) { m ->
-        Mat4(this.copyOfRange(m * 64, m * 64 + 64).asNativeFloatList().toFloatArray())
-    }
-
-    // TODO: PERF !! - preload add the samplers, no need to to each frame
-    private fun getSamplerValue(
-        sampler: Gltf.Animation.AnimationSampler,
-        currentTime: Float
-    ): List<Float> {
-
-        val inputAccessor = gltfLoaded.model.accessors!![sampler.input]
-        val inputBytes = getAccessorBytes(inputAccessor)
+        val inputBytes = gltfLoaded.loadedAccessors[sampler.input]!!
         val inputFloats = inputBytes.asNativeFloatList()
 
-        val outputAccessor = gltfLoaded.model.accessors[sampler.output]
-        val outputBytes = getAccessorBytes(outputAccessor)
+        val outputBytes = gltfLoaded.loadedAccessors[sampler.output]!!
         val outputFloats = outputBytes.asNativeFloatList()
         // TODO validate float input and output
-        val outputValues = getAccessorFloatBasedElements(outputFloats, outputAccessor.type)
+        val outputValues = getAccessorFloatBasedElements(outputFloats, gltfLoaded.model.accessors!![sampler.output].type)
         // TODO validate same lengths
 
         val max = inputFloats.last()
@@ -142,9 +111,7 @@ internal class GltfSceneBuilder(
 
         translation?.let { transform *= Transform.translate(Vec3(it[0], it[1], it[2])) }
         rotation?.let {
-            transform *= Transform.rotate(
-                Quaternion(it[3], Vec3(it[0], it[1], it[2]))
-            )
+            transform *= Transform.rotate(Quaternion(it[3], Vec3(it[0], it[1], it[2])))
         }
         scale?.let { transform *= Transform.scale(it[0], it[1], it[2]) }
 
@@ -162,13 +129,15 @@ internal class GltfSceneBuilder(
         transform: Transform,
         mesh: Gltf.Mesh,
         meshIndex: Int,
-        skinIndex: Int?
+        skinIndex: Int?,
+        jointMatrices: List<List<Mat4>>?
     ): List<RenderableDeclaration> =
         mesh.primitives.mapIndexed { primitiveIndex, primitive ->
             val meshDeclaration = createMeshDeclaration(primitive, meshIndex, primitiveIndex)
             val materialModifier = createMaterialModifiers(
                 primitive,
-                skinIndex
+                skinIndex,
+                skinIndex?.let { jointMatrices?.get(it) }
             )
             RenderableDeclaration(
                 BaseMaterial.Renderable,
@@ -182,7 +151,8 @@ internal class GltfSceneBuilder(
 
     private fun createMaterialModifiers(
         primitive: Gltf.Mesh.Primitive,
-        skinIndex: Int?
+        skinIndex: Int?,
+        jointMatrices: List<Mat4>?
     ): MaterialModifier {
 
         // TODO: split into 2 parts, precompute textures modifier, calc only skin modifier
@@ -194,14 +164,13 @@ internal class GltfSceneBuilder(
         // TODO: Precreate all except jointMatrices
         return InternalMaterialModifier { mb ->
 
-            if (skinIndex != null) {
+            if (jointMatrices != null) {
                 mb.plugins["vposition"] = "!shader/plugin/vposition.skinning.vert"
                 mb.plugins["vnormal"] = "!shader/plugin/vnormal.skinning.vert"
-                mb.uniforms["jntMatrices[0]"] = Mat4List(
-                    loadedSkins[skinIndex].jointMatrices.mapIndexed { ind, jm ->
-                        jm * loadedSkins[skinIndex].inverseBindMatrices[ind]
-                    }
-                )
+                val jointMatrixList = jointMatrices.mapIndexed { ind, jm ->
+                    jm * gltfLoaded.loadedSkins[skinIndex]!![ind]
+                }
+                mb.uniforms["jntMatrices[0]"] = Mat4List(jointMatrixList)
             }
 
             mb.uniforms["baseColor"] = (matSpecularGlossiness?.diffuseFactor ?: matPbr?.baseColorFactor)?.let {
@@ -242,25 +211,26 @@ internal class GltfSceneBuilder(
         meshIndex: Int,
         primitiveIndex: Int
     ): CustomMesh {
+        // TODO: optimizer accessor stuff
         val indicesAccessor = primitive.indices?.let { gltfLoaded.model.accessors!![it] }
         val verticesAttributeAccessors = primitive.attributes
             .mapNotNull { p ->
                 val accessor = gltfLoaded.model.accessors!![p.value]
-                attributeForAccessor(p.key, accessor)?.let { it to accessor }
+                attributeForAccessor(p.key, accessor)?.let { it to p.value }
             }
 
         return CustomMesh(
             "${declaration.gltfResource}:$meshIndex:$primitiveIndex",
-            verticesAttributeAccessors.first().second.count,
+            gltfLoaded.model.accessors!![verticesAttributeAccessors.first().second].count,
             indicesAccessor?.count ?: 0,
             verticesAttributeAccessors.map { it.first },
             false,
             accessorComponentTypeToIndexType(indicesAccessor?.componentType),
             declaration.retentionPolicy
         ) {
-            indicesAccessor?.let { indexBytes(getAccessorBytes(it)) }
+            indicesAccessor?.let { indexBytes(gltfLoaded.loadedAccessors[primitive.indices]!!) }
             verticesAttributeAccessors.forEach {
-                attrBytes(it.first, getAccessorBytes(it.second))
+                attrBytes(it.first, gltfLoaded.loadedAccessors[it.second]!!)
             }
         }
     }
@@ -289,42 +259,9 @@ internal class GltfSceneBuilder(
             else -> throw KorenderException("GLTF: Unsupported componentType for index: $componentType")
         }
 
-    private fun getAccessorBytes(accessor: Gltf.Accessor): ByteArray {
-
-        val componentBytes = accessor.componentByteSize()
-        val elementComponents = accessor.elementComponentSize()
-
-        val bufferView = gltfLoaded.model.bufferViews!![accessor.bufferView!!]
-        val buffer = gltfLoaded.model.buffers!![bufferView.buffer]
-        val bufferBytes = getBufferBytes(buffer)
-        val byteOffset = accessor.byteOffset ?: 0
-
-        val stride = bufferView.byteStride ?: 0
-        if (stride == 0 || stride == elementComponents * componentBytes) {
-            return bufferBytes.copyOfRange(
-                bufferView.byteOffset + byteOffset,
-                bufferView.byteOffset + byteOffset + accessor.count * elementComponents * componentBytes
-            )
-        } else {
-            val accessorBytes = ByteArray(accessor.count * elementComponents * componentBytes)
-            for (element in 0 until accessor.count) {
-                bufferBytes.copyInto(
-                    accessorBytes,
-                    element * elementComponents * componentBytes,
-                    bufferView.byteOffset + element * stride + byteOffset,
-                    bufferView.byteOffset + element * stride + byteOffset +
-                            elementComponents * componentBytes
-                )
-            }
-            return accessorBytes
-        }
-    }
-
     // TODO: redesign; uri is to big for key
     private fun getBufferBytes(buffer: Gltf.Buffer): ByteArray {
-        if (buffer.uri == null)
-            return gltfLoaded.loadedUris[""]!!
-        return gltfLoaded.loadedUris[buffer.uri]!!
+        return gltfLoaded.loadedUris[buffer.uri ?: ""]!!
     }
 
     private fun getBufferViewBytes(bufferView: Gltf.BufferView): ByteArray {

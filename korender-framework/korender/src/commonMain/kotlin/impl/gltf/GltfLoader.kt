@@ -25,14 +25,11 @@ internal object GltfLoader {
 
     class GlbChunk(val type: ChunkType, val data: ByteArray)
 
-    suspend fun load(
-        declaration: GltfDeclaration,
-        appResourceLoader: ResourceLoader
-    ): GltfLoaded {
+    suspend fun load(declaration: GltfDeclaration, appResourceLoader: ResourceLoader): GltfLoaded {
         val extension = declaration.gltfResource.split(".").last().lowercase()
         val resourceBytes = resourceBytes(appResourceLoader, declaration.gltfResource)
         return when (extension) {
-            "gltf" -> loadGltf(resourceBytes, appResourceLoader, declaration.gltfResource)
+            "gltf" -> loadGltf(resourceBytes, null, appResourceLoader, declaration.gltfResource)
             "glb" -> loadGlb(resourceBytes, appResourceLoader, declaration.gltfResource)
             else -> throw KorenderException("Unknown extension of gltf/glb resource: $extension")
         }
@@ -63,10 +60,10 @@ internal object GltfLoader {
         val jsonChunk = chunks.find { it.type == ChunkType.JSON }
             ?: throw KorenderException("Missing JSON chunk in GLB file")
 
-        return loadGltf(jsonChunk.data, appResourceLoader, resourceName).apply {
-            chunks.find { it.type == ChunkType.BIN }?.let {
-                loadedUris[""] = it.data
-            }
+        val binData = chunks.find { it.type == ChunkType.BIN }?.data
+
+        return loadGltf(jsonChunk.data, binData, appResourceLoader, resourceName).apply {
+
         }
     }
 
@@ -87,21 +84,67 @@ internal object GltfLoader {
         }
     }
 
-    private suspend fun loadGltf(
-        resourceBytes: ByteArray,
-        appResourceLoader: ResourceLoader,
-        gltfResource: String
-    ): GltfLoaded {
+    private suspend fun loadGltf(resourceBytes: ByteArray, binData: ByteArray?, appResourceLoader: ResourceLoader, gltfResource: String): GltfLoaded {
         val gltfCode = resourceBytes.decodeToString()
         val model = json.decodeFromString<Gltf>(gltfCode)
-        val loadedUris = listOfNotNull(
+        val loadedUris = preloadUris(model, appResourceLoader, gltfResource, binData)
+        val loadedAccessors = preloadAccessors(model, loadedUris)
+        val loadedSkins = preloadSkins(model, loadedAccessors)
+        return GltfLoaded(model, gltfResource, loadedUris, loadedAccessors, loadedSkins)
+    }
+
+    private suspend fun preloadUris(model: Gltf, appResourceLoader: ResourceLoader, gltfResource: String, binData: ByteArray?) =
+        listOfNotNull(
             model.buffers?.mapNotNull { it.uri },
             model.images?.mapNotNull { it.uri }
         )
             .flatten()
             .associateWith { loadUriBytes(appResourceLoader, absolutizeResource(it, gltfResource)) }
-        return GltfLoaded(model, gltfResource, loadedUris.toMutableMap())
+            .toMutableMap()
+            .apply { binData?.let { this[""] = it } }
+
+    private fun preloadAccessors(model: Gltf, loadedUris: Map<String, ByteArray>): Map<Int, ByteArray> =
+        model.accessors?.mapIndexed { index, accessor ->
+            index to getAccessorBytes(model, accessor, loadedUris)
+        }?.toMap() ?: mapOf()
+
+    private fun getAccessorBytes(model: Gltf, accessor: Gltf.Accessor, loadedUris: Map<String, ByteArray>): ByteArray {
+
+        val componentBytes = accessor.componentByteSize()
+        val elementComponents = accessor.elementComponentSize()
+
+        val bufferView = model.bufferViews!![accessor.bufferView!!]
+        val buffer = model.buffers!![bufferView.buffer]
+        val bufferBytes = loadedUris[buffer.uri ?: ""]!!
+        val byteOffset = accessor.byteOffset ?: 0
+
+        val stride = bufferView.byteStride ?: 0
+        if (stride == 0 || stride == elementComponents * componentBytes) {
+            return bufferBytes.copyOfRange(
+                bufferView.byteOffset + byteOffset,
+                bufferView.byteOffset + byteOffset + accessor.count * elementComponents * componentBytes
+            )
+        } else {
+            val accessorBytes = ByteArray(accessor.count * elementComponents * componentBytes)
+            for (element in 0 until accessor.count) {
+                bufferBytes.copyInto(
+                    accessorBytes,
+                    element * elementComponents * componentBytes,
+                    bufferView.byteOffset + element * stride + byteOffset,
+                    bufferView.byteOffset + element * stride + byteOffset +
+                            elementComponents * componentBytes
+                )
+            }
+            return accessorBytes
+        }
     }
+
+    private fun preloadSkins(model: Gltf, loadedAccessors: Map<Int, ByteArray>) =
+        model.skins?.mapIndexed { index, skin ->
+            // TODO validate accessor type map4
+            index to loadedAccessors[skin.inverseBindMatrices!!]!!.asNativeMat4List()
+        }?.toMap() ?: mapOf()
+
 
     @OptIn(ExperimentalEncodingApi::class)
     private suspend fun loadUriBytes(appResourceLoader: ResourceLoader, resourceUri: String): ByteArray {
@@ -119,7 +162,7 @@ internal object GltfLoader {
     }
 }
 
-fun Gltf.Accessor.componentByteSize(): Int =
+internal fun Gltf.Accessor.componentByteSize(): Int =
     when (componentType) {
         GLConstants.GL_UNSIGNED_BYTE -> 1
         GLConstants.GL_UNSIGNED_SHORT -> 2
@@ -128,7 +171,7 @@ fun Gltf.Accessor.componentByteSize(): Int =
         else -> throw KorenderException("GLTF: Not supported accessor componentType $componentType")
     }
 
-fun Gltf.Accessor.elementComponentSize(): Int =
+internal fun Gltf.Accessor.elementComponentSize(): Int =
     // TODO enums
     when (type) {
         "SCALAR" -> 1
@@ -138,4 +181,22 @@ fun Gltf.Accessor.elementComponentSize(): Int =
         "MAT3" -> 9
         "MAT4" -> 16
         else -> throw KorenderException("GLTF: Not supported accessor type $type")
+    }
+
+
+// TODO move me and optimize by avoiding copy
+internal fun ByteArray.asNativeMat4List(): List<Mat4> =
+    List(size / 64) { m ->
+        Mat4(this.copyOfRange(m * 64, m * 64 + 64).asNativeFloatList().toFloatArray())
+    }
+
+// TODO move me
+internal fun ByteArray.asNativeFloatList(): List<Float> =
+    List(size / 4) {
+        Float.fromBits(
+            (this[it * 4 + 0].toInt() and 0xFF) or
+                    ((this[it * 4 + 1].toInt() and 0xFF) shl 8) or
+                    ((this[it * 4 + 2].toInt() and 0xFF) shl 16) or
+                    ((this[it * 4 + 3].toInt() and 0xFF) shl 24)
+        )
     }
