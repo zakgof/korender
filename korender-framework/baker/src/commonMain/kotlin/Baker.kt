@@ -21,12 +21,10 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.Vec3.Companion.ZERO
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 import java.awt.image.BufferedImage
 import java.awt.image.BufferedImage.TYPE_INT_RGB
 import java.io.File
 import javax.imageio.ImageIO
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.pow
@@ -34,10 +32,9 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 @Composable
-@OptIn(ExperimentalResourceApi::class, ExperimentalEncodingApi::class)
 fun Baker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-    val basePath = "D:\\kot\\dev\\assets\\"
+    val basePath = "D:\\p\\dev\\korender-assets\\"
 
     // val metaball = Metaball(20f, 1.0f) { sqrt(it * 0.05f) * (1f - it * 0.05f) * 10f }
     val metaball = Metaball(20f, 3.0f, 8000, 48) { (it * 0.05f).pow(0.1f) * (1f - it * 0.05f) * 10f }
@@ -58,13 +55,13 @@ fun Baker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         index(0, 1, 2, 0, 2, 3)
     }
     val leafInstances = metaball.points.mapIndexed { index, pt ->
-        val quaternion = (0..640)
+        val quaternion = (0..64)
             .map { index * 1023 + it }
             .map { Quaternion.fromAxisAngle(Vec3.random(it), Random(index * 777 + it).nextFloat() * 100f) }
             .maxBy { (it * 1.z) * pt.n }
 
         rotate(quaternion)
-            .scale(0.6f)
+            .scale(0.8f)
             .translate((pt.pos - hull.center))
     }
 
@@ -93,17 +90,16 @@ fun Baker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         projection = frustum(3f * width / height, 3f, 3f, 100f)
         camera = camera(20.z, -1.z, 1.y)
         AmbientLight(white(0.2f))
-        DirectionalLight(Vec3(2.0f, 0.0f, -1.0f), white(3f))
+        DirectionalLight(Vec3(2.0f, 0.0f, -2.0f), white(3f))
         Billboard(
-            billboard(xscale = 10.0f, yscale = 10.0f),
-            uniforms(
-                "radiantTexture" to cubeTexture("radiant", radiantImages),
-                "radiantNormalTexture" to cubeTexture("radiant-normal", radiantNormalImages),
-                "colorTexture" to cubeTexture("albedo", albedoImages),
-                "normalTexture" to cubeTexture("normal", normalImages)
-            ),
-            fragment("!shader/effect/radial.frag"),
-            position = ZERO
+            base(metallicFactor = 0f, roughnessFactor = 0.9f),
+            billboard(xscale = 20.0f, yscale = 20.0f),
+            radiant(
+                radiantTexture = cubeTexture("radiant", radiantImages),
+                radiantNormalTexture = cubeTexture("radiant-normal", radiantNormalImages),
+                colorTexture = cubeTexture("albedo", albedoImages),
+                normalTexture = cubeTexture("normal", normalImages)
+            )
         )
     }
 }
@@ -137,17 +133,18 @@ private fun FrameContext.renderHull(hullMesh: MeshDeclaration, offset: Vec3 = ZE
 }
 
 private fun FrameContext.renderTree(leaf: MeshDeclaration, leafInstances: List<Transform>, vararg mods: MaterialModifier) {
-    InstancedRenderables(
+    Renderable(
         base(colorTexture = texture("model/leaf.png")),
         *mods,
         mesh = leaf,
-        id = "metapoints",
         transparent = true,
-        count = leafInstances.size,
-        static = true
-    ) {
-        leafInstances.forEach { Instance(it) }
-    }
+        instancing = instancing(
+            id = "metapoints",
+            count = leafInstances.size,
+            dynamic = false
+        ) {
+            leafInstances.forEach { Instance(it) }
+        })
 }
 
 class Metaball(

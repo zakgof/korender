@@ -29,7 +29,9 @@ fun HybridTerrainExample() =
             camera = camera(Vec3(23.0f, 1000f, -2000.0f), 1.z - 1.y, 1.z + 1.y)
 
             AmbientLight(ColorRGB.white(0.2f))
-            DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(1.5f))
+            DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(1.5f)) {
+                // Cascade(1024, 5f, 2000f, algorithm = vsm())
+            }
             Renderable(
                 base(metallicFactor = 0.0f),
                 roiTextures,
