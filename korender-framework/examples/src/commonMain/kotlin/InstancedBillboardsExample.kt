@@ -15,7 +15,7 @@ import kotlin.random.Random
 fun InstancedBillboardsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
     val particleNum = 1000
-    val particles = Array(particleNum) { Particle(Random.nextDouble(5.0).toFloat()) }
+    val particles = Array(particleNum) { Particle(Random.nextFloat() * 5f) }
 
     Frame {
         AmbientLight(White)
@@ -52,17 +52,15 @@ fun InstancedBillboardsExample() = Korender(appResourceLoader = { Res.readBytes(
 class Particle(initTtl: Float = 5.0f) {
     var ttl = initTtl
     var pos = Vec3(-2f, -2f, 0f)
-    private var v = Vec3.random() + Vec3(4f, 8f, 0f)
+    private var v = Vec3.random() + Vec3(2f, 7f, 0f)
     fun update(dt: Float) {
         v += -5.y * dt
         pos += v * dt
         ttl -= dt
         if (ttl < 0) {
-            ttl = 5.0f
+            ttl = 5f
             pos = Vec3(-2f, -2f, 0f)
-            v = Vec3.random() + Vec3(4f, 8f, 0f)
+            v = Vec3.random() + Vec3(2f, 7f, 0f)
         }
     }
-
-
 }

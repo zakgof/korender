@@ -8,15 +8,16 @@ import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
-import org.jetbrains.compose.resources.ExperimentalResourceApi
+import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
 import kotlin.math.max
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun MetallicRoughnessExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })
     Frame {
         projection = frustum(width = 3f * width / height, height = 3f, near = 3f, far = 1000f)
+        camera = camera(18.z, -1.z, 1.y)
         Sky(cubeSky(env))
         DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(5f))
         AmbientLight(ColorRGB.Black)
