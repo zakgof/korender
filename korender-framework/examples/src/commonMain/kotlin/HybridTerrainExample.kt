@@ -46,7 +46,7 @@ fun HybridTerrainExample() =
 
             fun cubTex(prefix: String) = cubeTexture(CubeTextureSide.entries.associateWith { "hybridterrain/tree/$prefix-${it.toString().lowercase()}.jpg" })
 
-            InstancedBillboards(
+            Billboard(
                 billboard(xscale = 100.0f, yscale = 100.0f),
                 base(metallicFactor = 0f, roughnessFactor = 0.9f),
                 radiant(
@@ -55,15 +55,16 @@ fun HybridTerrainExample() =
                     colorTexture = cubTex("albedo"),
                     normalTexture = cubTex("normal")
                 ),
-                id = "trees",
-                static = true,
-                count = 2000
-            ) {
-                (0 until 2000).forEach {
-                    val r = Random(it)
-                    Instance(pos = Vec3(r.nextFloat() * 5000f - 600f, 450f, r.nextFloat() * 3000f - 1610f))
-                }
-            }
+                instancing = billboardInstancing(
+                    id = "trees",
+                    dynamic = false,
+                    count = 2000
+                ) {
+                    (0 until 2000).forEach {
+                        val r = Random(it)
+                        Instance(pos = Vec3(r.nextFloat() * 5000f - 600f, 450f, r.nextFloat() * 3000f - 1610f))
+                    }
+                })
             Sky(fastCloudSky())
             PostProcess(water(), fastCloudSky())
             PostProcess(fog(color = ColorRGB(0x9BB4C8), density = 0.00003f))

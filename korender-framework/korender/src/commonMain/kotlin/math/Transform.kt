@@ -6,14 +6,15 @@ import kotlin.math.sin
 class Transform(val mat4: Mat4 = Mat4.IDENTITY) {
 
     companion object {
-        fun translate(offset: Vec3): Transform = Transform().translate(offset)
-        fun translate(x: Float, y: Float, z: Float): Transform = Transform().translate(x, y, z)
-        fun scale(s: Float): Transform = Transform().scale(s)
-        fun scale(xs: Float, ys: Float, zs: Float): Transform = Transform().scale(xs, ys, zs)
-        fun rotate(q: Quaternion): Transform = Transform().rotate(q)
-        fun rotate(axis: Vec3, angle: Float): Transform = Transform().rotate(axis, angle)
+        fun translate(offset: Vec3): Transform = IDENTITY.translate(offset)
+        fun translate(x: Float, y: Float, z: Float): Transform = IDENTITY.translate(x, y, z)
+        fun scale(s: Float): Transform = IDENTITY.scale(s)
+        fun scale(xs: Float, ys: Float, zs: Float): Transform = IDENTITY.scale(xs, ys, zs)
+        fun rotate(q: Quaternion): Transform = IDENTITY.rotate(q)
+        fun rotate(axis: Vec3, angle: Float): Transform = IDENTITY.rotate(axis, angle)
         fun rotate(direction: Vec3, uptrend: Vec3): Transform =
-            Transform().rotate(direction, uptrend)
+            IDENTITY.rotate(direction, uptrend)
+        val IDENTITY = Transform()
     }
 
     fun translate(x: Float, y: Float, z: Float) = translate(Vec3(x, y, z))

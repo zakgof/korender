@@ -1,7 +1,6 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.impl.camera.Camera
-import com.zakgof.korender.impl.context.DefaultInstancedBillboardsContext
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
@@ -17,11 +16,11 @@ internal class Renderable(
     val mesh: GlGpuMesh,
     val shader: GlGpuShader,
     val uniforms: Map<String, Any?>,
-    val transform: Transform = Transform()
+    val transform: Transform = Transform.IDENTITY
 ) {
     fun render(contextUniforms: Map<String, Any?>, fixer: (Any?) -> Any?) {
         shader.render(
-            { fixer(uniforms[it] ?: contextUniforms[it] ?: if (it == "model") transform.mat4 else null )},
+            { fixer(uniforms[it] ?: contextUniforms[it] ?: if (it == "model") transform.mat4 else null) },
             mesh
         )
     }
@@ -51,11 +50,10 @@ internal object Rendering {
         if (declaration.mesh is InstancedBillboard) {
             val mesh = meshLink.cpuMesh as MultiMesh
             if (!declaration.mesh.static || !mesh.initialized || declaration.mesh.transparent) {
-                val instances = mutableListOf<BillboardInstance>();
-                DefaultInstancedBillboardsContext(instances).apply(declaration.mesh.block)
+                var instances = declaration.mesh.instancer()
                 val sortFactor = if (reverseZ) -1f else 1f
                 if (declaration.mesh.transparent) {
-                    instances.sortBy { (camera.mat4 * it.pos).z * sortFactor }
+                    instances = instances.sortedBy { (camera.mat4 * it.pos).z * sortFactor }
                 }
                 meshLink.cpuMesh.updateBillboardInstances(instances)
                 meshLink.updateGpu(instances.size * 4, instances.size * 6)
@@ -67,7 +65,7 @@ internal object Rendering {
                 var instances = declaration.mesh.instancer()
                 val sortFactor = if (reverseZ) -1f else 1f
                 if (declaration.mesh.transparent) {
-                    instances = instances.sortedBy { (camera.mat4 * it.transform.offset()).z * sortFactor}
+                    instances = instances.sortedBy { (camera.mat4 * it.transform.offset()).z * sortFactor }
                 }
                 mesh.updateInstances(instances)
                 meshLink.updateGpu(mesh.prototype.vertexCount * instances.size, mesh.prototype.indexCount * instances.size)

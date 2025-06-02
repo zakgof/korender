@@ -42,7 +42,7 @@ internal class GltfSceneBuilder(
     private val gltfLoaded: GltfLoaded
 ) {
     private val meshNodes = mutableListOf<Pair<Int, Int>>()
-    private val instances = declaration.instancingDeclaration?.instancer?.invoke() ?: listOf(GltfInstance(Transform(), declaration.time, declaration.animation))
+    private val instances = declaration.instancingDeclaration?.instancer?.invoke() ?: listOf(GltfInstance(Transform.IDENTITY, declaration.time, declaration.animation))
     private val instanceData: Array<InstanceData> = Array(instances.size) { InstanceData() }
 
     fun build(): List<RenderableDeclaration> {
@@ -69,7 +69,7 @@ internal class GltfSceneBuilder(
             scene.nodes.forEach { nodeIndex ->
                 processNode(
                     instanceData,
-                    Transform(),
+                    Transform.IDENTITY,
                     nodeIndex,
                     model.nodes!![nodeIndex]
                 )

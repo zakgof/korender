@@ -9,10 +9,8 @@ import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.random.Random
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun InstancedBillboardsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
@@ -21,22 +19,31 @@ fun InstancedBillboardsExample() = Korender(appResourceLoader = { Res.readBytes(
 
     Frame {
         AmbientLight(White)
-        InstancedBillboards(
+        Billboard(
             base(
                 color = ColorRGBA.Red,
                 colorTexture = texture("texture/splat.png")
             ),
-            id = "particles",
-            count = particleNum,
-            transparent = true
-        ) {
-            for (particle in particles) {
-                particle.update(frameInfo.dt)
-                val scale = (5.0f - particle.ttl) * 0.3f
-                Instance(
-                    pos = particle.pos,
-                    scale = Vec2(scale, scale)
-                )
+            transparent = true,
+            instancing = billboardInstancing(
+                id = "particles",
+                count = particleNum,
+                dynamic = true
+            ) {
+                for (particle in particles) {
+                    particle.update(frameInfo.dt)
+                    val scale = (5.0f - particle.ttl) * 0.3f
+                    Instance(
+                        pos = particle.pos,
+                        scale = Vec2(scale, scale)
+                    )
+                }
+            }
+        )
+        Gui {
+            Column {
+                Filler()
+                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
             }
         }
     }

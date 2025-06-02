@@ -29,7 +29,9 @@ import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
+import com.zakgof.korender.context.BillboardInstancingDeclaration
 import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedGltfContext
 import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.KorenderContext
@@ -37,6 +39,7 @@ import com.zakgof.korender.context.RoiTexturesContext
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.context.DefaultFrameContext
+import com.zakgof.korender.impl.context.DefaultInstancedBillboardsContext
 import com.zakgof.korender.impl.context.DefaultInstancedGltfContext
 import com.zakgof.korender.impl.context.DefaultInstancedRenderablesContext
 import com.zakgof.korender.impl.engine.shadow.InternalHardParams
@@ -505,6 +508,14 @@ internal class Engine(
             InternalInstancingDeclaration(id, count, dynamic) {
                 val instances = mutableListOf<MeshInstance>()
                 val context = DefaultInstancedRenderablesContext(instances)
+                block.invoke(context)
+                instances
+            }
+
+        override fun billboardInstancing(id: String, count: Int, dynamic: Boolean, block: InstancedBillboardsContext.() -> Unit)=
+            InternalBillboardInstancingDeclaration(id, count, dynamic) {
+                val instances = mutableListOf<BillboardInstance>()
+                val context = DefaultInstancedBillboardsContext(instances)
                 block.invoke(context)
                 instances
             }

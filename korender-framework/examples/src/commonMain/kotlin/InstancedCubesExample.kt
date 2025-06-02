@@ -13,7 +13,6 @@ import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.random.Random
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun InstancedCubesExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val freeCamera = FreeCamera(this, 20.z, -1.z)

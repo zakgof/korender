@@ -6,6 +6,7 @@ import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TouchHandler
+import com.zakgof.korender.context.BillboardInstancingDeclaration
 import com.zakgof.korender.context.GltfInstancingDeclaration
 import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.impl.context.Direction
@@ -60,7 +61,7 @@ internal class RenderableDeclaration(
     val base: BaseMaterial,
     val materialModifiers: List<MaterialModifier>,
     val mesh: MeshDeclaration,
-    val transform: Transform = Transform(),
+    val transform: Transform = Transform.IDENTITY,
     override val retentionPolicy: RetentionPolicy
 ) : Retentionable
 
@@ -168,5 +169,7 @@ internal class DirectionalLightDeclaration(val direction: Vec3, val color: Color
 internal class InternalInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<MeshInstance>) : InstancingDeclaration
 
 internal class InternalGltfInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<GltfInstance>) : GltfInstancingDeclaration
+
+internal class InternalBillboardInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<BillboardInstance>) : BillboardInstancingDeclaration
 
 internal class InternalFilterDeclaration(val modifiers: List<MaterialModifier>, val sceneDeclaration: SceneDeclaration, override val retentionPolicy: RetentionPolicy) : Retentionable

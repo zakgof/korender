@@ -8,6 +8,8 @@ interface InstancingDeclaration
 
 interface GltfInstancingDeclaration
 
+interface BillboardInstancingDeclaration
+
 interface InstancedBillboardsContext {
     fun Instance(pos: Vec3, scale: Vec2 = Vec2(1f, 1f), rotation: Float = 0f)
 }

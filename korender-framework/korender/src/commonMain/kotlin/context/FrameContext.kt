@@ -14,17 +14,13 @@ interface FrameContext : KorenderContext {
 
     val frameInfo: FrameInfo
 
-    fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform = Transform(), transparent: Boolean = false, instancing: InstancingDeclaration? = null)
+    fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform = Transform.IDENTITY, transparent: Boolean = false, instancing: InstancingDeclaration? = null)
     fun Renderable(vararg materialModifiers: MaterialModifier, prefab: Prefab)
-    fun Gltf(resource: String, transform: Transform = Transform(), time: Float? = null, animation:Int? = null, instancing: GltfInstancingDeclaration? = null)
+    fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, time: Float? = null, animation:Int? = null, instancing: GltfInstancingDeclaration? = null)
 
-    fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3 = Vec3.ZERO, transparent: Boolean = false)
+    fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3 = Vec3.ZERO, transparent: Boolean = false, instancing: BillboardInstancingDeclaration? = null)
     fun Sky(vararg materialModifiers: MaterialModifier)
     fun Gui(block: GuiContainerContext.() -> Unit)
-
-    // fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: String, count: Int, mesh: MeshDeclaration, static: Boolean = false, transparent: Boolean = false, block: InstancedRenderablesContext.() -> Unit)
-    fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: String, count: Int, static: Boolean = false, transparent: Boolean = false, block: InstancedBillboardsContext.() -> Unit)
-    // fun InstancedGltf(resource: String, count: Int, block: InstancedGltfContext.() -> Unit)
 
     fun PostProcess(vararg materialModifiers: MaterialModifier, block: FrameContext.() -> Unit = {})
 

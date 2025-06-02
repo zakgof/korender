@@ -6,11 +6,11 @@ import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.context.BillboardInstancingDeclaration
 import com.zakgof.korender.context.DeferredShadingContext
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.GltfInstancingDeclaration
 import com.zakgof.korender.context.GuiContainerContext
-import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.context.ShadowContext
@@ -23,6 +23,7 @@ import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.engine.EnvCaptureContext
 import com.zakgof.korender.impl.engine.FrameCaptureContext
 import com.zakgof.korender.impl.engine.GltfDeclaration
+import com.zakgof.korender.impl.engine.InternalBillboardInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalFilterDeclaration
 import com.zakgof.korender.impl.engine.InternalGltfInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalInstancingDeclaration
@@ -52,7 +53,7 @@ internal class DefaultFrameContext(
     }
 
     override fun Gltf(resource: String, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?) {
-        sceneDeclaration.gltfs += GltfDeclaration(resource, transform, time?: frameInfo.time, animation?:0, instancing as InternalGltfInstancingDeclaration?, korenderContext.currentRetentionPolicy)
+        sceneDeclaration.gltfs += GltfDeclaration(resource, transform, time ?: frameInfo.time, animation ?: 0, instancing as InternalGltfInstancingDeclaration?, korenderContext.currentRetentionPolicy)
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean, instancing: InstancingDeclaration?) {
@@ -67,11 +68,18 @@ internal class DefaultFrameContext(
         (prefab as InternalPrefab).render(this, *materialModifiers)
     }
 
-    override fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3, transparent: Boolean) {
+    override fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3, transparent: Boolean, instancing: BillboardInstancingDeclaration?) {
+        val mesh = com.zakgof.korender.impl.geometry.Billboard(korenderContext.currentRetentionPolicy)
+        val meshDeclaration = if (instancing != null) {
+            instancing as InternalBillboardInstancingDeclaration
+            InstancedBillboard(instancing.id, instancing.count, !instancing.dynamic, transparent, korenderContext.currentRetentionPolicy, instancing.instancer)
+        } else {
+            mesh
+        }
         val rd = RenderableDeclaration(
             BaseMaterial.Billboard,
             materialModifiers.asList(),
-            com.zakgof.korender.impl.geometry.Billboard(korenderContext.currentRetentionPolicy),
+            meshDeclaration,
             translate(position),
             korenderContext.currentRetentionPolicy
         )
@@ -79,7 +87,7 @@ internal class DefaultFrameContext(
     }
 
     override fun Sky(vararg materialModifiers: MaterialModifier) {
-        sceneDeclaration.skies += RenderableDeclaration(BaseMaterial.Sky, materialModifiers.asList(), ScreenQuad(korenderContext.currentRetentionPolicy), Transform(), korenderContext.currentRetentionPolicy)
+        sceneDeclaration.skies += RenderableDeclaration(BaseMaterial.Sky, materialModifiers.asList(), ScreenQuad(korenderContext.currentRetentionPolicy), Transform.IDENTITY, korenderContext.currentRetentionPolicy)
     }
 
     override fun Gui(block: GuiContainerContext.() -> Unit) {
@@ -87,35 +95,6 @@ internal class DefaultFrameContext(
         DefaultContainerContext(this, root).apply(block)
         sceneDeclaration.guis += root
     }
-
-//    override fun InstancedRenderables(vararg materialModifiers: MaterialModifier, id: String, count: Int, mesh: MeshDeclaration, static: Boolean, transparent: Boolean, block: InstancedRenderablesContext.() -> Unit) {
-//        val instances = mutableListOf<MeshInstance>()
-//        val irc = DefaultInstancedRenderablesContext(instances)
-//        block.invoke(irc)
-//        val rd = RenderableDeclaration(
-//                BaseMaterial.Renderable, materialModifiers.asList(),
-//                InstancedMesh(id, count, mesh, static, transparent, korenderContext.currentRetentionPolicy, instances),
-//                transform = Transform(),
-//                korenderContext.currentRetentionPolicy
-//            )
-//        addToScene(transparent, rd)
-//    }
-
-    override fun InstancedBillboards(vararg materialModifiers: MaterialModifier, id: String, count: Int, static: Boolean, transparent: Boolean, block: InstancedBillboardsContext.() -> Unit) {
-        val rd = RenderableDeclaration(
-                BaseMaterial.Billboard, materialModifiers.asList(),
-                InstancedBillboard(id, count, static, transparent, korenderContext.currentRetentionPolicy, block),
-                transform = Transform(),
-                korenderContext.currentRetentionPolicy
-            )
-        addToScene(transparent, rd)
-    }
-
-//    override fun InstancedGltf(resource: String, count: Int, block: InstancedGltfContext.() -> Unit) {
-//        val instances = mutableListOf<GltfInstance>()
-//        DefaultInstancedGltfContext(instances, frameInfo.time).apply(block)
-//        sceneDeclaration.gltfs += GltfDeclaration(resource, korenderContext.currentRetentionPolicy, count, instances)
-//    }
 
     private fun addToScene(transparent: Boolean, rd: RenderableDeclaration) {
         if (transparent)

@@ -5,7 +5,7 @@ import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.RetentionPolicy
-import com.zakgof.korender.context.InstancedBillboardsContext
+import com.zakgof.korender.impl.engine.BillboardInstance
 import com.zakgof.korender.impl.engine.MeshInstance
 import impl.engine.Retentionable
 
@@ -37,7 +37,7 @@ internal data class InstancedBillboard(
     val static: Boolean,
     val transparent: Boolean,
     override val retentionPolicy: RetentionPolicy,
-    val block: InstancedBillboardsContext.() -> Unit
+    val instancer: () -> List<BillboardInstance>
 ) : InternalMeshDeclaration {
     override fun equals(other: Any?): Boolean = (other is InstancedBillboard && other.id == id)
     override fun hashCode(): Int = id.hashCode()
