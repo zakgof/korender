@@ -69,7 +69,7 @@ internal class GltfSceneBuilder(
             scene.nodes.forEach { nodeIndex ->
                 processNode(
                     instanceData,
-                    declaration.transform * instanceDeclaration.transform,
+                    Transform(),
                     nodeIndex,
                     model.nodes!![nodeIndex]
                 )
@@ -79,7 +79,7 @@ internal class GltfSceneBuilder(
             } ?: listOf() // TODO optimize
         }
         return meshNodes.flatMap {
-            processMesh(
+            createRenderables(
                 gltfLoaded.model.meshes!![it.first],
                 it.first,
                 gltfLoaded.model.nodes!![it.second].skin,
@@ -150,11 +150,7 @@ internal class GltfSceneBuilder(
         }
     }
 
-    private fun processMesh(
-        mesh: Gltf.Mesh,
-        meshIndex: Int,
-        skinIndex: Int?
-    ): List<RenderableDeclaration> =
+    private fun createRenderables(mesh: Gltf.Mesh, meshIndex: Int, skinIndex: Int?): List<RenderableDeclaration> =
         mesh.primitives.mapIndexed { primitiveIndex, primitive ->
             val meshDeclaration = createMeshDeclaration(primitive, meshIndex, primitiveIndex, skinIndex)
             val jointMatrices = skinIndex?.let {
@@ -165,7 +161,7 @@ internal class GltfSceneBuilder(
                 BaseMaterial.Renderable,
                 listOf(materialModifier),
                 mesh = meshDeclaration,
-                transform = if (declaration.instancingDeclaration == null) instances[0].transform else Transform(),
+                transform = if (declaration.instancingDeclaration == null) declaration.transform * instances[0].transform else declaration.transform,
                 declaration.retentionPolicy
             )
         }
@@ -186,7 +182,7 @@ internal class GltfSceneBuilder(
         // TODO: Precreate all except jointMatrices
         return InternalMaterialModifier { mb ->
 
-            if (jointMatrices != null) {
+            if (jointMatrices != null && declaration.instancingDeclaration == null) {
                 mb.plugins["vposition"] = "!shader/plugin/vposition.skinning.vert"
                 mb.plugins["vnormal"] = "!shader/plugin/vnormal.skinning.vert"
                 val jointMatrixList = jointMatrices.mapIndexed { ind, jm ->
@@ -257,7 +253,9 @@ internal class GltfSceneBuilder(
 
         return InstancedMesh(declaration.gltfResource, declaration.instancingDeclaration.count, meshDeclaration, !declaration.instancingDeclaration.dynamic, false, declaration.retentionPolicy) {
             declaration.instancingDeclaration.instancer().mapIndexed { i, it ->
-                MeshInstance(it.transform, skinIndex?.let { instanceData[i].jointMatrices[skinIndex] })
+                MeshInstance(it.transform, skinIndex?.let {
+                    instanceData[i].jointMatrices[skinIndex].mapIndexed { ind, jm -> jm * gltfLoaded.loadedSkins[skinIndex]!![ind] }
+                })
             }
         }
     }

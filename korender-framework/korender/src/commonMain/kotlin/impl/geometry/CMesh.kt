@@ -237,6 +237,7 @@ internal class MultiMesh(val prototype: CMesh, instances: Int) :
                             instance.jointMatrices[joints[3]] * weights[3]
                 } else null
 
+                skinningMatrix?.let { newPos = skinningMatrix * newPos }
                 newPos = instance.transform.mat4.project(newPos)
                 if (protoNormalBuffer != null) {
                     val normalMatrix = instance.transform.mat4.invTranspose()

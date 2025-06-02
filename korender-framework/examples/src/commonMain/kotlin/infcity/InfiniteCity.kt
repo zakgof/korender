@@ -47,7 +47,7 @@ private fun FrameContext.frame() {
     camera = camera(Vec3(0.05f, 0.3f, z - 1f), Quaternion.fromAxisAngle(1.y, 0.05f * cos(frameInfo.time)) * 1.z, 1.y)
 
     light()
-    // character(z)
+    character(z)
     city(z)
     atmosphere()
     gui()

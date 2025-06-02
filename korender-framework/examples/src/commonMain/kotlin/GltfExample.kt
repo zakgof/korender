@@ -12,7 +12,7 @@ import com.zakgof.korender.math.z
 
 @Composable
 fun GltfExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
-    val orbitCamera = OrbitCamera(this, 20.z, 2.y)
+    val orbitCamera = OrbitCamera(this, 20.z, 3.y)
     OnTouch { orbitCamera.touch(it) }
     Frame {
         camera = orbitCamera.camera(projection, width, height)
