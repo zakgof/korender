@@ -12,7 +12,7 @@ import impl.engine.Retentionable
 internal interface InternalMeshDeclaration : MeshDeclaration, Retentionable
 
 internal data class Cube(val halfSide: Float, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
-internal data class Sphere(val radius: Float, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
+internal data class Sphere(val radius: Float, val slices: Int, val sectors: Int, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class ObjMesh(val objFile: String, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class Billboard(override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class ImageQuad(override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration

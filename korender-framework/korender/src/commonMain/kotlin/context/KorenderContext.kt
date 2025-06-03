@@ -56,7 +56,7 @@ interface KorenderContext {
     fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameContext.() -> Unit): Image
 
     fun cube(halfSide: Float = 0.5f): MeshDeclaration
-    fun sphere(radius: Float = 1.0f): MeshDeclaration
+    fun sphere(radius: Float = 1.0f, slices: Int = 32, sectors: Int = 32): MeshDeclaration
     fun obj(objFile: String): MeshDeclaration
     fun screenQuad(): MeshDeclaration
     fun heightField(id: String, cellsX: Int, cellsZ: Int, cellWidth: Float, height: (Int, Int) -> Float): MeshDeclaration

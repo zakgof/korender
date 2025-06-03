@@ -28,7 +28,7 @@ class ShaderDebugInfo(val file: String) {
             // int col = Integer.parseInt(matcher.group(1));
             val row = matcher.groups[2]!!.value.toInt()
             val entry = lines[row - 1]
-            val info = "[${entry.file}:${entry.srclineNo}  ${entry.line}]"
+            val info = "[${entry.file}:${entry.srclineNo}]  ${entry.line}"
             return info
         }
         return ""

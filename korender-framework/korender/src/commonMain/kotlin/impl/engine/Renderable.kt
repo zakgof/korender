@@ -1,5 +1,8 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.Attributes.INSTPOS
+import com.zakgof.korender.Attributes.INSTROT
+import com.zakgof.korender.Attributes.INSTSCALE
 import com.zakgof.korender.Attributes.MODEL0
 import com.zakgof.korender.Attributes.MODEL1
 import com.zakgof.korender.Attributes.MODEL2
@@ -9,7 +12,6 @@ import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
-import com.zakgof.korender.impl.geometry.MultiMesh
 import com.zakgof.korender.impl.glgpu.GlGpuMesh
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.material.InternalMaterialModifier
@@ -42,7 +44,7 @@ internal object Rendering {
         defs: Set<String>,
         reverseZ: Boolean = false
     ) {
-        val addDefs = if (declaration.mesh is InstancedMesh) setOf("INSTANCING") else setOf()
+        val addDefs = if (declaration.mesh is InstancedMesh || declaration.mesh is InstancedBillboard) setOf("INSTANCING") else setOf()
         val materialDeclaration = materialDeclaration(declaration.base, deferredShading, declaration.retentionPolicy, declaration.materialModifiers + InternalMaterialModifier { it.shaderDefs += defs + addDefs })
 
         val meshLink = inventory.mesh(declaration.mesh as InternalMeshDeclaration) ?: return
@@ -53,14 +55,20 @@ internal object Rendering {
             meshLink.updateGpu(0)
         }
         if (declaration.mesh is InstancedBillboard) {
-            val mesh = meshLink.cpuMesh as MultiMesh
-            if (!declaration.mesh.static || !mesh.initialized || declaration.mesh.transparent) {
+            val mesh = meshLink.cpuMesh
+            if (!declaration.mesh.static || !mesh.instancesInitialized || declaration.mesh.transparent) {
                 var instances = declaration.mesh.instancer()
                 val sortFactor = if (reverseZ) -1f else 1f
                 if (declaration.mesh.transparent) {
                     instances = instances.sortedBy { (camera.mat4 * it.pos).z * sortFactor }
                 }
-                meshLink.cpuMesh.updateBillboardInstances(instances)
+                mesh.updateMesh {
+                    instances.forEachIndexed { i, it ->
+                        this.attrSet(INSTPOS, i, it.pos)
+                        this.attrSet(INSTROT, i, it.phi)
+                        this.attrSet(INSTSCALE, i, it.scale)
+                    }
+                }
                 meshLink.updateGpu(instances.size)
             }
         }
@@ -77,8 +85,8 @@ internal object Rendering {
                         val m = it.transform.mat4
                         this.attrSet(MODEL0, i, floatArrayOf(m.m00, m.m10, m.m20, m.m30))
                         this.attrSet(MODEL1, i, floatArrayOf(m.m01, m.m11, m.m21, m.m31))
-                        this.attrSet(MODEL2, i, floatArrayOf(m.m01, m.m12, m.m22, m.m32))
-                        this.attrSet(MODEL3, i, floatArrayOf(m.m02, m.m13, m.m23, m.m33))
+                        this.attrSet(MODEL2, i, floatArrayOf(m.m02, m.m12, m.m22, m.m32))
+                        this.attrSet(MODEL3, i, floatArrayOf(m.m03, m.m13, m.m23, m.m33))
                     }
                 }
                 mesh.instancesInitialized = true

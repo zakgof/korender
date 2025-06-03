@@ -1,6 +1,5 @@
 package com.zakgof.korender.impl.prefab.grass
 
-import com.zakgof.korender.Attributes.PHI
 import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.MaterialModifier
@@ -19,14 +18,14 @@ internal class Grass(
     private val filter: (Vec3) -> Boolean = { true }
 ) : InternalPrefab {
 
-    private val mesh = korenderContext.customMesh(id, segments * 4 + 2, segments * 12 - 6, POS, TEX, PHI) {
+    private val mesh = korenderContext.customMesh(id, segments * 4 + 2, segments * 12 - 6, POS, TEX) {
         for (b1 in 0..1) {
             for (s in 0 until segments) {
                 val h = s.toFloat() / segments
-                pos(Vec3.ZERO).tex(0f, h).phi(b1.toFloat())
-                pos(Vec3.ZERO).tex(1f, h).phi(b1.toFloat())
+                pos(Vec3.ZERO).tex(0f, h)
+                pos(Vec3.ZERO).tex(1f, h)
             }
-            pos(Vec3.ZERO).tex(0.5f, 1.0f).phi(b1.toFloat())
+            pos(Vec3.ZERO).tex(0.5f, 1.0f)
         }
         for (s in 0 until segments - 1) {
             val b = s * 2

@@ -26,7 +26,7 @@ fun InstancedCubesExample() = Korender(appResourceLoader = { Res.readBytes(it) }
             instancing = instancing(
                 id = "particles",
                 count = 41 * 41,
-                dynamic = false
+                dynamic = true
             ) {
                 for (x in -20..20) {
                     for (y in -20..20) {
@@ -41,12 +41,11 @@ fun InstancedCubesExample() = Korender(appResourceLoader = { Res.readBytes(it) }
             }
         )
 
-
-//        Gui {
-//            Column {
-//                Filler()
-//                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
-//            }
-//        }
+        Gui {
+            Column {
+                Filler()
+                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
+            }
+        }
     }
 }

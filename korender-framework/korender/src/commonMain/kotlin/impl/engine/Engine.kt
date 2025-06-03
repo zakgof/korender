@@ -165,7 +165,7 @@ internal class Engine(
 
         override fun cube(halfSide: Float): MeshDeclaration = Cube(halfSide, currentRetentionPolicy)
 
-        override fun sphere(radius: Float): MeshDeclaration = Sphere(radius, currentRetentionPolicy)
+        override fun sphere(radius: Float, slices: Int, sectors: Int): MeshDeclaration = Sphere(radius, slices, sectors, currentRetentionPolicy)
 
         override fun obj(objFile: String): MeshDeclaration = ObjMesh(objFile, currentRetentionPolicy)
 

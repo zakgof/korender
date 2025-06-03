@@ -4,9 +4,7 @@ import com.zakgof.korender.Attributes.JOINTS_BYTE
 import com.zakgof.korender.Attributes.JOINTS_INT
 import com.zakgof.korender.Attributes.JOINTS_SHORT
 import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.PHI
 import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.SCALE
 import com.zakgof.korender.Attributes.SCREEN
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Attributes.WEIGHTS
@@ -18,7 +16,6 @@ import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.buffer.floatChunk
 import com.zakgof.korender.impl.buffer.put
 import com.zakgof.korender.impl.buffer.vec3
-import com.zakgof.korender.impl.engine.BillboardInstance
 import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
@@ -27,19 +24,20 @@ internal open class CMesh(
     val vertexCount: Int,
     val indexCount: Int,
     val instanceCount: Int = 0,
-    val attributes: List<MeshAttribute<*>>,
+    attrs: List<MeshAttribute<*>>,
     indexType: IndexType? = null
 ) : Mesh, MeshInitializer {
 
     var instancesInitialized: Boolean = false
 
+    val attributes = attrs.filter { !it.instance || instanceCount > 0 }
+
     val attributeBuffers: List<NativeByteBuffer> = attributes
-        .filter { !it.instance || instanceCount > 0 }
         .map {
             val count = if (it.instance) instanceCount else vertexCount
             NativeByteBuffer(count * it.primitiveType.size() * it.structSize)
         }
-    val attrMap: Map<MeshAttribute<*>, NativeByteBuffer> = attributes.indices.associate { attributes[it] to attributeBuffers[it] }
+    val attrMap: Map<MeshAttribute<*>, NativeByteBuffer> = attributeBuffers.indices.associate { attributes[it] to attributeBuffers[it] }
 
     val actualIndexType: IndexType = convertIndexType(indexType, indexCount)
     val indexBuffer: NativeByteBuffer? = if (indexCount > 0) NativeByteBuffer(indexCount * actualIndexType.size()) else null
@@ -53,8 +51,6 @@ internal open class CMesh(
             override fun pos() = value(POS)
             override fun normal() = value(NORMAL)
             override fun tex() = value(TEX)
-            override fun scale() = value(SCALE)
-            override fun phi() = value(PHI)
 
             override fun <T> value(attribute: MeshAttribute<T>) =
                 attrMap[attribute]?.let { attribute.bufferAccessor.get(it, index) }
@@ -123,15 +119,6 @@ internal open class CMesh(
     }
 
     override fun tex(vararg v: Float): MeshInitializer = attr(TEX, *v)
-
-    override fun scale(vararg scale: Vec2): MeshInitializer {
-        scale.forEach { tex(it.x, it.y) }
-        return this
-    }
-
-    override fun scale(vararg v: Float): MeshInitializer = attr(SCALE, *v)
-
-    override fun phi(vararg v: Float): MeshInitializer = attr(PHI, *v)
 
     override fun index(vararg indices: Int): MeshInitializer {
         for (value in indices) {
@@ -265,6 +252,7 @@ internal class MultiMesh(val prototype: CMesh, instances: Int) :
         initialized = true
     }
 
+    /*
     fun updateBillboardInstances(instances: List<BillboardInstance>) {
         val dataPosBuffer = attrMap[POS]!!
         val dataScaleBuffer = attrMap[SCALE]!!
@@ -303,4 +291,6 @@ internal class MultiMesh(val prototype: CMesh, instances: Int) :
         }
         initialized = true
     }
+
+     */
 }

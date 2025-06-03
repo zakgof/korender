@@ -1,14 +1,15 @@
 package com.zakgof.korender.impl.geometry
 
 import com.zakgof.korender.AttributeType
+import com.zakgof.korender.Attributes.INSTPOS
+import com.zakgof.korender.Attributes.INSTROT
+import com.zakgof.korender.Attributes.INSTSCALE
 import com.zakgof.korender.Attributes.MODEL0
 import com.zakgof.korender.Attributes.MODEL1
 import com.zakgof.korender.Attributes.MODEL2
 import com.zakgof.korender.Attributes.MODEL3
 import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.PHI
 import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.SCALE
 import com.zakgof.korender.Attributes.SCREEN
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.IndexType
@@ -59,27 +60,25 @@ internal object Geometry {
     }
 
     suspend fun createCpuMesh(meshDeclaration: MeshDeclaration, appResourceLoader: ResourceLoader): CMesh {
-        val simpleMeshDeclaration = (meshDeclaration as? InstancedMesh)?.mesh ?: meshDeclaration
-        val count = (meshDeclaration as? InstancedMesh)?.count ?: 0
+        val simpleMeshDeclaration = (meshDeclaration as? InstancedMesh)?.mesh ?: (meshDeclaration as? InstancedBillboard)?.let { Billboard(it.retentionPolicy) } ?: meshDeclaration
+        val count = (meshDeclaration as? InstancedMesh)?.count ?: (meshDeclaration as? InstancedBillboard)?.count ?: 0
 
         return when (simpleMeshDeclaration) {
-            is Sphere -> sphere(simpleMeshDeclaration.radius)
+            is Sphere -> sphere(simpleMeshDeclaration.radius, simpleMeshDeclaration.slices, simpleMeshDeclaration.sectors, count)
             is Cube -> cube(simpleMeshDeclaration.halfSide, count)
             is ScreenQuad -> screenQuad()
-            is Billboard -> billboard()
+            is Billboard -> billboard(count)
             is ImageQuad -> imageQuad()
-            is ObjMesh -> obj(simpleMeshDeclaration.objFile, appResourceLoader)
+            is ObjMesh -> obj(simpleMeshDeclaration.objFile, count, appResourceLoader)
             is CustomCpuMesh -> simpleMeshDeclaration.mesh
-            // is CustomMesh -> CMesh(simpleMeshDeclaration.vertexCount, simpleMeshDeclaration.indexCount, attributes = meshDeclaration.attributes.toTypedArray(), meshDeclaration.indexType, meshDeclaration.block)
-            // is InstancedMesh -> MultiMesh(createCpuMesh(simpleMeshDeclaration.mesh, appResourceLoader), meshDeclaration.count)
-            // is InstancedBillboard -> MultiMesh(billboard(), meshDeclaration.count)
+            is CustomMesh -> CMesh(simpleMeshDeclaration.vertexCount, simpleMeshDeclaration.indexCount, count, attributes = simpleMeshDeclaration.attributes.toTypedArray(), simpleMeshDeclaration.indexType, simpleMeshDeclaration.block)
             else -> throw KorenderException("Unknown mesh type $meshDeclaration")
         }
     }
 
-    private suspend fun obj(objFile: String, appResourceLoader: ResourceLoader): CMesh {
+    private suspend fun obj(objFile: String, count: Int, appResourceLoader: ResourceLoader): CMesh {
         val model: ObjModel = ObjLoader.load(objFile, appResourceLoader)
-        return CMesh(model.vertices.size, model.indices.size, 0, POS, NORMAL, TEX) {
+        return CMesh(model.vertices.size, model.indices.size, count, POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3) {
             model.vertices.forEach {
                 pos(it.pos).normal(it.normal).tex(it.tex.x, it.tex.y)
             }
@@ -89,12 +88,12 @@ internal object Geometry {
         }
     }
 
-    private fun sphere(radius: Float, slices: Int = 32, sectors: Int = 32) =
+    private fun sphere(radius: Float, slices: Int, sectors: Int, count: Int) =
         CMesh(
             2 + (slices - 1) * sectors,
             sectors * 3 * 2 + (slices - 2) * sectors * 6,
-            0,
-            POS, NORMAL, TEX
+            count,
+            POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
         ) {
             pos(0f, -radius, 0f).normal(0f, -1f, 0f).tex(0f, 0f)
             for (slice in 1..<slices) {
@@ -170,17 +169,10 @@ internal object Geometry {
             index(20, 22, 21, 20, 23, 22)
         }
 
-    private fun billboard() =
-        CMesh(4, 6, 0, POS, TEX, SCALE, PHI) {
-            pos(Vec3.ZERO)
-            tex(0f, 0f).scale(1f, 1f).phi(0f)
-            pos(Vec3.ZERO)
-            tex(0f, 1f).scale(1f, 1f).phi(0f)
-            pos(Vec3.ZERO)
-            tex(1f, 1f).scale(1f, 1f).phi(0f)
-            pos(Vec3.ZERO)
-            tex(1f, 0f).scale(1f, 1f).phi(0f)
-            index(0, 2, 1, 0, 3, 2)
+    private fun billboard(count: Int) =
+        CMesh(4, 6, count, TEX, INSTPOS, INSTSCALE, INSTROT) {
+            tex(0f, 0f).tex(0f, 1f).tex(1f, 1f).tex(1f, 0f)
+                .index(0, 2, 1, 0, 3, 2)
         }
 
     private fun imageQuad() =

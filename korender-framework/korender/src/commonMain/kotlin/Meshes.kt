@@ -1,7 +1,6 @@
 package com.zakgof.korender
 
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
-import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
@@ -40,7 +39,9 @@ object Vec2BufferAccessor : BufferAccessor<Vec2> {
         Vec2(buffer.float(index * 2), buffer.float(index * 2 + 1))
 
     override fun put(buffer: NativeByteBuffer, index: Int, value: Vec2) {
-        // TODO
+        buffer.position(8 * index)
+        buffer.put(value.x)
+        buffer.put(value.y)
     }
 }
 
@@ -49,17 +50,10 @@ object Vec3BufferAccessor : BufferAccessor<Vec3> {
         Vec3(buffer.float(index * 3), buffer.float(index * 3 + 1), buffer.float(index * 3 + 2))
 
     override fun put(buffer: NativeByteBuffer, index: Int, value: Vec3) {
-        // TODO
-    }
-}
-
-object Mat4BufferAccessor : BufferAccessor<Mat4> {
-    override fun get(buffer: NativeByteBuffer, index: Int) =
-        Mat4(FloatArray(16) { buffer.float(index * 16 + it) })
-
-    override fun put(buffer: NativeByteBuffer, index: Int, value: Mat4) {
-        buffer.position(16 * 4 * index)
-        value.asArray().forEach { buffer.put(it) }
+        buffer.position(12 * index)
+        buffer.put(value.x)
+        buffer.put(value.y)
+        buffer.put(value.z)
     }
 }
 
@@ -105,7 +99,8 @@ object FloatBufferAccessor : BufferAccessor<Float> {
         buffer.float(index)
 
     override fun put(buffer: NativeByteBuffer, index: Int, value: Float) {
-        // TODO
+        buffer.position(index * 4)
+        buffer.put(value)
     }
 }
 
@@ -119,23 +114,24 @@ object ByteBufferAccessor : BufferAccessor<Byte> {
 }
 
 object Attributes {
-    val POS = MeshAttribute<Vec3>("pos", 3, AttributeType.Float, 0, Vec3BufferAccessor)
-    val NORMAL = MeshAttribute<Vec3>("normal", 3, AttributeType.Float, 1, Vec3BufferAccessor)
-    val TEX = MeshAttribute<Vec2>("tex", 2, AttributeType.Float, 2, Vec2BufferAccessor)
-    val JOINTS_BYTE = MeshAttribute<ByteArray>("joints", 4, AttributeType.Byte, 3, Byte4BufferAccessor)
-    val JOINTS_SHORT = MeshAttribute<ShortArray>("joints", 4, AttributeType.Short, 3, Short4BufferAccessor)
-    val JOINTS_INT = MeshAttribute<IntArray>("joints", 4, AttributeType.Int, 3, Int4BufferAccessor)
-    val WEIGHTS = MeshAttribute<FloatArray>("weights", 4, AttributeType.Float, 4, Float4BufferAccessor)
-    val SCREEN = MeshAttribute<Vec2>("screen", 2, AttributeType.Float, 5, Vec2BufferAccessor)
-    val SCALE = MeshAttribute<Vec2>("scale", 2, AttributeType.Float, 6, Vec2BufferAccessor)
-    val PHI = MeshAttribute<Float>("phi", 1, AttributeType.Float, 7, FloatBufferAccessor)
-    val B1 = MeshAttribute<Byte>("b1", 1, AttributeType.SignedByte, 8, ByteBufferAccessor)
-    val B2 = MeshAttribute<Byte>("b2", 1, AttributeType.SignedByte, 9, ByteBufferAccessor)
-    val B3 = MeshAttribute<Byte>("b3", 1, AttributeType.SignedByte, 10, ByteBufferAccessor)
-    val MODEL0 = MeshAttribute<FloatArray>("instanceModel0", 4, AttributeType.Float, 11, Float4BufferAccessor, true)
-    val MODEL1 = MeshAttribute<FloatArray>("instanceModel1", 4, AttributeType.Float, 12, Float4BufferAccessor, true)
-    val MODEL2 = MeshAttribute<FloatArray>("instanceModel2", 4, AttributeType.Float, 13, Float4BufferAccessor, true)
-    val MODEL3 = MeshAttribute<FloatArray>("instanceModel3", 4, AttributeType.Float, 14, Float4BufferAccessor, true)
+    val POS = MeshAttribute("pos", 3, AttributeType.Float, 0, Vec3BufferAccessor)
+    val NORMAL = MeshAttribute("normal", 3, AttributeType.Float, 1, Vec3BufferAccessor)
+    val TEX = MeshAttribute("tex", 2, AttributeType.Float, 2, Vec2BufferAccessor)
+    val JOINTS_BYTE = MeshAttribute("joints", 4, AttributeType.Byte, 3, Byte4BufferAccessor)
+    val JOINTS_SHORT = MeshAttribute("joints", 4, AttributeType.Short, 3, Short4BufferAccessor)
+    val JOINTS_INT = MeshAttribute("joints", 4, AttributeType.Int, 3, Int4BufferAccessor)
+    val WEIGHTS = MeshAttribute("weights", 4, AttributeType.Float, 4, Float4BufferAccessor)
+    val SCREEN = MeshAttribute("screen", 2, AttributeType.Float, 5, Vec2BufferAccessor)
+    val B1 = MeshAttribute("b1", 1, AttributeType.SignedByte, 8, ByteBufferAccessor)
+    val B2 = MeshAttribute("b2", 1, AttributeType.SignedByte, 9, ByteBufferAccessor)
+    val B3 = MeshAttribute("b3", 1, AttributeType.SignedByte, 10, ByteBufferAccessor)
+    val MODEL0 = MeshAttribute("instanceModel0", 4, AttributeType.Float, 11, Float4BufferAccessor, true)
+    val MODEL1 = MeshAttribute("instanceModel1", 4, AttributeType.Float, 12, Float4BufferAccessor, true)
+    val MODEL2 = MeshAttribute("instanceModel2", 4, AttributeType.Float, 13, Float4BufferAccessor, true)
+    val MODEL3 = MeshAttribute("instanceModel3", 4, AttributeType.Float, 14, Float4BufferAccessor, true)
+    val INSTPOS = MeshAttribute("instpos", 3, AttributeType.Float, 11, Vec3BufferAccessor, true)
+    val INSTSCALE = MeshAttribute("instscale", 2, AttributeType.Float, 12, Vec2BufferAccessor, true)
+    val INSTROT = MeshAttribute("instrot", 1, AttributeType.Float, 13, FloatBufferAccessor, true)
 }
 
 interface MeshDeclaration
@@ -149,9 +145,6 @@ interface MeshInitializer {
     fun normal(vararg v: Float): MeshInitializer
     fun tex(vararg tex: Vec2): MeshInitializer
     fun tex(vararg v: Float): MeshInitializer
-    fun scale(vararg scale: Vec2): MeshInitializer
-    fun scale(vararg v: Float): MeshInitializer
-    fun phi(vararg v: Float): MeshInitializer
     fun index(vararg indices: Int): MeshInitializer
     fun indexBytes(rawBytes: ByteArray): MeshInitializer
     fun attrBytes(attr: MeshAttribute<*>, rawBytes: ByteArray): MeshInitializer
@@ -172,8 +165,6 @@ interface Mesh {
         fun pos(): Vec3?
         fun normal(): Vec3?
         fun tex(): Vec2?
-        fun scale(): Vec2?
-        fun phi(): Float?
         fun <T> value(attribute: MeshAttribute<T>): T?
     }
 
