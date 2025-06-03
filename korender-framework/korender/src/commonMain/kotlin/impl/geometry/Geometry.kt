@@ -4,13 +4,14 @@ import com.zakgof.korender.AttributeType
 import com.zakgof.korender.Attributes.INSTPOS
 import com.zakgof.korender.Attributes.INSTROT
 import com.zakgof.korender.Attributes.INSTSCALE
+import com.zakgof.korender.Attributes.INSTSCREEN
+import com.zakgof.korender.Attributes.INSTTEX
 import com.zakgof.korender.Attributes.MODEL0
 import com.zakgof.korender.Attributes.MODEL1
 import com.zakgof.korender.Attributes.MODEL2
 import com.zakgof.korender.Attributes.MODEL3
 import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.SCREEN
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
@@ -53,10 +54,11 @@ internal object Geometry {
     }
 
     fun font(reservedLength: Int): MeshLink {
-        val prototype = CMesh(4, 6, 0, TEX, SCREEN) {
-            index(0, 2, 1, 0, 3, 2)
+        val mesh = CMesh(4, 6, reservedLength, TEX, INSTTEX, INSTSCREEN) {
+            tex(0f, 0f).tex(0f, 1f).tex(1f, 1f).tex(1f, 0f)
+            index(0, 1, 2, 0, 2, 3)
         }
-        return MeshLink(MultiMesh(prototype, reservedLength), true)
+        return MeshLink(mesh, true)
     }
 
     suspend fun createCpuMesh(meshDeclaration: MeshDeclaration, appResourceLoader: ResourceLoader): CMesh {

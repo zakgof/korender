@@ -1,11 +1,12 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.Attributes.INSTSCREEN
+import com.zakgof.korender.Attributes.INSTTEX
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.font.InternalFontDeclaration
 import com.zakgof.korender.impl.font.InternalFontMeshDeclaration
 import com.zakgof.korender.impl.geometry.ImageQuad
-import com.zakgof.korender.impl.geometry.MultiMesh
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.math.Vec2
@@ -128,21 +129,29 @@ internal class GuiRenderer(
         }
     }
 
-    private fun createText(declaration: ElementDeclaration.Text, x: Int, y: Int, w: Int) {
+    private fun createText(declaration: ElementDeclaration.Text, xxx: Int, yyy: Int, w: Int) {
         val meshLink = inventory.fontMesh(InternalFontMeshDeclaration(declaration.id, declaration.retentionPolicy))
         val font = inventory.font(InternalFontDeclaration( declaration.fontResource, declaration.retentionPolicy))
         val shader = inventory.shader(Fonts.shaderDeclaration)
         if (meshLink != null && font != null && shader != null) {
-            val mesh = meshLink.cpuMesh as MultiMesh
-            if (!declaration.static || !mesh.initialized) {
-                mesh.updateFont(
-                    declaration.text,
-                    declaration.height.toFloat() / height,
-                    height.toFloat() / width.toFloat(),
-                    x.toFloat() / width,
-                    1.0f - y.toFloat() / height,
-                    font.widths
-                )
+            val mesh = meshLink.cpuMesh
+            if (!declaration.static || !mesh.instancesInitialized) {
+                mesh.updateMesh {
+                    val h = declaration.height.toFloat() / height
+                    val aspect = height.toFloat() / width.toFloat()
+                    val x = xxx.toFloat() / width
+                    val y = 1.0f - yyy.toFloat() / height
+                    var xx = x
+                    for (i in declaration.text.indices) {
+                        val c = declaration.text[i].code
+                        val ratio = font.widths[c]
+                        val width = h * ratio * aspect
+                        attrSet(INSTTEX, i, floatArrayOf((c % 16) / 16.0f, (c / 16) / 16.0f, ratio / 16f, 1 / 16f))
+                        attrSet(INSTSCREEN, i, floatArrayOf(xx, y, width, -h))
+                        xx += width
+                    }
+                }
+                mesh.instancesInitialized = true
                 meshLink.updateGpu(declaration.text.length)
             }
             renderables.add(
@@ -155,7 +164,7 @@ internal class GuiRenderer(
                     )
                 )
             )
-            touchBoxes.add(TouchBox(x, y, w, declaration.height, declaration.id, declaration.onTouch))
+            touchBoxes.add(TouchBox(xxx, yyy, w, declaration.height, declaration.id, declaration.onTouch))
         }
     }
 

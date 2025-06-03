@@ -121,7 +121,6 @@ object Attributes {
     val JOINTS_SHORT = MeshAttribute("joints", 4, AttributeType.Short, 3, Short4BufferAccessor)
     val JOINTS_INT = MeshAttribute("joints", 4, AttributeType.Int, 3, Int4BufferAccessor)
     val WEIGHTS = MeshAttribute("weights", 4, AttributeType.Float, 4, Float4BufferAccessor)
-    val SCREEN = MeshAttribute("screen", 2, AttributeType.Float, 5, Vec2BufferAccessor)
     val B1 = MeshAttribute("b1", 1, AttributeType.SignedByte, 8, ByteBufferAccessor)
     val B2 = MeshAttribute("b2", 1, AttributeType.SignedByte, 9, ByteBufferAccessor)
     val B3 = MeshAttribute("b3", 1, AttributeType.SignedByte, 10, ByteBufferAccessor)
@@ -132,6 +131,8 @@ object Attributes {
     val INSTPOS = MeshAttribute("instpos", 3, AttributeType.Float, 11, Vec3BufferAccessor, true)
     val INSTSCALE = MeshAttribute("instscale", 2, AttributeType.Float, 12, Vec2BufferAccessor, true)
     val INSTROT = MeshAttribute("instrot", 1, AttributeType.Float, 13, FloatBufferAccessor, true)
+    val INSTTEX = MeshAttribute("insttexrect", 4, AttributeType.Float, 11, Float4BufferAccessor, true)
+    val INSTSCREEN = MeshAttribute("instscreentect", 4, AttributeType.Float, 12, Float4BufferAccessor, true)
 }
 
 interface MeshDeclaration

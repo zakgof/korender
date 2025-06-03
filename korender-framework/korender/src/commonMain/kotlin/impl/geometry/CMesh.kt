@@ -1,22 +1,13 @@
 package com.zakgof.korender.impl.geometry
 
-import com.zakgof.korender.Attributes.JOINTS_BYTE
-import com.zakgof.korender.Attributes.JOINTS_INT
-import com.zakgof.korender.Attributes.JOINTS_SHORT
 import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.SCREEN
 import com.zakgof.korender.Attributes.TEX
-import com.zakgof.korender.Attributes.WEIGHTS
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
-import com.zakgof.korender.impl.buffer.floatChunk
-import com.zakgof.korender.impl.buffer.put
-import com.zakgof.korender.impl.buffer.vec3
-import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
@@ -146,151 +137,4 @@ internal open class CMesh(
         indexBuffer?.rewind()
         apply(block)
     }
-}
-
-internal class MultiMesh(val prototype: CMesh, instances: Int) :
-    CMesh(
-        prototype.vertexCount * instances, prototype.indexCount * instances, 0, prototype.attributes
-            .filter { it.name != "joints" }) {
-
-    var initialized = false
-
-    init {
-        attributeBuffers.forEach { it.rewind() }
-        for (i in 0 until instances) {
-            attrMap.forEach {
-                it.value.put(prototype.attrMap[it.key]!!.rewind())
-            }
-            for (ind in 0 until prototype.indexCount) {
-                index(prototype.indices!![ind] + i * prototype.vertexCount)
-            }
-        }
-    }
-
-    fun updateFont(
-        text: String,
-        height: Float,
-        aspect: Float,
-        x: Float,
-        y: Float,
-        widths: FloatArray
-    ) {
-        val dataTexBuffer = attrMap[TEX]!!
-        val dataScreenBuffer = attrMap[SCREEN]!!
-        dataTexBuffer.rewind()
-        dataScreenBuffer.rewind()
-        var xx = x
-        for (i in text.indices) {
-            val c = text[i].code
-            val ratio = widths[c]
-            val width = height * ratio * aspect
-            dataTexBuffer.put((c % 16) / 16.0f)
-            dataTexBuffer.put((c / 16) / 16.0f)
-            dataScreenBuffer.put(xx)
-            dataScreenBuffer.put(y)
-
-            dataTexBuffer.put((c % 16 + ratio) / 16.0f)
-            dataTexBuffer.put((c / 16) / 16.0f)
-            dataScreenBuffer.put(xx + width)
-            dataScreenBuffer.put(y)
-
-            dataTexBuffer.put((c % 16 + ratio) / 16.0f)
-            dataTexBuffer.put((c / 16 + 1f) / 16.0f)
-            dataScreenBuffer.put(xx + width)
-            dataScreenBuffer.put(y - height)
-
-            dataTexBuffer.put((c % 16) / 16.0f)
-            dataTexBuffer.put((c / 16 + 1f) / 16.0f)
-            dataScreenBuffer.put(xx)
-            dataScreenBuffer.put(y - height)
-
-            xx += width
-        }
-        initialized = true
-    }
-
-    fun updateInstances(instances: List<MeshInstance>) {
-        val protoPosBuffer = prototype.attrMap[POS]!!
-        val protoNormalBuffer = prototype.attrMap[NORMAL]
-        val protoWeightsBuffer = prototype.attrMap[WEIGHTS]
-        val protoJointsByteBuffer = prototype.attrMap[JOINTS_BYTE]
-        val protoJointsShortBuffer = prototype.attrMap[JOINTS_SHORT]
-        val protoJointsIntBuffer = prototype.attrMap[JOINTS_INT]
-        val dataPosBuffer = attrMap[POS]!!
-        val dataNormalBuffer = attrMap[NORMAL]
-        dataPosBuffer.rewind()
-        dataNormalBuffer?.rewind()
-        instances.indices.map {
-            val instance = instances[it]
-
-            for (v in 0 until prototype.vertexCount) {
-                var newPos = protoPosBuffer.vec3(v)
-                val skinningMatrix = if (instance.jointMatrices != null && protoWeightsBuffer != null) {
-                    val weights = protoWeightsBuffer.floatChunk(v * 4, 4)
-                    val joints =
-                        protoJointsIntBuffer?.let { intBuffer -> IntArray(4) { i -> intBuffer.int(v * 4 + i) } }
-                            ?: protoJointsShortBuffer?.let { shortBuffer -> IntArray(4) { i -> shortBuffer.short(v * 4 + i).toInt() } }
-                            ?: protoJointsByteBuffer?.let { byteBuffer -> IntArray(4) { i -> byteBuffer.byte(v * 4 + i).toInt() } }
-
-                    instance.jointMatrices[joints!![0]] * weights[0] +
-                            instance.jointMatrices[joints[1]] * weights[1] +
-                            instance.jointMatrices[joints[2]] * weights[2] +
-                            instance.jointMatrices[joints[3]] * weights[3]
-                } else null
-
-                skinningMatrix?.let { newPos = skinningMatrix * newPos }
-                newPos = instance.transform.mat4.project(newPos)
-                if (protoNormalBuffer != null) {
-                    val normalMatrix = instance.transform.mat4.invTranspose()
-                    var newNormal = normalMatrix * protoNormalBuffer.vec3(v)
-                    skinningMatrix?.let { newNormal = skinningMatrix.invTranspose() * newNormal }
-                    dataNormalBuffer!!.put(newNormal)
-                }
-                dataPosBuffer.put(newPos)
-            }
-        }
-        initialized = true
-    }
-
-    /*
-    fun updateBillboardInstances(instances: List<BillboardInstance>) {
-        val dataPosBuffer = attrMap[POS]!!
-        val dataScaleBuffer = attrMap[SCALE]!!
-        val dataPhiBuffer = attrMap[PHI]!!
-        val dataTexBuffer = attrMap[TEX]!!
-        dataPosBuffer.rewind()
-        dataScaleBuffer.rewind()
-        dataPhiBuffer.rewind()
-        dataTexBuffer.rewind()
-        instances.indices.map {
-            val instance = instances[it]
-            dataPosBuffer.put(instance.pos)
-            dataScaleBuffer.put(instance.scale.x)
-            dataScaleBuffer.put(instance.scale.y)
-            dataPhiBuffer.put(instance.phi)
-            dataTexBuffer.put(0f)
-            dataTexBuffer.put(0f)
-            dataPosBuffer.put(instance.pos)
-            dataScaleBuffer.put(instance.scale.x)
-            dataScaleBuffer.put(instance.scale.y)
-            dataPhiBuffer.put(instance.phi)
-            dataTexBuffer.put(0f)
-            dataTexBuffer.put(1f)
-            dataPosBuffer.put(instance.pos)
-            dataScaleBuffer.put(instance.scale.x)
-            dataScaleBuffer.put(instance.scale.y)
-            dataPhiBuffer.put(instance.phi)
-            dataTexBuffer.put(1f)
-            dataTexBuffer.put(1f)
-            dataPosBuffer.put(instance.pos)
-            dataScaleBuffer.put(instance.scale.x)
-            dataScaleBuffer.put(instance.scale.y)
-            dataPhiBuffer.put(instance.phi)
-            dataTexBuffer.put(1f)
-            dataTexBuffer.put(0f)
-        }
-        initialized = true
-    }
-
-     */
 }
