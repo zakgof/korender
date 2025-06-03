@@ -26,11 +26,19 @@ import com.zakgof.korender.math.Vec3
 internal open class CMesh(
     val vertexCount: Int,
     val indexCount: Int,
+    val instanceCount: Int = 0,
     val attributes: List<MeshAttribute<*>>,
     indexType: IndexType? = null
 ) : Mesh, MeshInitializer {
 
-    val attributeBuffers: List<NativeByteBuffer> = attributes.map { NativeByteBuffer(vertexCount * it.primitiveType.size() * it.structSize) }
+    var instancesInitialized: Boolean = false
+
+    val attributeBuffers: List<NativeByteBuffer> = attributes
+        .filter { !it.instance || instanceCount > 0 }
+        .map {
+            val count = if (it.instance) instanceCount else vertexCount
+            NativeByteBuffer(count * it.primitiveType.size() * it.structSize)
+        }
     val attrMap: Map<MeshAttribute<*>, NativeByteBuffer> = attributes.indices.associate { attributes[it] to attributeBuffers[it] }
 
     val actualIndexType: IndexType = convertIndexType(indexType, indexCount)
@@ -65,10 +73,11 @@ internal open class CMesh(
     constructor(
         vertexCount: Int,
         indexCount: Int,
+        instanceCount: Int = 0,
         vararg attributes: MeshAttribute<*>,
         indexType: IndexType? = null,
         block: MeshInitializer.() -> Unit
-    ) : this(vertexCount, indexCount, attributes.toList(), indexType = indexType) {
+    ) : this(vertexCount, indexCount, instanceCount, attributes.toList(), indexType = indexType) {
         apply(block)
     }
 
@@ -86,6 +95,11 @@ internal open class CMesh(
 
     override fun attr(attr: MeshAttribute<*>, vararg b: Byte): MeshInitializer {
         b.forEach { attrMap[attr]!!.put(it) }
+        return this
+    }
+
+    override fun <T> attrSet(attr: MeshAttribute<T>, index: Int, value: T): MeshInitializer {
+        attr.bufferAccessor.put(attrMap[attr]!!, index, value)
         return this
     }
 
@@ -149,7 +163,7 @@ internal open class CMesh(
 
 internal class MultiMesh(val prototype: CMesh, instances: Int) :
     CMesh(
-        prototype.vertexCount * instances, prototype.indexCount * instances, prototype.attributes
+        prototype.vertexCount * instances, prototype.indexCount * instances, 0, prototype.attributes
             .filter { it.name != "joints" }) {
 
     var initialized = false

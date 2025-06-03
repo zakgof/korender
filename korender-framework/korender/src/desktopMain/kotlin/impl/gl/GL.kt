@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.gl
 
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import org.lwjgl.opengl.GL30
+import org.lwjgl.opengl.GL33
 import java.nio.ByteBuffer
 
 actual object GL {
@@ -11,8 +12,14 @@ actual object GL {
     actual fun glDrawElements(mode: Int, count: Int, type: Int, indices: Int) =
         GL30.glDrawElements(mode, count, type, indices.toLong())
 
+    actual fun glDrawElementsInstanced(mode: Int, count: Int, type: Int, indices: Int, instances: Int) =
+        GL33.glDrawElementsInstanced(mode, count, type, indices.toLong(), instances)
+
     actual fun glDrawArrays(mode: Int, starting: Int, count: Int) =
         GL30.glDrawArrays(mode, starting, count)
+
+    actual fun glDrawArraysInstanced(mode: Int, starting: Int, count: Int, instances: Int) =
+        GL33.glDrawArraysInstanced(mode, starting, count, instances)
 
     actual fun glEnable(target: Int) =
         GL30.glEnable(target)
@@ -150,6 +157,9 @@ actual object GL {
 
     actual fun glEnableVertexAttribArray(index: Int) =
         GL30.glEnableVertexAttribArray(index)
+
+    actual fun glVertexAttribDivisor(index: Int, divisor: Int) =
+        GL33.glVertexAttribDivisor(index, divisor)
 
     actual fun glGetUniformLocation(program: GLProgram, name: String) =
         GLUniformLocation(GL30.glGetUniformLocation(program.glHandle, name))

@@ -29,6 +29,10 @@ expect class NativeByteBuffer(size: Int) {
     fun put(other: NativeByteBuffer)
 
     fun size(): Int
+
+    fun position(): Int
+
+    fun position(offset: Int)
 }
 
 fun NativeByteBuffer.put(v: Vec3) {

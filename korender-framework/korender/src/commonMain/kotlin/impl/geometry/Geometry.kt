@@ -1,6 +1,10 @@
 package com.zakgof.korender.impl.geometry
 
 import com.zakgof.korender.AttributeType
+import com.zakgof.korender.Attributes.MODEL0
+import com.zakgof.korender.Attributes.MODEL1
+import com.zakgof.korender.Attributes.MODEL2
+import com.zakgof.korender.Attributes.MODEL3
 import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.PHI
 import com.zakgof.korender.Attributes.POS
@@ -23,17 +27,18 @@ internal class MeshLink(val cpuMesh: CMesh, dynamic: Boolean) : AutoCloseable {
 
     override fun close() = gpuMesh.close()
 
-    fun updateGpu(vertexCount: Int = cpuMesh.vertexCount, indexCount: Int = cpuMesh.indexCount) {
+    fun updateGpu(instanceCount: Int) {
         gpuMesh.update(
             cpuMesh.attributeBuffers.onEach { it.rewind() },
             cpuMesh.indexBuffer?.rewind(),
-            vertexCount,
-            indexCount
+            cpuMesh.vertexCount,
+            cpuMesh.indexCount,
+            instanceCount
         )
     }
 
     init {
-        updateGpu()
+        updateGpu(cpuMesh.instanceCount)
     }
 }
 
@@ -47,30 +52,34 @@ internal object Geometry {
     }
 
     fun font(reservedLength: Int): MeshLink {
-        val prototype = CMesh(4, 6, TEX, SCREEN) {
+        val prototype = CMesh(4, 6, 0, TEX, SCREEN) {
             index(0, 2, 1, 0, 3, 2)
         }
         return MeshLink(MultiMesh(prototype, reservedLength), true)
     }
 
-    suspend fun createCpuMesh(meshDeclaration: MeshDeclaration, appResourceLoader: ResourceLoader): CMesh =
-        when (meshDeclaration) {
-            is Sphere -> sphere(meshDeclaration.radius)
-            is Cube -> cube(meshDeclaration.halfSide)
+    suspend fun createCpuMesh(meshDeclaration: MeshDeclaration, appResourceLoader: ResourceLoader): CMesh {
+        val simpleMeshDeclaration = (meshDeclaration as? InstancedMesh)?.mesh ?: meshDeclaration
+        val count = (meshDeclaration as? InstancedMesh)?.count ?: 0
+
+        return when (simpleMeshDeclaration) {
+            is Sphere -> sphere(simpleMeshDeclaration.radius)
+            is Cube -> cube(simpleMeshDeclaration.halfSide, count)
             is ScreenQuad -> screenQuad()
             is Billboard -> billboard()
             is ImageQuad -> imageQuad()
-            is ObjMesh -> obj(meshDeclaration.objFile, appResourceLoader)
-            is CustomCpuMesh -> meshDeclaration.mesh
-            is CustomMesh -> CMesh(meshDeclaration.vertexCount, meshDeclaration.indexCount, attributes = meshDeclaration.attributes.toTypedArray(), meshDeclaration.indexType, meshDeclaration.block)
-            is InstancedMesh -> MultiMesh(createCpuMesh(meshDeclaration.mesh, appResourceLoader), meshDeclaration.count)
-            is InstancedBillboard -> MultiMesh(billboard(), meshDeclaration.count)
+            is ObjMesh -> obj(simpleMeshDeclaration.objFile, appResourceLoader)
+            is CustomCpuMesh -> simpleMeshDeclaration.mesh
+            // is CustomMesh -> CMesh(simpleMeshDeclaration.vertexCount, simpleMeshDeclaration.indexCount, attributes = meshDeclaration.attributes.toTypedArray(), meshDeclaration.indexType, meshDeclaration.block)
+            // is InstancedMesh -> MultiMesh(createCpuMesh(simpleMeshDeclaration.mesh, appResourceLoader), meshDeclaration.count)
+            // is InstancedBillboard -> MultiMesh(billboard(), meshDeclaration.count)
             else -> throw KorenderException("Unknown mesh type $meshDeclaration")
         }
+    }
 
     private suspend fun obj(objFile: String, appResourceLoader: ResourceLoader): CMesh {
         val model: ObjModel = ObjLoader.load(objFile, appResourceLoader)
-        return CMesh(model.vertices.size, model.indices.size, POS, NORMAL, TEX) {
+        return CMesh(model.vertices.size, model.indices.size, 0, POS, NORMAL, TEX) {
             model.vertices.forEach {
                 pos(it.pos).normal(it.normal).tex(it.tex.x, it.tex.y)
             }
@@ -84,6 +93,7 @@ internal object Geometry {
         CMesh(
             2 + (slices - 1) * sectors,
             sectors * 3 * 2 + (slices - 2) * sectors * 6,
+            0,
             POS, NORMAL, TEX
         ) {
             pos(0f, -radius, 0f).normal(0f, -1f, 0f).tex(0f, 0f)
@@ -119,14 +129,14 @@ internal object Geometry {
         }
 
     private fun screenQuad() =
-        CMesh(4, 6, TEX) {
+        CMesh(4, 6, 0, TEX) {
             tex(0f, 0f).tex(0f, 1f)
             tex(1f, 1f).tex(1f, 0f)
             index(0, 2, 1, 0, 3, 2)
         }
 
-    private fun cube(halfSide: Float) =
-        CMesh(24, 36, POS, NORMAL, TEX) {
+    private fun cube(halfSide: Float, count: Int) =
+        CMesh(24, 36, count, POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3) {
             pos(-halfSide, -halfSide, -halfSide).normal(-1f, 0f, 0f).tex(0f, 0f)
             pos(-halfSide, halfSide, -halfSide).normal(-1f, 0f, 0f).tex(0f, 1f)
             pos(-halfSide, halfSide, halfSide).normal(-1f, 0f, 0f).tex(1f, 1f)
@@ -161,7 +171,7 @@ internal object Geometry {
         }
 
     private fun billboard() =
-        CMesh(4, 6, POS, TEX, SCALE, PHI) {
+        CMesh(4, 6, 0, POS, TEX, SCALE, PHI) {
             pos(Vec3.ZERO)
             tex(0f, 0f).scale(1f, 1f).phi(0f)
             pos(Vec3.ZERO)
@@ -174,7 +184,7 @@ internal object Geometry {
         }
 
     private fun imageQuad() =
-        CMesh(4, 6, TEX) {
+        CMesh(4, 6, 0, TEX) {
             tex(0f, 0f)
             tex(0f, 1f)
             tex(1f, 1f)

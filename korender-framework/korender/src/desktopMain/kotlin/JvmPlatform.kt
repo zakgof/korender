@@ -24,6 +24,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.lwjgl.opengl.GL.createCapabilities
 import org.lwjgl.opengl.GL11.glGetString
+import org.lwjgl.opengl.GL33
+import org.lwjgl.opengl.GL43
+import org.lwjgl.opengl.GL43.GL_DEBUG_OUTPUT
+import org.lwjgl.opengl.GLDebugMessageCallback
 import org.lwjgl.opengl.awt.AWTGLCanvas
 import org.lwjgl.opengl.awt.GLData
 import org.lwjgl.system.Platform
@@ -110,7 +114,8 @@ actual fun Korender(
             val data = GLData()
             data.swapInterval = 0
             data.majorVersion = 3
-            data.minorVersion = 0
+            data.minorVersion = 3
+            data.profile = GLData.Profile.CORE
             // TODO
             data.samples = 1
 
@@ -124,6 +129,11 @@ actual fun Korender(
                 override fun initGL() {
                     createCapabilities()
                     println("OpenGL Vendor:[${glGetString(GL_VENDOR)}] Renderer:[${glGetString(GL_RENDERER)}] Version:[${glGetString(GL_VERSION)}] Effective context version: [${effective.majorVersion}.${effective.minorVersion} (Profile: ${effective.profile})]")
+
+                    GL33.glEnable(GL_DEBUG_OUTPUT);
+                    GL43.glDebugMessageCallback( { source, type, id, severity, length, message, userParam ->
+                        System.err.println("OpenGL error: " + GLDebugMessageCallback.getMessage(length, message));
+                    }, 0);
 
                     val async = object : AsyncContext {
                         override val appResourceLoader = appResourceLoader

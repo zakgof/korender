@@ -1,6 +1,7 @@
 package com.zakgof.korender
 
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
@@ -25,7 +26,8 @@ class MeshAttribute<T>(
     val structSize: Int,
     val primitiveType: AttributeType,
     val location: Int,
-    val bufferAccessor: BufferAccessor<T>
+    val bufferAccessor: BufferAccessor<T>,
+    val instance: Boolean = false
 )
 
 interface BufferAccessor<T> {
@@ -48,6 +50,16 @@ object Vec3BufferAccessor : BufferAccessor<Vec3> {
 
     override fun put(buffer: NativeByteBuffer, index: Int, value: Vec3) {
         // TODO
+    }
+}
+
+object Mat4BufferAccessor : BufferAccessor<Mat4> {
+    override fun get(buffer: NativeByteBuffer, index: Int) =
+        Mat4(FloatArray(16) { buffer.float(index * 16 + it) })
+
+    override fun put(buffer: NativeByteBuffer, index: Int, value: Mat4) {
+        buffer.position(16 * 4 * index)
+        value.asArray().forEach { buffer.put(it) }
     }
 }
 
@@ -83,7 +95,8 @@ object Float4BufferAccessor : BufferAccessor<FloatArray> {
         floatArrayOf(buffer.float(index), buffer.float(index + 1), buffer.float(index + 2), buffer.float(index + 3))
 
     override fun put(buffer: NativeByteBuffer, index: Int, value: FloatArray) {
-        // TODO
+        buffer.position(4 * 4 * index)
+        value.forEach { buffer.put(it) }
     }
 }
 
@@ -119,6 +132,10 @@ object Attributes {
     val B1 = MeshAttribute<Byte>("b1", 1, AttributeType.SignedByte, 8, ByteBufferAccessor)
     val B2 = MeshAttribute<Byte>("b2", 1, AttributeType.SignedByte, 9, ByteBufferAccessor)
     val B3 = MeshAttribute<Byte>("b3", 1, AttributeType.SignedByte, 10, ByteBufferAccessor)
+    val MODEL0 = MeshAttribute<FloatArray>("instanceModel0", 4, AttributeType.Float, 11, Float4BufferAccessor, true)
+    val MODEL1 = MeshAttribute<FloatArray>("instanceModel1", 4, AttributeType.Float, 12, Float4BufferAccessor, true)
+    val MODEL2 = MeshAttribute<FloatArray>("instanceModel2", 4, AttributeType.Float, 13, Float4BufferAccessor, true)
+    val MODEL3 = MeshAttribute<FloatArray>("instanceModel3", 4, AttributeType.Float, 14, Float4BufferAccessor, true)
 }
 
 interface MeshDeclaration
@@ -138,6 +155,7 @@ interface MeshInitializer {
     fun index(vararg indices: Int): MeshInitializer
     fun indexBytes(rawBytes: ByteArray): MeshInitializer
     fun attrBytes(attr: MeshAttribute<*>, rawBytes: ByteArray): MeshInitializer
+    fun <T> attrSet(attr: MeshAttribute<T>, index: Int, value: T): MeshInitializer
 }
 
 interface Mesh {

@@ -8,7 +8,11 @@ expect object GL {
 
     fun glDrawElements(mode: Int, count: Int, type: Int, indices: Int)
 
+    fun glDrawElementsInstanced(mode: Int, count: Int, type: Int, indices: Int, instances: Int)
+
     fun glDrawArrays(mode: Int, starting: Int, count: Int)
+
+    fun glDrawArraysInstanced(mode: Int, starting: Int, count: Int, instances: Int)
 
     fun glEnable(target: Int)
 
@@ -109,6 +113,8 @@ expect object GL {
     fun glCompileShader(shader: GLShader)
 
     fun glEnableVertexAttribArray(index: Int)
+
+    fun glVertexAttribDivisor(index: Int, divisor: Int)
 
     fun glGetUniformLocation(program: GLProgram, name: String): GLUniformLocation
 

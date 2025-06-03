@@ -3,12 +3,23 @@
 layout(location = 0) in vec3 pos;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 tex;
+#ifdef INSTANCING
+    layout(location = 11) in vec4 instanceModel0;
+    layout(location = 12) in vec4 instanceModel1;
+    layout(location = 13) in vec4 instanceModel2;
+    layout(location = 14) in vec4 instanceModel3;
+#endif
 
 out vec3 vpos;
 out vec3 vnormal;
 out vec2 vtex;
+#ifdef INSTANCING
+    out mat4 model;
+#endif
 
-uniform mat4 model;
+#ifndef INSTANCING
+    uniform mat4 model;
+#endif
 uniform mat4 view;
 uniform mat4 projection;
 uniform vec3 cameraPos;
@@ -26,6 +37,10 @@ uniform vec3 cameraPos;
 #endif
 
 void main() {
+
+    #ifdef INSTANCING
+        model = mat4(instanceModel0, instanceModel1, instanceModel2, instanceModel3);
+    #endif
 
     #ifdef PLUGIN_VPOSITION
         vec4 worldPos = pluginVPosition();

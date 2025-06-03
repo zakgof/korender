@@ -10,10 +10,13 @@ import com.zakgof.korender.impl.gl.GL.glBufferData
 import com.zakgof.korender.impl.gl.GL.glDeleteBuffers
 import com.zakgof.korender.impl.gl.GL.glDeleteVertexArrays
 import com.zakgof.korender.impl.gl.GL.glDrawArrays
+import com.zakgof.korender.impl.gl.GL.glDrawArraysInstanced
 import com.zakgof.korender.impl.gl.GL.glDrawElements
+import com.zakgof.korender.impl.gl.GL.glDrawElementsInstanced
 import com.zakgof.korender.impl.gl.GL.glEnableVertexAttribArray
 import com.zakgof.korender.impl.gl.GL.glGenBuffers
 import com.zakgof.korender.impl.gl.GL.glGenVertexArrays
+import com.zakgof.korender.impl.gl.GL.glVertexAttribDivisor
 import com.zakgof.korender.impl.gl.GL.glVertexAttribIPointer
 import com.zakgof.korender.impl.gl.GL.glVertexAttribPointer
 import com.zakgof.korender.impl.gl.GLConstants.GL_ARRAY_BUFFER
@@ -52,6 +55,7 @@ internal class GlGpuMesh(
 
     private var vertices: Int = -1
     private var indices: Int = -1
+    private var instances: Int = -1
 
     init {
         println("Creating GPU Mesh [$vao/$vbos/$ebo]")
@@ -63,10 +67,12 @@ internal class GlGpuMesh(
         vb: List<NativeByteBuffer>,
         ib: NativeByteBuffer?,
         vertices: Int,
-        indices: Int
+        indices: Int,
+        instances: Int
     ) {
         this.vertices = vertices
         this.indices = indices
+        this.instances = instances
         glBindVertexArray(vao)
 
         attrs.forEachIndexed { index, attr ->
@@ -80,6 +86,9 @@ internal class GlGpuMesh(
                 glVertexAttribIPointer(attr.location, attr.structSize, attr.primitiveType.toGL(), 0, 0)
             }
             glEnableVertexAttribArray(attr.location)
+            if (attr.instance) {
+                glVertexAttribDivisor(attr.location, 1)
+            }
         }
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
@@ -91,18 +100,22 @@ internal class GlGpuMesh(
     fun render() {
         glBindVertexArray(vao)
         if (indices <= 0) {
-            glDrawArrays(GL_TRIANGLES, 0, vertices)
+            if (instances > 0) {
+                glDrawArraysInstanced(GL_TRIANGLES, 0, vertices, instances)
+            } else {
+                glDrawArrays(GL_TRIANGLES, 0, vertices)
+            }
         } else {
-            glDrawElements(
-                GL_TRIANGLES,
-                indices,
-                when (indexType) {
-                    IndexType.Byte -> GL_UNSIGNED_BYTE
-                    IndexType.Short -> GL_UNSIGNED_SHORT
-                    IndexType.Int -> GL_UNSIGNED_INT
-                },
-                0
-            )
+            val glIndexType = when (indexType) {
+                IndexType.Byte -> GL_UNSIGNED_BYTE
+                IndexType.Short -> GL_UNSIGNED_SHORT
+                IndexType.Int -> GL_UNSIGNED_INT
+            }
+            if (instances > 0) {
+                glDrawElementsInstanced(GL_TRIANGLES, indices, glIndexType, 0, instances)
+            } else {
+                glDrawElements(GL_TRIANGLES, indices, glIndexType, 0)
+            }
             // checkGlError("during glDrawElements")
         }
         glBindVertexArray(null)

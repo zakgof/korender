@@ -143,7 +143,7 @@ internal class GuiRenderer(
                     1.0f - y.toFloat() / height,
                     font.widths
                 )
-                meshLink.updateGpu(declaration.text.length * 4,declaration.text.length * 6)
+                meshLink.updateGpu(declaration.text.length)
             }
             renderables.add(
                 Renderable(
