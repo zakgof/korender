@@ -9,6 +9,7 @@ import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA.Companion.Red
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -96,15 +97,17 @@ fun CSMExample() =
             fun cubTex(prefix: String) = cubeTexture(CubeTextureSide.entries.associateWith { "hybridterrain/tree/$prefix-${it.toString().lowercase()}.jpg" })
 
             Billboard(
-                billboard(xscale = 5.0f, yscale = 5.0f),
+                billboard(
+                    position = Vec3(5f, 2f, -10f),
+                    scale = Vec2(5.0f, 5.0f)
+                ),
                 base(metallicFactor = 0f, roughnessFactor = 0.9f),
                 radiant(
                     radiantTexture = cubTex("radiant"),
                     radiantNormalTexture = cubTex("radiant-normal"),
                     colorTexture = cubTex("albedo"),
                     normalTexture = cubTex("normal")
-                ),
-                position = Vec3(5f, 2f, -10f)
+                )
             )
 
 //            Billboard(

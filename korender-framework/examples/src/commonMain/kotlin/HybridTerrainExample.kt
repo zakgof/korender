@@ -6,6 +6,7 @@ import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.Korender
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -49,7 +50,7 @@ fun HybridTerrainExample() =
             fun cubTex(prefix: String) = cubeTexture(CubeTextureSide.entries.associateWith { "hybridterrain/tree/$prefix-${it.toString().lowercase()}.jpg" })
 
             Billboard(
-                billboard(xscale = 100.0f, yscale = 100.0f),
+                billboard(),
                 base(metallicFactor = 0f, roughnessFactor = 0.9f),
                 radiant(
                     radiantTexture = cubTex("radiant"),
@@ -64,7 +65,10 @@ fun HybridTerrainExample() =
                 ) {
                     (0 until 2000).forEach {
                         val r = Random(it)
-                        Instance(pos = Vec3(r.nextFloat() * 5000f - 600f, 450f, r.nextFloat() * 3000f - 1610f))
+                        Instance(
+                            pos = Vec3(r.nextFloat() * 5000f - 600f, 450f, r.nextFloat() * 3000f - 1610f),
+                            scale = Vec2(100.0f, 100.0f)
+                        )
                     }
                 })
             Sky(fastCloudSky())

@@ -38,7 +38,7 @@ import com.zakgof.korender.impl.prefab.InternalPrefab
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
-import com.zakgof.korender.math.Transform.Companion.translate
+import com.zakgof.korender.math.Transform.Companion.IDENTITY
 import com.zakgof.korender.math.Vec3
 
 internal class DefaultFrameContext(
@@ -68,7 +68,7 @@ internal class DefaultFrameContext(
         (prefab as InternalPrefab).render(this, *materialModifiers)
     }
 
-    override fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3, transparent: Boolean, instancing: BillboardInstancingDeclaration?) {
+    override fun Billboard(vararg materialModifiers: MaterialModifier, transparent: Boolean, instancing: BillboardInstancingDeclaration?) {
         val mesh = com.zakgof.korender.impl.geometry.Billboard(korenderContext.currentRetentionPolicy)
         val meshDeclaration = if (instancing != null) {
             instancing as InternalBillboardInstancingDeclaration
@@ -80,7 +80,7 @@ internal class DefaultFrameContext(
             BaseMaterial.Billboard,
             materialModifiers.asList(),
             meshDeclaration,
-            translate(position),
+            IDENTITY,
             korenderContext.currentRetentionPolicy
         )
         addToScene(transparent, rd)

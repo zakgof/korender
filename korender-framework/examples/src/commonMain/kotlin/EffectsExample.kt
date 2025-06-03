@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
@@ -35,9 +36,11 @@ fun EffectsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 }
 
 private fun FrameContext.fireDemo() = Billboard(
-    billboard(xscale = 2f, yscale = 10f),
+    billboard(
+        position = (-5).x + 5.y,
+        scale = Vec2(2f, 10f)
+    ),
     fire(),
-    position = (-5).x + 5.y,
     transparent = true
 )
 
@@ -46,9 +49,11 @@ private fun FrameContext.smokeDemo() {
     for (i in 1..n) {
         val phase = fract(frameInfo.time * 0.5f + n.toFloat() / i)
         Billboard(
-            billboard(xscale = 5f * phase + 0.5f, yscale = 5f * phase + 0.5f),
+            billboard(
+                position = (6.0f + phase * phase * 8f + phase * 2f - 4f).y,
+                scale = Vec2(5f * phase + 0.5f, 5f * phase + 0.5f)
+            ),
             smoke(seed = i / n.toFloat(), density = 1.0f - phase),
-            position = (6.0f + phase * phase * 8f + phase * 2f - 4f).y,
             transparent = true
         )
     }
@@ -57,10 +62,12 @@ private fun FrameContext.smokeDemo() {
 private fun FrameContext.fireballDemo() {
     val phase = fract(frameInfo.time)
     Billboard(
-        billboard(xscale = 8f * phase, yscale = 8f * phase),
+        billboard(
+            position = 5.x + 3.y,
+            scale = Vec2(8f * phase, 8f * phase)
+        ),
         fireball(power = phase),
-        transparent = true,
-        position = 5.x + 3.y
+        transparent = true
     )
 }
 

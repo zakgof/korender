@@ -29,7 +29,6 @@ import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.context.BillboardInstancingDeclaration
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedGltfContext
@@ -75,6 +74,7 @@ import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import impl.engine.TimeRetentionPolicy
 import kotlinx.coroutines.Deferred
@@ -239,9 +239,10 @@ internal class Engine(
             it.uniforms["specularGlossinessTexture"] = texture
         }
 
-        override fun billboard(xscale: Float, yscale: Float) = InternalMaterialModifier {
-            it.uniforms["xscale"] = xscale
-            it.uniforms["yscale"] = yscale
+        override fun billboard(position: Vec3, scale: Vec2, rotation: Float) = InternalMaterialModifier {
+            it.uniforms["pos"] = position
+            it.uniforms["scale"] = scale
+            it.uniforms["rotation"] = rotation
         }
 
         override fun terrain(heightTexture: TextureDeclaration, heightTextureSize: Int, heightScale: Float, outsideHeight: Float, terrainCenter: Vec3) = InternalMaterialModifier {

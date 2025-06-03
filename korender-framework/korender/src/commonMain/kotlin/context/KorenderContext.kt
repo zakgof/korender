@@ -25,6 +25,7 @@ import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.Vec3.Companion.ZERO
 import kotlinx.coroutines.Deferred
@@ -78,7 +79,7 @@ interface KorenderContext {
     fun metallicRoughnessTexture(texture: TextureDeclaration): MaterialModifier
     fun specularGlossinessTexture(texture: TextureDeclaration): MaterialModifier
     fun specularGlossiness(specularFactor: ColorRGB, glossinessFactor: Float): MaterialModifier
-    fun billboard(xscale: Float = 1.0f, yscale: Float = 1.0f): MaterialModifier
+    fun billboard(position: Vec3 = ZERO, scale: Vec2 = Vec2(1f, 1f), rotation: Float = 0.0f): MaterialModifier
 
     fun terrain(heightTexture: TextureDeclaration, heightTextureSize: Int, heightScale: Float, outsideHeight: Float, terrainCenter: Vec3 = ZERO): MaterialModifier
     fun radiant(radiantTexture: CubeTextureDeclaration, radiantNormalTexture: CubeTextureDeclaration, colorTexture: CubeTextureDeclaration, normalTexture: CubeTextureDeclaration): MaterialModifier

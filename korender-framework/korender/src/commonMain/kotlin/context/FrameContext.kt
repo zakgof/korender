@@ -18,7 +18,7 @@ interface FrameContext : KorenderContext {
     fun Renderable(vararg materialModifiers: MaterialModifier, prefab: Prefab)
     fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, time: Float? = null, animation:Int? = null, instancing: GltfInstancingDeclaration? = null)
 
-    fun Billboard(vararg materialModifiers: MaterialModifier, position: Vec3 = Vec3.ZERO, transparent: Boolean = false, instancing: BillboardInstancingDeclaration? = null)
+    fun Billboard(vararg materialModifiers: MaterialModifier, transparent: Boolean = false, instancing: BillboardInstancingDeclaration? = null)
     fun Sky(vararg materialModifiers: MaterialModifier)
     fun Gui(block: GuiContainerContext.() -> Unit)
 
