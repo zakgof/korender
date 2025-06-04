@@ -7,14 +7,21 @@ import com.zakgof.korender.Attributes.MODEL0
 import com.zakgof.korender.Attributes.MODEL1
 import com.zakgof.korender.Attributes.MODEL2
 import com.zakgof.korender.Attributes.MODEL3
+import com.zakgof.korender.Attributes.WEIGHTS
+import com.zakgof.korender.impl.buffer.NativeFloatBuffer
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
+import com.zakgof.korender.impl.gl.GLConstants.GL_FLOAT
+import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA
+import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA32F
 import com.zakgof.korender.impl.glgpu.GlGpuMesh
 import com.zakgof.korender.impl.glgpu.GlGpuShader
+import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.material.InternalMaterialModifier
+import com.zakgof.korender.impl.material.RawTextureDeclaration
 import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.math.Transform
 
@@ -44,7 +51,14 @@ internal object Rendering {
         defs: Set<String>,
         reverseZ: Boolean = false
     ) {
-        val addDefs = if (declaration.mesh is InstancedMesh || declaration.mesh is InstancedBillboard) setOf("INSTANCING") else setOf()
+        val addUniforms = mutableMapOf<String, Any?>()
+        val addDefs = mutableSetOf<String>()
+
+        if (declaration.mesh is InstancedMesh || declaration.mesh is InstancedBillboard)
+            addDefs += "INSTANCING"
+
+        addUniforms["model"] = declaration.transform.mat4
+
         val materialDeclaration = materialDeclaration(declaration.base, deferredShading, declaration.retentionPolicy, declaration.materialModifiers + InternalMaterialModifier { it.shaderDefs += defs + addDefs })
 
         val meshLink = inventory.mesh(declaration.mesh as InternalMeshDeclaration) ?: return
@@ -91,10 +105,26 @@ internal object Rendering {
                 }
                 mesh.instancesInitialized = true
                 meshLink.updateGpu(instances.size)
+
+                if (mesh.attrMap.containsKey(WEIGHTS)) {
+                    val texDecl = RawTextureDeclaration(declaration.mesh.id, 32 * 4, mesh.instanceCount, declaration.retentionPolicy)
+                    inventory.texture(texDecl)?.let { jointTexture ->
+                        // TODO avoid recreating the buffer
+                        val buffer = NativeFloatBuffer(32 * 4 * 4 * mesh.instanceCount)
+                        instances.forEachIndexed { i, instance ->
+                            buffer.position(32 * 4 * 4 * i)
+                            instance.jointMatrices!!.forEach { jm ->
+                                jm.asArray().forEach { m -> buffer.put(m) }
+                            }
+                        }
+                        jointTexture.uploadData(buffer, GlGpuTexture.GlFormat(GL_RGBA32F, GL_RGBA, GL_FLOAT))
+                        addUniforms["jntTexture"] = jointTexture
+                    } ?: return
+                }
             }
         }
         shader.render(
-            { fixer(materialDeclaration.uniforms[it] ?: contextUniforms[it] ?: if (it == "model") declaration.transform.mat4 else null) },
+            { fixer(materialDeclaration.uniforms[it] ?: contextUniforms[it] ?: addUniforms[it]) },
             meshLink.gpuMesh
         )
     }

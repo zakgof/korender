@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.gl
 
+import com.zakgof.korender.impl.buffer.NativeBuffer
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import org.lwjgl.opengl.GL30
 import org.lwjgl.opengl.GL33
@@ -69,7 +70,7 @@ actual object GL {
         border: Int,
         format: Int,
         type: Int,
-        pixels: NativeByteBuffer?
+        pixels: NativeBuffer?
     ) = GL30.glTexImage2D(
         target, level, internalformat, width, height, border, format, type, pixels?.byteBuffer
     )

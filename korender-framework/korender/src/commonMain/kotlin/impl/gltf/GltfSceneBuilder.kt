@@ -1,4 +1,9 @@
 import com.zakgof.korender.Attributes
+import com.zakgof.korender.Attributes.MODEL0
+import com.zakgof.korender.Attributes.MODEL1
+import com.zakgof.korender.Attributes.MODEL2
+import com.zakgof.korender.Attributes.MODEL3
+import com.zakgof.korender.Attributes.WEIGHTS
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MaterialModifier
@@ -19,7 +24,6 @@ import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.impl.glgpu.toGL
 import com.zakgof.korender.impl.gltf.Gltf
 import com.zakgof.korender.impl.gltf.GltfLoaded
-import com.zakgof.korender.impl.gltf.asNativeFloatList
 import com.zakgof.korender.impl.gltf.elementComponentSize
 import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
 import com.zakgof.korender.impl.material.InternalMaterialModifier
@@ -89,15 +93,11 @@ internal class GltfSceneBuilder(
 
     private fun getSamplerValue(sampler: Gltf.Animation.AnimationSampler, currentTime: Float): List<Float> {
 
-        val inputBytes = gltfLoaded.loadedAccessors[sampler.input]!!
-        val inputFloats = inputBytes.asNativeFloatList()
-
-        val outputBytes = gltfLoaded.loadedAccessors[sampler.output]!!
-        val outputFloats = outputBytes.asNativeFloatList()
         // TODO validate float input and output
-        val outputValues = getAccessorFloatBasedElements(outputFloats, gltfLoaded.model.accessors!![sampler.output].type)
-        // TODO validate same lengths
+        val inputFloats = gltfLoaded.loadedAccessors.floats[sampler.input]!!
+        val outputValues = gltfLoaded.loadedAccessors.floatArrays[sampler.output]!!
 
+        // TODO validate same lengths
         val max = inputFloats.last()
         val timeOffset = currentTime - floor(currentTime / max) * max
 
@@ -108,15 +108,7 @@ internal class GltfSceneBuilder(
         // TODO this is STEP, implement other interpolations
         val output = outputValues[samplerPositionBefore]
         return output
-
     }
-
-    private fun getAccessorFloatBasedElements(raw: List<Float>, type: String): List<List<Float>> =
-        when (type) {
-            "VEC4" -> List(raw.size / 4) { List(4) { i -> raw[i + it * 4] } }
-            "VEC3" -> List(raw.size / 3) { List(3) { i -> raw[i + it * 3] } }
-            else -> throw KorenderException("GLTF: Unknown accessor element type for sampler: $type")
-        }
 
     private fun collectMeshesFromNode(nodeIndex: Int) {
         val node = gltfLoaded.model.nodes!![nodeIndex]
@@ -182,13 +174,15 @@ internal class GltfSceneBuilder(
         // TODO: Precreate all except jointMatrices
         return InternalMaterialModifier { mb ->
 
-            if (jointMatrices != null && declaration.instancingDeclaration == null) {
+            if (skinIndex != null) {
                 mb.plugins["vposition"] = "!shader/plugin/vposition.skinning.vert"
                 mb.plugins["vnormal"] = "!shader/plugin/vnormal.skinning.vert"
-                val jointMatrixList = jointMatrices.mapIndexed { ind, jm ->
-                    jm * gltfLoaded.loadedSkins[skinIndex]!![ind]
+                if (declaration.instancingDeclaration == null && jointMatrices != null) {
+                    val jointMatrixList = jointMatrices.mapIndexed { ind, jm ->
+                        jm * gltfLoaded.loadedSkins[skinIndex]!![ind]
+                    }
+                    mb.uniforms["jntMatrices[0]"] = Mat4List(jointMatrixList)
                 }
-                mb.uniforms["jntMatrices[0]"] = Mat4List(jointMatrixList)
             }
 
             mb.uniforms["baseColor"] = (matSpecularGlossiness?.diffuseFactor ?: matPbr?.baseColorFactor)?.let {
@@ -232,19 +226,22 @@ internal class GltfSceneBuilder(
                 val accessor = gltfLoaded.model.accessors!![p.value]
                 attributeForAccessor(p.key, accessor)?.let { it to p.value }
             }
+        val attributes = verticesAttributeAccessors.map { it.first }.toMutableList()
+        if (declaration.instancingDeclaration != null && attributes.contains(WEIGHTS))
+            attributes += listOf(MODEL0, MODEL1, MODEL2, MODEL3)
 
         val meshDeclaration = CustomMesh(
             "${declaration.gltfResource}:$meshIndex:$primitiveIndex",
             gltfLoaded.model.accessors!![verticesAttributeAccessors.first().second].count,
             indicesAccessor?.count ?: 0,
-            verticesAttributeAccessors.map { it.first },
+            attributes,
             false,
             accessorComponentTypeToIndexType(indicesAccessor?.componentType),
             declaration.retentionPolicy
         ) {
-            indicesAccessor?.let { indexBytes(gltfLoaded.loadedAccessors[primitive.indices]!!) }
+            indicesAccessor?.let { indexBytes(gltfLoaded.loadedAccessors.all[primitive.indices]!!) }
             verticesAttributeAccessors.forEach {
-                attrBytes(it.first, gltfLoaded.loadedAccessors[it.second]!!)
+                attrBytes(it.first, gltfLoaded.loadedAccessors.all[it.second]!!)
             }
         }
 

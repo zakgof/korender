@@ -97,7 +97,6 @@ interface KorenderContext {
     fun fire(strength: Float = 3.0f): MaterialModifier
     fun fireball(power: Float = 0.5f): MaterialModifier
     fun smoke(density: Float = 0.5f, seed: Float = 0f): MaterialModifier
-    fun grass(grassColor1: ColorRGB = ColorRGB(0.60f, 0.64f, 0.31f), grassColor2: ColorRGB = ColorRGB(0.40f, 0.74f, 0.21f), bladeWidth: Float = 0.1f, bladeLength: Float = 1.5f): MaterialModifier
 
     fun fastCloudSky(density: Float = 3.0f, thickness: Float = 10.0f, scale: Float = 1.0f, rippleamount: Float = 0.3f, ripplescale: Float = 4.0f, zenithcolor: ColorRGB = ColorRGB(0x3F6FC3), horizoncolor: ColorRGB = ColorRGB(0xB8CAE9)): MaterialModifier
     fun starrySky(colorness: Float = 0.8f, density: Float = 20.0f, speed: Float = 1.0f, size: Float = 15.0f): MaterialModifier
@@ -122,7 +121,6 @@ interface KorenderContext {
     fun pcss(samples: Int = 32, blurRadius: Float = 0.05f): ShadowAlgorithmDeclaration
 
     fun clipmapTerrainPrefab(id: String, cellSize: Float, hg: Int, rings: Int): Prefab
-    fun grassPrefab(id: String, segments: Int, cell: Float, side: Int, filter: (Vec3) -> Boolean): Prefab
 
     fun instancing(id: String, count: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit): InstancingDeclaration
     fun gltfInstancing(id: String, count: Int, dynamic: Boolean, block: InstancedGltfContext.() -> Unit): GltfInstancingDeclaration

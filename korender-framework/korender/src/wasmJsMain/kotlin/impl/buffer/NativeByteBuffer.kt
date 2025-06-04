@@ -5,7 +5,7 @@ import org.khronos.webgl.get
 import org.khronos.webgl.set
 import org.khronos.webgl.toUint8Array
 
-actual class NativeByteBuffer(val array: Uint8Array) {
+actual class NativeByteBuffer(override val array: Uint8Array) : NativeBuffer {
 
     actual constructor(size: Int) : this(Uint8Array(size))
 
@@ -68,7 +68,7 @@ actual class NativeByteBuffer(val array: Uint8Array) {
         return Float.fromBits(int(index))
     }
 
-    actual fun rewind(): NativeByteBuffer {
+    actual override fun rewind(): NativeByteBuffer {
         position = 0
         return this
     }
@@ -78,6 +78,11 @@ actual class NativeByteBuffer(val array: Uint8Array) {
         position += other.array.length
     }
 
-    actual fun size(): Int = array.length
+    actual override fun size(): Int = array.length
 
+    actual override fun position() = position
+
+    actual override fun position(offset: Int) {
+        position = offset;
+    }
 }

@@ -66,7 +66,6 @@ import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
-import com.zakgof.korender.impl.prefab.grass.Grass
 import com.zakgof.korender.impl.prefab.terrain.Clipmaps
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.OrthoProjection
@@ -317,13 +316,6 @@ internal class Engine(
             it.uniforms["seed"] = seed
         }
 
-        override fun grass(grassColor1: ColorRGB, grassColor2: ColorRGB, bladeWidth: Float, bladeLength: Float) = InternalMaterialModifier {
-            it.uniforms["grassColor1"] = grassColor1
-            it.uniforms["grassColor2"] = grassColor2
-            it.uniforms["bladeWidth"] = bladeWidth
-            it.uniforms["bladeLength"] = bladeLength
-        }
-
         override fun water(waterColor: ColorRGB, transparency: Float, waveScale: Float, waveMagnitude: Float) = InternalMaterialModifier {
             it.fragShaderFile = "!shader/effect/water.frag"
             it.uniforms["waterColor"] = waterColor
@@ -501,9 +493,6 @@ internal class Engine(
 
         override fun clipmapTerrainPrefab(id: String, cellSize: Float, hg: Int, rings: Int): Prefab =
             Clipmaps(this, id, cellSize, hg, rings)
-
-        override fun grassPrefab(id: String, segments: Int, cell: Float, side: Int, filter: (Vec3) -> Boolean): Prefab =
-            Grass(this, id, segments, cell, side, filter)
 
         override fun instancing(id: String, count: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit) =
             InternalInstancingDeclaration(id, count, dynamic) {

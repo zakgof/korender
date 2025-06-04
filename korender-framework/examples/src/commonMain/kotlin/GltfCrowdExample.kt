@@ -20,12 +20,12 @@ fun GltfCrowdExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(3f))
         Gltf(
             resource = "gltf/ai/swat.glb",
-            instancing = gltfInstancing("crowd", 9, true) {
-                (-1..1).forEach { x ->
-                    (-1..1).forEach { z ->
+            instancing = gltfInstancing("crowd", 49, true) {
+                (-3..3).forEach { x ->
+                    (-3..3).forEach { z ->
                         Instance(
                             time = (x + z * 31) * 100f + frameInfo.time,
-                            transform = scale(0.01f).translate(x.toFloat() * 2f, -3f, z.toFloat() * 2f)
+                            transform = scale(0.01f).translate(x.toFloat(), -2f, z.toFloat())
                         )
                     }
                 }

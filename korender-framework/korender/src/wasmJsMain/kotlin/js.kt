@@ -17,6 +17,9 @@ abstract external class WebGL2RenderingContext : WebGLRenderingContextBase, Rend
     abstract fun drawBuffers(targets: JsArray<JsNumber>)
     abstract fun framebufferTexture(target: Int, attachment: Int, texture: WebGLTexture?, level: Int)
     abstract fun getTexImage(tex: Int, level: Int, format: Int, type: Int, array: Uint8Array)
+    abstract fun drawArraysInstanced(mode: Int, starting: Int, count: Int, instances: Int)
+    abstract fun drawElementsInstanced(mode: Int, count: Int, type: Int, indices: Int, instances: Int)
+    abstract fun vertexAttribDivisor(index: Int, divisor: Int)
 }
 
 abstract external class WebGLVertexArray : WebGLObject, JsAny

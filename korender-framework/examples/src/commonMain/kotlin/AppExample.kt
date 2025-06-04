@@ -36,7 +36,7 @@ import org.jetbrains.compose.resources.painterResource
 fun AppExample() {
     val options = listOf(
 
-        Demo("Particles / Billboards") { InstancedBillboardsExample() },
+        // Demo("GLTF crowd") { GltfCrowdExample() },
 
         Demo("Heightmap Terrain") { HeightmapTerrainExample() },
         Demo("Procedural Terrain") { ProcTerrainExample() },
@@ -44,7 +44,6 @@ fun AppExample() {
 
         Demo("City demo") { InfiniteCity() },
 
-        Demo("Grass") { GrassExample() },
         Demo("SSR") { SsrExample() },       // TODO
         Demo("PBR") { MetallicRoughnessExample() },
         Demo("OBJ mesh") { ObjFileExample() },

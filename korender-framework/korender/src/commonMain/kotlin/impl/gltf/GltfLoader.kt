@@ -103,10 +103,25 @@ internal object GltfLoader {
             .toMutableMap()
             .apply { binData?.let { this[""] = it } }
 
-    private fun preloadAccessors(model: Gltf, loadedUris: Map<String, ByteArray>): Map<Int, ByteArray> =
-        model.accessors?.mapIndexed { index, accessor ->
-            index to getAccessorBytes(model, accessor, loadedUris)
-        }?.toMap() ?: mapOf()
+    private fun preloadAccessors(model: Gltf, loadedUris: Map<String, ByteArray>): AccessorCache {
+        val all = mutableMapOf<Int, ByteArray>()
+        val floats = mutableMapOf<Int, FloatArray>()
+        val floatArrays = mutableMapOf<Int, Array<List<Float>>>()
+
+        model.accessors?.forEachIndexed { index, accessor ->
+            val raw = getAccessorBytes(model, accessor, loadedUris)
+            if (accessor.componentType == GLConstants.GL_FLOAT) {
+                val floatArray = raw.asNativeFloatArray()
+                when (accessor.type) {
+                    "VEC4" -> floatArrays[index] = Array(floatArray.size / 4) { List(4) { i -> floatArray[i + it * 4] } }
+                    "VEC3" -> floatArrays[index] = Array(floatArray.size / 3) { List(3) { i -> floatArray[i + it * 3] } }
+                    else -> floats[index] = floatArray
+                }
+            }
+            all[index] = raw
+        }
+        return AccessorCache(all, floats, floatArrays)
+    }
 
     private fun getAccessorBytes(model: Gltf, accessor: Gltf.Accessor, loadedUris: Map<String, ByteArray>): ByteArray {
 
@@ -139,10 +154,10 @@ internal object GltfLoader {
         }
     }
 
-    private fun preloadSkins(model: Gltf, loadedAccessors: Map<Int, ByteArray>) =
+    private fun preloadSkins(model: Gltf, loadedAccessors: AccessorCache) =
         model.skins?.mapIndexed { index, skin ->
             // TODO validate accessor type map4
-            index to loadedAccessors[skin.inverseBindMatrices!!]!!.asNativeMat4List()
+            index to loadedAccessors.floats[skin.inverseBindMatrices!!]!!.asNativeMat4List()
         }?.toMap() ?: mapOf()
 
 
@@ -185,14 +200,14 @@ internal fun Gltf.Accessor.elementComponentSize(): Int =
 
 
 // TODO move me and optimize by avoiding copy
-internal fun ByteArray.asNativeMat4List(): List<Mat4> =
-    List(size / 64) { m ->
-        Mat4(this.copyOfRange(m * 64, m * 64 + 64).asNativeFloatList().toFloatArray())
+internal fun FloatArray.asNativeMat4List(): List<Mat4> =
+    List(size / 16) { m ->
+        Mat4(this.copyOfRange(m * 16, m * 16 + 16))
     }
 
 // TODO move me
-internal fun ByteArray.asNativeFloatList(): List<Float> =
-    List(size / 4) {
+internal fun ByteArray.asNativeFloatArray() =
+    FloatArray(size / 4) {
         Float.fromBits(
             (this[it * 4 + 0].toInt() and 0xFF) or
                     ((this[it * 4 + 1].toInt() and 0xFF) shl 8) or

@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.gl
 
+import com.zakgof.korender.impl.buffer.NativeBuffer
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 
 expect object GL {
@@ -47,7 +48,7 @@ expect object GL {
         border: Int,
         format: Int,
         type: Int,
-        pixels: NativeByteBuffer?
+        pixels: NativeBuffer?
     )
 
     fun glGetTexImage(tex: Int, level: Int, format: Int, type: Int, pixels: NativeByteBuffer)

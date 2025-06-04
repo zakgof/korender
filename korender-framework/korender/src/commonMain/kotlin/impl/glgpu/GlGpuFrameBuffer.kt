@@ -17,6 +17,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER_COMPLETE
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_2D
 import com.zakgof.korender.impl.gl.GLFrameBuffer
 
+@OptIn(ExperimentalStdlibApi::class)
 internal class GlGpuFrameBuffer(
     private val name: String,
     private val width: Int,
@@ -64,9 +65,9 @@ internal class GlGpuFrameBuffer(
         }
         glDrawBuffers(*IntArray(colorTextures.size) { GL_COLOR_ATTACHMENT0 + it })
 
-        val err: Int = glCheckFramebufferStatus(GL_FRAMEBUFFER)
-        if (err != GL_FRAMEBUFFER_COMPLETE) {
-            throw KorenderException("Error creating framebuffer $name: $err")
+        val error: Int = glCheckFramebufferStatus(GL_FRAMEBUFFER)
+        if (error != GL_FRAMEBUFFER_COMPLETE) {
+            throw KorenderException("Error creating framebuffer $name: ${error.toHexString()}")
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, null)

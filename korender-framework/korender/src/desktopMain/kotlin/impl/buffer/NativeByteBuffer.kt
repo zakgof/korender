@@ -3,7 +3,7 @@ package com.zakgof.korender.impl.buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-actual class NativeByteBuffer(val byteBuffer: ByteBuffer) {
+actual class NativeByteBuffer(override val byteBuffer: ByteBuffer) : NativeBuffer {
 
     actual constructor(size: Int) :
             this(ByteBuffer.allocateDirect(size).order(ByteOrder.LITTLE_ENDIAN))
@@ -59,16 +59,16 @@ actual class NativeByteBuffer(val byteBuffer: ByteBuffer) {
     actual fun byte(index: Int) =
         byteBuffer[index]
 
-    actual fun rewind(): NativeByteBuffer {
+    actual override fun rewind(): NativeByteBuffer {
         byteBuffer.rewind()
         return this
     }
 
-    actual fun size() = byteBuffer.limit()
+    actual override fun size() = byteBuffer.limit()
 
-    actual fun position() = byteBuffer.position()
+    actual override fun position() = byteBuffer.position()
 
-    actual fun position(offset: Int) {
+    actual override fun position(offset: Int) {
         byteBuffer.position(offset)
     }
 }

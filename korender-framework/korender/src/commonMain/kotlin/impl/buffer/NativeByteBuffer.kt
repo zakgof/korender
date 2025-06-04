@@ -2,7 +2,7 @@ package com.zakgof.korender.impl.buffer
 
 import com.zakgof.korender.math.Vec3
 
-expect class NativeByteBuffer(size: Int) {
+expect class NativeByteBuffer(size: Int) : NativeBuffer {
 
     operator fun set(index: Int, byte: Byte)
 
@@ -24,15 +24,15 @@ expect class NativeByteBuffer(size: Int) {
 
     fun float(index: Int): Float
 
-    fun rewind(): NativeByteBuffer
-
     fun put(other: NativeByteBuffer)
 
-    fun size(): Int
+    override fun rewind(): NativeByteBuffer
 
-    fun position(): Int
+    override fun size(): Int
 
-    fun position(offset: Int)
+    override fun position(): Int
+
+    override fun position(offset: Int)
 }
 
 fun NativeByteBuffer.put(v: Vec3) {

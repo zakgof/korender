@@ -27,7 +27,7 @@ internal class Inventory(asyncContext: AsyncContext) {
 
     private val meshes = Registry<InternalMeshDeclaration, MeshLink>(asyncContext) { Geometry.create(it, asyncContext.appResourceLoader) }
     private val shaders = Registry<ShaderDeclaration, GlGpuShader>(asyncContext) { Shaders.create(it, asyncContext.appResourceLoader, zeroTex) }
-    private val textures = Registry<InternalTexture, GlGpuTexture>(asyncContext) { Texturing.create(it, asyncContext.appResourceLoader) }
+    private val textures = Registry<InternalTexture, GlGpuTexture>(asyncContext) { it.generateGpuTexture(asyncContext.appResourceLoader) }
     private val resourceCubeTextures = Registry<ResourceCubeTextureDeclaration, GlGpuCubeTexture>(asyncContext) { Texturing.cube(it, asyncContext.appResourceLoader) }
     private val imageCubeTextures = Registry<ImageCubeTextureDeclaration, GlGpuCubeTexture>(asyncContext) { Texturing.cube(it) }
     private val fonts = Registry<InternalFontDeclaration, Font>(asyncContext) { Fonts.load(it.resource, asyncContext.appResourceLoader) }

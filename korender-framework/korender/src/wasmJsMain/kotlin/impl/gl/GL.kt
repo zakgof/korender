@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.gl
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.WebGL2RenderingContext
+import com.zakgof.korender.impl.buffer.NativeBuffer
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import org.khronos.webgl.toFloat32Array
 import org.khronos.webgl.toInt32Array
@@ -16,8 +17,14 @@ actual object GL {
     actual fun glDrawElements(mode: Int, count: Int, type: Int, indices: Int) =
         gl!!.drawElements(mode, count, type, indices)
 
+    actual fun glDrawElementsInstanced(mode: Int, count: Int, type: Int, indices: Int, instances: Int) =
+        gl!!.drawElementsInstanced(mode, count, type, indices, instances)
+
     actual fun glDrawArrays(mode: Int, starting: Int, count: Int) =
         gl!!.drawArrays(mode, starting, count)
+
+    actual fun glDrawArraysInstanced(mode: Int, starting: Int, count: Int, instances: Int) =
+        gl!!.drawArraysInstanced(mode, starting, count, instances)
 
     actual fun glEnable(target: Int) =
         gl!!.enable(target)
@@ -63,7 +70,7 @@ actual object GL {
         border: Int,
         format: Int,
         type: Int,
-        pixels: NativeByteBuffer?
+        pixels: NativeBuffer?
     ) = gl!!.texImage2D(
         target, level, internalformat, width, height, border, format, type, pixels?.array
     )
@@ -263,4 +270,7 @@ actual object GL {
 
     actual fun glReadPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, data: NativeByteBuffer) =
         gl!!.readPixels(x, y, width, height, format, type, data.array)
+
+    actual fun glVertexAttribDivisor(index: Int, divisor: Int) =
+        gl!!.vertexAttribDivisor(index, divisor)
 }

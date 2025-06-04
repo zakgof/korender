@@ -5,6 +5,7 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Platform
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
+import com.zakgof.korender.impl.buffer.NativeBuffer
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.gl.GL.glActiveTexture
 import com.zakgof.korender.impl.gl.GL.glBindTexture
@@ -84,32 +85,44 @@ internal val backFormatMap = mapOf(
 )
 
 internal class GlGpuTexture(
-    image: InternalImage?,
     private val width: Int,
     private val height: Int,
-    filter: TextureFilter,
-    wrap: TextureWrap,
-    aniso: Int,
-    formats: List<GlFormat>,
+    filter: TextureFilter = TextureFilter.MipMap,
+    wrap: TextureWrap = TextureWrap.Repeat,
+    aniso: Int = 1024
 ) : AutoCloseable {
 
     val glHandle: GLTexture = glGenTextures()
     val mipmapped = filter == TextureFilter.MipMap
 
     private var format: Image.Format? = null
-    private var glFormat: GlGpuTexture.GlFormat? = null
+    private lateinit var glFormat: GlFormat
+
+    constructor(
+        image: InternalImage,
+        filter: TextureFilter = TextureFilter.MipMap,
+        wrap: TextureWrap = TextureWrap.Repeat,
+        aniso: Int = 1024
+    ) : this(image.width, image.height, filter, wrap, aniso) {
+        uploadData(image.bytes, formatMap[image.format]!!)
+    }
+
+    constructor(width: Int, height: Int, preset: Preset) : this(width, height, preset.filter, preset.wrap, preset.aniso) {
+        glBindTexture(GL_TEXTURE_2D, glHandle)
+        for (format in preset.formats) {
+            if (upload(width, height, null, format)) {
+                glBindTexture(GL_TEXTURE_2D, null)
+                return
+            }
+        }
+        throw KorenderException("Could not create texture with preset $preset")
+    }
 
     init {
         println("Creating GPU Texture $this")
 
-        glActiveTexture(GL_TEXTURE0)
+        // glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, glHandle)
-
-        initTexImage(formats, width, height, image)
-
-        if (mipmapped && image != null) {
-            glGenerateMipmap(GL_TEXTURE_2D)
-        }
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterMinMap[filter]!!)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterMagMap[filter]!!)
@@ -130,37 +143,29 @@ internal class GlGpuTexture(
         glBindTexture(GL_TEXTURE_2D, null)
     }
 
-    constructor(
-        image: InternalImage,
-        filter: TextureFilter = TextureFilter.MipMap,
-        wrap: TextureWrap = TextureWrap.Repeat,
-        aniso: Int = 1024
-    ) : this(
-        image, image.width, image.height, filter, wrap, aniso, listOf(formatMap[image.format]!!)
-    )
-
-    constructor(
-        width: Int,
-        height: Int,
-        preset: Preset
-    ) : this(
-        null, width, height, preset.filter, preset.wrap, preset.aniso, preset.formats
-    )
-
-    @OptIn(ExperimentalStdlibApi::class)
-    private fun initTexImage(formats: List<GlFormat>, width: Int, height: Int, image: InternalImage?) {
-        for (glFormat in formats) {
-            glTexImage2D(GL_TEXTURE_2D, 0, glFormat.internal, width, height, 0, glFormat.format, glFormat.type, image?.bytes)
-            val errcode = glGetError()
-            if (errcode != 0) {
-                println("Could not create a texture with format 0x${glFormat.internal.toHexString()}. Falling back to next format when creating texture")
-                continue
+    fun uploadData(buffer: NativeBuffer, format: GlFormat) {
+        glBindTexture(GL_TEXTURE_2D, glHandle)
+        if (upload(width, height, buffer, format)) {
+            if (mipmapped) {
+                glGenerateMipmap(GL_TEXTURE_2D)
             }
-            this.glFormat = glFormat
-            this.format = backFormatMap[glFormat.format]
+            glBindTexture(GL_TEXTURE_2D, null)
             return
         }
-        throw KorenderException("Could not create GL texture")
+        throw KorenderException("Could not create texture")
+    }
+
+    @OptIn(ExperimentalStdlibApi::class)
+    private fun upload(width: Int, height: Int, buffer: NativeBuffer?, format: GlFormat): Boolean {
+        glTexImage2D(GL_TEXTURE_2D, 0, format.internal, width, height, 0, format.format, format.type, buffer?.rewind())
+        val error = glGetError()
+        if (error != 0) {
+            println("Could not create a texture with format 0x${format.internal.toHexString()}")
+            return false
+        }
+        this.glFormat = format
+        this.format = backFormatMap[format.format]
+        return true
     }
 
     fun bind(unit: Int) {
@@ -171,7 +176,7 @@ internal class GlGpuTexture(
     fun fetch(): Image {
         glBindTexture(GL_TEXTURE_2D, glHandle)
         val img = Platform.createImage(width, height, format!!)
-        glGetTexImage(GL_TEXTURE_2D, 0, glFormat!!.format, glFormat!!.type, img.bytes)
+        glGetTexImage(GL_TEXTURE_2D, 0, glFormat.format, glFormat.type, img.bytes)
         glBindTexture(GL_TEXTURE_2D, null)
         return img
     }
