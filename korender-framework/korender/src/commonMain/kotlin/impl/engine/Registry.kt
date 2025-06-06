@@ -44,6 +44,9 @@ internal class Registry<D : Retentionable, R : AutoCloseable>(
         return entry.deferred.resultOrNull()
     }
 
+    fun pending() =
+        map.values.count { !it.deferred.isCompleted }
+
     inner class Entry(val deferred: Deferred<R>, var freeTime: Float? = null) {
 
         fun attemptDelete(retentionPolicy: RetentionPolicy, currentTime: Float, currentGeneration: Int): Boolean {

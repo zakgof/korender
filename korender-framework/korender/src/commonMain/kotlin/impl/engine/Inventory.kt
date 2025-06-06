@@ -36,27 +36,17 @@ internal class Inventory(asyncContext: AsyncContext) {
     private val cubeFrameBuffers = Registry<CubeFrameBufferDeclaration, GlGpuCubeFrameBuffer>(asyncContext) { GlGpuCubeFrameBuffer(it.id, it.width, it.height, it.withDepth) }
     private val gltfs = Registry<GltfDeclaration, GltfLoaded>(asyncContext) { GltfLoader.load(it, asyncContext.appResourceLoader) }
 
+    private val registries = listOf(meshes, shaders, textures, fonts, fontMeshes, frameBuffers, cubeFrameBuffers, gltfs)
+
     fun go(time: Float, generation: Int, block: Inventory.() -> Boolean) {
-        meshes.begin()
-        shaders.begin()
-        textures.begin()
-        fonts.begin()
-        fontMeshes.begin()
-        frameBuffers.begin()
-        cubeFrameBuffers.begin()
-        gltfs.begin()
+        registries.forEach { it.begin() }
         val ok = block.invoke(this)
         if (ok) {
-            meshes.end(time, generation)
-            shaders.end(time, generation)
-            textures.end(time, generation)
-            fonts.end(time, generation)
-            fontMeshes.end(time, generation)
-            frameBuffers.end(time, generation)
-            cubeFrameBuffers.end(time, generation)
-            gltfs.end(time, generation)
+            registries.forEach { it.end(time, generation) }
         }
     }
+
+    fun pending() = registries.sumOf { it.pending() }
 
     fun mesh(decl: InternalMeshDeclaration): MeshLink? = meshes[decl]
     fun shader(decl: ShaderDeclaration): GlGpuShader? = shaders[decl]

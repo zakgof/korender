@@ -123,9 +123,13 @@ internal object Rendering {
                 }
             }
         }
-        shader.render(
-            { fixer(materialDeclaration.uniforms[it] ?: contextUniforms[it] ?: addUniforms[it]) },
-            meshLink.gpuMesh
-        )
+        try {
+            shader.render(
+                { fixer(materialDeclaration.uniforms[it] ?: contextUniforms[it] ?: addUniforms[it]) },
+                meshLink.gpuMesh
+            )
+        } catch (sr: SkipRender) {
+            println("Renderable skipped as resource not ready: [${sr.text}]")
+        }
     }
 }

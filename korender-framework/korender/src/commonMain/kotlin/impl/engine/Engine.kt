@@ -134,7 +134,7 @@ internal class Engine(
 
         override fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3, insideOut: Boolean, defs: Set<String>, block: FrameContext.() -> Unit): CubeTextureImages {
             val sd = SceneDeclaration()
-            block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f)))
+            block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f, 0)))
             var images: CubeTextureImages? = null
             inventory.go(0f, 0) {
                 val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
@@ -149,7 +149,7 @@ internal class Engine(
 
         override fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameContext.() -> Unit): Image {
             val sd = SceneDeclaration()
-            block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f)))
+            block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f, 0)))
             var image: Image? = null
             inventory.go(0f, 0) {
                 val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
@@ -528,7 +528,7 @@ internal class Engine(
     }
 
     fun frame() {
-        val frameInfo = renderContext.frameInfoManager.frame()
+        val frameInfo = renderContext.frameInfoManager.frame(inventory.pending())
         processTouches()
         processKeys()
         val sd = SceneDeclaration()
