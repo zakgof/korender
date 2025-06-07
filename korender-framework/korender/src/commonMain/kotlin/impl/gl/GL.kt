@@ -48,7 +48,7 @@ expect object GL {
         border: Int,
         format: Int,
         type: Int,
-        pixels: NativeBuffer?
+        buffer: NativeBuffer?
     )
 
     fun glGetTexImage(tex: Int, level: Int, format: Int, type: Int, pixels: NativeByteBuffer)

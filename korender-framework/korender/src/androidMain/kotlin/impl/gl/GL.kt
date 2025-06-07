@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.gl
 
 import android.opengl.GLES30
+import com.zakgof.korender.impl.buffer.NativeBuffer
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 
 actual object GL {
@@ -46,8 +47,8 @@ actual object GL {
     actual fun glCullFace(mode: Int) =
         GLES30.glCullFace(mode)
 
-    actual fun glTexImage2D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, border: Int, format: Int, type: Int, pixels: NativeByteBuffer?) =
-        GLES30.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels?.byteBuffer)
+    actual fun glTexImage2D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, border: Int, format: Int, type: Int, buffer: NativeBuffer?) =
+        GLES30.glTexImage2D(target, level, internalformat, width, height, border, format, type, buffer?.byteBuffer)
 
     actual fun glGetFloatv(pname: Int): Float? =
         FloatArray(1).also { GLES30.glGetFloatv(pname, it, 0) }[0]
@@ -223,6 +224,15 @@ actual object GL {
 
     actual fun glReadPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, data: NativeByteBuffer) =
         GLES30.glReadPixels(x, y, width, height, format, type, data.byteBuffer)
+
+    actual fun glDrawElementsInstanced(mode: Int, count: Int, type: Int, indices: Int, instances: Int) =
+        GLES30.glDrawElementsInstanced(mode, count, type, indices, instances)
+
+    actual fun glDrawArraysInstanced(mode: Int, starting: Int, count: Int, instances: Int) =
+        GLES30.glDrawArraysInstanced(mode, starting, count, instances)
+
+    actual fun glVertexAttribDivisor(index: Int, divisor: Int) =
+        GLES30.glVertexAttribDivisor(index, divisor)
 
     private fun intViaArray(function: (IntArray) -> Unit) =
         IntArray(1).apply(function)[0]

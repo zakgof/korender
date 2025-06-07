@@ -70,9 +70,9 @@ actual object GL {
         border: Int,
         format: Int,
         type: Int,
-        pixels: NativeBuffer?
+        buffer: NativeBuffer?
     ) = GL30.glTexImage2D(
-        target, level, internalformat, width, height, border, format, type, pixels?.byteBuffer
+        target, level, internalformat, width, height, border, format, type, buffer?.byteBuffer
     )
 
     actual fun glGetFloatv(pname: Int): Float? =

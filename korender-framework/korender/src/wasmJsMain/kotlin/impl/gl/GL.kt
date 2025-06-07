@@ -70,9 +70,9 @@ actual object GL {
         border: Int,
         format: Int,
         type: Int,
-        pixels: NativeBuffer?
+        buffer: NativeBuffer?
     ) = gl!!.texImage2D(
-        target, level, internalformat, width, height, border, format, type, pixels?.array
+        target, level, internalformat, width, height, border, format, type, buffer?.array
     )
 
     actual fun glGetTexImage(tex: Int, level: Int, format: Int, type: Int, pixels: NativeByteBuffer) =
