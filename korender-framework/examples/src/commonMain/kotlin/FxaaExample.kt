@@ -8,7 +8,6 @@ import com.zakgof.korender.math.ColorRGBA.Companion.Green
 import com.zakgof.korender.math.ColorRGBA.Companion.Red
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun FxaaExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {

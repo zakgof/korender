@@ -11,9 +11,7 @@ import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })
@@ -45,7 +43,8 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         Renderable(
             base(color = ColorRGBA.Red, metallicFactor = 0f, roughnessFactor = 0.2f),
             mesh = sphere(),
-            transform = translate(-2f, -1f, -5f)
+            transform = translate(-2f, -1f, -5f),
+            transparent = false
         )
         Renderable(
             base(color = ColorRGBA.Green, metallicFactor = 0f, roughnessFactor = 0.2f),

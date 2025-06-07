@@ -11,7 +11,6 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun SkyExample() {
     Korender(appResourceLoader = { Res.readBytes(it) }) {

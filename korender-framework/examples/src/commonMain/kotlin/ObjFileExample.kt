@@ -13,7 +13,6 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun ObjFileExample() {
     Korender(appResourceLoader = { Res.readBytes(it) }) {

@@ -13,7 +13,6 @@ import com.zakgof.korender.TextStyle
 import com.zakgof.korender.math.ColorRGBA
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun GuiExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val statusStyle = TextStyle(height = 36, color = ColorRGBA(0xF06543A0))

@@ -15,7 +15,6 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.cos
 import kotlin.math.sin
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun LightsExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {

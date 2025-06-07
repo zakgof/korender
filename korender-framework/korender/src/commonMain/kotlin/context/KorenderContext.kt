@@ -77,8 +77,9 @@ interface KorenderContext {
     fun normalTexture(normalTexture: TextureDeclaration): MaterialModifier
     fun emission(factor: ColorRGB): MaterialModifier
     fun metallicRoughnessTexture(texture: TextureDeclaration): MaterialModifier
-    fun specularGlossinessTexture(texture: TextureDeclaration): MaterialModifier
     fun specularGlossiness(specularFactor: ColorRGB, glossinessFactor: Float): MaterialModifier
+    fun specularGlossinessTexture(texture: TextureDeclaration): MaterialModifier
+
     fun billboard(position: Vec3 = ZERO, scale: Vec2 = Vec2(1f, 1f), rotation: Float = 0.0f): MaterialModifier
 
     fun terrain(heightTexture: TextureDeclaration, heightTextureSize: Int, heightScale: Float, outsideHeight: Float, terrainCenter: Vec3 = ZERO): MaterialModifier

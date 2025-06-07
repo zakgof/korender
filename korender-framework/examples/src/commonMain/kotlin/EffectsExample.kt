@@ -13,7 +13,6 @@ import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.floor
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun EffectsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     camera = camera(Vec3(0f, 5f, 30f), -1.z, 1.y)
