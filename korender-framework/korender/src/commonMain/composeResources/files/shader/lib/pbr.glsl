@@ -48,7 +48,8 @@ vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 cdiff, vec3 F0, float roughness, 
     
 #ifdef IBL
     vec3 R = reflect(-V, N);
-    vec3 env = texture(cubeTexture, R, roughness * 8.0).rgb; // TODO env resolution
+    float maxBias = log2(float(textureSize(cubeTexture, 0).x)) - 1.;
+    vec3 env = texture(cubeTexture, R, roughness * maxBias).rgb;
     vec3 FR = F0 + (1. - F0) * pow(1. - NdotV, 5.);
     vec3 indirect = env * FR;
 #else

@@ -49,8 +49,8 @@ internal class GlGpuCubeTexture : AutoCloseable {
 
     val glHandle: GLTexture = glGenTextures()
 
-    private var width: Int? = null
-    private var height: Int? = null
+    var width: Int? = null
+    var height: Int? = null
     private var format: Image.Format? = null
     private var glFormat: GlGpuTexture.GlFormat? = null
 
@@ -78,7 +78,7 @@ internal class GlGpuCubeTexture : AutoCloseable {
             loadSide(glSide, images[CubeTextureSide.entries[index]]!! as InternalImage)
         }
 
-        setupFiltering(GlGpuTexture.Preset.RGBFilter)
+        setupFiltering(GlGpuTexture.Preset.RGBMipmap)
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP)
 
         glBindTexture(GL_TEXTURE_CUBE_MAP, null)
