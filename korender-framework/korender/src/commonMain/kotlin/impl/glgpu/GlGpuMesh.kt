@@ -102,7 +102,7 @@ internal class GlGpuMesh(
         if (indices <= 0) {
             if (instances > 0) {
                 glDrawArraysInstanced(GL_TRIANGLES, 0, vertices, instances)
-            } else {
+            } else if (instances < 0) {
                 glDrawArrays(GL_TRIANGLES, 0, vertices)
             }
         } else {
@@ -113,7 +113,7 @@ internal class GlGpuMesh(
             }
             if (instances > 0) {
                 glDrawElementsInstanced(GL_TRIANGLES, indices, glIndexType, 0, instances)
-            } else {
+            } else if (instances < 0) {
                 glDrawElements(GL_TRIANGLES, indices, glIndexType, 0)
             }
             // checkGlError("during glDrawElements")

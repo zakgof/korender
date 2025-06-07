@@ -14,7 +14,7 @@ import com.zakgof.korender.math.Vec3
 internal open class CMesh(
     val vertexCount: Int,
     val indexCount: Int,
-    val instanceCount: Int = 0,
+    val instanceCount: Int = -1,
     attrs: List<MeshAttribute<*>>,
     indexType: IndexType? = null
 ) : Mesh, MeshInitializer {
@@ -60,7 +60,7 @@ internal open class CMesh(
     constructor(
         vertexCount: Int,
         indexCount: Int,
-        instanceCount: Int = 0,
+        instanceCount: Int = -1,
         vararg attributes: MeshAttribute<*>,
         indexType: IndexType? = null,
         block: MeshInitializer.() -> Unit

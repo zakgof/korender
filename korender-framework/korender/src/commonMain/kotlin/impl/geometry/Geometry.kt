@@ -63,7 +63,7 @@ internal object Geometry {
 
     suspend fun createCpuMesh(meshDeclaration: MeshDeclaration, appResourceLoader: ResourceLoader): CMesh {
         val simpleMeshDeclaration = (meshDeclaration as? InstancedMesh)?.mesh ?: (meshDeclaration as? InstancedBillboard)?.let { Billboard(it.retentionPolicy) } ?: meshDeclaration
-        val count = (meshDeclaration as? InstancedMesh)?.count ?: (meshDeclaration as? InstancedBillboard)?.count ?: 0
+        val count = (meshDeclaration as? InstancedMesh)?.count ?: (meshDeclaration as? InstancedBillboard)?.count ?: -1
 
         return when (simpleMeshDeclaration) {
             is Sphere -> sphere(simpleMeshDeclaration.radius, simpleMeshDeclaration.slices, simpleMeshDeclaration.sectors, count)
@@ -130,7 +130,7 @@ internal object Geometry {
         }
 
     private fun screenQuad() =
-        CMesh(4, 6, 0, TEX) {
+        CMesh(4, 6, -1, TEX) {
             tex(0f, 0f).tex(0f, 1f)
             tex(1f, 1f).tex(1f, 0f)
             index(0, 2, 1, 0, 3, 2)
@@ -178,7 +178,7 @@ internal object Geometry {
         }
 
     private fun imageQuad() =
-        CMesh(4, 6, 0, TEX) {
+        CMesh(4, 6, -1, TEX) {
             tex(0f, 0f)
             tex(0f, 1f)
             tex(1f, 1f)
