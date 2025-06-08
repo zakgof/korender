@@ -29,11 +29,6 @@ private val buildings = (0 until 10).map { generateBuilding() }
 @Composable
 fun InfiniteCity() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
-//        val loaded = preload {
-//            gltf("infcity/swat-woman.glb")
-//            texture("infcity/road.jpg")
-//        }
-//        if (loaded) frame() else loader()
         frame()
     }
 }
@@ -170,6 +165,8 @@ private fun FrameContext.gui() =
         Column {
             Filler()
             Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40, color = ColorRGBA(0x66FF55A0))
+            if (frameInfo.pending > 0)
+                Text(id = "pending", text = "PENDING ${frameInfo.pending}")
         }
     }
 

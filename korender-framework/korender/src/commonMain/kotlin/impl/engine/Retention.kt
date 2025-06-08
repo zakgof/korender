@@ -10,8 +10,6 @@ internal class UntilGenerationRetentionPolicy(val generation: Int) : RetentionPo
 
 internal class TimeRetentionPolicy(val seconds: Float) : RetentionPolicy
 
-internal class RetentionDecorated<T> (val key: T, val retentionPolicy: RetentionPolicy)
-
 internal interface Retentionable {
     val retentionPolicy: RetentionPolicy
 }

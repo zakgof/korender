@@ -176,11 +176,6 @@ internal class Engine(
         override fun heightField(id: String, cellsX: Int, cellsZ: Int, cellWidth: Float, height: (Int, Int) -> Float): MeshDeclaration =
             HeightField(id, cellsX, cellsZ, cellWidth, height, currentRetentionPolicy)
 
-        override fun loadMesh(meshDeclaration: MeshDeclaration) =
-            asyncContext.call {
-                Geometry.createCpuMesh(meshDeclaration, asyncContext.appResourceLoader)
-            }
-
         override fun mesh(id: String, mesh: Mesh) =
             CustomCpuMesh(id, mesh as CMesh, currentRetentionPolicy)
 

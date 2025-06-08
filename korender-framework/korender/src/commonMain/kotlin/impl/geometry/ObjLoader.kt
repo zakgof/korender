@@ -1,8 +1,6 @@
 package com.zakgof.korender.impl.geometry
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
@@ -11,13 +9,12 @@ internal class ObjModel(val vertices: List<Vertex>, val indices: List<Int>) {
 }
 
 internal object ObjLoader {
-    suspend fun load(file: String, appResourceLoader: ResourceLoader): ObjModel {
+    fun load(bytes: ByteArray): ObjModel {
         val positions = mutableListOf<Vec3>()
         val normals = mutableListOf<Vec3>()
         val texes = mutableListOf<Vec2>()
         val faces = mutableListOf<IntArray>()
-        resourceBytes(appResourceLoader, file)
-            .decodeToString()
+        bytes.decodeToString()
             .lines()
             .forEach {
                 val command = it.split(" ", limit = 2).toList()

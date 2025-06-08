@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.ResourceLoader
+import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gl.GL.shaderEnv
 import com.zakgof.korender.impl.glgpu.GlGpuShader
@@ -12,16 +13,19 @@ import impl.engine.ImmediatelyFreeRetentionPolicy
 internal fun <T> MutableList<T>.peek(): T = this.last()
 internal fun <T> MutableList<T>.pop(): T = this.removeAt(this.size - 1)
 
+private class ShaderData(val title: String, val vertCode: String, val fragCode: String, val vertDebugInfo: ShaderDebugInfo, val fragDebugInfo: ShaderDebugInfo)
+
 internal object Shaders {
 
     val imageQuadDeclaration: ShaderDeclaration =
         ShaderDeclaration("!shader/gui/image.vert", "!shader/gui/image.frag", retentionPolicy = ImmediatelyFreeRetentionPolicy)
 
-    suspend fun create(
-        declaration: ShaderDeclaration,
-        appResourceLoader: ResourceLoader,
-        zeroTex: GlGpuTexture
-    ): GlGpuShader {
+    fun create(declaration: ShaderDeclaration, loader: Loader, zeroTex: GlGpuTexture): GlGpuShader? =
+        loader.syncy(declaration) { load(declaration, it, zeroTex) } ?.let {
+            GlGpuShader(it.title, it.vertCode, it.fragCode, it.vertDebugInfo, it.fragDebugInfo, zeroTex)
+        }
+
+    private suspend fun load(declaration: ShaderDeclaration, appResourceLoader: ResourceLoader, zeroTex: GlGpuTexture): ShaderData {
         val defs = declaration.defs + shaderEnv + declaration.plugins.keys.map {"PLUGIN_" + it.uppercase()}
         val title = "${declaration.vertFile}:${declaration.fragFile} $defs"
         val vertDebugInfo = ShaderDebugInfo(declaration.vertFile)
@@ -30,7 +34,7 @@ internal object Shaders {
             preprocessFile(declaration.vertFile, defs, vertDebugInfo, declaration.plugins, appResourceLoader)
         val fragCode =
             preprocessFile(declaration.fragFile, defs, fragDebugInfo, declaration.plugins, appResourceLoader)
-        return GlGpuShader(title, vertCode, fragCode, vertDebugInfo, fragDebugInfo, zeroTex)
+        return ShaderData(title, vertCode, fragCode, vertDebugInfo, fragDebugInfo)
     }
 
     private suspend fun preprocessFile(

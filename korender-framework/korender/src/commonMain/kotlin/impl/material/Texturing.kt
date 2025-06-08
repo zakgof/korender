@@ -5,37 +5,33 @@ import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureResources
 import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.Platform
-import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
+import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.image.InternalImage
-import com.zakgof.korender.impl.resourceBytes
 import impl.engine.Retentionable
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.awaitAll
 
 object NotYetLoadedTexture
 object NotYetLoadedCubeTexture
 
 internal object Texturing {
 
-    suspend fun cube(decl: ResourceCubeTextureDeclaration, appResourceLoader: ResourceLoader): GlGpuCubeTexture {
-        val images = CubeTextureSide.entries
-            .map { toImage(appResourceLoader, decl.resources[it]!!) }
-            .awaitAll()
-            .let { CubeTextureSide.entries.zip(it).toMap() }
-        return GlGpuCubeTexture(images)
+    fun cube(decl: ResourceCubeTextureDeclaration, loader: Loader): GlGpuCubeTexture? {
+        val images = CubeTextureSide.entries.mapNotNull { toImage(loader, decl.resources[it]!!) }
+        return if (images.size == 6)
+            GlGpuCubeTexture(CubeTextureSide.entries.zip(images).toMap())
+        else
+            null
     }
 
-    suspend fun toImage(appResourceLoader: ResourceLoader, resource: String): Deferred<InternalImage> {
-        val bytes = resourceBytes(appResourceLoader, resource)
-        val extension = resource.split(".").last()
-        return Platform.loadImage(bytes, extension)
-    }
+    fun toImage(loader: Loader, resource: String): InternalImage? =
+        loader.load(resource)?.let {
+            loader.wait(resource) { Platform.loadImage(it, resource.split(".").last()) }
+        }
 
     fun cube(decl: ImageCubeTextureDeclaration): GlGpuCubeTexture =
         GlGpuCubeTexture(decl.images)
@@ -43,7 +39,7 @@ internal object Texturing {
 }
 
 internal interface InternalTexture : Retentionable {
-    suspend fun generateGpuTexture(appResourceLoader: ResourceLoader): GlGpuTexture
+    fun generateGpuTexture(loader: Loader): GlGpuTexture?
 }
 
 internal class ResourceTextureDeclaration(
@@ -58,10 +54,10 @@ internal class ResourceTextureDeclaration(
 
     override fun hashCode(): Int = textureResource.hashCode()
 
-    override suspend fun generateGpuTexture(appResourceLoader: ResourceLoader): GlGpuTexture {
-        val image = Texturing.toImage(appResourceLoader, textureResource).await()
-        return GlGpuTexture(image, filter, wrap, aniso)
-    }
+    override fun generateGpuTexture(loader: Loader): GlGpuTexture? =
+        Texturing.toImage(loader, textureResource)?.let {
+            GlGpuTexture(it, filter, wrap, aniso)
+        }
 }
 
 internal class ImageTextureDeclaration(
@@ -77,7 +73,7 @@ internal class ImageTextureDeclaration(
 
     override fun hashCode(): Int = id.hashCode()
 
-    override suspend fun generateGpuTexture(appResourceLoader: ResourceLoader) =
+    override fun generateGpuTexture(loader: Loader): GlGpuTexture =
         GlGpuTexture(image, filter, wrap, aniso)
 }
 
@@ -96,10 +92,12 @@ internal class ByteArrayTextureDeclaration(
 
     override fun hashCode(): Int = id.hashCode()
 
-    override suspend fun generateGpuTexture(appResourceLoader: ResourceLoader): GlGpuTexture {
-        val image = Platform.loadImage(fileBytesLoader(), extension).await()
-        return GlGpuTexture(image, filter, wrap, aniso)
-    }
+    override fun generateGpuTexture(loader: Loader): GlGpuTexture? =
+        loader.wait("@$id") {
+            Platform.loadImage(fileBytesLoader(), extension)
+        }?.let {
+            GlGpuTexture(it, filter, wrap, aniso)
+        }
 }
 
 internal class RawTextureDeclaration(
@@ -113,7 +111,7 @@ internal class RawTextureDeclaration(
 
     override fun hashCode(): Int = id.hashCode()
 
-    override suspend fun generateGpuTexture(appResourceLoader: ResourceLoader) =
+    override fun generateGpuTexture(loader: Loader): GlGpuTexture =
         GlGpuTexture(width, height, TextureFilter.Nearest, TextureWrap.Repeat, 0)
 }
 

@@ -47,7 +47,7 @@ internal actual object Platform {
 
     actual val target = KorenderContext.TargetPlatform.Web
 
-    @OptIn(DelicateCoroutinesApi::class, ExperimentalUnsignedTypes::class)
+    @OptIn(DelicateCoroutinesApi::class)
     internal actual fun loadFont(bytes: ByteArray): Deferred<FontDef> {
         val ffLoader = jsLoadFont(bytes.toInt8Array())
         return GlobalScope.async {

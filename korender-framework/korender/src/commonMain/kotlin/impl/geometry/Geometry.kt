@@ -16,7 +16,7 @@ import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MeshDeclaration
-import com.zakgof.korender.ResourceLoader
+import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.glgpu.GlGpuMesh
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Vec3
@@ -46,11 +46,12 @@ internal class MeshLink(val cpuMesh: CMesh, dynamic: Boolean) : AutoCloseable {
 
 internal object Geometry {
 
-    suspend fun create(meshDeclaration: MeshDeclaration, appResourceLoader: ResourceLoader): MeshLink {
+    fun create(meshDeclaration: MeshDeclaration, loader: Loader): MeshLink? {
         val dynamic = ((meshDeclaration as? InstancedMesh)?.static == false) or
                 (meshDeclaration is InstancedBillboard)
-        val cpuMesh = createCpuMesh(meshDeclaration, appResourceLoader)
-        return MeshLink(cpuMesh, dynamic)
+        return createCpuMesh(meshDeclaration, loader)?.let {
+            MeshLink(it, dynamic)
+        }
     }
 
     fun font(reservedLength: Int): MeshLink {
@@ -61,7 +62,7 @@ internal object Geometry {
         return MeshLink(mesh, true)
     }
 
-    suspend fun createCpuMesh(meshDeclaration: MeshDeclaration, appResourceLoader: ResourceLoader): CMesh {
+    fun createCpuMesh(meshDeclaration: MeshDeclaration, loader: Loader): CMesh? {
         val simpleMeshDeclaration = (meshDeclaration as? InstancedMesh)?.mesh ?: (meshDeclaration as? InstancedBillboard)?.let { Billboard(it.retentionPolicy) } ?: meshDeclaration
         val count = (meshDeclaration as? InstancedMesh)?.count ?: (meshDeclaration as? InstancedBillboard)?.count ?: -1
 
@@ -71,15 +72,15 @@ internal object Geometry {
             is ScreenQuad -> screenQuad()
             is Billboard -> billboard(count)
             is ImageQuad -> imageQuad()
-            is ObjMesh -> obj(simpleMeshDeclaration.objFile, count, appResourceLoader)
+            is ObjMesh -> loader.load(simpleMeshDeclaration.objFile)?.let { obj(it, count) }
             is CustomCpuMesh -> simpleMeshDeclaration.mesh
             is CustomMesh -> CMesh(simpleMeshDeclaration.vertexCount, simpleMeshDeclaration.indexCount, count, attributes = simpleMeshDeclaration.attributes.toTypedArray(), simpleMeshDeclaration.indexType, simpleMeshDeclaration.block)
             else -> throw KorenderException("Unknown mesh type $meshDeclaration")
         }
     }
 
-    private suspend fun obj(objFile: String, count: Int, appResourceLoader: ResourceLoader): CMesh {
-        val model: ObjModel = ObjLoader.load(objFile, appResourceLoader)
+    private fun obj(objFileBytes: ByteArray, count: Int): CMesh {
+        val model: ObjModel = ObjLoader.load(objFileBytes)
         return CMesh(model.vertices.size, model.indices.size, count, POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3) {
             model.vertices.forEach {
                 pos(it.pos).normal(it.normal).tex(it.tex.x, it.tex.y)

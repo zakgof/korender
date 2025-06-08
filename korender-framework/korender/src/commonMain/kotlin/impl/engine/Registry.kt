@@ -1,19 +1,15 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.AsyncContext
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.RetentionPolicy
-import com.zakgof.korender.impl.resultOrNull
 import impl.engine.ImmediatelyFreeRetentionPolicy
 import impl.engine.KeepForeverRetentionPolicy
 import impl.engine.Retentionable
 import impl.engine.TimeRetentionPolicy
 import impl.engine.UntilGenerationRetentionPolicy
-import kotlinx.coroutines.Deferred
 
 internal class Registry<D : Retentionable, R : AutoCloseable>(
-    private val asyncContext: AsyncContext,
-    private val factory: suspend (D) -> R
+    private val factory: (D) -> R?
 ) {
 
     private val map = mutableMapOf<D, Entry>()
@@ -33,21 +29,22 @@ internal class Registry<D : Retentionable, R : AutoCloseable>(
 
     operator fun get(key: D): R? {
         unusedKeys.remove(key)
-        val entry = map.getOrPut(key) {
-            Entry(
-                asyncContext.call {
-                    factory(key)
-                }
-            )
+        val existing = map[key]
+        if (existing != null) {
+            existing.freeTime = null
+            return existing.value
         }
-        entry.freeTime = null
-        return entry.deferred.resultOrNull()
+
+        val value = factory(key)
+        if (value != null) {
+            map[key] = Entry(value)
+            return value
+        }
+
+        return null
     }
 
-    fun pending() =
-        map.values.count { !it.deferred.isCompleted }
-
-    inner class Entry(val deferred: Deferred<R>, var freeTime: Float? = null) {
+    inner class Entry(val value: R, var freeTime: Float? = null) {
 
         fun attemptDelete(retentionPolicy: RetentionPolicy, currentTime: Float, currentGeneration: Int): Boolean {
 
@@ -60,9 +57,6 @@ internal class Registry<D : Retentionable, R : AutoCloseable>(
             }
             if (freeTime == null) {
                 freeTime = currentTime
-            }
-            if (del) {
-                deferred.resultOrNull()?.close() ?: deferred.cancel()
             }
             return del
         }

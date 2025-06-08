@@ -62,7 +62,6 @@ interface KorenderContext {
     fun screenQuad(): MeshDeclaration
     fun heightField(id: String, cellsX: Int, cellsZ: Int, cellWidth: Float, height: (Int, Int) -> Float): MeshDeclaration
 
-    fun loadMesh(meshDeclaration: MeshDeclaration): Deferred<Mesh>
     fun mesh(id: String, mesh: Mesh): MeshDeclaration
     fun customMesh(id: String, vertexCount: Int, indexCount: Int, vararg attributes: MeshAttribute<*>, dynamic: Boolean = false, indexType: IndexType? = null, block: MeshInitializer.() -> Unit): MeshDeclaration
 

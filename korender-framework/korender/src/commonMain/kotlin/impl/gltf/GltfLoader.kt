@@ -4,6 +4,7 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.impl.absolutizeResource
 import com.zakgof.korender.impl.engine.GltfDeclaration
+import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.gl.GLConstants
 import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.Mat4
@@ -24,6 +25,9 @@ internal object GltfLoader {
     }
 
     class GlbChunk(val type: ChunkType, val data: ByteArray)
+
+    fun load(declaration: GltfDeclaration, loader: Loader): GltfLoaded? =
+        loader.syncy(declaration.gltfResource) { load(declaration, it) }
 
     suspend fun load(declaration: GltfDeclaration, appResourceLoader: ResourceLoader): GltfLoaded {
         val extension = declaration.gltfResource.split(".").last().lowercase()
