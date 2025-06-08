@@ -32,10 +32,14 @@ internal class Renderable(
     val transform: Transform = Transform.IDENTITY
 ) {
     fun render(contextUniforms: Map<String, Any?>, fixer: (Any?) -> Any?) {
-        shader.render(
-            { fixer(uniforms[it] ?: contextUniforms[it] ?: if (it == "model") transform.mat4 else null) },
-            mesh
-        )
+        try {
+            shader.render(
+                { fixer(uniforms[it] ?: contextUniforms[it] ?: if (it == "model") transform.mat4 else null) },
+                mesh
+            )
+        } catch (sr: SkipRender) {
+            println("Renderable skipped as resource not ready: [${sr.text}]")
+        }
     }
 }
 
@@ -123,13 +127,9 @@ internal object Rendering {
                 }
             }
         }
-        try {
-            shader.render(
-                { fixer(materialDeclaration.uniforms[it] ?: contextUniforms[it] ?: addUniforms[it]) },
-                meshLink.gpuMesh
-            )
-        } catch (sr: SkipRender) {
-            println("Renderable skipped as resource not ready: [${sr.text}]")
-        }
+        shader.render(
+            { fixer(materialDeclaration.uniforms[it] ?: contextUniforms[it] ?: addUniforms[it]) },
+            meshLink.gpuMesh
+        )
     }
 }

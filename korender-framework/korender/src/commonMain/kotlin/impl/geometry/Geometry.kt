@@ -72,7 +72,7 @@ internal object Geometry {
             is ScreenQuad -> screenQuad()
             is Billboard -> billboard(count)
             is ImageQuad -> imageQuad()
-            is ObjMesh -> loader.load(simpleMeshDeclaration.objFile)?.let { obj(it, count) }
+            is ObjMesh -> loader.safeBytes(simpleMeshDeclaration.objFile) { obj(it, count) }
             is CustomCpuMesh -> simpleMeshDeclaration.mesh
             is CustomMesh -> CMesh(simpleMeshDeclaration.vertexCount, simpleMeshDeclaration.indexCount, count, attributes = simpleMeshDeclaration.attributes.toTypedArray(), simpleMeshDeclaration.indexType, simpleMeshDeclaration.block)
             else -> throw KorenderException("Unknown mesh type $meshDeclaration")

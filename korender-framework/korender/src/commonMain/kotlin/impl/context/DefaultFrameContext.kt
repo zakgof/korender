@@ -137,4 +137,9 @@ internal class DefaultFrameContext(
         DefaultFrameContext(korenderContext, captureSceneDeclaration, frameInfo).apply(block)
         sceneDeclaration.frameCaptures[frameProbeName] = frameCaptureContext
     }
+
+    override fun OnLoading(block: FrameContext.() -> Unit) {
+        sceneDeclaration.loaderSceneDeclaration = SceneDeclaration()
+        DefaultFrameContext(korenderContext, sceneDeclaration.loaderSceneDeclaration!!, frameInfo).apply(block)
+    }
 }

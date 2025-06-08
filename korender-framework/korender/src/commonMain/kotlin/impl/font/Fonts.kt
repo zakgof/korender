@@ -12,7 +12,7 @@ internal object Fonts {
     val shaderDeclaration = ShaderDeclaration("!shader/gui/font.vert", "!shader/gui/font.frag", retentionPolicy = ImmediatelyFreeRetentionPolicy)
 
     fun load(fontResource: String, loader: Loader): Font? =
-        loader.load(fontResource)?.let {
+        loader.safeBytes(fontResource) {
             loader.wait(fontResource) { Platform.loadFont(it) }
         }?.let {
             Font(GlGpuTexture(it.image), it.widths)

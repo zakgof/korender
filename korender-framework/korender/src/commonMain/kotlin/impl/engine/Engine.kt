@@ -48,7 +48,6 @@ import com.zakgof.korender.impl.geometry.CMesh
 import com.zakgof.korender.impl.geometry.Cube
 import com.zakgof.korender.impl.geometry.CustomCpuMesh
 import com.zakgof.korender.impl.geometry.CustomMesh
-import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.HeightField
 import com.zakgof.korender.impl.geometry.ObjMesh
 import com.zakgof.korender.impl.geometry.ScreenQuad
@@ -533,7 +532,9 @@ internal class Engine(
         inventory.go(frameInfo.time, kc.currentRetentionGeneration) {
             val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
             val renderOk = scene.render()
-            // checkGlError("during rendering")
+            if (sd.loaderSceneDeclaration != null && (!renderOk || inventory.pending() > 0)) {
+                Scene(sd.loaderSceneDeclaration!!, inventory, renderContext, kc.currentRetentionPolicy).render()
+            }
             touchBoxes = scene.touchBoxes
             renderOk
         }

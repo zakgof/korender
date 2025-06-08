@@ -35,6 +35,7 @@ internal class SceneDeclaration {
     var deferredShadingDeclaration: DeferredShadingDeclaration? = null
     val envCaptures = mutableMapOf<String, EnvCaptureContext>()
     val frameCaptures = mutableMapOf<String, FrameCaptureContext>()
+    var loaderSceneDeclaration: SceneDeclaration? = null
 }
 
 internal class DeferredShadingDeclaration() {

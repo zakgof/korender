@@ -29,9 +29,25 @@ private val buildings = (0 until 10).map { generateBuilding() }
 @Composable
 fun InfiniteCity() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
+        OnLoading {
+            loader()
+        }
         frame()
     }
 }
+
+private fun FrameContext.loader() =
+    Gui {
+        Column {
+            Filler()
+            Row {
+                Filler()
+                Text(id = "loader", text = "loading...", height = 40)
+                Filler()
+            }
+            Filler()
+        }
+    }
 
 private fun FrameContext.frame() {
     val z = frameInfo.time * 0.2f
@@ -162,11 +178,12 @@ private fun FrameContext.grassMesh() = customMesh("grass", 4, 6, POS, NORMAL, TE
 
 private fun FrameContext.gui() =
     Gui {
+
+        println("-------- Frame ${frameInfo.frame}   pending ${frameInfo.pending} ----------")
+
         Column {
             Filler()
             Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40, color = ColorRGBA(0x66FF55A0))
-            if (frameInfo.pending > 0)
-                Text(id = "pending", text = "PENDING ${frameInfo.pending}")
         }
     }
 

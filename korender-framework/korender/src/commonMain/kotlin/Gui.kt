@@ -36,12 +36,12 @@ fun GuiContainerContext.Checkbox(id: String, state: CheckboxState, text: String?
         Image(id = "checkbox.image.$id.${state.state}", imageResource = if (state.state) "!gui/checkbox.checked.png" else "!gui/checkbox.unchecked.png", width = 48, height = 48, marginLeft = 8, onTouch = clickHandler)
     }
 
-fun GuiContainerContext.ProgressBar(id: String, width: Int, value: Float) =
+fun GuiContainerContext.ProgressBar(id: String, width: Int, height: Int = 48, value: Float) =
     Row {
-        Image(id = "progressbar.left.$id", imageResource = "!gui/progressbar.filled.png", width = 8, height = 48, marginLeft = 8)
-        Image(id = "progressbar.filled.$id", imageResource = "!gui/progressbar.filled.png", width = (value * width).toInt(), height = 48)
-        Image(id = "progressbar.empty.$id", imageResource = "!gui/progressbar.empty.png", width = ((1f - value) * width).toInt(), height = 48)
-        Image(id = "progressbar.right", imageResource = "!gui/progressbar.filled.png", width = 8, height = 48)
+        Image(id = "progressbar.left.$id", imageResource = "!gui/progressbar.filled.png", width = 8, height = height, marginLeft = 8)
+        Image(id = "progressbar.filled.$id", imageResource = "!gui/progressbar.filled.png", width = (value * width).toInt(), height = height)
+        Image(id = "progressbar.empty.$id", imageResource = "!gui/progressbar.empty.png", width = ((1f - value) * width).toInt(), height = height)
+        Image(id = "progressbar.right.$id", imageResource = "!gui/progressbar.filled.png", width = 8, height = height)
     }
 
 fun GuiContainerContext.Joystick(id: String, state: JoystickState, width: Int) {

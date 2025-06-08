@@ -1,7 +1,6 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.impl.engine.SkipRender
 import com.zakgof.korender.impl.gl.GL.glAttachShader
 import com.zakgof.korender.impl.gl.GL.glBindAttribLocation
 import com.zakgof.korender.impl.gl.GL.glCompileShader
@@ -37,7 +36,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_FRAGMENT_SHADER
 import com.zakgof.korender.impl.gl.GLConstants.GL_LINK_STATUS
 import com.zakgof.korender.impl.gl.GLConstants.GL_VERTEX_SHADER
 import com.zakgof.korender.impl.gl.GLUniformLocation
-import com.zakgof.korender.impl.material.NotYetLoadedCubeTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ShaderDebugInfo
 import com.zakgof.korender.math.ColorRGB
@@ -132,9 +130,10 @@ internal class GlGpuShader(
 
     fun render(uniforms: (String) -> Any?, mesh: GlGpuMesh) {
         glUseProgram(programHandle)
-        bindUniforms(uniforms)
-        bindAttrs(mesh)
-        mesh.render()
+        if (bindUniforms(uniforms)) {
+            bindAttrs(mesh)
+            mesh.render()
+        }
         glUseProgram(null)
     }
 
@@ -145,13 +144,19 @@ internal class GlGpuShader(
         }
     }
 
-    private fun bindUniforms(uniforms: (String) -> Any?) {
+    private fun bindUniforms(uniforms: (String) -> Any?) : Boolean {
         var currentTexUnit = 0
+        var result = true
         uniformLocations.forEach {
-            val uniformValue =
-                requireNotNull(uniforms(it.key)) { "Material ${toString()} does not provide value for the uniform ${it.key}" }
-            currentTexUnit += bind(it.key, uniformValue, it.value, currentTexUnit)
+            val uniformValue = requireNotNull(uniforms(it.key)) { "Material ${toString()} does not provide value for the uniform ${it.key}" }
+            if (uniformValue == NotYetLoadedTexture) {
+                println("Skipping shader rendering because texture [${it.key}] not loaded")
+                result = false
+            }
+            if (result)
+                currentTexUnit += bind(it.key, uniformValue, it.value, currentTexUnit)
         }
+        return result
     }
 
     private fun bind(name: String, value: Any, location: GLUniformLocation, currentTexUnit: Int): Int {
@@ -223,10 +228,6 @@ internal class GlGpuShader(
                 // println("Bind texture unit $units to texture array $name")
                 glUniform1iv(location, *units.toIntArray())
             }
-
-            is NotYetLoadedTexture -> throw SkipRender("Texture for uniform '$name'")
-
-            is NotYetLoadedCubeTexture -> throw SkipRender("Cube texture for uniform '$name'")
 
             else -> {
                 throw KorenderException("Unsupported uniform value $value of type ${value::class} for uniform $name")

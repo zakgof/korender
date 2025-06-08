@@ -16,20 +16,25 @@ import com.zakgof.korender.impl.image.InternalImage
 import impl.engine.Retentionable
 
 object NotYetLoadedTexture
-object NotYetLoadedCubeTexture
 
 internal object Texturing {
 
     fun cube(decl: ResourceCubeTextureDeclaration, loader: Loader): GlGpuCubeTexture? {
-        val images = CubeTextureSide.entries.mapNotNull { toImage(loader, decl.resources[it]!!) }
-        return if (images.size == 6)
+        val resources = CubeTextureSide.entries.map { decl.resources[it]!! }
+        val byteArrays = resources.map { it to loader.unsafeBytes(it) }
+        val images = byteArrays
+            .filter { it.second != null }
+            .mapNotNull { loader.wait(it.first) { Platform.loadImage(it.second!!, it.first.split(".").last()) } }
+        return if (images.size == 6) {
+            println("***************************************************** $images")
+            resources.forEach { loader.freeBytes(it) }
             GlGpuCubeTexture(CubeTextureSide.entries.zip(images).toMap())
-        else
+        } else
             null
     }
 
     fun toImage(loader: Loader, resource: String): InternalImage? =
-        loader.load(resource)?.let {
+        loader.safeBytes(resource) {
             loader.wait(resource) { Platform.loadImage(it, resource.split(".").last()) }
         }
 

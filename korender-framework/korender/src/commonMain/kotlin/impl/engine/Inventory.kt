@@ -45,6 +45,7 @@ internal class Inventory(asyncContext: AsyncContext) {
         val ok = block.invoke(this)
         if (ok) {
             registries.forEach { it.end(time, generation) }
+            // loader.gc()
         }
     }
 
