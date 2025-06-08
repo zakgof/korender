@@ -24,10 +24,11 @@ internal object Texturing {
         val byteArrays = resources.map { it to loader.unsafeBytes(it) }
         val images = byteArrays
             .filter { it.second != null }
-            .mapNotNull { loader.wait(it.first) { Platform.loadImage(it.second!!, it.first.split(".").last()) } }
+            .mapNotNull { loader.unsafeWait(it.first) { Platform.loadImage(it.second!!, it.first.split(".").last()) } }
         return if (images.size == 6) {
-            println("***************************************************** $images")
-            resources.forEach { loader.freeBytes(it) }
+            resources.forEach {
+                loader.free(it)
+            }
             GlGpuCubeTexture(CubeTextureSide.entries.zip(images).toMap())
         } else
             null

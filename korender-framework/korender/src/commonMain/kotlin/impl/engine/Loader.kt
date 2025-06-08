@@ -26,25 +26,29 @@ internal class Loader(private val appResourceLoader: ResourceLoader) {
     fun unsafeBytes(resource: String): ByteArray? {
         val deferred = loadingMap.getOrPut(resource) {
             CoroutineScope(Dispatchers.Default).async {
-                resourceBytes(appResourceLoader, resource).also { println("... finished loading bytes for $resource") }
+                resourceBytes(appResourceLoader, resource)
             }
         }
-        return deferred.resultOrNull()?.also { println("... unsafeBytes returns OK for $resource") }
+        return deferred.resultOrNull()
     }
 
-    fun freeBytes(resource: String) {
-        println("Unsafe freeing resource: $resource")
+    fun free(resource: String) {
         loadingMap.remove(resource)
+        waitingMap.remove(resource)
     }
+
+    fun <R> wait(resource: String, function: () -> Deferred<R>): R? =
+        unsafeWait(resource, function)?.also {
+            waitingMap.remove(resource)
+        }
+
 
     @Suppress("UNCHECKED_CAST")
-    fun <R> wait(resource: String, function: () -> Deferred<R>): R? {
+    fun <R> unsafeWait(resource: String, function: () -> Deferred<R>): R? {
         val deferred = waitingMap.getOrPut(resource) {
             function()
         }
-        return deferred.resultOrNull()?.also {
-            waitingMap.remove(resource)
-        } as R?
+        return deferred.resultOrNull() as R?
     }
 
     @Suppress("UNCHECKED_CAST")

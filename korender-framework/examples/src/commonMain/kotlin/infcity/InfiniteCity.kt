@@ -178,9 +178,6 @@ private fun FrameContext.grassMesh() = customMesh("grass", 4, 6, POS, NORMAL, TE
 
 private fun FrameContext.gui() =
     Gui {
-
-        println("-------- Frame ${frameInfo.frame}   pending ${frameInfo.pending} ----------")
-
         Column {
             Filler()
             Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40, color = ColorRGBA(0x66FF55A0))
