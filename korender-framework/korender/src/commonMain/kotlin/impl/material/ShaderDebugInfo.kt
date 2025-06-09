@@ -4,6 +4,7 @@ class ShaderDebugInfo(val file: String) {
 
     private val PATTERN1 = Regex("^(\\d+)\\((\\d+)\\).+$")
     private val PATTERN2 = Regex("^.+: (\\d+):(\\d+):.+$")
+    private val PATTERN3 = Regex("(\\d+):(\\d+):.+$")
 
     private val fileStack = mutableListOf<String>()
     private val srcLineStack = mutableListOf<Int>()
@@ -23,6 +24,9 @@ class ShaderDebugInfo(val file: String) {
         var matcher = PATTERN1.find(line)
         if (matcher == null) {
             matcher = PATTERN2.find(line)
+        }
+        if (matcher == null) {
+            matcher = PATTERN3.find(line)
         }
         if (matcher != null) {
             // int col = Integer.parseInt(matcher.group(1));
