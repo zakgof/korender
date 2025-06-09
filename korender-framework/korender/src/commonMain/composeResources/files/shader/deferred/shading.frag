@@ -16,9 +16,6 @@ uniform vec3 ambientColor;
 uniform mat4 projection;
 uniform mat4 view;
 
-#ifdef IBL
-uniform samplerCube cubeTexture;
-#endif
 
 //////////
 
@@ -51,11 +48,6 @@ out vec4 fragColor;
 
 float shadowRatios[MAX_SHADOWS];
 
-#import "!shader/lib/space.glsl"
-#import "!shader/lib/shadow.glsl"
-#import "!shader/lib/pbr.glsl"
-#import "!shader/lib/light.glsl"
-
 #ifdef PLUGIN_COLOR
 #import "$color"
 #endif
@@ -63,6 +55,17 @@ float shadowRatios[MAX_SHADOWS];
 #ifdef PLUGIN_DEPTH
 #import "$depth"
 #endif
+
+#import "!shader/lib/space.glsl"
+
+#ifdef PLUGIN_SKY
+#import "!shader/lib/sky.glsl"
+#import "$sky"
+#endif
+
+#import "!shader/lib/shadow.glsl"
+#import "!shader/lib/pbr.glsl"
+#import "!shader/lib/light.glsl"
 
 void main() {
 

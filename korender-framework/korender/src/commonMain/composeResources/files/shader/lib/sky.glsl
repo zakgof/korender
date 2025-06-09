@@ -7,7 +7,7 @@ vec3 lookfromskydisk(vec2 vtex, float distortion) {
 
 vec2 skydiskfromlook(vec3 look, float distortion) {
     float l = length(look.xz);
-    float theta = atan(l, look.y * distortion);
+    float theta = atan(l, abs(look.y) * distortion);
     return vec2(0.5) + vec2(look.xz) * (theta / (3.1415926 * l));
 }
 

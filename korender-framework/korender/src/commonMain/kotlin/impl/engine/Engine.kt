@@ -323,7 +323,7 @@ internal class Engine(
         }
 
         override fun fastCloudSky(density: Float, thickness: Float, scale: Float, rippleamount: Float, ripplescale: Float, zenithcolor: ColorRGB, horizoncolor: ColorRGB) = InternalMaterialModifier {
-            it.plugins["sky"] = "!shader/sky/fastcloud.plugin.frag"
+            it.plugins["sky"] = "!shader/plugin/sky.fastcloud.frag"
             it.uniforms["density"] = density
             it.uniforms["thickness"] = thickness
             it.uniforms["scale"] = scale
@@ -334,7 +334,7 @@ internal class Engine(
         }
 
         override fun starrySky(colorness: Float, density: Float, speed: Float, size: Float) = InternalMaterialModifier {
-            it.plugins["sky"] = "!shader/sky/starry.plugin.frag"
+            it.plugins["sky"] = "!shader/plugin/sky.starry.frag"
             it.uniforms["colorness"] = colorness
             it.uniforms["density"] = density
             it.uniforms["speed"] = speed
@@ -343,9 +343,14 @@ internal class Engine(
 
         override fun cubeSky(cubeTexture: CubeTextureDeclaration) =
             InternalMaterialModifier {
-                it.plugins["sky"] = "!shader/sky/cube.plugin.frag"
-                it.shaderDefs += "SKY_CUBE"
+                it.plugins["sky"] = "!shader/plugin/sky.cube.frag"
                 it.uniforms["cubeTexture"] = cubeTexture
+            }
+
+        override fun textureSky(texture: TextureDeclaration) =
+            InternalMaterialModifier {
+                it.plugins["sky"] = "!shader/plugin/sky.texture.frag"
+                it.uniforms["skyTexture"] = texture
             }
 
         override fun fog(density: Float, color: ColorRGB) = InternalMaterialModifier {
@@ -354,11 +359,9 @@ internal class Engine(
             it.uniforms["fogColor"] = color
         }
 
-        override fun ibl(env: CubeTextureDeclaration): MaterialModifier =
-            InternalMaterialModifier {
-                it.shaderDefs += "IBL"
-                it.uniforms["cubeTexture"] = env
-            }
+        override fun ibl(env: CubeTextureDeclaration) = cubeSky(env)
+
+        override fun ibl(env: MaterialModifier) = env
 
         override fun roiTextures(block: RoiTexturesContext.() -> Unit) = InternalMaterialModifier {
             it.shaderDefs += "ROI"

@@ -19,7 +19,7 @@ out vec4 fragColor;
 void main() {
 
     vec3 look = screenToLook(vtex);
-    vec3 color = sky(look);
+    vec3 color = sky(look, 0.);
 
     #ifdef PLUGIN_SECSKY
         color = pluginSecsky(look, color);

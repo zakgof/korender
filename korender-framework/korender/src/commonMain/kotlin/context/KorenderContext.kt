@@ -101,8 +101,10 @@ interface KorenderContext {
     fun fastCloudSky(density: Float = 3.0f, thickness: Float = 10.0f, scale: Float = 1.0f, rippleamount: Float = 0.3f, ripplescale: Float = 4.0f, zenithcolor: ColorRGB = ColorRGB(0x3F6FC3), horizoncolor: ColorRGB = ColorRGB(0xB8CAE9)): MaterialModifier
     fun starrySky(colorness: Float = 0.8f, density: Float = 20.0f, speed: Float = 1.0f, size: Float = 15.0f): MaterialModifier
     fun cubeSky(cubeTexture: CubeTextureDeclaration): MaterialModifier
+    fun textureSky(texture: TextureDeclaration): MaterialModifier
 
     fun ibl(env: CubeTextureDeclaration): MaterialModifier
+    fun ibl(env: MaterialModifier): MaterialModifier
 
     fun roiTextures(block: RoiTexturesContext.() -> Unit): MaterialModifier
 

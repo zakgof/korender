@@ -12,7 +12,7 @@ float noi(vec2 uv) {
     return fract(texture(noiseTexture, uv).r * 5.0) * 0.8 + 0.1;
 }
 
-vec3 sky(vec3 look) {
+vec3 sky(vec3 look, float bias) {
 
     vec2 uve = skydiskfromlook(look, 1.5);
 

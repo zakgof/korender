@@ -46,10 +46,10 @@ vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 cdiff, vec3 F0, float roughness, 
     vec3 f_specular = F * D * G / max(4.0 * NdotV * NdotL, 0.001);
 #endif
     
-#ifdef IBL
+#ifdef PLUGIN_SKY
     vec3 R = reflect(-V, N);
-    float maxBias = log2(float(textureSize(cubeTexture, 0).x)) - 1.;
-    vec3 env = texture(cubeTexture, R, roughness * maxBias).rgb;
+    float maxBias = 8;
+    vec3 env = sky(R, roughness * maxBias);
     vec3 FR = F0 + (1. - F0) * pow(1. - NdotV, 5.);
     vec3 indirect = env * FR;
 #else

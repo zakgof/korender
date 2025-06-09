@@ -7,7 +7,13 @@ import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 
 internal fun interface InternalMaterialModifier : MaterialModifier {
+
     fun applyTo(builder: MaterialBuilder)
+
+    operator fun plus(that: InternalMaterialModifier) = InternalMaterialModifier {
+        this.applyTo(it)
+        that.applyTo(it)
+    }
 }
 
 internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean, private val retentionPolicy: RetentionPolicy) {

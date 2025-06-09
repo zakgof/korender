@@ -18,10 +18,6 @@ uniform vec4 baseColor;
 uniform float metallicFactor;
 uniform float roughnessFactor;
 
-#ifdef IBL
-uniform samplerCube cubeTexture;
-#endif
-
 uniform vec3 cameraPos;
 uniform vec3 cameraDir;
 uniform vec3 ambientColor;
@@ -54,10 +50,6 @@ uniform int i1[MAX_SHADOWS];
 out vec4 fragColor;
 
 float shadowRatios[MAX_SHADOWS];
-
-#import "!shader/lib/shadow.glsl"
-#import "!shader/lib/pbr.glsl"
-#import "!shader/lib/light.glsl"
 
 vec3 position;
 vec4 albedo;
@@ -105,6 +97,16 @@ vec3 look;
 #ifdef PLUGIN_DEPTH
 #import "$depth"
 #endif
+
+#ifdef PLUGIN_SKY
+#import "!shader/lib/space.glsl"
+#import "!shader/lib/sky.glsl"
+#import "$sky"
+#endif
+
+#import "!shader/lib/shadow.glsl"
+#import "!shader/lib/pbr.glsl"
+#import "!shader/lib/light.glsl"
 
 void main() {
 
