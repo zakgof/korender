@@ -19,8 +19,13 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.glgpu.GlGpuMesh
 import com.zakgof.korender.math.FloatMath.PI
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
 import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sin
 
 internal class MeshLink(val cpuMesh: CMesh, dynamic: Boolean) : AutoCloseable {
@@ -72,11 +77,194 @@ internal object Geometry {
             is ScreenQuad -> screenQuad()
             is Billboard -> billboard(count)
             is ImageQuad -> imageQuad()
+            is Quad -> quad(simpleMeshDeclaration.sizeX, simpleMeshDeclaration.sizeY, count)
+            is Disk -> disk(simpleMeshDeclaration.radius, simpleMeshDeclaration.sectors, count)
+            is Cylinder -> cylinder(simpleMeshDeclaration.radius, simpleMeshDeclaration.height, simpleMeshDeclaration.sectors, count)
+            is CylinderSide -> cylinderSide(simpleMeshDeclaration.radius, simpleMeshDeclaration.height, simpleMeshDeclaration.sectors, count)
+            is Cone -> cone(simpleMeshDeclaration.radius, simpleMeshDeclaration.height, simpleMeshDeclaration.sectors, count)
+            is ConeTop -> coneTop(simpleMeshDeclaration.radius, simpleMeshDeclaration.height, simpleMeshDeclaration.sectors, count)
+            is HeightField -> heightField(simpleMeshDeclaration.cellsX, simpleMeshDeclaration.cellsZ, simpleMeshDeclaration.cellWidth, simpleMeshDeclaration.height, count)
             is ObjMesh -> loader.safeBytes(simpleMeshDeclaration.objFile) { obj(it, count) }
             is CustomCpuMesh -> simpleMeshDeclaration.mesh
             is CustomMesh -> CMesh(simpleMeshDeclaration.vertexCount, simpleMeshDeclaration.indexCount, count, attributes = simpleMeshDeclaration.attributes.toTypedArray(), simpleMeshDeclaration.indexType, simpleMeshDeclaration.block)
             else -> throw KorenderException("Unknown mesh type $meshDeclaration")
         }
+    }
+
+    private fun quad(sizeX: Float, sizeY: Float, count: Int) = CMesh(
+        4,
+        6,
+        count,
+        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+    ) {
+        pos(Vec3(-sizeX * 0.5f, -sizeY * 0.5f, 0f)).tex(0f, 0f).normal((-1).z)
+        pos(Vec3( sizeX * 0.5f, -sizeY * 0.5f, 0f)).tex(1f, 0f).normal((-1).z)
+        pos(Vec3( sizeX * 0.5f,  sizeY * 0.5f, 0f)).tex(1f, 1f).normal((-1).z)
+        pos(Vec3(-sizeX * 0.5f,  sizeY * 0.5f, 0f)).tex(0f, 1f).normal((-1).z)
+    }
+
+    private fun disk(radius: Float, sectors: Int, count: Int) = CMesh(
+        sectors * 2,
+        sectors * 3,
+        count,
+        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+    ) {
+        for (sector in 0 until sectors) {
+            val phi = PI * 2f * sector / sectors
+            pos(Vec3(radius * cos(phi), 0f, radius * sin(phi)))
+                .normal(1.y)
+                .tex(0.5f + 0.5f * cos(phi), 0.5f + 0.5f * sin(phi))
+        }
+        pos(Vec3.ZERO)
+            .normal(1.y)
+            .tex(0.5f, 0.5f)
+        for (sector in 0 until sectors) {
+            index(sector, sectors, (sector + 1) % sectors)
+        }
+    }
+
+    private fun coneTop(radius: Float, height: Float, sectors: Int, count: Int) = CMesh(
+        sectors * 2,
+        sectors * 3,
+        count,
+        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+    ) {
+        val base = 1f / Vec2(radius, height).length()
+        val xSlope = height * base
+        val ySlope = radius * base
+        for (sector in 0 until sectors) {
+            val phi = PI * 2f * sector / sectors
+            val normal = Vec3(xSlope * cos(phi), ySlope, xSlope * sin(phi))
+            pos(Vec3(radius * cos(phi), 0f, radius * sin(phi)))
+                .normal(normal)
+                .tex(sector.toFloat() / sectors, 0f)
+            pos(height.y)
+                .normal(normal)
+                .tex(sector.toFloat() / sectors, 1f)
+        }
+        val d = 2 * sectors
+        for (sector in 0 until sectors) {
+            index(sector * 2, (sector * 2 + 1) % d, (sector * 2+ 2) % d)
+        }
+    }
+
+    private fun cone(radius: Float, height: Float, sectors: Int, count: Int) = CMesh(
+        sectors * 2,
+        sectors * 3,
+        count,
+        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+    ) {
+        val base = 1f / Vec2(radius, height).length()
+        val xSlope = height * base
+        val ySlope = radius * base
+        for (sector in 0 until sectors) {
+            val phi = PI * 2f * sector / sectors
+            val normal = Vec3(xSlope * cos(phi), ySlope, xSlope * sin(phi))
+            pos(Vec3(radius * cos(phi), 0f, radius * sin(phi)))
+                .normal(normal)
+                .tex(sector.toFloat() / sectors, 0f)
+            pos(height.y)
+                .normal(normal)
+                .tex(sector.toFloat() / sectors, 1f)
+        }
+        val d = 2 * sectors
+        for (sector in 0 until sectors) {
+            index(sector * 2, (sector * 2 + 1) % d, (sector * 2+ 2) % d)
+        }
+    }
+
+    private fun cylinder(radius: Float, height: Float, sectors: Int, count: Int) = CMesh(
+        sectors * 2,
+        sectors * 3,
+        count,
+        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+    ) {
+        val base = 1f / Vec2(radius, height).length()
+        val xSlope = height * base
+        val ySlope = radius * base
+        for (sector in 0 until sectors) {
+            val phi = PI * 2f * sector / sectors
+            val normal = Vec3(xSlope * cos(phi), ySlope, xSlope * sin(phi))
+            pos(Vec3(radius * cos(phi), 0f, radius * sin(phi)))
+                .normal(normal)
+                .tex(sector.toFloat() / sectors, 0f)
+            pos(height.y)
+                .normal(normal)
+                .tex(sector.toFloat() / sectors, 1f)
+        }
+        val d = 2 * sectors
+        for (sector in 0 until sectors) {
+            index(sector, (sector + 2) % d, (sector + 1) % d)
+        }
+    }
+
+    private fun cylinderSide(radius: Float, height: Float, sectors: Int, count: Int) = CMesh(
+        sectors * 2,
+        sectors * 3,
+        count,
+        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+    ) {
+        val base = 1f / Vec2(radius, height).length()
+        val xSlope = height * base
+        val ySlope = radius * base
+        for (sector in 0 until sectors) {
+            val phi = PI * 2f * sector / sectors
+            val normal = Vec3(xSlope * cos(phi), ySlope, xSlope * sin(phi))
+            pos(Vec3(radius * cos(phi), 0f, radius * sin(phi)))
+                .normal(normal)
+                .tex(sector.toFloat() / sectors, 0f)
+            pos(height.y)
+                .normal(normal)
+                .tex(sector.toFloat() / sectors, 1f)
+        }
+        val d = 2 * sectors
+        for (sector in 0 until sectors) {
+            index(sector, (sector + 2) % d, (sector + 1) % d)
+        }
+    }
+
+    private fun heightField(xsize: Int, zsize: Int, cell: Float, height: (Int, Int) -> Float, count: Int) = CMesh(
+        (xsize + 1) * (zsize + 1),
+        xsize * zsize * 6,
+        count,
+        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+    ) {
+        for (x in 0..xsize) {
+            for (z in 0..zsize) {
+                pos(
+                    x * cell - 0.5f * cell * xsize,
+                    height(x, z),
+                    z * cell - 0.5f * cell * zsize
+                )
+                val n = normal(x, z, xsize, zsize, cell, height)
+                normal(n)
+                tex(x.toFloat() / xsize, z.toFloat() / zsize)
+            }
+        }
+        for (x in 0..<xsize) {
+            for (z in 0..<zsize) {
+                val b = x + (xsize + 1) * z
+                index(b, b + 1, b + xsize + 1, b + xsize + 1, b + 1, b + xsize + 2)
+            }
+        }
+    }
+
+    private fun normal(
+        x: Int,
+        y: Int,
+        xsize: Int,
+        ysize: Int,
+        cell: Float,
+        height: (Int, Int) -> Float
+    ): Vec3 {
+        val h = height(x, y)
+        val dhx = (max(x - 1, 0)..min(x + 1, xsize) step 2)
+            .map { (height(it, y) - h) * (it - x) }
+            .average().toFloat()
+        val dhy = (max(y - 1, 0)..min(y + 1, ysize) step 2)
+            .map { (height(x, it) - h) * (it - y) }
+            .average().toFloat()
+        return Vec3(-dhx, cell, -dhy).normalize()
     }
 
     private fun obj(objFileBytes: ByteArray, count: Int): CMesh {

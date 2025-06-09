@@ -45,12 +45,17 @@ import com.zakgof.korender.impl.engine.shadow.InternalHardParams
 import com.zakgof.korender.impl.engine.shadow.InternalPcssParams
 import com.zakgof.korender.impl.engine.shadow.InternalVsmParams
 import com.zakgof.korender.impl.geometry.CMesh
+import com.zakgof.korender.impl.geometry.Cone
+import com.zakgof.korender.impl.geometry.ConeTop
 import com.zakgof.korender.impl.geometry.Cube
 import com.zakgof.korender.impl.geometry.CustomCpuMesh
 import com.zakgof.korender.impl.geometry.CustomMesh
+import com.zakgof.korender.impl.geometry.Cylinder
+import com.zakgof.korender.impl.geometry.CylinderSide
+import com.zakgof.korender.impl.geometry.Disk
 import com.zakgof.korender.impl.geometry.HeightField
 import com.zakgof.korender.impl.geometry.ObjMesh
-import com.zakgof.korender.impl.geometry.ScreenQuad
+import com.zakgof.korender.impl.geometry.Quad
 import com.zakgof.korender.impl.geometry.Sphere
 import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
@@ -161,13 +166,23 @@ internal class Engine(
             return image!!
         }
 
-        override fun cube(halfSide: Float): MeshDeclaration = Cube(halfSide, currentRetentionPolicy)
+        override fun quad(sizeX: Float, sizeY: Float) = Quad(sizeX, sizeY, currentRetentionPolicy)
 
-        override fun sphere(radius: Float, slices: Int, sectors: Int): MeshDeclaration = Sphere(radius, slices, sectors, currentRetentionPolicy)
+        override fun cube(halfSide: Float) = Cube(halfSide, currentRetentionPolicy)
+
+        override fun sphere(radius: Float, slices: Int, sectors: Int) = Sphere(radius, slices, sectors, currentRetentionPolicy)
+
+        override fun cylinder(height: Float, radius: Float, sectors: Int) = Cylinder(height, radius, sectors, currentRetentionPolicy)
+
+        override fun cylinderSide(height: Float, radius: Float, sectors: Int) = CylinderSide(height, radius, sectors, currentRetentionPolicy)
+
+        override fun cone(height: Float, radius: Float, sectors: Int) = Cone(height, radius, sectors, currentRetentionPolicy)
+
+        override fun coneTop(height: Float, radius: Float, sectors: Int) = ConeTop(height, radius, sectors, currentRetentionPolicy)
+
+        override fun disk(radius: Float, sectors: Int) = Disk(radius, sectors, currentRetentionPolicy)
 
         override fun obj(objFile: String): MeshDeclaration = ObjMesh(objFile, currentRetentionPolicy)
-
-        override fun screenQuad(): MeshDeclaration = ScreenQuad(currentRetentionPolicy)
 
         override fun customMesh(id: String, vertexCount: Int, indexCount: Int, vararg attributes: MeshAttribute<*>, dynamic: Boolean, indexType: IndexType?, block: MeshInitializer.() -> Unit): MeshDeclaration =
             CustomMesh(id, vertexCount, indexCount, attributes.asList(), dynamic, indexType, currentRetentionPolicy, block)
@@ -499,7 +514,7 @@ internal class Engine(
                 instances
             }
 
-        override fun billboardInstancing(id: String, count: Int, dynamic: Boolean, block: InstancedBillboardsContext.() -> Unit)=
+        override fun billboardInstancing(id: String, count: Int, dynamic: Boolean, block: InstancedBillboardsContext.() -> Unit) =
             InternalBillboardInstancingDeclaration(id, count, dynamic) {
                 val instances = mutableListOf<BillboardInstance>()
                 val context = DefaultInstancedBillboardsContext(instances)
