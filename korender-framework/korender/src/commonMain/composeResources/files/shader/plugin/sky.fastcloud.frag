@@ -1,4 +1,4 @@
-#import "!shader/lib/noise.glsl"
+#import "!shader/lib/noisebias.glsl"
 
 uniform float time;
 uniform float thickness;

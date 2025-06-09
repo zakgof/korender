@@ -21,9 +21,9 @@ float pluginTerrainHeight(vec2 uv) {
     float hs = clamp(samp - 0.1, 0.0, 1.0);
 
     float height =  -90.0 + base
-    +    8.0 * fbm2(uv * 64.0) * hs
-    +   16.0 * fbm2(uv * 16.0) * hs
-    +  512.0 * fbm2(uv *  4.0) * hs * hs;
+    +    8.0 * fbm(uv * 64.0) * hs
+    +   16.0 * fbm(uv * 16.0) * hs
+    +  512.0 * fbm(uv *  4.0) * hs * hs;
 
     return height;
 }

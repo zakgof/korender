@@ -21,13 +21,13 @@ uniform sampler2D road;
 
 vec4 pluginAlbedo() {
 
-    vec3 sand = vec3(0.89, 0.79, 0.46) + 0.3 * sin(fbm2(vtex *  64.0));
+    vec3 sand = vec3(0.89, 0.79, 0.46) + 0.3 * sin(fbm(vtex *  64.0));
     vec3 grass = vec3(0.2, 0.6, 0.3);
     vec3 snow = vec3(0.9, 0.9, 0.9);
     vec3 rock = vec3(0.5, 0.4, 0.4);
 
-    float sandW = 1.0 - smoothstep(40.0, 70.0, vpos.y - 20.0 * fbm2(vtex * 18.0));
-    float snowW = smoothstep(100.0, 200.0, vpos.y - 96.0 * fbm2(vtex * 4.0));
+    float sandW = 1.0 - smoothstep(40.0, 70.0, vpos.y - 20.0 * fbm(vtex * 18.0));
+    float snowW = smoothstep(100.0, 200.0, vpos.y - 96.0 * fbm(vtex * 4.0));
     float rockW = smoothstep(-0.45, -0.44, -vnormal.y);
     float grassW = clamp(1.0 - sandW - rockW - snowW, 0.0, 1.0);
 
@@ -38,8 +38,8 @@ vec4 pluginAlbedo() {
 
 
     float c = 0.25 +
-    fbm2(vtex *  64.0) * 0.5 +
-    fbm2(vtex * 128.0) * 0.25;
+    fbm(vtex *  64.0) * 0.5 +
+    fbm(vtex * 128.0) * 0.25;
 
     vec4 roiColor = roi(vtex);
 

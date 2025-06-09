@@ -119,7 +119,7 @@ internal class GlGpuTexture(
     }
 
     init {
-        println("Creating GPU Texture $this")
+        println("Creating GPU Texture [$this]")
 
         // glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, glHandle)

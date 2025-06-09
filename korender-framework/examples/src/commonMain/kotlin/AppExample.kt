@@ -36,26 +36,25 @@ import org.jetbrains.compose.resources.painterResource
 fun AppExample() {
     val options = listOf(
 
-        Demo("PBR") { MetallicRoughnessExample() },
-
         Demo("Heightmap Terrain") { HeightmapTerrainExample() },
         Demo("Procedural Terrain") { ProcTerrainExample() },
         Demo("Hybrid Terrain") { HybridTerrainExample() },
 
         Demo("City demo") { InfiniteCity() },
 
-        Demo("SSR") { SsrExample() },       // TODO
+
         Demo("PBR") { MetallicRoughnessExample() },
         Demo("OBJ mesh") { ObjFileExample() },
         Demo("GLTF crowd") { GltfCrowdExample() },
         Demo("Shadows") { ShadowExample() },
         Demo("Render to texture") { RenderToTextureExample() },
-        Demo("Effects") { EffectsExample() },
         Demo("Point lights") { LightsExample() },
         Demo("GUI") { GuiExample() },
         Demo("Particles / Billboards") { InstancedBillboardsExample() },
         Demo("Particles / Cubes") { InstancedCubesExample() },
         Demo("Blur") { BlurExample() },
+        Demo("Effects") { EffectsExample() },
+        Demo("SSR") { SsrExample() },       // TODO
     )
 
     var isExpanded by remember { mutableStateOf(false) }

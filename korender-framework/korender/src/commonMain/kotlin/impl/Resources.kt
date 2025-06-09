@@ -11,7 +11,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 internal fun <T> Deferred<T>.resultOrNull(): T? = if (this.isCompleted) this.getCompleted() else null
 
 internal suspend fun resourceBytes(appResourceLoader: ResourceLoader, resource: String): ByteArray {
-    println("Loading resource $resource")
+    println("Loading resource [$resource]")
     if (resource.startsWith("!")) {
         return Res.readBytes("files/" + resource.substring(1))
     }

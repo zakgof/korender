@@ -38,17 +38,17 @@ void main() {
 
     vec3 surface = cameraPos - look * cameraPos.y / look.y;
 
-    float fbmA = fbm2(surface.xz / waveScale - 0.03 * time) - 0.5;
+    float fbmA = fbm(surface.xz / waveScale - 0.03 * time) - 0.5;
     if (world.y < waveMagnitude * fbmA) {
 
         vec3 normal = normalize(vec3(
             waveMagnitude * fbmA,
             1.0f,
-            waveMagnitude * (fbm2((msw * surface.xz) / waveScale  + 0.04 * time) - 0.5)
+            waveMagnitude * (fbm((msw * surface.xz) / waveScale  + 0.04 * time) - 0.5)
         ));
 
         vec3 reflecteddir = reflect(look, normal);
-        vec3 reflectedcolor = sky(reflecteddir).rgb;
+        vec3 reflectedcolor = sky(reflecteddir, 0.).rgb;
 
         #ifdef PLUGIN_SECSKY
             reflectedcolor = pluginSecsky(reflecteddir, reflectedcolor);
