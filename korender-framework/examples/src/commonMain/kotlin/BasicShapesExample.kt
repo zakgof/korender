@@ -10,12 +10,13 @@ import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
+import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 @Composable
 fun BasicShapesExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val material = base(color = ColorRGBA.Blue)
-    val freeCamera = FreeCamera(this, Vec3(0f, -2f, 20f), (-1).z)
+    val freeCamera = FreeCamera(this, 20.z, (-1).z)
     OnTouch { freeCamera.touch(it) }
     OnKey { freeCamera.handle(it) }
     Frame {
@@ -25,23 +26,33 @@ fun BasicShapesExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         Renderable(
             material,
-            mesh = quad(),
-            transform = translate(0.x)
+            mesh = quad(1f, 1f),
+            transform = translate(-3.x + 2.y)
         )
         Renderable(
             material,
             mesh = disk(),
-            transform = rot.translate(-2.5f.x)
+            transform = translate(2.y)
         )
         Renderable(
             material,
-            mesh = cone(2f, 1f),
-            transform = rot.translate(-5.x)
+            mesh = coneTop(2f, 1f),
+            transform = translate(3.x + 1.y)
         )
         Renderable(
             material,
             mesh = cube(1f),
-            transform = translate(0.x)
+            transform = translate(-3.x - 2.y)
+        )
+        Renderable(
+            material,
+            mesh = sphere(1f),
+            transform = translate(-2.y)
+        )
+        Renderable(
+            material,
+            mesh = cylinderSide(2f, 1f),
+            transform = translate(3.x - 3.y)
         )
 
         Gui {

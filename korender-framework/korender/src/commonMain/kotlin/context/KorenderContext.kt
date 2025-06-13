@@ -56,13 +56,11 @@ interface KorenderContext {
     fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3 = ZERO, insideOut: Boolean = false, defs: Set<String> = setOf(), block: FrameContext.() -> Unit): CubeTextureImages
     fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameContext.() -> Unit): Image
 
-    fun quad(sizeX: Float = 1f, sizeY: Float = 1f): MeshDeclaration
+    fun quad(halfSideX: Float = 0.5f, halfSideY: Float = 0.5f): MeshDeclaration
     fun cube(halfSide: Float = 0.5f): MeshDeclaration
     fun sphere(radius: Float = 1.0f, slices: Int = 32, sectors: Int = 32): MeshDeclaration
     fun disk(radius: Float = 1f, sectors: Int = 32): MeshDeclaration
-    fun cone(height: Float = 1f, radius: Float = 1f, sectors: Int = 32): MeshDeclaration
     fun coneTop(height: Float = 1f, radius: Float = 1f, sectors: Int = 32): MeshDeclaration
-    fun cylinder(height: Float = 1f, radius: Float = 1f, sectors: Int = 32): MeshDeclaration
     fun cylinderSide(height: Float = 1f, radius: Float = 1f, sectors: Int = 32): MeshDeclaration
     fun heightField(id: String, cellsX: Int, cellsZ: Int, cellWidth: Float, height: (Int, Int) -> Float): MeshDeclaration
     fun obj(objFile: String): MeshDeclaration
@@ -113,7 +111,7 @@ interface KorenderContext {
 
     fun roiTextures(block: RoiTexturesContext.() -> Unit): MaterialModifier
 
-    fun ssr(width: Int? = null, height: Int? = null, fxaa: Boolean = false, maxRayTravel: Float = 100f, linearSteps: Int = 12, binarySteps: Int = 5, envTexture: CubeTextureDeclaration? = null): PostShadingEffect
+    fun ssr(width: Int? = null, height: Int? = null, fxaa: Boolean = false, maxRayTravel: Float = 10f, linearSteps: Int = 12, binarySteps: Int = 5, envTexture: CubeTextureDeclaration? = null): PostShadingEffect
     fun bloom(width: Int? = null, height: Int? = null): PostShadingEffect
 
     fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration

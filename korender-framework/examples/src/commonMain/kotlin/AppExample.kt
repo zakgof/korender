@@ -36,16 +36,13 @@ import org.jetbrains.compose.resources.painterResource
 fun AppExample() {
     val options = listOf(
 
-        Demo("Basic shapes") { BasicShapesExample() },
-
         Demo("Heightmap Terrain") { HeightmapTerrainExample() },
         Demo("Procedural Terrain") { ProcTerrainExample() },
         Demo("Hybrid Terrain") { HybridTerrainExample() },
 
         Demo("City demo") { InfiniteCity() },
 
-
-        Demo("PBR") { MetallicRoughnessExample() },
+        Demo("PBR materials") { MetallicRoughnessExample() },
         Demo("OBJ mesh") { ObjFileExample() },
         Demo("GLTF crowd") { GltfCrowdExample() },
         Demo("Shadows") { ShadowExample() },

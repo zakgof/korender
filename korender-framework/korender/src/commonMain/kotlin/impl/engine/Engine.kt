@@ -45,12 +45,10 @@ import com.zakgof.korender.impl.engine.shadow.InternalHardParams
 import com.zakgof.korender.impl.engine.shadow.InternalPcssParams
 import com.zakgof.korender.impl.engine.shadow.InternalVsmParams
 import com.zakgof.korender.impl.geometry.CMesh
-import com.zakgof.korender.impl.geometry.Cone
 import com.zakgof.korender.impl.geometry.ConeTop
 import com.zakgof.korender.impl.geometry.Cube
 import com.zakgof.korender.impl.geometry.CustomCpuMesh
 import com.zakgof.korender.impl.geometry.CustomMesh
-import com.zakgof.korender.impl.geometry.Cylinder
 import com.zakgof.korender.impl.geometry.CylinderSide
 import com.zakgof.korender.impl.geometry.Disk
 import com.zakgof.korender.impl.geometry.HeightField
@@ -166,17 +164,13 @@ internal class Engine(
             return image!!
         }
 
-        override fun quad(sizeX: Float, sizeY: Float) = Quad(sizeX, sizeY, currentRetentionPolicy)
+        override fun quad(halfSideX: Float, halfSideY: Float) = Quad(halfSideX, halfSideY, currentRetentionPolicy)
 
         override fun cube(halfSide: Float) = Cube(halfSide, currentRetentionPolicy)
 
         override fun sphere(radius: Float, slices: Int, sectors: Int) = Sphere(radius, slices, sectors, currentRetentionPolicy)
 
-        override fun cylinder(height: Float, radius: Float, sectors: Int) = Cylinder(height, radius, sectors, currentRetentionPolicy)
-
         override fun cylinderSide(height: Float, radius: Float, sectors: Int) = CylinderSide(height, radius, sectors, currentRetentionPolicy)
-
-        override fun cone(height: Float, radius: Float, sectors: Int) = Cone(height, radius, sectors, currentRetentionPolicy)
 
         override fun coneTop(height: Float, radius: Float, sectors: Int) = ConeTop(height, radius, sectors, currentRetentionPolicy)
 

@@ -4,16 +4,21 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.Korender
+import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
 
 @Composable
 fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+    val orbitCamera = OrbitCamera(this, 20.z, 1.y)
+    OnTouch { orbitCamera.touch(it) }
     val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })
     Frame {
-        val phase = frameInfo.time.toInt() % 3
+        camera = orbitCamera.camera(projection, width, height)
+        val phase = 1 //frameInfo.time.toInt() % 3
         DeferredShading {
             if (phase == 1) {
                 PostShading(
@@ -21,9 +26,9 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                         width = width / 4,
                         height = height / 4,
                         fxaa = true,
-                        maxRayTravel = 25f,
-                        linearSteps = 18,
-                        binarySteps = 5,
+                        maxRayTravel = 12f,
+                        linearSteps = 120,
+                        binarySteps = 4,
                         envTexture = env
                     )
                 )
@@ -38,13 +43,13 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         Renderable(
             base(color = ColorRGBA.Red, metallicFactor = 0f, roughnessFactor = 0.2f),
             mesh = sphere(),
-            transform = translate(-2f, -1f, -5f),
+            transform = translate(-2f, -1f, -4f),
             transparent = false
         )
         Renderable(
             base(color = ColorRGBA.Green, metallicFactor = 0f, roughnessFactor = 0.2f),
             mesh = sphere(),
-            transform = translate(2f, -1f, -5f)
+            transform = translate(2f, -1f, -4f)
         )
         Renderable(
             base(colorTexture = texture("texture/asphalt-albedo.jpg"), metallicFactor = 0.3f, roughnessFactor = 0.2f),

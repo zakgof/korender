@@ -42,43 +42,48 @@ vec3 ssr(vec3 vpos, vec3 N, vec3 V) {
 
     float w = 1.;
 
-    if (dot(rayDir, cameraDir) > 0.) {
 
-        float travel = 0.;
-        float step = maxRayTravel / float(linearSteps);
-        vec3 rayPoint = vpos;
-        vec3 rayStep = rayDir * step;
 
-        for (int i = 0; i < linearSteps; i++) {
+    float peel = 0.01;
 
-            rayPoint += rayStep;
-            travel += step;
+    float travel = 0.;
+    float step = maxRayTravel / float(linearSteps);
+    vec3 rayPoint = vpos;
+    vec3 rayStep = rayDir * step;
 
-            vec3 uv = wToS(rayPoint);
-            if (uv.x < 0. || uv.x > 1. || uv.y < 0. || uv.y > 1.)
-                break;
+    for (int i = 0; i < linearSteps; i++) {
 
-            if (uv.z > texture(depthTexture, uv.xy).r) {
-                vec3 r2 = rayPoint;
-                vec3 r1 = rayPoint - rayStep;
+        vec3 prevPoint = rayPoint;
+        rayPoint += rayStep;
+        travel += step;
 
-                rayPoint = (r1 + r2) * 0.5;
-                for (int b=0; b<binarySteps; b++) {
-                    uv = wToS(rayPoint);
-                    if (uv.z > texture(depthTexture, uv.xy).r) {
-                        r2 = rayPoint;
-                    } else {
-                        r1 = rayPoint;
-                    }
-                    rayPoint = (r1 + r2) * 0.5;
-                }
+        vec3 uv = wToS(rayPoint);
+        if (uv.x < 0. || uv.x > 1. || uv.y < 0. || uv.y > 1. || uv.z < 0. || uv.z > 1.)
+            break;
+
+        float deepen = uv.z - texture(depthTexture, uv.xy).r;
+
+        if (deepen > peel)
+            continue;
+
+        if (deepen > peel * 0.1 && deepen < peel) {
+            vec3 r2 = rayPoint;
+            vec3 r1 = prevPoint;
+            rayPoint = (r1 + r2) * 0.5;
+            for (int b = 0; b < binarySteps; b++) {
                 uv = wToS(rayPoint);
-
-                vec3 hitN = normalize(texture(normalTexture, uv.xy).rgb * 2. - 1.);
-                w *= smoothstep(0.21, 0.25, -dot(cameraDir, hitN))
-                    * (1. - smoothstep(0.8, 1.0, travel/maxRayTravel));
-                return mix(dflt, texture(colorTexture, uv.xy).rgb, w);
+                deepen = uv.z - texture(depthTexture, uv.xy).r;
+                if (deepen > 0.) {
+                    r2 = rayPoint;
+                } else {
+                    r1 = rayPoint;
+                }
+                rayPoint = (r1 + r2) * 0.5;
             }
+            uv = wToS(rayPoint);
+            w *= smoothstep (peel, 0.0, abs(deepen));
+            w *= smoothstep(maxRayTravel * maxRayTravel, 0., travel * travel);
+            return mix(dflt, texture(colorTexture, uv.xy).rgb, w);
         }
     }
     return dflt;
@@ -99,11 +104,11 @@ void main() {
     vec3 N = normalize(normalTexel.rgb * 2.0 - 1.0);
 
     vec3 reflection = vec3(0.);
-    if (depth < 0.9999) {
+    if (depth < 1.0) {
         reflection = ssr(vpos, N, V);
-        float NdotV = clamp(dot(N, V), 0.2, 1.0);
+        float NdotV = clamp(dot(N, V), 0.0, 1.0);
         vec3 FR = F0 + (1. - F0) * pow(1. - NdotV, 5.);
-        reflection *= FR;
+        reflection *= FR * (1. - rough);
     }
 
     fragColor = vec4(reflection, 1.0);

@@ -133,7 +133,7 @@ internal class GuiRenderer(
         val meshLink = inventory.fontMesh(InternalFontMeshDeclaration(declaration.id, declaration.retentionPolicy))
         val font = inventory.font(InternalFontDeclaration( declaration.fontResource, declaration.retentionPolicy))
         val shader = inventory.shader(Fonts.shaderDeclaration)
-        if (meshLink != null && font != null && shader != null) {
+        if (meshLink != null && font != null && shader != null && w > 0) {
             val mesh = meshLink.cpuMesh
             if (!declaration.static || !mesh.instancesInitialized) {
                 mesh.updateMesh {
@@ -237,9 +237,7 @@ internal class GuiRenderer(
         return size
     }
 
-    private fun textSize(
-        textDeclaration: ElementDeclaration.Text
-    ): Size {
+    private fun textSize(textDeclaration: ElementDeclaration.Text): Size {
         val font = inventory.font(InternalFontDeclaration(textDeclaration.fontResource, textDeclaration.retentionPolicy))
         return Size(
             font?.textWidth(textDeclaration.height, textDeclaration.text) ?: 0,

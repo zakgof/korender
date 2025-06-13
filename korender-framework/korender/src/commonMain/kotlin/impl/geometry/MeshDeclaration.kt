@@ -17,10 +17,8 @@ internal data class ObjMesh(val objFile: String, override val retentionPolicy: R
 internal data class Billboard(override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class ImageQuad(override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class ScreenQuad(override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
-internal data class Quad(val sizeX: Float, val sizeY: Float, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
-internal data class Cylinder(val height: Float, val radius: Float, val sectors: Int, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
+internal data class Quad(val halfSideX: Float, val halfSideY: Float, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class CylinderSide(val height: Float, val radius: Float, val sectors: Int, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
-internal data class Cone(val height: Float, val radius: Float, val sectors: Int, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class ConeTop(val height: Float, val radius: Float, val sectors: Int, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class Disk(val radius: Float, val sectors: Int, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 

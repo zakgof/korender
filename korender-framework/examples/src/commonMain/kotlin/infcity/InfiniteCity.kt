@@ -117,10 +117,10 @@ private fun FrameContext.building(buildingId: Int, z: Float, x: Float) {
     val building = buildings[buildingId]
 
     val roof = arrayOf(
-        base(colorTexture = texture("infcity/roof.jpg"), metallicFactor = 0.6f),
+        base(colorTexture = texture("infcity/roof.jpg"), metallicFactor = 0f, roughnessFactor = 1f),
     )
     val windows = arrayOf(
-        base(colorTexture = texture("infcity/dw.jpg"), metallicFactor = 0.3f),
+        base(colorTexture = texture("infcity/dw.jpg"), metallicFactor = 0.5f, roughnessFactor = 0.1f),
         emission(White),
         uniforms(
             "windowTexture" to texture("infcity/lw.jpg", wrap = TextureWrap.MirroredRepeat)
@@ -148,7 +148,7 @@ private fun FrameContext.building(buildingId: Int, z: Float, x: Float) {
 }
 
 private fun FrameContext.road(startZ: Float) = Renderable(
-    base(colorTexture = texture("infcity/road.jpg")),
+    base(colorTexture = texture("infcity/road.jpg"), metallicFactor = 0f, roughnessFactor = 1.0f),
     mesh = roadMesh(),
     transform = translate(startZ.z)
 )
@@ -162,13 +162,13 @@ private fun FrameContext.roadMesh() = customMesh("road", 4, 6, POS, NORMAL, TEX)
 }
 
 private fun FrameContext.sidewalk(z: Float, x: Float) = Renderable(
-    base(colorTexture = texture("infcity/roof.jpg")),
+    base(colorTexture = texture("infcity/roof.jpg"), metallicFactor = 0.1f, roughnessFactor = 0.2f),
     triplanar(0.5f),
-    mesh = grassMesh(),
+    mesh = sidewalkMesh(),
     transform = translate(x, 0f, z)
 )
 
-private fun FrameContext.grassMesh() = customMesh("grass", 4, 6, POS, NORMAL, TEX) {
+private fun FrameContext.sidewalkMesh() = customMesh("sidewalk", 4, 6, POS, NORMAL, TEX) {
     pos(0f, 0f, 0f).normal(1.y).tex(0f, 0f)
     pos(0f, 0f, 32f).normal(1.y).tex(0f, 1f)
     pos(32f, 0f, 32f).normal(1.y).tex(1f, 1f)
