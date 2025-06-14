@@ -262,7 +262,9 @@ internal class Scene(
 
             if (meshLink != null && shader != null && decalsFb != null && decalBlendFb != null) {
                 decalsFb.exec {
-                    renderContext.state.set {}
+                    renderContext.state.set {
+                        depthTest(false)
+                    }
                     glViewport(0, 0, renderContext.width, renderContext.height)
                     glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
 
@@ -272,13 +274,16 @@ internal class Scene(
                         val model = Mat4(
                             right.x, right.y, right.z, decalDeclaration.position.x,
                             decalDeclaration.up.x, decalDeclaration.up.y, decalDeclaration.up.z, decalDeclaration.position.y,
-                            -decalDeclaration.look.x, -decalDeclaration.look.y, -decalDeclaration.look.z, decalDeclaration.position.z,
+                            decalDeclaration.look.x, decalDeclaration.look.y, decalDeclaration.look.z, decalDeclaration.position.z,
                             0f, 0f, 0f, 1f
-                        )
+                        ) * scale(decalDeclaration.size).mat4
+
+                        println("MODEL ${model * 2.z}")
+
                         val decalUniforms = mapOf(
                             "renderSize" to Vec2(renderContext.width.toFloat(), renderContext.height.toFloat()),
                             "decalTexture" to decalDeclaration.colorTexture,
-                            "model" to model * scale(decalDeclaration.size).mat4
+                            "model" to model
                         )
                         shader.render(
                             { fixer(decalUniforms[it] ?: uniforms[it]) },

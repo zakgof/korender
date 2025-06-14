@@ -22,10 +22,12 @@ fun DecalExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         AmbientLight(white(0.3f))
 
         DeferredShading {
-            (0 until 1).forEach {
-                val look = (-2.z+1.x).normalize() // Vec3.random(it * 1000)
-                val up = ((look % Vec3.random(it * 1000 + 1)) % look).normalize()
-                Decal(position = 3.x, look = look, up = up, size = 1.6f, colorTexture = texture("texture/decal.png"))
+            val blots = frameInfo.time.toInt().coerceIn(1, 4)
+            (0 until blots).forEach {
+                val look = (-1.z + it.x - 2.x).normalize()
+                val up = 1.y
+                val pos = 3.x - look * 2.0f
+                Decal(position = pos, look = look, up = up, size = 1.6f, colorTexture = texture("texture/decal.png"))
             }
         }
         Renderable(
