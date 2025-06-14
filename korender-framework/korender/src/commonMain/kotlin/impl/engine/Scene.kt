@@ -7,6 +7,7 @@ import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.shadow.ShadowRenderer
 import com.zakgof.korender.impl.engine.shadow.ShadowerData
 import com.zakgof.korender.impl.engine.shadow.uniforms
+import com.zakgof.korender.impl.geometry.DecalCube
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glViewport
@@ -36,6 +37,9 @@ import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.Mat4
+import com.zakgof.korender.math.Transform.Companion.scale
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
@@ -233,6 +237,59 @@ internal class Scene(
         uniforms["materialTexture"] = geometryBuffer.colorTextures[2]
         uniforms["emissionTexture"] = geometryBuffer.colorTextures[3]
         uniforms["depthTexture"] = geometryBuffer.depthTexture!!
+
+        renderDecals(uniforms)
+    }
+
+    private fun renderDecals(uniforms: MutableMap<String, Any?>) {
+        if (sceneDeclaration.deferredShadingDeclaration!!.decals.isNotEmpty()) {
+            // TODO: downscaled
+            val decalsFb = inventory.frameBuffer(
+                FrameBufferDeclaration(
+                    "decals", renderContext.width, renderContext.height,
+                    listOf(GlGpuTexture.Preset.RGBAFilter, GlGpuTexture.Preset.RGBAFilter), true, TransientProperty(currentRetentionPolicy)
+                )
+            )
+            val meshLink = inventory.mesh(DecalCube(0.5f, currentRetentionPolicy))
+            val shader = inventory.shader(ShaderDeclaration("!shader/deferred/decal.vert", "!shader/deferred/decal.frag", retentionPolicy = currentRetentionPolicy))
+
+            if (meshLink != null && shader != null && decalsFb != null) {
+                decalsFb.exec {
+
+                    renderContext.state.set {}
+                    glViewport(0, 0, renderContext.width, renderContext.height)
+                    glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+
+                    sceneDeclaration.deferredShadingDeclaration!!.decals.forEach { decalDeclaration ->
+
+                        val right = decalDeclaration.look % decalDeclaration.up
+                        val model = Mat4(
+                            right.x, right.y, right.z, decalDeclaration.position.x,
+                            decalDeclaration.up.x, decalDeclaration.up.y, decalDeclaration.up.z, decalDeclaration.position.y,
+                            -decalDeclaration.look.x, -decalDeclaration.look.y, -decalDeclaration.look.z, decalDeclaration.position.z,
+                            0f, 0f, 0f, 1f
+                        )
+
+
+
+                        val decalUniforms = mapOf(
+                            "renderSize" to Vec2(renderContext.width.toFloat(), renderContext.height.toFloat()),
+                            "decalTexture" to decalDeclaration.colorTexture,
+                            "model" to model * scale(decalDeclaration.size).mat4
+                        )
+
+                        println((decalUniforms["model"] as Mat4).project(Vec3.ZERO))
+
+
+                        shader.render(
+                            { fixer(decalUniforms[it] ?: uniforms[it]) },
+                            meshLink.gpuMesh
+                        )
+                    }
+                    uniforms["cdiffTexture"] = decalsFb.colorTextures[0]
+                }
+            }
+        }
     }
 
     private fun renderBucket(renderables: List<RenderableDeclaration>, uniforms: Map<String, Any?>, defs: Set<String> = setOf()) {
@@ -376,7 +433,8 @@ internal class Scene(
             return null
         } else {
             val number = index % 2
-            val fb = inventory.frameBuffer(FrameBufferDeclaration("filter-$number", renderContext.width, renderContext.height, listOf(GlGpuTexture.Preset.RGBNoFilter), true, TransientProperty(currentRetentionPolicy))) ?: throw SkipRender("Reusable FB 'filter-$number'")
+            val fb = inventory.frameBuffer(FrameBufferDeclaration("filter-$number", renderContext.width, renderContext.height, listOf(GlGpuTexture.Preset.RGBNoFilter), true, TransientProperty(currentRetentionPolicy)))
+                ?: throw SkipRender("Reusable FB 'filter-$number'")
             fb.exec { block() }
             m["colorTexture"] = fb.colorTextures[0]
             m["depthTexture"] = fb.depthTexture
@@ -386,7 +444,8 @@ internal class Scene(
 
     fun renderToEnvProbe(uniforms: MutableMap<String, Any?>, envCaptureContext: EnvCaptureContext, probeName: String): GlGpuCubeTexture {
         renderShadows(uniforms, true)
-        val probeFb = inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", envCaptureContext.resolution, envCaptureContext.resolution, true, TransientProperty(currentRetentionPolicy))) ?: throw SkipRender("Env probe FB 'probe-$probeName'")
+        val probeFb =
+            inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", envCaptureContext.resolution, envCaptureContext.resolution, true, TransientProperty(currentRetentionPolicy))) ?: throw SkipRender("Env probe FB 'probe-$probeName'")
         val probeUniforms = mutableMapOf<String, Any?>()
         probeUniforms += uniforms
         val projection = FrustumProjection(2f * envCaptureContext.near, 2f * envCaptureContext.near, envCaptureContext.near, envCaptureContext.far)
@@ -414,7 +473,8 @@ internal class Scene(
 
     fun renderToFrameProbe(uniforms: MutableMap<String, Any?>, frameCaptureContext: FrameCaptureContext, frameProbeName: String): GlGpuTexture {
         renderShadows(uniforms, true)
-        val probeFb = inventory.frameBuffer(FrameBufferDeclaration("probe-$frameProbeName", frameCaptureContext.width, frameCaptureContext.height, listOf(GlGpuTexture.Preset.RGBAFilter), true, TransientProperty(currentRetentionPolicy))) ?: throw SkipRender("Frame probe FB 'probe-$frameProbeName'")
+        val probeFb = inventory.frameBuffer(FrameBufferDeclaration("probe-$frameProbeName", frameCaptureContext.width, frameCaptureContext.height, listOf(GlGpuTexture.Preset.RGBAFilter), true, TransientProperty(currentRetentionPolicy)))
+            ?: throw SkipRender("Frame probe FB 'probe-$frameProbeName'")
         val probeUniforms = mutableMapOf<String, Any?>()
         probeUniforms += uniforms
         probeUniforms["view"] = frameCaptureContext.camera.mat4
@@ -424,8 +484,10 @@ internal class Scene(
         probeFb.exec {
             prepareScene(frameCaptureContext.width, frameCaptureContext.height)
             renderForwardOpaques(sceneDeclaration, probeUniforms)
-            renderTransparents(sceneDeclaration, probeUniforms, frameCaptureContext.camera,
-                width = frameCaptureContext.width, height = frameCaptureContext.height)
+            renderTransparents(
+                sceneDeclaration, probeUniforms, frameCaptureContext.camera,
+                width = frameCaptureContext.width, height = frameCaptureContext.height
+            )
         }
         return probeFb.colorTextures[0]
     }

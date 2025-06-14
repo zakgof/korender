@@ -1,9 +1,9 @@
+
 import com.zakgof.korender.Attributes
 import com.zakgof.korender.Attributes.MODEL0
 import com.zakgof.korender.Attributes.MODEL1
 import com.zakgof.korender.Attributes.MODEL2
 import com.zakgof.korender.Attributes.MODEL3
-import com.zakgof.korender.Attributes.WEIGHTS
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MaterialModifier
@@ -227,7 +227,7 @@ internal class GltfSceneBuilder(
                 attributeForAccessor(p.key, accessor)?.let { it to p.value }
             }
         val attributes = verticesAttributeAccessors.map { it.first }.toMutableList()
-        if (declaration.instancingDeclaration != null && attributes.contains(WEIGHTS))
+        if (declaration.instancingDeclaration != null)
             attributes += listOf(MODEL0, MODEL1, MODEL2, MODEL3)
 
         val meshDeclaration = CustomMesh(

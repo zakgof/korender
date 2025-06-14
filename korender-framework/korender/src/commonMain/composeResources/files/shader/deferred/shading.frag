@@ -71,8 +71,7 @@ void main() {
 
     float depth = texture(depthTexture, vtex).r;
 
-    vec4 viewPos = screenToViewSpace(vtex, depth);
-    vec3 vpos = (inverse(view) * viewPos).xyz;
+    vec3 vpos = screenToWorldSpace(vtex, depth);
 
     vec3 c_diff = texture(cdiffTexture, vtex).rgb;
     vec4 materialTexel = texture(materialTexture, vtex);

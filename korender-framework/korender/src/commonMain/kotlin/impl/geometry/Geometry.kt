@@ -74,6 +74,7 @@ internal object Geometry {
         return when (simpleMeshDeclaration) {
             is Sphere -> sphere(simpleMeshDeclaration.radius, simpleMeshDeclaration.slices, simpleMeshDeclaration.sectors, count)
             is Cube -> cube(simpleMeshDeclaration.halfSide, count)
+            is DecalCube -> decalCube(simpleMeshDeclaration.halfSide, count)
             is ScreenQuad -> screenQuad()
             is Billboard -> billboard(count)
             is ImageQuad -> imageQuad()
@@ -307,6 +308,25 @@ internal object Geometry {
             index(12, 14, 13, 12, 15, 14)
             index(16, 18, 17, 16, 19, 18)
             index(20, 22, 21, 20, 23, 22)
+        }
+
+    private fun decalCube(halfSide: Float, count: Int) =
+        CMesh(8, 36, count, POS, MODEL0, MODEL1, MODEL2, MODEL3) {
+            pos(-halfSide, -halfSide, -halfSide)
+            pos( halfSide, -halfSide, -halfSide)
+            pos(-halfSide,  halfSide, -halfSide)
+            pos( halfSide,  halfSide, -halfSide)
+            pos(-halfSide, -halfSide,  halfSide)
+            pos( halfSide, -halfSide,  halfSide)
+            pos(-halfSide,  halfSide,  halfSide)
+            pos( halfSide,  halfSide,  halfSide)
+
+            index( 0, 1, 2, 1, 3, 2)
+            index(5, 4, 7, 4, 6, 7)
+            index(4, 0, 6, 0, 2, 6)
+            index(1, 5, 3, 5, 7, 3)
+            index(2, 3, 6, 3, 7, 6)
+            index(4, 5, 0, 5, 1, 0)
         }
 
     private fun billboard(count: Int) =
