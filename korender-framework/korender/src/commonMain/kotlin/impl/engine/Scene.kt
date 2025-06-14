@@ -250,12 +250,18 @@ internal class Scene(
                     listOf(GlGpuTexture.Preset.RGBAFilter, GlGpuTexture.Preset.RGBAFilter), true, TransientProperty(currentRetentionPolicy)
                 )
             )
+            // TODO: no depth on blend
+            val decalBlendFb = inventory.frameBuffer(
+                FrameBufferDeclaration(
+                    "decal-blend", renderContext.width, renderContext.height,
+                    listOf(GlGpuTexture.Preset.RGBFilter, GlGpuTexture.Preset.RGBFilter, GlGpuTexture.Preset.RGBAFilter), false, TransientProperty(currentRetentionPolicy)
+                )
+            )
             val meshLink = inventory.mesh(DecalCube(0.5f, currentRetentionPolicy))
             val shader = inventory.shader(ShaderDeclaration("!shader/deferred/decal.vert", "!shader/deferred/decal.frag", retentionPolicy = currentRetentionPolicy))
 
-            if (meshLink != null && shader != null && decalsFb != null) {
+            if (meshLink != null && shader != null && decalsFb != null && decalBlendFb != null) {
                 decalsFb.exec {
-
                     renderContext.state.set {}
                     glViewport(0, 0, renderContext.width, renderContext.height)
                     glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
@@ -269,25 +275,26 @@ internal class Scene(
                             -decalDeclaration.look.x, -decalDeclaration.look.y, -decalDeclaration.look.z, decalDeclaration.position.z,
                             0f, 0f, 0f, 1f
                         )
-
-
-
                         val decalUniforms = mapOf(
                             "renderSize" to Vec2(renderContext.width.toFloat(), renderContext.height.toFloat()),
                             "decalTexture" to decalDeclaration.colorTexture,
                             "model" to model * scale(decalDeclaration.size).mat4
                         )
-
-                        println((decalUniforms["model"] as Mat4).project(Vec3.ZERO))
-
-
                         shader.render(
                             { fixer(decalUniforms[it] ?: uniforms[it]) },
                             meshLink.gpuMesh
                         )
                     }
-                    uniforms["cdiffTexture"] = decalsFb.colorTextures[0]
                 }
+                uniforms["decalAlbedo"] = decalsFb.colorTextures[0]
+                decalBlendFb.exec {
+                    val blendShader = ShaderDeclaration("!shader/screen.vert", "!shader/deferred/decalblend.frag", retentionPolicy = currentRetentionPolicy)
+                    val blendMaterialDeclaration = MaterialDeclaration(blendShader, mapOf())
+                    renderFullscreen(blendMaterialDeclaration, uniforms) { blend(false)}
+                }
+                uniforms["cdiffTexture"] = decalBlendFb.colorTextures[0]
+                uniforms["normalTexture"] = decalBlendFb.colorTextures[1]
+                uniforms["materialTexture"] = decalBlendFb.colorTextures[2]
             }
         }
     }
@@ -411,17 +418,20 @@ internal class Scene(
     }
 
     private fun renderFullscreen(
-        filter: MaterialDeclaration, uniforms: Map<String, Any?>,
-        width: Int = renderContext.width, height: Int = renderContext.height
+        quadMaterial: MaterialDeclaration, uniforms: Map<String, Any?>,
+        width: Int = renderContext.width, height: Int = renderContext.height,
+        state: GlState.StateContext.() -> Unit = {}
     ) {
         val mesh = inventory.mesh(ScreenQuad(currentRetentionPolicy))
-        val shader = inventory.shader(filter.shader)
-        renderContext.state.set {}
+        val shader = inventory.shader(quadMaterial.shader)
+        renderContext.state.set {
+            state()
+        }
         glViewport(0, 0, width, height)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         if (mesh != null && shader != null) {
             shader.render(
-                { fixer(filter.uniforms[it] ?: uniforms[it]) },
+                { fixer(quadMaterial.uniforms[it] ?: uniforms[it]) },
                 mesh.gpuMesh
             )
         }

@@ -13,9 +13,8 @@ uniform vec3 cameraPos;
 uniform vec2 renderSize;
 uniform sampler2D decalTexture;
 
-layout(location = 0) out vec4 outAlbedo;
-layout(location = 1) out vec4 outNormal;
-
+layout(location = 0) out vec4 decalAlbedo;
+layout(location = 1) out vec4 decalNormal;
 
 #import "!shader/lib/space.glsl"
 
@@ -25,12 +24,10 @@ void main() {
     float depth = texture(depthTexture, uv).r;
     vec3 vpos = screenToWorldSpace(uv, depth);
 
-    vec3 decalSpacePos = (inverse(model) * vec4(vpos, 1.0)).xyz;
-//    if (decalSpacePos.x < 0. || decalSpacePos.x > 1. || decalSpacePos.y < 0. || decalSpacePos.y > 1. || decalSpacePos.z < 0. || decalSpacePos.z > 1.)
-//        discard;
+    vec3 decalSpacePos = (inverse(model) * vec4(vpos, 1.0)).xyz + 0.5;
+    if (decalSpacePos.x < 0. || decalSpacePos.x > 1. || decalSpacePos.y < 0. || decalSpacePos.y > 1.)
+        discard;
 
-    outAlbedo = texture(decalTexture, decalSpacePos.xy);
-    outNormal = vec4(0.);
-
-    outAlbedo = vec4(decalSpacePos, 1.);
+    decalAlbedo = texture(decalTexture, decalSpacePos.xy);
+    decalNormal = vec4(0.);
 }
