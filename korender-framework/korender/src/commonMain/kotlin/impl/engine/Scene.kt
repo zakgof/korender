@@ -278,8 +278,6 @@ internal class Scene(
                             0f, 0f, 0f, 1f
                         ) * scale(decalDeclaration.size).mat4
 
-                        println("MODEL ${model * 2.z}")
-
                         val decalUniforms = mapOf(
                             "renderSize" to Vec2(renderContext.width.toFloat(), renderContext.height.toFloat()),
                             "decalTexture" to decalDeclaration.colorTexture,

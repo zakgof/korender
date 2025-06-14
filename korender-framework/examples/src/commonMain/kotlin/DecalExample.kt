@@ -4,11 +4,10 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.math.ColorRGB.Companion.white
-import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import kotlin.random.Random
 
 @Composable
 fun DecalExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
@@ -22,18 +21,18 @@ fun DecalExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         AmbientLight(white(0.3f))
 
         DeferredShading {
-            val blots = frameInfo.time.toInt().coerceIn(1, 4)
+            val blots = (frameInfo.time * 6f).toInt().coerceIn(1, 12)
             (0 until blots).forEach {
-                val look = (-1.z + it.x - 2.x).normalize()
-                val up = 1.y
-                val pos = 3.x - look * 2.0f
+                val r = Random(it)
+                val look = Vec3(r.nextFloat() - 0.5f, r.nextFloat() - 0.5f, -0.6f).normalize() // Vec3(cos(it * 0.4f), -1f, -sin(it * 0.4f)).normalize()
+                val up = ((look % 1.y) % look).normalize()
+                val pos = -look * 4f
                 Decal(position = pos, look = look, up = up, size = 1.6f, colorTexture = texture("texture/decal.png"))
             }
         }
         Renderable(
             *materialModifiers,
-            mesh = sphere(2f),
-            transform = translate(3.x),
+            mesh = sphere(4f)
         )
         Gui {
             Column {
