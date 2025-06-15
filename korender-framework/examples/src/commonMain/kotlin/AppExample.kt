@@ -93,11 +93,11 @@ fun AppExample() {
                     Image(
                         painter = painterResource(Res.drawable.korender32),
                         contentDescription = "Korender",
-                        modifier = Modifier.padding(8.dp).size(16.dp)
+                        modifier = Modifier.padding(4.dp).size(20.dp)
                     )
                     Text(
                         text = "Korender",
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         color = textColor,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
