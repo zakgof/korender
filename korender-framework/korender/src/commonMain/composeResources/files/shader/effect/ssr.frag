@@ -4,9 +4,9 @@ in vec2 vtex;
 
 uniform sampler2D colorTexture;
 
-uniform sampler2D normalTexture;
-uniform sampler2D materialTexture;
-uniform sampler2D depthTexture;
+uniform sampler2D normalGeometryTexture;
+uniform sampler2D materialGeometryTexture;
+uniform sampler2D depthGeometryTexture;
 
 uniform vec3 cameraPos;
 uniform vec3 cameraDir;
@@ -61,7 +61,7 @@ vec3 ssr(vec3 vpos, vec3 N, vec3 V) {
         if (uv.x < 0. || uv.x > 1. || uv.y < 0. || uv.y > 1. || uv.z < 0. || uv.z > 1.)
             break;
 
-        float deepen = uv.z - texture(depthTexture, uv.xy).r;
+        float deepen = uv.z - texture(depthGeometryTexture, uv.xy).r;
 
         if (deepen > peel)
             continue;
@@ -72,7 +72,7 @@ vec3 ssr(vec3 vpos, vec3 N, vec3 V) {
             rayPoint = (r1 + r2) * 0.5;
             for (int b = 0; b < binarySteps; b++) {
                 uv = wToS(rayPoint);
-                deepen = uv.z - texture(depthTexture, uv.xy).r;
+                deepen = uv.z - texture(depthGeometryTexture, uv.xy).r;
                 if (deepen > 0.) {
                     r2 = rayPoint;
                 } else {
@@ -91,11 +91,11 @@ vec3 ssr(vec3 vpos, vec3 N, vec3 V) {
 
 void main() {
 
-    float depth = texture(depthTexture, vtex).r;
+    float depth = texture(depthGeometryTexture, vtex).r;
     vec3 vpos = screenToWorldSpace(vtex, depth);
 
-    vec4 materialTexel = texture(materialTexture, vtex);
-    vec4 normalTexel = texture(normalTexture, vtex);
+    vec4 materialTexel = texture(materialGeometryTexture, vtex);
+    vec4 normalTexel = texture(normalGeometryTexture, vtex);
 
     vec3 F0 = materialTexel.rgb;
     float rough = materialTexel.a;

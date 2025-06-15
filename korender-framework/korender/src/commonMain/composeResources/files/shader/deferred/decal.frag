@@ -1,8 +1,6 @@
 #import "!shader/lib/header.glsl"
 
-in vec3 vpos;
-
-uniform sampler2D depthTexture;
+uniform sampler2D depthGeometryTexture;
 
 //////////
 
@@ -23,8 +21,12 @@ layout(location = 2) out vec4 decalMaterial;
 
 #import "!shader/lib/space.glsl"
 
+vec2 vtex;
+vec3 vpos;
+vec3 vnormal;
 vec4 albedo;
 vec3 normal;
+float normala;
 float metallic;
 float roughness;
 vec3 diffuse;
@@ -38,6 +40,10 @@ vec3 f0;
 #import "$albedo"
 #endif
 
+#ifdef PLUGIN_NORMAL
+#import "$normal"
+#endif
+
 #ifdef PLUGIN_METALLIC_ROUGHNESS
 #import "$metallic_roughness"
 #endif
@@ -49,12 +55,14 @@ vec3 f0;
 void main() {
 
     vec2 uv = gl_FragCoord.xy / renderSize;
-    float depth = texture(depthTexture, uv).r;
-    vec3 vpos = screenToWorldSpace(uv, depth);
+    float depth = texture(depthGeometryTexture, uv).r;
+    vpos = screenToWorldSpace(uv, depth);
 
-    vec3 decalSpacePos = (inverse(model) * vec4(vpos, 1.0)).xyz + 0.5;
-    if (decalSpacePos.x < 0. || decalSpacePos.x > 1. || decalSpacePos.y < 0. || decalSpacePos.y > 1.)
+    vtex = (inverse(model) * vec4(vpos, 1.0)).xy + 0.5;
+    if (vtex.x < 0. || vtex.x > 1. || vtex.y < 0. || vtex.y > 1.)
         discard;
+
+    vnormal = texture(depthGeometryTexture, uv).rgb * 2.0 - 1.0;
 
     albedo = baseColor;
 
@@ -66,9 +74,10 @@ void main() {
         albedo *= pluginTexturing();
     #else
         #ifdef BASE_COLOR_MAP
-            albedo *= texture(baseColorTexture, decalSpacePos.xy);
+            albedo *= texture(baseColorTexture, vtex);
         #endif
     #endif
+
 
     #ifdef PLUGIN_ALBEDO
         albedo = pluginAlbedo();
@@ -76,6 +85,14 @@ void main() {
 
     if (albedo.a < 0.001)
         discard;
+
+    #ifdef PLUGIN_NORMAL
+        normal = pluginNormal();
+        normala = albedo.a;
+    #else
+        normal = vec3(0.);
+        normala = 0.;
+    #endif
 
     metallic = metallicFactor;
     roughness = roughnessFactor;
@@ -90,6 +107,6 @@ void main() {
     f0 = mix(vec3(0.04), albedo.rgb, metallic);
 
     decalDiffuse = vec4(diffuse, albedo.a);
-    decalNormal = vec4(0.);
+    decalNormal = vec4((normal + 1.0) * 0.5, normala);
     decalMaterial = vec4(f0, roughness);
 }

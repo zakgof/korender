@@ -24,7 +24,7 @@ fun DecalExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             val blots = (frameInfo.time * 6f).toInt().coerceIn(1, 12)
             (0 until blots).forEach {
                 val r = Random(it)
-                val look = Vec3(r.nextFloat() - 0.5f, r.nextFloat() - 0.5f, -0.6f).normalize() // Vec3(cos(it * 0.4f), -1f, -sin(it * 0.4f)).normalize()
+                val look = Vec3(r.nextFloat() - 0.5f, r.nextFloat() - 0.5f, -0.6f).normalize()
                 val up = ((look % 1.y) % look).normalize()
                 val pos = -look * 4f
                 Decal(

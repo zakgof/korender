@@ -36,8 +36,6 @@ import org.jetbrains.compose.resources.painterResource
 fun AppExample() {
     val options = listOf(
 
-        Demo("Decals") { DecalExample() },
-
         Demo("Heightmap Terrain") { HeightmapTerrainExample() },
         Demo("Procedural Terrain") { ProcTerrainExample() },
         Demo("Hybrid Terrain") { HybridTerrainExample() },
@@ -55,6 +53,7 @@ fun AppExample() {
         Demo("Particles / Cubes") { InstancedCubesExample() },
         Demo("Blur") { BlurExample() },
         Demo("Effects") { EffectsExample() },
+        Demo("Decals") { DecalExample() },
         Demo("SSR") { SsrExample() },       // TODO
     )
 

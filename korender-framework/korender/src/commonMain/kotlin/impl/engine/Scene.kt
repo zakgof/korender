@@ -235,11 +235,11 @@ internal class Scene(
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             renderBucket(sceneDeclaration.opaques, uniforms)
         }
-        uniforms["cdiffTexture"] = geometryBuffer.colorTextures[0]
-        uniforms["normalTexture"] = geometryBuffer.colorTextures[1]
-        uniforms["materialTexture"] = geometryBuffer.colorTextures[2]
-        uniforms["emissionTexture"] = geometryBuffer.colorTextures[3]
-        uniforms["depthTexture"] = geometryBuffer.depthTexture!!
+        uniforms["diffuseGeometryTexture"] = geometryBuffer.colorTextures[0]
+        uniforms["normalGeometryTexture"] = geometryBuffer.colorTextures[1]
+        uniforms["materialGeometryTexture"] = geometryBuffer.colorTextures[2]
+        uniforms["emissionGeometryTexture"] = geometryBuffer.colorTextures[3]
+        uniforms["depthGeometryTexture"] = geometryBuffer.depthTexture!!
 
         renderDecals(uniforms)
     }
@@ -297,9 +297,9 @@ internal class Scene(
                     val blendMaterialDeclaration = MaterialDeclaration(blendShader, mapOf())
                     renderFullscreen(blendMaterialDeclaration, uniforms) { blend(false) }
                 }
-                uniforms["cdiffTexture"] = decalBlendFb.colorTextures[0]
-                uniforms["normalTexture"] = decalBlendFb.colorTextures[1]
-                uniforms["materialTexture"] = decalBlendFb.colorTextures[2]
+                uniforms["diffuseGeometryTexture"] = decalBlendFb.colorTextures[0]
+                uniforms["normalGeometryTexture"] = decalBlendFb.colorTextures[1]
+                uniforms["materialGeometryTexture"] = decalBlendFb.colorTextures[2]
             }
         }
     }

@@ -2,11 +2,11 @@
 
 in vec2 vtex;
 
-uniform sampler2D cdiffTexture;
-uniform sampler2D normalTexture;
-uniform sampler2D materialTexture;
-uniform sampler2D emissionTexture;
-uniform sampler2D depthTexture;
+uniform sampler2D diffuseGeometryTexture;
+uniform sampler2D normalGeometryTexture;
+uniform sampler2D materialGeometryTexture;
+uniform sampler2D emissionGeometryTexture;
+uniform sampler2D depthGeometryTexture;
 
 //////////
 
@@ -69,14 +69,14 @@ float shadowRatios[MAX_SHADOWS];
 
 void main() {
 
-    float depth = texture(depthTexture, vtex).r;
+    float depth = texture(depthGeometryTexture, vtex).r;
 
     vec3 vpos = screenToWorldSpace(vtex, depth);
 
-    vec3 c_diff = texture(cdiffTexture, vtex).rgb;
-    vec4 materialTexel = texture(materialTexture, vtex);
-    vec4 emissionTexel = texture(emissionTexture, vtex);
-    vec4 normalTexel = texture(normalTexture, vtex);
+    vec3 c_diff = texture(diffuseGeometryTexture, vtex).rgb;
+    vec4 materialTexel = texture(materialGeometryTexture, vtex);
+    vec4 emissionTexel = texture(emissionGeometryTexture, vtex);
+    vec4 normalTexel = texture(normalGeometryTexture, vtex);
 
     vec3 F0 = materialTexel.rgb;
     float rough = materialTexel.a;
