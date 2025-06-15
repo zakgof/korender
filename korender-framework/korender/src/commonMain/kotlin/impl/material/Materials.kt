@@ -5,6 +5,8 @@ import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.ShaderDeclaration
+import com.zakgof.korender.math.Vec2
+import com.zakgof.korender.math.Vec3.Companion.ZERO
 
 internal fun interface InternalMaterialModifier : MaterialModifier {
 
@@ -23,6 +25,7 @@ internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean, pri
         BaseMaterial.Billboard -> "!shader/billboard.vert"
         BaseMaterial.Screen, BaseMaterial.Shading, BaseMaterial.Composition -> "!shader/screen.vert"
         BaseMaterial.Sky -> "!shader/sky/sky.vert"
+        BaseMaterial.Decal -> "!shader/deferred/decal.vert"
     }
     var fragShaderFile: String = when (base) {
         BaseMaterial.Renderable, BaseMaterial.Billboard -> if (deferredShading) "!shader/deferred/geometry.frag" else "!shader/forward.frag"
@@ -30,6 +33,7 @@ internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean, pri
         BaseMaterial.Sky -> "!shader/sky/sky.frag"
         BaseMaterial.Shading -> "!shader/deferred/shading.frag"
         BaseMaterial.Composition -> "!shader/deferred/composition.frag"
+        BaseMaterial.Decal -> "!shader/deferred/decal.frag"
     }
 
     val shaderDefs: MutableSet<String> = mutableSetOf()
@@ -38,8 +42,8 @@ internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean, pri
 
     init {
         if (base == BaseMaterial.Billboard) {
-            uniforms["xscale"] = 1.0f
-            uniforms["yscale"] = 1.0f
+            uniforms["position"] = ZERO
+            uniforms["scale"] = Vec2(1f, 1f)
             uniforms["rotation"] = 0.0f
         }
     }

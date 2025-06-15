@@ -28,6 +28,7 @@ import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Vec3List
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
+import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
@@ -37,7 +38,9 @@ import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
+import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
@@ -247,7 +250,8 @@ internal class Scene(
             val decalsFb = inventory.frameBuffer(
                 FrameBufferDeclaration(
                     "decals", renderContext.width, renderContext.height,
-                    listOf(GlGpuTexture.Preset.RGBAFilter, GlGpuTexture.Preset.RGBAFilter), true, TransientProperty(currentRetentionPolicy)
+                    listOf(GlGpuTexture.Preset.RGBAFilter, GlGpuTexture.Preset.RGBAFilter, GlGpuTexture.Preset.RGBAFilter),
+                    true, TransientProperty(currentRetentionPolicy)
                 )
             )
             // TODO: no depth on blend
@@ -257,12 +261,11 @@ internal class Scene(
                     listOf(GlGpuTexture.Preset.RGBFilter, GlGpuTexture.Preset.RGBFilter, GlGpuTexture.Preset.RGBAFilter), false, TransientProperty(currentRetentionPolicy)
                 )
             )
-            val meshLink = inventory.mesh(DecalCube(0.5f, currentRetentionPolicy))
-            val shader = inventory.shader(ShaderDeclaration("!shader/deferred/decal.vert", "!shader/deferred/decal.frag", retentionPolicy = currentRetentionPolicy))
 
-            if (meshLink != null && shader != null && decalsFb != null && decalBlendFb != null) {
+            if (decalsFb != null && decalBlendFb != null) {
                 decalsFb.exec {
                     renderContext.state.set {
+                        clearColor(ColorRGBA(0f, 0f, 0f, 0f))
                         depthTest(false)
                     }
                     glViewport(0, 0, renderContext.width, renderContext.height)
@@ -278,22 +281,21 @@ internal class Scene(
                             0f, 0f, 0f, 1f
                         ) * scale(decalDeclaration.size).mat4
 
-                        val decalUniforms = mapOf(
-                            "renderSize" to Vec2(renderContext.width.toFloat(), renderContext.height.toFloat()),
-                            "decalTexture" to decalDeclaration.colorTexture,
-                            "model" to model
-                        )
-                        shader.render(
-                            { fixer(decalUniforms[it] ?: uniforms[it]) },
-                            meshLink.gpuMesh
-                        )
+                        val materialModifiers = decalDeclaration.materialModifiers + InternalMaterialModifier {
+                            it.uniforms["renderSize"] = Vec2(renderContext.width.toFloat(), renderContext.height.toFloat())
+                        }
+                        val renderableDeclaration = RenderableDeclaration(BaseMaterial.Decal, materialModifiers, DecalCube(0.5f, currentRetentionPolicy), Transform(model), currentRetentionPolicy)
+
+                        Rendering.render(inventory, renderableDeclaration, renderContext.camera, true, uniforms, fixer, setOf())
                     }
                 }
-                uniforms["decalAlbedo"] = decalsFb.colorTextures[0]
+                uniforms["decalDiffuse"] = decalsFb.colorTextures[0]
+                uniforms["decalNormal"] = decalsFb.colorTextures[1]
+                uniforms["decalMaterial"] = decalsFb.colorTextures[2]
                 decalBlendFb.exec {
                     val blendShader = ShaderDeclaration("!shader/screen.vert", "!shader/deferred/decalblend.frag", retentionPolicy = currentRetentionPolicy)
                     val blendMaterialDeclaration = MaterialDeclaration(blendShader, mapOf())
-                    renderFullscreen(blendMaterialDeclaration, uniforms) { blend(false)}
+                    renderFullscreen(blendMaterialDeclaration, uniforms) { blend(false) }
                 }
                 uniforms["cdiffTexture"] = decalBlendFb.colorTextures[0]
                 uniforms["normalTexture"] = decalBlendFb.colorTextures[1]

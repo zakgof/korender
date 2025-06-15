@@ -5,7 +5,6 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
-import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.context.BillboardInstancingDeclaration
 import com.zakgof.korender.context.GltfInstancingDeclaration
@@ -45,7 +44,7 @@ internal class DeferredShadingDeclaration() {
     var decals = mutableListOf<InternalDecalDeclaration>()
 }
 
-internal class InternalDecalDeclaration(val position: Vec3, val look: Vec3, val up: Vec3, val size: Float, val colorTexture: TextureDeclaration)
+internal class InternalDecalDeclaration(val position: Vec3, val look: Vec3, val up: Vec3, val size: Float, val materialModifiers: List<MaterialModifier>)
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
 
@@ -76,7 +75,8 @@ internal enum class BaseMaterial {
     Screen,
     Sky,
     Shading,
-    Composition
+    Composition,
+    Decal
 }
 
 internal class MaterialDeclaration(

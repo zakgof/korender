@@ -27,7 +27,13 @@ fun DecalExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                 val look = Vec3(r.nextFloat() - 0.5f, r.nextFloat() - 0.5f, -0.6f).normalize() // Vec3(cos(it * 0.4f), -1f, -sin(it * 0.4f)).normalize()
                 val up = ((look % 1.y) % look).normalize()
                 val pos = -look * 4f
-                Decal(position = pos, look = look, up = up, size = 1.6f, colorTexture = texture("texture/decal.png"))
+                Decal(
+                    base(
+                        colorTexture = texture("texture/decal.png"),
+                        metallicFactor = 0.2f
+                    ),
+                    position = pos, look = look, up = up, size = 1.6f
+                )
             }
         }
         Renderable(
