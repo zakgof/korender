@@ -48,7 +48,7 @@ internal object Rendering {
     fun render(
         inventory: Inventory,
         declaration: RenderableDeclaration,
-        camera: Camera,
+        camera: Camera?,
         deferredShading: Boolean,
         contextUniforms: Map<String, Any?>,
         fixer: (Any?) -> Any?,
@@ -78,7 +78,7 @@ internal object Rendering {
                 var instances = declaration.mesh.instancer()
                 val sortFactor = if (reverseZ) -1f else 1f
                 if (declaration.mesh.transparent) {
-                    instances = instances.sortedBy { (camera.mat4 * it.pos).z * sortFactor }
+                    instances = instances.sortedBy { (camera!!.mat4 * it.pos).z * sortFactor }
                 }
                 mesh.updateMesh {
                     instances.forEachIndexed { i, it ->
@@ -96,7 +96,7 @@ internal object Rendering {
                 var instances = declaration.mesh.instancer()
                 val sortFactor = if (reverseZ) -1f else 1f
                 if (declaration.mesh.transparent) {
-                    instances = instances.sortedBy { (camera.mat4 * it.transform.offset()).z * sortFactor }
+                    instances = instances.sortedBy { (camera!!.mat4 * it.transform.offset()).z * sortFactor }
                 }
                 mesh.updateMesh {
                     instances.forEachIndexed { i, it ->

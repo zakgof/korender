@@ -103,17 +103,17 @@ internal class GuiRenderer(
                     mesh = mesh.gpuMesh,
                     shader = shader,
                     uniforms =
-                    mapOf<String, Any?>(
-                        "pos" to Vec2(
-                            (x.toFloat() + declaration.marginLeft.toFloat()) / width,
-                            1.0f - (y.toFloat() + declaration.marginTop.toFloat() + declaration.height.toFloat()) / height
-                        ),
-                        "size" to Vec2(
-                            declaration.width.toFloat() / width,
-                            declaration.height.toFloat() / height
-                        ),
-                        "imageTexture" to ResourceTextureDeclaration(declaration.imageResource, retentionPolicy = declaration.retentionPolicy)
-                    )
+                        mapOf<String, Any?>(
+                            "pos" to Vec2(
+                                (x.toFloat() + declaration.marginLeft.toFloat()) / width,
+                                1.0f - (y.toFloat() + declaration.marginTop.toFloat() + declaration.height.toFloat()) / height
+                            ),
+                            "size" to Vec2(
+                                declaration.width.toFloat() / width,
+                                declaration.height.toFloat() / height
+                            ),
+                            "imageTexture" to ResourceTextureDeclaration(declaration.imageResource, retentionPolicy = declaration.retentionPolicy)
+                        )
                 )
             )
             touchBoxes.add(
@@ -131,7 +131,7 @@ internal class GuiRenderer(
 
     private fun createText(declaration: ElementDeclaration.Text, xxx: Int, yyy: Int, w: Int) {
         val meshLink = inventory.fontMesh(InternalFontMeshDeclaration(declaration.id, declaration.retentionPolicy))
-        val font = inventory.font(InternalFontDeclaration( declaration.fontResource, declaration.retentionPolicy))
+        val font = inventory.font(InternalFontDeclaration(declaration.fontResource, declaration.retentionPolicy))
         val shader = inventory.shader(Fonts.shaderDeclaration)
         if (meshLink != null && font != null && shader != null && w > 0) {
             val mesh = meshLink.cpuMesh

@@ -8,11 +8,9 @@ import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.FrameBufferDeclaration
 import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.RenderContext
-import com.zakgof.korender.impl.engine.Renderable
 import com.zakgof.korender.impl.engine.RenderableDeclaration
-import com.zakgof.korender.impl.engine.ShaderDeclaration
+import com.zakgof.korender.impl.engine.Rendering
 import com.zakgof.korender.impl.engine.TransientProperty
-import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
@@ -25,12 +23,12 @@ import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.impl.material.InternalMaterialModifier
-import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.OrthoProjection
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
+import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import impl.engine.ImmediatelyFreeRetentionPolicy
@@ -84,36 +82,32 @@ internal object ShadowRenderer {
                 it.base == BaseMaterial.Renderable || it.base == BaseMaterial.Billboard
             }.forEach { renderableDeclaration ->
 
-                val originalMaterialDeclaration = materialDeclaration(renderableDeclaration.base, false, renderableDeclaration.retentionPolicy, renderableDeclaration.materialModifiers)
+                val shadowMaterialModifier = InternalMaterialModifier {
 
-                val mesh = inventory.mesh(renderableDeclaration.mesh as InternalMeshDeclaration)
-                val additionalDefs = mutableSetOf<String>()
-                val additionalPlugins = mutableMapOf<String, String>()
-                val additionalUniforms = mutableMapOf<String, Any?>()
+                    it.vertShaderFile = if (renderableDeclaration.base == BaseMaterial.Billboard) "!shader/billboard.vert" else "!shader/base.vert"
+                    it.fragShaderFile = "!shader/caster.frag"
 
-                if (declaration.fixedYRange != null) {
-                    additionalPlugins["voutput"] = "!shader/plugin/voutput.fixedyrange.vert"
-                    additionalUniforms["fixedYMin"] = declaration.fixedYRange.first
-                    additionalUniforms["fixedYMax"] = declaration.fixedYRange.second
+                    if (declaration.fixedYRange != null) {
+                        it.plugins["voutput"] = "!shader/plugin/voutput.fixedyrange.vert"
+                        it.uniforms["fixedYMin"] = declaration.fixedYRange.first
+                        it.uniforms["fixedYMax"] = declaration.fixedYRange.second
+                    }
+                    when (declaration.algorithm) {
+                        is InternalVsmParams -> it.shaderDefs += "VSM_SHADOW"
+                        is InternalHardParams -> it.shaderDefs += "HARD_SHADOW"
+                        is InternalPcssParams -> it.shaderDefs += "PCSS_SHADOW"
+                    }
                 }
-                when (declaration.algorithm) {
-                    is InternalVsmParams -> additionalDefs += "VSM_SHADOW"
-                    is InternalHardParams -> additionalDefs += "HARD_SHADOW"
-                    is InternalPcssParams -> additionalDefs += "PCSS_SHADOW"
-                }
 
-                val modifiedShaderDeclaration = ShaderDeclaration(
-                    if (renderableDeclaration.base == BaseMaterial.Billboard) "!shader/billboard.vert" else "!shader/base.vert",
-                    "!shader/caster.frag",
-                    originalMaterialDeclaration.shader.defs + additionalDefs,
-                    originalMaterialDeclaration.shader.plugins + additionalPlugins,
-                    ImmediatelyFreeRetentionPolicy
+                val casterRenderableDeclaration = RenderableDeclaration(
+                    renderableDeclaration.base,
+                    renderableDeclaration.materialModifiers + shadowMaterialModifier,
+                    renderableDeclaration.mesh,
+                    renderableDeclaration.transform,
+                    renderableDeclaration.retentionPolicy
                 )
-                val shader = inventory.shader(modifiedShaderDeclaration)
-                if (mesh != null && shader != null) {
-                    Renderable(mesh.gpuMesh, shader, originalMaterialDeclaration.uniforms, renderableDeclaration.transform)
-                        .render(casterUniforms + additionalUniforms, fixer)
-                }
+
+                Rendering.render(inventory, casterRenderableDeclaration, shadowCamera, false, casterUniforms, fixer, setOf())
             }
         }
 
@@ -169,7 +163,6 @@ internal object ShadowRenderer {
         fixer: (Any?) -> Any?,
         texBlurRadius: Float
     ) {
-
         val uniforms = mutableMapOf<String, Any?>()
         renderContext.uniforms(uniforms) // TODO once per frame only
 
@@ -177,46 +170,40 @@ internal object ShadowRenderer {
             FrameBufferDeclaration("shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM), true, TransientProperty(ImmediatelyFreeRetentionPolicy))
         ) ?: return
 
-        val blur1 = materialDeclaration(BaseMaterial.Screen, false, ImmediatelyFreeRetentionPolicy, listOf(InternalMaterialModifier {
-            it.vertShaderFile = "!shader/screen.vert"
-            it.fragShaderFile = "!shader/effect/blurv.frag"
-            it.uniforms["radius"] = texBlurRadius
-        }))
+        val blurVQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, "!shader/effect/blurv.frag")
 
         uniforms["colorTexture"] = frameBuffer.colorTextures[0]
         uniforms["depthTexture"] = frameBuffer.depthTexture
 
         blurFrameBuffer.exec {
-            val mesh = inventory.mesh(ScreenQuad(ImmediatelyFreeRetentionPolicy))
-            val shader = inventory.shader(blur1.shader)
             renderContext.state.set { }
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-            if (mesh != null && shader != null) {
-                Renderable(mesh.gpuMesh, shader, blur1.uniforms).render(uniforms, fixer)
-            }
+            Rendering.render(inventory, blurVQuadRenderableDeclaration, null, false, uniforms, fixer, setOf() )
         }
 
-        val blur2 = materialDeclaration(
-            BaseMaterial.Screen, false, ImmediatelyFreeRetentionPolicy, listOf(
-                InternalMaterialModifier {
-                    it.vertShaderFile = "!shader/screen.vert"
-                    it.fragShaderFile = "!shader/effect/blurh.frag"
-                    it.uniforms["radius"] = texBlurRadius
-                })
-        )
+        val blurHQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, "!shader/effect/blurh.frag")
+
         uniforms["colorTexture"] = blurFrameBuffer.colorTextures[0]
         uniforms["depthTexture"] = blurFrameBuffer.depthTexture
 
         frameBuffer.exec {
-            val mesh = inventory.mesh(ScreenQuad(ImmediatelyFreeRetentionPolicy))
-            val shader = inventory.shader(blur2.shader)
             renderContext.state.set { }
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-            if (mesh != null && shader != null) {
-                Renderable(mesh.gpuMesh, shader, blur2.uniforms).render(uniforms, fixer)
-            }
+            Rendering.render(inventory, blurHQuadRenderableDeclaration, null, false, uniforms, fixer, setOf() )
         }
     }
+
+    private fun blurQuadRenderableDeclaration(texBlurRadius: Float, fragShader: String) = RenderableDeclaration(
+        BaseMaterial.Screen,
+        listOf(InternalMaterialModifier {
+            it.vertShaderFile = "!shader/screen.vert"
+            it.fragShaderFile = fragShader
+            it.uniforms["radius"] = texBlurRadius
+        }),
+        ScreenQuad(ImmediatelyFreeRetentionPolicy),
+        Transform.IDENTITY,
+        ImmediatelyFreeRetentionPolicy
+    )
 
     private fun updateShadowCamera(
         projection: Projection,
