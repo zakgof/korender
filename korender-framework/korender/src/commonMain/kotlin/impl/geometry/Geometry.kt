@@ -34,18 +34,19 @@ internal class MeshLink(val cpuMesh: CMesh, dynamic: Boolean) : AutoCloseable {
 
     override fun close() = gpuMesh.close()
 
-    fun updateGpu(instanceCount: Int) {
+    fun updateGpu(instanceCount: Int, instanceDataOnly: Boolean) {
         gpuMesh.update(
             cpuMesh.attributeBuffers.onEach { it.rewind() },
             cpuMesh.indexBuffer?.rewind(),
             cpuMesh.vertexCount,
             cpuMesh.indexCount,
-            instanceCount
+            instanceCount,
+            instanceDataOnly
         )
     }
 
     init {
-        updateGpu(cpuMesh.instanceCount)
+        updateGpu(cpuMesh.instanceCount, false)
     }
 }
 

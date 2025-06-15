@@ -68,7 +68,8 @@ internal class GlGpuMesh(
         ib: NativeByteBuffer?,
         vertices: Int,
         indices: Int,
-        instances: Int
+        instances: Int,
+        instanceDataOnly: Boolean
     ) {
         this.vertices = vertices
         this.indices = indices
@@ -76,23 +77,26 @@ internal class GlGpuMesh(
         glBindVertexArray(vao)
 
         attrs.forEachIndexed { index, attr ->
-            val vbo = vbos[index]
-            glBindBuffer(GL_ARRAY_BUFFER, vbo)
-            glBufferData(GL_ARRAY_BUFFER, vb[index], usage)
-
-            if (attr.primitiveType == AttributeType.Float)
-                glVertexAttribPointer(attr.location, attr.structSize, attr.primitiveType.toGL(), false, 0, 0)
-            else {
-                glVertexAttribIPointer(attr.location, attr.structSize, attr.primitiveType.toGL(), 0, 0)
-            }
-            glEnableVertexAttribArray(attr.location)
-            if (attr.instance) {
-                glVertexAttribDivisor(attr.location, 1)
+            if (!instanceDataOnly || attr.instance) {
+                val vbo = vbos[index]
+                glBindBuffer(GL_ARRAY_BUFFER, vbo)
+                glBufferData(GL_ARRAY_BUFFER, vb[index], usage)
+                if (attr.primitiveType == AttributeType.Float)
+                    glVertexAttribPointer(attr.location, attr.structSize, attr.primitiveType.toGL(), false, 0, 0)
+                else {
+                    glVertexAttribIPointer(attr.location, attr.structSize, attr.primitiveType.toGL(), 0, 0)
+                }
+                glEnableVertexAttribArray(attr.location)
+                if (attr.instance) {
+                    glVertexAttribDivisor(attr.location, 1)
+                }
             }
         }
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
-        ib?.let { glBufferData(GL_ELEMENT_ARRAY_BUFFER, it, usage) }
+        if (!instanceDataOnly) {
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
+            ib?.let { glBufferData(GL_ELEMENT_ARRAY_BUFFER, it, usage) }
+        }
 
         glBindVertexArray(null)
     }

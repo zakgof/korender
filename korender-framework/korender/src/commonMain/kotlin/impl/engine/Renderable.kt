@@ -70,7 +70,7 @@ internal object Rendering {
 
         if (declaration.mesh is CustomMesh && declaration.mesh.dynamic) {
             meshLink.cpuMesh.updateMesh(declaration.mesh.block)
-            meshLink.updateGpu(0)
+            meshLink.updateGpu(0, false)
         }
         if (declaration.mesh is InstancedBillboard) {
             val mesh = meshLink.cpuMesh
@@ -87,7 +87,7 @@ internal object Rendering {
                         this.attrSet(INSTSCALE, i, it.scale)
                     }
                 }
-                meshLink.updateGpu(instances.size)
+                meshLink.updateGpu(instances.size, true)
             }
         }
         if (declaration.mesh is InstancedMesh) {
@@ -108,7 +108,7 @@ internal object Rendering {
                     }
                 }
                 mesh.instancesInitialized = true
-                meshLink.updateGpu(instances.size)
+                meshLink.updateGpu(instances.size, true)
 
                 if (mesh.attrMap.containsKey(WEIGHTS)) {
                     val texDecl = RawTextureDeclaration(declaration.mesh.id, 32 * 4, mesh.instanceCount, declaration.retentionPolicy)

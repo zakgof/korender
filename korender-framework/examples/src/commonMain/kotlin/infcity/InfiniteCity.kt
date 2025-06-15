@@ -68,12 +68,12 @@ private fun FrameContext.light() {
     AmbientLight(white(0.7f))
     DirectionalLight(Vec3(0.1f, -1f, -1f), white(2f)) {
         if (target == KorenderContext.TargetPlatform.Desktop) {
-            Cascade(1024, 0.3f, 3.0f, 0f to 60f, pcss(12, 0.01f))
-            Cascade(1024, 2.5f, 12.0f, 0f to 60f, vsm())
-            Cascade(1024, 10.0f, 50.0f, 0f to 60f, vsm())
+            Cascade(1024, 0.3f, 3.0f, 0f to 60f, pcss(6, 0.008f))
+            Cascade(512, 2.5f, 12.0f, 0f to 60f, vsm())
+            Cascade(512, 10.0f, 50.0f, 0f to 60f, vsm())
         } else {
-            Cascade(1024, 0.3f, 3.0f, 0f to 60f, hard())
-            Cascade(1024, 2.5f, 30.0f, 0f to 60f, vsm())
+            Cascade(512, 0.3f, 3.0f, 0f to 60f, hard())
+            Cascade(512, 2.5f, 30.0f, 0f to 60f, vsm())
         }
     }
 }

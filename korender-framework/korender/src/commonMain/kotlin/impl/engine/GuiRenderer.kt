@@ -152,7 +152,7 @@ internal class GuiRenderer(
                     }
                 }
                 mesh.instancesInitialized = true
-                meshLink.updateGpu(declaration.text.length)
+                meshLink.updateGpu(declaration.text.length, true)
             }
             renderables.add(
                 Renderable(
