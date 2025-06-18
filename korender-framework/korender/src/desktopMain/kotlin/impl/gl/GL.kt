@@ -2,6 +2,8 @@ package com.zakgof.korender.impl.gl
 
 import com.zakgof.korender.impl.buffer.NativeBuffer
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_TEXTURE_MAX_ANISOTROPY
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MAX_ANISOTROPY
 import org.lwjgl.opengl.GL30
 import org.lwjgl.opengl.GL33
 import java.nio.ByteBuffer
@@ -257,4 +259,8 @@ actual object GL {
 
     actual fun glReadPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, data: NativeByteBuffer) =
         GL30.glReadPixels(x, y, width, height, format, type, data.byteBuffer)
+
+    actual fun glGetMaxTextureMaxAnisotropyConstant() = GL_MAX_TEXTURE_MAX_ANISOTROPY
+
+    actual fun glGetTextureMaxAnisotropyConstant() = GL_TEXTURE_MAX_ANISOTROPY
 }

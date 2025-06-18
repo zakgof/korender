@@ -177,5 +177,9 @@ expect object GL {
 
     fun glDrawBuffers(vararg targets: Int)
 
-    fun glReadPixels(x:Int, y:Int, width: Int, height: Int, format: Int, type: Int, data: NativeByteBuffer)
+    fun glReadPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, data: NativeByteBuffer)
+
+    fun glGetMaxTextureMaxAnisotropyConstant(): Int
+
+    fun glGetTextureMaxAnisotropyConstant(): Int
 }

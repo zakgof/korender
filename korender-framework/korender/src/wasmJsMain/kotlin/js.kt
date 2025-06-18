@@ -52,3 +52,7 @@ internal fun performanceNow(): Double =
 external class FontFace : JsAny {
     fun load(): Promise<FontFace>
 }
+
+internal fun maxTexAniso(ext: JsAny): Int = js("ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT")
+
+internal fun texAniso(ext: JsAny): Int = js("ext.TEXTURE_MAX_ANISOTROPY_EXT")

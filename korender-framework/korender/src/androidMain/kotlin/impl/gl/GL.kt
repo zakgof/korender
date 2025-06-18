@@ -3,6 +3,8 @@ package com.zakgof.korender.impl.gl
 import android.opengl.GLES30
 import com.zakgof.korender.impl.buffer.NativeBuffer
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_TEXTURE_MAX_ANISOTROPY
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MAX_ANISOTROPY
 
 actual object GL {
 
@@ -233,6 +235,10 @@ actual object GL {
 
     actual fun glVertexAttribDivisor(index: Int, divisor: Int) =
         GLES30.glVertexAttribDivisor(index, divisor)
+
+    actual fun glGetMaxTextureMaxAnisotropyConstant() = GL_MAX_TEXTURE_MAX_ANISOTROPY
+
+    actual fun glGetTextureMaxAnisotropyConstant() = GL_TEXTURE_MAX_ANISOTROPY
 
     private fun intViaArray(function: (IntArray) -> Unit) =
         IntArray(1).apply(function)[0]

@@ -14,7 +14,9 @@ import com.zakgof.korender.impl.gl.GL.glGenTextures
 import com.zakgof.korender.impl.gl.GL.glGenerateMipmap
 import com.zakgof.korender.impl.gl.GL.glGetError
 import com.zakgof.korender.impl.gl.GL.glGetFloatv
+import com.zakgof.korender.impl.gl.GL.glGetMaxTextureMaxAnisotropyConstant
 import com.zakgof.korender.impl.gl.GL.glGetTexImage
+import com.zakgof.korender.impl.gl.GL.glGetTextureMaxAnisotropyConstant
 import com.zakgof.korender.impl.gl.GL.glTexImage2D
 import com.zakgof.korender.impl.gl.GL.glTexParameteri
 import com.zakgof.korender.impl.gl.GLConstants.GL_CLAMP_TO_EDGE
@@ -27,7 +29,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_FLOAT
 import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.gl.GLConstants.GL_LINEAR
 import com.zakgof.korender.impl.gl.GLConstants.GL_LINEAR_MIPMAP_LINEAR
-import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_TEXTURE_MAX_ANISOTROPY
 import com.zakgof.korender.impl.gl.GLConstants.GL_MIRRORED_REPEAT
 import com.zakgof.korender.impl.gl.GLConstants.GL_NEAREST
 import com.zakgof.korender.impl.gl.GLConstants.GL_R16
@@ -44,7 +45,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_2D
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_COMPARE_FUNC
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_COMPARE_MODE
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MAG_FILTER
-import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MAX_ANISOTROPY
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MIN_FILTER
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_S
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_T
@@ -136,9 +136,9 @@ internal class GlGpuTexture(
 
         if (aniso > 0) {
             ignoringGlError {
-                val anisoMax = glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY) ?: 0f
+                val anisoMax = glGetFloatv(glGetMaxTextureMaxAnisotropyConstant()) ?: 0f
                 if (anisoMax > 0) {
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, min(aniso, anisoMax.toInt()))
+                    glTexParameteri(GL_TEXTURE_2D, glGetTextureMaxAnisotropyConstant(), min(aniso, anisoMax.toInt()))
                 }
             }
         }

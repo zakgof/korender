@@ -4,6 +4,10 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.WebGL2RenderingContext
 import com.zakgof.korender.impl.buffer.NativeBuffer
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_TEXTURE_MAX_ANISOTROPY
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MAX_ANISOTROPY
+import com.zakgof.korender.maxTexAniso
+import com.zakgof.korender.texAniso
 import org.khronos.webgl.toFloat32Array
 import org.khronos.webgl.toInt32Array
 
@@ -273,4 +277,14 @@ actual object GL {
 
     actual fun glVertexAttribDivisor(index: Int, divisor: Int) =
         gl!!.vertexAttribDivisor(index, divisor)
+
+    actual fun glGetMaxTextureMaxAnisotropyConstant(): Int {
+        val ext = gl!!.getExtension("EXT_texture_filter_anisotropic")
+        return ext?.let { maxTexAniso(ext) } ?: GL_MAX_TEXTURE_MAX_ANISOTROPY
+    }
+
+    actual fun glGetTextureMaxAnisotropyConstant(): Int {
+        val ext = gl!!.getExtension("EXT_texture_filter_anisotropic")
+        return ext?.let { texAniso(ext) } ?: GL_TEXTURE_MAX_ANISOTROPY
+    }
 }
