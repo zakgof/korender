@@ -88,6 +88,7 @@ internal object Rendering {
                     }
                 }
                 meshLink.updateGpu(instances.size, true)
+                mesh.instancesInitialized = true
             }
         }
         if (declaration.mesh is InstancedMesh) {
