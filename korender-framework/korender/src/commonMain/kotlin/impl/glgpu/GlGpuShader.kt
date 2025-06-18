@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.impl.gl.GL.glActiveTexture
 import com.zakgof.korender.impl.gl.GL.glAttachShader
 import com.zakgof.korender.impl.gl.GL.glBindAttribLocation
 import com.zakgof.korender.impl.gl.GL.glCompileShader
@@ -34,6 +35,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_ACTIVE_UNIFORMS
 import com.zakgof.korender.impl.gl.GLConstants.GL_COMPILE_STATUS
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAGMENT_SHADER
 import com.zakgof.korender.impl.gl.GLConstants.GL_LINK_STATUS
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE0
 import com.zakgof.korender.impl.gl.GLConstants.GL_VERTEX_SHADER
 import com.zakgof.korender.impl.gl.GLUniformLocation
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
@@ -51,7 +53,8 @@ internal class GlGpuShader(
     fragmentShaderText: String,
     vertDebugInfo: ShaderDebugInfo,
     fragDebugInfo: ShaderDebugInfo,
-    private val zeroTex: GlGpuTexture
+    private val zeroTex: GlGpuTexture,
+    private val zeroShadowTex: GlGpuTexture
 ) : AutoCloseable {
     private val programHandle = glCreateProgram()
     private val vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER)
@@ -156,6 +159,7 @@ internal class GlGpuShader(
             if (result)
                 currentTexUnit += bind(it.key, uniformValue, it.value, currentTexUnit)
         }
+        glActiveTexture(GL_TEXTURE0)
         return result
     }
 
@@ -203,13 +207,11 @@ internal class GlGpuShader(
             }
 
             is GlGpuTexture -> {
-                // println("Bind texture unit $currentTexUnit to 2d texture $name")
                 value.bind(currentTexUnit)
                 glUniform1i(location, currentTexUnit)
             }
 
             is GlGpuCubeTexture -> {
-                // println("Bind texture unit $currentTexUnit to cube texture $name")
                 value.bind(currentTexUnit)
                 glUniform1i(location, currentTexUnit)
             }
@@ -218,14 +220,21 @@ internal class GlGpuShader(
                 val units = (0 until value.totalNum)
                     .map {
                         val ctu = currentTexUnit + it
-                        if (it < value.textures.size) {
-                            value.textures[it].bind(ctu)
-                        } else {
-                            zeroTex.bind(ctu)
-                        }
+                        val tex = if (it < value.textures.size) value.textures[it] else null
+                        (tex ?: zeroTex).bind(ctu)
                         ctu
                     }
-                // println("Bind texture unit $units to texture array $name")
+                glUniform1iv(location, *units.toIntArray())
+            }
+
+            is GlGpuShadowTextureList -> {
+                val units = (0 until value.totalNum)
+                    .map {
+                        val ctu = currentTexUnit + it
+                        val tex = if (it < value.textures.size) value.textures[it] else null
+                        (tex ?: zeroShadowTex).bind(ctu)
+                        ctu
+                    }
                 glUniform1iv(location, *units.toIntArray())
             }
 
@@ -239,6 +248,7 @@ internal class GlGpuShader(
             is GlGpuTexture -> 1
             is GlGpuCubeTexture -> 1
             is GlGpuTextureList -> value.totalNum
+            is GlGpuShadowTextureList -> value.totalNum
             else -> 0
         }
     }
@@ -258,4 +268,6 @@ internal data class Color4List(val values: List<ColorRGBA>)
 
 internal data class Color3List(val values: List<ColorRGB>)
 
-internal data class GlGpuTextureList(val textures: List<GlGpuTexture>, val totalNum: Int)
+internal data class GlGpuTextureList(val textures: List<GlGpuTexture?>, val totalNum: Int)
+
+internal data class GlGpuShadowTextureList(val textures: List<GlGpuTexture?>, val totalNum: Int)

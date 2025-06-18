@@ -41,9 +41,10 @@ import com.zakgof.korender.impl.context.DefaultFrameContext
 import com.zakgof.korender.impl.context.DefaultInstancedBillboardsContext
 import com.zakgof.korender.impl.context.DefaultInstancedGltfContext
 import com.zakgof.korender.impl.context.DefaultInstancedRenderablesContext
-import com.zakgof.korender.impl.engine.shadow.InternalHardParams
-import com.zakgof.korender.impl.engine.shadow.InternalPcssParams
-import com.zakgof.korender.impl.engine.shadow.InternalVsmParams
+import com.zakgof.korender.impl.engine.shadow.InternalHardShadow
+import com.zakgof.korender.impl.engine.shadow.InternalHardwarePcfShadow
+import com.zakgof.korender.impl.engine.shadow.InternalPcssShadow
+import com.zakgof.korender.impl.engine.shadow.InternalVsmShadow
 import com.zakgof.korender.impl.geometry.CMesh
 import com.zakgof.korender.impl.geometry.ConeTop
 import com.zakgof.korender.impl.geometry.Cube
@@ -489,13 +490,16 @@ internal class Engine(
             }
 
         override fun vsm(blurRadius: Float?): ShadowAlgorithmDeclaration =
-            InternalVsmParams(blurRadius)
+            InternalVsmShadow(blurRadius)
 
         override fun hard(): ShadowAlgorithmDeclaration =
-            InternalHardParams()
+            InternalHardShadow()
 
         override fun pcss(samples: Int, blurRadius: Float): ShadowAlgorithmDeclaration =
-            InternalPcssParams(samples, blurRadius)
+            InternalPcssShadow(samples, blurRadius)
+
+        override fun hardwarePcf(bias: Float): ShadowAlgorithmDeclaration =
+            InternalHardwarePcfShadow(bias)
 
         override fun clipmapTerrainPrefab(id: String, cellSize: Float, hg: Int, rings: Int): Prefab =
             Clipmaps(this, id, cellSize, hg, rings)

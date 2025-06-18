@@ -61,7 +61,7 @@ void main() {
     #endif
 
     if (albedo.a < 0.001)
-    discard;
+        discard;
 
 
 #ifdef VSM_SHADOW
@@ -70,10 +70,7 @@ void main() {
     float dx = dFdx(m1);
     float dy = dFdy(m1);
     float m2 = m1 * m1 + 0.25 * (dx * dx + dy * dy);
-    // TODO Depth is used anyway. Swizzling ?
     fragColor = vec4(m1, m2, 1.0, 1.0);
-#else
-
 #endif
 
 }

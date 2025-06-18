@@ -18,11 +18,13 @@ import com.zakgof.korender.impl.gl.GL.glGetTexImage
 import com.zakgof.korender.impl.gl.GL.glTexImage2D
 import com.zakgof.korender.impl.gl.GL.glTexParameteri
 import com.zakgof.korender.impl.gl.GLConstants.GL_CLAMP_TO_EDGE
+import com.zakgof.korender.impl.gl.GLConstants.GL_COMPARE_REF_TO_TEXTURE
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_COMPONENT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_COMPONENT16
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_COMPONENT24
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_COMPONENT32
 import com.zakgof.korender.impl.gl.GLConstants.GL_FLOAT
+import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.gl.GLConstants.GL_LINEAR
 import com.zakgof.korender.impl.gl.GLConstants.GL_LINEAR_MIPMAP_LINEAR
 import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_TEXTURE_MAX_ANISOTROPY
@@ -39,6 +41,8 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_RGB
 import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE0
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_2D
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_COMPARE_FUNC
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_COMPARE_MODE
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MAG_FILTER
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MAX_ANISOTROPY
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MIN_FILTER
@@ -121,7 +125,6 @@ internal class GlGpuTexture(
     init {
         println("Creating GPU Texture [$this]")
 
-        // glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, glHandle)
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterMinMap[filter]!!)
@@ -143,7 +146,7 @@ internal class GlGpuTexture(
         glBindTexture(GL_TEXTURE_2D, null)
     }
 
-    fun uploadData(buffer: NativeBuffer, format: GlFormat) {
+    fun uploadData(buffer: NativeBuffer?, format: GlFormat) {
         glBindTexture(GL_TEXTURE_2D, glHandle)
         if (upload(width, height, buffer, format)) {
             if (mipmapped) {
@@ -152,7 +155,7 @@ internal class GlGpuTexture(
             glBindTexture(GL_TEXTURE_2D, null)
             return
         }
-        throw KorenderException("Could not create texture")
+        throw KorenderException("Could not upload texture data")
     }
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -160,7 +163,7 @@ internal class GlGpuTexture(
         glTexImage2D(GL_TEXTURE_2D, 0, format.internal, width, height, 0, format.format, format.type, buffer?.rewind())
         val error = glGetError()
         if (error != 0) {
-            println("Could not create a texture with format 0x${format.internal.toHexString()}")
+            println("Could not upload texture data with format 0x${format.internal.toHexString()}")
             return false
         }
         this.glFormat = format
@@ -179,6 +182,15 @@ internal class GlGpuTexture(
         glGetTexImage(GL_TEXTURE_2D, 0, glFormat.format, glFormat.type, img.bytes)
         glBindTexture(GL_TEXTURE_2D, null)
         return img
+    }
+
+    fun enablePcfMode() {
+        glBindTexture(GL_TEXTURE_2D, glHandle)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glBindTexture(GL_TEXTURE_2D, null)
     }
 
     override fun close() {
@@ -203,12 +215,6 @@ internal class GlGpuTexture(
                 GlFormat(GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT),
             )
         ),
-        SimpleDepth(
-            TextureFilter.Nearest, TextureWrap.Repeat, 0,
-            listOf(
-                GlFormat(GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT)
-            )
-        ),
         VSM(
             TextureFilter.Linear, TextureWrap.MirroredRepeat, 1024, listOf(
                 // TODO: still want this on Desktop
@@ -228,18 +234,14 @@ internal class GlGpuTexture(
     )
 
     companion object {
-        fun zeroTex(): GlGpuTexture = GlGpuTexture(
-            InternalImage(
-                2, 2, NativeByteBuffer(14).apply {
-                    put(
-                        byteArrayOf(
-                            0, 0, 0, 255.toByte(), 0, 0,
-                            0, 255.toByte(), 0, 0, 0, 0, 0, 0
-                        )
-                    )
-                    rewind()
-                }, Image.Format.RGB
-            )
-        )
+        fun zeroTex(): GlGpuTexture = GlGpuTexture(1, 1, TextureFilter.Linear).also {
+            val buffer = NativeByteBuffer(3).rewind()
+            it.uploadData(buffer, GlFormat(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE))
+        }
+
+        fun zeroShadowTex() = GlGpuTexture(1, 1, TextureFilter.Linear).also {
+            it.enablePcfMode()
+            it.uploadData(null, GlFormat(GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT))
+        }
     }
 }

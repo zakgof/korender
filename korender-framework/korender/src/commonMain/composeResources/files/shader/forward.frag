@@ -36,9 +36,10 @@ uniform vec3 pointLightPos[MAX_LIGHTS];
 uniform vec3 pointLightColor[MAX_LIGHTS];
 uniform vec3 pointLightAttenuation[MAX_LIGHTS];
 
-const int MAX_SHADOWS = 8;
+const int MAX_SHADOWS = 5;
 uniform int numShadows;
 uniform sampler2D shadowTextures[MAX_SHADOWS];
+uniform sampler2DShadow pcfTextures[MAX_SHADOWS];
 uniform mat4 bsps[MAX_SHADOWS];
 uniform vec4 cascade[MAX_SHADOWS];
 uniform float yMin[MAX_SHADOWS];

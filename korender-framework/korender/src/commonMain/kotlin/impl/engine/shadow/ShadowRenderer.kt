@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.engine.shadow
 
 import com.zakgof.korender.FrustumProjectionDeclaration
+import com.zakgof.korender.KorenderException
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.BaseMaterial
@@ -18,6 +19,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.glgpu.Color4List
 import com.zakgof.korender.impl.glgpu.FloatList
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
+import com.zakgof.korender.impl.glgpu.GlGpuShadowTextureList
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.glgpu.IntList
@@ -93,9 +95,10 @@ internal object ShadowRenderer {
                         it.uniforms["fixedYMax"] = declaration.fixedYRange.second
                     }
                     when (declaration.algorithm) {
-                        is InternalVsmParams -> it.shaderDefs += "VSM_SHADOW"
-                        is InternalHardParams -> it.shaderDefs += "HARD_SHADOW"
-                        is InternalPcssParams -> it.shaderDefs += "PCSS_SHADOW"
+                        is InternalVsmShadow -> it.shaderDefs += "VSM_SHADOW"
+                        is InternalHardShadow -> it.shaderDefs += "HARD_SHADOW"
+                        is InternalPcssShadow -> it.shaderDefs += "PCSS_SHADOW"
+                        is InternalHardwarePcfShadow -> it.shaderDefs += "HARDWARE_PCF_SHADOW"
                     }
                 }
 
@@ -111,7 +114,7 @@ internal object ShadowRenderer {
             }
         }
 
-        if (declaration.algorithm is InternalVsmParams && declaration.algorithm.blurRadius != null) {
+        if (declaration.algorithm is InternalVsmShadow && declaration.algorithm.blurRadius != null) {
             val texBlurRadius = declaration.algorithm.blurRadius * declaration.mapSize / shadowProjection.width
             blurShadowMap(
                 id,
@@ -123,8 +126,15 @@ internal object ShadowRenderer {
                 texBlurRadius
             )
         }
+
+        // TODO can only once on texture init
+        if (declaration.algorithm is InternalHardwarePcfShadow) {
+            frameBuffer.depthTexture!!.enablePcfMode()
+        }
+
         return ShadowerData(
-            output(frameBuffer, declaration),
+            outputShadowTexture(frameBuffer, declaration),
+            outputPcfTexture(frameBuffer, declaration),
             SHADOW_SHIFTER * shadowProjection.mat4 * shadowCamera.mat4,
             listOf(
                 if (index == 0) 0f else declaration.near,
@@ -135,23 +145,35 @@ internal object ShadowRenderer {
             declaration.fixedYRange?.first ?: 0f,
             declaration.fixedYRange?.second ?: 0f,
             mode(declaration),
-            (declaration.algorithm as? InternalPcssParams)?.samples ?: 0,
-            ((declaration.algorithm as? InternalPcssParams)?.blurRadius ?: 0f) / shadowProjection.width
+            (declaration.algorithm as? InternalPcssShadow)?.samples ?: 0,
+            when (declaration.algorithm) {
+                is InternalPcssShadow -> declaration.algorithm.blurRadius / shadowProjection.width
+                is InternalHardwarePcfShadow -> declaration.algorithm.bias
+                else -> 0f
+            }
         )
     }
 
-    private fun output(frameBuffer: GlGpuFrameBuffer, declaration: CascadeDeclaration): GlGpuTexture =
-        if (declaration.algorithm is InternalVsmParams) frameBuffer.colorTextures[0] else frameBuffer.depthTexture!!
+    private fun outputShadowTexture(frameBuffer: GlGpuFrameBuffer, declaration: CascadeDeclaration): GlGpuTexture? =
+        when (declaration.algorithm) {
+            is InternalVsmShadow -> frameBuffer.colorTextures[0]
+            is InternalHardwarePcfShadow -> null
+            else -> frameBuffer.depthTexture!!
+        }
+
+    private fun outputPcfTexture(frameBuffer: GlGpuFrameBuffer, declaration: CascadeDeclaration): GlGpuTexture? =
+        if (declaration.algorithm is InternalHardwarePcfShadow) frameBuffer.depthTexture!! else null
 
     private fun fbPreset(declaration: CascadeDeclaration): List<GlGpuTexture.Preset> =
-        if (declaration.algorithm is InternalVsmParams) listOf(GlGpuTexture.Preset.VSM) else listOf()
+        if (declaration.algorithm is InternalVsmShadow) listOf(GlGpuTexture.Preset.VSM) else listOf()
 
     private fun mode(declaration: CascadeDeclaration): Int =
         when (declaration.algorithm) {
-            is InternalHardParams -> 0
-            is InternalPcssParams -> 1
-            is InternalVsmParams -> 2
-            else -> 0
+            is InternalHardShadow -> 0
+            is InternalPcssShadow -> 1
+            is InternalVsmShadow -> 2
+            is InternalHardwarePcfShadow -> 3
+            else -> throw KorenderException("Unknown shadow algorithm")
         } or (if (declaration.fixedYRange != null) 128 else 0)
 
     private fun blurShadowMap(
@@ -281,7 +303,8 @@ internal object ShadowRenderer {
 }
 
 internal class ShadowerData(
-    val texture: GlGpuTexture,
+    val texture: GlGpuTexture?,
+    val pcfTexture: GlGpuTexture?,
     val bsp: Mat4,
     val cascade: List<Float>,
     val yMin: Float,
@@ -293,7 +316,8 @@ internal class ShadowerData(
 
 internal fun List<ShadowerData>.uniforms(m: MutableMap<String, Any?>) {
     m["numShadows"] = size
-    m["shadowTextures[0]"] = GlGpuTextureList(this.map { it.texture }, 8)
+    m["shadowTextures[0]"] = GlGpuTextureList(this.map { it.texture }, 5)
+    m["pcfTextures[0]"] = GlGpuShadowTextureList(this.map { it.pcfTexture }, 5)
     m["bsps[0]"] = Mat4List(this.map { it.bsp })
     m["cascade[0]"] = Color4List(this.map { ColorRGBA(it.cascade[0], it.cascade[1], it.cascade[2], it.cascade[3]) })
     m["yMin[0]"] = FloatList(this.map { it.yMin })
