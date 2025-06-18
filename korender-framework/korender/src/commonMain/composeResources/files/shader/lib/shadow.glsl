@@ -29,11 +29,11 @@ vec2 vogelDiskSample(int sampleIndex, int numSamples, float phi) {
     return vec2(cos(angle), sin(angle)) * sqrt(sampleVal + 0.5) / sqrt(float(numSamples));
 }
 
-float pcss(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float penumbraWidth) {
+float swPcf(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float penumbraWidth) {
     float beavis = 0.0005;
 
     const float PHI = 1.61803398874989484820459;
-    float phi = 0.; // 6.28 * fract(tan(distance(vpos.xy * 20.0 * PHI, vpos.xy * 20.0) * 0.01) * vpos.x);
+    float phi = 0.;
 
     float cumulative = 0.;
     float weight = 0.;
@@ -69,7 +69,7 @@ float shadow(sampler2D shadowTexture, sampler2DShadow pcfTexture, int index, vec
     float sh = 0.;
     switch (mode) {
           case 0: sh = hard(shadowTexture, vshadow); break;
-          case 1: sh =  pcss(shadowTexture, vshadow, i1[index], f1[index]); break;
+          case 1: sh =  swPcf(shadowTexture, vshadow, i1[index], f1[index]); break;
           case 2: sh =  vsm(shadowTexture, vshadow); break;
           case 3: sh =  hwPcf(pcfTexture, vshadow, f1[index]); break;
     }

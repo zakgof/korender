@@ -43,7 +43,7 @@ import com.zakgof.korender.impl.context.DefaultInstancedGltfContext
 import com.zakgof.korender.impl.context.DefaultInstancedRenderablesContext
 import com.zakgof.korender.impl.engine.shadow.InternalHardShadow
 import com.zakgof.korender.impl.engine.shadow.InternalHardwarePcfShadow
-import com.zakgof.korender.impl.engine.shadow.InternalPcssShadow
+import com.zakgof.korender.impl.engine.shadow.InternalSoftwarePcfShadow
 import com.zakgof.korender.impl.engine.shadow.InternalVsmShadow
 import com.zakgof.korender.impl.geometry.CMesh
 import com.zakgof.korender.impl.geometry.ConeTop
@@ -495,8 +495,8 @@ internal class Engine(
         override fun hard(): ShadowAlgorithmDeclaration =
             InternalHardShadow()
 
-        override fun pcss(samples: Int, blurRadius: Float): ShadowAlgorithmDeclaration =
-            InternalPcssShadow(samples, blurRadius)
+        override fun softwarePcf(samples: Int, blurRadius: Float): ShadowAlgorithmDeclaration =
+            InternalSoftwarePcfShadow(samples, blurRadius)
 
         override fun hardwarePcf(bias: Float): ShadowAlgorithmDeclaration =
             InternalHardwarePcfShadow(bias)

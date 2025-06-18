@@ -97,7 +97,7 @@ internal object ShadowRenderer {
                     when (declaration.algorithm) {
                         is InternalVsmShadow -> it.shaderDefs += "VSM_SHADOW"
                         is InternalHardShadow -> it.shaderDefs += "HARD_SHADOW"
-                        is InternalPcssShadow -> it.shaderDefs += "PCSS_SHADOW"
+                        is InternalSoftwarePcfShadow -> it.shaderDefs += "PCSS_SHADOW"
                         is InternalHardwarePcfShadow -> it.shaderDefs += "HARDWARE_PCF_SHADOW"
                     }
                 }
@@ -145,9 +145,9 @@ internal object ShadowRenderer {
             declaration.fixedYRange?.first ?: 0f,
             declaration.fixedYRange?.second ?: 0f,
             mode(declaration),
-            (declaration.algorithm as? InternalPcssShadow)?.samples ?: 0,
+            (declaration.algorithm as? InternalSoftwarePcfShadow)?.samples ?: 0,
             when (declaration.algorithm) {
-                is InternalPcssShadow -> declaration.algorithm.blurRadius / shadowProjection.width
+                is InternalSoftwarePcfShadow -> declaration.algorithm.blurRadius / shadowProjection.width
                 is InternalHardwarePcfShadow -> declaration.algorithm.bias
                 else -> 0f
             }
@@ -170,7 +170,7 @@ internal object ShadowRenderer {
     private fun mode(declaration: CascadeDeclaration): Int =
         when (declaration.algorithm) {
             is InternalHardShadow -> 0
-            is InternalPcssShadow -> 1
+            is InternalSoftwarePcfShadow -> 1
             is InternalVsmShadow -> 2
             is InternalHardwarePcfShadow -> 3
             else -> throw KorenderException("Unknown shadow algorithm")
