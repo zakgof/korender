@@ -4,7 +4,6 @@ import com.zakgof.korender.AsyncContext
 import com.zakgof.korender.impl.font.Font
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.font.InternalFontDeclaration
-import com.zakgof.korender.impl.font.InternalFontMeshDeclaration
 import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
 import com.zakgof.korender.impl.geometry.MeshLink
@@ -34,12 +33,11 @@ internal class Inventory(asyncContext: AsyncContext) {
     private val resourceCubeTextures = Registry<ResourceCubeTextureDeclaration, GlGpuCubeTexture> { Texturing.cube(it, loader) }
     private val imageCubeTextures = Registry<ImageCubeTextureDeclaration, GlGpuCubeTexture> { Texturing.cube(it) }
     private val fonts = Registry<InternalFontDeclaration, Font> { Fonts.load(it.resource, loader) }
-    private val fontMeshes = Registry<InternalFontMeshDeclaration, MeshLink> { Geometry.font(256) }
     private val frameBuffers = Registry<FrameBufferDeclaration, GlGpuFrameBuffer> { GlGpuFrameBuffer(it.id, it.width, it.height, it.colorTexturePresets, it.withDepth) }
     private val cubeFrameBuffers = Registry<CubeFrameBufferDeclaration, GlGpuCubeFrameBuffer> { GlGpuCubeFrameBuffer(it.id, it.width, it.height, it.withDepth) }
     private val gltfs = Registry<GltfDeclaration, GltfLoaded> { GltfLoader.load(it, loader) }
 
-    private val registries = listOf(meshes, shaders, textures, fonts, fontMeshes, frameBuffers, cubeFrameBuffers, gltfs)
+    private val registries = listOf(meshes, shaders, textures, fonts, frameBuffers, cubeFrameBuffers, gltfs)
 
     fun go(time: Float, generation: Int, block: Inventory.() -> Boolean) {
         registries.forEach { it.begin() }
@@ -58,7 +56,6 @@ internal class Inventory(asyncContext: AsyncContext) {
     fun cubeTexture(decl: ResourceCubeTextureDeclaration): GlGpuCubeTexture? = resourceCubeTextures[decl]
     fun cubeTexture(decl: ImageCubeTextureDeclaration): GlGpuCubeTexture? = imageCubeTextures[decl]
     fun font(decl: InternalFontDeclaration): Font? = fonts[decl]
-    fun fontMesh(decl: InternalFontMeshDeclaration): MeshLink? = fontMeshes[decl]
     fun frameBuffer(decl: FrameBufferDeclaration): GlGpuFrameBuffer? = frameBuffers[decl]
     fun cubeFrameBuffer(decl: CubeFrameBufferDeclaration): GlGpuCubeFrameBuffer? = cubeFrameBuffers[decl]
     fun gltf(decl: GltfDeclaration): GltfLoaded? = gltfs[decl]

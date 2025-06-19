@@ -366,9 +366,10 @@ internal class Scene(
             GuiRenderer(inventory, width, height, it)
         }
         touchBoxes += guiRenderers.flatMap { it.touchBoxes }
-        guiRenderers.flatMap { it.renderables }.forEach {
-            it.render(uniforms, fixer)
-        }
+        guiRenderers.flatMap { it.renderableDeclarations }
+            .forEach {
+                Rendering.render(inventory, it, renderContext.camera, deferredShading, uniforms, fixer, defs)
+            }
     }
 
     private fun renderShadows(m: MutableMap<String, Any?>, forceNoShadows: Boolean) {

@@ -60,17 +60,9 @@ internal object Geometry {
         }
     }
 
-    fun font(reservedLength: Int): MeshLink {
-        val mesh = CMesh(4, 6, reservedLength, TEX, INSTTEX, INSTSCREEN) {
-            tex(0f, 0f).tex(0f, 1f).tex(1f, 1f).tex(1f, 0f)
-            index(0, 1, 2, 0, 2, 3)
-        }
-        return MeshLink(mesh, true)
-    }
-
     fun createCpuMesh(meshDeclaration: MeshDeclaration, loader: Loader): CMesh? {
         val simpleMeshDeclaration = (meshDeclaration as? InstancedMesh)?.mesh ?: (meshDeclaration as? InstancedBillboard)?.let { Billboard(it.retentionPolicy) } ?: meshDeclaration
-        val count = (meshDeclaration as? InstancedMesh)?.count ?: (meshDeclaration as? InstancedBillboard)?.count ?: -1
+        val count = (meshDeclaration as? Instanceable)?.count ?: -1
 
         return when (simpleMeshDeclaration) {
             is Sphere -> sphere(simpleMeshDeclaration.radius, simpleMeshDeclaration.slices, simpleMeshDeclaration.sectors, count)
@@ -87,6 +79,7 @@ internal object Geometry {
             is ObjMesh -> loader.safeBytes(simpleMeshDeclaration.objFile) { obj(it, count) }
             is CustomCpuMesh -> simpleMeshDeclaration.mesh
             is CustomMesh -> CMesh(simpleMeshDeclaration.vertexCount, simpleMeshDeclaration.indexCount, count, attributes = simpleMeshDeclaration.attributes.toTypedArray(), simpleMeshDeclaration.indexType, simpleMeshDeclaration.block)
+            is FontMesh -> font(count)
             else -> throw KorenderException("Unknown mesh type $meshDeclaration")
         }
     }
@@ -343,6 +336,12 @@ internal object Geometry {
             tex(1f, 1f)
             tex(1f, 0f)
             index(0, 2, 1, 0, 3, 2)
+        }
+
+    private fun font(count: Int) =
+        CMesh(4, 6, count, TEX, INSTTEX, INSTSCREEN) {
+            tex(0f, 0f).tex(0f, 1f).tex(1f, 1f).tex(1f, 0f)
+            index(0, 1, 2, 0, 2, 3)
         }
 }
 

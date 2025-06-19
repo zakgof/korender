@@ -17,9 +17,6 @@ private class ShaderData(val title: String, val vertCode: String, val fragCode: 
 
 internal object Shaders {
 
-    val imageQuadDeclaration: ShaderDeclaration =
-        ShaderDeclaration("!shader/gui/image.vert", "!shader/gui/image.frag", retentionPolicy = ImmediatelyFreeRetentionPolicy)
-
     fun create(declaration: ShaderDeclaration, loader: Loader, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture): GlGpuShader? =
         loader.syncy(declaration) { load(declaration, it, zeroTex) } ?.let {
             GlGpuShader(it.title, it.vertCode, it.fragCode, it.vertDebugInfo, it.fragDebugInfo,zeroTex, zeroShadowTex)

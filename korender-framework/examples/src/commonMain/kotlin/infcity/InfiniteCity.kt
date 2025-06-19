@@ -42,7 +42,7 @@ private fun FrameContext.loader() =
             Filler()
             Row {
                 Filler()
-                Text(id = "loader", text = "loading...", height = 40)
+                Text(id = "loader", text = "loading...", static = true, height = 40)
                 Filler()
             }
             Filler()

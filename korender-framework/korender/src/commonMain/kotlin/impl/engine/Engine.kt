@@ -100,6 +100,7 @@ internal class Engine(
     private val touchHandlers = mutableListOf<TouchHandler>()
     private val keyHandlers = mutableListOf<KeyHandler>()
     private val kc = KorenderContextImpl()
+    private var loaderLoaded = false
 
     inner class KorenderContextImpl : KorenderContext {
 
@@ -546,13 +547,19 @@ internal class Engine(
             DefaultFrameContext(kc, sd, frameInfo).apply(it)
         }
         inventory.go(frameInfo.time, kc.currentRetentionGeneration) {
-            val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
-            val renderOk = scene.render()
-            if (sd.loaderSceneDeclaration != null && (!renderOk || inventory.pending() > 0)) {
-                Scene(sd.loaderSceneDeclaration!!, inventory, renderContext, kc.currentRetentionPolicy).render()
+            val loader = sd.loaderSceneDeclaration?.let {Scene(it, inventory, renderContext, kc.currentRetentionPolicy)}
+            if (loader != null && !loaderLoaded) {
+                loaderLoaded = loader.render() || inventory.pending() > 0
+                loaderLoaded
+            } else {
+                val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
+                val renderOk = scene.render()
+                if (loader != null && (!renderOk || inventory.pending() > 0)) {
+                    loader.render()
+                }
+                touchBoxes = scene.touchBoxes
+                renderOk
             }
-            touchBoxes = scene.touchBoxes
-            renderOk
         }
     }
 

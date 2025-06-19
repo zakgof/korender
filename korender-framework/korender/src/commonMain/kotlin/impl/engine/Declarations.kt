@@ -73,6 +73,8 @@ internal enum class BaseMaterial {
     Renderable,
     Billboard,
     Screen,
+    Font,
+    Image,
     Sky,
     Shading,
     Composition,

@@ -1,16 +1,13 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.Attributes.INSTSCREEN
-import com.zakgof.korender.Attributes.INSTTEX
 import com.zakgof.korender.impl.context.Direction
-import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.font.InternalFontDeclaration
-import com.zakgof.korender.impl.font.InternalFontMeshDeclaration
+import com.zakgof.korender.impl.geometry.FontMesh
 import com.zakgof.korender.impl.geometry.ImageQuad
+import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
-import com.zakgof.korender.impl.material.Shaders
+import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
-import impl.engine.ImmediatelyFreeRetentionPolicy
 import kotlin.math.max
 
 internal class GuiRenderer(
@@ -20,7 +17,7 @@ internal class GuiRenderer(
     container: ElementDeclaration.Container
 ) {
 
-    val renderables = mutableListOf<Renderable>()
+    val renderableDeclarations = mutableListOf<RenderableDeclaration>()
     val touchBoxes = mutableListOf<TouchBox>()
 
     init {
@@ -94,75 +91,48 @@ internal class GuiRenderer(
 
     private fun createImage(declaration: ElementDeclaration.Image, x: Int, y: Int) {
 
-        val mesh = inventory.mesh(ImageQuad(ImmediatelyFreeRetentionPolicy))
-        val shader = inventory.shader(Shaders.imageQuadDeclaration)
+        renderableDeclarations += RenderableDeclaration(
+            BaseMaterial.Image,
+            listOf(InternalMaterialModifier {
+                it.uniforms["pos"] = Vec2(
+                    (x.toFloat() + declaration.marginLeft.toFloat()) / width,
+                    1.0f - (y.toFloat() + declaration.marginTop.toFloat() + declaration.height.toFloat()) / height
+                )
+                it.uniforms["size"] = Vec2(
+                    declaration.width.toFloat() / width,
+                    declaration.height.toFloat() / height
+                )
+                it.uniforms["imageTexture"] = ResourceTextureDeclaration(declaration.imageResource, retentionPolicy = declaration.retentionPolicy)
+            }),
+            ImageQuad(declaration.retentionPolicy),
+            Transform.IDENTITY,
+            declaration.retentionPolicy
+        )
 
-        if (mesh != null && shader != null) {
-            renderables.add(
-                Renderable(
-                    mesh = mesh.gpuMesh,
-                    shader = shader,
-                    uniforms =
-                        mapOf<String, Any?>(
-                            "pos" to Vec2(
-                                (x.toFloat() + declaration.marginLeft.toFloat()) / width,
-                                1.0f - (y.toFloat() + declaration.marginTop.toFloat() + declaration.height.toFloat()) / height
-                            ),
-                            "size" to Vec2(
-                                declaration.width.toFloat() / width,
-                                declaration.height.toFloat() / height
-                            ),
-                            "imageTexture" to ResourceTextureDeclaration(declaration.imageResource, retentionPolicy = declaration.retentionPolicy)
-                        )
-                )
+        touchBoxes.add(
+            TouchBox(
+                x + declaration.marginLeft,
+                y + declaration.marginTop,
+                declaration.width,
+                declaration.height,
+                declaration.id,
+                declaration.onTouch,
             )
-            touchBoxes.add(
-                TouchBox(
-                    x + declaration.marginLeft,
-                    y + declaration.marginTop,
-                    declaration.width,
-                    declaration.height,
-                    declaration.id,
-                    declaration.onTouch,
-                )
-            )
-        }
+        )
     }
 
     private fun createText(declaration: ElementDeclaration.Text, xxx: Int, yyy: Int, w: Int) {
-        val meshLink = inventory.fontMesh(InternalFontMeshDeclaration(declaration.id, declaration.retentionPolicy))
         val font = inventory.font(InternalFontDeclaration(declaration.fontResource, declaration.retentionPolicy))
-        val shader = inventory.shader(Fonts.shaderDeclaration)
-        if (meshLink != null && font != null && shader != null && w > 0) {
-            val mesh = meshLink.cpuMesh
-            if (!declaration.static || !mesh.instancesInitialized) {
-                mesh.updateMesh {
-                    val h = declaration.height.toFloat() / height
-                    val aspect = height.toFloat() / width.toFloat()
-                    val x = xxx.toFloat() / width
-                    val y = 1.0f - yyy.toFloat() / height
-                    var xx = x
-                    for (i in declaration.text.indices) {
-                        val c = declaration.text[i].code
-                        val ratio = font.widths[c]
-                        val width = h * ratio * aspect
-                        attrSet(INSTTEX, i, floatArrayOf((c % 16) / 16.0f, (c / 16) / 16.0f, ratio / 16f, 1 / 16f))
-                        attrSet(INSTSCREEN, i, floatArrayOf(xx, y, width, -h))
-                        xx += width
-                    }
-                }
-                mesh.instancesInitialized = true
-                meshLink.updateGpu(declaration.text.length, true)
-            }
-            renderables.add(
-                Renderable(
-                    mesh = meshLink.gpuMesh,
-                    shader = shader,
-                    uniforms = mapOf(
-                        "color" to declaration.color,
-                        "fontTexture" to font.gpuTexture
-                    )
-                )
+        if (w > 0 && font != null) {
+            renderableDeclarations += RenderableDeclaration(
+                BaseMaterial.Font,
+                listOf(InternalMaterialModifier {
+                    it.uniforms["color"] = declaration.color
+                    it.uniforms["fontTexture"] = font.gpuTexture
+                }),
+                FontMesh(declaration.id, 256, declaration, width.toFloat(), height.toFloat(), xxx.toFloat(), yyy.toFloat(), font),
+                Transform.IDENTITY,
+                declaration.retentionPolicy
             )
             touchBoxes.add(TouchBox(xxx, yyy, w, declaration.height, declaration.id, declaration.onTouch))
         }

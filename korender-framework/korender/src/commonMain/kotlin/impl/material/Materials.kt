@@ -24,12 +24,16 @@ internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean, pri
         BaseMaterial.Renderable -> "!shader/base.vert"
         BaseMaterial.Billboard -> "!shader/billboard.vert"
         BaseMaterial.Screen, BaseMaterial.Shading, BaseMaterial.Composition -> "!shader/screen.vert"
+        BaseMaterial.Font -> "!shader/gui/font.vert"
+        BaseMaterial.Image -> "!shader/gui/image.vert"
         BaseMaterial.Sky -> "!shader/sky/sky.vert"
         BaseMaterial.Decal -> "!shader/deferred/decal.vert"
     }
     var fragShaderFile: String = when (base) {
         BaseMaterial.Renderable, BaseMaterial.Billboard -> if (deferredShading) "!shader/deferred/geometry.frag" else "!shader/forward.frag"
         BaseMaterial.Screen -> "!shader/screen.frag"
+        BaseMaterial.Font -> "!shader/gui/font.frag"
+        BaseMaterial.Image -> "!shader/gui/image.frag"
         BaseMaterial.Sky -> "!shader/sky/sky.frag"
         BaseMaterial.Shading -> "!shader/deferred/shading.frag"
         BaseMaterial.Composition -> "!shader/deferred/composition.frag"
