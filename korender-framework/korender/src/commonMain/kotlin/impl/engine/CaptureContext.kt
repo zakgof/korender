@@ -10,7 +10,6 @@ internal class EnvCaptureContext(
     val near: Float,
     val far: Float,
     val insideOut: Boolean,
-    val defs: Set<String>,
     val sceneDeclaration: SceneDeclaration
 )
 

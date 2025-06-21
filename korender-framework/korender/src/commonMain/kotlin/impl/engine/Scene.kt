@@ -8,6 +8,8 @@ import com.zakgof.korender.impl.engine.shadow.ShadowRenderer
 import com.zakgof.korender.impl.engine.shadow.ShadowerData
 import com.zakgof.korender.impl.engine.shadow.uniforms
 import com.zakgof.korender.impl.geometry.DecalCube
+import com.zakgof.korender.impl.geometry.Instanceable
+import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glViewport
@@ -50,9 +52,9 @@ import com.zakgof.korender.math.z
 
 internal class Scene(
     private val sceneDeclaration: SceneDeclaration,
-    private val inventory: Inventory,
-    private val renderContext: RenderContext,
-    private val currentRetentionPolicy: RetentionPolicy
+    val inventory: Inventory,
+    val renderContext: RenderContext,
+    val currentRetentionPolicy: RetentionPolicy
 ) {
 
     private val deferredShading = sceneDeclaration.deferredShadingDeclaration != null
@@ -105,8 +107,11 @@ internal class Scene(
     private fun renderEnvProbes(uniforms: MutableMap<String, Any?>) {
         sceneDeclaration.envCaptures.forEach { kv ->
             try {
-                renderContext.envProbes[kv.key] = Scene(kv.value.sceneDeclaration, inventory, renderContext, currentRetentionPolicy)
+                 Scene(kv.value.sceneDeclaration, inventory, renderContext, currentRetentionPolicy)
                     .renderToEnvProbe(uniforms, kv.value, kv.key)
+                    ?.let {
+                        renderContext.envProbes[kv.key] = it
+                    }
             } catch (sr: SkipRender) {
                 println("Env probing skipped as resource not ready: [${sr.text}]")
                 return
@@ -285,8 +290,7 @@ internal class Scene(
                             it.uniforms["renderSize"] = Vec2(renderContext.width.toFloat(), renderContext.height.toFloat())
                         }
                         val renderableDeclaration = RenderableDeclaration(BaseMaterial.Decal, materialModifiers, DecalCube(0.5f, currentRetentionPolicy), Transform(model), currentRetentionPolicy)
-
-                        Rendering.render(inventory, renderableDeclaration, renderContext.camera, true, uniforms, fixer, setOf())
+                        renderRenderable(renderableDeclaration, renderContext.camera, uniforms)
                     }
                 }
                 uniforms["decalDiffuse"] = decalsFb.colorTextures[0]
@@ -304,10 +308,12 @@ internal class Scene(
         }
     }
 
-    private fun renderBucket(renderables: List<RenderableDeclaration>, uniforms: Map<String, Any?>, defs: Set<String> = setOf()) {
+    private fun renderBucket(renderables: List<RenderableDeclaration>, uniforms: Map<String, Any?>): Boolean {
+        var success = true
         renderables.forEach {
-            Rendering.render(inventory, it, renderContext.camera, deferredShading, uniforms, fixer, defs)
+            success = success and renderRenderable(it, renderContext.camera, uniforms)
         }
+        return success
     }
 
     private fun prepareScene(
@@ -327,24 +333,22 @@ internal class Scene(
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
     }
 
-    private fun renderForwardOpaques(
-        sceneDeclaration: SceneDeclaration,
-        uniforms: Map<String, Any?>,
-        defs: Set<String> = setOf(),
-    ) {
-        renderBucket(sceneDeclaration.opaques, uniforms, defs)
-        renderBucket(sceneDeclaration.skies, uniforms, defs)
+    private fun renderForwardOpaques(sceneDeclaration: SceneDeclaration, uniforms: Map<String, Any?>): Boolean {
+        var success = true
+        success = success and renderBucket(sceneDeclaration.opaques, uniforms)
+        success = success and renderBucket(sceneDeclaration.skies, uniforms)
+        return success
     }
 
     private fun renderTransparents(
         sceneDeclaration: SceneDeclaration,
         uniforms: MutableMap<String, Any?>,
         camera: Camera,
-        defs: Set<String> = setOf(),
         insideOut: Boolean = false,
         width: Int = renderContext.width,
         height: Int = renderContext.height
-    ) {
+    ): Boolean {
+        var success = true
         renderContext.state.set {
             depthMask(false)
             if (insideOut) {
@@ -356,10 +360,7 @@ internal class Scene(
         sceneDeclaration.transparents
             .sortedByDescending { (camera.mat4 * it.transform.offset()).z * reverse }
             .forEach {
-                Rendering.render(
-                    inventory, it, camera, deferredShading,
-                    uniforms, fixer, defs, insideOut
-                )
+                success = success and renderRenderable(it, camera, uniforms, insideOut)
             }
 
         val guiRenderers = sceneDeclaration.guis.map {
@@ -368,8 +369,9 @@ internal class Scene(
         touchBoxes += guiRenderers.flatMap { it.touchBoxes }
         guiRenderers.flatMap { it.renderableDeclarations }
             .forEach {
-                Rendering.render(inventory, it, renderContext.camera, deferredShading, uniforms, fixer, defs)
+                success = success and renderRenderable(it, renderContext.camera, uniforms)
             }
+        return success
     }
 
     private fun renderShadows(m: MutableMap<String, Any?>, forceNoShadows: Boolean) {
@@ -385,13 +387,11 @@ internal class Scene(
                 dl.shadowDeclaration.cascades.mapIndexedNotNull { ci, cascadeDeclaration ->
                     ShadowRenderer.render(
                         "$li-$ci",
-                        inventory,
                         dl.direction,
                         dl.shadowDeclaration.cascades,
                         ci,
-                        renderContext,
                         sceneDeclaration.opaques + sceneDeclaration.transparents,
-                        fixer
+                        this
                     )?.let {
                         shadowData += it
                         shadowData.size - 1
@@ -458,10 +458,11 @@ internal class Scene(
         }
     }
 
-    fun renderToEnvProbe(uniforms: MutableMap<String, Any?>, envCaptureContext: EnvCaptureContext, probeName: String): GlGpuCubeTexture {
+    fun renderToEnvProbe(uniforms: MutableMap<String, Any?>, envCaptureContext: EnvCaptureContext, probeName: String): GlGpuCubeTexture? {
+        var success = true
         renderShadows(uniforms, true)
         val probeFb =
-            inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", envCaptureContext.resolution, envCaptureContext.resolution, true, TransientProperty(currentRetentionPolicy))) ?: throw SkipRender("Env probe FB 'probe-$probeName'")
+            inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", envCaptureContext.resolution, envCaptureContext.resolution, true, TransientProperty(currentRetentionPolicy))) ?: return null
         val probeUniforms = mutableMapOf<String, Any?>()
         probeUniforms += uniforms
         val projection = FrustumProjection(2f * envCaptureContext.near, 2f * envCaptureContext.near, envCaptureContext.near, envCaptureContext.far)
@@ -479,12 +480,12 @@ internal class Scene(
             probeUniforms["cameraDir"] = it.value.direction
             probeFb.exec(it.key) {
                 prepareScene(envCaptureContext.resolution, envCaptureContext.resolution, envCaptureContext.insideOut)
-                renderForwardOpaques(sceneDeclaration, probeUniforms, envCaptureContext.defs)
-                renderTransparents(sceneDeclaration, probeUniforms, it.value, envCaptureContext.defs, envCaptureContext.insideOut)
+                success = success and renderForwardOpaques(sceneDeclaration, probeUniforms)
+                success = success and renderTransparents(sceneDeclaration, probeUniforms, it.value, envCaptureContext.insideOut)
             }
         }
         probeFb.finish()
-        return probeFb.colorTexture;
+        return if (success) probeFb.colorTexture else null
     }
 
     fun renderToFrameProbe(uniforms: MutableMap<String, Any?>, frameCaptureContext: FrameCaptureContext, frameProbeName: String): GlGpuTexture {
@@ -506,6 +507,32 @@ internal class Scene(
             )
         }
         return probeFb.colorTextures[0]
+    }
+
+    fun renderRenderable(
+        declaration: RenderableDeclaration,
+        camera: Camera?,
+        contextUniforms: Map<String, Any?>,
+        reverseZ: Boolean = false
+    ): Boolean {
+        val addUniforms = mutableMapOf<String, Any?>()
+        val addDefs = mutableSetOf<String>()
+
+        val meshLink = inventory.mesh(declaration.mesh as InternalMeshDeclaration) ?: return false
+
+        if (declaration.mesh is Instanceable) {
+            declaration.mesh.instancing(meshLink, reverseZ, camera, inventory, addUniforms, addDefs)
+        }
+
+        val materialDeclaration = materialDeclaration(declaration.base, deferredShading, declaration.retentionPolicy, declaration.materialModifiers + InternalMaterialModifier { it.shaderDefs += addDefs })
+        val shader = inventory.shader(materialDeclaration.shader) ?: return false
+
+        // TODO move this to where it is supported
+        addUniforms["model"] = declaration.transform.mat4
+        return shader.render(
+            { fixer(materialDeclaration.uniforms[it] ?: contextUniforms[it] ?: addUniforms[it]) },
+            meshLink.gpuMesh
+        )
     }
 }
 

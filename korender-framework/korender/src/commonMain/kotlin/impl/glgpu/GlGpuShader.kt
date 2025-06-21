@@ -131,13 +131,15 @@ internal class GlGpuShader(
         glDeleteProgram(programHandle)
     }
 
-    fun render(uniforms: (String) -> Any?, mesh: GlGpuMesh) {
+    fun render(uniforms: (String) -> Any?, mesh: GlGpuMesh): Boolean {
         glUseProgram(programHandle)
-        if (bindUniforms(uniforms)) {
+        val success = bindUniforms(uniforms)
+        if (success) {
             bindAttrs(mesh)
             mesh.render()
         }
         glUseProgram(null)
+        return success
     }
 
     private fun bindAttrs(mesh: GlGpuMesh) {

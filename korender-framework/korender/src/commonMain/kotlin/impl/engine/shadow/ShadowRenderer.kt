@@ -7,10 +7,8 @@ import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.FrameBufferDeclaration
-import com.zakgof.korender.impl.engine.Inventory
-import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.engine.RenderableDeclaration
-import com.zakgof.korender.impl.engine.Rendering
+import com.zakgof.korender.impl.engine.Scene
 import com.zakgof.korender.impl.engine.TransientProperty
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
@@ -48,26 +46,24 @@ internal object ShadowRenderer {
 
     fun render(
         id: String,
-        inventory: Inventory,
         lightDirection: Vec3,
         declarations: List<CascadeDeclaration>,
         index: Int,
-        renderContext: RenderContext,
         shadowCasterDeclarations: List<RenderableDeclaration>,
-        fixer: (Any?) -> Any?
+        scene: Scene,
     ): ShadowerData? {
 
         val declaration = declarations[index]
-        val frameBuffer = inventory.frameBuffer(
+        val frameBuffer = scene.inventory.frameBuffer(
             FrameBufferDeclaration("shadow-$id", declaration.mapSize, declaration.mapSize, fbPreset(declaration), true, TransientProperty(ImmediatelyFreeRetentionPolicy))
         ) ?: return null
 
-        val matrices = updateShadowCamera(renderContext.projection, renderContext.camera, lightDirection, declaration)
+        val matrices = updateShadowCamera(scene.renderContext.projection, scene.renderContext.camera, lightDirection, declaration)
         val shadowCamera = matrices.first
         val shadowProjection = matrices.second
 
         val casterUniforms = mutableMapOf<String, Any?>()
-        renderContext.uniforms(casterUniforms)
+        scene.renderContext.uniforms(casterUniforms)
 
         casterUniforms["view"] = shadowCamera.mat4
         casterUniforms["projection"] = shadowProjection.mat4
@@ -75,7 +71,7 @@ internal object ShadowRenderer {
         casterUniforms["cameraDir"] = shadowCamera.direction
 
         frameBuffer.exec {
-            renderContext.state.set {
+            scene.renderContext.state.set {
                 clearColor(ColorRGBA(1f, 1f, 0f, 1f))
             }
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
@@ -110,7 +106,7 @@ internal object ShadowRenderer {
                     renderableDeclaration.retentionPolicy
                 )
 
-                Rendering.render(inventory, casterRenderableDeclaration, shadowCamera, false, casterUniforms, fixer, setOf())
+                scene.renderRenderable(casterRenderableDeclaration, shadowCamera, casterUniforms)
             }
         }
 
@@ -120,9 +116,7 @@ internal object ShadowRenderer {
                 id,
                 declaration,
                 frameBuffer,
-                inventory,
-                renderContext,
-                fixer,
+                scene,
                 texBlurRadius
             )
         }
@@ -180,15 +174,13 @@ internal object ShadowRenderer {
         id: String,
         declaration: CascadeDeclaration,
         frameBuffer: GlGpuFrameBuffer,
-        inventory: Inventory,
-        renderContext: RenderContext,
-        fixer: (Any?) -> Any?,
+        scene: Scene,
         texBlurRadius: Float
     ) {
         val uniforms = mutableMapOf<String, Any?>()
-        renderContext.uniforms(uniforms) // TODO once per frame only
+        scene.renderContext.uniforms(uniforms) // TODO once per frame only
 
-        val blurFrameBuffer = inventory.frameBuffer(
+        val blurFrameBuffer = scene.inventory.frameBuffer(
             FrameBufferDeclaration("shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM), true, TransientProperty(ImmediatelyFreeRetentionPolicy))
         ) ?: return
 
@@ -198,9 +190,9 @@ internal object ShadowRenderer {
         uniforms["depthTexture"] = frameBuffer.depthTexture
 
         blurFrameBuffer.exec {
-            renderContext.state.set { }
+            scene.renderContext.state.set { }
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-            Rendering.render(inventory, blurVQuadRenderableDeclaration, null, false, uniforms, fixer, setOf() )
+            scene.renderRenderable(blurVQuadRenderableDeclaration, null, uniforms)
         }
 
         val blurHQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, "!shader/effect/blurh.frag")
@@ -209,9 +201,9 @@ internal object ShadowRenderer {
         uniforms["depthTexture"] = blurFrameBuffer.depthTexture
 
         frameBuffer.exec {
-            renderContext.state.set { }
+            scene.renderContext.state.set { }
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-            Rendering.render(inventory, blurHQuadRenderableDeclaration, null, false, uniforms, fixer, setOf() )
+            scene.renderRenderable(blurHQuadRenderableDeclaration, null, uniforms)
         }
     }
 

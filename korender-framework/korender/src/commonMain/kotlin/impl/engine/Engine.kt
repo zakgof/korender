@@ -136,7 +136,7 @@ internal class Engine(
 
         override fun cubeTextureProbe(envProbeName: String): CubeTextureDeclaration = ProbeCubeTextureDeclaration(envProbeName)
 
-        override fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3, insideOut: Boolean, defs: Set<String>, block: FrameContext.() -> Unit): CubeTextureImages {
+        override fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3, insideOut: Boolean, block: FrameContext.() -> Unit): CubeTextureImages {
             val sd = SceneDeclaration()
             block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f, 0)))
             var images: CubeTextureImages? = null
@@ -145,12 +145,13 @@ internal class Engine(
                 val uniforms = mutableMapOf<String, Any?>()
                 renderContext.uniforms(uniforms)
                 while(true) {
-                    val cubeTexture = scene.renderToEnvProbe(uniforms, EnvCaptureContext(resolution, position, near, far, insideOut, defs, sd), "#immediate")
-                    if (inventory.pending() == 0) {
+                    val cubeTexture = scene.renderToEnvProbe(uniforms, EnvCaptureContext(resolution, position, near, far, insideOut, sd), "#immediate")
+                    if (cubeTexture != null) {
                         images = cubeTexture.fetch()
-                        break;
+                        println("Fetch done " + inventory.pending())
+                        break
                     }
-                    println("Resources pending, retrying env capture...")
+                    println("Resources pending, retrying env capture... " + inventory.pending())
                 }
                 true
             }

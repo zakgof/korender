@@ -108,6 +108,7 @@ fun Baker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             )
         )
         renderHull(hullMesh, 15.x)
+        renderTree(leaf, leafInstances)
     }
 }
 
