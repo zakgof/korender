@@ -61,7 +61,7 @@ kotlin {
             implementation(compose.material)
             implementation(compose.ui)
             implementation(compose.components.resources)
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1")
+            implementation(libs.kotlinx.serialization.core)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -83,8 +83,8 @@ android {
         applicationId = "com.zakgof.korenderexamples"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 4
+        versionName = "0.4.0"
     }
     packaging {
         resources {

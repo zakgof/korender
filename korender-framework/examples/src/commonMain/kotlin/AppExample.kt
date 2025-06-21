@@ -35,14 +35,13 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun AppExample() {
     val options = listOf(
-
-        Demo("Hybrid Terrain") { HybridTerrainExample() },
+        Demo("Mac 1") { Nothing(0f) },
+        Demo("Mac 2") { Nothing(0.5f) },
+        Demo("Mac 3") { Nothing(1.0f) },
 
         Demo("Heightmap Terrain") { HeightmapTerrainExample() },
         Demo("Procedural Terrain") { ProcTerrainExample() },
-
         Demo("City demo") { InfiniteCity() },
-
         Demo("PBR materials") { MetallicRoughnessExample() },
         Demo("OBJ mesh") { ObjFileExample() },
         Demo("GLTF crowd") { GltfCrowdExample() },
@@ -55,7 +54,6 @@ fun AppExample() {
         Demo("Blur") { BlurExample() },
         Demo("Effects") { EffectsExample() },
         Demo("Decals") { DecalExample() },
-        Demo("SSR") { SsrExample() },       // TODO
     )
 
     var isExpanded by remember { mutableStateOf(false) }
