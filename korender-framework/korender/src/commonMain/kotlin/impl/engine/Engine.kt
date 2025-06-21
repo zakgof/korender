@@ -144,8 +144,14 @@ internal class Engine(
                 val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
                 val uniforms = mutableMapOf<String, Any?>()
                 renderContext.uniforms(uniforms)
-                val cubeTexture = scene.renderToEnvProbe(uniforms, EnvCaptureContext(resolution, position, near, far, insideOut, defs, sd), "#immediate")
-                images = cubeTexture.fetch()
+                while(true) {
+                    val cubeTexture = scene.renderToEnvProbe(uniforms, EnvCaptureContext(resolution, position, near, far, insideOut, defs, sd), "#immediate")
+                    if (inventory.pending() == 0) {
+                        images = cubeTexture.fetch()
+                        break;
+                    }
+                    println("Resources pending, retrying env capture...")
+                }
                 true
             }
             return images!!

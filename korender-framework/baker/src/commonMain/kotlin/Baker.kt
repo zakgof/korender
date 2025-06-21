@@ -1,6 +1,10 @@
 package com.zakgof.korender.baker
 
 import androidx.compose.runtime.Composable
+import com.zakgof.korender.Attributes.MODEL0
+import com.zakgof.korender.Attributes.MODEL1
+import com.zakgof.korender.Attributes.MODEL2
+import com.zakgof.korender.Attributes.MODEL3
 import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
@@ -17,8 +21,10 @@ import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Transform.Companion.translate
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.Vec3.Companion.ZERO
+import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import java.awt.image.BufferedImage
@@ -34,7 +40,7 @@ import kotlin.random.Random
 @Composable
 fun Baker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-    val basePath = "D:\\p\\dev\\korender-assets\\"
+    val basePath = "D:\\kot\\dev\\assets\\"
 
     // val metaball = Metaball(20f, 1.0f) { sqrt(it * 0.05f) * (1f - it * 0.05f) * 10f }
     val metaball = Metaball(20f, 3.0f, 8000, 48) { (it * 0.05f).pow(0.1f) * (1f - it * 0.05f) * 10f }
@@ -46,7 +52,7 @@ fun Baker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         hull.points.forEach { pos(it.pos).normal(it.normal) }
         hull.indexes.forEach { index(it) }
     }
-    val leaf = customMesh("leaf", 4, 6, POS, NORMAL, TEX) {
+    val leaf = customMesh("leaf", 4, 6, POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3) {
         pos(Vec3(-0.5f, -0.5f, 0f)).normal(1.z).tex(0f, 0f)
         pos(Vec3(0.5f, -0.5f, 0f)).normal(1.z).tex(1f, 0f)
         pos(Vec3(0.5f, 0.5f, 0f)).normal(1.z).tex(1f, 1f)
@@ -65,22 +71,22 @@ fun Baker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             .translate((pt.pos - hull.center))
     }
 
-    val radiantImages = captureEnv(resolution = 128, near = 0.2f, far = 30f, insideOut = true) {
-        renderHull(hullMesh, ZERO, radiantCapture(30f))
+    val radiantImages = captureEnv(resolution = 128, near = 0.2f, far = 15f, insideOut = true) {
+        renderHull(hullMesh, ZERO, radiantCapture(15f))
     }
     saveCubeMap(radiantImages, basePath + "radiant-")
 
-    val radiantNormalImages = captureEnv(resolution = 128, near = 0.2f, far = 30f, insideOut = true) {
+    val radiantNormalImages = captureEnv(resolution = 128, near = 0.2f, far = 15f, insideOut = true) {
         renderHull(hullMesh, ZERO, normalCapture())
     }
     saveCubeMap(radiantNormalImages, basePath + "radiant-normal-")
 
-    val normalImages = captureEnv(resolution = 128, near = 0.2f, far = 30f, insideOut = true) {
+    val normalImages = captureEnv(resolution = 128, near = 0.2f, far = 15f, insideOut = true) {
         renderTree(leaf, leafInstances, normalCapture())
     }
     saveCubeMap(normalImages, basePath + "normal-")
 
-    val albedoImages = captureEnv(resolution = 256, near = 0.2f, far = 30f, insideOut = true) {
+    val albedoImages = captureEnv(resolution = 256, near = 0.2f, far = 15f, insideOut = true) {
         AmbientLight(white(1f))
         renderTree(leaf, leafInstances)
     }
@@ -88,12 +94,12 @@ fun Baker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
     Frame {
         projection = frustum(3f * width / height, 3f, 3f, 100f)
-        camera = camera(20.z, -1.z, 1.y)
+        camera = camera(40.z, -1.z, 1.y)
         AmbientLight(white(0.2f))
         DirectionalLight(Vec3(2.0f, 0.0f, -2.0f), white(3f))
         Billboard(
             base(metallicFactor = 0f, roughnessFactor = 0.9f),
-            billboard(xscale = 20.0f, yscale = 20.0f),
+            billboard(scale = Vec2(30.0f, 30.0f), position = -15.x),
             radiant(
                 radiantTexture = cubeTexture("radiant", radiantImages),
                 radiantNormalTexture = cubeTexture("radiant-normal", radiantNormalImages),
@@ -101,6 +107,7 @@ fun Baker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                 normalTexture = cubeTexture("normal", normalImages)
             )
         )
+        renderHull(hullMesh, 15.x)
     }
 }
 
