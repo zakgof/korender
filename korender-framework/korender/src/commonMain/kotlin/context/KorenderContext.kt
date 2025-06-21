@@ -101,7 +101,7 @@ interface KorenderContext {
     fun fireball(power: Float = 0.5f): MaterialModifier
     fun smoke(density: Float = 0.5f, seed: Float = 0f): MaterialModifier
 
-    fun fastCloudSky(density: Float = 3.0f, thickness: Float = 10.0f, scale: Float = 1.0f, rippleamount: Float = 0.3f, ripplescale: Float = 4.0f, zenithcolor: ColorRGB = ColorRGB(0x3F6FC3), horizoncolor: ColorRGB = ColorRGB(0xB8CAE9)): MaterialModifier
+    fun fastCloudSky(density: Float = 3.0f, thickness: Float = 10.0f, scale: Float = 1.0f, rippleAmount: Float = 0.3f, rippleScale: Float = 4.0f, zenithColor: ColorRGB = ColorRGB(0x3F6FC3), horizonColor: ColorRGB = ColorRGB(0xB8CAE9), cloudLight: Float = 1.0f, cloudDark: Float = 0.7f): MaterialModifier
     fun starrySky(colorness: Float = 0.8f, density: Float = 20.0f, speed: Float = 1.0f, size: Float = 15.0f): MaterialModifier
     fun cubeSky(cubeTexture: CubeTextureDeclaration): MaterialModifier
     fun textureSky(texture: TextureDeclaration): MaterialModifier

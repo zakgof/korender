@@ -340,15 +340,17 @@ internal class Engine(
             it.fragShaderFile = "!shader/effect/fxaa.frag"
         }
 
-        override fun fastCloudSky(density: Float, thickness: Float, scale: Float, rippleamount: Float, ripplescale: Float, zenithcolor: ColorRGB, horizoncolor: ColorRGB) = InternalMaterialModifier {
+        override fun fastCloudSky(density: Float, thickness: Float, scale: Float, rippleAmount: Float, rippleScale: Float, zenithColor: ColorRGB, horizonColor: ColorRGB, cloudLight: Float, cloudDark: Float) = InternalMaterialModifier {
             it.plugins["sky"] = "!shader/plugin/sky.fastcloud.frag"
             it.uniforms["density"] = density
             it.uniforms["thickness"] = thickness
             it.uniforms["scale"] = scale
-            it.uniforms["zenithcolor"] = zenithcolor
-            it.uniforms["horizoncolor"] = horizoncolor
-            it.uniforms["rippleamount"] = rippleamount
-            it.uniforms["ripplescale"] = ripplescale
+            it.uniforms["zenithcolor"] = zenithColor
+            it.uniforms["horizoncolor"] = horizonColor
+            it.uniforms["rippleamount"] = rippleAmount
+            it.uniforms["ripplescale"] = rippleScale
+            it.uniforms["cloudlight"] = cloudLight
+            it.uniforms["clouddark"] = cloudDark
         }
 
         override fun starrySky(colorness: Float, density: Float, speed: Float, size: Float) = InternalMaterialModifier {
