@@ -56,7 +56,7 @@ fun GuiContainerContext.Slider(id: String, width: Int, height: Int = 48, state: 
             onChange(state.position)
         }
         val jumpLeft = { setPosition(state.position - (state.max - state.min) * 0.1f) }
-        val jumpRight = { setPosition(state.position - (state.max - state.min) * 0.1f) }
+        val jumpRight = { setPosition(state.position + (state.max - state.min) * 0.1f) }
         val fillLeft = ((state.position - state.min) * (width - 96) / (state.max - state.min)).toInt()
         val fillRight = width - 96 - fillLeft
         Image(id = "slider.left.$id", imageResource = "!gui/slider.left.png", width = 32, height = height, marginLeft = 8) { onClick(it) { jumpLeft() } }
@@ -67,22 +67,19 @@ fun GuiContainerContext.Slider(id: String, width: Int, height: Int = 48, state: 
                     state.dragStartX = te.x
                     state.dragStartPos = state.position
                 }
-
                 TouchEvent.Type.UP -> {
                     state.dragStartX = null
                     state.dragStartPos = null
                 }
-
                 TouchEvent.Type.MOVE -> {
                     state.dragStartX?.let {
-                        println("Move by ${(te.x - it)}")
                         state.position = (state.dragStartPos!! + (te.x - it) * (state.max - state.min) / (width - 96)).coerceIn(state.min, state.max)
                     }
                 }
             }
         }
         Image(id = "slider.right.empty.$id", imageResource = "!gui/slider.empty.png", width = fillRight, height = height) { onClick(it) { jumpRight() } }
-        Image(id = "slider.right.$id", imageResource = "!gui/slider.right.png", width = 32, height = height, marginRight = 8) { onClick(it) { jumpLeft() } }
+        Image(id = "slider.right.$id", imageResource = "!gui/slider.right.png", width = 32, height = height, marginRight = 8) { onClick(it) { jumpRight() } }
     }
 
 fun GuiContainerContext.Joystick(id: String, state: JoystickState, width: Int) {
