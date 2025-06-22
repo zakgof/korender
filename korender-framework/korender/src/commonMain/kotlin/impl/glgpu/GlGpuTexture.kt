@@ -112,6 +112,7 @@ internal class GlGpuTexture(
     }
 
     constructor(width: Int, height: Int, preset: Preset) : this(width, height, preset.filter, preset.wrap, preset.aniso) {
+        glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, glHandle)
         for (format in preset.formats) {
             if (upload(width, height, null, format)) {
@@ -124,7 +125,7 @@ internal class GlGpuTexture(
 
     init {
         println("Creating GPU Texture [$this]")
-
+        glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, glHandle)
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterMinMap[filter]!!)
@@ -147,6 +148,7 @@ internal class GlGpuTexture(
     }
 
     fun uploadData(buffer: NativeBuffer?, format: GlFormat) {
+        glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, glHandle)
         if (upload(width, height, buffer, format)) {
             if (mipmapped) {
@@ -163,7 +165,7 @@ internal class GlGpuTexture(
         glTexImage2D(GL_TEXTURE_2D, 0, format.internal, width, height, 0, format.format, format.type, buffer?.rewind())
         val error = glGetError()
         if (error != 0) {
-            println("Could not upload texture data with format 0x${format.internal.toHexString()}")
+            println("Could not upload texture data with internal format 0x${format.internal.toHexString()} - error 0x${error.toHexString()}")
             return false
         }
         this.glFormat = format
@@ -177,6 +179,7 @@ internal class GlGpuTexture(
     }
 
     fun fetch(): Image {
+        glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, glHandle)
         val img = Platform.createImage(width, height, format!!)
         glGetTexImage(GL_TEXTURE_2D, 0, glFormat.format, glFormat.type, img.bytes)
@@ -185,6 +188,7 @@ internal class GlGpuTexture(
     }
 
     fun enablePcfMode() {
+        glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, glHandle)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL)

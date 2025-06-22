@@ -4,6 +4,7 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.impl.gl.GL.glActiveTexture
 import com.zakgof.korender.impl.gl.GL.glAttachShader
 import com.zakgof.korender.impl.gl.GL.glBindAttribLocation
+import com.zakgof.korender.impl.gl.GL.glBindTexture
 import com.zakgof.korender.impl.gl.GL.glCompileShader
 import com.zakgof.korender.impl.gl.GL.glCreateProgram
 import com.zakgof.korender.impl.gl.GL.glCreateShader
@@ -36,6 +37,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_COMPILE_STATUS
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAGMENT_SHADER
 import com.zakgof.korender.impl.gl.GLConstants.GL_LINK_STATUS
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE0
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_2D
 import com.zakgof.korender.impl.gl.GLConstants.GL_VERTEX_SHADER
 import com.zakgof.korender.impl.gl.GLUniformLocation
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
@@ -150,7 +152,7 @@ internal class GlGpuShader(
     }
 
     private fun bindUniforms(uniforms: (String) -> Any?) : Boolean {
-        var currentTexUnit = 0
+        var currentTexUnit = 1
         var result = true
         uniformLocations.forEach {
             val uniformValue = requireNotNull(uniforms(it.key)) { "Material ${toString()} does not provide value for the uniform ${it.key}" }
@@ -162,6 +164,7 @@ internal class GlGpuShader(
                 currentTexUnit += bind(it.key, uniformValue, it.value, currentTexUnit)
         }
         glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, null)
         return result
     }
 
