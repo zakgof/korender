@@ -287,4 +287,15 @@ actual object GL {
         val ext = gl!!.getExtension("EXT_texture_filter_anisotropic")
         return ext?.let { texAniso(ext) } ?: GL_TEXTURE_MAX_ANISOTROPY
     }
+
+    actual fun glGetUniformBlockIndex(program: GLProgram, name: String): Int =
+        gl!!.getUniformBlockIndex
+
+    actual fun glGetActiveUniformBlockiv(program: GLProgram, blockIndex: Int, param: Int, paramValues: IntArray): Unit
+
+    actual fun glGetActiveUniformsiv(program: GLProgram, uniformIndices: IntArray, param: Int, paramValues: IntArray): Unit
+
+    actual fun glGetActiveUniformName(program: GLProgram, uniformIndex: Int): String
+
+    actual fun glBufferSubData(target: Int, offset: Long, buffer: NativeByteBuffer): Unit
 }

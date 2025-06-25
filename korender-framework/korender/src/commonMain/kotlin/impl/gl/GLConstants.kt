@@ -1599,4 +1599,10 @@ object GLConstants {
 
     const val GL_TEXTURE_CUBE_MAP_SEAMLESS: Int = 0x884F
 
+    const val GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS: Int = 0x8A42
+    const val GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES: Int = 0x8A43
+    const val GL_UNIFORM_OFFSET: Int = 0x8A3B
+    const val GL_UNIFORM_BLOCK_DATA_SIZE: Int =  0x8A40
+    const val GL_UNIFORM_BUFFER: Int = 0x8A11
+
 }

@@ -18,11 +18,13 @@ out vec2 vtex;
 #endif
 
 #ifndef INSTANCING
-    uniform mat4 model;
+    #uniform mat4 model;
 #endif
-uniform mat4 view;
-uniform mat4 projection;
-uniform vec3 cameraPos;
+#uniform mat4 view;
+#uniform mat4 projection;
+#uniform vec3 cameraPos;
+
+#uniforms
 
 #ifdef PLUGIN_VPOSITION
 #import "$vposition"

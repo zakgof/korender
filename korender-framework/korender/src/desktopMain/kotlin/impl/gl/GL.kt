@@ -164,8 +164,10 @@ actual object GL {
     actual fun glVertexAttribDivisor(index: Int, divisor: Int) =
         GL33.glVertexAttribDivisor(index, divisor)
 
-    actual fun glGetUniformLocation(program: GLProgram, name: String) =
-        GLUniformLocation(GL30.glGetUniformLocation(program.glHandle, name))
+    actual fun glGetUniformLocation(program: GLProgram, name: String): GLUniformLocation? {
+        val location = GL30.glGetUniformLocation(program.glHandle, name)
+        return if (location < 0) null else GLUniformLocation(location)
+    }
 
     actual fun glGetAttribLocation(program: GLProgram, name: String) =
         GL30.glGetAttribLocation(program.glHandle, name)
@@ -263,4 +265,25 @@ actual object GL {
     actual fun glGetMaxTextureMaxAnisotropyConstant() = GL_MAX_TEXTURE_MAX_ANISOTROPY
 
     actual fun glGetTextureMaxAnisotropyConstant() = GL_TEXTURE_MAX_ANISOTROPY
+
+    actual fun glGetUniformBlockIndex(program: GLProgram, name: String): Int =
+        GL33.glGetUniformBlockIndex(program.glHandle, name)
+
+    actual fun glGetActiveUniformBlockiv(program: GLProgram, blockIndex: Int, param: Int, paramValues: IntArray) =
+        GL33.glGetActiveUniformBlockiv(program.glHandle, blockIndex, param, paramValues)
+
+    actual fun glGetActiveUniformsiv(program: GLProgram, uniformIndices: IntArray, param: Int, paramValues: IntArray) =
+        GL33.glGetActiveUniformsiv(program.glHandle, uniformIndices, param, paramValues)
+
+    actual fun glGetActiveUniformName(program: GLProgram, uniformIndex: Int): String =
+        GL33.glGetActiveUniformName(program.glHandle, uniformIndex)
+
+    actual fun glBufferSubData(target: Int, offset: Long, buffer: NativeByteBuffer) =
+        GL33.glBufferSubData(target, offset, buffer.byteBuffer)
+
+    actual fun glUniformBlockBinding(program: GLProgram, blockIndex: Int, blockBinding: Int) =
+        GL33.glUniformBlockBinding(program.glHandle, blockIndex, blockBinding)
+
+    actual fun glBindBufferBase(target: Int, blockBinding: Int, buffer: GLBuffer) =
+        GL33.glBindBufferBase(target, blockBinding, buffer.glHandle)
 }

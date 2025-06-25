@@ -41,6 +41,8 @@ fun NativeByteBuffer.put(v: Vec3) {
     put(v.z)
 }
 
+fun NativeByteBuffer.put(arr: FloatArray) = arr.forEach { put(it) }
+
 fun NativeByteBuffer.vec3(index: Int): Vec3 {
     val x = float(index * 3)
     val y = float(index * 3 + 1)

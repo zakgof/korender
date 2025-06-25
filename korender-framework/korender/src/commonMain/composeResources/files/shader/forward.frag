@@ -10,47 +10,47 @@ in vec2 vtex;
     in float vocclusion;
 #endif
 
-uniform vec4 baseColor;
+#uniform vec4 baseColor;
 #ifdef BASE_COLOR_MAP
     uniform sampler2D baseColorTexture;
 #endif
 
-uniform float metallicFactor;
-uniform float roughnessFactor;
+#uniform float metallicFactor;
+#uniform float roughnessFactor;
 
-uniform vec3 cameraPos;
-uniform vec3 cameraDir;
-uniform vec3 ambientColor;
-uniform mat4 projection;
-uniform mat4 view;
+#uniform vec3 cameraPos;
+#uniform vec3 cameraDir;
+#uniform vec3 ambientColor;
+#uniform mat4 projection;
+#uniform mat4 view;
 
-const int MAX_LIGHTS = 32;
-uniform int numDirectionalLights;
-uniform vec3 directionalLightDir[MAX_LIGHTS];
-uniform vec3 directionalLightColor[MAX_LIGHTS];
-uniform int directionalLightShadowTextureIndex[MAX_LIGHTS];
-uniform int directionalLightShadowTextureCount[MAX_LIGHTS];
+#uniform int numDirectionalLights;
+#uniform vec3 directionalLightDir[32];
+#uniform vec3 directionalLightColor[32];
+#uniform int directionalLightShadowTextureIndex[32];
+#uniform int directionalLightShadowTextureCount[32];
 
-uniform int numPointLights;
-uniform vec3 pointLightPos[MAX_LIGHTS];
-uniform vec3 pointLightColor[MAX_LIGHTS];
-uniform vec3 pointLightAttenuation[MAX_LIGHTS];
+#uniform int numPointLights;
+#uniform vec3 pointLightPos[32];
+#uniform vec3 pointLightColor[32];
+#uniform vec3 pointLightAttenuation[32];
 
-const int MAX_SHADOWS = 5;
-uniform int numShadows;
-uniform sampler2D shadowTextures[MAX_SHADOWS];
-uniform sampler2DShadow pcfTextures[MAX_SHADOWS];
-uniform mat4 bsps[MAX_SHADOWS];
-uniform vec4 cascade[MAX_SHADOWS];
-uniform float yMin[MAX_SHADOWS];
-uniform float yMax[MAX_SHADOWS];
-uniform int shadowMode[MAX_SHADOWS];
-uniform float f1[MAX_SHADOWS];
-uniform int i1[MAX_SHADOWS];
+#uniform int numShadows;
+uniform sampler2D shadowTextures[5];
+uniform sampler2DShadow pcfTextures[5];
+#uniform mat4 bsps[5];
+#uniform vec4 cascade[5];
+#uniform float yMin[5];
+#uniform float yMax[5];
+#uniform int shadowMode[5];
+#uniform float f1[5];
+#uniform int i1[5];
+
+#uniforms
 
 out vec4 fragColor;
 
-float shadowRatios[MAX_SHADOWS];
+float shadowRatios[5];
 
 vec3 position;
 vec4 albedo;

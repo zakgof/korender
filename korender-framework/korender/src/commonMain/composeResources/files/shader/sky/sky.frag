@@ -2,9 +2,11 @@
 
 in vec2 vtex;
 
-uniform vec3 cameraPos;
-uniform mat4 view;
-uniform mat4 projection;
+#uniform vec3 cameraPos;
+#uniform mat4 view;
+#uniform mat4 projection;
+
+#uniforms
 
 out vec4 fragColor;
 

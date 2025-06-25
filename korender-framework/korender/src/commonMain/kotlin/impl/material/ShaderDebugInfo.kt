@@ -1,6 +1,6 @@
 package com.zakgof.korender.impl.material
 
-class ShaderDebugInfo(val file: String) {
+class ShaderDebugInfo {
 
     private val PATTERN1 = Regex("^(\\d+)\\((\\d+)\\).+$")
     private val PATTERN2 = Regex("^.+: (\\d+):(\\d+):.+$")
@@ -12,6 +12,7 @@ class ShaderDebugInfo(val file: String) {
     private var srcLine = -1
 
     fun decorate(log: String): String {
+        return log
         return log.lines()
             .map { it.trim() }
             .filter { it.isNotEmpty() }
