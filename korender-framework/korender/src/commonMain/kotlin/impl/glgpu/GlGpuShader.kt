@@ -30,18 +30,9 @@ import com.zakgof.korender.impl.gl.GL.glGetUniformBlockIndex
 import com.zakgof.korender.impl.gl.GL.glGetUniformLocation
 import com.zakgof.korender.impl.gl.GL.glLinkProgram
 import com.zakgof.korender.impl.gl.GL.glShaderSource
-import com.zakgof.korender.impl.gl.GL.glUniform1f
-import com.zakgof.korender.impl.gl.GL.glUniform1fv
 import com.zakgof.korender.impl.gl.GL.glUniform1i
 import com.zakgof.korender.impl.gl.GL.glUniform1iv
-import com.zakgof.korender.impl.gl.GL.glUniform2f
-import com.zakgof.korender.impl.gl.GL.glUniform3f
-import com.zakgof.korender.impl.gl.GL.glUniform3fv
-import com.zakgof.korender.impl.gl.GL.glUniform4f
-import com.zakgof.korender.impl.gl.GL.glUniform4fv
 import com.zakgof.korender.impl.gl.GL.glUniformBlockBinding
-import com.zakgof.korender.impl.gl.GL.glUniformMatrix3fv
-import com.zakgof.korender.impl.gl.GL.glUniformMatrix4fv
 import com.zakgof.korender.impl.gl.GL.glUseProgram
 import com.zakgof.korender.impl.gl.GLBuffer
 import com.zakgof.korender.impl.gl.GLConstants.GL_ACTIVE_UNIFORMS
@@ -197,13 +188,14 @@ internal class GlGpuShader(
         var success = bindUniforms(uniforms)
         success = success or bindUbo(uniforms)
         if (success) {
-            bindAttrs(mesh)
+            // bindAttrs(mesh)
             mesh.render()
         }
-        glUseProgram(null)
+        // glUseProgram(null)
         return success
     }
 
+    // TODO Do not call before every render
     private fun bindAttrs(mesh: GlGpuMesh) {
         mesh.bind()
         mesh.attrs.forEach { attr ->
@@ -230,46 +222,6 @@ internal class GlGpuShader(
 
     private fun bind(name: String, value: Any, location: GLUniformLocation, currentTexUnit: Int): Int {
         when (value) {
-            is Int -> glUniform1i(location, value)
-            is Float -> glUniform1f(location, value)
-            is Vec2 -> glUniform2f(location, value.x, value.y)
-            is Vec3 -> glUniform3f(location, value.x, value.y, value.z)
-            is ColorRGB -> glUniform3f(location, value.r, value.g, value.b)
-            is ColorRGBA -> glUniform4f(location, value.r, value.g, value.b, value.a)
-            is Mat4 -> glUniformMatrix4fv(
-                location, false, value.asArray()
-            )
-
-            is IntList -> if (value.values.isNotEmpty()) {
-                glUniform1iv(location, *value.values.toIntArray())
-            }
-
-            is FloatList -> if (value.values.isNotEmpty()) {
-                glUniform1fv(location, value.values.toFloatArray())
-            }
-
-            is Vec3List -> if (value.values.isNotEmpty()) {
-                glUniform3fv(location, value.values.flatMap { listOf(it.x, it.y, it.z) }.toFloatArray())
-            }
-
-            is Color3List -> if (value.values.isNotEmpty()) {
-                glUniform3fv(location, value.values.flatMap { listOf(it.r, it.g, it.b) }.toFloatArray())
-            }
-
-            is Color4List -> if (value.values.isNotEmpty()) {
-                glUniform4fv(location, value.values.flatMap { listOf(it.r, it.g, it.b, it.a) }.toFloatArray())
-            }
-
-            is Mat3 -> glUniformMatrix3fv(
-                location, false, value.asArray()
-            )
-
-            is Mat4List -> {
-                if (value.matrices.isNotEmpty()) {
-                    val fa = value.matrices.flatMap { it.asArray().asList() }.toFloatArray()
-                    glUniformMatrix4fv(location, false, fa)
-                }
-            }
 
             is GlGpuTexture -> {
                 value.bind(currentTexUnit)
