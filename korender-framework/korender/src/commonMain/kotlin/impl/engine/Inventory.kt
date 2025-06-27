@@ -39,6 +39,8 @@ internal class Inventory(asyncContext: AsyncContext) {
 
     private val registries = listOf(meshes, shaders, textures, fonts, frameBuffers, cubeFrameBuffers, gltfs)
 
+    val textureUnitCache = GlTextureUnitCache()
+
     fun go(time: Float, generation: Int, block: Inventory.() -> Boolean) {
         registries.forEach { it.begin() }
         val ok = block.invoke(this)

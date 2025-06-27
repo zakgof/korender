@@ -51,7 +51,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_T
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_BYTE
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_INT
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_SHORT
-import com.zakgof.korender.impl.gl.GLTexture
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.image.InternalImage
 import kotlin.math.min
@@ -94,9 +93,9 @@ internal class GlGpuTexture(
     filter: TextureFilter = TextureFilter.MipMap,
     wrap: TextureWrap = TextureWrap.Repeat,
     aniso: Int = 1024
-) : AutoCloseable {
+) : GLBindableTexture, AutoCloseable {
 
-    val glHandle: GLTexture = glGenTextures()
+    override val glHandle = glGenTextures()
     val mipmapped = filter == TextureFilter.MipMap
 
     private var format: Image.Format? = null
@@ -173,7 +172,7 @@ internal class GlGpuTexture(
         return true
     }
 
-    fun bind(unit: Int) {
+    override fun bind(unit: Int) {
         glActiveTexture(GL_TEXTURE0 + unit)
         glBindTexture(GL_TEXTURE_2D, glHandle)
     }

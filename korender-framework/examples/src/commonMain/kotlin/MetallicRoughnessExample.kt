@@ -21,17 +21,17 @@ fun MetallicRoughnessExample() = Korender(appResourceLoader = { Res.readBytes(it
         Sky(cubeSky(env))
         DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(5f))
         AmbientLight(ColorRGB.Black)
-        for (m in 0..4) {
-            for (r in 0..4) {
+        for (m in 0..40) {
+            for (r in 0..40) {
                 Renderable(
                     base(
                         color = ColorRGBA(0x80A0FFFF),
-                        metallicFactor = r / 4.0f,
-                        roughnessFactor = max(m / 4.0f, 0.05f)
+                        metallicFactor = r / 40.0f,
+                        roughnessFactor = max(m / 40.0f, 0.05f)
                     ),
                     ibl(env),
                     mesh = sphere(0.8f),
-                    transform = translate((m - 2) * 1.7f, (r - 2) * 1.7f, 8f)
+                    transform = translate((m - 2) * 0.17f, (r - 2) * 0.17f, 8f)
                 )
             }
         }

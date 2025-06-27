@@ -45,9 +45,9 @@ import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.image.InternalImage
 import kotlin.math.min
 
-internal class GlGpuCubeTexture : AutoCloseable {
+internal class GlGpuCubeTexture : GLBindableTexture, AutoCloseable {
 
-    val glHandle: GLTexture = glGenTextures()
+    override val glHandle: GLTexture = glGenTextures()
 
     var width: Int? = null
     var height: Int? = null
@@ -139,7 +139,7 @@ internal class GlGpuCubeTexture : AutoCloseable {
         throw KorenderException("Could not create GL texture")
     }
 
-    fun bind(unit: Int) {
+    override fun bind(unit: Int) {
         glActiveTexture(GLConstants.GL_TEXTURE0 + unit)
         glBindTexture(GL_TEXTURE_CUBE_MAP, glHandle)
     }

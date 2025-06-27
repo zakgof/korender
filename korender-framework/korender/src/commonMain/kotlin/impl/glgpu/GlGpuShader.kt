@@ -3,12 +3,10 @@ package com.zakgof.korender.impl.glgpu
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.buffer.put
-import com.zakgof.korender.impl.gl.GL.glActiveTexture
+import com.zakgof.korender.impl.engine.GlTextureUnitCache
 import com.zakgof.korender.impl.gl.GL.glAttachShader
-import com.zakgof.korender.impl.gl.GL.glBindAttribLocation
 import com.zakgof.korender.impl.gl.GL.glBindBuffer
 import com.zakgof.korender.impl.gl.GL.glBindBufferBase
-import com.zakgof.korender.impl.gl.GL.glBindTexture
 import com.zakgof.korender.impl.gl.GL.glBufferData
 import com.zakgof.korender.impl.gl.GL.glBufferSubData
 import com.zakgof.korender.impl.gl.GL.glCompileShader
@@ -40,8 +38,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_COMPILE_STATUS
 import com.zakgof.korender.impl.gl.GLConstants.GL_DYNAMIC_DRAW
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAGMENT_SHADER
 import com.zakgof.korender.impl.gl.GLConstants.GL_LINK_STATUS
-import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE0
-import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_2D
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_BLOCK_DATA_SIZE
@@ -75,6 +71,7 @@ internal class GlGpuShader(
     private val uboBuffer: NativeByteBuffer
     private val uniformOffsets: Map<String, Int>
     private val uniformLocations: Map<String, GLUniformLocation>
+    private val uniformCache = mutableMapOf<String, Any>()
 
     init {
 
@@ -183,28 +180,17 @@ internal class GlGpuShader(
         glDeleteProgram(programHandle)
     }
 
-    fun render(uniforms: (String) -> Any?, mesh: GlGpuMesh): Boolean {
+    fun render(uniforms: (String) -> Any?, mesh: GlGpuMesh, textureUnitCache: GlTextureUnitCache): Boolean {
         glUseProgram(programHandle)
-        var success = bindUniforms(uniforms)
+        var success = bindUniforms(uniforms, textureUnitCache)
         success = success or bindUbo(uniforms)
         if (success) {
-            // bindAttrs(mesh)
             mesh.render()
         }
-        // glUseProgram(null)
         return success
     }
 
-    // TODO Do not call before every render
-    private fun bindAttrs(mesh: GlGpuMesh) {
-        mesh.bind()
-        mesh.attrs.forEach { attr ->
-            glBindAttribLocation(programHandle, attr.location, attr.name)
-        }
-    }
-
-    private fun bindUniforms(uniforms: (String) -> Any?): Boolean {
-        var currentTexUnit = 1
+    private fun bindUniforms(uniforms: (String) -> Any?, textureUnitCache: GlTextureUnitCache): Boolean {
         var result = true
         uniformLocations.forEach {
             val uniformValue = requireNotNull(uniforms(it.key)) { "Material ${toString()} does not provide value for the uniform ${it.key}" }
@@ -212,61 +198,54 @@ internal class GlGpuShader(
                 println("Skipping shader rendering because texture [${it.key}] not loaded")
                 result = false
             }
-            if (result)
-                currentTexUnit += bind(it.key, uniformValue, it.value, currentTexUnit)
+            if (result) {
+                bind(it.key, uniformValue, it.value, textureUnitCache)
+            }
         }
-        glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, null)
+        // glActiveTexture(GL_TEXTURE0)
+        // glBindTexture(GL_TEXTURE_2D, null)
         return result
     }
 
-    private fun bind(name: String, value: Any, location: GLUniformLocation, currentTexUnit: Int): Int {
+    private fun bind(name: String, value: Any, location: GLUniformLocation, textureUnitCache: GlTextureUnitCache) {
         when (value) {
 
-            is GlGpuTexture -> {
-                value.bind(currentTexUnit)
-                glUniform1i(location, currentTexUnit)
-            }
-
-            is GlGpuCubeTexture -> {
-                value.bind(currentTexUnit)
-                glUniform1i(location, currentTexUnit)
+            is GLBindableTexture -> {
+                val unit = textureUnitCache.bind(value)
+                if (unit != uniformCache[name]) {
+                    uniformCache[name] = unit
+                    glUniform1i(location, unit)
+                }
             }
 
             is GlGpuTextureList -> {
                 val units = (0 until value.totalNum)
                     .map {
-                        val ctu = currentTexUnit + it
                         val tex = if (it < value.textures.size) value.textures[it] else null
-                        (tex ?: zeroTex).bind(ctu)
-                        ctu
+                        textureUnitCache.bind(tex ?: zeroTex)
                     }
-                glUniform1iv(location, *units.toIntArray())
+                if (units != uniformCache[name]) {
+                    uniformCache[name] = units
+                    glUniform1iv(location, *units.toIntArray())
+                }
             }
 
             is GlGpuShadowTextureList -> {
                 val units = (0 until value.totalNum)
                     .map {
-                        val ctu = currentTexUnit + it
                         val tex = if (it < value.textures.size) value.textures[it] else null
-                        (tex ?: zeroShadowTex).bind(ctu)
-                        ctu
+                        textureUnitCache.bind(tex ?: zeroShadowTex)
                     }
-                glUniform1iv(location, *units.toIntArray())
+                if (units != uniformCache[name]) {
+                    uniformCache[name] = units
+                    glUniform1iv(location, *units.toIntArray())
+                }
             }
 
             else -> {
                 throw KorenderException("Unsupported uniform value $value of type ${value::class} for uniform $name")
             }
 
-        }
-        // checkGlError("while setting uniform $name in shader $this")
-        return when (value) {
-            is GlGpuTexture -> 1
-            is GlGpuCubeTexture -> 1
-            is GlGpuTextureList -> value.totalNum
-            is GlGpuShadowTextureList -> value.totalNum
-            else -> 0
         }
     }
 

@@ -438,7 +438,8 @@ internal class Scene(
         if (mesh != null && shader != null) {
             shader.render(
                 { fixer(quadMaterial.uniforms[it] ?: uniforms[it]) },
-                mesh.gpuMesh
+                mesh.gpuMesh,
+                inventory.textureUnitCache
             )
         }
     }
@@ -531,7 +532,8 @@ internal class Scene(
         addUniforms["model"] = declaration.transform.mat4
         return shader.render(
             { fixer(materialDeclaration.uniforms[it] ?: contextUniforms[it] ?: addUniforms[it]) },
-            meshLink.gpuMesh
+            meshLink.gpuMesh,
+            inventory.textureUnitCache
         )
     }
 }
