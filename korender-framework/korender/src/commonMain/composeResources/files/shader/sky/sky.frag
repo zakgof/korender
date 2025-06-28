@@ -1,10 +1,7 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 
 in vec2 vtex;
-
-#uniform vec3 cameraPos;
-#uniform mat4 view;
-#uniform mat4 projection;
 
 #uniforms
 

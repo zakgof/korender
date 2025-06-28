@@ -1,4 +1,5 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 
 layout(location = 8) in int b1;
 layout(location = 9) in int b2;
@@ -7,13 +8,12 @@ out vec3 vpos;
 out vec3 vnormal;
 out vec2 vtex;
 
-uniform mat4 view;
-uniform mat4 projection;
+#uniform float cell;
+#uniform vec3 tileOffsetAndScale;
+#uniform vec3 antipop;
+#uniform float antipopSpan;
 
-uniform float cell;
-uniform vec3 tileOffsetAndScale;
-uniform vec3 antipop;
-uniform float antipopSpan;
+#uniforms
 
 #import "$terrain"
 

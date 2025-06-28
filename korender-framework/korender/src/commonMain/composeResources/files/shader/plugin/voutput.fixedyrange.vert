@@ -1,5 +1,5 @@
-uniform float fixedYMin;
-uniform float fixedYMax;
+#uniform float fixedYMin;
+#uniform float fixedYMax;
 
 vec4 pluginVOutput(vec4 worldPos) {
     vec4 tpos = projection * (view * worldPos);

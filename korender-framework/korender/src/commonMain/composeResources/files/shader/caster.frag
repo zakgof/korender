@@ -1,4 +1,5 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 
 in vec3 vpos;
 in vec3 vnormal;
@@ -7,15 +8,12 @@ in vec2 vtex;
     in vec4 vcolor;
 #endif
 
-uniform vec4 baseColor;
+#uniform vec4 baseColor;
 #ifdef BASE_COLOR_MAP
     uniform sampler2D baseColorTexture;
 #endif
 
-uniform vec3 cameraPos;
-uniform vec3 cameraDir;
-uniform mat4 projection;
-uniform mat4 view;
+#uniforms
 
 out vec4 fragColor;
 

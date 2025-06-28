@@ -1,15 +1,15 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 
 in vec2 vtex;
 
 uniform sampler2D colorTexture;
 uniform sampler2D depthTexture;
-uniform mat4 projection;
-uniform mat4 view;
-uniform vec3 cameraPos;
 
-uniform vec3 fogColor;
-uniform float density;
+#uniform vec3 fogColor;
+#uniform float density;
+
+#uniforms
 
 out vec4 fragColor;
 

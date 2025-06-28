@@ -1,4 +1,5 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 
 layout(location = 2) in vec2 tex;
 #ifdef INSTANCING
@@ -8,9 +9,6 @@ layout(location = 2) in vec2 tex;
 #endif
 
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-uniform vec3 cameraPos;
 
 #ifndef INSTANCING
     uniform vec3 pos;

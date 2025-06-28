@@ -8,6 +8,8 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_TEXTURE_MAX_ANISOTROPY
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MAX_ANISOTROPY
 import com.zakgof.korender.maxTexAniso
 import com.zakgof.korender.texAniso
+import org.khronos.webgl.Uint32Array
+import org.khronos.webgl.get
 import org.khronos.webgl.toFloat32Array
 import org.khronos.webgl.toInt32Array
 
@@ -172,13 +174,8 @@ actual object GL {
     actual fun glEnableVertexAttribArray(index: Int) =
         gl!!.enableVertexAttribArray(index)
 
-    actual fun glGetUniformLocation(program: GLProgram, name: String) =
-        com.zakgof.korender.impl.gl.GLUniformLocation(
-            gl!!.getUniformLocation(
-                program.program,
-                name
-            )!!
-        )
+    actual fun glGetUniformLocation(program: GLProgram, name: String): GLUniformLocation? =
+        gl!!.getUniformLocation(program.program, name)?.let { GLUniformLocation(it) }
 
     actual fun glGetAttribLocation(program: GLProgram, name: String): Int =
         gl!!.getAttribLocation(program.program, name)
@@ -289,13 +286,33 @@ actual object GL {
     }
 
     actual fun glGetUniformBlockIndex(program: GLProgram, name: String): Int =
-        gl!!.getUniformBlockIndex
+        gl!!.getUniformBlockIndex(program.program, name)
 
-    actual fun glGetActiveUniformBlockiv(program: GLProgram, blockIndex: Int, param: Int, paramValues: IntArray): Unit
+    actual fun glGetActiveUniformBlockiv(program: GLProgram, blockIndex: Int, param: Int, paramValues: IntArray) {
+        when (val value = gl!!.getActiveUniformBlockParameter(program.program, blockIndex, param)) {
+            is JsBigInt -> paramValues[0] = value.toLong().toInt()
+            is JsNumber -> paramValues[0] = value.toInt()
+            is Uint32Array -> for (i in 0 until value.length)
+                    paramValues[i] = value[i]
+            else -> throw KorenderException("Internal error [$value] ")
+        }
+    }
 
-    actual fun glGetActiveUniformsiv(program: GLProgram, uniformIndices: IntArray, param: Int, paramValues: IntArray): Unit
+    actual fun glGetActiveUniformsiv(program: GLProgram, uniformIndices: IntArray, param: Int, paramValues: IntArray) {
+        val value = gl!!.getActiveUniforms(program.program, uniformIndices.map { it.toJsNumber() }.toJsArray(), param)
+        for (i in 0 until value.length)
+            paramValues[i] = (value[i] as JsNumber).toInt()
+    }
 
-    actual fun glGetActiveUniformName(program: GLProgram, uniformIndex: Int): String
+    actual fun glGetActiveUniformName(program: GLProgram, uniformIndex: Int) =
+        gl!!.getActiveUniform(program.program, uniformIndex)!!.name
 
-    actual fun glBufferSubData(target: Int, offset: Long, buffer: NativeByteBuffer): Unit
+    actual fun glBufferSubData(target: Int, offset: Long, buffer: NativeByteBuffer) =
+        gl!!.bufferSubData(target, offset.toInt(), buffer.array)
+
+    actual fun glUniformBlockBinding(program: GLProgram, blockIndex: Int, blockBinding: Int) =
+        gl!!.uniformBlockBinding(program.program, blockIndex, blockBinding)
+
+    actual fun glBindBufferBase(target: Int, blockBinding: Int, buffer: GLBuffer) =
+        gl!!.bindBufferBase(target, blockBinding, buffer.buffer)
 }

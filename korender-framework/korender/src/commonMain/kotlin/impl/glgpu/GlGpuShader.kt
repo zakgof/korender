@@ -1,21 +1,13 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.impl.buffer.NativeByteBuffer
-import com.zakgof.korender.impl.buffer.put
 import com.zakgof.korender.impl.engine.GlTextureUnitCache
 import com.zakgof.korender.impl.gl.GL.glAttachShader
-import com.zakgof.korender.impl.gl.GL.glBindBuffer
-import com.zakgof.korender.impl.gl.GL.glBindBufferBase
-import com.zakgof.korender.impl.gl.GL.glBufferData
-import com.zakgof.korender.impl.gl.GL.glBufferSubData
 import com.zakgof.korender.impl.gl.GL.glCompileShader
 import com.zakgof.korender.impl.gl.GL.glCreateProgram
 import com.zakgof.korender.impl.gl.GL.glCreateShader
-import com.zakgof.korender.impl.gl.GL.glDeleteBuffers
 import com.zakgof.korender.impl.gl.GL.glDeleteProgram
 import com.zakgof.korender.impl.gl.GL.glDeleteShader
-import com.zakgof.korender.impl.gl.GL.glGenBuffers
 import com.zakgof.korender.impl.gl.GL.glGetActiveUniform
 import com.zakgof.korender.impl.gl.GL.glGetActiveUniformBlockiv
 import com.zakgof.korender.impl.gl.GL.glGetActiveUniformName
@@ -32,16 +24,13 @@ import com.zakgof.korender.impl.gl.GL.glUniform1i
 import com.zakgof.korender.impl.gl.GL.glUniform1iv
 import com.zakgof.korender.impl.gl.GL.glUniformBlockBinding
 import com.zakgof.korender.impl.gl.GL.glUseProgram
-import com.zakgof.korender.impl.gl.GLBuffer
 import com.zakgof.korender.impl.gl.GLConstants.GL_ACTIVE_UNIFORMS
 import com.zakgof.korender.impl.gl.GLConstants.GL_COMPILE_STATUS
-import com.zakgof.korender.impl.gl.GLConstants.GL_DYNAMIC_DRAW
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAGMENT_SHADER
 import com.zakgof.korender.impl.gl.GLConstants.GL_LINK_STATUS
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_BLOCK_DATA_SIZE
-import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_BUFFER
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_OFFSET
 import com.zakgof.korender.impl.gl.GLConstants.GL_VERTEX_SHADER
 import com.zakgof.korender.impl.gl.GLUniformLocation
@@ -49,9 +38,7 @@ import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ShaderDebugInfo
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
-import com.zakgof.korender.math.Mat3
 import com.zakgof.korender.math.Mat4
-import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
 internal class GlGpuShader(
@@ -61,15 +48,15 @@ internal class GlGpuShader(
     vertDebugInfo: ShaderDebugInfo,
     fragDebugInfo: ShaderDebugInfo,
     private val zeroTex: GlGpuTexture,
-    private val zeroShadowTex: GlGpuTexture
+    private val zeroShadowTex: GlGpuTexture,
+    private val frameUbo: GlGpuUniformBuffer
 ) : AutoCloseable {
     private val programHandle = glCreateProgram()
     private val vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER)
     private val fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER)
 
-    private val ubo: GLBuffer
-    private val uboBuffer: NativeByteBuffer
-    private val uniformOffsets: Map<String, Int>
+    private val shaderUbo: GlGpuUniformBuffer?
+
     private val uniformLocations: Map<String, GLUniformLocation>
     private val uniformCache = mutableMapOf<String, Any>()
 
@@ -77,10 +64,10 @@ internal class GlGpuShader(
 
         println("Creating GPU Shader [$name] : $programHandle")
 
-//        println("Vertex ====")
-//        println(vertexShaderText)
-//        println("Fragment ====")
-//        println(fragmentShaderText)
+        println("Vertex ====")
+        println(vertexShaderText)
+        println("Fragment ====")
+        println(fragmentShaderText)
 
         glShaderSource(vertexShaderHandle, vertexShaderText)
         glCompileShader(vertexShaderHandle)
@@ -122,44 +109,51 @@ internal class GlGpuShader(
         } else if (programLog.isNotEmpty()) {
             throw KorenderException("Program linking warnings $errorLog")
         }
-        val blockIndex = glGetUniformBlockIndex(programHandle, "Uniforms")
-        uboBuffer = createUboBuffer(blockIndex)
-        ubo = createUbo(blockIndex)
-        uniformOffsets = fetchUniformBlocks(blockIndex)
+
+        val shaderUboBlockIndex = glGetUniformBlockIndex(programHandle, "Uniforms")
+
+        shaderUbo = if (shaderUboBlockIndex >= 0) createShaderUbo(shaderUboBlockIndex) else null
+        shaderUbo?.let { attachUbo(shaderUbo, shaderUboBlockIndex, 1) }
+
+        val contextUboBlockIndex = glGetUniformBlockIndex(programHandle, "Frame")
+        // createShaderUbo(contextUboBlockIndex)
+        if (contextUboBlockIndex >= 0) {
+            attachUbo(frameUbo, contextUboBlockIndex, 0)
+        }
+
         uniformLocations = fetchUniforms()
     }
 
-    private fun createUbo(blockIndex: Int): GLBuffer {
-        val ubo = glGenBuffers()
-        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-        glBufferData(GL_UNIFORM_BUFFER, uboBuffer, GL_DYNAMIC_DRAW)
-
-        glUniformBlockBinding(programHandle, blockIndex, 0)
-        glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo)
-
-        return ubo
-    }
-
-    private fun createUboBuffer(blockIndex: Int): NativeByteBuffer {
+    private fun createShaderUbo(blockIndex: Int): GlGpuUniformBuffer? {
         val blockSize = IntArray(1)
         glGetActiveUniformBlockiv(programHandle, blockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, blockSize);
-        return NativeByteBuffer(blockSize[0])
+        val offsets = fetchUniformBlockOffsets(blockIndex)
+        return if (offsets.isEmpty()) null else GlGpuUniformBuffer(blockSize[0], offsets)
     }
 
-    private fun fetchUniformBlocks(blockIndex: Int): Map<String, Int> {
+    private fun attachUbo(ubo: GlGpuUniformBuffer, blockIndex: Int, blockBinding: Int) {
+        glUniformBlockBinding(programHandle, blockIndex, blockBinding)
+        ubo.bindShader(blockBinding)
+    }
+
+    private fun fetchUniformBlockOffsets(blockIndex: Int): Map<String, Int> {
         val uniformCount = IntArray(1)
         glGetActiveUniformBlockiv(programHandle, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, uniformCount)
 
-        val uniformIndices = IntArray(uniformCount[0])
-        glGetActiveUniformBlockiv(programHandle, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, uniformIndices)
+        if (uniformCount[0] > 0) {
 
-        val uniformOffsets = IntArray(uniformCount[0])
-        glGetActiveUniformsiv(programHandle, uniformIndices, GL_UNIFORM_OFFSET, uniformOffsets)
+            val uniformIndices = IntArray(uniformCount[0])
+            glGetActiveUniformBlockiv(programHandle, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, uniformIndices)
 
-        return (0 until uniformCount[0]).associate {
-            val name = glGetActiveUniformName(programHandle, uniformIndices[it])
-            name to uniformOffsets[it]
+            val uniformOffsets = IntArray(uniformCount[0])
+            glGetActiveUniformsiv(programHandle, uniformIndices, GL_UNIFORM_OFFSET, uniformOffsets)
+
+            return (0 until uniformCount[0]).associate {
+                val name = glGetActiveUniformName(programHandle, uniformIndices[it])
+                name to uniformOffsets[it]
+            }
         }
+        return mapOf()
     }
 
     private fun fetchUniforms(): Map<String, GLUniformLocation> {
@@ -174,7 +168,7 @@ internal class GlGpuShader(
 
     override fun close() {
         println("Destroying GPU Shader [$name] : $programHandle")
-        glDeleteBuffers(ubo)
+        shaderUbo?.close()
         glDeleteShader(vertexShaderHandle)
         glDeleteShader(fragmentShaderHandle)
         glDeleteProgram(programHandle)
@@ -182,8 +176,8 @@ internal class GlGpuShader(
 
     fun render(uniforms: (String) -> Any?, mesh: GlGpuMesh, textureUnitCache: GlTextureUnitCache): Boolean {
         glUseProgram(programHandle)
-        var success = bindUniforms(uniforms, textureUnitCache)
-        success = success or bindUbo(uniforms)
+        shaderUbo?.populate(uniforms, 1, this.toString())
+        val success = bindUniforms(uniforms, textureUnitCache)
         if (success) {
             mesh.render()
         }
@@ -246,81 +240,6 @@ internal class GlGpuShader(
                 throw KorenderException("Unsupported uniform value $value of type ${value::class} for uniform $name")
             }
 
-        }
-    }
-
-    private fun bindUbo(uniforms: (String) -> Any?): Boolean {
-        uniformOffsets.forEach {
-            val uniformValue = requireNotNull(uniforms(it.key)) { "Material ${toString()} does not provide value for the blocked uniform ${it.key}" }
-            populateUbo(it.key, uniformValue, it.value)
-        }
-        glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo)
-        glBindBuffer(GL_UNIFORM_BUFFER, ubo)
-        glBufferSubData(GL_UNIFORM_BUFFER, 0L, uboBuffer.rewind())
-        return true
-    }
-
-    private fun populateUbo(name: String, value: Any, offset: Int) {
-        uboBuffer.position(offset)
-        when (value) {
-            is Int -> uboBuffer.put(value)
-            is Float -> uboBuffer.put(value)
-            is Vec2 -> {
-                uboBuffer.put(value.x)
-                uboBuffer.put(value.y)
-            }
-
-            is Vec3 -> uboBuffer.put(value)
-            is ColorRGB -> {
-                uboBuffer.put(value.r)
-                uboBuffer.put(value.g)
-                uboBuffer.put(value.b)
-            }
-
-            is ColorRGBA -> {
-                uboBuffer.put(value.r)
-                uboBuffer.put(value.g)
-                uboBuffer.put(value.b)
-                uboBuffer.put(value.a)
-            }
-
-            is Mat3 -> uboBuffer.put(value.asArray()) // TODO: padding
-            is Mat4 -> uboBuffer.put(value.asArray())
-
-            is IntList -> value.values.forEach {
-                uboBuffer.put(it)
-            }
-
-            is FloatList -> value.values.forEach {
-                uboBuffer.put(it)
-            }
-
-            is Vec3List -> value.values.forEach {
-                uboBuffer.put(it.x)
-                uboBuffer.put(it.y)
-                uboBuffer.put(it.z)
-            }
-
-            is Color3List -> value.values.forEach {
-                uboBuffer.put(it.r)
-                uboBuffer.put(it.g)
-                uboBuffer.put(it.b)
-            }
-
-            is Color4List -> value.values.forEach {
-                uboBuffer.put(it.r)
-                uboBuffer.put(it.g)
-                uboBuffer.put(it.b)
-                uboBuffer.put(it.a)
-            }
-
-            is Mat4List -> value.matrices.forEach {
-                uboBuffer.put(it.asArray())
-            }
-
-            else -> {
-                throw KorenderException("Unsupported uniform value $value of type ${value::class} for uniform $name")
-            }
         }
     }
 

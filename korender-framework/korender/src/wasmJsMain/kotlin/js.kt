@@ -2,7 +2,9 @@ package com.zakgof.korender
 
 import org.khronos.webgl.Int8Array
 import org.khronos.webgl.Uint8Array
+import org.khronos.webgl.WebGLBuffer
 import org.khronos.webgl.WebGLObject
+import org.khronos.webgl.WebGLProgram
 import org.khronos.webgl.WebGLRenderingContextBase
 import org.khronos.webgl.WebGLTexture
 import org.w3c.dom.RenderingContext
@@ -20,6 +22,11 @@ abstract external class WebGL2RenderingContext : WebGLRenderingContextBase, Rend
     abstract fun drawArraysInstanced(mode: Int, starting: Int, count: Int, instances: Int)
     abstract fun drawElementsInstanced(mode: Int, count: Int, type: Int, indices: Int, instances: Int)
     abstract fun vertexAttribDivisor(index: Int, divisor: Int)
+    abstract fun getUniformBlockIndex(program: WebGLProgram, uniformBlockName: String): Int
+    abstract fun getActiveUniformBlockParameter(program: WebGLProgram, uniformBlockIndex: Int, pname: Int): JsAny
+    abstract fun uniformBlockBinding(program: WebGLProgram, uniformBlockIndex: Int, blockBinding: Int)
+    abstract fun bindBufferBase(target: Int, blockBinding: Int, buffer: WebGLBuffer)
+    abstract fun getActiveUniforms(program: WebGLProgram, uniformIndices: JsArray<JsNumber>, param: Int): JsArray<*>
 }
 
 abstract external class WebGLVertexArray : WebGLObject, JsAny
@@ -46,8 +53,9 @@ internal fun jsAddFont(fontFace: FontFace): JsAny =
     """
     )
 
-internal fun performanceNow(): Double =
-    js("performance.now()")
+internal fun performanceNow(): Double = js("performance.now()")
+
+internal fun typeOf(obj: JsAny): JsAny = js("(typeof obj).toString()")
 
 external class FontFace : JsAny {
     fun load(): Promise<FontFace>

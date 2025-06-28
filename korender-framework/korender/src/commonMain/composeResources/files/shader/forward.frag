@@ -1,4 +1,5 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 
 in vec3 vpos;
 in vec3 vnormal;
@@ -18,33 +19,8 @@ in vec2 vtex;
 #uniform float metallicFactor;
 #uniform float roughnessFactor;
 
-#uniform vec3 cameraPos;
-#uniform vec3 cameraDir;
-#uniform vec3 ambientColor;
-#uniform mat4 projection;
-#uniform mat4 view;
-
-#uniform int numDirectionalLights;
-#uniform vec3 directionalLightDir[32];
-#uniform vec3 directionalLightColor[32];
-#uniform int directionalLightShadowTextureIndex[32];
-#uniform int directionalLightShadowTextureCount[32];
-
-#uniform int numPointLights;
-#uniform vec3 pointLightPos[32];
-#uniform vec3 pointLightColor[32];
-#uniform vec3 pointLightAttenuation[32];
-
-#uniform int numShadows;
 uniform sampler2D shadowTextures[5];
 uniform sampler2DShadow pcfTextures[5];
-#uniform mat4 bsps[5];
-#uniform vec4 cascade[5];
-#uniform float yMin[5];
-#uniform float yMax[5];
-#uniform int shadowMode[5];
-#uniform float f1[5];
-#uniform int i1[5];
 
 #uniforms
 

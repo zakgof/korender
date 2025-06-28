@@ -1,11 +1,12 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 #import "!shader/lib/blur.glsl"
 
 in vec2 vtex;
 
-uniform float radius;
+#uniform float radius;
+#uniforms
 
-uniform float screenHeight;
 uniform sampler2D colorTexture;
 uniform sampler2D depthTexture;
 

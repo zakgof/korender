@@ -85,13 +85,17 @@ internal class Scene(
     fun render(): Boolean {
 
         val uniforms = mutableMapOf<String, Any?>()
-        renderContext.uniforms(uniforms)
-
         renderEnvProbes(uniforms)
         renderFrameProbes(uniforms)
 
         try {
+            // TODO perf
+            renderContext.uniforms(uniforms)
+            renderShadows(uniforms, true)
+            inventory.frameUbo.populate({ uniforms[it] }, 0, "Frame context")
             renderShadows(uniforms, false)
+            inventory.frameUbo.populate({ uniforms[it] }, 0, "Frame context")
+
             if (deferredShading) {
                 renderSceneDeferred(uniforms)
             } else {
@@ -107,7 +111,7 @@ internal class Scene(
     private fun renderEnvProbes(uniforms: MutableMap<String, Any?>) {
         sceneDeclaration.envCaptures.forEach { kv ->
             try {
-                 Scene(kv.value.sceneDeclaration, inventory, renderContext, currentRetentionPolicy)
+                Scene(kv.value.sceneDeclaration, inventory, renderContext, currentRetentionPolicy)
                     .renderToEnvProbe(uniforms, kv.value, kv.key)
                     ?.let {
                         renderContext.envProbes[kv.key] = it

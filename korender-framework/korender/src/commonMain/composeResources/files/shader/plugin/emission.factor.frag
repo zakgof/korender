@@ -1,4 +1,4 @@
-uniform vec3 emissionFactor;
+#uniform vec3 emissionFactor;
 
 vec3 pluginEmission() {
     return emissionFactor;

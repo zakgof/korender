@@ -1,19 +1,16 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 
 in vec2 vtex;
 
-uniform vec3 waterColor;
-uniform float transparency;
-uniform float waveScale;
-uniform float waveMagnitude;
+#uniform vec3 waterColor;
+#uniform float transparency;
+#uniform float waveScale;
+#uniform float waveMagnitude;
+#uniforms
 
 uniform sampler2D colorTexture;
 uniform sampler2D depthTexture;
-uniform mat4 projection;
-uniform mat4 view;
-uniform vec3 cameraPos;
-uniform vec3 lightDir;
-uniform vec4 lightColor;
 
 out vec4 fragColor;
 

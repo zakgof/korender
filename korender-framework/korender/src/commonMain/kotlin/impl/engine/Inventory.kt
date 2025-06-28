@@ -27,8 +27,10 @@ internal class Inventory(asyncContext: AsyncContext) {
     private val zeroTex = GlGpuTexture.zeroTex()
     private val zeroShadowTex = GlGpuTexture.zeroShadowTex()
 
+    val frameUbo = Shaders.frame()
+
     private val meshes = Registry<InternalMeshDeclaration, MeshLink> { Geometry.create(it, loader) }
-    private val shaders = Registry<ShaderDeclaration, GlGpuShader> { Shaders.create(it, loader, zeroTex, zeroShadowTex) }
+    private val shaders = Registry<ShaderDeclaration, GlGpuShader> { Shaders.create(it, loader, zeroTex, zeroShadowTex, frameUbo) }
     private val textures = Registry<InternalTexture, GlGpuTexture> { it.generateGpuTexture(loader) }
     private val resourceCubeTextures = Registry<ResourceCubeTextureDeclaration, GlGpuCubeTexture> { Texturing.cube(it, loader) }
     private val imageCubeTextures = Registry<ImageCubeTextureDeclaration, GlGpuCubeTexture> { Texturing.cube(it) }

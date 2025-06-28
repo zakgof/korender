@@ -1,11 +1,10 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 
 in vec2 vtex;
 
 uniform sampler2D colorTexture;
 uniform sampler2D depthTexture;
-uniform float screenWidth;
-uniform float screenHeight;
 
 out vec4 fragColor;
 

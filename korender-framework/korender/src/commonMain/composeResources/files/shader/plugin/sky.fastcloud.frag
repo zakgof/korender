@@ -1,15 +1,14 @@
 #import "!shader/lib/noisebias.glsl"
 
-uniform float time;
-uniform float thickness;
-uniform float density;
-uniform float scale;
-uniform float rippleamount;
-uniform float ripplescale;
-uniform vec3 zenithcolor;
-uniform vec3 horizoncolor;
-uniform float cloudlight;
-uniform float clouddark;
+#uniform float thickness;
+#uniform float density;
+#uniform float scale;
+#uniform float rippleamount;
+#uniform float ripplescale;
+#uniform vec3 zenithcolor;
+#uniform vec3 horizoncolor;
+#uniform float cloudlight;
+#uniform float clouddark;
 
 vec3 sky(vec3 look, float bias) {
 
