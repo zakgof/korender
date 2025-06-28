@@ -39,13 +39,11 @@ import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
-import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec2
-import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -88,13 +86,12 @@ internal class Scene(
         renderEnvProbes(uniforms)
         renderFrameProbes(uniforms)
 
+        val frameUniforms = mutableMapOf<String, Any?>()
+        renderContext.uniforms(frameUniforms)
+        fillLightUniforms(frameUniforms)
+
         try {
-            // TODO perf
-            renderContext.uniforms(uniforms)
-            renderShadows(uniforms, true)
-            inventory.frameUbo.populate({ uniforms[it] }, 0, "Frame context")
-            renderShadows(uniforms, false)
-            inventory.frameUbo.populate({ uniforms[it] }, 0, "Frame context")
+            renderShadows(frameUniforms, uniforms)
 
             if (deferredShading) {
                 renderSceneDeferred(uniforms)
@@ -107,6 +104,7 @@ internal class Scene(
             return false
         }
     }
+
 
     private fun renderEnvProbes(uniforms: MutableMap<String, Any?>) {
         sceneDeclaration.envCaptures.forEach { kv ->
@@ -378,17 +376,26 @@ internal class Scene(
         return success
     }
 
-    private fun renderShadows(m: MutableMap<String, Any?>, forceNoShadows: Boolean) {
+    private fun fillLightUniforms(m: MutableMap<String, Any?>) {
+        m["numDirectionalLights"] = sceneDeclaration.directionalLights.size
+        m["directionalLightDir[0]"] = Vec3List(sceneDeclaration.directionalLights.map { it.direction })
+        m["directionalLightColor[0]"] = Color3List(sceneDeclaration.directionalLights.map { it.color })
+        m["directionalLightShadowTextureIndex[0]"] = IntList(List(32) { -1 })
+        m["directionalLightShadowTextureCount[0]"] = IntList(List(32) { 0 })
+        m["ambientColor"] = sceneDeclaration.ambientLightColor
+        m["numPointLights"] = sceneDeclaration.pointLights.size
+        m["pointLightPos[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.position })
+        m["pointLightColor[0]"] = Color3List(sceneDeclaration.pointLights.map { it.color })
+        m["pointLightAttenuation[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.attenuation })
+        inventory.frameUbo.populate({ m[it] }, 0, "Frame context", true)
+    }
+
+    private fun renderShadows(m: MutableMap<String, Any?>, u: MutableMap<String, Any?>) {
         val shadowData = mutableListOf<ShadowerData>()
-        val directionalDirs = mutableListOf<Vec3>()
-        val directionalColors = mutableListOf<ColorRGB>()
         val directionalShadowIndexes = mutableListOf<Int>()
         val directionalShadowCounts = mutableListOf<Int>()
         sceneDeclaration.directionalLights.forEachIndexed { li, dl ->
-            val indexes = if (forceNoShadows)
-                listOf()
-            else
-                dl.shadowDeclaration.cascades.mapIndexedNotNull { ci, cascadeDeclaration ->
+            val indexes = dl.shadowDeclaration.cascades.mapIndexedNotNull { ci, cascadeDeclaration ->
                     ShadowRenderer.render(
                         "$li-$ci",
                         dl.direction,
@@ -401,24 +408,13 @@ internal class Scene(
                         shadowData.size - 1
                     }
                 }
-            directionalDirs += dl.direction
-            directionalColors += dl.color
             directionalShadowIndexes += indexes.minOrNull() ?: -1
             directionalShadowCounts += indexes.size
         }
-
-        shadowData.uniforms(m)
-
-        m["numDirectionalLights"] = sceneDeclaration.directionalLights.size
-        m["directionalLightDir[0]"] = Vec3List(directionalDirs)
-        m["directionalLightColor[0]"] = Color3List(directionalColors)
+        shadowData.uniforms(m, u)
         m["directionalLightShadowTextureIndex[0]"] = IntList(directionalShadowIndexes)
         m["directionalLightShadowTextureCount[0]"] = IntList(directionalShadowCounts)
-        m["ambientColor"] = sceneDeclaration.ambientLightColor
-        m["numPointLights"] = sceneDeclaration.pointLights.size
-        m["pointLightPos[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.position })
-        m["pointLightColor[0]"] = Color3List(sceneDeclaration.pointLights.map { it.color })
-        m["pointLightAttenuation[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.attenuation })
+        inventory.frameUbo.populate({ m[it] }, 0, "Frame context")
     }
 
     private fun renderPostProcess(filterDeclaration: InternalFilterDeclaration, uniforms: Map<String, Any?>) {
@@ -442,8 +438,7 @@ internal class Scene(
         if (mesh != null && shader != null) {
             shader.render(
                 { fixer(quadMaterial.uniforms[it] ?: uniforms[it]) },
-                mesh.gpuMesh,
-                inventory.textureUnitCache
+                mesh.gpuMesh
             )
         }
     }
@@ -465,7 +460,7 @@ internal class Scene(
 
     fun renderToEnvProbe(uniforms: MutableMap<String, Any?>, envCaptureContext: EnvCaptureContext, probeName: String): GlGpuCubeTexture? {
         var success = true
-        renderShadows(uniforms, true)
+        fillLightUniforms(uniforms)
         val probeFb =
             inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", envCaptureContext.resolution, envCaptureContext.resolution, true, TransientProperty(currentRetentionPolicy))) ?: return null
         val probeUniforms = mutableMapOf<String, Any?>()
@@ -494,7 +489,7 @@ internal class Scene(
     }
 
     fun renderToFrameProbe(uniforms: MutableMap<String, Any?>, frameCaptureContext: FrameCaptureContext, frameProbeName: String): GlGpuTexture {
-        renderShadows(uniforms, true)
+        fillLightUniforms(uniforms)
         val probeFb = inventory.frameBuffer(FrameBufferDeclaration("probe-$frameProbeName", frameCaptureContext.width, frameCaptureContext.height, listOf(GlGpuTexture.Preset.RGBAFilter), true, TransientProperty(currentRetentionPolicy)))
             ?: throw SkipRender("Frame probe FB 'probe-$frameProbeName'")
         val probeUniforms = mutableMapOf<String, Any?>()
@@ -536,8 +531,7 @@ internal class Scene(
         addUniforms["model"] = declaration.transform.mat4
         return shader.render(
             { fixer(materialDeclaration.uniforms[it] ?: contextUniforms[it] ?: addUniforms[it]) },
-            meshLink.gpuMesh,
-            inventory.textureUnitCache
+            meshLink.gpuMesh
         )
     }
 }

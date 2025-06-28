@@ -19,10 +19,8 @@ internal class Registry<D : Retentionable, R : AutoCloseable>(
     }
 
     fun end(time: Float, generation: Int) {
-        map.forEach {
-            if (!it.value.used && it.value.attemptDelete(it.key.retentionPolicy, time, generation)) {
-                map.remove(it.key)
-            }
+        map.entries.removeAll {
+            !it.value.used && it.value.attemptDelete(it.key.retentionPolicy, time, generation)
         }
     }
 
@@ -57,6 +55,8 @@ internal class Registry<D : Retentionable, R : AutoCloseable>(
             if (freeTime == null) {
                 freeTime = currentTime
             }
+            if (del)
+                value.close()
             return del
         }
     }

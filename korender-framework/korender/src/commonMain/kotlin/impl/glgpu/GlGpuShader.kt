@@ -1,7 +1,6 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.impl.engine.GlTextureUnitCache
 import com.zakgof.korender.impl.gl.GL.glAttachShader
 import com.zakgof.korender.impl.gl.GL.glCompileShader
 import com.zakgof.korender.impl.gl.GL.glCreateProgram
@@ -140,20 +139,16 @@ internal class GlGpuShader(
         val uniformCount = IntArray(1)
         glGetActiveUniformBlockiv(programHandle, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, uniformCount)
 
-        if (uniformCount[0] > 0) {
+        val uniformIndices = IntArray(uniformCount[0])
+        glGetActiveUniformBlockiv(programHandle, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, uniformIndices)
 
-            val uniformIndices = IntArray(uniformCount[0])
-            glGetActiveUniformBlockiv(programHandle, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, uniformIndices)
+        val uniformOffsets = IntArray(uniformCount[0])
+        glGetActiveUniformsiv(programHandle, uniformIndices, GL_UNIFORM_OFFSET, uniformOffsets)
 
-            val uniformOffsets = IntArray(uniformCount[0])
-            glGetActiveUniformsiv(programHandle, uniformIndices, GL_UNIFORM_OFFSET, uniformOffsets)
-
-            return (0 until uniformCount[0]).associate {
-                val name = glGetActiveUniformName(programHandle, uniformIndices[it])
-                name to uniformOffsets[it]
-            }
+        return (0 until uniformCount[0]).associate {
+            val name = glGetActiveUniformName(programHandle, uniformIndices[it])
+            name to uniformOffsets[it]
         }
-        return mapOf()
     }
 
     private fun fetchUniforms(): Map<String, GLUniformLocation> {
@@ -174,66 +169,62 @@ internal class GlGpuShader(
         glDeleteProgram(programHandle)
     }
 
-    fun render(uniforms: (String) -> Any?, mesh: GlGpuMesh, textureUnitCache: GlTextureUnitCache): Boolean {
+    fun render(uniforms: (String) -> Any?, mesh: GlGpuMesh): Boolean {
         glUseProgram(programHandle)
         shaderUbo?.populate(uniforms, 1, this.toString())
-        val success = bindUniforms(uniforms, textureUnitCache)
+        val success = bindUniforms(uniforms)
         if (success) {
             mesh.render()
         }
         return success
     }
 
-    private fun bindUniforms(uniforms: (String) -> Any?, textureUnitCache: GlTextureUnitCache): Boolean {
-        var result = true
+    private fun bindUniforms(uniforms: (String) -> Any?): Boolean {
+        var currentTextureUnit = 1
         uniformLocations.forEach {
             val uniformValue = requireNotNull(uniforms(it.key)) { "Material ${toString()} does not provide value for the uniform ${it.key}" }
             if (uniformValue == NotYetLoadedTexture) {
                 println("Skipping shader rendering because texture [${it.key}] not loaded")
-                result = false
+                return false
             }
-            if (result) {
-                bind(it.key, uniformValue, it.value, textureUnitCache)
-            }
+            currentTextureUnit += bindUniform(it.key, uniformValue, it.value, currentTextureUnit)
         }
         // glActiveTexture(GL_TEXTURE0)
         // glBindTexture(GL_TEXTURE_2D, null)
-        return result
+        return true
     }
 
-    private fun bind(name: String, value: Any, location: GLUniformLocation, textureUnitCache: GlTextureUnitCache) {
+    private fun bindUniform(name: String, value: Any, location: GLUniformLocation, currentTextureUnit: Int): Int {
         when (value) {
 
             is GLBindableTexture -> {
-                val unit = textureUnitCache.bind(value)
-                if (unit != uniformCache[name]) {
-                    uniformCache[name] = unit
-                    glUniform1i(location, unit)
-                }
+                value.bind(currentTextureUnit)
+                glUniform1i(location, currentTextureUnit)
+                return 1
             }
 
             is GlGpuTextureList -> {
                 val units = (0 until value.totalNum)
                     .map {
+                        val ctu = currentTextureUnit + it
                         val tex = if (it < value.textures.size) value.textures[it] else null
-                        textureUnitCache.bind(tex ?: zeroTex)
+                        (tex ?: zeroTex).bind(ctu)
+                        ctu
                     }
-                if (units != uniformCache[name]) {
-                    uniformCache[name] = units
-                    glUniform1iv(location, *units.toIntArray())
-                }
+                glUniform1iv(location, *units.toIntArray())
+                return value.totalNum
             }
 
             is GlGpuShadowTextureList -> {
                 val units = (0 until value.totalNum)
                     .map {
+                        val ctu = currentTextureUnit + it
                         val tex = if (it < value.textures.size) value.textures[it] else null
-                        textureUnitCache.bind(tex ?: zeroShadowTex)
+                        (tex ?: zeroShadowTex).bind(ctu)
+                        ctu
                     }
-                if (units != uniformCache[name]) {
-                    uniformCache[name] = units
-                    glUniform1iv(location, *units.toIntArray())
-                }
+                glUniform1iv(location, *units.toIntArray())
+                return value.totalNum
             }
 
             else -> {

@@ -70,6 +70,9 @@ internal object ShadowRenderer {
         casterUniforms["cameraPos"] = shadowCamera.position
         casterUniforms["cameraDir"] = shadowCamera.direction
 
+        // TODO: UGLY!!!!
+        scene.inventory.frameUbo.populate({ casterUniforms[it] }, 0, "Frame context", true)
+
         frameBuffer.exec {
             scene.renderContext.state.set {
                 clearColor(ColorRGBA(1f, 1f, 0f, 1f))
@@ -178,7 +181,6 @@ internal object ShadowRenderer {
         texBlurRadius: Float
     ) {
         val uniforms = mutableMapOf<String, Any?>()
-        scene.renderContext.uniforms(uniforms) // TODO once per frame only
 
         val blurFrameBuffer = scene.inventory.frameBuffer(
             FrameBufferDeclaration("shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM), true, TransientProperty(ImmediatelyFreeRetentionPolicy))
@@ -306,10 +308,8 @@ internal class ShadowerData(
     val f1: Float
 )
 
-internal fun List<ShadowerData>.uniforms(m: MutableMap<String, Any?>) {
+internal fun List<ShadowerData>.uniforms(m: MutableMap<String, Any?>, u: MutableMap<String, Any?>) {
     m["numShadows"] = size
-    m["shadowTextures[0]"] = GlGpuTextureList(this.map { it.texture }, 5)
-    m["pcfTextures[0]"] = GlGpuShadowTextureList(this.map { it.pcfTexture }, 5)
     m["bsps[0]"] = Mat4List(this.map { it.bsp })
     m["cascade[0]"] = Color4List(this.map { ColorRGBA(it.cascade[0], it.cascade[1], it.cascade[2], it.cascade[3]) })
     m["yMin[0]"] = FloatList(this.map { it.yMin })
@@ -317,4 +317,7 @@ internal fun List<ShadowerData>.uniforms(m: MutableMap<String, Any?>) {
     m["shadowMode[0]"] = IntList(this.map { it.mode })
     m["i1[0]"] = IntList(this.map { it.i1 })
     m["f1[0]"] = FloatList(this.map { it.f1 })
+
+    u["shadowTextures[0]"] = GlGpuTextureList(this.map { it.texture }, 5)
+    u["pcfTextures[0]"] = GlGpuShadowTextureList(this.map { it.pcfTexture }, 5)
 }
