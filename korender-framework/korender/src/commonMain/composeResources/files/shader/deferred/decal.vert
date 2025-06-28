@@ -1,4 +1,5 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 
 layout(location = 0) in vec3 pos;
 
@@ -16,10 +17,10 @@ out vec3 vpos;
 #endif
 
 #ifndef INSTANCING
-    uniform mat4 model;
+    #uniform mat4 model;
 #endif
-uniform mat4 view;
-uniform mat4 projection;
+
+#uniforms
 
 void main() {
 

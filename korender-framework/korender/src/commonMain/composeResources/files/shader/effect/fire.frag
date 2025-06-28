@@ -1,4 +1,5 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 #import "!shader/lib/noise.glsl"
 
 // Inspired by Xavier Benech https://www.shadertoy.com/view/XsXSWS
@@ -7,8 +8,9 @@ in vec3 vpos;
 in vec3 vnormal;
 in vec2 vtex;
 
-uniform float time;
-uniform float strength;
+#uniform float strength;
+
+#uniforms
 
 out vec4 fragColor;
 

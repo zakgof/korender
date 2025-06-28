@@ -1,4 +1,5 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 
 in vec2 vtex;
 
@@ -8,46 +9,16 @@ uniform sampler2D materialGeometryTexture;
 uniform sampler2D emissionGeometryTexture;
 uniform sampler2D depthGeometryTexture;
 
-//////////
+uniform sampler2D shadowTextures[5];
+uniform sampler2DShadow pcfTextures[5];
 
-uniform vec3 cameraPos;
-uniform vec3 cameraDir;
-uniform vec3 ambientColor;
-uniform mat4 projection;
-uniform mat4 view;
-
-
-//////////
-
-const int MAX_LIGHTS = 32;
-uniform int numDirectionalLights;
-uniform vec3 directionalLightDir[MAX_LIGHTS];
-uniform vec3 directionalLightColor[MAX_LIGHTS];
-uniform int directionalLightShadowTextureIndex[MAX_LIGHTS];
-uniform int directionalLightShadowTextureCount[MAX_LIGHTS];
-
-uniform int numPointLights;
-uniform vec3 pointLightPos[MAX_LIGHTS];
-uniform vec3 pointLightColor[MAX_LIGHTS];
-uniform vec3 pointLightAttenuation[MAX_LIGHTS];
-
-const int MAX_SHADOWS = 5;
-uniform int numShadows;
-uniform sampler2D shadowTextures[MAX_SHADOWS];
-uniform sampler2DShadow pcfTextures[MAX_SHADOWS];
-uniform mat4 bsps[MAX_SHADOWS];
-uniform vec4 cascade[MAX_SHADOWS];
-uniform float yMin[MAX_SHADOWS];
-uniform float yMax[MAX_SHADOWS];
-uniform int shadowMode[MAX_SHADOWS];
-uniform float f1[MAX_SHADOWS];
-uniform int i1[MAX_SHADOWS];
+#uniforms
 
 //////////
 
 out vec4 fragColor;
 
-float shadowRatios[MAX_SHADOWS];
+float shadowRatios[5];
 
 #ifdef PLUGIN_COLOR
 #import "$color"

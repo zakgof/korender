@@ -6,9 +6,7 @@ in vec2 vtex;
 uniform sampler2D colorTexture;
 uniform samplerCube envTexture0;
 
-uniform mat4 projection;
-uniform mat4 view;
-uniform vec3 cameraPos;
+#uniforms
 
 out vec4 fragColor;
 

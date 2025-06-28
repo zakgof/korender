@@ -1,4 +1,4 @@
-uniform float triplanarScale;
+#uniform float triplanarScale;
 
 vec4 triplanar(sampler2D tex, vec3 pos, vec3 normal) {
 

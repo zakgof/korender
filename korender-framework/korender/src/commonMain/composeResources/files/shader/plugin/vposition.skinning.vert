@@ -1,13 +1,12 @@
 layout(location = 3) in uvec4 joints;
 layout(location = 4) in vec4 weights;
 
-const int MAX_JOINTS = 32;
 mat4 skinningMatrix;
 
 #ifdef INSTANCING
     uniform sampler2D jntTexture;
 #else
-    uniform mat4 jntMatrices[MAX_JOINTS];
+    #uniform mat4 jntMatrices[32];
 #endif
 
 

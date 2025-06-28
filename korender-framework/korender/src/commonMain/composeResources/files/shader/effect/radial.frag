@@ -1,4 +1,5 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl
 
 in vec3 vcenter;
 in vec3 vpos;
@@ -8,12 +9,8 @@ uniform samplerCube radiantTexture;
 uniform samplerCube radiantNormalTexture;
 uniform samplerCube colorTexture;
 uniform samplerCube normalTexture;
-uniform vec3 cameraPos;
-uniform mat4 projection;
-uniform mat4 view;
 
 out vec4 fragColor;
-
 
 void main() {
 

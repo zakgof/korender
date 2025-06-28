@@ -8,17 +8,14 @@ uniform sampler2D normalGeometryTexture;
 uniform sampler2D materialGeometryTexture;
 uniform sampler2D depthGeometryTexture;
 
-uniform vec3 cameraPos;
-uniform vec3 cameraDir;
-uniform mat4 projection;
-uniform mat4 view;
+#uniform float maxRayTravel;
+#uniform int linearSteps;
+#uniform int binarySteps;
 
-uniform float maxRayTravel;
-uniform int linearSteps;
-uniform int binarySteps;
+#uniforms
 
 #ifdef SSR_ENV
-uniform samplerCube envTexture;
+    uniform samplerCube envTexture;
 #endif
 
 out vec4 fragColor;

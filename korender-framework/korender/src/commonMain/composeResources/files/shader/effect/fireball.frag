@@ -1,4 +1,5 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 #import "!shader/lib/noise.glsl"
 
 in vec3 vpos;
@@ -6,10 +7,9 @@ in vec2 vsize;
 in vec3 vnormal;
 in vec2 vtex;
 
-uniform float time;
-uniform float power;
-uniform mat4 view;
-uniform mat4 projection;
+#uniform float power;
+
+#uniforms
 
 out vec4 fragColor;
 

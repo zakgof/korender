@@ -29,7 +29,7 @@ internal class RenderContext(var width: Int, var height: Int) {
     val envProbes = mutableMapOf<String, GlGpuCubeTexture>()
     val frameProbes = mutableMapOf<String, GlGpuTexture>()
 
-    fun uniforms(m: MutableMap<String, Any?>) {
+    fun frameUniforms(m: MutableMap<String, Any?>) {
         m["noiseTexture"] = ResourceTextureDeclaration("!noise.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)
         m["fbmTexture"] = ResourceTextureDeclaration("!fbm.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)
         m["view"] = camera.mat4
@@ -39,6 +39,11 @@ internal class RenderContext(var width: Int, var height: Int) {
         m["screenWidth"] = width.toFloat()
         m["screenHeight"] = height.toFloat()
         m["time"] = (Platform.nanoTime() - frameInfoManager.startNanos) * 1e-9f
+    }
+
+    fun contextUniforms(m: MutableMap<String, Any?>) {
+        m["noiseTexture"] = ResourceTextureDeclaration("!noise.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)
+        m["fbmTexture"] = ResourceTextureDeclaration("!fbm.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)
     }
 
 }

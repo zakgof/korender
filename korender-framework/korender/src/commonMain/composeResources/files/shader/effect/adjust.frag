@@ -2,9 +2,11 @@
 
 in vec2 vtex;
 
-uniform float brightness;   // -1..1, 0 is unity
-uniform float contrast;     // 0..2, 1 is unity
-uniform float saturation;   // 0..inf, 1 is unity
+#uniform float brightness;   // -1..1, 0 is unity
+#uniform float contrast;     // 0..2, 1 is unity
+#uniform float saturation;   // 0..inf, 1 is unity
+
+#uniforms
 
 uniform sampler2D colorTexture;
 uniform sampler2D depthTexture;

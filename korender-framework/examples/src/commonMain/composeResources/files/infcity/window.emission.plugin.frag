@@ -1,4 +1,3 @@
-uniform float time;
 uniform sampler2D windowTexture;
 
 vec3 pluginEmission() {

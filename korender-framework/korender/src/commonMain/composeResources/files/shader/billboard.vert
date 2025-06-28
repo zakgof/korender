@@ -8,13 +8,15 @@ layout(location = 2) in vec2 tex;
     layout(location = 13) in float instrot;
 #endif
 
-uniform mat4 model;
+#uniform mat4 model;
 
 #ifndef INSTANCING
-    uniform vec3 pos;
-    uniform vec2 scale;
-    uniform float rotation;
+    #uniform vec3 pos;
+    #uniform vec2 scale;
+    #uniform float rotation;
 #endif
+
+#uniforms
 
 out vec3 vcenter;
 out vec3 vpos;

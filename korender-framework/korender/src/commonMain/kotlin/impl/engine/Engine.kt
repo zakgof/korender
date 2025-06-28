@@ -143,7 +143,7 @@ internal class Engine(
             inventory.go(0f, 0) {
                 val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
                 val uniforms = mutableMapOf<String, Any?>()
-                renderContext.uniforms(uniforms)
+                renderContext.frameUniforms(uniforms)
                 while(true) {
                     val cubeTexture = scene.renderToEnvProbe(uniforms, EnvCaptureContext(resolution, position, near, far, insideOut, sd), "#immediate")
                     if (cubeTexture != null) {
@@ -165,7 +165,7 @@ internal class Engine(
             inventory.go(0f, 0) {
                 val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
                 val uniforms = mutableMapOf<String, Any?>()
-                renderContext.uniforms(uniforms)
+                renderContext.frameUniforms(uniforms)
                 val texture = scene.renderToFrameProbe(uniforms, FrameCaptureContext(width, height, camera as Camera, projection as Projection, sd), "#immediate")
                 image = texture.fetch()
                 true

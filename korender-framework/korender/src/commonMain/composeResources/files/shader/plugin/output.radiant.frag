@@ -1,4 +1,4 @@
-uniform float radiantMax;
+#uniform float radiantMax;
 
 vec4 pluginOutput() {
     float radiant = length(cameraPos - vpos) / radiantMax;

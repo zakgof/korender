@@ -83,11 +83,12 @@ internal class Scene(
     fun render(): Boolean {
 
         val uniforms = mutableMapOf<String, Any?>()
+        renderContext.contextUniforms(uniforms)
         renderEnvProbes(uniforms)
         renderFrameProbes(uniforms)
 
         val frameUniforms = mutableMapOf<String, Any?>()
-        renderContext.uniforms(frameUniforms)
+        renderContext.frameUniforms(frameUniforms)
         fillLightUniforms(frameUniforms)
 
         try {

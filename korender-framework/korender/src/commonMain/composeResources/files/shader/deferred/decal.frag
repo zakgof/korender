@@ -1,19 +1,20 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 
 uniform sampler2D depthGeometryTexture;
 
 //////////
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-uniform vec3 cameraPos;
-uniform vec2 renderSize;
+#uniform mat4 model;
+#uniform vec2 renderSize;
 
-uniform vec4 baseColor;
+#uniform vec4 baseColor;
+#uniform float metallicFactor;
+#uniform float roughnessFactor;
+
+#uniforms
+
 uniform sampler2D baseColorTexture;
-uniform float metallicFactor;
-uniform float roughnessFactor;
 
 layout(location = 0) out vec4 decalDiffuse;
 layout(location = 1) out vec4 decalNormal;

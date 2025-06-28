@@ -63,7 +63,7 @@ internal object ShadowRenderer {
         val shadowProjection = matrices.second
 
         val casterUniforms = mutableMapOf<String, Any?>()
-        scene.renderContext.uniforms(casterUniforms)
+        scene.renderContext.frameUniforms(casterUniforms)
 
         casterUniforms["view"] = shadowCamera.mat4
         casterUniforms["projection"] = shadowProjection.mat4

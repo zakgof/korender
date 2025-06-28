@@ -1,4 +1,5 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 
 in vec3 vpos;
 in vec3 vnormal;
@@ -10,17 +11,15 @@ in vec2 vtex;
     in float vocclusion;
 #endif
 
-uniform vec4 baseColor;
+#uniform vec4 baseColor;
 #ifdef BASE_COLOR_MAP
     uniform sampler2D baseColorTexture;
 #endif
 
-uniform float metallicFactor;
-uniform float roughnessFactor;
+#uniform float metallicFactor;
+#uniform float roughnessFactor;
 
-uniform vec4 ambientColor;
-uniform mat4 projection;
-uniform mat4 view;
+#uniforms
 
 layout(location = 0) out vec3 cdiffChannel;
 layout(location = 1) out vec3 normalChannel;

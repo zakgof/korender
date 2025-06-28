@@ -5,6 +5,7 @@
 in vec2 vtex;
 
 #uniform float radius;
+
 #uniforms
 
 uniform sampler2D colorTexture;

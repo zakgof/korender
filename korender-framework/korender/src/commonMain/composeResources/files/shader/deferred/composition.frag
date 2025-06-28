@@ -1,24 +1,24 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 
 in vec2 vtex;
 
 uniform sampler2D finalColorTexture;
 uniform sampler2D depthTexture;
 
-uniform float screenWidth;
-uniform float screenHeight;
-
 #ifdef SSR
 uniform sampler2D ssrTexture;
     #ifdef SSR_FXAA
-    uniform float ssrWidth;
-    uniform float ssrHeight;
+        #uniform float ssrWidth;
+        #uniform float ssrHeight;
     #endif
 #endif
 
 #ifdef BLOOM
 uniform sampler2D bloomTexture;
 #endif
+
+#uniforms
 
 out vec4 fragColor;
 

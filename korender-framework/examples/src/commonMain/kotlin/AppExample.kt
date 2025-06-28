@@ -35,9 +35,6 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun AppExample() {
     val options = listOf(
-
-        Demo("PBR materials") { MetallicRoughnessExample() },
-
         Demo("Heightmap Terrain") { HeightmapTerrainExample() },
         Demo("Procedural Terrain") { ProcTerrainExample() },
         Demo("City demo") { InfiniteCity() },
