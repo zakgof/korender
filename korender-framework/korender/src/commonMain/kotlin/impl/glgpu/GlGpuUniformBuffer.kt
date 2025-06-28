@@ -23,7 +23,7 @@ internal class GlGpuUniformBuffer(size: Int, private val offsets: Map<String, In
 
     init {
         glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-        glBufferData(GL_UNIFORM_BUFFER, uboBuffer, GL_DYNAMIC_DRAW)
+        glBufferData(GL_UNIFORM_BUFFER, uboBuffer.rewind(), GL_DYNAMIC_DRAW)
         println("Creating GPU UBO : $ubo")
     }
 

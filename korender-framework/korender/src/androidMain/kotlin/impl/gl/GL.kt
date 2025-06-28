@@ -126,8 +126,10 @@ actual object GL {
     actual fun glEnableVertexAttribArray(index: Int) =
         GLES30.glEnableVertexAttribArray(index)
 
-    actual fun glGetUniformLocation(program: GLProgram, name: String) =
-        GLUniformLocation(GLES30.glGetUniformLocation(program.program, name))
+    actual fun glGetUniformLocation(program: GLProgram, name: String): GLUniformLocation? {
+        val loc = GLES30.glGetUniformLocation(program.program, name)
+        return if (loc < 0) null else GLUniformLocation(loc)
+    }
 
     actual fun glGetAttribLocation(program: GLProgram, name: String) =
         GLES30.glGetAttribLocation(program.program, name)
@@ -239,6 +241,24 @@ actual object GL {
     actual fun glGetMaxTextureMaxAnisotropyConstant() = GL_MAX_TEXTURE_MAX_ANISOTROPY
 
     actual fun glGetTextureMaxAnisotropyConstant() = GL_TEXTURE_MAX_ANISOTROPY
+
+    actual fun glGetUniformBlockIndex(program: GLProgram, name: String) =
+        GLES30.glGetUniformBlockIndex(program.program, name)
+
+    actual fun glGetActiveUniformBlockiv(program: GLProgram, blockIndex: Int, param: Int, paramValues: IntArray) =
+        GLES30.glGetActiveUniformBlockiv(program.program, blockIndex, param, paramValues, 0)
+
+    actual fun glGetActiveUniformsiv(program: GLProgram, uniformIndices: IntArray, param: Int, paramValues: IntArray) =
+        GLES30.glGetActiveUniformsiv(program.program, uniformIndices.size, uniformIndices, 0, param, paramValues, 0)
+
+    actual fun glGetActiveUniformName(program: GLProgram, uniformIndex: Int): String =
+        GLES30.glGetActiveUniform(program.program, uniformIndex, intArrayOf(0), 0, intArrayOf(0), 0)
+
+    actual fun glUniformBlockBinding(program: GLProgram, blockIndex: Int, blockBinding: Int) =
+        GLES30.glUniformBlockBinding(program.program, blockIndex, blockBinding)
+
+    actual fun glBindBufferBase(target: Int, blockBinding: Int, buffer: GLBuffer) =
+        GLES30.glBindBufferBase(target, blockBinding, buffer.buffer)
 
     private fun intViaArray(function: (IntArray) -> Unit) =
         IntArray(1).apply(function)[0]
