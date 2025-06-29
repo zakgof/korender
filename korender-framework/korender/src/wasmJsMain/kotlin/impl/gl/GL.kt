@@ -81,6 +81,9 @@ actual object GL {
         target, level, internalformat, width, height, border, format, type, buffer?.array
     )
 
+    actual fun glTexSubImage2D(target: Int, level: Int, x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, buffer: NativeBuffer) =
+        gl!!.glTexSubImage2D(target, level, x, y, width, height, format, type, buffer.array)
+
     actual fun glGetTexImage(tex: Int, level: Int, format: Int, type: Int, pixels: NativeByteBuffer) =
         gl!!.getTexImage(tex, level, format, type, pixels.array)
 
@@ -306,9 +309,6 @@ actual object GL {
 
     actual fun glGetActiveUniformName(program: GLProgram, uniformIndex: Int) =
         gl!!.getActiveUniform(program.program, uniformIndex)!!.name
-
-    actual fun glBufferSubData(target: Int, offset: Long, buffer: NativeByteBuffer) =
-        gl!!.bufferSubData(target, offset.toInt(), buffer.array)
 
     actual fun glUniformBlockBinding(program: GLProgram, blockIndex: Int, blockBinding: Int) =
         gl!!.uniformBlockBinding(program.program, blockIndex, blockBinding)

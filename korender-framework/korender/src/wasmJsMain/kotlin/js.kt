@@ -1,5 +1,6 @@
 package com.zakgof.korender
 
+import org.khronos.webgl.ArrayBufferView
 import org.khronos.webgl.Int8Array
 import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.WebGLBuffer
@@ -27,6 +28,7 @@ abstract external class WebGL2RenderingContext : WebGLRenderingContextBase, Rend
     abstract fun uniformBlockBinding(program: WebGLProgram, uniformBlockIndex: Int, blockBinding: Int)
     abstract fun bindBufferBase(target: Int, blockBinding: Int, buffer: WebGLBuffer)
     abstract fun getActiveUniforms(program: WebGLProgram, uniformIndices: JsArray<JsNumber>, param: Int): JsArray<*>
+    abstract fun glTexSubImage2D(target: Int, level: Int, x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, array: ArrayBufferView)
 }
 
 abstract external class WebGLVertexArray : WebGLObject, JsAny

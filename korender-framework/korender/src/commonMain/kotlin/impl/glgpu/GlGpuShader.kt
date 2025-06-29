@@ -34,7 +34,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_OFFSET
 import com.zakgof.korender.impl.gl.GLConstants.GL_VERTEX_SHADER
 import com.zakgof.korender.impl.gl.GLUniformLocation
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
-import com.zakgof.korender.impl.material.ShaderDebugInfo
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
@@ -44,8 +43,8 @@ internal class GlGpuShader(
     private val name: String,
     vertexShaderText: String,
     fragmentShaderText: String,
-    vertDebugInfo: ShaderDebugInfo,
-    fragDebugInfo: ShaderDebugInfo,
+    vertDebugInfo: (String) -> String,
+    fragDebugInfo: (String) -> String,
     private val zeroTex: GlGpuTexture,
     private val zeroShadowTex: GlGpuTexture,
     private val frameUbo: GlGpuUniformBuffer
@@ -57,16 +56,15 @@ internal class GlGpuShader(
     private val shaderUbo: GlGpuUniformBuffer?
 
     private val uniformLocations: Map<String, GLUniformLocation>
-    private val uniformCache = mutableMapOf<String, Any>()
 
     init {
 
         println("Creating GPU Shader [$name] : $programHandle")
 
-        println("Vertex ====")
-        println(vertexShaderText)
-        println("Fragment ====")
-        println(fragmentShaderText)
+//        println("Vertex ====")
+//        println(vertexShaderText)
+//        println("Fragment ====")
+//        println(fragmentShaderText)
 
         glShaderSource(vertexShaderHandle, vertexShaderText)
         glCompileShader(vertexShaderHandle)
@@ -82,12 +80,12 @@ internal class GlGpuShader(
         var errorLog = "\n"
         val vertexLog: String = glGetShaderInfoLog(vertexShaderHandle)
         if (vertexLog.isNotEmpty()) {
-            errorLog += "\n > Vertex shader log\n" + vertDebugInfo.decorate(vertexLog) + "\n"
+            errorLog += "\n > Vertex shader log\n" + vertDebugInfo(vertexLog) + "\n"
         }
 
         val fragmentLog: String = glGetShaderInfoLog(fragmentShaderHandle)
         if (fragmentLog.isNotEmpty()) {
-            errorLog += "\n >> Fragment shader log\n" + fragDebugInfo.decorate(fragmentLog) + "\n"
+            errorLog += "\n >> Fragment shader log\n" + fragDebugInfo(fragmentLog) + "\n"
         }
 
         val programLog: String = glGetProgramInfoLog(programHandle)

@@ -1,7 +1,9 @@
 package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.Platform
 import com.zakgof.korender.ResourceLoader
+import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gl.GL.shaderEnv
@@ -13,7 +15,8 @@ import com.zakgof.korender.impl.resourceBytes
 internal fun <T> MutableList<T>.peek(): T = this.last()
 internal fun <T> MutableList<T>.pop(): T = this.removeAt(this.size - 1)
 
-private class ShaderData(val title: String, val vertCode: String, val fragCode: String, val vertDebugInfo: ShaderDebugInfo, val fragDebugInfo: ShaderDebugInfo)
+private class ShaderData(val title: String, val vertCode: String, val fragCode: String, val vertDebugInfo: (String) -> String, val fragDebugInfo: (String) -> String)
+private class Line(val text: String, val originFile: String, val originLine: Int)
 
 internal object Shaders {
 
@@ -65,71 +68,112 @@ internal object Shaders {
         private val uniforms = mutableListOf<String>()
 
         suspend fun load(vertFile: String, fragFile: String): ShaderData {
-            val vertDebugInfo = ShaderDebugInfo()
-            val fragDebugInfo = ShaderDebugInfo()
-            val vertShaderLoader = ShaderLoader(vertDebugInfo)
-            val fragShaderLoader = ShaderLoader(fragDebugInfo)
-            val vertCode = vertShaderLoader.preprocessFile(vertFile)
-            val fragCode = fragShaderLoader.preprocessFile(fragFile)
+
+            val vertLines = ShaderLoader().preprocessFile(vertFile)
+            val fragLines = ShaderLoader().preprocessFile(fragFile)
 
             val uniformBlock = buildUniformBlock()
-            val postProcessedVertCode = vertCode.replace("#uniforms", uniformBlock)
-            val postProcessedFragCode = fragCode.replace("#uniforms", uniformBlock)
+            injectUniforms(vertLines, uniformBlock)
+            injectUniforms(fragLines, uniformBlock)
 
-            return ShaderData("${vertFile}:${fragFile} $defs", postProcessedVertCode, postProcessedFragCode, vertDebugInfo, fragDebugInfo)
+            val vertCode = vertLines.joinToString("\n") { it.text }
+            val fragCode = fragLines.joinToString("\n") { it.text }
+
+            val vertDebugInfo: (String) -> String = { debugInfo(it, vertLines) }
+            val fragDebugInfo: (String) -> String = { debugInfo(it, fragLines) }
+
+            return ShaderData("${vertFile}:${fragFile} $defs", vertCode, fragCode, vertDebugInfo, fragDebugInfo)
         }
 
-        private fun buildUniformBlock() = if (uniforms.isEmpty()) "" else buildString {
-            append("layout(std140) uniform Uniforms {\n")
-            uniforms.distinct().forEach { append("    ").append(it).append("\n") }
-            append("};")
+        private fun buildUniformBlock(): List<String> {
+            return if (uniforms.isEmpty())
+                listOf()
+            else
+                mutableListOf("layout(std140) uniform Uniforms {") +
+                        uniforms.distinct().map { "    $it" } +
+                        "};"
         }
 
-        private inner class ShaderLoader(val debugInfo: ShaderDebugInfo) {
+        private fun injectUniforms(shaderLines: MutableList<Line>, uniformBlock: List<String>) {
+            val index = shaderLines.indexOfFirst { it.text.trim() == "#uniforms" }
+            if (index >= 0) {
+                shaderLines.removeAt(index)
+                shaderLines.addAll(index, uniformBlock.map { Line(it, "", 0) })
+            }
+        }
+
+        private fun debugInfo(log: String, lines: List<Line>): String {
+            return log.lines()
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .flatMap {
+                    listOf(it, debugLineInfo(it, lines))
+                }.joinToString("\n") { "       $it" }
+        }
+
+        private fun debugLineInfo(error: String, lines: List<Line>): String {
+            val patterns = listOf(
+                Regex("^(\\d+)\\((\\d+)\\).+$"),
+                Regex("^.+: (\\d+):(\\d+):.+$"),
+                Regex("(\\d+):(\\d+):.+$")
+            )
+            return patterns.map { it.find(error) }
+                .firstOrNull { it != null }
+                ?.let {
+                    val row = it.groups[2]!!.value.toInt()
+                    val offset = when (Platform.target) {
+                        KorenderContext.TargetPlatform.Desktop -> 2
+                        else -> 1
+                    }
+                    val entry = lines[row - offset]
+                    val info = "[${entry.originFile}:${entry.originLine}]  ${entry.text}"
+                    return info
+                } ?: error
+        }
+
+        private inner class ShaderLoader {
 
             private val includedFnames = mutableSetOf<String>()
 
-            suspend fun preprocessFile(fname: String): String {
+            suspend fun preprocessFile(fname: String): MutableList<Line> {
                 val content = resourceBytes(appResourceLoader, fname).decodeToString()
                 return preprocess(content, fname)
             }
 
-            private suspend fun preprocess(content: String, fname: String): String {
-                val outputLines = mutableListOf<String>()
+            private suspend fun preprocess(content: String, fname: String): MutableList<Line> {
+                val outputLines = mutableListOf<Line>()
                 val ifdefs = mutableListOf<String>()
                 val passes = mutableListOf<Boolean>()
                 passes.add(true)
-                debugInfo.start(fname)
-                content.lines().forEach {
-                    val line = it.trim()
-                    debugInfo.incSourceLine()
-                    preprocessLine(line, ifdefs, passes, outputLines)
+                content.lines().forEachIndexed { originLine, lineText ->
+                    preprocessLine(ifdefs, passes, outputLines, lineText.trim(), fname, originLine)
                 }
-                debugInfo.finish(fname)
-                return outputLines.joinToString("\n") // TODO check on Linux
+                return outputLines
             }
 
             private suspend fun preprocessLine(
-                line: String,
                 ifdefs: MutableList<String>,
                 passes: MutableList<Boolean>,
-                outputLines: MutableList<String>,
+                outputLines: MutableList<Line>,
+                lineText: String,
+                originFile: String,
+                originLine: Int
             ) {
-                val ifdefMatcher = Regex("#ifdef (.+)").find(line)
+                val ifdefMatcher = Regex("#ifdef (.+)").find(lineText)
                 if (ifdefMatcher != null) {
                     val defname = ifdefMatcher.groups[1]!!.value
                     ifdefs.add(defname)
                     passes.add(passes.peek() && defs.contains(defname))
                     return
                 }
-                val ifndefMatcher = Regex("#ifndef (.+)").find(line)
+                val ifndefMatcher = Regex("#ifndef (.+)").find(lineText)
                 if (ifndefMatcher != null) {
                     val defname = ifndefMatcher.groups[1]!!.value
                     ifdefs.add("-$defname")
                     passes.add(passes.peek() && !defs.contains(defname))
                     return
                 }
-                if (line == "#else") {
+                if (lineText == "#else") {
                     if (ifdefs.isEmpty())
                         throw KorenderException("Shader preprocessor error: #else without #if")
                     var inverting = ifdefs.pop()
@@ -146,7 +190,7 @@ internal object Shaders {
                     }
                     return
                 }
-                if (line == "#endif") {
+                if (lineText == "#endif") {
                     if (ifdefs.isEmpty())
                         throw KorenderException("Shader preprocessor error: #endif without #if")
                     ifdefs.pop()
@@ -157,7 +201,7 @@ internal object Shaders {
                 if (!passes.peek())
                     return
 
-                val includeMatcher = Regex("#import \"(.+)\"").find(line)
+                val includeMatcher = Regex("#import \"(.+)\"").find(lineText)
                 if (includeMatcher != null) {
                     val include = includeMatcher.groups[1]!!.value
                     val includeFname = includeToFile(include, plugins)
@@ -165,19 +209,18 @@ internal object Shaders {
                         return
                     includedFnames += includeFname;
                     val includeContent = preprocessFile(includeFname)
-                    outputLines.add(includeContent)
+                    outputLines.addAll(includeContent)
                     return
                 }
 
-                val uniformMatcher = Regex("#uniform (.+)").find(line)
+                val uniformMatcher = Regex("#uniform (.+)").find(lineText)
                 if (uniformMatcher != null) {
                     val uniform = uniformMatcher.groups[1]!!.value
                     uniforms += uniform
                     return
                 }
 
-                outputLines.add(line)
-                debugInfo.incDestLine(line)
+                outputLines.add(Line(lineText, originFile, originLine))
             }
 
             private fun includeToFile(include: String, plugins: Map<String, String>): String {
