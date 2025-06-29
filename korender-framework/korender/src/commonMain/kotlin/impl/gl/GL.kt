@@ -208,4 +208,6 @@ expect object GL {
 
     fun glBufferSubData(target: Int, offset: Long, buffer: NativeByteBuffer)
 
+    fun glBindBufferRange(target: Int, blockBinding: Int, buffer: GLBuffer, shift: Int, size: Int)
+
 }

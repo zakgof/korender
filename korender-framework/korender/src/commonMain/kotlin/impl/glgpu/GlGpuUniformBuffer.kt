@@ -3,6 +3,7 @@ package com.zakgof.korender.impl.glgpu
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.buffer.put
+import com.zakgof.korender.impl.gl.GL
 import com.zakgof.korender.impl.gl.GL.glBindBuffer
 import com.zakgof.korender.impl.gl.GL.glBindBufferBase
 import com.zakgof.korender.impl.gl.GL.glBufferData
@@ -17,7 +18,7 @@ import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
-internal class GlGpuUniformBuffer(size: Int, private val offsets: Map<String, Int>) : AutoCloseable {
+internal class GlGpuUniformBuffer(size: Int) : AutoCloseable {
 
     private val ubo = glGenBuffers()
     private val uboBuffer = NativeByteBuffer(size)
@@ -30,7 +31,12 @@ internal class GlGpuUniformBuffer(size: Int, private val offsets: Map<String, In
 
     fun bindShader(blockBinding: Int) = glBindBufferBase(GL_UNIFORM_BUFFER, blockBinding, ubo)
 
-    fun populate(uniforms: (String) -> Any?, blockBinding: Int, materialName: String, ignoreMissing: Boolean = false) {
+    fun populate(uniforms: (String) -> Any?,
+                 bufferShift: Int,
+                 offsets: Map<String, Int>,
+                 blockBinding: Int,
+                 materialName: String,
+                 ignoreMissing: Boolean = false) {
         offsets.forEach {
             val uniformValue = uniforms(it.key)
             if (uniformValue == null) {
@@ -38,10 +44,13 @@ internal class GlGpuUniformBuffer(size: Int, private val offsets: Map<String, In
                     throw KorenderException ("$materialName does not provide value for the blocked uniform ${it.key}")
                 }
             } else {
-                populateUboUniform(it.key, uniformValue, it.value)
+                populateUboUniform(it.key, uniformValue, bufferShift + it.value)
             }
         }
         glBindBufferBase(GL_UNIFORM_BUFFER, blockBinding, ubo)
+    }
+
+    fun upload(size: Int) {
         glBindBuffer(GL_UNIFORM_BUFFER, ubo)
         glBufferData(GL_UNIFORM_BUFFER, uboBuffer.size().toLong(), GL_DYNAMIC_DRAW)
         glBufferSubData(GL_UNIFORM_BUFFER, 0, uboBuffer.rewind())
@@ -108,9 +117,11 @@ internal class GlGpuUniformBuffer(size: Int, private val offsets: Map<String, In
         }
     }
 
+    fun setShift(bindingPoint: Int, shift: Int, size: Int) =
+        GL.glBindBufferRange(GL_UNIFORM_BUFFER, bindingPoint, ubo, shift, size)
+
     override fun close() {
         println("Destroying GPU UBO [$ubo]")
         glDeleteBuffers(ubo)
     }
-
 }

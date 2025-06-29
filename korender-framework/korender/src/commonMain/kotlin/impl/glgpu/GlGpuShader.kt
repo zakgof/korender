@@ -34,6 +34,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_OFFSET
 import com.zakgof.korender.impl.gl.GLConstants.GL_VERTEX_SHADER
 import com.zakgof.korender.impl.gl.GLUniformLocation
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
+import com.zakgof.korender.impl.material.UniformBufferHolder
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
@@ -47,14 +48,13 @@ internal class GlGpuShader(
     fragDebugInfo: (String) -> String,
     private val zeroTex: GlGpuTexture,
     private val zeroShadowTex: GlGpuTexture,
-    private val frameUbo: GlGpuUniformBuffer
+    private val uboHolder: UniformBufferHolder
 ) : AutoCloseable {
+    private val shaderUboSize: Int?
+    private val shaderUboOffsets: Map<String, Int>?
     private val programHandle = glCreateProgram()
     private val vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER)
     private val fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER)
-
-    private val shaderUbo: GlGpuUniformBuffer?
-
     private val uniformLocations: Map<String, GLUniformLocation>
 
     init {
@@ -108,24 +108,24 @@ internal class GlGpuShader(
         }
 
         val shaderUboBlockIndex = glGetUniformBlockIndex(programHandle, "Uniforms")
-
-        shaderUbo = if (shaderUboBlockIndex >= 0) createShaderUbo(shaderUboBlockIndex) else null
-        shaderUbo?.let { attachUbo(shaderUbo, shaderUboBlockIndex, 1) }
+        if (shaderUboBlockIndex >= 0) {
+            val blockSize = IntArray(1)
+            glGetActiveUniformBlockiv(programHandle, shaderUboBlockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, blockSize);
+            shaderUboSize = blockSize[0]
+            shaderUboOffsets = fetchUniformBlockOffsets(shaderUboBlockIndex)
+            attachUbo(uboHolder.shaderUbo, shaderUboBlockIndex, 0)
+        } else {
+            shaderUboSize = null
+            shaderUboOffsets = null
+        }
 
         val contextUboBlockIndex = glGetUniformBlockIndex(programHandle, "Frame")
         // createShaderUbo(contextUboBlockIndex)
         if (contextUboBlockIndex >= 0) {
-            attachUbo(frameUbo, contextUboBlockIndex, 0)
+            attachUbo(uboHolder.frameUbo, contextUboBlockIndex, 0)
         }
 
         uniformLocations = fetchUniforms()
-    }
-
-    private fun createShaderUbo(blockIndex: Int): GlGpuUniformBuffer? {
-        val blockSize = IntArray(1)
-        glGetActiveUniformBlockiv(programHandle, blockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, blockSize);
-        val offsets = fetchUniformBlockOffsets(blockIndex)
-        return if (offsets.isEmpty()) null else GlGpuUniformBuffer(blockSize[0], offsets)
     }
 
     private fun attachUbo(ubo: GlGpuUniformBuffer, blockIndex: Int, blockBinding: Int) {
@@ -161,20 +161,20 @@ internal class GlGpuShader(
 
     override fun close() {
         println("Destroying GPU Shader [$name] : $programHandle")
-        shaderUbo?.close()
         glDeleteShader(vertexShaderHandle)
         glDeleteShader(fragmentShaderHandle)
         glDeleteProgram(programHandle)
     }
 
-    fun render(uniforms: (String) -> Any?, mesh: GlGpuMesh): Boolean {
+    fun render(uniforms: (String) -> Any?, mesh: GlGpuMesh) {
         glUseProgram(programHandle)
-        shaderUbo?.populate(uniforms, 1, this.toString())
-        val success = bindUniforms(uniforms)
-        if (success) {
-            mesh.render()
+        uboHolder.populate(uniforms, shaderUboSize, shaderUboOffsets, 1, this.toString()) {
+            if (bindUniforms(uniforms)) {
+                mesh.render()
+                true
+            } else
+                false
         }
-        return success
     }
 
     private fun bindUniforms(uniforms: (String) -> Any?): Boolean {

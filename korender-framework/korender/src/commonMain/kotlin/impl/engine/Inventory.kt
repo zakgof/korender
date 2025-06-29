@@ -17,10 +17,11 @@ import com.zakgof.korender.impl.gltf.GltfLoader
 import com.zakgof.korender.impl.material.GpuTextureLink
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.InternalTexture
-import com.zakgof.korender.impl.material.TextureLinkDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.Shaders
+import com.zakgof.korender.impl.material.TextureLinkDeclaration
 import com.zakgof.korender.impl.material.Texturing
+import com.zakgof.korender.impl.material.UniformBufferHolder
 
 internal class Inventory(asyncContext: AsyncContext) {
 
@@ -29,10 +30,10 @@ internal class Inventory(asyncContext: AsyncContext) {
     private val zeroTex = GlGpuTexture.zeroTex()
     private val zeroShadowTex = GlGpuTexture.zeroShadowTex()
 
-    val frameUbo = Shaders.frame()
+    val uniformBufferHolder = UniformBufferHolder()
 
     private val meshes = Registry<InternalMeshDeclaration, MeshLink> { Geometry.create(it, loader) }
-    private val shaders = Registry<ShaderDeclaration, GlGpuShader> { Shaders.create(it, loader, zeroTex, zeroShadowTex, frameUbo) }
+    private val shaders = Registry<ShaderDeclaration, GlGpuShader> { Shaders.create(it, loader, zeroTex, zeroShadowTex, uniformBufferHolder) }
     private val textures = Registry<InternalTexture, GlGpuTexture> { it.generateGpuTexture(loader) }
     private val textureLinks = Registry<TextureLinkDeclaration, GpuTextureLink> { it.generateGpuTextureLink(loader) }
     private val resourceCubeTextures = Registry<ResourceCubeTextureDeclaration, GlGpuCubeTexture> { Texturing.cube(it, loader) }

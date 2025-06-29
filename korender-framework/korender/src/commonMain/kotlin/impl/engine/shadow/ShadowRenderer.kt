@@ -71,7 +71,7 @@ internal object ShadowRenderer {
         casterUniforms["cameraDir"] = shadowCamera.direction
 
         // TODO: UGLY!!!!
-        scene.inventory.frameUbo.populate({ casterUniforms[it] }, 0, "Frame context", true)
+        scene.inventory.uniformBufferHolder.populateFrame({ casterUniforms[it] }, 0, true)
 
         frameBuffer.exec {
             scene.renderContext.state.set {
@@ -111,6 +111,7 @@ internal object ShadowRenderer {
 
                 scene.renderRenderable(casterRenderableDeclaration, shadowCamera, casterUniforms)
             }
+            scene.inventory.uniformBufferHolder.flush()
         }
 
         if (declaration.algorithm is InternalVsmShadow && declaration.algorithm.blurRadius != null) {
@@ -195,6 +196,7 @@ internal object ShadowRenderer {
             scene.renderContext.state.set { }
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             scene.renderRenderable(blurVQuadRenderableDeclaration, null, uniforms)
+            scene.inventory.uniformBufferHolder.flush()
         }
 
         val blurHQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, "!shader/effect/blurh.frag")
@@ -206,6 +208,7 @@ internal object ShadowRenderer {
             scene.renderContext.state.set { }
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             scene.renderRenderable(blurHQuadRenderableDeclaration, null, uniforms)
+            scene.inventory.uniformBufferHolder.flush()
         }
     }
 

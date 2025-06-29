@@ -295,6 +295,7 @@ internal class Scene(
                         val renderableDeclaration = RenderableDeclaration(BaseMaterial.Decal, materialModifiers, DecalCube(0.5f, currentRetentionPolicy), Transform(model), currentRetentionPolicy)
                         renderRenderable(renderableDeclaration, renderContext.camera, uniforms)
                     }
+                    inventory.uniformBufferHolder.flush()
                 }
                 uniforms["decalDiffuse"] = decalsFb.colorTextures[0]
                 uniforms["decalNormal"] = decalsFb.colorTextures[1]
@@ -316,7 +317,7 @@ internal class Scene(
         renderables.forEach {
             success = success and renderRenderable(it, renderContext.camera, uniforms)
         }
-        return success
+        return success and inventory.uniformBufferHolder.flush()
     }
 
     private fun prepareScene(
@@ -365,6 +366,7 @@ internal class Scene(
             .forEach {
                 success = success and renderRenderable(it, camera, uniforms, insideOut)
             }
+        success = success and inventory.uniformBufferHolder.flush()
 
         val guiRenderers = sceneDeclaration.guis.map {
             GuiRenderer(inventory, width, height, it)
@@ -388,7 +390,7 @@ internal class Scene(
         m["pointLightPos[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.position })
         m["pointLightColor[0]"] = Color3List(sceneDeclaration.pointLights.map { it.color })
         m["pointLightAttenuation[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.attenuation })
-        inventory.frameUbo.populate({ m[it] }, 0, "Frame context", true)
+        inventory.uniformBufferHolder.populateFrame({ m[it] }, 0, true)
     }
 
     private fun renderShadows(m: MutableMap<String, Any?>, u: MutableMap<String, Any?>) {
@@ -415,7 +417,7 @@ internal class Scene(
         shadowData.uniforms(m, u)
         m["directionalLightShadowTextureIndex[0]"] = IntList(directionalShadowIndexes)
         m["directionalLightShadowTextureCount[0]"] = IntList(directionalShadowCounts)
-        inventory.frameUbo.populate({ m[it] }, 0, "Frame context")
+        inventory.uniformBufferHolder.populateFrame({ m[it] }, 0)
     }
 
     private fun renderPostProcess(filterDeclaration: InternalFilterDeclaration, uniforms: Map<String, Any?>) {
@@ -530,10 +532,11 @@ internal class Scene(
 
         // TODO move this to where it is supported
         addUniforms["model"] = declaration.transform.mat4
-        return shader.render(
+        shader.render(
             { fixer(materialDeclaration.uniforms[it] ?: contextUniforms[it] ?: addUniforms[it]) },
             meshLink.gpuMesh
         )
+        return true
     }
 }
 

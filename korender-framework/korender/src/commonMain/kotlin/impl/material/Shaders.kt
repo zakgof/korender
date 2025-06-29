@@ -9,7 +9,6 @@ import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gl.GL.shaderEnv
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.glgpu.GlGpuUniformBuffer
 import com.zakgof.korender.impl.resourceBytes
 
 internal fun <T> MutableList<T>.peek(): T = this.last()
@@ -20,9 +19,9 @@ private class Line(val text: String, val originFile: String, val originLine: Int
 
 internal object Shaders {
 
-    fun create(declaration: ShaderDeclaration, loader: Loader, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, frameUbo: GlGpuUniformBuffer): GlGpuShader? =
+    fun create(declaration: ShaderDeclaration, loader: Loader, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, uniformBufferHolder: UniformBufferHolder): GlGpuShader? =
         loader.syncy(declaration) { load(declaration, it) }?.let {
-            GlGpuShader(it.title, it.vertCode, it.fragCode, it.vertDebugInfo, it.fragDebugInfo, zeroTex, zeroShadowTex, frameUbo)
+            GlGpuShader(it.title, it.vertCode, it.fragCode, it.vertDebugInfo, it.fragDebugInfo, zeroTex, zeroShadowTex, uniformBufferHolder)
         }
 
     private suspend fun load(declaration: ShaderDeclaration, appResourceLoader: ResourceLoader): ShaderData {
@@ -32,36 +31,6 @@ internal object Shaders {
         val shaderBaker = ShaderBaker(defs, declaration.plugins, appResourceLoader)
         return shaderBaker.load(declaration.vertFile, declaration.fragFile)
     }
-
-    fun frame(): GlGpuUniformBuffer = GlGpuUniformBuffer(
-        4608, mapOf(
-            "cameraPos" to 0,
-            "cameraDir" to 16,
-            "view" to 32,
-            "projection" to 96,
-            "screenWidth" to 160,
-            "screenHeight" to 164,
-            "time" to 168,
-            "ambientColor" to 176,
-            "numDirectionalLights" to 188,
-            "directionalLightDir[0]" to 192,
-            "directionalLightColor[0]" to 704,
-            "directionalLightShadowTextureIndex[0]" to 1216,
-            "directionalLightShadowTextureCount[0]" to 1728,
-            "numPointLights" to 2240,
-            "pointLightPos[0]" to 2256,
-            "pointLightColor[0]" to 2768,
-            "pointLightAttenuation[0]" to 3280,
-            "numShadows" to 3792,
-            "bsps[0]" to 3808,
-            "cascade[0]" to 4128,
-            "yMin[0]" to 4208,
-            "yMax[0]" to 4288,
-            "shadowMode[0]" to 4368,
-            "f1[0]" to 4448,
-            "i1[0]" to 4528
-        )
-    )
 
     private class ShaderBaker(private val defs: Set<String>, private val plugins: Map<String, String>, private val appResourceLoader: ResourceLoader) {
 

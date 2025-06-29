@@ -298,4 +298,7 @@ actual object GL {
 
     actual fun glBufferSubData(target: Int, offset: Long, buffer: NativeByteBuffer) =
         GL33.glBufferSubData(target, offset, buffer.byteBuffer)
+
+    actual fun glBindBufferRange(target: Int, blockBinding: Int, buffer: GLBuffer, shift: Int, size: Int) =
+        GL33.glBindBufferRange(target, blockBinding, buffer.glHandle, shift.toLong(), size.toLong())
 }

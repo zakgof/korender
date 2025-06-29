@@ -28,7 +28,7 @@ fun ObjFileExample() {
             Gui {
                 Column {
                     Filler()
-                    Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
+   //                 Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
                 }
             }
         }
