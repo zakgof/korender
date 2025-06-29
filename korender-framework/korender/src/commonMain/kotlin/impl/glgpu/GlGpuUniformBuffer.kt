@@ -6,6 +6,7 @@ import com.zakgof.korender.impl.buffer.put
 import com.zakgof.korender.impl.gl.GL.glBindBuffer
 import com.zakgof.korender.impl.gl.GL.glBindBufferBase
 import com.zakgof.korender.impl.gl.GL.glBufferData
+import com.zakgof.korender.impl.gl.GL.glBufferSubData
 import com.zakgof.korender.impl.gl.GL.glDeleteBuffers
 import com.zakgof.korender.impl.gl.GL.glGenBuffers
 import com.zakgof.korender.impl.gl.GLConstants.GL_DYNAMIC_DRAW
@@ -42,7 +43,8 @@ internal class GlGpuUniformBuffer(size: Int, private val offsets: Map<String, In
         }
         glBindBufferBase(GL_UNIFORM_BUFFER, blockBinding, ubo)
         glBindBuffer(GL_UNIFORM_BUFFER, ubo)
-        glBufferData(GL_UNIFORM_BUFFER, uboBuffer.rewind(), GL_DYNAMIC_DRAW)
+        glBufferData(GL_UNIFORM_BUFFER, uboBuffer.size().toLong(), GL_DYNAMIC_DRAW)
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, uboBuffer.rewind())
     }
 
     private fun populateUboUniform(name: String, value: Any, offset: Int) {

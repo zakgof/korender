@@ -265,5 +265,11 @@ actual object GL {
 
     private fun intViaArray(function: (IntArray) -> Unit) =
         IntArray(1).apply(function)[0]
+
+    actual fun glBufferData(target: Int, size: Long, usage: Int) =
+        GLES30.glBufferData(target, size.toInt(), null, usage)
+
+    actual fun glBufferSubData(target: Int, offset: Long, buffer: NativeByteBuffer) =
+        GLES30.glBufferSubData(target, offset.toInt(), buffer.size(), buffer.byteBuffer)
 }
 

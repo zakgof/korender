@@ -265,6 +265,9 @@ actual object GL {
     actual fun glBufferData(target: Int, data: NativeByteBuffer, usage: Int) =
         GL30.glBufferData(target, data.byteBuffer, usage)
 
+    actual fun glBufferData(target: Int, size: Long, usage: Int) =
+        GL30.glBufferData(target, size, usage)
+
     actual fun glDrawBuffers(vararg targets: Int) =
         GL30.glDrawBuffers(targets)
 
@@ -292,4 +295,7 @@ actual object GL {
 
     actual fun glBindBufferBase(target: Int, blockBinding: Int, buffer: GLBuffer) =
         GL33.glBindBufferBase(target, blockBinding, buffer.glHandle)
+
+    actual fun glBufferSubData(target: Int, offset: Long, buffer: NativeByteBuffer) =
+        GL33.glBufferSubData(target, offset, buffer.byteBuffer)
 }

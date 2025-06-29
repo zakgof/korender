@@ -315,4 +315,10 @@ actual object GL {
 
     actual fun glBindBufferBase(target: Int, blockBinding: Int, buffer: GLBuffer) =
         gl!!.bindBufferBase(target, blockBinding, buffer.buffer)
+
+    actual fun glBufferData(target: Int, size: Long, usage: Int) =
+        gl!!.bufferData(target, size.toInt(), usage)
+
+    actual fun glBufferSubData(target: Int, offset: Long, buffer: NativeByteBuffer) =
+        gl!!.bufferSubData(target, offset.toInt(), buffer.array)
 }

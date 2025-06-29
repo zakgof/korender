@@ -88,6 +88,8 @@ expect object GL {
 
     fun glBufferData(target: Int, data: NativeByteBuffer, usage: Int)
 
+    fun glBufferData(target: Int, size: Long, usage: Int)
+
     fun glGenBuffers(): GLBuffer
 
     fun glGenVertexArrays(): GLVertexArray
@@ -203,5 +205,7 @@ expect object GL {
     fun glUniformBlockBinding(program: GLProgram, blockIndex: Int, blockBinding: Int)
 
     fun glBindBufferBase(target: Int, blockBinding: Int, buffer: GLBuffer)
+
+    fun glBufferSubData(target: Int, offset: Long, buffer: NativeByteBuffer)
 
 }
