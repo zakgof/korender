@@ -9,7 +9,11 @@ import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
+import com.zakgof.korender.impl.buffer.NativeFloatBuffer
 import com.zakgof.korender.impl.engine.Loader
+import com.zakgof.korender.impl.gl.GLConstants.GL_FLOAT
+import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA
+import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA32F
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.image.InternalImage
@@ -106,19 +110,22 @@ internal class ByteArrayTextureDeclaration(
         }
 }
 
-internal class RawTextureDeclaration(
+internal class TextureLinkDeclaration(
     private val id: String,
     val width: Int,
     val height: Int,
     override val retentionPolicy: RetentionPolicy
 ) : TextureDeclaration, InternalTexture {
     override fun equals(other: Any?): Boolean =
-        (other is RawTextureDeclaration && other.id == id)
+        (other is TextureLinkDeclaration && other.id == id)
 
     override fun hashCode(): Int = id.hashCode()
 
     override fun generateGpuTexture(loader: Loader): GlGpuTexture =
         GlGpuTexture(width, height, TextureFilter.Nearest, TextureWrap.Repeat, 0)
+
+    fun generateGpuTextureLink(loader: Loader) =
+        GpuTextureLink(generateGpuTexture(loader), NativeFloatBuffer(width * height * 4))
 }
 
 internal data class ProbeTextureDeclaration(val frameProbeName: String) : TextureDeclaration
@@ -143,3 +150,13 @@ internal class ImageCubeTextureDeclaration(
 }
 
 internal data class ProbeCubeTextureDeclaration(val envProbeName: String) : CubeTextureDeclaration
+
+internal class GpuTextureLink(
+    val texture: GlGpuTexture,
+    val buffer: NativeFloatBuffer
+) : AutoCloseable {
+    override fun close() =
+        texture.close()
+    fun uploadData() =
+        texture.uploadData(buffer.rewind(), GlGpuTexture.GlFormat(GL_RGBA32F, GL_RGBA, GL_FLOAT))
+}

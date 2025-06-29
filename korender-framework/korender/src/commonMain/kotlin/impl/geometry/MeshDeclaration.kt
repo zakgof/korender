@@ -15,18 +15,14 @@ import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.RetentionPolicy
-import com.zakgof.korender.impl.buffer.NativeFloatBuffer
+import com.zakgof.korender.impl.buffer.put
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.engine.BillboardInstance
 import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.font.Font
-import com.zakgof.korender.impl.gl.GLConstants.GL_FLOAT
-import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA
-import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA32F
-import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.material.RawTextureDeclaration
+import com.zakgof.korender.impl.material.TextureLinkDeclaration
 import impl.engine.Retentionable
 
 internal interface InternalMeshDeclaration : MeshDeclaration, Retentionable
@@ -92,18 +88,16 @@ internal data class InstancedMesh(
             meshLink.updateGpu(instances.size, true)
 
             if (cpuMesh.attrMap.containsKey(WEIGHTS)) {
-                val texDecl = RawTextureDeclaration(id, 32 * 4, cpuMesh.instanceCount, retentionPolicy)
-                inventory.texture(texDecl)?.let { jointTexture ->
-                    // TODO avoid recreating the buffer
-                    val buffer = NativeFloatBuffer(32 * 4 * 4 * cpuMesh.instanceCount)
+                val texDecl = TextureLinkDeclaration(id, 32 * 4, cpuMesh.instanceCount, retentionPolicy)
+                inventory.textureLink(texDecl)?.let { jointTextureLink ->
                     instances.forEachIndexed { i, instance ->
-                        buffer.position(32 * 4 * 4 * i)
+                        jointTextureLink.buffer.position(32 * 4 * 4 * i)
                         instance.jointMatrices!!.forEach { jm ->
-                            jm.asArray().forEach { m -> buffer.put(m) }
+                            jointTextureLink.buffer.put(jm.asArray())
                         }
                     }
-                    jointTexture.uploadData(buffer, GlGpuTexture.GlFormat(GL_RGBA32F, GL_RGBA, GL_FLOAT))
-                    addUniforms["jntTexture"] = jointTexture
+                    jointTextureLink.uploadData()
+                    addUniforms["jntTexture"] = jointTextureLink.texture
                 } ?: return
             }
 

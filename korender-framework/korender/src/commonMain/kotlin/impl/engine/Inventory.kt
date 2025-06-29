@@ -14,8 +14,10 @@ import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.gltf.GltfLoaded
 import com.zakgof.korender.impl.gltf.GltfLoader
+import com.zakgof.korender.impl.material.GpuTextureLink
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.InternalTexture
+import com.zakgof.korender.impl.material.TextureLinkDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.impl.material.Texturing
@@ -32,6 +34,7 @@ internal class Inventory(asyncContext: AsyncContext) {
     private val meshes = Registry<InternalMeshDeclaration, MeshLink> { Geometry.create(it, loader) }
     private val shaders = Registry<ShaderDeclaration, GlGpuShader> { Shaders.create(it, loader, zeroTex, zeroShadowTex, frameUbo) }
     private val textures = Registry<InternalTexture, GlGpuTexture> { it.generateGpuTexture(loader) }
+    private val textureLinks = Registry<TextureLinkDeclaration, GpuTextureLink> { it.generateGpuTextureLink(loader) }
     private val resourceCubeTextures = Registry<ResourceCubeTextureDeclaration, GlGpuCubeTexture> { Texturing.cube(it, loader) }
     private val imageCubeTextures = Registry<ImageCubeTextureDeclaration, GlGpuCubeTexture> { Texturing.cube(it) }
     private val fonts = Registry<InternalFontDeclaration, Font> { Fonts.load(it.resource, loader) }
@@ -39,7 +42,7 @@ internal class Inventory(asyncContext: AsyncContext) {
     private val cubeFrameBuffers = Registry<CubeFrameBufferDeclaration, GlGpuCubeFrameBuffer> { GlGpuCubeFrameBuffer(it.id, it.width, it.height, it.withDepth) }
     private val gltfs = Registry<GltfDeclaration, GltfLoaded> { GltfLoader.load(it, loader) }
 
-    private val registries = listOf(meshes, shaders, textures, fonts, frameBuffers, cubeFrameBuffers, gltfs)
+    private val registries = listOf(meshes, shaders, textures, textureLinks, fonts, frameBuffers, cubeFrameBuffers, gltfs)
 
     fun go(time: Float, generation: Int, block: Inventory.() -> Boolean) {
         registries.forEach { it.begin() }
@@ -54,6 +57,7 @@ internal class Inventory(asyncContext: AsyncContext) {
     fun mesh(decl: InternalMeshDeclaration): MeshLink? = meshes[decl]
     fun shader(decl: ShaderDeclaration): GlGpuShader? = shaders[decl]
     fun texture(decl: InternalTexture): GlGpuTexture? = textures[decl]
+    fun textureLink(decl: TextureLinkDeclaration): GpuTextureLink? = textureLinks[decl]
     fun cubeTexture(decl: ResourceCubeTextureDeclaration): GlGpuCubeTexture? = resourceCubeTextures[decl]
     fun cubeTexture(decl: ImageCubeTextureDeclaration): GlGpuCubeTexture? = imageCubeTextures[decl]
     fun font(decl: InternalFontDeclaration): Font? = fonts[decl]

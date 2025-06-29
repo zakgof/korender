@@ -7,3 +7,7 @@ expect class NativeFloatBuffer(size: Int) : NativeBuffer {
     override fun position(): Int
     override fun position(offset: Int)
 }
+
+fun NativeFloatBuffer.put(v: FloatArray) {
+    v.forEach { put(it) }
+}

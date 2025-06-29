@@ -51,6 +51,15 @@ expect object GL {
         buffer: NativeBuffer?
     )
 
+    fun glTexSubImage2D(target: Int,
+                       level: Int,
+                       x: Int, y: Int,
+                       width: Int,
+                       height: Int,
+                       format: Int,
+                       type: Int,
+                       buffer: NativeBuffer)
+
     fun glGetTexImage(tex: Int, level: Int, format: Int, type: Int, pixels: NativeByteBuffer)
 
     fun glGetFloatv(pname: Int): Float?

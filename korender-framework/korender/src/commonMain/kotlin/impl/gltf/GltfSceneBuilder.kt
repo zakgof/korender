@@ -1,4 +1,3 @@
-
 import com.zakgof.korender.Attributes
 import com.zakgof.korender.Attributes.MODEL0
 import com.zakgof.korender.Attributes.MODEL1
@@ -32,13 +31,29 @@ import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Transform.Companion.rotate
+import com.zakgof.korender.math.Transform.Companion.scale
+import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import kotlin.math.floor
 
-internal class InstanceData {
-    val nodeMatrices = mutableMapOf<Int, Transform>()
-    val nodeAnimations = mutableMapOf<Int, MutableMap<String, List<Float>>>()
+internal class InstanceData(nodes: Int) {
+    val nodeMatrices = Array(nodes){Transform()}
+    val nodeAnimations = Array(nodes){NodeAnimation(null, null, null)}
     val jointMatrices = mutableListOf<List<Mat4>>()
+}
+
+internal class NodeAnimation (
+    var translation: List<Float>?,
+    var rotation: List<Float>?,
+    var scale: List<Float>?
+) {
+    fun populate(path: String, floats: List<Float>) = when(path) {
+        "translation" -> translation = floats
+        "rotation" -> rotation = floats
+        "scale" -> scale = floats
+        else -> {}
+    }
 }
 
 internal class GltfSceneBuilder(
@@ -47,7 +62,7 @@ internal class GltfSceneBuilder(
 ) {
     private val meshNodes = mutableListOf<Pair<Int, Int>>()
     private val instances = declaration.instancingDeclaration?.instancer?.invoke() ?: listOf(GltfInstance(Transform.IDENTITY, declaration.time, declaration.animation))
-    private val instanceData: Array<InstanceData> = Array(instances.size) { InstanceData() }
+    private val instanceData: Array<InstanceData> = Array(instances.size) { InstanceData(gltfLoaded.model.nodes?.size ?: 0) }
 
     fun build(): List<RenderableDeclaration> {
         val model = gltfLoaded.model
@@ -57,18 +72,7 @@ internal class GltfSceneBuilder(
 
         instanceData.forEachIndexed { index, instanceData ->
 
-            val instanceDeclaration = instances[index]
-
-            val animationIndex = instanceDeclaration.animation ?: declaration.animation
-            if (animationIndex < (model.animations?.size ?: 0)) {
-                val animation = model.animations!![animationIndex]
-                val samplerValues = animation.samplers.map { sampler -> getSamplerValue(sampler, instanceDeclaration.time ?: declaration.time) }
-                animation.channels.forEach { channel ->
-                    instanceData.nodeAnimations.getOrPut(channel.target.node!!) {
-                        mutableMapOf()
-                    }[channel.target.path] = samplerValues[channel.sampler]
-                }
-            }
+            calculateInstanceData(index, instanceData)
 
             scene.nodes.forEach { nodeIndex ->
                 processNode(
@@ -88,6 +92,18 @@ internal class GltfSceneBuilder(
                 it.first,
                 gltfLoaded.model.nodes!![it.second].skin,
             )
+        }
+    }
+
+    private fun calculateInstanceData(instanceIndex: Int, instanceData: InstanceData) {
+        val instanceDeclaration = instances[instanceIndex]
+        val animationIndex = instanceDeclaration.animation ?: declaration.animation
+        if (animationIndex < (gltfLoaded.model.animations?.size ?: 0)) {
+            val animation = gltfLoaded.model.animations!![animationIndex]
+            animation.channels.forEach { channel ->
+                val samplerValue = getSamplerValue(animation.samplers[channel.sampler], instanceDeclaration.time ?: declaration.time)
+                instanceData.nodeAnimations[channel.target.node!!].populate(channel.target.path, samplerValue)
+            }
         }
     }
 
@@ -124,17 +140,15 @@ internal class GltfSceneBuilder(
 
         val na = instanceData.nodeAnimations[nodeIndex]
 
-        val translation = na?.get("translation") ?: node.translation
-        val rotation = na?.get("rotation") ?: node.rotation
-        val scale = na?.get("scale") ?: node.scale
+        val translation = na?.translation ?: node.translation
+        val rotation = na?.rotation ?: node.rotation
+        val scale = na?.scale ?: node.scale
 
-        translation?.let { transform *= Transform.translate(Vec3(it[0], it[1], it[2])) }
-        rotation?.let {
-            transform *= Transform.rotate(Quaternion(it[3], Vec3(it[0], it[1], it[2])))
-        }
-        scale?.let { transform *= Transform.scale(it[0], it[1], it[2]) }
-
+        translation?.let { transform *= translate(Vec3(it[0], it[1], it[2])) }
+        rotation?.let { transform *= rotate(Quaternion(it[3], Vec3(it[0], it[1], it[2]))) }
+        scale?.let { transform *= scale(it[0], it[1], it[2]) }
         node.matrix?.let { transform *= Transform(Mat4(it.toFloatArray())) }
+
         instanceData.nodeMatrices[nodeIndex] = transform
 
         node.children?.forEach { childNodeIndex ->

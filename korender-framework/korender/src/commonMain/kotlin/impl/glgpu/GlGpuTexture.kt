@@ -19,6 +19,7 @@ import com.zakgof.korender.impl.gl.GL.glGetTexImage
 import com.zakgof.korender.impl.gl.GL.glGetTextureMaxAnisotropyConstant
 import com.zakgof.korender.impl.gl.GL.glTexImage2D
 import com.zakgof.korender.impl.gl.GL.glTexParameteri
+import com.zakgof.korender.impl.gl.GL.glTexSubImage2D
 import com.zakgof.korender.impl.gl.GLConstants.GL_CLAMP_TO_EDGE
 import com.zakgof.korender.impl.gl.GLConstants.GL_COMPARE_REF_TO_TEXTURE
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_COMPONENT
@@ -87,13 +88,7 @@ internal val backFormatMap = mapOf(
     GL_R16 to Image.Format.Gray16
 )
 
-internal class GlGpuTexture(
-    private val width: Int,
-    private val height: Int,
-    filter: TextureFilter = TextureFilter.MipMap,
-    wrap: TextureWrap = TextureWrap.Repeat,
-    aniso: Int = 1024
-) : GLBindableTexture, AutoCloseable {
+internal class GlGpuTexture(private val width: Int, private val height: Int, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024) : GLBindableTexture, AutoCloseable {
 
     override val glHandle = glGenTextures()
     val mipmapped = filter == TextureFilter.MipMap
@@ -101,12 +96,7 @@ internal class GlGpuTexture(
     private var format: Image.Format? = null
     private lateinit var glFormat: GlFormat
 
-    constructor(
-        image: InternalImage,
-        filter: TextureFilter = TextureFilter.MipMap,
-        wrap: TextureWrap = TextureWrap.Repeat,
-        aniso: Int = 1024
-    ) : this(image.width, image.height, filter, wrap, aniso) {
+    constructor(image: InternalImage, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024) : this(image.width, image.height, filter, wrap, aniso) {
         uploadData(image.bytes, formatMap[image.format]!!)
     }
 
@@ -161,6 +151,12 @@ internal class GlGpuTexture(
 
     @OptIn(ExperimentalStdlibApi::class)
     private fun upload(width: Int, height: Int, buffer: NativeBuffer?, format: GlFormat): Boolean {
+
+        if (this.format != null && buffer != null) {
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, format.format, format.type, buffer.rewind())
+            return true
+        }
+
         glTexImage2D(GL_TEXTURE_2D, 0, format.internal, width, height, 0, format.format, format.type, buffer?.rewind())
         val error = glGetError()
         if (error != 0) {

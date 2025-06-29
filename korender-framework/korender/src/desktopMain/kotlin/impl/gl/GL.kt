@@ -73,9 +73,18 @@ actual object GL {
         format: Int,
         type: Int,
         buffer: NativeBuffer?
-    ) = GL30.glTexImage2D(
-        target, level, internalformat, width, height, border, format, type, buffer?.byteBuffer
-    )
+    ) = GL30.glTexImage2D(target, level, internalformat, width, height, border, format, type, buffer?.byteBuffer)
+
+    actual fun glTexSubImage2D(
+        target: Int,
+        level: Int,
+        x: Int, y: Int,
+        width: Int,
+        height: Int,
+        format: Int,
+        type: Int,
+        buffer: NativeBuffer
+    ) = GL30.glTexSubImage2D(target, level, x, y, width, height, format, type, buffer.byteBuffer)
 
     actual fun glGetFloatv(pname: Int): Float? =
         FloatArray(1).apply { GL30.glGetFloatv(pname, this) }[0]
@@ -277,9 +286,6 @@ actual object GL {
 
     actual fun glGetActiveUniformName(program: GLProgram, uniformIndex: Int): String =
         GL33.glGetActiveUniformName(program.glHandle, uniformIndex)
-
-    actual fun glBufferSubData(target: Int, offset: Long, buffer: NativeByteBuffer) =
-        GL33.glBufferSubData(target, offset, buffer.byteBuffer)
 
     actual fun glUniformBlockBinding(program: GLProgram, blockIndex: Int, blockBinding: Int) =
         GL33.glUniformBlockBinding(program.glHandle, blockIndex, blockBinding)
