@@ -1,10 +1,11 @@
 package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.impl.glgpu.GlGpuUniformBuffer
+import com.zakgof.korender.impl.glgpu.UniformBlock
 
 internal class UniformBufferHolder {
 
-    val frameUbo = GlGpuUniformBuffer(4608)
+    private val frameUbo = GlGpuUniformBuffer(4608)
 
     private val frameOffsets = mapOf(
         "cameraPos" to 0,
@@ -37,50 +38,61 @@ internal class UniformBufferHolder {
     private val shaderUboSize = 16384
     val shaderUbo = GlGpuUniformBuffer(shaderUboSize)
     private var bufferShift = 0
+    private var currentBinding = 1
 
     private val renderQueue = mutableListOf<RenderItem>()
 
-    fun populateFrame(uniforms: (String) -> Any?, binding: Int, ignoreMissing: Boolean = false) =
-        frameUbo.populate(uniforms, 0, frameOffsets, binding, "FrameContect", ignoreMissing)
+    init {
+        frameUbo.bindBase(0)
+    }
+
+    fun populateFrame(uniforms: (String) -> Any?, ignoreMissing: Boolean = false) {
+        frameUbo.populate(uniforms, 0, frameOffsets, "FrameContext", ignoreMissing)
+        frameUbo.upload(4608)
+    }
 
     fun populate(
         uniforms: (String) -> Any?,
-        size: Int?,
-        offsets: Map<String, Int>?,
-        binding: Int,
+        uniformBlock: UniformBlock?,
         materialName: String,
         render: () -> Boolean
-    ) {
-        size?.let {
-            if (shaderUboSize - bufferShift < size) {
+    ): Int? {
+        val renderItem = if (uniformBlock != null) {
+            if (shaderUboSize - bufferShift < uniformBlock.size) {
                 flush()
             }
-            shaderUbo.populate(uniforms, bufferShift, offsets!!, binding, materialName)
+            shaderUbo.populate(uniforms, bufferShift, uniformBlock.offsets, materialName)
+            val ri = RenderItem(render, bufferShift, uniformBlock.size, currentBinding)
+            bufferShift = ((bufferShift + uniformBlock.size + 256 - 1) / 256) * 256 // TODO use GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT
+            currentBinding++ // TODO check binding limits
+            ri
+        } else {
+            RenderItem(render, bufferShift, 0, null)
         }
-        renderQueue += RenderItem(render, bufferShift, size ?: 0, binding)
-        bufferShift = ((bufferShift + (size ?: 0) + 256 - 1) / 256) * 256 // TODO use GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT
+        renderQueue += renderItem
+        return renderItem.binding
     }
 
     fun flush(): Boolean {
-        if (renderQueue.isEmpty())
-            return true
-        shaderUbo.upload(bufferShift)
         var success = true
-        renderQueue.forEach {
-            shaderUbo.setShift(it.binding, it.shift, it.size)
-            success = success or it.render()
+        if (renderQueue.isNotEmpty()) {
+            shaderUbo.upload(bufferShift)
+            renderQueue.forEach { renderItem ->
+                renderItem.binding?.let { shaderUbo.bindRange(it, renderItem.shift, renderItem.size) }
+                success = success and renderItem.render()
+            }
         }
         bufferShift = 0
+        currentBinding = 1
         renderQueue.clear()
         return success
     }
-
 
 
     private class RenderItem(
         val render: () -> Boolean,
         val shift: Int,
         val size: Int,
-        val binding: Int
+        val binding: Int?
     )
 }

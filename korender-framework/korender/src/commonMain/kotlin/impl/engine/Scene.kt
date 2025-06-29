@@ -390,7 +390,7 @@ internal class Scene(
         m["pointLightPos[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.position })
         m["pointLightColor[0]"] = Color3List(sceneDeclaration.pointLights.map { it.color })
         m["pointLightAttenuation[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.attenuation })
-        inventory.uniformBufferHolder.populateFrame({ m[it] }, 0, true)
+        inventory.uniformBufferHolder.populateFrame({ m[it] }, true)
     }
 
     private fun renderShadows(m: MutableMap<String, Any?>, u: MutableMap<String, Any?>) {
@@ -417,7 +417,7 @@ internal class Scene(
         shadowData.uniforms(m, u)
         m["directionalLightShadowTextureIndex[0]"] = IntList(directionalShadowIndexes)
         m["directionalLightShadowTextureCount[0]"] = IntList(directionalShadowCounts)
-        inventory.uniformBufferHolder.populateFrame({ m[it] }, 0)
+        inventory.uniformBufferHolder.populateFrame({ m[it] })
     }
 
     private fun renderPostProcess(filterDeclaration: InternalFilterDeclaration, uniforms: Map<String, Any?>) {

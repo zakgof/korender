@@ -28,7 +28,8 @@ abstract external class WebGL2RenderingContext : WebGLRenderingContextBase, Rend
     abstract fun uniformBlockBinding(program: WebGLProgram, uniformBlockIndex: Int, blockBinding: Int)
     abstract fun bindBufferBase(target: Int, blockBinding: Int, buffer: WebGLBuffer)
     abstract fun getActiveUniforms(program: WebGLProgram, uniformIndices: JsArray<JsNumber>, param: Int): JsArray<*>
-    abstract fun glTexSubImage2D(target: Int, level: Int, x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, array: ArrayBufferView)
+    abstract fun texSubImage2D(target: Int, level: Int, x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, array: ArrayBufferView)
+    abstract fun bindBufferRange(target: Int, blockBinding: Int, buffer: WebGLBuffer, shift: Int, size: Int)
 }
 
 abstract external class WebGLVertexArray : WebGLObject, JsAny

@@ -71,7 +71,7 @@ internal object ShadowRenderer {
         casterUniforms["cameraDir"] = shadowCamera.direction
 
         // TODO: UGLY!!!!
-        scene.inventory.uniformBufferHolder.populateFrame({ casterUniforms[it] }, 0, true)
+        scene.inventory.uniformBufferHolder.populateFrame({ casterUniforms[it] }, true)
 
         frameBuffer.exec {
             scene.renderContext.state.set {

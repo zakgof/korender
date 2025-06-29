@@ -82,7 +82,7 @@ actual object GL {
     )
 
     actual fun glTexSubImage2D(target: Int, level: Int, x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, buffer: NativeBuffer) =
-        gl!!.glTexSubImage2D(target, level, x, y, width, height, format, type, buffer.array)
+        gl!!.texSubImage2D(target, level, x, y, width, height, format, type, buffer.array)
 
     actual fun glGetTexImage(tex: Int, level: Int, format: Int, type: Int, pixels: NativeByteBuffer) =
         gl!!.getTexImage(tex, level, format, type, pixels.array)
@@ -321,4 +321,7 @@ actual object GL {
 
     actual fun glBufferSubData(target: Int, offset: Long, buffer: NativeByteBuffer) =
         gl!!.bufferSubData(target, offset.toInt(), buffer.array)
+
+    actual fun glBindBufferRange(target: Int, blockBinding: Int, buffer: GLBuffer, shift: Int, size: Int) =
+        gl!!.bindBufferRange(target, blockBinding, buffer.buffer, shift, size)
 }
