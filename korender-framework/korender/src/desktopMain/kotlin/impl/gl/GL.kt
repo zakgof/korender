@@ -293,6 +293,9 @@ actual object GL {
     actual fun glUniformBlockBinding(program: GLProgram, blockIndex: Int, blockBinding: Int) =
         GL33.glUniformBlockBinding(program.glHandle, blockIndex, blockBinding)
 
+    actual fun glGetInteger(pname: Int) =
+        GL33.glGetInteger(pname)
+
     actual fun glBindBufferBase(target: Int, blockBinding: Int, buffer: GLBuffer) =
         GL33.glBindBufferBase(target, blockBinding, buffer.glHandle)
 

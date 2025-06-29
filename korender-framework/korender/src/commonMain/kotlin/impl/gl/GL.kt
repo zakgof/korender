@@ -210,4 +210,6 @@ expect object GL {
 
     fun glBindBufferRange(target: Int, blockBinding: Int, buffer: GLBuffer, shift: Int, size: Int)
 
+    fun glGetInteger(pname: Int): Int
+
 }

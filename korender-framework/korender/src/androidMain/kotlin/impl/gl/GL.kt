@@ -271,5 +271,11 @@ actual object GL {
 
     actual fun glBufferSubData(target: Int, offset: Long, buffer: NativeByteBuffer) =
         GLES30.glBufferSubData(target, offset.toInt(), buffer.size(), buffer.byteBuffer)
+
+    actual fun glBindBufferRange(target: Int, blockBinding: Int, buffer: GLBuffer, shift: Int, size: Int) =
+        GLES30.glBindBufferRange(target, blockBinding, buffer.buffer, shift, size)
+
+    actual fun glGetInteger(pname: Int): Int =
+        intViaArray{ GLES30.glGetIntegerv(pname, it, 0) }
 }
 

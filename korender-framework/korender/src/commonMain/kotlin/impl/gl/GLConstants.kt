@@ -1605,4 +1605,9 @@ object GLConstants {
     const val GL_UNIFORM_BLOCK_DATA_SIZE: Int =  0x8A40
     const val GL_UNIFORM_BUFFER: Int = 0x8A11
 
+    const val GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT: Int = 0x8A34
+    const val GL_MAX_UNIFORM_BUFFER_BINDINGS: Int = 0x8A2F
+    const val GL_MAX_UNIFORM_BLOCK_SIZE: Int = 0x8A30
+
+
 }

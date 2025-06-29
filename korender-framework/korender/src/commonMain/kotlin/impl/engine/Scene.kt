@@ -376,6 +376,7 @@ internal class Scene(
             .forEach {
                 success = success and renderRenderable(it, renderContext.camera, uniforms)
             }
+        success = success and inventory.uniformBufferHolder.flush()
         return success
     }
 
@@ -443,6 +444,7 @@ internal class Scene(
                 { fixer(quadMaterial.uniforms[it] ?: uniforms[it]) },
                 mesh.gpuMesh
             )
+            inventory.uniformBufferHolder.flush()
         }
     }
 

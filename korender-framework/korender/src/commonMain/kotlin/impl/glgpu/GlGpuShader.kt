@@ -166,15 +166,16 @@ internal class GlGpuShader(
     }
 
     fun render(uniforms: (String) -> Any?, mesh: GlGpuMesh) {
-        val binding = uboHolder.populate(uniforms, shaderUniformBlock, this.toString()) {
+        uboHolder.populate(uniforms, shaderUniformBlock, this.toString()) { binding ->
             glUseProgram(programHandle)
+            shaderUniformBlock?.let { glUniformBlockBinding(programHandle, it.shaderBlockIndex, binding) }
             if (bindUniforms(uniforms)) {
                 mesh.render()
                 true
             } else
                 false
         }
-        shaderUniformBlock?.let { glUniformBlockBinding(programHandle, it.shaderBlockIndex, binding!!) }
+
     }
 
     private fun bindUniforms(uniforms: (String) -> Any?): Boolean {

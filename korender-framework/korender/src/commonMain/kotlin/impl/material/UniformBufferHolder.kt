@@ -1,5 +1,9 @@
 package com.zakgof.korender.impl.material
 
+import com.zakgof.korender.impl.gl.GL.glGetInteger
+import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_UNIFORM_BLOCK_SIZE
+import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_UNIFORM_BUFFER_BINDINGS
+import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT
 import com.zakgof.korender.impl.glgpu.GlGpuUniformBuffer
 import com.zakgof.korender.impl.glgpu.UniformBlock
 
@@ -35,12 +39,15 @@ internal class UniformBufferHolder {
         "i1[0]" to 4528
     )
 
-    private val shaderUboSize = 16384
-    val shaderUbo = GlGpuUniformBuffer(shaderUboSize)
-    private var bufferShift = 0
-    private var currentBinding = 1
+    private val bufferOffsetAlignment = glGetInteger(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT)
+    private val maxBindings = glGetInteger(GL_MAX_UNIFORM_BUFFER_BINDINGS)
+    private val shaderUboSize = glGetInteger(GL_MAX_UNIFORM_BLOCK_SIZE)
+
+    private val shaderUbo = GlGpuUniformBuffer(shaderUboSize)
 
     private val renderQueue = mutableListOf<RenderItem>()
+    private var bufferShift = 0
+    private var currentBinding = 1
 
     init {
         frameUbo.bindBase(0)
@@ -55,16 +62,16 @@ internal class UniformBufferHolder {
         uniforms: (String) -> Any?,
         uniformBlock: UniformBlock?,
         materialName: String,
-        render: () -> Boolean
+        render: (Int) -> Boolean
     ): Int? {
         val renderItem = if (uniformBlock != null) {
-            if (shaderUboSize - bufferShift < uniformBlock.size) {
+            if (shaderUboSize - bufferShift < uniformBlock.size || currentBinding >= maxBindings) {
                 flush()
             }
             shaderUbo.populate(uniforms, bufferShift, uniformBlock.offsets, materialName)
             val ri = RenderItem(render, bufferShift, uniformBlock.size, currentBinding)
-            bufferShift = ((bufferShift + uniformBlock.size + 256 - 1) / 256) * 256 // TODO use GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT
-            currentBinding++ // TODO check binding limits
+            bufferShift = ((bufferShift + uniformBlock.size + bufferOffsetAlignment - 1) / bufferOffsetAlignment) * bufferOffsetAlignment
+            currentBinding++
             ri
         } else {
             RenderItem(render, bufferShift, 0, null)
@@ -79,7 +86,7 @@ internal class UniformBufferHolder {
             shaderUbo.upload(bufferShift)
             renderQueue.forEach { renderItem ->
                 renderItem.binding?.let { shaderUbo.bindRange(it, renderItem.shift, renderItem.size) }
-                success = success and renderItem.render()
+                success = success and renderItem.render(renderItem.binding ?: -1)
             }
         }
         bufferShift = 0
@@ -90,7 +97,7 @@ internal class UniformBufferHolder {
 
 
     private class RenderItem(
-        val render: () -> Boolean,
+        val render: (Int) -> Boolean,
         val shift: Int,
         val size: Int,
         val binding: Int?

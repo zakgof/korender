@@ -324,4 +324,7 @@ actual object GL {
 
     actual fun glBindBufferRange(target: Int, blockBinding: Int, buffer: GLBuffer, shift: Int, size: Int) =
         gl!!.bindBufferRange(target, blockBinding, buffer.buffer, shift, size)
+
+    actual fun glGetInteger(pname: Int) =
+        (gl!!.getParameter(pname) as JsNumber).toInt()
 }
