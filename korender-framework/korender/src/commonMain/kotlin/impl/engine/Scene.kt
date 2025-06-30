@@ -82,9 +82,10 @@ internal class Scene(
 
     fun render(): Boolean {
 
+        // TODO dis iz mess
         val uniforms = mutableMapOf<String, Any?>()
         renderContext.contextUniforms(uniforms)
-        renderEnvProbes(uniforms)
+        renderEnvProbes()
         renderFrameProbes(uniforms)
 
         val frameUniforms = mutableMapOf<String, Any?>()
@@ -106,12 +107,11 @@ internal class Scene(
         }
     }
 
-
-    private fun renderEnvProbes(uniforms: MutableMap<String, Any?>) {
+    private fun renderEnvProbes() {
         sceneDeclaration.envCaptures.forEach { kv ->
             try {
                 Scene(kv.value.sceneDeclaration, inventory, renderContext, currentRetentionPolicy)
-                    .renderToEnvProbe(uniforms, kv.value, kv.key)
+                    .renderToEnvProbe(kv.value, kv.key)
                     ?.let {
                         renderContext.envProbes[kv.key] = it
                     }
@@ -463,13 +463,10 @@ internal class Scene(
         }
     }
 
-    fun renderToEnvProbe(uniforms: MutableMap<String, Any?>, envCaptureContext: EnvCaptureContext, probeName: String): GlGpuCubeTexture? {
+    fun renderToEnvProbe(envCaptureContext: EnvCaptureContext, probeName: String): GlGpuCubeTexture? {
         var success = true
-        fillLightUniforms(uniforms)
         val probeFb =
             inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", envCaptureContext.resolution, envCaptureContext.resolution, true, TransientProperty(currentRetentionPolicy))) ?: return null
-        val probeUniforms = mutableMapOf<String, Any?>()
-        probeUniforms += uniforms
         val projection = FrustumProjection(2f * envCaptureContext.near, 2f * envCaptureContext.near, envCaptureContext.near, envCaptureContext.far)
         mapOf(
             GL_TEXTURE_CUBE_MAP_NEGATIVE_X to DefaultCamera(envCaptureContext.position, -1.x, -1.y),
@@ -479,14 +476,21 @@ internal class Scene(
             GL_TEXTURE_CUBE_MAP_POSITIVE_Y to DefaultCamera(envCaptureContext.position, 1.y, 1.z),
             GL_TEXTURE_CUBE_MAP_POSITIVE_Z to DefaultCamera(envCaptureContext.position, 1.z, -1.y),
         ).forEach {
-            probeUniforms["view"] = it.value.mat4
-            probeUniforms["projection"] = projection.mat4
-            probeUniforms["cameraPos"] = it.value.position
-            probeUniforms["cameraDir"] = it.value.direction
+            val frameUniforms = mutableMapOf<String, Any?>()
+            renderContext.frameUniforms(frameUniforms)
+            frameUniforms["view"] = it.value.mat4
+            frameUniforms["projection"] = projection.mat4
+            frameUniforms["cameraPos"] = it.value.position
+            frameUniforms["cameraDir"] = it.value.direction
+            fillLightUniforms(frameUniforms)
+
+            val contextUniforms= mutableMapOf<String, Any?>()
+            renderContext.contextUniforms(contextUniforms)
+
             probeFb.exec(it.key) {
                 prepareScene(envCaptureContext.resolution, envCaptureContext.resolution, envCaptureContext.insideOut)
-                success = success and renderForwardOpaques(sceneDeclaration, probeUniforms)
-                success = success and renderTransparents(sceneDeclaration, probeUniforms, it.value, envCaptureContext.insideOut)
+                success = success and renderForwardOpaques(sceneDeclaration, contextUniforms)
+                success = success and renderTransparents(sceneDeclaration, contextUniforms, it.value, envCaptureContext.insideOut)
             }
         }
         probeFb.finish()

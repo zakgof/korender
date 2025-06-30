@@ -4,7 +4,9 @@ import com.zakgof.korender.Platform
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
+import com.zakgof.korender.impl.glgpu.GlGpuShadowTextureList
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
+import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.Projection
@@ -44,6 +46,8 @@ internal class RenderContext(var width: Int, var height: Int) {
     fun contextUniforms(m: MutableMap<String, Any?>) {
         m["noiseTexture"] = ResourceTextureDeclaration("!noise.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)
         m["fbmTexture"] = ResourceTextureDeclaration("!fbm.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)
+        m["shadowTextures[0]"] = GlGpuTextureList(List(5) { null }, 5)
+        m["pcfTextures[0]"] = GlGpuShadowTextureList(List(5) { null }, 5)
     }
 
 }
