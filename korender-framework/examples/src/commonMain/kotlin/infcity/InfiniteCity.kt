@@ -6,7 +6,6 @@ import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Korender
-import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.math.ColorRGB.Companion.White
@@ -123,8 +122,8 @@ private fun FrameContext.building(buildingId: Int, z: Float, x: Float) {
         base(colorTexture = texture("infcity/dw.jpg"), metallicFactor = 0.5f, roughnessFactor = 0.1f),
         emission(White),
         uniforms(
-            "windowTexture" to texture("infcity/lw.jpg", wrap = TextureWrap.MirroredRepeat)
-        ),
+            "windowTexture" to texture("infcity/lw.jpg")
+        )
     )
 
     fun Triangulation.toCustomMesh(id: String) = customMesh(id, this.points.size, this.indexes.size, POS, NORMAL, TEX) {
