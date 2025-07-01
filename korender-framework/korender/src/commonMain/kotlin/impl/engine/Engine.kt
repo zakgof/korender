@@ -162,10 +162,14 @@ internal class Engine(
             var image: Image? = null
             inventory.go(0f, 0) {
                 val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
-                val uniforms = mutableMapOf<String, Any?>()
-                renderContext.frameUniforms(uniforms)
-                val texture = scene.renderToFrameProbe(uniforms, FrameCaptureContext(width, height, camera as Camera, projection as Projection, sd), "#immediate")
-                image = texture.fetch()
+                while(true) {
+                    val texture = scene.renderToFrameProbe(FrameCaptureContext(width, height, camera as Camera, projection as Projection, sd), "#immediate")
+                    if (texture != null) {
+                        image = texture.fetch()
+                        break
+                    }
+                    println("Resources pending, retrying frame capture... " + inventory.pending())
+                }
                 true
             }
             return image!!

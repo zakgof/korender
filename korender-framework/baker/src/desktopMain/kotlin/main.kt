@@ -8,6 +8,7 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = "Korender Baker"
     ) {
-         Baker()  
+        BillboardTreeBaker()
+        // RadiantTreeBaker()
     }
 }

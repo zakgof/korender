@@ -8,25 +8,33 @@ import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.impl.buffer.NativeBuffer
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.gl.GL.glActiveTexture
+import com.zakgof.korender.impl.gl.GL.glBindFramebuffer
 import com.zakgof.korender.impl.gl.GL.glBindTexture
+import com.zakgof.korender.impl.gl.GL.glCheckFramebufferStatus
+import com.zakgof.korender.impl.gl.GL.glDeleteFramebuffers
 import com.zakgof.korender.impl.gl.GL.glDeleteTextures
+import com.zakgof.korender.impl.gl.GL.glFramebufferTexture2D
+import com.zakgof.korender.impl.gl.GL.glGenFramebuffers
 import com.zakgof.korender.impl.gl.GL.glGenTextures
 import com.zakgof.korender.impl.gl.GL.glGenerateMipmap
 import com.zakgof.korender.impl.gl.GL.glGetError
 import com.zakgof.korender.impl.gl.GL.glGetFloatv
 import com.zakgof.korender.impl.gl.GL.glGetMaxTextureMaxAnisotropyConstant
-import com.zakgof.korender.impl.gl.GL.glGetTexImage
 import com.zakgof.korender.impl.gl.GL.glGetTextureMaxAnisotropyConstant
+import com.zakgof.korender.impl.gl.GL.glReadPixels
 import com.zakgof.korender.impl.gl.GL.glTexImage2D
 import com.zakgof.korender.impl.gl.GL.glTexParameteri
 import com.zakgof.korender.impl.gl.GL.glTexSubImage2D
 import com.zakgof.korender.impl.gl.GLConstants.GL_CLAMP_TO_EDGE
+import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_ATTACHMENT0
 import com.zakgof.korender.impl.gl.GLConstants.GL_COMPARE_REF_TO_TEXTURE
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_COMPONENT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_COMPONENT16
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_COMPONENT24
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_COMPONENT32
 import com.zakgof.korender.impl.gl.GLConstants.GL_FLOAT
+import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER
+import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER_COMPLETE
 import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
 import com.zakgof.korender.impl.gl.GLConstants.GL_LINEAR
 import com.zakgof.korender.impl.gl.GLConstants.GL_LINEAR_MIPMAP_LINEAR
@@ -174,11 +182,22 @@ internal class GlGpuTexture(private val width: Int, private val height: Int, fil
     }
 
     fun fetch(): Image {
-        glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, glHandle)
+        val fb = glGenFramebuffers()
+        glBindFramebuffer(GL_FRAMEBUFFER, fb)
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, glHandle, 0);
+
+        val status = glCheckFramebufferStatus(GL_FRAMEBUFFER)
+        if (status != GL_FRAMEBUFFER_COMPLETE) {
+            throw KorenderException("Framebuffer not complete, status=$status")
+        }
+
         val img = Platform.createImage(width, height, format!!)
-        glGetTexImage(GL_TEXTURE_2D, 0, glFormat.format, glFormat.type, img.bytes)
-        glBindTexture(GL_TEXTURE_2D, null)
+        glReadPixels(0, 0, width, height, glFormat.format, glFormat.type, img.bytes)
+
+        glBindFramebuffer(GL_FRAMEBUFFER, null)
+        glDeleteFramebuffers(fb)
+
         return img
     }
 

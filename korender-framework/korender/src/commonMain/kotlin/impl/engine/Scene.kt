@@ -82,15 +82,15 @@ internal class Scene(
 
     fun render(): Boolean {
 
-        // TODO dis iz mess
-        val uniforms = mutableMapOf<String, Any?>()
-        renderContext.contextUniforms(uniforms)
         renderEnvProbes()
-        renderFrameProbes(uniforms)
+        renderFrameProbes()
 
         val frameUniforms = mutableMapOf<String, Any?>()
         renderContext.frameUniforms(frameUniforms)
         fillLightUniforms(frameUniforms)
+
+        val uniforms = mutableMapOf<String, Any?>()
+        renderContext.contextUniforms(uniforms)
 
         try {
             renderShadows(frameUniforms, uniforms)
@@ -122,11 +122,14 @@ internal class Scene(
         }
     }
 
-    private fun renderFrameProbes(uniforms: MutableMap<String, Any?>) {
+    private fun renderFrameProbes() {
         sceneDeclaration.frameCaptures.forEach { kv ->
             try {
-                renderContext.frameProbes[kv.key] = Scene(kv.value.sceneDeclaration, inventory, renderContext, currentRetentionPolicy)
-                    .renderToFrameProbe(uniforms, kv.value, kv.key)
+                Scene(kv.value.sceneDeclaration, inventory, renderContext, currentRetentionPolicy)
+                    .renderToFrameProbe(kv.value, kv.key)
+                    ?.let {
+                        renderContext.frameProbes[kv.key] = it
+                    }
             } catch (sr: SkipRender) {
                 println("Frame probing skipped as resource not ready: [${sr.text}]")
                 return
@@ -497,25 +500,31 @@ internal class Scene(
         return if (success) probeFb.colorTexture else null
     }
 
-    fun renderToFrameProbe(uniforms: MutableMap<String, Any?>, frameCaptureContext: FrameCaptureContext, frameProbeName: String): GlGpuTexture {
-        fillLightUniforms(uniforms)
+    fun renderToFrameProbe(frameCaptureContext: FrameCaptureContext, frameProbeName: String): GlGpuTexture? {
+        val frameUniforms = mutableMapOf<String, Any?>()
+        renderContext.frameUniforms(frameUniforms)
+        frameUniforms["view"] = frameCaptureContext.camera.mat4
+        frameUniforms["projection"] = frameCaptureContext.projection.mat4
+        frameUniforms["cameraPos"] = frameCaptureContext.camera.position
+        frameUniforms["cameraDir"] = frameCaptureContext.camera.direction
+        fillLightUniforms(frameUniforms)
+
+        val contextUniforms= mutableMapOf<String, Any?>()
+        renderContext.contextUniforms(contextUniforms)
+
         val probeFb = inventory.frameBuffer(FrameBufferDeclaration("probe-$frameProbeName", frameCaptureContext.width, frameCaptureContext.height, listOf(GlGpuTexture.Preset.RGBAFilter), true, TransientProperty(currentRetentionPolicy)))
-            ?: throw SkipRender("Frame probe FB 'probe-$frameProbeName'")
-        val probeUniforms = mutableMapOf<String, Any?>()
-        probeUniforms += uniforms
-        probeUniforms["view"] = frameCaptureContext.camera.mat4
-        probeUniforms["projection"] = frameCaptureContext.projection.mat4
-        probeUniforms["cameraPos"] = frameCaptureContext.camera.position
-        probeUniforms["cameraDir"] = frameCaptureContext.camera.direction
+            ?: return null
+
+        var success = true
         probeFb.exec {
             prepareScene(frameCaptureContext.width, frameCaptureContext.height)
-            renderForwardOpaques(sceneDeclaration, probeUniforms)
-            renderTransparents(
-                sceneDeclaration, probeUniforms, frameCaptureContext.camera,
+            success = success and renderForwardOpaques(sceneDeclaration, contextUniforms)
+            success = success and renderTransparents(
+                sceneDeclaration, contextUniforms, frameCaptureContext.camera,
                 width = frameCaptureContext.width, height = frameCaptureContext.height
             )
         }
-        return probeFb.colorTextures[0]
+        return if (success) probeFb.colorTextures[0] else null
     }
 
     fun renderRenderable(

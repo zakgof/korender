@@ -16,7 +16,6 @@ import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
-import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.rotate
@@ -31,16 +30,13 @@ import java.awt.image.BufferedImage
 import java.awt.image.BufferedImage.TYPE_INT_RGB
 import java.io.File
 import javax.imageio.ImageIO
-import kotlin.math.abs
-import kotlin.math.cos
 import kotlin.math.pow
-import kotlin.math.sin
 import kotlin.random.Random
 
 @Composable
-fun Baker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun RadiantTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-    val basePath = "D:\\kot\\dev\\assets\\"
+    val basePath = "D:\\kot\\dev\\assets\\" // TODO
 
     // val metaball = Metaball(20f, 1.0f) { sqrt(it * 0.05f) * (1f - it * 0.05f) * 10f }
     val metaball = Metaball(20f, 3.0f, 8000, 48) { (it * 0.05f).pow(0.1f) * (1f - it * 0.05f) * 10f }
@@ -155,38 +151,3 @@ private fun FrameContext.renderTree(leaf: MeshDeclaration, leafInstances: List<T
         })
 }
 
-class Metaball(
-    private val height: Float,
-    private val radius: Float,
-    private val sphereCount: Int = 4096,
-    private val pointCount: Int = 64,
-    private val shape: (Float) -> Float
-) {
-
-    val spheres: List<Sphere>
-    val points: List<Pt>
-
-    init {
-        val rnd = Random(1)
-        spheres = (0 until sphereCount).flatMap {
-            val phi = rnd.nextFloat() * 2f * PI
-            val h = rnd.nextFloat() * height
-            val r = rnd.nextFloat() * height
-            if (abs(r - shape(h)) > 0.6f * radius)
-                listOf()
-            else
-                listOf(Vec3(r * sin(phi), h, r * cos(phi)))
-        }.map {
-            Sphere(radius, it)
-        }
-        points = spheres.flatMap { s ->
-            (0 until pointCount).map {
-                val n = Vec3.random()
-                Pt(s.pos + n * s.r, n)
-            }
-        }
-    }
-
-    class Sphere(val r: Float, val pos: Vec3)
-    class Pt(val pos: Vec3, val n: Vec3)
-}

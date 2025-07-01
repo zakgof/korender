@@ -156,7 +156,6 @@ internal class GlGpuCubeTexture : GLBindableTexture, AutoCloseable {
         glBindFramebuffer(GL_FRAMEBUFFER, fb)
 
         val images = sides.mapIndexed() { index, side ->
-            // Attach cube face to framebuffer
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, side, glHandle, 0)
             val status = glCheckFramebufferStatus(GL_FRAMEBUFFER)
             if (status != GL_FRAMEBUFFER_COMPLETE) {
