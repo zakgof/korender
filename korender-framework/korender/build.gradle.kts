@@ -134,12 +134,12 @@ fun getExtraString(name: String) = ext[name]?.toString()
 publishing {
     repositories {
         maven {
-            name = "sonatype"
+            name = "ossrh-staging-api"
             setUrl(
                 if (libraryVersion.contains("SNAPSHOT"))
-                    "https://oss.sonatype.org/content/repositories/snapshots/"
+                    "https://ossrh-staging-api.central.sonatype.com/content/repositories/snapshots/"
                 else
-                    "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+                    "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
             )
             credentials {
                 username = getExtraString("ossrhUsername")
