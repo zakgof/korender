@@ -27,9 +27,8 @@ Korender is BETA - APIs may change without notice.
 
 ### Features
 - Physically Based Rendering (PBR) metallic-roughness model
-- Rendering opaque and transparent objects
 - Directional and point lights
-- Shadows: Variance shadow mapping (VSM), percentage-closer soft shadows (PCSS)
+- Shadows: Variance shadow mapping (VSM), percentage-closer filter (PCF)
 - Texturing with normal mapping support
 - Predefined shapes and custom meshes
 - Wavefront .obj and .gtlf/.glb file loading (with animation support)
@@ -37,6 +36,7 @@ Korender is BETA - APIs may change without notice.
 - Batching (instancing)
 - Heightfield (terrain) rendering
 - Textured or shader sky
+- Environment mapping
 - On-screen basic GUI
 - Custom shaders support
 - Multi-pass rendering and screen-space shaders (filters)
@@ -47,8 +47,8 @@ Korender is BETA - APIs may change without notice.
 
 #### Precompiled:
 - [Web live demo](https://zakgof.github.io/projects/korender/wasm/)
-- [JVM Desktop Windows](https://github.com/zakgof/korender/releases/download/0.4.0/korender-demo-0.4.0.zip)
-- [Android APK](https://github.com/zakgof/korender/releases/download/0.4.0/korender-demo-0.4.0.apk)
+- [JVM Desktop Windows](https://github.com/zakgof/korender/releases/download/0.5.0/korender-demo-0.5.0.zip)
+- [Android APK](https://github.com/zakgof/korender/releases/download/0.5.0/korender-demo-0.5.0.apk)
 
 [Examples source code](https://github.com/zakgof/korender/tree/main/korender-framework/examples/src/commonMain/kotlin)
 
@@ -85,7 +85,7 @@ Korender {
 #### From scratch
 
 - Generate a new KMP application using [Kotlin Multiplatform Wizard](https://kmp.jetbrains.com/). Select Android, Desktop and WASM platforms.
-- Add Korender dependency `com.github.zakgof:korender:0.4.0`
+- Add Korender dependency `com.github.zakgof:korender:0.5.0`
 - Add the above code to commonMain
 - Run on desktop: `./gradlew composeApp:run`
 
