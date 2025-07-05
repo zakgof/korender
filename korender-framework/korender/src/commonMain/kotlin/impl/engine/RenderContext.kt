@@ -3,12 +3,17 @@ package com.zakgof.korender.impl.engine
 import com.zakgof.korender.Platform
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
+import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
+import com.zakgof.korender.impl.glgpu.GlGpuShadowTextureList
+import com.zakgof.korender.impl.glgpu.GlGpuTexture
+import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjection
 import com.zakgof.korender.impl.projection.Projection
-import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import impl.engine.ImmediatelyFreeRetentionPolicy
 
 internal class RenderContext(var width: Int, var height: Int) {
 
@@ -19,13 +24,16 @@ internal class RenderContext(var width: Int, var height: Int) {
         set(newProjection) {
             _projection = newProjection
         }
-    var backgroundColor = ColorRGB.Black
+    var backgroundColor = ColorRGBA.Transparent
 
     val frameInfoManager = FrameInfoManager()
+    val state = GlState()
+    val envProbes = mutableMapOf<String, GlGpuCubeTexture>()
+    val frameProbes = mutableMapOf<String, GlGpuTexture>()
 
-    fun uniforms(m: MutableMap<String, Any?>) {
-        m["noiseTexture"] = ResourceTextureDeclaration("!noise.png")
-        m["fbmTexture"] = ResourceTextureDeclaration("!fbm.png")
+    fun frameUniforms(m: MutableMap<String, Any?>) {
+        m["noiseTexture"] = ResourceTextureDeclaration("!noise.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)
+        m["fbmTexture"] = ResourceTextureDeclaration("!fbm.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)
         m["view"] = camera.mat4
         m["projection"] = projection.mat4
         m["cameraPos"] = camera.position
@@ -33,6 +41,13 @@ internal class RenderContext(var width: Int, var height: Int) {
         m["screenWidth"] = width.toFloat()
         m["screenHeight"] = height.toFloat()
         m["time"] = (Platform.nanoTime() - frameInfoManager.startNanos) * 1e-9f
+    }
+
+    fun contextUniforms(m: MutableMap<String, Any?>) {
+        m["noiseTexture"] = ResourceTextureDeclaration("!noise.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)
+        m["fbmTexture"] = ResourceTextureDeclaration("!fbm.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)
+        m["shadowTextures[0]"] = GlGpuTextureList(List(5) { null }, 5)
+        m["pcfTextures[0]"] = GlGpuShadowTextureList(List(5) { null }, 5)
     }
 
 }

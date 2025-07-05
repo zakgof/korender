@@ -2,80 +2,107 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
-import com.zakgof.korender.RenderingOption
+import com.zakgof.korender.PostShadingEffect
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TouchHandler
+import com.zakgof.korender.context.BillboardInstancingDeclaration
+import com.zakgof.korender.context.GltfInstancingDeclaration
+import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.material.DynamicUniforms
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import impl.engine.Retentionable
 
 internal class SceneDeclaration {
     val pointLights = mutableListOf<PointLightDeclaration>()
     val directionalLights = mutableListOf<DirectionalLightDeclaration>()
     var ambientLightColor = white(0.3f)
-    val renderables = mutableListOf<RenderableDeclaration>()
+
+    val opaques = mutableListOf<RenderableDeclaration>()
+    val transparents = mutableListOf<RenderableDeclaration>()
+    val skies = mutableListOf<RenderableDeclaration>()
+
     val guis = mutableListOf<ElementDeclaration.Container>()
     val gltfs = mutableListOf<GltfDeclaration>()
-    var filters = mutableListOf<List<MaterialModifier>>()
-    var deferredShading: Boolean = false
-    var compositionModifiers = mutableListOf<MaterialModifier>()
+    var filters = mutableListOf<InternalFilterDeclaration>()
+    var deferredShadingDeclaration: DeferredShadingDeclaration? = null
+    val envCaptures = mutableMapOf<String, EnvCaptureContext>()
+    val frameCaptures = mutableMapOf<String, FrameCaptureContext>()
+    var loaderSceneDeclaration: SceneDeclaration? = null
 }
+
+internal class DeferredShadingDeclaration() {
+    var postShadingEffects = mutableListOf<PostShadingEffect>()
+    var shadingModifiers = mutableListOf<MaterialModifier>()
+    var decals = mutableListOf<InternalDecalDeclaration>()
+}
+
+internal class InternalDecalDeclaration(val position: Vec3, val look: Vec3, val up: Vec3, val size: Float, val materialModifiers: List<MaterialModifier>)
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
 
-internal class MeshInstance(val transform: Transform)
+internal class MeshInstance(
+    val transform: Transform,
+    val jointMatrices: List<Mat4>?
+)
 
 internal data class ShaderDeclaration(
     val vertFile: String,
     val fragFile: String,
     val defs: Set<String> = setOf(),
-    val options: Set<RenderingOption> = setOf(),
-    val plugins: Map<String, String> = mapOf()
-)
+    val plugins: Map<String, String> = mapOf(),
+    override val retentionPolicy: RetentionPolicy
+) : Retentionable
 
 internal class RenderableDeclaration(
     val base: BaseMaterial,
     val materialModifiers: List<MaterialModifier>,
     val mesh: MeshDeclaration,
-    val transform: Transform = Transform(),
-    val bucket: Bucket = Bucket.OPAQUE
-)
+    val transform: Transform = Transform.IDENTITY,
+    override val retentionPolicy: RetentionPolicy
+) : Retentionable
 
 internal enum class BaseMaterial {
     Renderable,
     Billboard,
     Screen,
+    Font,
+    Image,
     Sky,
-    Composition
+    Shading,
+    Composition,
+    Decal
 }
 
 internal class MaterialDeclaration(
     val shader: ShaderDeclaration,
-    val uniforms: DynamicUniforms
+    val uniforms: Map<String, Any?>
 )
 
-internal sealed class ElementDeclaration {
+internal sealed interface ElementDeclaration {
 
-    class Filler : ElementDeclaration()
+    class Filler : ElementDeclaration
 
     class Text(
-        val id: Any,
+        val id: String,
         val fontResource: String,
         val height: Int,
         val text: String,
         val color: ColorRGBA,
         val static: Boolean,
-        val onTouch: TouchHandler
-    ) : ElementDeclaration()
+        val onTouch: TouchHandler,
+        override val retentionPolicy: RetentionPolicy
+    ) : ElementDeclaration, Retentionable
 
     class Image(
-        val id: Any?,
+        val id: String,
         val imageResource: String,
         val width: Int,
         val height: Int,
@@ -83,17 +110,22 @@ internal sealed class ElementDeclaration {
         val marginBottom: Int,
         val marginLeft: Int,
         val marginRight: Int,
-        val onTouch: TouchHandler
-    ) : ElementDeclaration() {
+        val onTouch: TouchHandler,
+        override val retentionPolicy: RetentionPolicy
+    ) : ElementDeclaration, Retentionable {
         val fullWidth = width + marginLeft + marginRight
         val fullHeight = height + marginTop + marginBottom
     }
 
-    class Container(val direction: Direction) : ElementDeclaration() {
-
+    class Container(val direction: Direction) : ElementDeclaration {
         val elements = mutableListOf<ElementDeclaration>()
         fun add(element: ElementDeclaration) = elements.add(element)
     }
+}
+
+internal class TransientProperty<T>(val property: T) {
+    override fun equals(other: Any?) = true
+    override fun hashCode() = 0
 }
 
 internal data class FrameBufferDeclaration(
@@ -101,8 +133,21 @@ internal data class FrameBufferDeclaration(
     val width: Int,
     val height: Int,
     val colorTexturePresets: List<GlGpuTexture.Preset>,
-    val withDepth: Boolean
-)
+    val withDepth: Boolean,
+    val retentionPolicyHolder: TransientProperty<RetentionPolicy>
+) : Retentionable {
+    override val retentionPolicy = retentionPolicyHolder.property
+}
+
+internal data class CubeFrameBufferDeclaration(
+    val id: String,
+    val width: Int,
+    val height: Int,
+    val withDepth: Boolean,
+    val retentionPolicyHolder: TransientProperty<RetentionPolicy>
+) : Retentionable {
+    override val retentionPolicy = retentionPolicyHolder.property
+}
 
 internal class ShadowDeclaration {
     val cascades = mutableListOf<CascadeDeclaration>()
@@ -110,11 +155,28 @@ internal class ShadowDeclaration {
 
 internal data class CascadeDeclaration(val mapSize: Int, val near: Float, val far: Float, val fixedYRange: Pair<Float, Float>?, val algorithm: ShadowAlgorithmDeclaration)
 
-internal class GltfDeclaration(val gltfResource: String, val animation: Int, val transform: Transform, val time: Float) {
+internal class GltfDeclaration(
+    val gltfResource: String,
+    val transform: Transform,
+    val time: Float,
+    val animation: Int,
+    val instancingDeclaration: InternalGltfInstancingDeclaration?,
+    override val retentionPolicy: RetentionPolicy
+) : Retentionable {
     override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.gltfResource == gltfResource)
     override fun hashCode(): Int = gltfResource.hashCode()
 }
 
+internal class GltfInstance(val transform: Transform, val time: Float?, val animation: Int?)
+
 internal class PointLightDeclaration(val position: Vec3, val color: ColorRGB, val attenuation: Vec3)
 
 internal class DirectionalLightDeclaration(val direction: Vec3, val color: ColorRGB, val shadowDeclaration: ShadowDeclaration)
+
+internal class InternalInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<MeshInstance>) : InstancingDeclaration
+
+internal class InternalGltfInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<GltfInstance>) : GltfInstancingDeclaration
+
+internal class InternalBillboardInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<BillboardInstance>) : BillboardInstancingDeclaration
+
+internal class InternalFilterDeclaration(val modifiers: List<MaterialModifier>, val sceneDeclaration: SceneDeclaration, override val retentionPolicy: RetentionPolicy) : Retentionable

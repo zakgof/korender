@@ -12,6 +12,15 @@ class Vec3(val x: Float, val y: Float, val z: Float) {
         val Z = Vec3(0f, 0f, 1f)
 
         // TODO optimize this using gaussian distribution
+        fun random(seed: Int): Vec3 {
+            val r = Random(seed)
+            return Vec3(
+                r.nextFloat() - 0.5f,
+                r.nextFloat() - 0.5f,
+                r.nextFloat() - 0.5f,
+            ).normalize()
+        }
+
         fun random() = Vec3(
             Random.nextFloat() - 0.5f,
             Random.nextFloat() - 0.5f,

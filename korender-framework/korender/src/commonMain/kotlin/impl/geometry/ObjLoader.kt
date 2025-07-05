@@ -1,8 +1,6 @@
 package com.zakgof.korender.impl.geometry
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
@@ -11,13 +9,12 @@ internal class ObjModel(val vertices: List<Vertex>, val indices: List<Int>) {
 }
 
 internal object ObjLoader {
-    suspend fun load(file: String, appResourceLoader: ResourceLoader): ObjModel {
+    fun load(bytes: ByteArray): ObjModel {
         val positions = mutableListOf<Vec3>()
         val normals = mutableListOf<Vec3>()
         val texes = mutableListOf<Vec2>()
         val faces = mutableListOf<IntArray>()
-        resourceBytes(appResourceLoader, file)
-            .decodeToString()
+        bytes.decodeToString()
             .lines()
             .forEach {
                 val command = it.split(" ", limit = 2).toList()
@@ -37,8 +34,8 @@ internal object ObjLoader {
             vertmap.getOrPut(it.toList()) {
                 vertices += ObjModel.Vertex(
                     positions[it[0] - 1],
-                    normals[it[2] - 1],
-                    texes[it[1] - 1]
+                    normals[(if (it.size == 1) it[0] else it[2]) - 1],
+                    texes[(if (it.size == 1) it[0] else it[1]) - 1],
                 )
                 vertices.size - 1
             }
@@ -55,8 +52,8 @@ internal object ObjLoader {
 
     private fun parse2(line: String): Vec2 {
         val tokens = line.split(" ").filter { it.isNotBlank() }
-        if (tokens.size != 2)
-            throw KorenderException("Obj vt expects 2 coordinates")
+        if (tokens.size != 2 && tokens.size != 3)
+            throw KorenderException("Obj vt expects 2 (or 3) coordinates")
         return Vec2(tokens[0].toFloat(), 1f - tokens[1].toFloat())
     }
 

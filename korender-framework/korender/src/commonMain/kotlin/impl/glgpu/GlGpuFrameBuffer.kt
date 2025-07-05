@@ -17,6 +17,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER_COMPLETE
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_2D
 import com.zakgof.korender.impl.gl.GLFrameBuffer
 
+@OptIn(ExperimentalStdlibApi::class)
 internal class GlGpuFrameBuffer(
     private val name: String,
     private val width: Int,
@@ -37,7 +38,7 @@ internal class GlGpuFrameBuffer(
         glBindFramebuffer(GL_FRAMEBUFFER, fbHandle)
 
         colorTextures = colorTexturePresets.mapIndexed { index, preset ->
-            val tex = GlGpuTexture( "$name-color-$index", width, height, preset)
+            val tex = GlGpuTexture(width, height, preset)
             glFramebufferTexture2D(
                 GL_FRAMEBUFFER,
                 GL_COLOR_ATTACHMENT0 + index,
@@ -47,10 +48,10 @@ internal class GlGpuFrameBuffer(
             )
             tex
         }
-        println("Framebuffer textures [${colorTextures.map { it.glHandle }}]")
+        println(" - FB color textures [${colorTextures.map { it.glHandle }}]")
 
         if (useDepthBuffer) {
-            depthTexture = GlGpuTexture("$name-depth", width, height, GlGpuTexture.Preset.Depth)
+            depthTexture = GlGpuTexture(width, height, GlGpuTexture.Preset.Depth)
             glFramebufferTexture2D(
                 GL_FRAMEBUFFER,
                 GL_DEPTH_ATTACHMENT,
@@ -58,14 +59,15 @@ internal class GlGpuFrameBuffer(
                 depthTexture.glHandle,
                 0
             )
+            println(" - FB depth textures [${depthTexture.glHandle}]")
         } else {
             depthTexture = null
         }
         glDrawBuffers(*IntArray(colorTextures.size) { GL_COLOR_ATTACHMENT0 + it })
 
-        val err: Int = glCheckFramebufferStatus(GL_FRAMEBUFFER)
-        if (err != GL_FRAMEBUFFER_COMPLETE) {
-            throw KorenderException("Error creating framebuffer $name: $err")
+        val error: Int = glCheckFramebufferStatus(GL_FRAMEBUFFER)
+        if (error != GL_FRAMEBUFFER_COMPLETE) {
+            throw KorenderException("Error creating framebuffer $name: ${error.toHexString()}")
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, null)
@@ -79,9 +81,12 @@ internal class GlGpuFrameBuffer(
     }
 
     fun exec(block: () -> Unit) {
-        bind()
-        block.invoke()
-        unbind()
+        try {
+            bind()
+            block.invoke()
+        } finally {
+            unbind()
+        }
     }
 
     private fun bind() {

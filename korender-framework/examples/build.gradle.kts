@@ -29,7 +29,7 @@ kotlin {
 
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
-        moduleName = "composeApp"
+        outputModuleName = "composeApp"
         browser {
             val rootDirPath = project.rootDir.path
             val projectDirPath = project.projectDir.path
@@ -61,6 +61,7 @@ kotlin {
             implementation(compose.material)
             implementation(compose.ui)
             implementation(compose.components.resources)
+            implementation(libs.kotlinx.serialization.core)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -82,8 +83,8 @@ android {
         applicationId = "com.zakgof.korenderexamples"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "0.4.0"
+        versionCode = 5
+        versionName = "0.5.0"
     }
     packaging {
         resources {
@@ -123,7 +124,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi)
             packageName = "com.zakgof.korender"
-            packageVersion = "0.4.0"
+            packageVersion = "0.5.0"
             modules("jdk.unsupported")
             windows {
                 iconFile.set(project.file("korender32.ico"))

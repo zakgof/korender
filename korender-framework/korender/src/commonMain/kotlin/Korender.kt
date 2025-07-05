@@ -18,4 +18,9 @@ class FrameInfo(
     val time: Float,
     val dt: Float,
     val avgFps: Float,
+    val pending: Int
 )
+
+interface Prefab
+
+interface RetentionPolicy

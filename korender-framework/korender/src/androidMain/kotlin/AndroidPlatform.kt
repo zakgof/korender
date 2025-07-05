@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.graphics.createBitmap
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
@@ -49,7 +50,7 @@ internal actual object Platform {
     internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage> =
         CompletableDeferred(bitmapToImage(BitmapFactory.decodeByteArray(bytes, 0, bytes.size)))
 
-    private fun bitmapToImage(bitmap: Bitmap): AndroidImage {
+    private fun bitmapToImage(bitmap: Bitmap): InternalImage {
         val size = bitmap.rowBytes * bitmap.height
         val byteBuffer = ByteBuffer.allocateDirect(size).order(ByteOrder.nativeOrder())
         bitmap.copyPixelsToBuffer(byteBuffer)
@@ -62,8 +63,7 @@ internal actual object Platform {
             Bitmap.Config.ARGB_8888 -> ARGBtoRGBA(byteBuffer) // TODO: how come ?
             else -> throw KorenderException("Unsupported image format $format")
         }
-        return AndroidImage(
-            bitmap,
+        return InternalImage(
             bitmap.width,
             bitmap.height,
             NativeByteBuffer(gpuBytes),
@@ -84,7 +84,7 @@ internal actual object Platform {
         tmpFile.writeBytes(bytes)
 
         val cell = 256
-        val bitmap = Bitmap.createBitmap(cell * 16, cell * 16, Bitmap.Config.ARGB_8888);
+        val bitmap = createBitmap(cell * 16, cell * 16);
         val canvas = Canvas(bitmap)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
         paint.typeface = Typeface.createFromFile(tmpFile)
@@ -109,19 +109,10 @@ internal actual object Platform {
     }
 
     actual fun nanoTime() = System.nanoTime()
-}
-
-internal class AndroidImage(
-    private val bitmap: Bitmap,
-    override val width: Int,
-    override val height: Int,
-    override val bytes: NativeByteBuffer,
-    override val format: Image.Format
-) : InternalImage {
-    override fun pixel(x: Int, y: Int): com.zakgof.korender.math.ColorRGBA {
-        // TODO: performance optimization
-        val androidColor = bitmap.getPixel(x, y)
-        return com.zakgof.korender.math.ColorRGBA(androidColor.toLong())
+    internal actual fun createImage(width: Int, height: Int, format: Image.Format): InternalImage {
+        // TODO image types support!
+        val bitmap = createBitmap(width, height)
+        return bitmapToImage(bitmap)
     }
 }
 

@@ -1,25 +1,23 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 #import "!shader/lib/noise.glsl"
 
 in vec3 vpos;
 in vec2 vsize;
 in vec2 vtex;
 
-uniform float time;
-uniform float density;
-uniform float seed;
-uniform mat4 view;
-uniform mat4 projection;
+#uniform float density;
+#uniform float seed;
 
-uniform sampler2D noiseTexture;
+#uniforms
 
 out vec4 fragColor;
 
 void main() {
     float r = length(2. * (vtex - 0.5));
     float a = density * clamp(1. - r * r, 0., 1.);
-    float n = (fbmTex(noiseTexture, seed + vtex * 0.025 + time * 0.005)  +
-               fbmTex(noiseTexture, seed * 2. + vtex * 0.025 - time * 0.005)) * a;
+    float n = (fbm(seed +      vtex * 0.1 + time * 0.005) * 0.7 +
+               fbm(seed * 2. + vtex * 0.2 - time * 0.005) * 0.7 - 0.66) * a;
     n = clamp(n, 0., 1.);
     fragColor = vec4(0.3, 0.3, 0.3, 1.0) * n;
 

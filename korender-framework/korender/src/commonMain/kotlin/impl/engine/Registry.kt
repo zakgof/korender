@@ -1,40 +1,64 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.AsyncContext
-import com.zakgof.korender.impl.resultOrNull
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.DelicateCoroutinesApi
+import com.zakgof.korender.KorenderException
+import com.zakgof.korender.RetentionPolicy
+import impl.engine.ImmediatelyFreeRetentionPolicy
+import impl.engine.KeepForeverRetentionPolicy
+import impl.engine.Retentionable
+import impl.engine.TimeRetentionPolicy
+import impl.engine.UntilGenerationRetentionPolicy
 
-@OptIn(DelicateCoroutinesApi::class)
-internal class Registry<D, R : AutoCloseable>(
-    private val asyncContext: AsyncContext,
-    private val factory: suspend (D) -> R
+internal class Registry<D : Retentionable, R : AutoCloseable>(
+    private val factory: (D) -> R?
 ) {
 
-    private val map = mutableMapOf<D, Deferred<R>>()
-    private var unusedKeys = mutableSetOf<D>()
+    private val map = mutableMapOf<D, Entry>()
 
     fun begin() {
-        unusedKeys = HashSet(map.keys)
+        map.values.forEach { it.used = false }
     }
 
-    fun end() {
-        unusedKeys.forEach {
-            val deferred = map.remove(it)!!
-            deferred.resultOrNull()?.close() ?: deferred.cancel()
+    fun end(time: Float, generation: Int) {
+        map.entries.removeAll {
+            !it.value.used && it.value.attemptDelete(it.key.retentionPolicy, time, generation)
         }
     }
 
-    operator fun get(decl: D): R? {
-        unusedKeys.remove(decl)
-        val deferred = map.getOrPut(decl) {
-            asyncContext.call {
-                factory(decl)
+    operator fun get(key: D): R? {
+        val existing = map[key]
+        if (existing != null) {
+            existing.freeTime = null
+            existing.used = true
+            return existing.value
+        }
+
+        val value = factory(key)
+        if (value != null) {
+            map[key] = Entry(value)
+            return value
+        }
+
+        return null
+    }
+
+    inner class Entry(val value: R, var freeTime: Float? = null, var used: Boolean = true) {
+
+        fun attemptDelete(retentionPolicy: RetentionPolicy, currentTime: Float, currentGeneration: Int): Boolean {
+
+            val del = when (retentionPolicy) {
+                is KeepForeverRetentionPolicy -> false
+                is ImmediatelyFreeRetentionPolicy -> true
+                is UntilGenerationRetentionPolicy -> currentGeneration > retentionPolicy.generation
+                is TimeRetentionPolicy -> currentTime > (freeTime ?: currentTime) + retentionPolicy.seconds
+                else -> throw KorenderException("Unknown retention policy")
             }
+            if (freeTime == null) {
+                freeTime = currentTime
+            }
+            if (del)
+                value.close()
+            return del
         }
-        return deferred.resultOrNull()
     }
-
-    fun has(decl: D): Boolean = map.containsKey(decl)
 
 }

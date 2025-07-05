@@ -29,11 +29,11 @@ vec2 vogelDiskSample(int sampleIndex, int numSamples, float phi) {
     return vec2(cos(angle), sin(angle)) * sqrt(sampleVal + 0.5) / sqrt(float(numSamples));
 }
 
-float pcss(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float penumbraWidth) {
+float swPcf(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float penumbraWidth) {
     float beavis = 0.0005;
 
     const float PHI = 1.61803398874989484820459;
-    float phi = 0.; // 6.28 * fract(tan(distance(vpos.xy * 20.0 * PHI, vpos.xy * 20.0) * 0.01) * vpos.x);
+    float phi = 0.;
 
     float cumulative = 0.;
     float weight = 0.;
@@ -61,22 +61,27 @@ float hard(sampler2D shadowTexture, vec3 vshadow) {
         && vshadow.y > 0.001 && vshadow.y < 0.999) ? 1. : 0.;
 }
 
-float shadow(sampler2D shadowTexture, int index, vec3 vshadow, int mode) {
+float hwPcf(sampler2DShadow pcfTexture, vec3 vshadow, float bias) {
+    return 1. - texture(pcfTexture, vshadow - vec3(0., 0., bias));
+}
+
+float shadow(sampler2D shadowTexture, sampler2DShadow pcfTexture, int index, vec3 vshadow, int mode) {
     float sh = 0.;
     switch (mode) {
           case 0: sh = hard(shadowTexture, vshadow); break;
-          case 1: sh =  pcss(shadowTexture, vshadow, i1[index], f1[index]); break;
+          case 1: sh =  swPcf(shadowTexture, vshadow, i1[index], f1[index]); break;
           case 2: sh =  vsm(shadowTexture, vshadow); break;
+          case 3: sh =  hwPcf(pcfTexture, vshadow, f1[index]); break;
     }
     return sh;
 }
 
-float casc(int s, float plane, vec3 vpos, sampler2D shadowTexture) {
+float casc(int s, float plane, vec3 vpos, sampler2D shadowTexture, sampler2DShadow pcfTexture) {
     vec3 vshadow = (bsps[s] * vec4(vpos, 1.0)).xyz;
     if ((shadowMode[s] & 0x80) != 0) {
         vshadow.z = (yMax[s] - vpos.y) / (yMax[s] - yMin[s]);
     }
-    float sh = shadow(shadowTexture, s, vshadow, shadowMode[s] & 0x07);
+    float sh = shadow(shadowTexture, pcfTexture, s, vshadow, shadowMode[s] & 0x07);
     vec4 ci = cascade[s];
     float cascadeContribution = smoothstep(ci.r, ci.g, plane) * (1.0 - smoothstep(ci.b, ci.a, plane));
     return sh * cascadeContribution;
@@ -84,16 +89,13 @@ float casc(int s, float plane, vec3 vpos, sampler2D shadowTexture) {
 
 void populateShadowRatios(float plane, vec3 vpos) {
     #ifdef OPENGL
-    for (int s=0; s<numShadows; s++)
-    shadowRatios[s] = casc(s, plane, vpos, shadowTextures[s]);
+        for (int s=0; s<numShadows; s++)
+            shadowRatios[s] = casc(s, plane, vpos, shadowTextures[s], pcfTextures[s]);
     #else
-    if (numShadows > 0) shadowRatios[0] = casc(0, plane, vpos, shadowTextures[0]);
-    if (numShadows > 1) shadowRatios[1] = casc(1, plane, vpos, shadowTextures[1]);
-    if (numShadows > 2) shadowRatios[2] = casc(2, plane, vpos, shadowTextures[2]);
-    if (numShadows > 3) shadowRatios[3] = casc(3, plane, vpos, shadowTextures[3]);
-    if (numShadows > 4) shadowRatios[4] = casc(4, plane, vpos, shadowTextures[4]);
-    if (numShadows > 5) shadowRatios[5] = casc(5, plane, vpos, shadowTextures[5]);
-    if (numShadows > 6) shadowRatios[6] = casc(6, plane, vpos, shadowTextures[6]);
-    if (numShadows > 7) shadowRatios[7] = casc(7, plane, vpos, shadowTextures[7]);
+        if (numShadows > 0) shadowRatios[0] = casc(0, plane, vpos, shadowTextures[0], pcfTextures[0]);
+        if (numShadows > 1) shadowRatios[1] = casc(1, plane, vpos, shadowTextures[1], pcfTextures[1]);
+        if (numShadows > 2) shadowRatios[2] = casc(2, plane, vpos, shadowTextures[2], pcfTextures[2]);
+        if (numShadows > 3) shadowRatios[3] = casc(3, plane, vpos, shadowTextures[3], pcfTextures[3]);
+        if (numShadows > 4) shadowRatios[4] = casc(4, plane, vpos, shadowTextures[4], pcfTextures[4]);
     #endif
 }

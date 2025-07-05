@@ -1,11 +1,9 @@
 package com.zakgof.korender.impl.camera
 
-import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec3
 
-internal class DefaultCamera(override val position: Vec3, override val direction: Vec3, override val up: Vec3) :
-    Camera {
+internal class DefaultCamera(override val position: Vec3, override val direction: Vec3, override val up: Vec3) : Camera {
 
     override val mat4: Mat4
 

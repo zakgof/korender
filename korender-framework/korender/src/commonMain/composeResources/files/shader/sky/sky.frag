@@ -1,23 +1,24 @@
 #import "!shader/lib/header.glsl"
-#import "!shader/lib/sky.glsl"
-
-#import "$sky"
-
-#ifdef PLUGIN_SECSKY
-    #import "$secsky"
-#endif
+#import "!shader/lib/ubo.glsl"
 
 in vec2 vtex;
 
-uniform vec3 cameraPos;
-uniform mat4 view;
-uniform mat4 projection;
+#uniforms
 
 out vec4 fragColor;
 
+#import "!shader/lib/space.glsl"
+#import "!shader/lib/sky.glsl"
+#import "$sky"
+
+#ifdef PLUGIN_SECSKY
+#import "$secsky"
+#endif
+
 void main() {
-    vec3 look = screentolook(vtex, projection * view, cameraPos);
-    vec3 color = sky(look);
+
+    vec3 look = screenToLook(vtex);
+    vec3 color = sky(look, 0.);
 
     #ifdef PLUGIN_SECSKY
         color = pluginSecsky(look, color);

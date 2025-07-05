@@ -9,34 +9,41 @@ import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.random.Random
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun InstancedBillboardsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
     val particleNum = 1000
-    val particles = Array(particleNum) { Particle(Random.nextDouble(5.0).toFloat()) }
+    val particles = Array(particleNum) { Particle(Random.nextFloat() * 5f) }
 
     Frame {
         AmbientLight(White)
-        InstancedBillboards(
-            standart {
-                baseColor = ColorRGBA.Red
-                baseColorTexture = texture("texture/splat.png")
-            },
-            id = "particles",
-            count = particleNum,
-            transparent = true
-        ) {
-            for (particle in particles) {
-                particle.update(frameInfo.dt)
-                val scale = (5.0f - particle.ttl) * 0.3f
-                Instance(
-                    pos = particle.pos,
-                    scale = Vec2(scale, scale)
-                )
+        Billboard(
+            base(
+                color = ColorRGBA.Red,
+                colorTexture = texture("texture/splat.png")
+            ),
+            transparent = true,
+            instancing = billboardInstancing(
+                id = "particles",
+                count = particleNum,
+                dynamic = true
+            ) {
+                for (particle in particles) {
+                    particle.update(frameInfo.dt)
+                    val scale = (5.0f - particle.ttl) * 0.3f
+                    Instance(
+                        pos = particle.pos,
+                        scale = Vec2(scale, scale)
+                    )
+                }
+            }
+        )
+        Gui {
+            Column {
+                Filler()
+                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
             }
         }
     }
@@ -45,17 +52,15 @@ fun InstancedBillboardsExample() = Korender(appResourceLoader = { Res.readBytes(
 class Particle(initTtl: Float = 5.0f) {
     var ttl = initTtl
     var pos = Vec3(-2f, -2f, 0f)
-    private var v = Vec3.random() + Vec3(4f, 8f, 0f)
+    private var v = Vec3.random() + Vec3(2f, 7f, 0f)
     fun update(dt: Float) {
         v += -5.y * dt
         pos += v * dt
         ttl -= dt
         if (ttl < 0) {
-            ttl = 5.0f
+            ttl = 5f
             pos = Vec3(-2f, -2f, 0f)
-            v = Vec3.random() + Vec3(4f, 8f, 0f)
+            v = Vec3.random() + Vec3(2f, 7f, 0f)
         }
     }
-
-
 }

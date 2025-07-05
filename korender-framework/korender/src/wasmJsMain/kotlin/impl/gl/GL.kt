@@ -2,7 +2,14 @@ package com.zakgof.korender.impl.gl
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.WebGL2RenderingContext
+import com.zakgof.korender.impl.buffer.NativeBuffer
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_TEXTURE_MAX_ANISOTROPY
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MAX_ANISOTROPY
+import com.zakgof.korender.maxTexAniso
+import com.zakgof.korender.texAniso
+import org.khronos.webgl.Uint32Array
+import org.khronos.webgl.get
 import org.khronos.webgl.toFloat32Array
 import org.khronos.webgl.toInt32Array
 
@@ -16,8 +23,14 @@ actual object GL {
     actual fun glDrawElements(mode: Int, count: Int, type: Int, indices: Int) =
         gl!!.drawElements(mode, count, type, indices)
 
+    actual fun glDrawElementsInstanced(mode: Int, count: Int, type: Int, indices: Int, instances: Int) =
+        gl!!.drawElementsInstanced(mode, count, type, indices, instances)
+
     actual fun glDrawArrays(mode: Int, starting: Int, count: Int) =
         gl!!.drawArrays(mode, starting, count)
+
+    actual fun glDrawArraysInstanced(mode: Int, starting: Int, count: Int, instances: Int) =
+        gl!!.drawArraysInstanced(mode, starting, count, instances)
 
     actual fun glEnable(target: Int) =
         gl!!.enable(target)
@@ -63,10 +76,16 @@ actual object GL {
         border: Int,
         format: Int,
         type: Int,
-        pixels: NativeByteBuffer?
+        buffer: NativeBuffer?
     ) = gl!!.texImage2D(
-        target, level, internalformat, width, height, border, format, type, pixels?.array
+        target, level, internalformat, width, height, border, format, type, buffer?.array
     )
+
+    actual fun glTexSubImage2D(target: Int, level: Int, x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, buffer: NativeBuffer) =
+        gl!!.texSubImage2D(target, level, x, y, width, height, format, type, buffer.array)
+
+    actual fun glGetTexImage(tex: Int, level: Int, format: Int, type: Int, pixels: NativeByteBuffer) =
+        gl!!.getTexImage(tex, level, format, type, pixels.array)
 
     actual fun glGetFloatv(pname: Int): Float? {
         val paramValue = gl!!.getParameter(pname)
@@ -88,6 +107,9 @@ actual object GL {
 
     actual fun glClearColor(fl: Float, fl1: Float, fl2: Float, fl3: Float) =
         gl!!.clearColor(fl, fl1, fl2, fl3)
+
+    actual fun glClearDepth(fl: Float) =
+        gl!!.clearDepth(fl)
 
     actual fun glActiveTexture(texture: Int) = gl!!.activeTexture(texture)
 
@@ -155,13 +177,8 @@ actual object GL {
     actual fun glEnableVertexAttribArray(index: Int) =
         gl!!.enableVertexAttribArray(index)
 
-    actual fun glGetUniformLocation(program: GLProgram, name: String) =
-        com.zakgof.korender.impl.gl.GLUniformLocation(
-            gl!!.getUniformLocation(
-                program.program,
-                name
-            )!!
-        )
+    actual fun glGetUniformLocation(program: GLProgram, name: String): GLUniformLocation? =
+        gl!!.getUniformLocation(program.program, name)?.let { GLUniformLocation(it) }
 
     actual fun glGetAttribLocation(program: GLProgram, name: String): Int =
         gl!!.getAttribLocation(program.program, name)
@@ -254,4 +271,60 @@ actual object GL {
 
     actual fun glDrawBuffers(vararg targets: Int) =
         gl!!.drawBuffers(targets.toTypedArray().map { it.toJsNumber() }.toJsArray())
+
+    actual fun glReadPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, data: NativeByteBuffer) =
+        gl!!.readPixels(x, y, width, height, format, type, data.array)
+
+    actual fun glVertexAttribDivisor(index: Int, divisor: Int) =
+        gl!!.vertexAttribDivisor(index, divisor)
+
+    actual fun glGetMaxTextureMaxAnisotropyConstant(): Int {
+        val ext = gl!!.getExtension("EXT_texture_filter_anisotropic")
+        return ext?.let { maxTexAniso(ext) } ?: GL_MAX_TEXTURE_MAX_ANISOTROPY
+    }
+
+    actual fun glGetTextureMaxAnisotropyConstant(): Int {
+        val ext = gl!!.getExtension("EXT_texture_filter_anisotropic")
+        return ext?.let { texAniso(ext) } ?: GL_TEXTURE_MAX_ANISOTROPY
+    }
+
+    actual fun glGetUniformBlockIndex(program: GLProgram, name: String): Int =
+        gl!!.getUniformBlockIndex(program.program, name)
+
+    actual fun glGetActiveUniformBlockiv(program: GLProgram, blockIndex: Int, param: Int, paramValues: IntArray) {
+        when (val value = gl!!.getActiveUniformBlockParameter(program.program, blockIndex, param)) {
+            is JsBigInt -> paramValues[0] = value.toLong().toInt()
+            is JsNumber -> paramValues[0] = value.toInt()
+            is Uint32Array -> for (i in 0 until value.length)
+                    paramValues[i] = value[i]
+            else -> throw KorenderException("Internal error [$value] ")
+        }
+    }
+
+    actual fun glGetActiveUniformsiv(program: GLProgram, uniformIndices: IntArray, param: Int, paramValues: IntArray) {
+        val value = gl!!.getActiveUniforms(program.program, uniformIndices.map { it.toJsNumber() }.toJsArray(), param)
+        for (i in 0 until value.length)
+            paramValues[i] = (value[i] as JsNumber).toInt()
+    }
+
+    actual fun glGetActiveUniformName(program: GLProgram, uniformIndex: Int) =
+        gl!!.getActiveUniform(program.program, uniformIndex)!!.name
+
+    actual fun glUniformBlockBinding(program: GLProgram, blockIndex: Int, blockBinding: Int) =
+        gl!!.uniformBlockBinding(program.program, blockIndex, blockBinding)
+
+    actual fun glBindBufferBase(target: Int, blockBinding: Int, buffer: GLBuffer) =
+        gl!!.bindBufferBase(target, blockBinding, buffer.buffer)
+
+    actual fun glBufferData(target: Int, size: Long, usage: Int) =
+        gl!!.bufferData(target, size.toInt(), usage)
+
+    actual fun glBufferSubData(target: Int, offset: Long, buffer: NativeByteBuffer) =
+        gl!!.bufferSubData(target, offset.toInt(), buffer.array)
+
+    actual fun glBindBufferRange(target: Int, blockBinding: Int, buffer: GLBuffer, shift: Int, size: Int) =
+        gl!!.bindBufferRange(target, blockBinding, buffer.buffer, shift, size)
+
+    actual fun glGetInteger(pname: Int) =
+        (gl!!.getParameter(pname) as JsNumber).toInt()
 }

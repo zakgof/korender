@@ -1,5 +1,7 @@
 package com.zakgof.korender.math
 
+import com.zakgof.korender.KorenderException
+
 class Mat4(
     val m00: Float,
     val m01: Float,
@@ -42,34 +44,50 @@ class Mat4(
         val IDENTITY: Mat4 = Mat4(1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f)
     }
 
-    operator fun times(a: Float): Mat4 {
-        return Mat4(
-            m00 * a,
-            m01 * a,
-            m02 * a,
-            m03 * a,
-            m10 * a,
-            m11 * a,
-            m12 * a,
-            m13 * a,
-            m20 * a,
-            m21 * a,
-            m22 * a,
-            m23 * a,
-            m30 * a,
-            m31 * a,
-            m32 * a,
-            m33 * a
+    operator fun plus(a: Mat4) =
+        Mat4(
+            m00 + a.m00,
+            m01 + a.m01,
+            m02 + a.m02,
+            m03 + a.m03,
+            m10 + a.m10,
+            m11 + a.m11,
+            m12 + a.m12,
+            m13 + a.m13,
+            m20 + a.m20,
+            m21 + a.m21,
+            m22 + a.m22,
+            m23 + a.m23,
+            m30 + a.m30,
+            m31 + a.m31,
+            m32 + a.m32,
+            m33 + a.m33
         )
-    }
 
-    operator fun times(vec: Vec3): Vec3 {
-        return Vec3(
-            (m00 * vec.x + m01 * vec.y + m02 * vec.z + m03),
-            (m10 * vec.x + m11 * vec.y + m12 * vec.z + m13),
-            (m20 * vec.x + m21 * vec.y + m22 * vec.z + m23)
-        )
-    }
+    operator fun times(a: Float) = Mat4(
+        m00 * a,
+        m01 * a,
+        m02 * a,
+        m03 * a,
+        m10 * a,
+        m11 * a,
+        m12 * a,
+        m13 * a,
+        m20 * a,
+        m21 * a,
+        m22 * a,
+        m23 * a,
+        m30 * a,
+        m31 * a,
+        m32 * a,
+        m33 * a
+    )
+
+    operator fun times(vec: Vec3) = Vec3(
+        (m00 * vec.x + m01 * vec.y + m02 * vec.z + m03),
+        (m10 * vec.x + m11 * vec.y + m12 * vec.z + m13),
+        (m20 * vec.x + m21 * vec.y + m22 * vec.z + m23)
+    )
 
     fun project(vec: Vec3): Vec3 {
         val winv: Float = 1.0f / (m30 * vec.x + m31 * vec.y + m32 * vec.z + m33)
@@ -108,4 +126,34 @@ class Mat4(
         m30 * mat.m02 + m31 * mat.m12 + m32 * mat.m22 + m33 * mat.m32,
         m30 * mat.m03 + m31 * mat.m13 + m32 * mat.m23 + m33 * mat.m33
     )
+
+    fun invTranspose(): Mat3 {
+        val determinant = m00 * (m11 * m22 - m12 * m21) -
+                m01 * (m10 * m22 - m12 * m20) +
+                m02 * (m10 * m21 - m11 * m20)
+
+        if (determinant == 0.0f) {
+            throw KorenderException("Singular matrix")
+        }
+
+        val invDet = 1.0f / determinant
+
+        val adj00 = (m11 * m22 - m12 * m21) * invDet
+        val adj01 = (m02 * m21 - m01 * m22) * invDet
+        val adj02 = (m01 * m12 - m02 * m11) * invDet
+
+        val adj10 = (m12 * m20 - m10 * m22) * invDet
+        val adj11 = (m00 * m22 - m02 * m20) * invDet
+        val adj12 = (m02 * m10 - m00 * m12) * invDet
+
+        val adj20 = (m10 * m21 - m11 * m20) * invDet
+        val adj21 = (m01 * m20 - m00 * m21) * invDet
+        val adj22 = (m00 * m11 - m01 * m10) * invDet
+
+        return Mat3(
+            adj00, adj10, adj20,
+            adj01, adj11, adj21,
+            adj02, adj12, adj22
+        )
+    }
 }

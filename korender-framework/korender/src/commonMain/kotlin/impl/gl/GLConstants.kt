@@ -1597,4 +1597,17 @@ object GLConstants {
     const val GL_TEXTURE_MAX_ANISOTROPY: Int = 0x84FE
     const val GL_MAX_TEXTURE_MAX_ANISOTROPY: Int = 0x84FF
 
+    const val GL_TEXTURE_CUBE_MAP_SEAMLESS: Int = 0x884F
+
+    const val GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS: Int = 0x8A42
+    const val GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES: Int = 0x8A43
+    const val GL_UNIFORM_OFFSET: Int = 0x8A3B
+    const val GL_UNIFORM_BLOCK_DATA_SIZE: Int =  0x8A40
+    const val GL_UNIFORM_BUFFER: Int = 0x8A11
+
+    const val GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT: Int = 0x8A34
+    const val GL_MAX_UNIFORM_BUFFER_BINDINGS: Int = 0x8A2F
+    const val GL_MAX_UNIFORM_BLOCK_SIZE: Int = 0x8A30
+
+
 }

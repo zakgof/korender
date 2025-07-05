@@ -1,4 +1,5 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 #import "!shader/lib/noise.glsl"
 
 in vec3 vpos;
@@ -6,12 +7,9 @@ in vec2 vsize;
 in vec3 vnormal;
 in vec2 vtex;
 
-uniform float time;
-uniform float power;
-uniform mat4 view;
-uniform mat4 projection;
+#uniform float power;
 
-uniform sampler2D noiseTexture;
+#uniforms
 
 out vec4 fragColor;
 
@@ -20,9 +18,9 @@ void main() {
 
     float r = length(2.0 * (uv - 0.5));
     float a = (1.0 - r * r) * (1.0 - power);
-    float ripple1 = fbmTex(noiseTexture, uv * 0.05 + time * 0.01);
-    float ripple2 = fbmTex(noiseTexture, uv * 0.05 - time * 0.01);
-    float n = (ripple2 * 2.0 + ripple2 * 2.0 + 2.0) * a;
+    float ripple1 = fbm(uv * 0.25 + time * 0.04) * 3.5;
+    float ripple2 = fbm(uv * 0.25 - time * 0.04) * 3.5;
+    float n = (ripple1 + ripple2 - 2.0) * a;
 
     if (a < 0.001)
         discard;

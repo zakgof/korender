@@ -1,18 +1,16 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 
 in vec2 vtex;
 
-uniform sampler2D filterColorTexture;
-
-uniform int numShadows;
-const int MAX_SHADOWS = 12;
-uniform sampler2D shadowTextures[MAX_SHADOWS];
+uniform sampler2D colorTexture;
+uniform sampler2D shadowTextures[12];
 
 out vec4 fragColor;
 
 void main() {
 
-    vec4 color = texture(filterColorTexture, vtex);
+    vec4 color = texture(colorTexture, vtex);
 
     float min = 0.4;
 

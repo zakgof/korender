@@ -4,9 +4,12 @@ import com.zakgof.korender.Image
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.math.ColorRGBA
 
-internal interface InternalImage : Image {
-
-    val bytes: NativeByteBuffer
+internal class InternalImage(
+    override val width: Int,
+    override val height: Int,
+    val bytes: NativeByteBuffer,
+    override val format: Image.Format
+) : Image {
 
     override fun pixel(x: Int, y: Int): ColorRGBA =
         when (format) {
@@ -36,6 +39,42 @@ internal interface InternalImage : Image {
             }
         }
 
+    override fun setPixel(x: Int, y: Int, color: ColorRGBA) {
+        when (format) {
+            Image.Format.RGB -> {
+                bytes[(x + y * width) * 3] = floatToByte(color.r)
+                bytes[(x + y * width) * 3 + 1] = floatToByte(color.g)
+                bytes[(x + y * width) * 3 + 2] = floatToByte(color.b)
+            }
+
+            Image.Format.RGBA -> {
+                bytes[(x + y * width) * 4] = floatToByte(color.r)
+                bytes[(x + y * width) * 4 + 1] = floatToByte(color.g)
+                bytes[(x + y * width) * 4 + 2] = floatToByte(color.b)
+                bytes[(x + y * width) * 4 + 3] = floatToByte(color.a)
+            }
+
+            Image.Format.Gray -> {
+                bytes[x + y * width] = floatToByte(color.r)
+            }
+
+            // TODO: Test
+            Image.Format.Gray16 -> {
+                val w = floatToWord(color.r)
+                bytes[(x + y * width) * 2] = (w % 255).toByte()
+                bytes[(x + y * width) * 2 + 1] = (w / 256).toByte()
+            }
+        }
+    }
+
     fun byteToFloat(byte: Byte): Float = byte.toUByte().toFloat() / 255.0f
+
+    fun floatToByte(float: Float): Byte = (float * 255f).toUInt().toByte()
+
+    fun floatToWord(float: Float): Short = (float * 65535).toUInt().toShort()
+
+    override fun toTga(): ByteArray = Tga.encode(width, height, format, bytes)
+
+    override fun toRaw(): ByteArray = ByteArray(bytes.size()) { bytes.byte(it) }
 
 }

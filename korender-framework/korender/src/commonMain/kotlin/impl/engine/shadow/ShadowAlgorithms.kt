@@ -2,8 +2,11 @@ package com.zakgof.korender.impl.engine.shadow
 
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 
-internal class InternalVsmParams(val blurRadius: Float?) : ShadowAlgorithmDeclaration
+internal class InternalVsmShadow(val blurRadius: Float?) : ShadowAlgorithmDeclaration
 
-internal class InternalHardParams() : ShadowAlgorithmDeclaration
+internal class InternalHardShadow : ShadowAlgorithmDeclaration
 
-internal class InternalPcssParams(val samples: Int, val blurRadius: Float) : ShadowAlgorithmDeclaration
+internal class InternalSoftwarePcfShadow(val samples: Int, val blurRadius: Float) : ShadowAlgorithmDeclaration
+
+internal class InternalHardwarePcfShadow(val bias: Float) : ShadowAlgorithmDeclaration
+

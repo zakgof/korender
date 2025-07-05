@@ -1,8 +1,10 @@
 #import "!shader/lib/header.glsl"
 
 in vec2 vtex;
-uniform vec4 color;
+#uniform vec4 color;
 uniform sampler2D fontTexture;
+
+#uniforms
 
 out vec4 fragColor;
 

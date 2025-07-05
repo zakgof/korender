@@ -12,6 +12,9 @@ import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
+import com.zakgof.korender.impl.gl.GLConstants.GL_RENDERER
+import com.zakgof.korender.impl.gl.GLConstants.GL_VENDOR
+import com.zakgof.korender.impl.gl.GLConstants.GL_VERSION
 import com.zakgof.korender.impl.image.InternalImage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
@@ -20,8 +23,10 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.lwjgl.opengl.GL.createCapabilities
+import org.lwjgl.opengl.GL11.glGetString
 import org.lwjgl.opengl.awt.AWTGLCanvas
 import org.lwjgl.opengl.awt.GLData
+import org.lwjgl.system.Platform
 import java.awt.Color
 import java.awt.Font
 import java.awt.GraphicsEnvironment
@@ -37,7 +42,6 @@ import java.awt.event.MouseMotionAdapter
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferByte
 import java.awt.image.DataBufferUShort
-import java.awt.image.Raster
 import java.io.ByteArrayInputStream
 import javax.imageio.ImageIO
 import javax.swing.SwingUtilities
@@ -50,7 +54,12 @@ private fun detectDevicePixelRatio(): List<Float> {
         ?.call(device) as Float?
     val scaleY = device::class.members.firstOrNull { it.name == "getDefaultScaleY" }
         ?.call(device) as Float?
-    return listOf(scaleX ?: 1.0f, scaleY ?: 1.0f)
+    val scaleFactor = device::class.members.firstOrNull { it.name == "getScaleFactor" }
+        ?.call(device) as Int?
+    return listOf(
+        scaleX ?: scaleFactor?.toFloat() ?: 1.0f,
+        scaleY ?: scaleFactor?.toFloat() ?: 1.0f
+    )
 }
 
 @OptIn(DelicateCoroutinesApi::class)
@@ -69,7 +78,7 @@ actual fun Korender(
         ey: Int
     ) {
         GlobalScope.launch {
-            engine?.pushTouch(TouchEvent(type, button,ex * pixelRatio[0], ey * pixelRatio[1]))
+            engine?.pushTouch(TouchEvent(type, button, ex * pixelRatio[0], ey * pixelRatio[1]))
         }
     }
 
@@ -82,13 +91,17 @@ actual fun Korender(
         }
     }
 
-    SwingPanel(modifier = Modifier.fillMaxSize(),
+    SwingPanel(
+        modifier = Modifier.fillMaxSize(),
         update = {
             val renderLoop: Runnable = object : Runnable {
                 override fun run() {
-                    if (!it.isValid) return
-                    it.render()
-                    SwingUtilities.invokeLater(this)
+                    if (it.isValid) {
+                        it.render()
+                    }
+                    if (it.isDisplayable) {
+                        SwingUtilities.invokeLater(this)
+                    }
                 }
             }
             SwingUtilities.invokeLater(renderLoop)
@@ -97,7 +110,8 @@ actual fun Korender(
             val data = GLData()
             data.swapInterval = 0
             data.majorVersion = 3
-            data.minorVersion = 0
+            data.minorVersion = 3
+            data.profile = GLData.Profile.COMPATIBILITY
             // TODO
             data.samples = 1
 
@@ -109,8 +123,8 @@ actual fun Korender(
                     })
 
                 override fun initGL() {
-                    println("OpenGL version: ${effective.majorVersion}.${effective.minorVersion} (Profile: ${effective.profile})")
                     createCapabilities()
+                    println("OpenGL Vendor:[${glGetString(GL_VENDOR)}] Renderer:[${glGetString(GL_RENDERER)}] Version:[${glGetString(GL_VERSION)}] Effective context version: [${effective.majorVersion}.${effective.minorVersion} (Profile: ${effective.profile})]")
 
                     val async = object : AsyncContext {
                         override val appResourceLoader = appResourceLoader
@@ -124,6 +138,11 @@ actual fun Korender(
                         async,
                         block
                     )
+
+                    if (Platform.get() == Platform.MACOSX) {
+                        setSize(size.width + 1, size.height)
+                        validate()
+                    }
                 }
 
                 override fun paintGL() {
@@ -132,7 +151,7 @@ actual fun Korender(
                 }
             }
 
-            fun Int.toButton() : TouchEvent.Button = when(this) {
+            fun Int.toButton(): TouchEvent.Button = when (this) {
                 BUTTON1 -> TouchEvent.Button.LEFT
                 BUTTON3 -> TouchEvent.Button.RIGHT
                 else -> TouchEvent.Button.NONE
@@ -156,6 +175,7 @@ actual fun Korender(
                 override fun keyPressed(e: KeyEvent) {
                     sendKey(com.zakgof.korender.KeyEvent.Type.DOWN, e.keyChar.toString()) // TODO all keycodes
                 }
+
                 override fun keyReleased(e: KeyEvent) {
                     sendKey(com.zakgof.korender.KeyEvent.Type.UP, e.keyChar.toString()) // TODO all keycodes
                 }
@@ -181,6 +201,9 @@ internal actual object Platform {
     actual val target = KorenderContext.TargetPlatform.Desktop
 
     actual fun nanoTime() = System.nanoTime()
+
+    internal actual fun createImage(width: Int, height: Int, format: Image.Format) =
+        image(BufferedImage(width, height, format.toBufferedImageType()))
 
     internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage> =
         CompletableDeferred(image(ImageIO.read(ByteArrayInputStream(bytes))))
@@ -271,25 +294,19 @@ internal actual object Platform {
             BufferedImage.TYPE_USHORT_GRAY -> Image.Format.Gray16
             else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
         }
-        return JvmImage(
-            bufferedImage.raster,
+        return InternalImage(
             bufferedImage.width,
             bufferedImage.height,
             bytes,
             format
         )
     }
-
 }
 
-internal class JvmImage(
-    private val raster: Raster,
-    override val width: Int,
-    override val height: Int,
-    override val bytes: NativeByteBuffer,
-    override val format: Image.Format
-) : InternalImage {
-
-
+fun Image.Format.toBufferedImageType() = when (this) {
+    Image.Format.RGB -> BufferedImage.TYPE_3BYTE_BGR
+    Image.Format.RGBA -> BufferedImage.TYPE_4BYTE_ABGR
+    Image.Format.Gray -> BufferedImage.TYPE_BYTE_GRAY
+    Image.Format.Gray16 -> BufferedImage.TYPE_USHORT_GRAY
 }
 

@@ -10,12 +10,12 @@ internal class FrameInfoManager() {
     private var frameNumber = 0L
     private var prevFrameNano: Long = Platform.nanoTime()
     private val frames = ArrayDeque<Long>()
-    fun frame(): FrameInfo {
+    fun frame(pending: Int): FrameInfo {
         val now = Platform.nanoTime()
         val frameTime = now - prevFrameNano
         frames.add(frameTime)
         val frameInfo =
-            FrameInfo(frameNumber, (now - startNanos) * 1e-9f, frameTime * 1e-9f, calcAverageFps())
+            FrameInfo(frameNumber, (now - startNanos) * 1e-9f, frameTime * 1e-9f, calcAverageFps(), pending)
         prevFrameNano = now
         frameNumber++
         return frameInfo

@@ -1,9 +1,10 @@
 package com.zakgof.korender.impl.material
 
-class ShaderDebugInfo(val file: String) {
+class ShaderDebugInfo {
 
     private val PATTERN1 = Regex("^(\\d+)\\((\\d+)\\).+$")
     private val PATTERN2 = Regex("^.+: (\\d+):(\\d+):.+$")
+    private val PATTERN3 = Regex("(\\d+):(\\d+):.+$")
 
     private val fileStack = mutableListOf<String>()
     private val srcLineStack = mutableListOf<Int>()
@@ -11,11 +12,13 @@ class ShaderDebugInfo(val file: String) {
     private var srcLine = -1
 
     fun decorate(log: String): String {
-//        return log.lines().flatMap {
-//            listOf(it, debug(it))
-//        }.joinToString("\n")
-
         return log
+        return log.lines()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .flatMap {
+                listOf(it, debug(it))
+            }.joinToString("\n") { "       $it" }
     }
 
     private fun debug(line: String): String {
@@ -23,14 +26,17 @@ class ShaderDebugInfo(val file: String) {
         if (matcher == null) {
             matcher = PATTERN2.find(line)
         }
+        if (matcher == null) {
+            matcher = PATTERN3.find(line)
+        }
         if (matcher != null) {
             // int col = Integer.parseInt(matcher.group(1));
             val row = matcher.groups[2]!!.value.toInt()
             val entry = lines[row - 1]
-            val info = entry.file + ":" + entry.srclineNo + "   " + entry.line
+            val info = "[${entry.file}:${entry.srclineNo}]  ${entry.line}"
             return info
         }
-        return "[Error parsing shader log]"
+        return ""
     }
 
     fun start(fname: String) {

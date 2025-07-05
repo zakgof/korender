@@ -6,13 +6,11 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.math.ColorRGB
-import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.z
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun SkyExample() {
     Korender(appResourceLoader = { Res.readBytes(it) }) {
@@ -23,13 +21,9 @@ fun SkyExample() {
             camera = freeCamera.camera(projection, width, height, 0f)
             Sky(starrySky())
             Renderable(
-                standart {
-                    baseColorTexture = texture("texture/asphalt-albedo.jpg")
-                    normalTexture = texture("texture/asphalt-normal.jpg")
-                    triplanarScale = 0.1f
-                    pbr.metallic = 0.2f
-                    pbr.roughness = 0.9f
-                },
+                base(colorTexture = texture("texture/asphalt-albedo.jpg"), metallicFactor = 0.2f, roughnessFactor = 0.9f),
+                normalTexture(normalTexture = texture("texture/asphalt-normal.jpg")),
+                triplanar(0.1f),
                 mesh = cube(1f),
                 transform = scale(2000f, 1f, 2000f)
             )

@@ -5,15 +5,13 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.context.FrameContext
-import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.floor
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun EffectsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     camera = camera(Vec3(0f, 5f, 30f), -1.z, 1.y)
@@ -25,7 +23,7 @@ fun EffectsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         smokeDemo()
         fireballDemo()
 
-        Filter(water(), fastCloudSky())
+        PostProcess(water(), fastCloudSky())
         Gui {
             Column {
                 Filler()
@@ -36,11 +34,11 @@ fun EffectsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 }
 
 private fun FrameContext.fireDemo() = Billboard(
-    fire {
-        yscale = 10f
-        xscale = 2f
-    },
-    position = (-5).x + 5.y,
+    billboard(
+        position = (-5).x + 5.y,
+        scale = Vec2(2f, 10f)
+    ),
+    fire(),
     transparent = true
 )
 
@@ -49,13 +47,11 @@ private fun FrameContext.smokeDemo() {
     for (i in 1..n) {
         val phase = fract(frameInfo.time * 0.5f + n.toFloat() / i)
         Billboard(
-            smoke {
-                xscale = 5f * phase + 0.5f
-                yscale = 5f * phase + 0.5f
-                seed = i / n.toFloat()
-                density = 1.0f - phase
-            },
-            position = (6.0f + phase * phase * 8f + phase * 2f - 4f).y,
+            billboard(
+                position = (6.0f + phase * phase * 8f + phase * 2f - 4f).y,
+                scale = Vec2(5f * phase + 0.5f, 5f * phase + 0.5f)
+            ),
+            smoke(seed = i / n.toFloat(), density = 1.0f - phase),
             transparent = true
         )
     }
@@ -64,13 +60,12 @@ private fun FrameContext.smokeDemo() {
 private fun FrameContext.fireballDemo() {
     val phase = fract(frameInfo.time)
     Billboard(
-        fireball {
-            xscale = 8f * phase
-            yscale = 8f * phase
-            power = phase
-        },
-        transparent = true,
-        position = 5.x + 3.y
+        billboard(
+            position = 5.x + 3.y,
+            scale = Vec2(8f * phase, 8f * phase)
+        ),
+        fireball(power = phase),
+        transparent = true
     )
 }
 
