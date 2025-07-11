@@ -16,7 +16,7 @@ vec3 pluginPosition() {
     float diff;
     vec3 n;
 
-    for (int i=0; i<8; i++) {
+    for (int i=0; i<4; i++) {
         vec3 ctop = p - vcenter;
         float cl = length(ctop);
         radiantDir = ctop/cl;
@@ -26,9 +26,9 @@ vec3 pluginPosition() {
 
         diff = cl - radiant;
         float lambda = - diff * dot (n, radiantDir) / dot(n, look);
-        if (i > 0) {
-            lambda = clamp(lambda, -0.05 * radius/float(i), 1.5 * radius /float(i));
-        }
+//        if (i > 0) {
+//            lambda = clamp(lambda, -0.05 * radius/float(i), 1.5 * radius /float(i));
+//        }
 
         p = p + look * lambda;
     }

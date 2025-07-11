@@ -1,4 +1,4 @@
-package com.zakgof.korender.baker
+package com.zakgof.korender.baker.tree
 
 import com.zakgof.korender.math.FloatMath
 import com.zakgof.korender.math.Vec3

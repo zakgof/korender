@@ -1,8 +1,10 @@
-package com.zakgof.korender.baker
+package tree
 
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.baker.resources.Res
+import com.zakgof.korender.baker.tree.Metaball
+import com.zakgof.korender.baker.tree.MetaballTree
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA

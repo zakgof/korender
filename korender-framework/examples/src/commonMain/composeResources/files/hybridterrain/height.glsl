@@ -7,24 +7,18 @@ vec3 pluginTerrainCenter() {
 }
 
 int pluginTerrainTextureSize() {
-    return 8192;
+    return 512;
 }
 
 float pluginTerrainHeight(vec2 uv) {
 
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
-        return -100.0;
+        return - 256.0 * 16.0 * 0.1;
 
-    float samp = texture(heightTexture, uv).r;
+    vec4 samp = texture(heightTexture, uv);
 
-    float base = samp * 800.0;
+    float base = (samp.g * 256.0 + samp.r) * 16.0 - 256.0 * 16.0 * 0.1;
 
-    float hs = 0.0 * clamp(samp - 0.1, 0.0, 1.0);
 
-    float height =  -90.0 + base
-    +    8.0 * fbm(uv * 64.0) * hs
-    +   16.0 * fbm(uv * 16.0) * hs
-    +  512.0 * fbm(uv *  4.0) * hs * hs;
-
-    return height;
+    return base + 0.3 * fbm(uv * 256.0);
 }

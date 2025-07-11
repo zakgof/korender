@@ -1,5 +1,6 @@
 #import "!shader/lib/noise.glsl"
 
+uniform sampler2D patchTexture;
 uniform sampler2D roiTextures[2];
 uniform vec3[2] roiuvs;
 uniform int roiCount;
@@ -26,30 +27,36 @@ vec4 pluginAlbedo() {
     vec3 snow = vec3(0.9, 0.9, 0.9);
     vec3 rock = vec3(0.5, 0.4, 0.4);
 
-    float sandW = 1.0 - smoothstep(40.0, 70.0, vpos.y - 20.0 * fbm(vtex * 18.0));
-    float snowW = smoothstep(100.0, 200.0, vpos.y - 96.0 * fbm(vtex * 4.0));
-    float rockW = smoothstep(-0.45, -0.44, -vnormal.y);
-    float grassW = clamp(1.0 - sandW - rockW - snowW, 0.0, 1.0);
 
-    vec3 color = (sand * sandW +
-    snow * snowW +
-    rock * rockW +
-    grass * grassW) / (sandW + snowW + rockW + grassW);
+    vec2 uvnoise = vec2(0.01 * fbm(vtex * 4.));
+    float patchSample = texture(patchTexture, vtex + uvnoise).r * 255;
+    int patchIndex = int(patchSample);
+    float power = fract(patchSample);
 
-
-    float c = 0.25 +
-    fbm(vtex *  64.0) * 0.5 +
-    fbm(vtex * 128.0) * 0.25;
-
-    vec4 roiColor = roi(vtex);
-
-    vec4 tx = texture(sdf, vtex);
-    float v = (tx.r - 0.5) * 2.0 * 6.0 / 128.0;
-
-    vec4 finalColor = vec4(mix(color + 0.25, roiColor.rgb, roiColor.a), 1.0);
-    if (abs(v) < 0.001) {
-        finalColor = texture(road, vec2(0.5 + v / 0.001, tx.b));
+    vec3 color = sand; // 0
+    switch (patchIndex) {
+        case 1: color = vec3(0.2, 0.6, 0.3); break;
+        case 2: color = vec3(0.2, 0.7, 0.2); break;
+        case 3: color = vec3(0.3, 0.8, 0.2); break;
+        case 10: color = vec3(0.5, 0.4, 0.4); break;
+        case 20: color = vec3(0.9, 0.9, 0.9); break;
     }
 
-    return finalColor;
+    vec4 sdfSample = texture(sdf, vtex);
+    if (sdfSample.r < -0.6) {
+        color = textureGrad(road, vec2(0.5 - 0.5/0.6 * sdfSample.r, sdfSample.g * 0.1f),
+        dFdx(vtex)*0.01*0.3, dFdy(vtex)*0.01*0.3 ).rgb;
+    }
+    // color = sdfSample.rgb;
+
+    //        finalColor = texture(road, vec2(0.5 + v / 0.001, tx.b));
+    //    }
+
+    //    vec4 finalColor = vec4(mix(color + 0.25, roiColor.rgb, roiColor.a), 1.0);
+    //    if (abs(v) < 0.001) {
+    //        finalColor = texture(road, vec2(0.5 + v / 0.001, tx.b));
+    //    }
+
+
+    return vec4(color, 1.0);
 }

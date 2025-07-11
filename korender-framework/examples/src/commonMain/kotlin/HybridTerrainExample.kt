@@ -22,8 +22,8 @@ import kotlin.random.Random
 fun HybridTerrainExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-        val terrain = clipmapTerrainPrefab("terrain", 2.0f, 16, 12)
-        val heightMapLoading = loadImage("hybridterrain/base-height.jpg")
+        val terrain = clipmapTerrainPrefab("terrain", 32.0f, 24, 6)
+        val heightMapLoading = loadImage("hybridterrain/height.png")
         val fbmLoading = loadImage("!fbm.png")
 
         Frame {
@@ -64,6 +64,7 @@ private fun FrameContext.island(heightMap: Image, fbm: Image, terrain: Prefab) {
         plugin("albedo", "hybridterrain/albedo.glsl"),
         uniforms(
             "heightTexture" to texture("base-terrain", heightMap),
+            "patchTexture" to texture("hybridterrain/color.png", TextureFilter.Nearest),
             "sdf" to texture("hybridterrain/sdf.png", TextureFilter.Linear),
             "road" to texture("infcity/road.jpg")
         ),
@@ -108,8 +109,8 @@ private fun FrameContext.island(heightMap: Image, fbm: Image, terrain: Prefab) {
 
 private fun FrameContext.atmosphere() {
     Sky(fastCloudSky())
-    PostProcess(water(), fastCloudSky())
-    PostProcess(fog(color = ColorRGB(0x9BB4C8), density = 0.00003f))
+    PostProcess(water(waveScale = 3000.0f, transparency = 0.1f), fastCloudSky())
+    //PostProcess(fog(color = ColorRGB(0x9BB4C8), density = 0.00003f))
 }
 
 private fun FrameContext.gui() =
