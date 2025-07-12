@@ -22,20 +22,17 @@ fun main() {
     val rootPath = "D:\\kot\\dev\\korender\\korender-framework\\examples\\src\\commonMain\\composeResources\\files\\hybridterrain"
 
     val mountainMapa = Mapa(512)
-
-    val erosion = Erosion(mountainMapa)
-
+    Erosion(mountainMapa)
     mountainMapa.save("$rootPath\\mountain.png")
 
-    return
-
     val heightMapa = Mapa(512)
+
     val colorMapa = Mapa(512)
     val sdf = Sdf(256)
 
-    val mtCenter = seedMountain(random)
+    val mt = seedMountain(random)
     heightMapa.populate { pt ->
-        ht(pt, mtCenter)
+        ht(pt, mt, mountainMapa)
     }
 
     val cells = seedCells(random, heightMapa)
@@ -45,8 +42,8 @@ fun main() {
     }
 
     heightMapa.save2("$rootPath\\height.png")
-    colorMapa.save("D:\\p\\dev\\korender\\korender-framework\\examples\\src\\commonMain\\composeResources\\files\\hybridterrain\\color.png")
-    sdf.save("D:\\p\\dev\\korender\\korender-framework\\examples\\src\\commonMain\\composeResources\\files\\hybridterrain\\sdf.png")
+    colorMapa.save("$rootPath\\color.png")
+    sdf.save("$rootPath\\sdf.png")
 }
 
 
@@ -55,7 +52,7 @@ fun seedMountain(random: Random) =
 
 //   0.1 sea level
 //   0.11..0.13 flat
-fun ht(pt: Vec2, mtCenter: Vec2): Float {
+fun ht(pt: Vec2, mtCenter: Vec2, mountain: Mapa): Float {
 
     val phi = atan2(pt.y - 0.5f, pt.x - 0.5f)
     val radius = (pt - Vec2(0.5f, 0.5f)).length()
@@ -75,7 +72,7 @@ fun ht(pt: Vec2, mtCenter: Vec2): Float {
     val c = (pt - mtCenter).lengthSquared()
     val mtHeight = exp(-c * 16.4f) * (0.7f + 0.07f * noise2.noise(pt.x * 70f, pt.y * 70f))
 
-    return flatIsland
+    return flatIsland + mountain[(pt - mtCenter) * 2.0f + Vec2(0.5f, 0.5f)]
 }
 
 

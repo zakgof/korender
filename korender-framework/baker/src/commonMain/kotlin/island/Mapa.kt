@@ -18,7 +18,7 @@ class Mapa(val side: Int) {
     }
 
     fun toFl(pixel: Int): Float = (pixel.toFloat() + 0.5f) / side
-    fun toVec2(xx:Int, yy: Int): Vec2 = Vec2(toFl(xx), toFl(yy))
+    fun toVec2(xx: Int, yy: Int): Vec2 = Vec2(toFl(xx), toFl(yy))
 
     fun toPix(coord: Float): Int = (coord * side - 0.5f).toInt()
 
@@ -52,6 +52,8 @@ class Mapa(val side: Int) {
     }
 
     operator fun get(pt: Vec2): Float {
+        if (pt.x < 0f || pt.x > 1f || pt.y < 0f || pt.y > 1f)
+            return 0f
         val gridX = pt.x * side - 0.5f
         val gridY = pt.y * side - 0.5f
         val i = gridX.toInt().coerceIn(0, side - 1)

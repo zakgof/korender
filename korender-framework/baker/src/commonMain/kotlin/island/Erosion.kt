@@ -2,7 +2,6 @@ package island
 
 import com.zakgof.korender.math.Vec2
 import kotlin.math.exp
-import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
 
@@ -14,15 +13,18 @@ class Erosion(val map: Mapa, seed: Int = 0) {
 
     init {
         initialize()
-        (0 until 100000).forEach { _ ->
+        (0 until 60000).forEach { _ ->
             runDroplet()
         }
     }
 
     fun initialize() {
         map.populate { pt ->
-            exp(-12f * (pt - Vec2(0.5f, 0.5f)).lengthSquared()) +
-                    0.1f * noise2.noise(pt.x * 16f, pt.y * 16f)
+            0.4f * exp(-24f * (pt - Vec2(0.5f, 0.5f)).lengthSquared()) *
+                    (1f +
+                    0.1f * noise2.noise(pt.x * 4f, pt.y * 4f) +
+                    0.02f * noise2.noise(pt.x * 16f, pt.y * 16f) +
+                    0.005f * noise2.noise(pt.x * 64f, pt.y * 64f))
         }
     }
 
@@ -33,23 +35,19 @@ class Erosion(val map: Mapa, seed: Int = 0) {
             1f,
             0f
         )
-        do {
-            applyDroplet(droplet)
-        } while (updateDroplet(droplet))
+        while (applyDroplet(droplet)) {}
     }
 
-    private fun applyDroplet(droplet: Droplet) {
+    private fun applyDroplet(droplet: Droplet): Boolean {
         val height = map.get(droplet.xx, droplet.yy)
         val minNeighborHeight = minNeighborHeight(droplet.xx, droplet.yy)
-        val minDelta = min((minNeighborHeight - height) * 0.9f, 0f)
-        val delta = max(-0.01f * droplet.water, minDelta)
+        val delta = min((minNeighborHeight - height) * 0.4f, 0.1f)
+        // val delta = max(-0.01f * droplet.water, minDelta)
         map.set(droplet.xx, droplet.yy, height + delta)
-    }
 
-    private fun updateDroplet(droplet: Droplet): Boolean {
         val next = neighbors(droplet.xx, droplet.yy)
             .minBy {
-                map.get(it.first, it.second) + random.nextFloat() * 0.1f
+                map.get(it.first, it.second) + random.nextFloat() * 0.06f
             }
         if (next.first == 0 || next.first == map.side - -1 || next.second == 0 || next.second == map.side - 1) {
             return false
