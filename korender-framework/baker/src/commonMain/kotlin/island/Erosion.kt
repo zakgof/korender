@@ -2,6 +2,8 @@ package island
 
 import com.zakgof.korender.math.Vec2
 import kotlin.math.exp
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.random.Random
 
 
@@ -25,51 +27,64 @@ class Erosion(val map: Mapa, seed: Int = 0) {
     }
 
     fun runDroplet() {
-        val position = Vec2(random.nextFloat(), random.nextFloat())
-        val droplet = Droplet(position, 1f, 0f)
+        val droplet = Droplet(
+            island.random.nextInt(map.side),
+            island.random.nextInt(map.side),
+            1f,
+            0f
+        )
         do {
             applyDroplet(droplet)
         } while (updateDroplet(droplet))
     }
 
     private fun applyDroplet(droplet: Droplet) {
-        val radius = droplet.water * 0.003f
-        val pixels = 0 // (radius * map.side * 3).toInt()
-        val basex = map.toPix(droplet.position.x)
-        val basey = map.toPix(droplet.position.y)
-
-        val maxDelta = map.gradient(droplet.position).length() * 0.5f / map.side
-        val delta = (-droplet.water * 0.01f).coerceIn(-maxDelta, maxDelta)
-
-        for (xx in basex - pixels..basex + pixels) {
-            for (yy in basey - pixels..basey + pixels) {
-                if (xx >= 0 && xx < map.side && yy >= 0 && yy < map.side) {
-                    val p = map.toVec2(xx, yy)
-                    val w = exp(-(droplet.position - p).lengthSquared() / (4f * radius * radius))
-                    val diff = delta * w
-                    map.set(xx, yy, map.get(xx, yy) + diff)
-                }
-            }
-        }
+        val height = map.get(droplet.xx, droplet.yy)
+        val minNeighborHeight = minNeighborHeight(droplet.xx, droplet.yy)
+        val minDelta = min((minNeighborHeight - height) * 0.9f, 0f)
+        val delta = max(-0.01f * droplet.water, minDelta)
+        map.set(droplet.xx, droplet.yy, height + delta)
     }
 
     private fun updateDroplet(droplet: Droplet): Boolean {
-        val gradient = map.gradient(droplet.position)
-        if (gradient.lengthSquared() < 0.5f)
-            return false // pit
-
-        droplet.position -= gradient.normalize() * (1f / map.side)
+        val next = neighbors(droplet.xx, droplet.yy)
+            .minBy {
+                map.get(it.first, it.second) + random.nextFloat() * 0.1f
+            }
+        if (next.first == 0 || next.first == map.side - -1 || next.second == 0 || next.second == map.side - 1) {
+            return false
+        }
         droplet.water -= 0.01f
+        droplet.xx = next.first
+        droplet.yy = next.second
 
         // println("Droplet ${droplet.position}  water ${droplet.water}")
 
-        return (droplet.position.x >= 0f && droplet.position.x <= 1f &&
-                droplet.position.y >= 0f && droplet.position.y <= 1f &&
-                droplet.water > 0f)
+        return droplet.water > 0f
     }
 
+
+    private fun minNeighborHeight(xx: Int, yy: Int) =
+        neighbors(xx, yy)
+            .minOf { map.get(it.first, it.second) }
+
+
+    private fun neighbors(xx: Int, yy: Int): List<Pair<Int, Int>> = listOf(
+        xx - 1 to yy,
+        xx + 1 to yy,
+        xx to yy - 1,
+        xx to yy + 1
+    ).filter { it.first >= 0 && it.first < map.side && it.second >= 0 && it.second < map.side }
+
+
+//    private fun neighbors(xx: Int, yy: Int): List<Pair<Int, Int>> =
+//        (xx - 1..xx + 1).flatMap { x ->
+//            (yy - 1..yy + 1).map { y -> x to y }
+//        }.filter { (it.first != xx || it.second != yy) && it.first >= 0 && it.first < map.side && it.second >= 0 && it.second < map.side }
+
     private class Droplet(
-        var position: Vec2,
+        var xx: Int,
+        var yy: Int,
         var water: Float,
         var deposit: Float
     )

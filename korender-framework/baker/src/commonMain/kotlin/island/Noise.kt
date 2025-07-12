@@ -55,12 +55,12 @@ class Perlin2D(seed: Int = 0) {
     }
 
     // Fade function (smoothstep: 6t^5 - 15t^4 + 10t^3)
-    private inline fun fade(t: Float): Float {
+    private fun fade(t: Float): Float {
         return t * t * t * (t * (t * 6 - 15) + 10)
     }
 
     // Linear interpolation
-    private inline fun lerp(a: Float, b: Float, t: Float): Float {
+    private fun lerp(a: Float, b: Float, t: Float): Float {
         return a + t * (b - a)
     }
 
