@@ -3,7 +3,6 @@ package island
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Vec2
 import kotlin.math.atan2
-import kotlin.math.exp
 import kotlin.random.Random
 
 // 0.1 - water
@@ -26,7 +25,6 @@ fun main() {
     mountainMapa.save("$rootPath\\mountain.png")
 
     val heightMapa = Mapa(512)
-
     val colorMapa = Mapa(512)
     val sdf = Sdf(256)
 
@@ -70,7 +68,6 @@ fun ht(pt: Vec2, mtCenter: Vec2, mountain: Mapa): Float {
                 ))
 
     val c = (pt - mtCenter).lengthSquared()
-    val mtHeight = exp(-c * 16.4f) * (0.7f + 0.07f * noise2.noise(pt.x * 70f, pt.y * 70f))
 
     return flatIsland + mountain[(pt - mtCenter) * 2.0f + Vec2(0.5f, 0.5f)]
 }
@@ -86,7 +83,7 @@ fun color(pt: Vec2, heightMapa: Mapa, cells: Set<Cell>): Float {
     val h = heightMapa[pt]
     if (h < 0.11f)
         return 0.p
-    if (h > 0.230f)
+    if (h > 0.160f)
         return 20.p
 
     val cell = cells.firstOrNull { it.ptIn(pt) }
@@ -100,7 +97,7 @@ fun seedCells(random: Random, heightMapa: Mapa): Set<Cell> {
     val cellz = 10
     val nodes = grid(cellz).filter {
         val h = heightMapa[Vec2(it.first.toFloat() / cellz, it.second.toFloat() / cellz)]
-        h > 0.11f && h < 0.13f
+        h > 0.113f && h < 0.155f
     }.toSet()
     return nodes.filter {
         nodes.contains((it.first + 1) to it.second) &&
@@ -161,10 +158,10 @@ class Cell(cellFactor: Int, xx: Int, yy: Int) {
     val color = (xx * 31 + yy * 19) % 4
 
     init {
-        val x1 = xx.toFloat() / cellFactor
-        val x2 = (xx + 1).toFloat() / cellFactor
-        val y1 = yy.toFloat() / cellFactor
-        val y2 = (yy + 1).toFloat() / cellFactor
+        val x1 = (xx.toFloat()) / cellFactor
+        val x2 = (xx.toFloat() + 1.0f) / cellFactor
+        val y1 = (yy.toFloat()) / cellFactor
+        val y2 = (yy.toFloat() + 1.0f) / cellFactor
         edges += Road(xx, xx + 1, yy, yy, steppy(x1, x2).map { perturb(Vec2(it, y1)) })
         edges += Road(xx, xx + 1, yy + 1, yy + 1, steppy(x2, x1).map { perturb(Vec2(it, y2)) })
         edges += Road(xx, xx, yy, yy + 1, steppy(y2, y1).map { perturb(Vec2(x1, it)) })

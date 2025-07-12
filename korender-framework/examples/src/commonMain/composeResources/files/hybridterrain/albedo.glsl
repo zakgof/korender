@@ -7,33 +7,23 @@ uniform int roiCount;
 
 vec4 roi(vec2 uv) {
     vec4 color = vec4(0.);
-//    for (int r=0; r<roiCount; r++) {
-//        vec3 r3 = roiuvs[r];
-//        vec2 roiuv = (uv - r3.xy) / r3.z;
-//        if (roiuv.x >= 0.0 && roiuv.x <= 1.0 && roiuv.y >= 0.0 && roiuv.y <= 1.0) {
-//            color += texture(roiTextures[r], roiuv);
-//        }
-//    }
+    //    for (int r=0; r<roiCount; r++) {
+    //        vec3 r3 = roiuvs[r];
+    //        vec2 roiuv = (uv - r3.xy) / r3.z;
+    //        if (roiuv.x >= 0.0 && roiuv.x <= 1.0 && roiuv.y >= 0.0 && roiuv.y <= 1.0) {
+    //            color += texture(roiTextures[r], roiuv);
+    //        }
+    //    }
     return color;
 }
 
 uniform sampler2D sdf;
 uniform sampler2D road;
 
-vec4 pluginAlbedo() {
 
-    vec3 sand = vec3(0.89, 0.79, 0.46) + 0.3 * sin(fbm(vtex *  64.0));
-    vec3 grass = vec3(0.2, 0.6, 0.3);
-    vec3 snow = vec3(0.9, 0.9, 0.9);
-    vec3 rock = vec3(0.5, 0.4, 0.4);
-
-
-    vec2 uvnoise = vec2(0.01 * fbm(vtex * 4.));
-    float patchSample = texture(patchTexture, vtex + uvnoise).r * 255;
-    int patchIndex = int(patchSample);
-    float power = fract(patchSample);
-
-    vec3 color = sand; // 0
+vec3 colorAtIndex(float index) {
+    int patchIndex = int(index);
+    vec3 color = vec3(0.1);
     switch (patchIndex) {
         case 1: color = vec3(0.2, 0.6, 0.3); break;
         case 2: color = vec3(0.2, 0.7, 0.2); break;
@@ -41,11 +31,50 @@ vec4 pluginAlbedo() {
         case 10: color = vec3(0.5, 0.4, 0.4); break;
         case 20: color = vec3(0.9, 0.9, 0.9); break;
     }
+    return color;
+}
+
+vec2 vogel(int sampleIndex, int numSamples, float phi) {
+    float goldenAngle = 2.39996323;
+    float sampleVal = float(sampleIndex);
+    float angle = sampleVal * goldenAngle + phi;
+    return vec2(cos(angle), sin(angle)) * sqrt(sampleVal + 0.5) / sqrt(float(numSamples));
+}
+
+vec4 pluginAlbedo() {
+
+    float centerIndex = texture(patchTexture, vtex).r * 255.0;
+
+    vec3 color = vec3(0.0);
+    float sumWeight = 0.0;
+
+    for (int i = 0; i < 4; ++i) {
+
+        vec2 offsetUV = vtex + vogel(i, 4, vtex.x * 1000. * vtex.y * 880.) * (1.0 / 512.0) * 2.0;
+
+        // Sample neighbor index
+        float neighborIndex = texture(patchTexture, offsetUV).r * 255.0;
+
+        // Weight: higher if the index is similar to center
+        float weight = 1.0 - min(abs(centerIndex - neighborIndex) / 255.0, 1.0);
+
+        // Alternatively, you can clamp to 0.5 if you prefer less cross-fade:
+        // float weight = 1.0 - smoothstep(0.0, 10.0, abs(centerIndex - neighborIndex));
+
+        // Sample the albedo
+        vec3 neighborColor = colorAtIndex(neighborIndex);
+
+        color += neighborColor * weight;
+        sumWeight += weight;
+    }
+
+    color /= sumWeight;
+
 
     vec4 sdfSample = texture(sdf, vtex);
-    if (sdfSample.r < -0.6) {
-        color = textureGrad(road, vec2(0.5 - 0.5/0.6 * sdfSample.r, sdfSample.g * 0.1f),
-        dFdx(vtex)*0.01*0.3, dFdy(vtex)*0.01*0.3 ).rgb;
+    float sdfCross = (sdfSample.r - 0.3) / (1. - 2. * 0.3);
+    if (sdfCross > 0. && sdfCross < 1. && sdfSample.b >= 1.0) {
+        color = texture(road, vec2(sdfCross, sdfSample.g * 0.05f)).rgb;
     }
     // color = sdfSample.rgb;
 

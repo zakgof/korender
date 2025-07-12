@@ -1,12 +1,14 @@
 package island
 
 import com.zakgof.korender.math.Vec2
+import org.apache.commons.math3.analysis.UnivariateFunction
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
 import kotlin.math.ceil
+import kotlin.math.sign
 import kotlin.math.sqrt
 
 class Sdf(private val reso: Int) {
@@ -15,12 +17,17 @@ class Sdf(private val reso: Int) {
         val x: PolynomialSplineFunction,
         val y: PolynomialSplineFunction,
         val maxT: Float
-    )
+    ) {
+        val dx: UnivariateFunction = x.derivative()
+        val dy: UnivariateFunction = y.derivative()
+    }
 
     private class Pt(
         val t: Float,
         val x: Float,
-        val y: Float
+        val y: Float,
+        val dx: Float,
+        val dy: Float
     )
 
     private data class Cell(
@@ -30,7 +37,8 @@ class Sdf(private val reso: Int) {
 
     private class SdfPt(
         val t: Float,
-        val d2: Float
+        val d2: Float,
+        val sign: Float
     )
 
     private val splines = mutableListOf<Spline>()
@@ -56,7 +64,13 @@ class Sdf(private val reso: Int) {
     }
 
     private fun curve(t: Float, spline: Spline) =
-        Pt(t, spline.x.value(t.toDouble()).toFloat(), spline.y.value(t.toDouble()).toFloat())
+        Pt(
+            t,
+            spline.x.value(t.toDouble()).toFloat(),
+            spline.y.value(t.toDouble()).toFloat(),
+            spline.dx.value(t.toDouble()).toFloat(),
+            spline.dy.value(t.toDouble()).toFloat()
+        )
 
     fun save(file: String) {
         val steps = 2000
@@ -90,9 +104,13 @@ class Sdf(private val reso: Int) {
                 if (c == null) {
                     pixel[0] = 255f
                     pixel[1] = 0f
+                    pixel[2] = 0f
                 } else {
-                    pixel[0] = (255f * sqrt(c.d2) / distanceScale).coerceIn(0f, 255f)
+                    // 0..distanceScale sign+ -> 0.5..1.0
+                    // 0..distanceScale sign- -> 0.5..1.0
+                    pixel[0] = (255f * (0.5f + 0.5f * c.sign * (sqrt(c.d2) / distanceScale))).coerceIn(0f, 255f)
                     pixel[1] = 255f * c.t
+                    pixel[2] = if (pixel[0] < 10f || pixel[0] > 244f) 0f else 255f
                 }
                 raster.setPixel(xx, zz, pixel)
             }
@@ -117,8 +135,8 @@ class Sdf(private val reso: Int) {
         val cellY = (cell.y + 0.5f) / reso
         val offsetX = pt.x - cellX
         val offsetY = pt.y - cellY
-
-        return SdfPt(pt.t / spline.maxT, offsetX * offsetX + offsetY * offsetY)
+        val sign = sign(offsetX * pt.dy - offsetY * pt.dx)
+        return SdfPt(pt.t / spline.maxT, offsetX * offsetX + offsetY * offsetY, sign)
     }
 }
 

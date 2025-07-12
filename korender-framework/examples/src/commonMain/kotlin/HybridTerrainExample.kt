@@ -9,13 +9,13 @@ import com.zakgof.korender.Prefab
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.math.ColorRGB
-import com.zakgof.korender.math.Vec2
+import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.math.roundToInt
-import kotlin.random.Random
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
@@ -70,7 +70,22 @@ private fun FrameContext.island(heightMap: Image, fbm: Image, terrain: Prefab) {
         ),
         prefab = terrain
     )
-//    for (xx in -10..10) {
+
+
+    Renderable(
+        base(color = ColorRGBA.Green),
+        mesh = cylinderSide(10000f, 50f),
+        transform = translate(Vec3(0.0f, -0.2f, 0.0f) * 32f * 512f)
+    )
+    Renderable(
+        base(color = ColorRGBA.Red),
+        mesh = cylinderSide(10000f, 50f),
+        transform = translate(Vec3(-0.5f + 0.25f, -0.2f, -0.5f + 0.35f) * 32f * 512f)
+    )
+
+
+
+    //    for (xx in -10..10) {
 //        for (zz in -10..10) {
 //            Renderable(
 //                base(color = ColorRGBA.Red),
@@ -81,30 +96,30 @@ private fun FrameContext.island(heightMap: Image, fbm: Image, terrain: Prefab) {
 //    }
     fun cubTex(prefix: String) = cubeTexture(CubeTextureSide.entries.associateWith { "hybridterrain/tree/$prefix-${it.toString().lowercase()}.jpg" })
 
-    Billboard(
-        billboard(),
-        base(metallicFactor = 0f, roughnessFactor = 0.9f),
-        radiant(
-            radiantTexture = cubTex("radiant"),
-            radiantNormalTexture = cubTex("radiant-normal"),
-            colorTexture = cubTex("albedo"),
-            normalTexture = cubTex("normal")
-        ),
-        instancing = billboardInstancing(
-            id = "trees",
-            dynamic = false,
-            count = 2000
-        ) {
-            (0 until 2000).forEach {
-                val r = Random(it)
-                val x = r.nextFloat() * 5000f - 600f
-                val z = r.nextFloat() * 3000f - 1610f
-                Instance(
-                    pos = Vec3(x, height(heightMap, fbm, x, z) + 50f, z),
-                    scale = Vec2(100.0f, 100.0f)
-                )
-            }
-        })
+//    Billboard(
+//        billboard(),
+//        base(metallicFactor = 0f, roughnessFactor = 0.9f),
+//        radiant(
+//            radiantTexture = cubTex("radiant"),
+//            radiantNormalTexture = cubTex("radiant-normal"),
+//            colorTexture = cubTex("albedo"),
+//            normalTexture = cubTex("normal")
+//        ),
+//        instancing = billboardInstancing(
+//            id = "trees",
+//            dynamic = false,
+//            count = 2000
+//        ) {
+//            (0 until 2000).forEach {
+//                val r = Random(it)
+//                val x = r.nextFloat() * 5000f - 600f
+//                val z = r.nextFloat() * 3000f - 1610f
+//                Instance(
+//                    pos = Vec3(x, height(heightMap, fbm, x, z) + 50f, z),
+//                    scale = Vec2(100.0f, 100.0f)
+//                )
+//            }
+//        })
 }
 
 private fun FrameContext.atmosphere() {

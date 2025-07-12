@@ -17,7 +17,7 @@ class Mapa(val side: Int) {
         }
     }
 
-    fun toFl(pixel: Int): Float = (pixel.toFloat() + 0.5f) / side
+    fun toFl(pixel: Int): Float = (pixel + 0.5f) / side
     fun toVec2(xx: Int, yy: Int): Vec2 = Vec2(toFl(xx), toFl(yy))
 
     fun toPix(coord: Float): Int = (coord * side - 0.5f).toInt()
@@ -28,7 +28,7 @@ class Mapa(val side: Int) {
         val pixel = IntArray(3)
         for (xx in 0 until side) {
             for (zz in 0 until side) {
-                val h = (points[xx + zz * side] * 65535).toInt()
+                val h = (get(xx, zz) * 65535).toInt()
                 pixel[0] = h and 255
                 pixel[1] = h shr 8
                 raster.setPixel(xx, zz, pixel)
@@ -43,7 +43,7 @@ class Mapa(val side: Int) {
         val raster = bi.raster
         for (xx in 0 until side) {
             for (zz in 0 until side) {
-                val h = (points[xx + zz * side] * 255).toInt().coerceIn(0, 255)
+                val h = (get(xx, zz) * 255).toInt().coerceIn(0, 255)
                 raster.setSample(xx, zz, 0, h)
             }
         }
