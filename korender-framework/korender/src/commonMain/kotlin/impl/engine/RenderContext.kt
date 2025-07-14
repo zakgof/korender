@@ -13,7 +13,6 @@ import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import impl.engine.ImmediatelyFreeRetentionPolicy
 
 internal class RenderContext(var width: Int, var height: Int) {
 

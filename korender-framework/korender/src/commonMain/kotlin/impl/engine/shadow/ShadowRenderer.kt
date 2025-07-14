@@ -7,6 +7,7 @@ import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.FrameBufferDeclaration
+import com.zakgof.korender.impl.engine.ImmediatelyFreeRetentionPolicy
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.Scene
 import com.zakgof.korender.impl.engine.TransientProperty
@@ -31,7 +32,6 @@ import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
-import impl.engine.ImmediatelyFreeRetentionPolicy
 import kotlin.math.ceil
 import kotlin.math.round
 
