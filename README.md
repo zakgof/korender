@@ -1,5 +1,5 @@
 # ![Korender](doc/korender32.png) korender
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.zakgof/korender/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.zakgof/korender)
+[![Maven Central](https://img.shields.io/badge/Maven_Central-0.5.1-8e27c7.svg?logo=mavenCentral)](https://central.sonatype.com/artifact/com.github.zakgof/korender/0.5.1)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.2.0-278ec7.svg?logo=kotlin)](http://kotlinlang.org)
 
 ![wasm](https://img.shields.io/badge/wasm-624FE8)
@@ -85,7 +85,7 @@ Korender {
 #### From scratch
 
 - Generate a new KMP application using [Kotlin Multiplatform Wizard](https://kmp.jetbrains.com/). Select Android, Desktop and WASM platforms.
-- Add Korender dependency `com.github.zakgof:korender:0.5.0`
+- Add Korender dependency `com.github.zakgof:korender:0.5.1`
 - Add the above code to commonMain
 - Run on desktop: `./gradlew composeApp:run`
 
