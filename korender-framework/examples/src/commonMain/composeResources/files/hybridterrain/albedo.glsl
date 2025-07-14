@@ -20,15 +20,21 @@ vec4 roi(vec2 uv) {
 uniform sampler2D sdf;
 uniform sampler2D road;
 
+uniform sampler2D grassTexture;
 
-vec3 colorAtIndex(float index) {
+
+vec3 colorAtIndex(float index, vec2 uv) {
     int patchIndex = int(index);
     vec3 color = vec3(0.1);
     switch (patchIndex) {
+        case 0: color = vec3(0.796, 0.741, 0.576) + vec3(fbm(uv * 35.0) * 0.2);
+            break;
+
         case 1: color = vec3(0.2, 0.6, 0.3); break;
         case 2: color = vec3(0.2, 0.7, 0.2); break;
         case 3: color = vec3(0.3, 0.8, 0.2); break;
-        case 10: color = vec3(0.5, 0.4, 0.4); break;
+        case 10: color = texture(grassTexture, uv * 8.0).rgb + vec3(0.1, 0.4, 0.0) * fbm(uv * 3.0);
+            break;
         case 20: color = vec3(0.9, 0.9, 0.9); break;
     }
     return color;
@@ -62,7 +68,7 @@ vec4 pluginAlbedo() {
         // float weight = 1.0 - smoothstep(0.0, 10.0, abs(centerIndex - neighborIndex));
 
         // Sample the albedo
-        vec3 neighborColor = colorAtIndex(neighborIndex);
+        vec3 neighborColor = colorAtIndex(neighborIndex, vtex);
 
         color += neighborColor * weight;
         sumWeight += weight;

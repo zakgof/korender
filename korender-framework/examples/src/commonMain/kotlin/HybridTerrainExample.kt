@@ -9,8 +9,6 @@ import com.zakgof.korender.Prefab
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.math.ColorRGB
-import com.zakgof.korender.math.ColorRGBA
-import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -66,23 +64,11 @@ private fun FrameContext.island(heightMap: Image, fbm: Image, terrain: Prefab) {
             "heightTexture" to texture("base-terrain", heightMap),
             "patchTexture" to texture("hybridterrain/color.png", TextureFilter.Nearest),
             "sdf" to texture("hybridterrain/sdf.png", TextureFilter.Linear),
-            "road" to texture("infcity/road.jpg")
+            "road" to texture("infcity/road.jpg"),
+            "grassTexture" to texture("texture/grass.jpg")
         ),
         prefab = terrain
     )
-
-
-    Renderable(
-        base(color = ColorRGBA.Green),
-        mesh = cylinderSide(10000f, 50f),
-        transform = translate(Vec3(0.0f, -0.2f, 0.0f) * 32f * 512f)
-    )
-    Renderable(
-        base(color = ColorRGBA.Red),
-        mesh = cylinderSide(10000f, 50f),
-        transform = translate(Vec3(-0.5f + 0.25f, -0.2f, -0.5f + 0.35f) * 32f * 512f)
-    )
-
 
 
     //    for (xx in -10..10) {
