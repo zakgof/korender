@@ -12,7 +12,7 @@ plugins {
     id("signing")
 }
 
-val libraryVersion = "0.5.0"
+val libraryVersion = "0.5.1"
 val libraryGroup = "com.github.zakgof"
 
 compose.resources {
@@ -22,6 +22,8 @@ compose.resources {
 }
 
 kotlin {
+
+    jvmToolchain(17)
 
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")

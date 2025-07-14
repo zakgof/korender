@@ -4,8 +4,8 @@ import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.context.RoiTexturesContext
+import com.zakgof.korender.impl.engine.Retentionable
 import com.zakgof.korender.math.Vec3
-import impl.engine.Retentionable
 
 internal class InternalPostShadingEffect(
     val name: String,

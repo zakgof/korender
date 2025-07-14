@@ -18,7 +18,6 @@ import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
-import impl.engine.Retentionable
 
 internal class SceneDeclaration {
     val pointLights = mutableListOf<PointLightDeclaration>()

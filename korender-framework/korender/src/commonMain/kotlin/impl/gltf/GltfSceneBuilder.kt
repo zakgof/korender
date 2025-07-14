@@ -1,3 +1,5 @@
+package com.zakgof.korender.impl.gltf
+
 import com.zakgof.korender.Attributes
 import com.zakgof.korender.Attributes.MODEL0
 import com.zakgof.korender.Attributes.MODEL1
@@ -21,9 +23,6 @@ import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
 import com.zakgof.korender.impl.gl.GLConstants
 import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.impl.glgpu.toGL
-import com.zakgof.korender.impl.gltf.Gltf
-import com.zakgof.korender.impl.gltf.GltfLoaded
-import com.zakgof.korender.impl.gltf.elementComponentSize
 import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.math.ColorRGB

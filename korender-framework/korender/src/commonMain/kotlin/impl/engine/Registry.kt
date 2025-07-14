@@ -2,11 +2,6 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.RetentionPolicy
-import impl.engine.ImmediatelyFreeRetentionPolicy
-import impl.engine.KeepForeverRetentionPolicy
-import impl.engine.Retentionable
-import impl.engine.TimeRetentionPolicy
-import impl.engine.UntilGenerationRetentionPolicy
 
 internal class Registry<D : Retentionable, R : AutoCloseable>(
     private val factory: (D) -> R?

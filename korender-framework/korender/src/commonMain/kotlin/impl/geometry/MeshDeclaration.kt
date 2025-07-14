@@ -21,9 +21,9 @@ import com.zakgof.korender.impl.engine.BillboardInstance
 import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.MeshInstance
+import com.zakgof.korender.impl.engine.Retentionable
 import com.zakgof.korender.impl.font.Font
 import com.zakgof.korender.impl.material.TextureLinkDeclaration
-import impl.engine.Retentionable
 
 internal interface InternalMeshDeclaration : MeshDeclaration, Retentionable
 

@@ -11,13 +11,13 @@ import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.impl.buffer.NativeFloatBuffer
 import com.zakgof.korender.impl.engine.Loader
+import com.zakgof.korender.impl.engine.Retentionable
 import com.zakgof.korender.impl.gl.GLConstants.GL_FLOAT
 import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA
 import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA32F
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.image.InternalImage
-import impl.engine.Retentionable
 
 object NotYetLoadedTexture
 

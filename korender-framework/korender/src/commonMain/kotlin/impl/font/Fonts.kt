@@ -3,9 +3,9 @@ package com.zakgof.korender.impl.font
 import com.zakgof.korender.Platform
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.impl.engine.Loader
+import com.zakgof.korender.impl.engine.Retentionable
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.image.InternalImage
-import impl.engine.Retentionable
 
 
 internal object Fonts {
