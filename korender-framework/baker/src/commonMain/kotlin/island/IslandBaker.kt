@@ -2,6 +2,11 @@ package island
 
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Vec2
+import island.pixelmap.ChannelMap
+import island.pixelmap.Float2PixelMap
+import island.pixelmap.FloatPixelMap
+import island.pixelmap.channel
+import island.pixelmap.channels
 import kotlin.math.atan2
 import kotlin.random.Random
 
@@ -20,27 +25,26 @@ fun main() {
 
     val rootPath = "D:\\p\\dev\\korender\\korender-framework\\examples\\src\\commonMain\\composeResources\\files\\hybridterrain"
 
-    val mountainMapa = Mapa(512)
-    Erosion(mountainMapa)
-    mountainMapa.save("$rootPath\\mountain.png")
+    val mountainMap = FloatPixelMap(512)
+    Erosion(mountainMap)
 
-    val heightMapa = Mapa(512)
-    val colorMapa = Mapa(512)
+    val heightMap = Float2PixelMap(512)
+    val colorMap = ChannelMap(512)
     val sdf = Sdf(256)
 
     val mt = seedMountain(random)
-    heightMapa.populate { pt ->
-        ht(pt, mt, mountainMapa)
+    heightMap.populate { pt ->
+        ht(pt, mt, mountainMap)
     }
 
-    val cells = seedCells(random, heightMapa)
+    val cells = seedCells(heightMap)
     fillRoads(cells, sdf)
-    colorMapa.populate { pt ->
-        color(pt, heightMapa, cells)
+    colorMap.populate { pt ->
+        color(pt, heightMap, cells)
     }
 
-    heightMapa.save2("$rootPath\\height.png")
-    colorMapa.save("$rootPath\\color.png")
+    heightMap.save("$rootPath\\height.png")
+    colorMap.save("$rootPath\\color.png")
     sdf.save("$rootPath\\sdf.png")
 }
 
@@ -50,7 +54,7 @@ fun seedMountain(random: Random) =
 
 //   0.1 sea level
 //   0.11..0.13 flat
-fun ht(pt: Vec2, mtCenter: Vec2, mountain: Mapa): Float {
+fun ht(pt: Vec2, mtCenter: Vec2, mountain: FloatPixelMap): Float {
 
     val phi = atan2(pt.y - 0.5f, pt.x - 0.5f)
     val radius = (pt - Vec2(0.5f, 0.5f)).length()
@@ -78,25 +82,28 @@ private fun smoothstep(p1: Float, p2: Float, x: Float): Float {
     return (t * t * t * t * t) - 5f * (t * t * t * t) + 5f * (t * t * t)
 }
 
-fun color(pt: Vec2, heightMapa: Mapa, cells: Set<Cell>): Float {
+fun color(pt: Vec2, heightMap: FloatPixelMap, cells: Set<Cell>): FloatArray {
 
-    val h = heightMapa[pt]
-    if (h < 0.11f)
-        return 0.p
-    if (h > 0.160f)
-        return 20.p
+    val h = heightMap[pt]
+
+    if (h <= 0.11)
+        return channels(0, 1, smoothstep(0.109f, 0.110f, h))
+
+    if (h >= 0.15)
+        return channels(1, 2, smoothstep(0.145f, 0.150f, h))
 
     val cell = cells.firstOrNull { it.ptIn(pt) }
     if (cell != null)
-        return (1 + cell.color).p
+        return channel(3, 1f)
 
-    return 10.p
+    return channel(1, 1f)
 }
 
-fun seedCells(random: Random, heightMapa: Mapa): Set<Cell> {
+
+fun seedCells(heightMap: FloatPixelMap): Set<Cell> {
     val cellz = 10
     val nodes = grid(cellz).filter {
-        val h = heightMapa[Vec2(it.first.toFloat() / cellz, it.second.toFloat() / cellz)]
+        val h = heightMap[Vec2(it.first.toFloat() / cellz, it.second.toFloat() / cellz)]
         h > 0.113f && h < 0.155f
     }.toSet()
     return nodes.filter {

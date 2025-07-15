@@ -62,7 +62,7 @@ private fun FrameContext.island(heightMap: Image, fbm: Image, terrain: Prefab) {
         plugin("albedo", "hybridterrain/albedo.glsl"),
         uniforms(
             "heightTexture" to texture("base-terrain", heightMap),
-            "patchTexture" to texture("hybridterrain/color.png", TextureFilter.Nearest),
+            "patchTexture" to texture("hybridterrain/color.png", TextureFilter.Linear),
             "sdf" to texture("hybridterrain/sdf.png", TextureFilter.Linear),
             "road" to texture("infcity/road.jpg"),
             "grassTexture" to texture("texture/grass.jpg")

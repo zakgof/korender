@@ -1,12 +1,13 @@
 package island
 
 import com.zakgof.korender.math.Vec2
+import island.pixelmap.FloatPixelMap
 import kotlin.math.exp
 import kotlin.math.min
 import kotlin.random.Random
 
 
-class Erosion(val map: Mapa, seed: Int = 0) {
+class Erosion(val map: FloatPixelMap, seed: Int = 0) {
 
     val random = Random(seed)
     val noise2 = Perlin2D(seed)
