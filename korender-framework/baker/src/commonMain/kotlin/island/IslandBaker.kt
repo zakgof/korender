@@ -1,22 +1,26 @@
 package island
 
+import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.impl.buffer.put
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Vec2
+import com.zakgof.korender.math.Vec3
 import island.pixelmap.ChannelMap
 import island.pixelmap.Float2PixelMap
 import island.pixelmap.FloatPixelMap
 import island.pixelmap.channel
 import island.pixelmap.channels
+import java.io.FileOutputStream
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import kotlin.math.atan2
 import kotlin.random.Random
 
 // 0.1 - water
 // 0.2 - flat island
 
-private val Int.p: Float
-    get() = (this.toFloat() + 0.5f) / 255f
 
-val seed = 7
+const val seed = 7
 val noise1 = Perlin1D(seed)
 val noise2 = Perlin2D(seed)
 val random = Random(seed)
@@ -39,6 +43,10 @@ fun main() {
 
     val cells = seedCells(heightMap)
     fillRoads(cells, sdf)
+
+    val blocks = cells.map { it.toBlock() }
+    val buildings = seedBuildings(blocks)
+
     colorMap.populate { pt ->
         color(pt, heightMap, cells)
     }
@@ -46,8 +54,9 @@ fun main() {
     heightMap.save("$rootPath\\height.png")
     colorMap.save("$rootPath\\color.png")
     sdf.save("$rootPath\\sdf.png")
-}
 
+    save(buildings, "$rootPath\\buildings.bin")
+}
 
 fun seedMountain(random: Random) =
     Vec2(0.3f + 0.4f * random.nextFloat(), 0.3f + 0.4f * random.nextFloat())
@@ -99,9 +108,8 @@ fun color(pt: Vec2, heightMap: FloatPixelMap, cells: Set<Cell>): FloatArray {
     return channel(1, 1f)
 }
 
-
 fun seedCells(heightMap: FloatPixelMap): Set<Cell> {
-    val cellz = 10
+    val cellz = 16
     val nodes = grid(cellz).filter {
         val h = heightMap[Vec2(it.first.toFloat() / cellz, it.second.toFloat() / cellz)]
         h > 0.113f && h < 0.155f
@@ -125,7 +133,7 @@ private fun fillRoads(cells: Set<Cell>, sdf: Sdf) {
 
 private fun perturb(p: Vec2): Vec2 {
     val noiseFreq = 5f
-    val noiseAmp = 0.035f
+    val noiseAmp = 0.015f
     val xw = p.x + noiseAmp * noise2.noise(p.x * noiseFreq, p.y * noiseFreq)
     val zw = p.y + noiseAmp * noise2.noise(p.x * noiseFreq + 16f, p.y * 10f + 16f)
     return Vec2(xw, zw)
@@ -160,15 +168,14 @@ class Road(val xmin: Int, val xmax: Int, val ymin: Int, val ymax: Int, val waypo
 
 class Cell(cellFactor: Int, xx: Int, yy: Int) {
 
+    val x1 = (xx.toFloat()) / cellFactor
+    val x2 = (xx.toFloat() + 1.0f) / cellFactor
+    val y1 = (yy.toFloat()) / cellFactor
+    val y2 = (yy.toFloat() + 1.0f) / cellFactor
+
     val edges = mutableListOf<Road>()
 
-    val color = (xx * 31 + yy * 19) % 4
-
     init {
-        val x1 = (xx.toFloat()) / cellFactor
-        val x2 = (xx.toFloat() + 1.0f) / cellFactor
-        val y1 = (yy.toFloat()) / cellFactor
-        val y2 = (yy.toFloat() + 1.0f) / cellFactor
         edges += Road(xx, xx + 1, yy, yy, steppy(x1, x2).map { perturb(Vec2(it, y1)) })
         edges += Road(xx, xx + 1, yy + 1, yy + 1, steppy(x2, x1).map { perturb(Vec2(it, y2)) })
         edges += Road(xx, xx, yy, yy + 1, steppy(y2, y1).map { perturb(Vec2(x1, it)) })
@@ -176,4 +183,29 @@ class Cell(cellFactor: Int, xx: Int, yy: Int) {
     }
 
     fun ptIn(pt: Vec2) = edges.all { it.isRight(pt) }
+
+    fun toBlock(): Pair<Vec2, Vec2> {
+        return Vec2(x1, y1) to Vec2(x2, y2)
+    }
 }
+
+fun seedBuildings(blocks: List<Pair<Vec2, Vec2>>) =
+    blocks.map {
+        Vec3(it.first.x, 0.0f, it.first.y) to Vec3(it.second.x, random.nextFloat() * 0.7f + 0.3f, it.second.y)
+    }
+
+fun save(buildings: List<Pair<Vec3, Vec3>>, path: String) {
+
+    val buffer = ByteBuffer.allocateDirect(buildings.size * 2 * 3 * 4).order(ByteOrder.LITTLE_ENDIAN)
+    val nb = NativeByteBuffer(buffer)
+
+    buildings.forEach {
+        nb.put(it.first)
+        nb.put(it.second)
+    }
+    nb.rewind()
+    FileOutputStream(path).use { fos ->
+        fos.channel.write(buffer)
+    }
+}
+

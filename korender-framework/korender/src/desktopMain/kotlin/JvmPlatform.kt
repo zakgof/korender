@@ -115,6 +115,8 @@ actual fun Korender(
             // TODO
             data.samples = 1
 
+            data.depthSize = 24
+
             val canvas = object : AWTGLCanvas(data) {
 
                 private fun <R> asyncInContext(function: suspend () -> R): Deferred<R> =

@@ -26,9 +26,9 @@ vec3 colorAtIndex(float index, vec2 uv) {
     int patchIndex = int(index);
     vec3 color = vec3(0.1);
     switch (patchIndex) {
-        case 0: color = vec3(0.796, 0.741, 0.576) + vec3(fbm(uv * 35.0) * 0.2);
+        case 0: color = vec3(0.796, 0.741, 0.576) + vec3(fbm(uv * 96.0) * 0.2);
             break;
-        case 1: color = texture(grassTexture, uv * 8.0).rgb + vec3(0.1, 0.4, 0.0) * fbm(uv * 3.0);
+        case 1: color = texture(grassTexture, uv * 64.0).rgb + vec3(0.1, 0.4, 0.0) * fbm(uv * 3.0);
             break;
         case 2: color = vec3(0.9, 0.9, 0.9); break;
         case 3: color = vec3(0.9, 0.3, 0.4); break;
@@ -46,9 +46,9 @@ vec4 pluginAlbedo() {
     }
 
     vec4 sdfSample = texture(sdf, vtex);
-    float sdfCross = (sdfSample.r - 0.3) / (1. - 2. * 0.3);
+    float sdfCross = (sdfSample.r - 0.35) / (1. - 2. * 0.35);
     if (sdfCross > 0. && sdfCross < 1. && sdfSample.b >= 1.0) {
-        color = texture(road, vec2(sdfCross, sdfSample.g * 0.05f)).rgb;
+        color = texture(road, vec2(sdfCross, sdfSample.g * 5.0f)).rgb;
     }
 
     return vec4(color, 1.0);
