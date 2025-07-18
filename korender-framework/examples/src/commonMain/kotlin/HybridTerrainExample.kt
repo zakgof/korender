@@ -70,7 +70,7 @@ fun HybridTerrainExample() =
 
         Frame {
             projection = projection(5f, 5f * height / width, 2f, 32000f)
-            camera = freeCamera.camera(projection, width, height, frameInfo.dt)1.z - 1.y, 1.z + 1.y)
+            camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
             AmbientLight(ColorRGB.white(0.2f))
             DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(1.5f))

@@ -28,10 +28,10 @@ void main() {
     vec3 color = texture(colorTexture, vtex).rgb;
     float depth = texture(depthTexture, vtex).r;
 
-    vec3 look = screenToLook(vtex);
     vec3 world = screenToWorldSpace(vtex, depth);
+    vec3 look = normalize(world - cameraPos);
     if (depth > 0.9999) {
-        world = cameraPos + look * 10000000.0;
+        world = cameraPos + look * 100000.0;
     }
 
     vec3 surface = cameraPos - look * cameraPos.y / look.y;
