@@ -4,7 +4,6 @@ import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureResources
-import com.zakgof.korender.FrustumProjectionDeclaration
 import com.zakgof.korender.Image
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KeyHandler
@@ -13,10 +12,10 @@ import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
-import com.zakgof.korender.OrthoProjectionDeclaration
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TextureDeclaration
@@ -114,9 +113,11 @@ interface KorenderContext {
     fun ssr(width: Int? = null, height: Int? = null, fxaa: Boolean = false, maxRayTravel: Float = 10f, linearSteps: Int = 12, binarySteps: Int = 5, envTexture: CubeTextureDeclaration? = null): PostShadingEffect
     fun bloom(width: Int? = null, height: Int? = null): PostShadingEffect
 
-    fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration
-    fun ortho(width: Float, height: Float, near: Float, far: Float): OrthoProjectionDeclaration
+    fun projection(width: Float, height: Float, near: Float, far: Float, mode: ProjectionMode = frustum()): ProjectionDeclaration
     fun camera(position: Vec3, direction: Vec3, up: Vec3): CameraDeclaration
+    fun frustum(): ProjectionMode
+    fun ortho(): ProjectionMode
+    fun log(c: Float = 1.0f): ProjectionMode
 
     fun createImage(width: Int, height: Int, format: Image.Format): Image
     fun loadImage(imageResource: String): Deferred<Image>
@@ -124,7 +125,7 @@ interface KorenderContext {
     fun vsm(blurRadius: Float? = null): ShadowAlgorithmDeclaration
     fun hard(): ShadowAlgorithmDeclaration
     fun softwarePcf(samples: Int = 8, blurRadius: Float = 0.005f): ShadowAlgorithmDeclaration
-    fun hardwarePcf(bias: Float = 0.003f): ShadowAlgorithmDeclaration
+    fun hardwarePcf(bias: Float = 0.005f): ShadowAlgorithmDeclaration
 
     fun clipmapTerrainPrefab(id: String, cellSize: Float, hg: Int, rings: Int): Prefab
 

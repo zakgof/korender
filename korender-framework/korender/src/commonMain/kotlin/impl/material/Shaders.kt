@@ -80,13 +80,12 @@ internal object Shaders {
                 }.joinToString("\n") { "       $it" }
         }
 
-        private fun debugLineInfo(error: String, lines: List<Line>): String {
-            val patterns = listOf(
+        private fun debugLineInfo(error: String, lines: List<Line>) =
+            listOf(
                 Regex("^(\\d+)\\((\\d+)\\).+$"),
                 Regex("^.+: (\\d+):(\\d+):.+$"),
                 Regex("(\\d+):(\\d+):.+$")
-            )
-            return patterns.map { it.find(error) }
+            ).map { it.find(error) }
                 .firstOrNull { it != null }
                 ?.let {
                     val row = it.groups[2]!!.value.toInt()
@@ -98,7 +97,6 @@ internal object Shaders {
                     val info = "[${entry.originFile}:${entry.originLine}]  ${entry.text}"
                     return info
                 } ?: error
-        }
 
         private inner class ShaderLoader {
 

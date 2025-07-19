@@ -13,6 +13,8 @@ in vec2 vtex;
 
 out vec4 fragColor;
 
+#import "$vprojection"
+
 void main() {
     float r = length(2. * (vtex - 0.5));
     float a = density * clamp(1. - r * r, 0., 1.);
@@ -22,6 +24,6 @@ void main() {
     fragColor = vec4(0.3, 0.3, 0.3, 1.0) * n;
 
     float zoffset = sqrt(vtex.x - vtex.x * vtex.x) * vsize.x * 2.f;
-    vec4 vclip = projection * (view * vec4(vpos, 1.) + vec4(0., 0., zoffset, 0.));
+    vec4 vclip = pluginVProjection((view * vec4(vpos, 1.) + vec4(0., 0., zoffset, 0.)).xyz);
     gl_FragDepth = 0.5 * vclip.z / vclip.w + 0.5;
 }

@@ -77,7 +77,8 @@ internal enum class BaseMaterial {
     Sky,
     Shading,
     Composition,
-    Decal
+    Decal,
+    DecalBlend
 }
 
 internal class MaterialDeclaration(

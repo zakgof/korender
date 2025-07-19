@@ -51,6 +51,16 @@ fun AppExample() {
         Demo("Blur") { BlurExample() },
         Demo("Effects") { EffectsExample() },
         Demo("Decals") { DecalExample() },
+
+        Demo("SSR") { SsrExample() },
+        Demo("Sky") { SkyExample() },
+        Demo("Transparency") { TransparencyExample() },
+        Demo("Meshes") { MeshesExample() },
+        Demo("FXAA") { FxaaExample() },
+        Demo("CSM") { CSMExample() },
+        Demo("Env") { CaptureEnvExample() },
+        Demo("Shapes") { BasicShapesExample() },
+
     )
 
     var isExpanded by remember { mutableStateOf(false) }

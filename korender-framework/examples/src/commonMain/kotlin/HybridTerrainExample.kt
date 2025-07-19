@@ -27,7 +27,7 @@ fun HybridTerrainExample() =
         val fbmLoading = loadImage("!fbm.png")
 
         Frame {
-            projection = frustum(5f, 5f * height / width, 2f, 32000f)
+            projection = projection(5f, 5f * height / width, 2f, 32000f)
             camera = camera(Vec3(23.0f, 1000f, -2000.0f), 1.z - 1.y, 1.z + 1.y)
 
             AmbientLight(ColorRGB.white(0.2f))

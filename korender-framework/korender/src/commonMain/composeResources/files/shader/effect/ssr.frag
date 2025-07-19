@@ -1,4 +1,5 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
 
 in vec2 vtex;
 
@@ -23,7 +24,7 @@ out vec4 fragColor;
 #import "!shader/lib/space.glsl"
 
 vec3 wToS(vec3 r) {
-    vec4 p = projection * (view * vec4(r, 1.0));
+    vec4 p = pluginVProjection((view * vec4(r, 1.0)).xyz);
     return (vec3(1.) + p.xyz / p.w) * 0.5;
 }
 

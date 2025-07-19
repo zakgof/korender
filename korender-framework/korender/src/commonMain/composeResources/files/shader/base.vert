@@ -31,9 +31,7 @@ out vec2 vtex;
 #import "$vnormal"
 #endif
 
-#ifdef PLUGIN_VOUTPUT
-#import "$voutput"
-#endif
+#import "$vprojection"
 
 void main() {
 
@@ -56,9 +54,6 @@ void main() {
     vpos = worldPos.xyz;
     vtex = tex;
 
-    #ifdef PLUGIN_VOUTPUT
-        gl_Position = pluginVOutput(worldPos);
-    #else
-        gl_Position = projection * (view * worldPos);
-    #endif
+    vec3 viewPos = (view * worldPos).xyz;
+    gl_Position = pluginVProjection(viewPos);
 }

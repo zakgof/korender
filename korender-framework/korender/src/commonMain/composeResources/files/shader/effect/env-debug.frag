@@ -12,8 +12,7 @@ out vec4 fragColor;
 
 void main() {
 
-    vec3 look = screentolook(vtex, projection * view, cameraPos);
-
+    vec3 look = screenToLook(vtex);
 
     vec3 color = texture(envTexture0, look).rgb;
     // float d = pow(max(dot(look, vec3(0., 0., -1.)), 0.), 200.);

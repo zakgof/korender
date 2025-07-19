@@ -27,7 +27,7 @@ fun CSMExample() =
 
         Frame {
 
-            CaptureFrame("oak", 1024, 1024, camera(50.z, -1.z, 1.y), ortho(50f, 50f, 1f, 100f)) {
+            CaptureFrame("oak", 1024, 1024, camera(50.z, -1.z, 1.y), projection(50f, 50f, 1f, 100f, ortho())) {
                 AmbientLight(white(1.6f))
                 Gltf(
                     resource = "gltf/ai/swat.glb",
@@ -39,7 +39,7 @@ fun CSMExample() =
                 )
             }
 
-            projection = frustum(4f * width / height, 4f, 4f, 10000f)
+            projection = projection(4f * width / height, 4f, 4f, 10000f)
             camera = freeCamera.camera(projection, width, height, frameInfo.dt)
             DirectionalLight(Vec3(1f, -1f, 0.3f).normalize(), white(5.0f)) {
                 Cascade(1024, 4f, 12f, -0f to 50f, softwarePcf())

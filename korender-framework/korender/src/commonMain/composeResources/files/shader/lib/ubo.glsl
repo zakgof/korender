@@ -4,7 +4,10 @@ layout(std140) uniform Frame {
     vec3 cameraDir;
 
     mat4 view;
-    mat4 projection;
+    float projectionWidth;
+    float projectionHeight;
+    float projectionNear;
+    float projectionFar;
 
     float screenWidth;
     float screenHeight;

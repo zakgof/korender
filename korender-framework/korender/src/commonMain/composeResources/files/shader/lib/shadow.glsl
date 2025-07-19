@@ -30,7 +30,7 @@ vec2 vogelDiskSample(int sampleIndex, int numSamples, float phi) {
 }
 
 float swPcf(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float penumbraWidth) {
-    float beavis = 0.0005;
+    float beavis = 0.005;
 
     const float PHI = 1.61803398874989484820459;
     float phi = 0.;
@@ -53,7 +53,7 @@ float swPcf(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float penumb
 }
 
 float hard(sampler2D shadowTexture, vec3 vshadow) {
-    float beavis = 0.0005;
+    float beavis = 0.005;
     float shadowSample = texture(shadowTexture, vshadow.xy).r;
 
     return (shadowSample < vshadow.z - beavis

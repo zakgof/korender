@@ -6,7 +6,6 @@ import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureResources
 import com.zakgof.korender.FrameInfo
-import com.zakgof.korender.FrustumProjectionDeclaration
 import com.zakgof.korender.Image
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KeyEvent
@@ -17,11 +16,11 @@ import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
-import com.zakgof.korender.OrthoProjectionDeclaration
 import com.zakgof.korender.Platform
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TextureDeclaration
@@ -70,8 +69,9 @@ import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.prefab.terrain.Clipmaps
-import com.zakgof.korender.impl.projection.FrustumProjection
-import com.zakgof.korender.impl.projection.OrthoProjection
+import com.zakgof.korender.impl.projection.FrustumProjectionMode
+import com.zakgof.korender.impl.projection.LogProjectionMode
+import com.zakgof.korender.impl.projection.OrthoProjectionMode
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.ColorRGB
@@ -141,7 +141,7 @@ internal class Engine(
             var images: CubeTextureImages? = null
             inventory.go(0f, 0) {
                 val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
-                while(true) {
+                while (true) {
                     val cubeTexture = scene.renderToEnvProbe(EnvCaptureContext(resolution, position, near, far, insideOut, sd), "#immediate")
                     if (cubeTexture != null) {
                         images = cubeTexture.fetch()
@@ -161,7 +161,7 @@ internal class Engine(
             var image: Image? = null
             inventory.go(0f, 0) {
                 val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
-                while(true) {
+                while (true) {
                     val texture = scene.renderToFrameProbe(FrameCaptureContext(width, height, camera as Camera, projection as Projection, sd), "#immediate")
                     if (texture != null) {
                         image = texture.fetch()
@@ -446,11 +446,14 @@ internal class Engine(
             }, currentRetentionPolicy
         )
 
-        override fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration =
-            FrustumProjection(width, height, near, far)
+        override fun projection(width: Float, height: Float, near: Float, far: Float, mode: ProjectionMode) =
+            Projection(width, height, near, far, mode)
 
-        override fun ortho(width: Float, height: Float, near: Float, far: Float): OrthoProjectionDeclaration =
-            OrthoProjection(width, height, near, far)
+        override fun frustum() = FrustumProjectionMode
+
+        override fun ortho() = OrthoProjectionMode
+
+        override fun log(c: Float) = LogProjectionMode(c)
 
         override fun camera(position: Vec3, direction: Vec3, up: Vec3): CameraDeclaration =
             DefaultCamera(position, direction.normalize(), up.normalize())
@@ -557,7 +560,7 @@ internal class Engine(
             DefaultFrameContext(kc, sd, frameInfo).apply(it)
         }
         inventory.go(frameInfo.time, kc.currentRetentionGeneration) {
-            val loader = sd.loaderSceneDeclaration?.let {Scene(it, inventory, renderContext, kc.currentRetentionPolicy)}
+            val loader = sd.loaderSceneDeclaration?.let { Scene(it, inventory, renderContext, kc.currentRetentionPolicy) }
             if (loader != null && !loaderLoaded) {
                 loaderLoaded = loader.render() || inventory.pending() > 0
                 loaderLoaded

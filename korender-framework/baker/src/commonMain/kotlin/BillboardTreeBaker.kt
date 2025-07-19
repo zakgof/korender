@@ -31,7 +31,7 @@ fun BillboardTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     saveImage(treeImage, "png", basePath + "tree.png")
 
     Frame {
-        projection = frustum(3f * width / height, 3f, 3f, 100f)
+        projection = projection(3f * width / height, 3f, 3f, 100f)
         camera = camera(60.z, -1.z, 1.y)
         AmbientLight(white(0.2f))
         DirectionalLight(Vec3(2.0f, 0.0f, -2.0f), white(3f))

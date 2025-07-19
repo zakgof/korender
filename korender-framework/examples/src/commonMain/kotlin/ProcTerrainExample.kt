@@ -20,7 +20,7 @@ fun ProcTerrainExample() =
 
             val cloudy = 0.5f - 0.5f * cos(frameInfo.time * 0.5f)
 
-            projection = frustum(5f, 5f * height / width, 2f, 40000f)
+            projection = projection(5f, 5f * height / width, 2f, 40000f)
             camera = camera(
                 Vec3(frameInfo.time * 200.0f, 1500f + 100f * sin(frameInfo.time), frameInfo.time * 600.0f),
                 2.x + 3.z,

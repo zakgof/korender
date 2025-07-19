@@ -24,6 +24,8 @@ out vec2 vsize;
 out vec3 vnormal;
 out vec2 vtex;
 
+#import "$vprojection"
+
 void main() {
 
     #ifdef INSTANCING
@@ -51,5 +53,6 @@ void main() {
     vtex = vec2(tex.x, 1.0 - tex.y);
     vnormal = normalize(cameraPos - vcenter);
 
-    gl_Position = projection * view * vec4(vpos, 1.0);
+    vec3 viewPos = (view * vec4(vpos, 1.0)).xyz;
+    gl_Position = pluginVProjection(viewPos);
 }

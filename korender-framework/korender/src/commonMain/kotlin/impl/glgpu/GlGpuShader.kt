@@ -67,11 +67,6 @@ internal class GlGpuShader(
 
         println("Creating GPU Shader [$name] : $programHandle")
 
-//        println("Vertex ====")
-//        println(vertexShaderText)
-//        println("Fragment ====")
-//        println(fragmentShaderText)
-
         glShaderSource(vertexShaderHandle, vertexShaderText)
         glCompileShader(vertexShaderHandle)
 
@@ -114,13 +109,34 @@ internal class GlGpuShader(
         }
 
         val frameUboBlockIndex = glGetUniformBlockIndex(programHandle, "Frame")
-        // createShaderUbo(frameUboBlockIndex)
         if (frameUboBlockIndex >= 0) {
+            dumpUboBlock(frameUboBlockIndex)
             glUniformBlockBinding(programHandle, frameUboBlockIndex, 0)
         }
 
         shaderUniformBlock = initShaderUniformBlock()
         uniformLocations = fetchUniforms()
+    }
+
+    private fun dumpUboBlock(blockIndex: Int) {
+
+        val blockSize = IntArray(1)
+        glGetActiveUniformBlockiv(programHandle, blockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, blockSize)
+        println("Size: ${blockSize[0]}")
+
+        val uniformCount = IntArray(1)
+        glGetActiveUniformBlockiv(programHandle, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, uniformCount)
+
+        val uniformIndices = IntArray(uniformCount[0])
+        glGetActiveUniformBlockiv(programHandle, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, uniformIndices)
+
+        val uniformOffsets = IntArray(uniformCount[0])
+        glGetActiveUniformsiv(programHandle, uniformIndices, GL_UNIFORM_OFFSET, uniformOffsets)
+
+        (0 until uniformCount[0]).forEach {
+            val name = glGetActiveUniformName(programHandle, uniformIndices[it])
+            println("\"$name\" to ${uniformOffsets[it]},")
+        }
     }
 
     private fun initShaderUniformBlock(): UniformBlock? {
