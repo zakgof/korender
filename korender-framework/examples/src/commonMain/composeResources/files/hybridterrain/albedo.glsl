@@ -22,8 +22,7 @@ uniform sampler2D road;
 
 uniform sampler2D grassTexture;
 
-vec3 colorAtIndex(float index, vec2 uv) {
-    int patchIndex = int(index);
+vec3 colorAtIndex(int patchIndex, vec2 uv) {
     vec3 color = vec3(0.1);
     switch (patchIndex) {
         case 0: color = vec3(0.796, 0.741, 0.576) + vec3(fbm(uv * 96.0) * 0.2);
@@ -41,9 +40,11 @@ vec4 pluginAlbedo() {
 
     vec4 materialSample = texture(patchTexture, vtex + vec2(-0.005 + 0.01 * fbm(vtex * 64.), -0.005 + 0.01 * fbm(vtex.yx * 63.)));
     vec3 color = vec3(0.);
-    for (int i=0; i<4; ++i) {
-        color += colorAtIndex(i, vtex) * materialSample[i];
-    }
+
+    color += colorAtIndex(0, vtex) * materialSample.r;
+    color += colorAtIndex(1, vtex) * materialSample.g;
+    color += colorAtIndex(2, vtex) * materialSample.b;
+    color += colorAtIndex(3, vtex) * materialSample.a;
 
     vec4 sdfSample = texture(sdf, vtex);
     float sdfCross = (sdfSample.r - 0.35) / (1. - 2. * 0.35);
@@ -51,5 +52,5 @@ vec4 pluginAlbedo() {
         color = texture(road, vec2(sdfCross, sdfSample.g * 5.0f)).rgb;
     }
 
-    return vec4(color, 1.0);
+    return vec4(texture(patchTexture, vtex).rgb, 1.0);
 }

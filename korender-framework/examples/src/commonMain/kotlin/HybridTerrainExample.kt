@@ -69,7 +69,7 @@ fun HybridTerrainExample() =
         OnKey { freeCamera.handle(it) }
 
         Frame {
-            projection = projection(5f, 5f * height / width, 2f, 68000f)
+            projection = projection(5f, 5f * height / width, 2f, 32000f, log())
             camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
             AmbientLight(ColorRGB.white(0.2f))
@@ -106,7 +106,7 @@ private fun FrameContext.island(heightMap: Image, fbm: Image, terrain: Prefab) {
         plugin("albedo", "hybridterrain/albedo.glsl"),
         uniforms(
             "heightTexture" to texture("base-terrain", heightMap),
-            "patchTexture" to texture("hybridterrain/color.png", TextureFilter.Linear),
+            "patchTexture" to texture("hybridterrain/color.png"),
             "sdf" to texture("hybridterrain/sdf.png", TextureFilter.Linear),
             "road" to texture("infcity/road.jpg"),
             "grassTexture" to texture("texture/grass.jpg")
@@ -154,7 +154,7 @@ private fun FrameContext.island(heightMap: Image, fbm: Image, terrain: Prefab) {
 
 private fun FrameContext.atmosphere() {
     Sky(fastCloudSky())
-    PostProcess(water(waveScale = 3000.0f, transparency = 0.1f), fastCloudSky())
+    PostProcess(water(waveScale = 3000.0f, transparency = 0.05f), fastCloudSky())
     //PostProcess(fog(color = ColorRGB(0x9BB4C8), density = 0.00003f))
 }
 

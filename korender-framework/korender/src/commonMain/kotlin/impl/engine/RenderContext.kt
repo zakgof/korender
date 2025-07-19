@@ -51,13 +51,17 @@ internal class RenderContext(var width: Int, var height: Int) {
     }
 
     fun contextPlugins(): Map<String, String> {
-        return mapOf("vprojection" to projection.mode.plugin())
+        val plugins = mutableMapOf("vprojection" to projection.mode.plugin())
+        if (projection.mode is LogProjectionMode) {
+            plugins["depth"] = "!shader/plugin/depth.log.frag"
+        }
+        return plugins
     }
 
     private fun ProjectionMode.plugin() = when (this) {
         is FrustumProjectionMode -> "!shader/plugin/vprojection.frustum.vert"
-        is OrthoProjectionMode -> "ortho"
-        is LogProjectionMode -> "log"
+        is OrthoProjectionMode -> "!shader/plugin/vprojection.ortho.vert"
+        is LogProjectionMode -> "!shader/plugin/vprojection.log.vert"
         else -> ""
     }
 

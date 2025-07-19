@@ -31,13 +31,14 @@ void main() {
     vec3 world = screenToWorldSpace(vtex, depth);
     vec3 look = normalize(world - cameraPos);
     if (depth > 0.9999) {
-        world = cameraPos + look * 100000.0;
+        world = cameraPos + look * projectionFar * 1e3;
     }
 
     vec3 surface = cameraPos - look * cameraPos.y / look.y;
-
     float fbmA = fbm(surface.xz / waveScale - 0.03 * time) - 0.5;
-    if (world.y < waveMagnitude * fbmA) {
+    surface.y += waveMagnitude * 64.0 * fbmA;
+
+    if (world.y < surface.y) {
 
         vec3 normal = normalize(vec3(
             waveMagnitude * fbmA,
