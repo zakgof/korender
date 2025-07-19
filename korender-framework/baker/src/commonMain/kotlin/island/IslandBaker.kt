@@ -27,7 +27,7 @@ val random = Random(seed)
 
 fun main() {
 
-    val rootPath = "D:\\p\\dev\\korender\\korender-framework\\examples\\src\\commonMain\\composeResources\\files\\hybridterrain"
+    val rootPath = "D:\\kot\\dev\\korender\\korender-framework\\examples\\src\\commonMain\\composeResources\\files\\hybridterrain"
 
     val mountainMap = FloatPixelMap(512)
     Erosion(mountainMap)

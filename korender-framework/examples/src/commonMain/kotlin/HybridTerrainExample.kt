@@ -69,7 +69,7 @@ fun HybridTerrainExample() =
         OnKey { freeCamera.handle(it) }
 
         Frame {
-            projection = projection(5f, 5f * height / width, 2f, 32000f)
+            projection = projection(5f, 5f * height / width, 2f, 68000f)
             camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
             AmbientLight(ColorRGB.white(0.2f))

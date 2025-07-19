@@ -4,7 +4,6 @@
 in vec3 vpos;
 in vec3 vnormal;
 in vec2 vtex;
-in float vdepth;
 
 #ifdef VERTEX_COLOR
     in vec4 vcolor;
@@ -175,7 +174,5 @@ void main() {
 
     #ifdef PLUGIN_DEPTH
         gl_FragDepth = pluginDepth();
-    #else
-        gl_FragDepth = log2(1.0 + max(1e-6, vdepth)) / log2(100001.0);
     #endif
 }

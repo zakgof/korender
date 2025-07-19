@@ -25,7 +25,7 @@ fun BillboardTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
     val metaballTree = MetaballTree(this, metaball, "cone-tree")
 
-    val treeImage = captureFrame(512, 512, camera(60.z, -1.z, 1.y), ortho(50f, 50f, 1f, 100f)) {
+    val treeImage = captureFrame(512, 512, camera(60.z, -1.z, 1.y), projection(50f, 50f, 1f, 100f, ortho())) {
         AmbientLight(white(0.2f))
         DirectionalLight(Vec3(2.0f, 0.0f, -2.0f), white(3f))
         tree(metaballTree)
