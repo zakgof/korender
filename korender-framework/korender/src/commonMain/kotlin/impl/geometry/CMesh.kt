@@ -39,9 +39,12 @@ internal open class CMesh(
 
         override fun get(index: Int): Mesh.Vertex = object : Mesh.Vertex {
 
-            override fun pos() = value(POS)
-            override fun normal() = value(NORMAL)
-            override fun tex() = value(TEX)
+            override val pos
+                get() = value(POS)
+            override val normal
+                get() = value(NORMAL)
+            override val tex
+                get() = value(TEX)
 
             override fun <T> value(attribute: MeshAttribute<T>) =
                 attrMap[attribute]?.let { attribute.bufferAccessor.get(it, index) }

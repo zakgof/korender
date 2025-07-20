@@ -15,6 +15,7 @@ import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.glgpu.GlGpuMesh
@@ -77,7 +78,7 @@ internal object Geometry {
             is ConeTop -> coneTop(simpleMeshDeclaration.radius, simpleMeshDeclaration.height, simpleMeshDeclaration.sectors, count)
             is HeightField -> heightField(simpleMeshDeclaration.cellsX, simpleMeshDeclaration.cellsZ, simpleMeshDeclaration.cellWidth, simpleMeshDeclaration.height, count)
             is ObjMesh -> loader.safeBytes(simpleMeshDeclaration.objFile) { obj(it, count) }
-            is CustomCpuMesh -> simpleMeshDeclaration.mesh
+            is CustomCpuMesh -> toCMesh(simpleMeshDeclaration.mesh, count)
             is CustomMesh -> CMesh(simpleMeshDeclaration.vertexCount, simpleMeshDeclaration.indexCount, count, attributes = simpleMeshDeclaration.attributes.toTypedArray(), simpleMeshDeclaration.indexType, simpleMeshDeclaration.block)
             is FontMesh -> font(count)
             else -> throw KorenderException("Unknown mesh type $meshDeclaration")
@@ -307,15 +308,15 @@ internal object Geometry {
     private fun decalCube(halfSide: Float, count: Int) =
         CMesh(8, 36, count, POS, MODEL0, MODEL1, MODEL2, MODEL3) {
             pos(-halfSide, -halfSide, -halfSide)
-            pos( halfSide, -halfSide, -halfSide)
-            pos(-halfSide,  halfSide, -halfSide)
-            pos( halfSide,  halfSide, -halfSide)
-            pos(-halfSide, -halfSide,  halfSide)
-            pos( halfSide, -halfSide,  halfSide)
-            pos(-halfSide,  halfSide,  halfSide)
-            pos( halfSide,  halfSide,  halfSide)
+            pos(halfSide, -halfSide, -halfSide)
+            pos(-halfSide, halfSide, -halfSide)
+            pos(halfSide, halfSide, -halfSide)
+            pos(-halfSide, -halfSide, halfSide)
+            pos(halfSide, -halfSide, halfSide)
+            pos(-halfSide, halfSide, halfSide)
+            pos(halfSide, halfSide, halfSide)
 
-            index( 0, 1, 2, 1, 3, 2)
+            index(0, 1, 2, 1, 3, 2)
             index(5, 4, 7, 4, 6, 7)
             index(4, 0, 6, 0, 2, 6)
             index(1, 5, 3, 5, 7, 3)
@@ -343,6 +344,24 @@ internal object Geometry {
             tex(0f, 0f).tex(0f, 1f).tex(1f, 1f).tex(1f, 0f)
             index(0, 1, 2, 0, 2, 3)
         }
+
+    private fun toCMesh(mesh: Mesh, count: Int): CMesh? {
+        if (mesh is CMesh) {
+            return mesh
+        }
+        return CMesh(mesh.vertices.size, mesh.indices?.size ?: -1, count, POS, NORMAL, TEX) {
+            (0 until mesh.vertices.size).forEach {
+                val vertex = mesh.vertices[it]
+                pos(vertex.pos!!).normal(vertex.normal!!).tex(vertex.tex!!)
+            }
+            mesh.indices?.let {indices ->
+                (0 until indices.size).forEach {
+                    index(indices[it])
+                }
+            }
+        }
+    }
+
 }
 
 fun IndexType.size() = when (this) {

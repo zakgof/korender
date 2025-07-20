@@ -1,5 +1,8 @@
 package com.zakgof.korender
 
+import com.zakgof.korender.Attributes.NORMAL
+import com.zakgof.korender.Attributes.POS
+import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
@@ -163,9 +166,9 @@ interface Mesh {
     }
 
     interface Vertex {
-        fun pos(): Vec3?
-        fun normal(): Vec3?
-        fun tex(): Vec2?
+        val pos: Vec3?
+        val normal: Vec3?
+        val tex: Vec2?
         fun <T> value(attribute: MeshAttribute<T>): T?
     }
 
@@ -173,4 +176,51 @@ interface Mesh {
         val size: Int
         operator fun get(index: Int): Int
     }
+}
+
+class MutableMesh : Mesh {
+
+    override val vertices = MutableVertices()
+    override val indices = MutableIndices()
+
+    class MutableVertices : Mesh.Vertices {
+        private val list = mutableListOf<Mesh.Vertex>()
+        override val size
+            get() = list.size
+
+        override fun get(index: Int) = list[index]
+        operator fun plusAssign(vertex: Mesh.Vertex) {
+            list += vertex
+        }
+    }
+
+    class MutableVertex : Mesh.Vertex {
+
+        override var pos: Vec3? = null
+        override var normal: Vec3? = null
+        override var tex: Vec2? = null
+
+        fun pos(p: Vec3) = apply { pos = p }
+        fun normal(n: Vec3) = apply { normal = n }
+        fun tex(t: Vec2) = apply { tex = t }
+
+        @Suppress("UNCHECKED_CAST")
+        override fun <T> value(attribute: MeshAttribute<T>): T? = when (attribute) {
+            POS -> pos
+            NORMAL -> normal
+            TEX -> tex
+            else -> null
+        } as T?
+    }
+
+    class MutableIndices : Mesh.Indices {
+        private val list = mutableListOf<Int>()
+        override val size
+            get() = list.size
+
+        override fun get(index: Int) = list[index]
+
+        fun index(vararg i: Int) = apply { list += i.toList() }
+    }
+
 }

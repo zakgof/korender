@@ -44,7 +44,6 @@ import com.zakgof.korender.impl.engine.shadow.InternalHardShadow
 import com.zakgof.korender.impl.engine.shadow.InternalHardwarePcfShadow
 import com.zakgof.korender.impl.engine.shadow.InternalSoftwarePcfShadow
 import com.zakgof.korender.impl.engine.shadow.InternalVsmShadow
-import com.zakgof.korender.impl.geometry.CMesh
 import com.zakgof.korender.impl.geometry.ConeTop
 import com.zakgof.korender.impl.geometry.Cube
 import com.zakgof.korender.impl.geometry.CustomCpuMesh
@@ -195,7 +194,7 @@ internal class Engine(
             HeightField(id, cellsX, cellsZ, cellWidth, height, currentRetentionPolicy)
 
         override fun mesh(id: String, mesh: Mesh) =
-            CustomCpuMesh(id, mesh as CMesh, currentRetentionPolicy)
+            CustomCpuMesh(id, mesh, currentRetentionPolicy)
 
         override fun vertex(vertShaderFile: String): InternalMaterialModifier =
             InternalMaterialModifier { it.vertShaderFile = vertShaderFile }

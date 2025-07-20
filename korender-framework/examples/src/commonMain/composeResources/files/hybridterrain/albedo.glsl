@@ -52,5 +52,5 @@ vec4 pluginAlbedo() {
         color = texture(road, vec2(sdfCross, sdfSample.g * 5.0f)).rgb;
     }
 
-    return vec4(texture(patchTexture, vtex).rgb, 1.0);
+    return vec4(color, 1.0);
 }

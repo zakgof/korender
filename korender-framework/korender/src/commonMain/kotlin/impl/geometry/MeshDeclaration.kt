@@ -11,6 +11,7 @@ import com.zakgof.korender.Attributes.MODEL2
 import com.zakgof.korender.Attributes.MODEL3
 import com.zakgof.korender.Attributes.WEIGHTS
 import com.zakgof.korender.IndexType
+import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
@@ -205,7 +206,7 @@ internal class FontMesh(
 
 internal data class CustomCpuMesh(
     val id: String,
-    val mesh: CMesh,
+    val mesh: Mesh,
     override val retentionPolicy: RetentionPolicy
 ) : InternalMeshDeclaration {
     override fun equals(other: Any?): Boolean = (other is CustomCpuMesh && other.id == id)

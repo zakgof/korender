@@ -10,10 +10,11 @@ import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.examples.camera.FreeCamera
+import com.zakgof.korender.examples.island.CityGenerator
+import com.zakgof.korender.examples.island.generateBuilding
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform.Companion.scale
-import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -52,12 +53,26 @@ fun HybridTerrainExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         val buildingsLoader = FileLoader({ Res.readBytes(it) }, "files/hybridterrain/buildings.bin") { bytes ->
+
+            val cityGenerator = CityGenerator()
+
             val size = bytes.size / (2 * 3 * 4)
-            List(size) { i ->
+            (0 until size).forEach { i ->
                 val p1 = Vec3(floatAt(bytes, i * (2 * 3 * 4)), floatAt(bytes, i * (2 * 3 * 4) + 4), floatAt(bytes, i * (2 * 3 * 4) + 8))
                 val p2 = Vec3(floatAt(bytes, i * (2 * 3 * 4) + 12), floatAt(bytes, i * (2 * 3 * 4) + 16), floatAt(bytes, i * (2 * 3 * 4) + 20))
-                p1 to p2
+
+                val c = (p1 + p2) * 0.5f * 512f
+                val halfDim = (p2 - p1) * 0.4f * 512f
+
+                val xoffset = (c - halfDim).x.toInt()
+                val yoffset = (c - halfDim).z.toInt()
+                val xsize = (halfDim.x * 2f).toInt()
+                val ysize = (halfDim.z * 2f).toInt()
+
+                generateBuilding(cityGenerator, xoffset, yoffset, xsize, ysize, i)
             }
+
+            cityGenerator
         }
 
         val terrain = clipmapTerrainPrefab("terrain", 32.0f, 24, 6)
@@ -158,12 +173,25 @@ private fun FrameContext.atmosphere() {
     //PostProcess(fog(color = ColorRGB(0x9BB4C8), density = 0.00003f))
 }
 
-private fun FrameContext.buildings(buildings: List<Pair<Vec3, Vec3>>) {
+private fun FrameContext.buildings(cityGenerator: CityGenerator) {
+
+    val dim = 32f * 512f
+
+    val tr = scale(32f).translate(Vec3(-dim * 0.5f, -100f, -dim * 0.5f))
+
+    Renderable(
+        base(color = ColorRGBA.Blue),
+        mesh = mesh("lw", cityGenerator.lightWindow),
+        transform = tr
+    )
     Renderable(
         base(color = ColorRGBA.Red),
-        mesh = sphere(300f),
-        transform = translate(400.y)
+        mesh = mesh("rf", cityGenerator.roof),
+        transform = tr
     )
+}
+
+private fun FrameContext.buildings2(buildings: List<Pair<Vec3, Vec3>>) {
     Renderable(
         base(color = ColorRGBA.Blue),
         mesh = cube(),
@@ -176,9 +204,11 @@ private fun FrameContext.buildings(buildings: List<Pair<Vec3, Vec3>>) {
                 )
                 val scale = (it.second - it.first) * 32f * 512f * 0.5f
                 Instance(
-                    scale(scale.x,
+                    scale(
+                        scale.x,
                         (it.second.y - it.first.y) * 500,
-                        scale.z)
+                        scale.z
+                    )
                         .translate(center)
                 )
             }
