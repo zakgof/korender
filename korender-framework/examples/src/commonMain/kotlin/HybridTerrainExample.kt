@@ -13,7 +13,7 @@ import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.examples.island.CityGenerator
 import com.zakgof.korender.examples.island.generateBuilding
 import com.zakgof.korender.math.ColorRGB
-import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.math.ColorRGBA.Companion.white
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -62,7 +62,7 @@ fun HybridTerrainExample() =
                 val p2 = Vec3(floatAt(bytes, i * (2 * 3 * 4) + 12), floatAt(bytes, i * (2 * 3 * 4) + 16), floatAt(bytes, i * (2 * 3 * 4) + 20))
 
                 val c = (p1 + p2) * 0.5f * 512f
-                val halfDim = (p2 - p1) * 0.4f * 512f
+                val halfDim = (p2 - p1) * 0.3f * 512f
 
                 val xoffset = (c - halfDim).x.toInt()
                 val yoffset = (c - halfDim).z.toInt()
@@ -87,7 +87,7 @@ fun HybridTerrainExample() =
             projection = projection(5f, 5f * height / width, 2f, 32000f, log())
             camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
-            AmbientLight(ColorRGB.white(0.2f))
+            AmbientLight(ColorRGB.white(0.5f))
             DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(1.5f))
 
             if (heightMapLoading.isCompleted && fbmLoading.isCompleted) {
@@ -168,9 +168,10 @@ private fun FrameContext.island(heightMap: Image, fbm: Image, terrain: Prefab) {
 }
 
 private fun FrameContext.atmosphere() {
-    Sky(fastCloudSky())
     PostProcess(water(waveScale = 3000.0f, transparency = 0.05f), fastCloudSky())
-    //PostProcess(fog(color = ColorRGB(0x9BB4C8), density = 0.00003f))
+    PostProcess(fog(color = ColorRGB(0xB8CAE9), density = 0.00003f)) {
+        Sky(fastCloudSky())
+    }
 }
 
 private fun FrameContext.buildings(cityGenerator: CityGenerator) {
@@ -178,44 +179,19 @@ private fun FrameContext.buildings(cityGenerator: CityGenerator) {
     val dim = 32f * 512f
 
     val tr = scale(32f).translate(Vec3(-dim * 0.5f, -100f, -dim * 0.5f))
+    val concrete = base(color = white(2.0f), colorTexture = texture("infcity/roof.jpg"), metallicFactor = 0f, roughnessFactor = 1f)
 
     Renderable(
-        base(color = ColorRGBA.Blue),
+        concrete,
+        plugin("albedo", "hybridterrain/building/shader/island.window.albedo.frag"),
         mesh = mesh("lw", cityGenerator.lightWindow),
         transform = tr
     )
     Renderable(
-        base(color = ColorRGBA.Red),
+        concrete,
         mesh = mesh("rf", cityGenerator.roof),
         transform = tr
     )
-}
-
-private fun FrameContext.buildings2(buildings: List<Pair<Vec3, Vec3>>) {
-    Renderable(
-        base(color = ColorRGBA.Blue),
-        mesh = cube(),
-        instancing = instancing("bldngz", 256, true) {
-            buildings.forEach {
-                val center = Vec3(
-                    (-0.5f + (it.first.x + it.second.x) * 0.5f) * 32f * 512f,
-                    (it.first.y + it.second.y) * 0.5f * 500f,
-                    (-0.5f + (it.first.z + it.second.z) * 0.5f) * 32f * 512f
-                )
-                val scale = (it.second - it.first) * 32f * 512f * 0.5f
-                Instance(
-                    scale(
-                        scale.x,
-                        (it.second.y - it.first.y) * 500,
-                        scale.z
-                    )
-                        .translate(center)
-                )
-            }
-            // Instance(scale(500.0f))
-        }
-    )
-
 }
 
 private fun FrameContext.gui() =

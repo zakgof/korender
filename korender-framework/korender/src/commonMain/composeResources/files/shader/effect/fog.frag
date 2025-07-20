@@ -22,7 +22,6 @@ void main() {
     float depth = texture(depthTexture, vtex).r;
 
     vec3 world = screenToWorldSpace(vtex, depth);
-
     float distance = length(world - cameraPos);
 
     float fogFactor = exp( -density * distance);
@@ -30,5 +29,5 @@ void main() {
     color = mix(fogColor.rgb, color, fogFactor);
 
     fragColor = vec4(color, 1.0);
-    gl_FragDepth = texture(depthTexture, vtex).r;
+    gl_FragDepth = depth;
 }
