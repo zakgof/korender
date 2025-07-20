@@ -84,11 +84,14 @@ fun HybridTerrainExample() =
         OnKey { freeCamera.handle(it) }
 
         Frame {
-            projection = projection(5f, 5f * height / width, 2f, 32000f, log())
+            projection = projection(2f, 2f * height / width, 2f, 32000f, log())
             camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
             AmbientLight(ColorRGB.white(0.5f))
-            DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(1.5f))
+            DirectionalLight(Vec3(5.0f, -3.0f, 1.0f), ColorRGB.white(1.5f)) {
+                Cascade(512, 2f, 3000f, 0f to 4000f, softwarePcf(blurRadius = 30.0f))
+                Cascade(512, 2500f, 16000f, 0f to 4000f, softwarePcf(blurRadius = 20.0f))
+            }
 
             if (heightMapLoading.isCompleted && fbmLoading.isCompleted) {
                 island(heightMapLoading.getCompleted(), fbmLoading.getCompleted(), terrain)
