@@ -1,4 +1,4 @@
-package com.zakgof.korender.examples
+package com.zakgof.korender.examples.island
 
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
@@ -6,38 +6,18 @@ import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.Image
 import com.zakgof.korender.Korender
 import com.zakgof.korender.Prefab
-import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.examples.camera.FreeCamera
-import com.zakgof.korender.examples.island.CityGenerator
-import com.zakgof.korender.examples.island.generateBuilding
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA.Companion.white
 import com.zakgof.korender.math.Transform.Companion.scale
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
 import kotlin.math.roundToInt
-
-
-class FileLoader<T>(resourceLoader: ResourceLoader, file: String, private val loader: (ByteArray) -> T) {
-    var loaded: T? = null
-    val deferred = CoroutineScope(Dispatchers.Default).async { resourceLoader(file) }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val data: T?
-        get() {
-            if (loaded == null && deferred.isCompleted) {
-                loaded = loader(deferred.getCompleted())
-            }
-            return loaded
-        }
-}
 
 fun floatAt(bytes: ByteArray, offset: Int): Float {
     val bits = (bytes[offset + 3].toInt() and 0xFF shl 24) or
@@ -49,10 +29,10 @@ fun floatAt(bytes: ByteArray, offset: Int): Float {
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
-fun HybridTerrainExample() =
+fun IslandExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-        val buildingsLoader = FileLoader({ Res.readBytes(it) }, "files/hybridterrain/buildings.bin") { bytes ->
+        val deferredBuildings = load("files/island/building/buildings.bin") { bytes ->
 
             val cityGenerator = CityGenerator()
 
@@ -71,12 +51,17 @@ fun HybridTerrainExample() =
 
                 generateBuilding(cityGenerator, xoffset, yoffset, xsize, ysize, i)
             }
-
             cityGenerator
+        }
+        val deferredTrees = load("files/island/tree/trees.bin") { bytes ->
+            val size = bytes.size / (3 * 4)
+            (0 until size).map { i ->
+                Vec3(floatAt(bytes, i * (3 * 4)), floatAt(bytes, i * (3 * 4) + 4), floatAt(bytes, i * (3 * 4) + 8))
+            }
         }
 
         val terrain = clipmapTerrainPrefab("terrain", 32.0f, 24, 6)
-        val heightMapLoading = loadImage("hybridterrain/height.png")
+        val heightMapLoading = loadImage("island/terrain/height.png")
         val fbmLoading = loadImage("!fbm.png")
 
         val freeCamera = FreeCamera(this, Vec3(23.0f, 4000f, -7000.0f), (1.z - 1.y).normalize(), 1400f)
@@ -88,9 +73,9 @@ fun HybridTerrainExample() =
             camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
             AmbientLight(ColorRGB.white(0.5f))
-            DirectionalLight(Vec3(5.0f, -3.0f, 1.0f), ColorRGB.white(1.5f)) {
-                Cascade(512, 2f, 3000f, 0f to 4000f, softwarePcf(blurRadius = 30.0f))
-                Cascade(512, 2500f, 16000f, 0f to 4000f, softwarePcf(blurRadius = 20.0f))
+            DirectionalLight(Vec3(3.0f, -3.0f, 1.0f), ColorRGB.white(1.5f)) {
+                Cascade(512, 2f, 3000f, 0f to 4000f, hardwarePcf())
+                Cascade(512, 2500f, 12000f, 0f to 4000f, hardwarePcf())
             }
 
             if (heightMapLoading.isCompleted && fbmLoading.isCompleted) {
@@ -99,7 +84,12 @@ fun HybridTerrainExample() =
 
             atmosphere()
             gui()
-            buildingsLoader.data?.let { buildings(it) }
+            if (deferredBuildings.isCompleted) {
+                buildings(deferredBuildings.getCompleted())
+            }
+            if (deferredTrees.isCompleted) {
+                trees(deferredTrees.getCompleted())
+            }
         }
     }
 
@@ -120,54 +110,46 @@ private fun FrameContext.island(heightMap: Image, fbm: Image, terrain: Prefab) {
     Renderable(
         base(metallicFactor = 0.0f),
         plugin("normal", "!shader/plugin/normal.terrain.frag"),
-        plugin("terrain", "hybridterrain/height.glsl"),
-        plugin("albedo", "hybridterrain/albedo.glsl"),
+        plugin("terrain", "island/terrain/shader/height.glsl"),
+        plugin("albedo", "island/terrain/shader/albedo.glsl"),
         uniforms(
             "heightTexture" to texture("base-terrain", heightMap),
-            "patchTexture" to texture("hybridterrain/color.png"),
-            "sdf" to texture("hybridterrain/sdf.png", TextureFilter.Linear),
+            "patchTexture" to texture("island/terrain/color.png"),
+            "sdf" to texture("island/terrain/sdf.png", TextureFilter.Linear),
             "road" to texture("infcity/road.jpg"),
             "grassTexture" to texture("texture/grass.jpg")
         ),
         prefab = terrain
     )
+}
 
-
-    //    for (xx in -10..10) {
-//        for (zz in -10..10) {
-//            Renderable(
-//                base(color = ColorRGBA.Red),
-//                mesh = sphere(20f),
-//                transform = translate(xx * 1000f, height(heightMap, fbm, xx * 1000f, zz * 1000f), zz * 1000f)
-//            )
-//        }
-//    }
-    fun cubTex(prefix: String) = cubeTexture(CubeTextureSide.entries.associateWith { "hybridterrain/tree/$prefix-${it.toString().lowercase()}.jpg" })
-
-//    Billboard(
-//        billboard(),
-//        base(metallicFactor = 0f, roughnessFactor = 0.9f),
-//        radiant(
-//            radiantTexture = cubTex("radiant"),
-//            radiantNormalTexture = cubTex("radiant-normal"),
-//            colorTexture = cubTex("albedo"),
-//            normalTexture = cubTex("normal")
-//        ),
-//        instancing = billboardInstancing(
-//            id = "trees",
-//            dynamic = false,
-//            count = 2000
-//        ) {
-//            (0 until 2000).forEach {
-//                val r = Random(it)
-//                val x = r.nextFloat() * 5000f - 600f
-//                val z = r.nextFloat() * 3000f - 1610f
-//                Instance(
-//                    pos = Vec3(x, height(heightMap, fbm, x, z) + 50f, z),
-//                    scale = Vec2(100.0f, 100.0f)
-//                )
-//            }
-//        })
+private fun FrameContext.trees(seeds: List<Vec3>) {
+    fun cubTex(prefix: String) = cubeTexture(CubeTextureSide.entries.associateWith { "island/tree/$prefix-${it.toString().lowercase()}.jpg" })
+    Billboard(
+        billboard(),
+        base(metallicFactor = 0f, roughnessFactor = 0.9f),
+        radiant(
+            radiantTexture = cubTex("radiant"),
+            radiantNormalTexture = cubTex("radiant-normal"),
+            colorTexture = cubTex("albedo"),
+            normalTexture = cubTex("normal")
+        ),
+        instancing = billboardInstancing(
+            id = "trees",
+            dynamic = false,
+            count = seeds.size
+        ) {
+            seeds.forEach { it ->
+                Instance(
+                    pos = Vec3(
+                        (-0.5f + it.x) * 32f * 512f,
+                        it.y * 256f * 16f - 256f * 16f * 0.1f + 64f,
+                        (-0.5f + it.z) * 32f * 512f
+                    ),
+                    Vec2(512f, 512f)
+                )
+            }
+        })
 }
 
 private fun FrameContext.atmosphere() {
@@ -186,7 +168,7 @@ private fun FrameContext.buildings(cityGenerator: CityGenerator) {
 
     Renderable(
         concrete,
-        plugin("albedo", "hybridterrain/building/shader/island.window.albedo.frag"),
+        plugin("albedo", "island/building/shader/island.window.albedo.frag"),
         mesh = mesh("lw", cityGenerator.lightWindow),
         transform = tr
     )

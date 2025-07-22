@@ -37,8 +37,6 @@ abstract class PixelMap<P>(val side: Int) {
         ImageIO.write(bi, "png", f)
     }
 
-
-
     fun set(xx: Int, zz: Int, value: P) {
         points[xx + zz * side] = value
     }

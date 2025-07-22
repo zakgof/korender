@@ -44,6 +44,8 @@ interface KorenderContext {
     val width: Int
     val height: Int
 
+    fun <T> load(resource: String, mapper: (ByteArray) -> T) : Deferred<T>
+
     fun texture(textureResource: String, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): TextureDeclaration
     fun texture(id: String, image: Image, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): TextureDeclaration
     fun textureProbe(frameProbeName: String): TextureDeclaration

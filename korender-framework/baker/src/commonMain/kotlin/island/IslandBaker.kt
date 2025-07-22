@@ -27,7 +27,7 @@ val random = Random(seed)
 
 fun main() {
 
-    val rootPath = "D:\\kot\\dev\\korender\\korender-framework\\examples\\src\\commonMain\\composeResources\\files\\hybridterrain"
+    val rootPath = "D:\\p\\dev\\korender\\korender-framework\\examples\\src\\commonMain\\composeResources\\files\\island"
 
     val mountainMap = FloatPixelMap(512)
     Erosion(mountainMap)
@@ -45,17 +45,19 @@ fun main() {
     fillRoads(cells, sdf)
 
     val blocks = cells.map { it.toBlock() }
-    val buildings = seedBuildings(blocks)
-
     colorMap.populate { pt ->
         color(pt, heightMap, cells)
     }
 
-    heightMap.save("$rootPath\\height.png")
-    colorMap.save("$rootPath\\color.png")
-    sdf.save("$rootPath\\sdf.png")
+    val buildings = seedBuildings(blocks)
+    val trees = seedTrees(colorMap, heightMap)
 
-    save(buildings, "$rootPath\\buildings.bin")
+    heightMap.save("$rootPath\\terrain\\height.png")
+    colorMap.save("$rootPath\\terrain\\color.png")
+    sdf.save("$rootPath\\terrain\\sdf.png")
+
+    saveBuildings(buildings, "$rootPath\\building\\buildings.bin")
+    saveTrees(trees, "$rootPath\\tree\\trees.bin")
 }
 
 fun seedMountain(random: Random) =
@@ -194,15 +196,37 @@ fun seedBuildings(blocks: List<Pair<Vec2, Vec2>>) =
         Vec3(it.first.x, 0.0f, it.first.y) to Vec3(it.second.x, random.nextFloat() * 0.7f + 0.3f, it.second.y)
     }
 
-fun save(buildings: List<Pair<Vec3, Vec3>>, path: String) {
+fun seedTrees(colorMap: ChannelMap, heightMap: Float2PixelMap): List<Vec3> {
+    val count = 80
+    return (0 until count).map {
+        val pt = generateSequence { Vec2(random.nextFloat(), random.nextFloat()) }
+            .first { pt ->
+                val color = colorMap.get(colorMap.toPix(pt.x), colorMap.toPix(pt.y))
+                color[1] > 0.99f
+            }
+        Vec3(pt.x, heightMap[pt], pt.y)
+    }
+}
 
-    val buffer = ByteBuffer.allocateDirect(buildings.size * 2 * 3 * 4).order(ByteOrder.LITTLE_ENDIAN)
-    val nb = NativeByteBuffer(buffer)
-
+fun saveBuildings(buildings: List<Pair<Vec3, Vec3>>, path: String) = save (buildings, buildings.size * 2 * 3 * 4, path){ trees, nb ->
     buildings.forEach {
         nb.put(it.first)
         nb.put(it.second)
     }
+}
+
+fun saveTrees(trees: List<Vec3>, path: String) = save(trees, trees.size * 3 * 4, path) { trees, nb ->
+    trees.forEach {
+        nb.put(it)
+    }
+}
+
+fun <T> save(data: T, size:Int, path: String, serializer: (T, NativeByteBuffer) -> Unit) {
+    val buffer = ByteBuffer.allocateDirect(size).order(ByteOrder.LITTLE_ENDIAN)
+    val nb = NativeByteBuffer(buffer)
+
+    serializer(data, nb)
+
     nb.rewind()
     FileOutputStream(path).use { fos ->
         fos.channel.write(buffer)

@@ -77,7 +77,10 @@ import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 
 internal class Engine(
@@ -119,6 +122,9 @@ internal class Engine(
         override fun OnKey(handler: (KeyEvent) -> Unit) {
             keyHandlers.add(handler)
         }
+
+        override fun <T> load(resource: String, mapper: (ByteArray) -> T): Deferred<T> =
+            CoroutineScope(Dispatchers.Default).async { mapper(asyncContext.appResourceLoader(resource)) }
 
         override fun texture(textureResource: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int) =
             ResourceTextureDeclaration(textureResource, filter, wrap, aniso, currentRetentionPolicy)
