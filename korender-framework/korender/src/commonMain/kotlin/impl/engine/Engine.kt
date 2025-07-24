@@ -541,6 +541,11 @@ internal class Engine(
                 block.invoke(context)
                 instances
             }
+
+        override fun immediatelyFree() = ImmediatelyFreeRetentionPolicy
+        override fun keepForever() = KeepForeverRetentionPolicy
+        override fun untilGeneration(generation: Int) = UntilGenerationRetentionPolicy(generation)
+        override fun time(seconds: Float) = TimeRetentionPolicy(seconds)
     }
 
     init {

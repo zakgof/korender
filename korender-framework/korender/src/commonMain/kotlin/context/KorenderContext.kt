@@ -133,6 +133,11 @@ interface KorenderContext {
     fun gltfInstancing(id: String, count: Int, dynamic: Boolean, block: InstancedGltfContext.() -> Unit): GltfInstancingDeclaration
     fun billboardInstancing(id: String, count: Int, dynamic: Boolean, block: InstancedBillboardsContext.() -> Unit): BillboardInstancingDeclaration
 
+    fun immediatelyFree(): RetentionPolicy
+    fun keepForever(): RetentionPolicy
+    fun untilGeneration(generation: Int): RetentionPolicy
+    fun time(seconds: Float): RetentionPolicy
+
     val target: TargetPlatform
 
     enum class TargetPlatform {
