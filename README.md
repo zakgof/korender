@@ -1,4 +1,4 @@
-# ![Korender](doc/korender32.png) korender
+# ![Korender](readme/korender32.png) korender
 [![Maven Central](https://img.shields.io/badge/Maven_Central-0.5.1-8e27c7.svg?logo=mavenCentral)](https://central.sonatype.com/artifact/com.github.zakgof/korender/0.5.1)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.2.0-278ec7.svg?logo=kotlin)](http://kotlinlang.org)
 
@@ -12,7 +12,7 @@ Kotlin Multiplatform 3D graphics rendering engine based on OpenGL / OpenGL ES / 
 Korender uses declarative approach that seamlessly integrates 3D viewport into Compose Multiplatform UI. 
 Same Korender code runs on all supported platforms.
 
-![Mobile](doc/mobile.jpg)![Web](doc/web.jpg)![Desktop](doc/desktop.jpg)
+![Mobile](readme/mobile.jpg)![Web](readme/web.jpg)![Desktop](readme/desktop.jpg)
 
 Live web demo: https://zakgof.github.io/projects/korender/wasm/
 
@@ -57,7 +57,7 @@ Korender is BETA - APIs may change without notice.
 - Desktop: `./gradlew :examples:run`
 - Android: `./gradlew :examples:installRelease`
 
-![Showcase](doc/collage1.jpg)!
+![Showcase](readme/collage1.jpg)!
 
 ### Quick start 
 

@@ -1,0 +1,21 @@
+site_name: Korender Wiki
+theme:
+  name: readthedocs
+nav:
+  - Home: index.md
+  - User Guide:
+    - Context: context.md
+    - Assets: assets.md
+    - Renderables: renderables.md
+    - Projection and camera: projection.md
+    - Lights and shadows: lights.md
+    - Environment mapping: env.md
+    - Post-process filters: filters.md
+    - Effects: effects.md
+    - GUI: gui.md
+    - Billboards: billboards.md
+    - Instancing: instancing.md
+    - Deferred renderer: deferred.md
+  - Extending Korender:
+    - Plugins: plugins.md
+    - Custom shaders: custom.md
