@@ -4,8 +4,8 @@ theme:
 nav:
   - Home: index.md
   - User Guide:
-    - Context: context.md
-    - Assets: assets.md
+    - Contexts: context.md
+    - Asset management: assets.md
     - Renderables: renderables.md
     - Projection and camera: projection.md
     - Lights and shadows: lights.md
