@@ -20,14 +20,6 @@ out vec4 fragColor;
 
 float shadowRatios[5];
 
-#ifdef PLUGIN_COLOR
-#import "$color"
-#endif
-
-#ifdef PLUGIN_DEPTH
-#import "$depth"
-#endif
-
 #import "!shader/lib/space.glsl"
 
 #ifdef PLUGIN_SKY
@@ -66,14 +58,6 @@ void main() {
 
     for (int l=0; l<numPointLights; l++)
         color += pointLight(vpos, l, N, V, c_diff, F0, rough, 1.0);
-
-#ifdef PLUGIN_COLOR
-    color = pluginColor(vpos, color, depth);
-#endif
-
-#ifdef PLUGIN_DEPTH
-    color = pluginDepth(vpos, color, depth);
-#endif
 
     fragColor = vec4(color, 1.);
     gl_FragDepth = depth;

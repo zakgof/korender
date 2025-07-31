@@ -147,15 +147,16 @@ internal class Scene(
 
         renderDeferredOpaques()
 
+        var pingPong = 0
         val postShadingEffects = sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects
-        renderDeferredShading(if (postShadingEffects.isEmpty() && sceneDeclaration.filters.isEmpty()) null else sceneDeclaration.filters.size + 1)
+        renderDeferredShading(if (postShadingEffects.isEmpty() && sceneDeclaration.filters.isEmpty()) null else pingPong++)
 
         if (postShadingEffects.isNotEmpty()) {
             postShadingEffects.forEach { renderPostShadingEffect(it as InternalPostShadingEffect) }
-            renderComposition(if (sceneDeclaration.filters.isEmpty()) null else sceneDeclaration.filters.size)
+            renderComposition(if (sceneDeclaration.filters.isEmpty()) null else pingPong++)
         }
         sceneDeclaration.filters.forEachIndexed { filterIndex, filter ->
-            renderToReusableFb(if (sceneDeclaration.filters.size - 1 == filterIndex) null else sceneDeclaration.filters.size - 1 - filterIndex) {
+            renderToReusableFb(if (sceneDeclaration.filters.size - 1 == filterIndex) null else pingPong++) {
                 renderPostProcess(filter)
             }
         }
@@ -463,6 +464,7 @@ internal class Scene(
     }
 
     private fun renderToReusableFb(index: Int?, block: () -> Unit): GlGpuFrameBuffer? {
+        println("renderToReusableFb --> $index")
         if (index == null) {
             block()
             return null

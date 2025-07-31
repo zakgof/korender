@@ -69,6 +69,9 @@ fun IslandExample() =
         OnKey { freeCamera.handle(it) }
 
         Frame {
+
+            DeferredShading()
+
             projection = projection(2f, 2f * height / width, 2f, 32000f, log())
             camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
