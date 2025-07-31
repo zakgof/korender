@@ -25,7 +25,7 @@ Retention policy can be overridden by setting the `retentionPolicy` var in the K
 ```kotlin
 @Composable
 Korender(appResourceLoader = { Res.readBytes(it) }) {
-  retentionPolicy = keepForever()
+    retentionPolicy = keepForever()
 ```
 
 #####Available retention policies:    

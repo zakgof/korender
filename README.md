@@ -91,4 +91,4 @@ Korender {
 
 
 ### Further reading
-Explore the [Korender Wiki](https://github.com/zakgof/korender/wiki)
+Explore the [Korender Wiki](https://zakgof.github.io/projects/korender/wiki)

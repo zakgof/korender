@@ -7,15 +7,20 @@ nav:
     - Contexts: context.md
     - Asset management: assets.md
     - Renderables: renderables.md
+    - Materials: materials.md
+    - Meshes: meshes.md
     - Projection and camera: projection.md
-    - Lights and shadows: lights.md
+    - Lights and shadows: light.md
+    - Sky rendering: sky.md
     - Environment mapping: env.md
     - Post-process filters: filters.md
     - Effects: effects.md
     - GUI: gui.md
     - Billboards: billboards.md
     - Instancing: instancing.md
+
     - Deferred renderer: deferred.md
-  - Extending Korender:
-    - Plugins: plugins.md
-    - Custom shaders: custom.md
+   # - Offscreen rendering: offscreen.md
+  #- Extending Korender:
+   # - Plugins: plugins.md
+   #- Custom shaders: custom.md
