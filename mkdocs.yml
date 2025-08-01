@@ -15,6 +15,8 @@ nav:
     - Environment mapping: env.md
     - Post-process filters: filters.md
     - Effects: effects.md
+    - GTLF support: gltf.md
+    - Terrain: terrain.md
     - GUI: gui.md
     - Billboards: billboards.md
     - Instancing: instancing.md
