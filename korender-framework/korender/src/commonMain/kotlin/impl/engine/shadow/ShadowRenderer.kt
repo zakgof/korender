@@ -86,7 +86,7 @@ internal object ShadowRenderer {
 
                 val shadowMaterialModifier = InternalMaterialModifier {
 
-                    it.vertShaderFile = if (renderableDeclaration.base == BaseMaterial.Billboard) "!shader/billboard.vert" else "!shader/base.vert"
+                    // it.vertShaderFile = if (renderableDeclaration.base == BaseMaterial.Billboard) "!shader/billboard.vert" else "!shader/base.vert"
                     it.fragShaderFile = "!shader/caster.frag"
                     it.plugins["vprojection"] = "!shader/plugin/vprojection.ortho.vert"
 

@@ -215,7 +215,6 @@ internal class GlGpuShader(
             is GLBindableTexture -> {
                 value.bind(currentTextureUnit)
                 glUniform1i(location, currentTextureUnit)
-                println("Bind texture $value -> unit $currentTextureUnit")
                 return 1
             }
 

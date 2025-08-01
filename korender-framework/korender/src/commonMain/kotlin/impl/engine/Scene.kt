@@ -464,7 +464,6 @@ internal class Scene(
     }
 
     private fun renderToReusableFb(index: Int?, block: () -> Unit): GlGpuFrameBuffer? {
-        println("renderToReusableFb --> $index")
         if (index == null) {
             block()
             return null

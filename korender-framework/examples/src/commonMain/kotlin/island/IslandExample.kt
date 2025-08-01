@@ -76,7 +76,7 @@ fun IslandExample() =
             camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
             AmbientLight(ColorRGB.white(0.5f))
-            DirectionalLight(Vec3(3.0f, -3.0f, 1.0f), ColorRGB.white(1.5f)) {
+            DirectionalLight(Vec3(15.0f, -3.0f, 1.0f), ColorRGB.white(1.5f)) {
                 Cascade(512, 2f, 3000f, 0f to 4000f, hardwarePcf())
                 Cascade(512, 2500f, 12000f, 0f to 4000f, hardwarePcf())
             }
