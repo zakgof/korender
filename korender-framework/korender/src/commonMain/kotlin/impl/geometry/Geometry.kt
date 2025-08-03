@@ -153,7 +153,7 @@ internal object Geometry {
             val phi = PI * 2f * sector / sectors
             val cosPhi = cos(phi)
             val sinPhi = sin(phi)
-            val normal = Vec3(-sinPhi, 0f, cosPhi)
+            val normal = Vec3(cosPhi, 0f, sinPhi)
             pos(Vec3(radius * cosPhi, 0f, radius * sinPhi))
                 .normal(normal)
                 .tex(sector.toFloat() / sectors, 0f)

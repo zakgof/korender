@@ -1,0 +1,4 @@
+package ltree
+
+class LTreeDef(
+)

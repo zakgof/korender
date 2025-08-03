@@ -17,7 +17,7 @@ import kotlin.math.pow
 @Composable
 fun BillboardTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-    val basePath = "D:\\p\\dev\\assets\\" // TODO
+    val basePath = "D:\\kot\\dev\\assets\\" // TODO
 
     val metaball = Metaball(20f, 3.0f, 8000, 48) { (it * 0.05f).pow(0.1f) * (1f - it * 0.05f) * 10f }
     // val metaball = Metaball(20f, 1.0f) { sqrt(it * 0.05f) * (1f - it * 0.05f) * 10f }
