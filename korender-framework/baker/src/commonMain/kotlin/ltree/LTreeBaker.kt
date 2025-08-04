@@ -8,7 +8,6 @@ import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform.Companion.scale
-import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -37,7 +36,7 @@ fun FrameContext.renderLTree(lTree: LTree) {
         mesh = cylinderSide(),
         instancing = instancing("trunk", lTree.branches.size, dynamic = true) {
             lTree.branches.map { branch ->
-                scale(0.08f, (branch.tail - branch.head).length() * 1.05f, 0.1f)
+                scale(0.03f, (branch.tail - branch.head).length() * 1.05f, 0.03f)
                     .rotate(Quaternion.shortestArc(1.y, (branch.tail - branch.head).normalize()))
                     .translate(branch.head)
                     .rotate(1.y, frameInfo.time * 0.1f)
@@ -45,11 +44,16 @@ fun FrameContext.renderLTree(lTree: LTree) {
         }
     )
 
-    Renderable(
-        base(color = ColorRGBA.Green),
-        mesh = sphere(0.1f),
-        instancing = instancing("attr", lTree.attractors.size, dynamic = false) {
-            lTree.attractors.forEach { Instance(translate(it)) }
-        }
-    )
+//    Renderable(
+//        base(color = ColorRGBA.Green),
+//        mesh = sphere(0.1f),
+//        instancing = instancing("attr", lTree.attractors.size, dynamic = true) {
+//            lTree.attractors.forEach {
+//                Instance(
+//                    translate(it)
+//                        .rotate(1.y, frameInfo.time * 0.1f)
+//                )
+//            }
+//        }
+//    )
 }

@@ -15,56 +15,63 @@ class LTree(
 ) {
 
     class Branch(
+        val level: Int,
         val head: Vec3,
         val tail: Vec3
     )
 }
 
 fun generateLTree(lTreeDef: LTreeDef): LTree {
-    val branches = mutableListOf<LTree.Branch>()
-    val attractors = initializeAttractors(lTreeDef)
 
-    fun rayMetric(point: Vec3, look: Vec3): Float {
-        val dirPower = attractors.sumOf { 1.0 / distancePointToRay(it, point, look) }.toFloat() / attractors.size
-        val dirSymmetry = attractors.fold(Vec3.ZERO) { a, it ->
-            (it - point).normalize() * (1.0f / distancePointToRay(it, point, look))
+    val attractors = initializeAttractors(lTreeDef)
+    val branches = mutableListOf<LTree.Branch>()
+    val growingBranches = mutableListOf<LTree.Branch>()
+    val r = Random()
+
+    fun totalMetric(bs: List<LTree.Branch>) = attractors.sumOf { a ->
+        bs.minOf { b ->
+            (a - b.tail).lengthSquared() * (4 + b.level)
+        }.toDouble()
+    }.toFloat()
+
+    fun processBranch(branch: LTree.Branch): List<LTree.Branch> {
+
+        val look = (branch.tail - branch.head).normalize()
+        val ortho = look.randomOrtho()
+        val p1 = branch.tail + (look + ortho * 0.7f).normalize()
+        val p2 = branch.tail + (look - ortho * 0.7f).normalize()
+
+        return listOf(p1, p2).map { LTree.Branch(branch.level + 1, branch.tail, it) }
+    }
+
+
+    val root = LTree.Branch(0, -4.y, 0.y)
+    branches += root
+    growingBranches += root
+
+    var metric = totalMetric(growingBranches)
+
+    for (iteration in 0..64) {
+
+        val candidate = (0 until 512).map {
+            val grower = growingBranches[r.nextInt(growingBranches.size)]
+            val newBranches = processBranch(grower)
+            arrayOf(grower, newBranches[0], newBranches[1])
+        }.minBy {
+            totalMetric(growingBranches + it[1] + it[2] - it[0])
         }
 
-        val metric = dirPower // + 0.03f * (dirSymmetry * look)
-
-        println("Look: $look | dirPower: $dirPower | dirSymmetry: $dirSymmetry | metric: $metric")
-        return metric
+        val candidateMetric = totalMetric(growingBranches + candidate[1] + candidate[2] - candidate[0])
+        if (candidateMetric < metric) {
+            branches += candidate[1]
+            branches += candidate[2]
+            growingBranches += candidate[1]
+            growingBranches += candidate[2]
+            growingBranches -= candidate[0]
+            println("Iteration:$iteration   metric:$metric -> candidate:$candidateMetric")
+            metric = totalMetric(growingBranches)
+        }
     }
-
-    fun step(point: Vec3, look: Vec3, level: Int) {
-        val tail = point + look
-        val branch = LTree.Branch(point, tail)
-        branches += branch
-
-        if (level == 12)
-            return
-
-        val ortho = (0 until 32)
-            .map { look.randomOrtho() }
-            .maxBy { o ->
-                rayMetric(point, (look + o * 0.5f).normalize()) +
-                        rayMetric(point, (look - o * 0.5f).normalize())
-            }
-
-        val l1 = (look + ortho * 0.5f).normalize()
-        val l2 = (look - ortho * 0.5f).normalize()
-
-        val rm1 = rayMetric(point + l1 * 1.0f, l1)
-        val rm2 = rayMetric(point + l2 * 1.0f, l2)
-
-        if (rm1 < 0.1f || rm2 < 0.1f)
-            return
-
-        step(tail, l1, level + 1)
-        step(tail, l2, level + 1)
-    }
-
-    step(-1.y, 1.y, 0)
     return LTree(branches, attractors)
 }
 
