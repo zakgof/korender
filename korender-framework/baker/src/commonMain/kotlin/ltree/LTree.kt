@@ -7,6 +7,7 @@ import com.zakgof.korender.math.y
 import java.util.Random
 import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.max
 import kotlin.math.sin
 
 class LTree(
@@ -30,7 +31,7 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
 
     fun totalMetric(bs: List<LTree.Branch>) = attractors.sumOf { a ->
         bs.minOf { b ->
-            (a - b.tail).lengthSquared() * (4 + b.level)
+            max((a - b.tail).lengthSquared(), 0.2f) * (3 + b.level)
         }.toDouble()
     }.toFloat()
 
@@ -49,19 +50,19 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
     branches += root
     growingBranches += root
 
-    var metric = totalMetric(growingBranches)
+    var metric = totalMetric(branches)
 
-    for (iteration in 0..64) {
+    for (iteration in 0..200) {
 
-        val candidate = (0 until 512).map {
+        val candidate = (0 until 128).map {
             val grower = growingBranches[r.nextInt(growingBranches.size)]
             val newBranches = processBranch(grower)
             arrayOf(grower, newBranches[0], newBranches[1])
         }.minBy {
-            totalMetric(growingBranches + it[1] + it[2] - it[0])
+            totalMetric(branches + it[1] + it[2] - it[0])
         }
 
-        val candidateMetric = totalMetric(growingBranches + candidate[1] + candidate[2] - candidate[0])
+        val candidateMetric = totalMetric(branches + candidate[1] + candidate[2] - candidate[0])
         if (candidateMetric < metric) {
             branches += candidate[1]
             branches += candidate[2]
@@ -69,7 +70,7 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
             growingBranches += candidate[2]
             growingBranches -= candidate[0]
             println("Iteration:$iteration   metric:$metric -> candidate:$candidateMetric")
-            metric = totalMetric(growingBranches)
+            metric = totalMetric(branches)
         }
     }
     return LTree(branches, attractors)
@@ -80,10 +81,9 @@ fun initializeAttractors(lTreeDef: LTreeDef) =
         -10f to 10f,
         0f to 20f,
         -10f to 10f,
-        64
+        32
     )
-        .filter {
-            abs(lTreeDef.sdf(it)) < 0.1f
+        .filter { lTreeDef.sdf(it) < 0.0f
         }.toMutableList()
 
 private fun grid(xRange: Pair<Float, Float>, yRange: Pair<Float, Float>, zRange: Pair<Float, Float>, steps: Int): List<Vec3> {
@@ -107,18 +107,6 @@ private fun Vec3.randomOrtho(): Vec3 {
     val ortho2 = (this % ortho1).normalize()
     val angle = Random().nextFloat(2f * PI)
     return ortho1 * cos(angle) + ortho2 * sin(angle)
-}
-
-private fun distancePointToRay(r: Vec3, origin: Vec3, look: Vec3): Float {
-    val lNorm = look.normalize()
-    val op = r - origin
-    val t = op * lNorm
-    return if (t < 0f) {
-        1000f
-    } else {
-        val closest = origin + lNorm * t
-        (r - closest).length()
-    }
 }
 
 
