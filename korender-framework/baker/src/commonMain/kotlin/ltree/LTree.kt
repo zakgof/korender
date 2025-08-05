@@ -4,6 +4,7 @@ import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
+import smile.clustering.DBSCAN
 import java.util.Random
 import kotlin.math.abs
 import kotlin.math.cos
@@ -40,8 +41,6 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
     val splitBranches = mutableSetOf<LTree.Branch>()
     val leaves = mutableListOf<LTree.Leaf>()
     val r = Random()
-
-    fun force(p: Vec3) = branches.fold(0.y) { acc, b -> acc + (b.tail - p) * (1.0f / (b.tail - p).lengthSquared()) }
 
     fun totalMetric(bs: List<LTree.Branch>) = bs.sumOf { b1 ->
         bs.filter { b2 -> b1 !== b2 }
@@ -87,16 +86,49 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
                 val normal = (dir % branchVector).normalize()
 
                 val r =
-                (0 until 8).map {
-                    val mount = branch.head + branchVector * ((it + 0.5f) / 8f)
-                    LTree.Leaf(mount, dir, normal)
-                } +
-                (0 until 8).map {
-                    val mount = branch.head + branchVector * ((it + 0.5f) / 8f)
-                    LTree.Leaf(mount, -dir, -normal)
-                } + LTree.Leaf(branch.tail, branchVector.normalize(), normal)
+                    (0 until 8).map {
+                        val mount = branch.head + branchVector * ((it + 0.5f) / 8f)
+                        LTree.Leaf(mount, dir, normal)
+                    } +
+                            (0 until 8).map {
+                                val mount = branch.head + branchVector * ((it + 0.5f) / 8f)
+                                LTree.Leaf(mount, -dir, -normal)
+                            } + LTree.Leaf(branch.tail, branchVector.normalize(), normal)
                 r
             }
+    }
+
+    fun clusterLeaves() {
+
+        val dbscan = DBSCAN<LTree.Leaf>.fit(
+            leaves.toTypedArray(),
+            {
+                l1: LTree.Leaf, l2: LTree.Leaf ->
+                val d = (l1.mount - l2.mount).lengthSquared() + 7.0 * (l1.normal - l2.normal).lengthSquared()
+                d
+            },
+            8,
+            1.9
+        )
+
+        println("DBSCAN clusters: ${dbscan.k()}")
+
+        val groups = leaves.indices.groupBy { dbscan.group()[it] }
+        val clusteredLeaves = groups.values.flatMap { groupIndices ->
+            val groupLeaves = groupIndices.map { leaves[it] }
+            val cardNormal = groupLeaves.fold(0.y) { a, c -> a + c.normal }.normalize()
+            val cardPosition = groupLeaves.fold(0.y) { a, c -> a + c.mount } * (1f / groupLeaves.size)
+            val fixedLeaves = groupLeaves.map { l ->
+                LTree.Leaf(
+                    mount = l.mount - cardNormal * ((l.mount - cardPosition) * cardNormal),
+                    bladeDir = l.bladeDir -cardNormal * (l.bladeDir * cardNormal),
+                    normal = cardNormal
+                )
+            }
+            fixedLeaves
+        }
+        leaves.clear()
+        leaves += clusteredLeaves
     }
 
 
@@ -126,6 +158,7 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
     }
     thicknessDance(root)
     seedLeaves()
+    clusterLeaves()
     return LTree(branches, leaves, attractors)
 }
 

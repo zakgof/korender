@@ -26,26 +26,28 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val lTree = generateLTree(lTreeDef)
 
     Frame {
-        AmbientLight(white(0.3f))
+        AmbientLight(white(0.5f))
         DirectionalLight(Vec3(3f, 0f, 1f), white(1.0f))
-        camera = camera(4.y + (-30).z, 1.z, 1.y)
+        camera = camera(4.y + (-60).z, 1.z, 1.y)
         renderLTree(lTree)
     }
 }
 
 fun FrameContext.renderLTree(lTree: LTree) {
-    Renderable(
-        base(color = ColorRGBA.Blue),
-        mesh = cylinderSide(),
-        instancing = instancing("trunk", lTree.branches.size, dynamic = true) {
-            lTree.branches.map { branch ->
-                scale(branch.raidusAtHead, (branch.tail - branch.head).length() * 1.05f, branch.raidusAtHead)
-                    .rotate(Quaternion.shortestArc(1.y, (branch.tail - branch.head).normalize()))
-                    .translate(branch.head)
-                    .rotate(1.y, frameInfo.time * 0.1f)
-            }.forEach { Instance(it) }
-        }
-    )
+    if (true) {
+        Renderable(
+            base(color = ColorRGBA.Blue),
+            mesh = cylinderSide(),
+            instancing = instancing("trunk", lTree.branches.size, dynamic = true) {
+                lTree.branches.map { branch ->
+                    scale(branch.raidusAtHead, (branch.tail - branch.head).length() * 1.05f, branch.raidusAtHead)
+                        .rotate(Quaternion.shortestArc(1.y, (branch.tail - branch.head).normalize()))
+                        .translate(branch.head)
+                        .rotate(1.y, frameInfo.time * 0.1f)
+                }.forEach { Instance(it) }
+            }
+        )
+    }
     Renderable(
         base(colorTexture = texture("model/leaf.png")),
         mesh = quad(0.05f, 0.14f),
