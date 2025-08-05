@@ -6,6 +6,7 @@ import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
@@ -42,6 +43,27 @@ fun FrameContext.renderLTree(lTree: LTree) {
                     .rotate(Quaternion.shortestArc(1.y, (branch.tail - branch.head).normalize()))
                     .translate(branch.head)
                     .rotate(1.y, frameInfo.time * 0.1f)
+            }.forEach { Instance(it) }
+        }
+    )
+    Renderable(
+        base(colorTexture = texture("model/leaf.png")),
+        mesh = quad(0.05f, 0.14f),
+        instancing = instancing("leaves", lTree.leafs.size * 2, dynamic = true) {
+            lTree.leafs.map { leaf ->
+                translate(0.1f.y)
+                    .rotate(leaf.normal, leaf.bladeDir)
+                    .translate(leaf.mount)
+                    .rotate(1.y, frameInfo.time * 0.1f)
+
+            }.forEach { Instance(it) }
+            lTree.leafs.map { leaf ->
+                translate(-0.1f.y)
+                    .rotate(1.y, PI)
+                    .rotate(leaf.normal, -leaf.bladeDir)
+                    .translate(leaf.mount)
+                    .rotate(1.y, frameInfo.time * 0.1f)
+
             }.forEach { Instance(it) }
         }
     )

@@ -12,6 +12,7 @@ import kotlin.math.sqrt
 
 class LTree(
     val branches: List<Branch>,
+    val leafs: List<Leaf>,
     val attractors: List<Vec3>
 ) {
 
@@ -24,6 +25,12 @@ class LTree(
         val parent: Branch?,
         val children: MutableList<Branch> = mutableListOf()
     )
+
+    class Leaf(
+        val mount: Vec3,
+        val bladeDir: Vec3,
+        val normal: Vec3
+    )
 }
 
 fun generateLTree(lTreeDef: LTreeDef): LTree {
@@ -31,7 +38,7 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
     val attractors = initializeAttractors(lTreeDef)
     val branches = mutableListOf<LTree.Branch>()
     val splitBranches = mutableSetOf<LTree.Branch>()
-    val activeAttractors = attractors.toSet()
+    val leaves = mutableListOf<LTree.Leaf>()
     val r = Random()
 
     fun force(p: Vec3) = branches.fold(0.y) { acc, b -> acc + (b.tail - p) * (1.0f / (b.tail - p).lengthSquared()) }
@@ -71,15 +78,36 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
         }
     }
 
+    fun seedLeaves() {
+        leaves += branches
+            .filter { it.children.isEmpty() || it.level > 7 }
+            .flatMap { branch ->
+                val branchVector = (branch.tail - branch.head)
+                val dir = branchVector.normalize().randomOrtho()
+                val normal = (dir % branchVector).normalize()
+
+                val r =
+                (0 until 8).map {
+                    val mount = branch.head + branchVector * ((it + 0.5f) / 8f)
+                    LTree.Leaf(mount, dir, normal)
+                } +
+                (0 until 8).map {
+                    val mount = branch.head + branchVector * ((it + 0.5f) / 8f)
+                    LTree.Leaf(mount, -dir, -normal)
+                } + LTree.Leaf(branch.tail, branchVector.normalize(), normal)
+                r
+            }
+    }
+
 
     val root = LTree.Branch(1, -4.y, 0.y, 0.1f, 0.1f, null)
     branches += root
 
     var metric = totalMetric(branches)
 
-    for (iteration in 0..300) {
+    for (iteration in 0..400) {
 
-        val candidate = (0 until 2048).mapNotNull {
+        val candidate = (0 until 512).mapNotNull {
             val grower = branches[r.nextInt(branches.size)]
             val newBranches = split(grower)
             newBranches?.let { grower to it }
@@ -97,7 +125,8 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
         metric = totalMetric(branches)
     }
     thicknessDance(root)
-    return LTree(branches, attractors)
+    seedLeaves()
+    return LTree(branches, leaves, attractors)
 }
 
 fun initializeAttractors(lTreeDef: LTreeDef) =
