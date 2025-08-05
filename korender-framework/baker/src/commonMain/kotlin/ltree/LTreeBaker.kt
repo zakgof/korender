@@ -38,7 +38,7 @@ fun FrameContext.renderLTree(lTree: LTree) {
         mesh = cylinderSide(),
         instancing = instancing("trunk", lTree.branches.size, dynamic = true) {
             lTree.branches.map { branch ->
-                scale(0.03f, (branch.tail - branch.head).length() * 1.05f, 0.03f)
+                scale(branch.raidusAtHead, (branch.tail - branch.head).length() * 1.05f, branch.raidusAtHead)
                     .rotate(Quaternion.shortestArc(1.y, (branch.tail - branch.head).normalize()))
                     .translate(branch.head)
                     .rotate(1.y, frameInfo.time * 0.1f)
