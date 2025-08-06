@@ -1,4 +1,4 @@
-package ltree.generator
+package ltree
 
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Vec3

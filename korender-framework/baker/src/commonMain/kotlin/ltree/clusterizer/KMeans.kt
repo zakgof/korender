@@ -1,7 +1,8 @@
-package ltree.generator
+package ltree.clusterizer
 
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
+import ltree.generator.LTree
 import kotlin.math.abs
 
 class Plane(var center: Vec3, var normal: Vec3) {
@@ -18,7 +19,7 @@ fun kMeans(leaves: List<LTree.Leaf>, initialPlanes: List<Plane>): Map<Plane, Lis
         initialPlanes.minBy { plane -> plane.distanceTo(leaf) }
     }.toMutableMap()
 
-    for (i in 0..1024) {
+    for (i in 0..128) {
 
         planes.forEach {
             val center = it.value.fold(0.x) { a, leaf -> a + leaf.mount } * (1f / it.value.size)

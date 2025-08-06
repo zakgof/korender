@@ -73,6 +73,7 @@ internal object Geometry {
             is Billboard -> billboard(count)
             is ImageQuad -> imageQuad()
             is Quad -> quad(simpleMeshDeclaration.halfSideX, simpleMeshDeclaration.halfSideY, count)
+            is BiQuad -> biquad(simpleMeshDeclaration.halfSideX, simpleMeshDeclaration.halfSideY, count)
             is Disk -> disk(simpleMeshDeclaration.radius, simpleMeshDeclaration.sectors, count)
             is CylinderSide -> cylinderSide(simpleMeshDeclaration.radius, simpleMeshDeclaration.height, simpleMeshDeclaration.sectors, count)
             is ConeTop -> coneTop(simpleMeshDeclaration.radius, simpleMeshDeclaration.height, simpleMeshDeclaration.sectors, count)
@@ -96,6 +97,25 @@ internal object Geometry {
         pos(Vec3(halfSideX, halfSideY, 0f)).tex(1f, 1f).normal(1.z)
         pos(Vec3(-halfSideX, halfSideY, 0f)).tex(0f, 1f).normal(1.z)
         index(0, 1, 2, 0, 2, 3)
+    }
+
+    private fun biquad(halfSideX: Float, halfSideY: Float, count: Int) = CMesh(
+        8,
+        12,
+        count,
+        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+    ) {
+        pos(Vec3(-halfSideX, -halfSideY, 0f)).tex(0f, 0f).normal(1.z)
+        pos(Vec3(halfSideX, -halfSideY, 0f)).tex(1f, 0f).normal(1.z)
+        pos(Vec3(halfSideX, halfSideY, 0f)).tex(1f, 1f).normal(1.z)
+        pos(Vec3(-halfSideX, halfSideY, 0f)).tex(0f, 1f).normal(1.z)
+
+        pos(Vec3(-halfSideX, -halfSideY, 0f)).tex(0f, 0f).normal(-1.z)
+        pos(Vec3(halfSideX, -halfSideY, 0f)).tex(1f, 0f).normal(-1.z)
+        pos(Vec3(halfSideX, halfSideY, 0f)).tex(1f, 1f).normal(-1.z)
+        pos(Vec3(-halfSideX, halfSideY, 0f)).tex(0f, 1f).normal(-1.z)
+
+        index(0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6)
     }
 
     private fun disk(radius: Float, sectors: Int, count: Int) = CMesh(

@@ -1,7 +1,7 @@
 package ltree.generator.leaf
 
 import ltree.generator.LTree
-import ltree.generator.randomOrtho
+import ltree.randomOrtho
 
 class RowanLeaves(val rows: Int = 7) : LeafStrategy {
 

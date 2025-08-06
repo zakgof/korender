@@ -1,16 +1,14 @@
 package ltree.generator
 
-import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
+import ltree.randomOrtho
 import java.util.Random
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlin.math.sqrt
 
 class LTree(
     val branches: List<Branch>,
-    val leafs: List<Leaf>,
+    val leaves: List<Leaf>,
 ) {
 
     class Branch(
@@ -80,34 +78,6 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
                 .flatMap { branch -> lTreeDef.leafStrategy.generateLeaves(branch) }
     }
 
-    fun clusterLeaves() {
-
-        val clusters = 16
-
-        val initialPlanes = (0 until clusters).map {
-            val s = sin(it * 2.0f * PI / clusters)
-            val c = cos(it * 2.0f * PI / clusters)
-            val normal = Vec3(s, 0f, c)
-            Plane(normal * 2.0f, normal)
-        }
-
-        val kMeans = kMeans(leaves, initialPlanes)
-
-        val clusteredLeaves = kMeans.flatMap {
-            val fixedLeaves = it.value.map { l ->
-                LTree.Leaf(
-                    mount = l.mount - it.key.normal * ((l.mount - it.key.center) * it.key.normal),
-                    blade = l.blade - it.key.normal * (l.blade * it.key.normal),
-                    normal = it.key.normal
-                )
-            }
-            fixedLeaves
-        }
-        leaves.clear()
-        leaves += clusteredLeaves
-    }
-
-
     val root = LTree.Branch(1, -4.y, 0.y, 0.1f, 0.1f, null)
     branches += root
 
@@ -134,7 +104,7 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
     }
     thicknessDance(root)
     seedLeaves()
-    clusterLeaves()
+    // clusterLeaves()
     return LTree(branches, leaves)
 }
 

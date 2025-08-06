@@ -1,8 +1,8 @@
 package ltree.generator.leaf
 
 import ltree.generator.LTree
-import ltree.generator.jitter
-import ltree.generator.randomOrtho
+import ltree.jitter
+import ltree.randomOrtho
 import java.util.Random
 
 class DiagonalLeaves(val rows: Int = 11, val length: Float = 0.4f) : LeafStrategy {

@@ -50,6 +50,7 @@ internal data class Billboard(override val retentionPolicy: RetentionPolicy) : I
 internal data class ImageQuad(override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class ScreenQuad(override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class Quad(val halfSideX: Float, val halfSideY: Float, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
+internal data class BiQuad(val halfSideX: Float, val halfSideY: Float, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class CylinderSide(val height: Float, val radius: Float, val sectors: Int, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class ConeTop(val height: Float, val radius: Float, val sectors: Int, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class Disk(val radius: Float, val sectors: Int, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration

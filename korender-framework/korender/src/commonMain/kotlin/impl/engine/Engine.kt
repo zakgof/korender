@@ -44,6 +44,7 @@ import com.zakgof.korender.impl.engine.shadow.InternalHardShadow
 import com.zakgof.korender.impl.engine.shadow.InternalHardwarePcfShadow
 import com.zakgof.korender.impl.engine.shadow.InternalSoftwarePcfShadow
 import com.zakgof.korender.impl.engine.shadow.InternalVsmShadow
+import com.zakgof.korender.impl.geometry.BiQuad
 import com.zakgof.korender.impl.geometry.ConeTop
 import com.zakgof.korender.impl.geometry.Cube
 import com.zakgof.korender.impl.geometry.CustomCpuMesh
@@ -180,6 +181,8 @@ internal class Engine(
         }
 
         override fun quad(halfSideX: Float, halfSideY: Float) = Quad(halfSideX, halfSideY, currentRetentionPolicy)
+
+        override fun biQuad(halfSideX: Float, halfSideY: Float) = BiQuad(halfSideX, halfSideY, currentRetentionPolicy)
 
         override fun cube(halfSide: Float) = Cube(halfSide, currentRetentionPolicy)
 
