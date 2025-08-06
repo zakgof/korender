@@ -6,29 +6,30 @@ import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
-import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import kotlin.math.pow
-import kotlin.math.sqrt
+import ltree.generator.LTree
+import ltree.generator.LTreeDef
+import ltree.generator.generateLTree
+import ltree.generator.leaf.DiagonalLeaves
 
 @Composable
 fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-    val lTreeDef = LTreeDef {
-        sqrt(it.x * it.x + it.z * it.z) - (it.y * 0.1f).pow(0.5f) * (1.0f - it.y * 0.1f) * 10f
-    }
+    val lTreeDef = LTreeDef(
+        DiagonalLeaves()
+    )
 
     val lTree = generateLTree(lTreeDef)
 
     Frame {
         AmbientLight(white(0.5f))
         DirectionalLight(Vec3(3f, 0f, 1f), white(1.0f))
-        camera = camera(4.y + (-60).z, 1.z, 1.y)
+        camera = camera(4.y + (-30).z, 1.z, 1.y)
         renderLTree(lTree)
     }
 }
@@ -50,36 +51,18 @@ fun FrameContext.renderLTree(lTree: LTree) {
     }
     Renderable(
         base(colorTexture = texture("model/leaf.png")),
-        mesh = quad(0.05f, 0.14f),
+        mesh = quad(),
         instancing = instancing("leaves", lTree.leafs.size * 2, dynamic = true) {
-            lTree.leafs.map { leaf ->
-                translate(0.1f.y)
-                    .rotate(leaf.normal, leaf.bladeDir)
-                    .translate(leaf.mount)
-                    .rotate(1.y, frameInfo.time * 0.1f)
-
-            }.forEach { Instance(it) }
-            lTree.leafs.map { leaf ->
-                translate(-0.1f.y)
-                    .rotate(1.y, PI)
-                    .rotate(leaf.normal, -leaf.bladeDir)
-                    .translate(leaf.mount)
-                    .rotate(1.y, frameInfo.time * 0.1f)
-
-            }.forEach { Instance(it) }
-        }
-    )
-    return
-    Renderable(
-        base(color = ColorRGBA.Green),
-        mesh = sphere(0.1f),
-        instancing = instancing("attr", lTree.attractors.size, dynamic = true) {
-            lTree.attractors.forEach {
-                Instance(
-                    translate(it)
+            lTree.leafs.flatMap { leaf ->
+                listOf(-1f, 1f).map { mult ->
+                    translate(0.5f.y)
+                        .scale(0.16f, 0.88f, 1.0f)
+                        .rotate(leaf.normal * mult, leaf.blade.normalize())
+                        .translate(leaf.mount)
                         .rotate(1.y, frameInfo.time * 0.1f)
-                )
-            }
+                }
+            }.forEach { Instance(it) }
         }
     )
+
 }

@@ -1,20 +1,14 @@
-package ltree
+package ltree.generator
 
-import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import smile.clustering.DBSCAN
 import java.util.Random
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlin.math.sqrt
 
 class LTree(
     val branches: List<Branch>,
     val leafs: List<Leaf>,
-    val attractors: List<Vec3>
 ) {
 
     class Branch(
@@ -29,14 +23,14 @@ class LTree(
 
     class Leaf(
         val mount: Vec3,
-        val bladeDir: Vec3,
+        val blade: Vec3,
         val normal: Vec3
     )
+
 }
 
 fun generateLTree(lTreeDef: LTreeDef): LTree {
 
-    val attractors = initializeAttractors(lTreeDef)
     val branches = mutableListOf<LTree.Branch>()
     val splitBranches = mutableSetOf<LTree.Branch>()
     val leaves = mutableListOf<LTree.Leaf>()
@@ -78,32 +72,17 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
     }
 
     fun seedLeaves() {
-        leaves += branches
-            .filter { it.children.isEmpty() || it.level > 7 }
-            .flatMap { branch ->
-                val branchVector = (branch.tail - branch.head)
-                val dir = branchVector.normalize().randomOrtho()
-                val normal = (dir % branchVector).normalize()
-
-                val r =
-                    (0 until 8).map {
-                        val mount = branch.head + branchVector * ((it + 0.5f) / 8f)
-                        LTree.Leaf(mount, dir, normal)
-                    } +
-                            (0 until 8).map {
-                                val mount = branch.head + branchVector * ((it + 0.5f) / 8f)
-                                LTree.Leaf(mount, -dir, -normal)
-                            } + LTree.Leaf(branch.tail, branchVector.normalize(), normal)
-                r
-            }
+        leaves +=
+            branches
+                .filter { it.children.isEmpty() || it.level > 7 }
+                .flatMap { branch -> lTreeDef.leafStrategy.generateLeaves(branch) }
     }
 
     fun clusterLeaves() {
 
         val dbscan = DBSCAN<LTree.Leaf>.fit(
             leaves.toTypedArray(),
-            {
-                l1: LTree.Leaf, l2: LTree.Leaf ->
+            { l1: LTree.Leaf, l2: LTree.Leaf ->
                 val d = (l1.mount - l2.mount).lengthSquared() + 7.0 * (l1.normal - l2.normal).lengthSquared()
                 d
             },
@@ -121,7 +100,7 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
             val fixedLeaves = groupLeaves.map { l ->
                 LTree.Leaf(
                     mount = l.mount - cardNormal * ((l.mount - cardPosition) * cardNormal),
-                    bladeDir = l.bladeDir -cardNormal * (l.bladeDir * cardNormal),
+                    blade = l.blade - cardNormal * (l.blade * cardNormal),
                     normal = cardNormal
                 )
             }
@@ -158,42 +137,8 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
     }
     thicknessDance(root)
     seedLeaves()
-    clusterLeaves()
-    return LTree(branches, leaves, attractors)
-}
-
-fun initializeAttractors(lTreeDef: LTreeDef) =
-    grid(
-        -10f to 10f,
-        0f to 20f,
-        -10f to 10f,
-        24
-    )
-        .filter {
-            lTreeDef.sdf(it) < 0.0f
-        }.toMutableList()
-
-private fun grid(xRange: Pair<Float, Float>, yRange: Pair<Float, Float>, zRange: Pair<Float, Float>, steps: Int): List<Vec3> {
-    val r = Random()
-    return (0..steps).flatMap { xx ->
-        (0..steps).flatMap { yy ->
-            (0..steps).map { zz ->
-                Vec3(
-                    xRange.first + (xx + r.nextFloat(0.4f)) * (xRange.second - xRange.first) / steps,
-                    yRange.first + (yy + r.nextFloat(0.4f)) * (yRange.second - yRange.first) / steps,
-                    zRange.first + (zz + r.nextFloat(0.4f)) * (zRange.second - zRange.first) / steps
-                )
-            }
-        }
-    }
-}
-
-private fun Vec3.randomOrtho(): Vec3 {
-    val reference = if (abs(this.x) < 0.99) 1.x else 1.y
-    val ortho1 = (this % reference).normalize()
-    val ortho2 = (this % ortho1).normalize()
-    val angle = Random().nextFloat(2f * PI)
-    return ortho1 * cos(angle) + ortho2 * sin(angle)
+    // clusterLeaves()
+    return LTree(branches, leaves)
 }
 
 
