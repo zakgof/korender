@@ -1,9 +1,11 @@
 package ltree.generator
 
+import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
-import smile.clustering.DBSCAN
 import java.util.Random
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 class LTree(
@@ -80,28 +82,23 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
 
     fun clusterLeaves() {
 
-        val dbscan = DBSCAN<LTree.Leaf>.fit(
-            leaves.toTypedArray(),
-            { l1: LTree.Leaf, l2: LTree.Leaf ->
-                val d = (l1.mount - l2.mount).lengthSquared() + 7.0 * (l1.normal - l2.normal).lengthSquared()
-                d
-            },
-            8,
-            1.9
-        )
+        val clusters = 16
 
-        println("DBSCAN clusters: ${dbscan.k()}")
+        val initialPlanes = (0 until clusters).map {
+            val s = sin(it * 2.0f * PI / clusters)
+            val c = cos(it * 2.0f * PI / clusters)
+            val normal = Vec3(s, 0f, c)
+            Plane(normal * 2.0f, normal)
+        }
 
-        val groups = leaves.indices.groupBy { dbscan.group()[it] }
-        val clusteredLeaves = groups.values.flatMap { groupIndices ->
-            val groupLeaves = groupIndices.map { leaves[it] }
-            val cardNormal = groupLeaves.fold(0.y) { a, c -> a + c.normal }.normalize()
-            val cardPosition = groupLeaves.fold(0.y) { a, c -> a + c.mount } * (1f / groupLeaves.size)
-            val fixedLeaves = groupLeaves.map { l ->
+        val kMeans = kMeans(leaves, initialPlanes)
+
+        val clusteredLeaves = kMeans.flatMap {
+            val fixedLeaves = it.value.map { l ->
                 LTree.Leaf(
-                    mount = l.mount - cardNormal * ((l.mount - cardPosition) * cardNormal),
-                    blade = l.blade - cardNormal * (l.blade * cardNormal),
-                    normal = cardNormal
+                    mount = l.mount - it.key.normal * ((l.mount - it.key.center) * it.key.normal),
+                    blade = l.blade - it.key.normal * (l.blade * it.key.normal),
+                    normal = it.key.normal
                 )
             }
             fixedLeaves
@@ -137,7 +134,7 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
     }
     thicknessDance(root)
     seedLeaves()
-    // clusterLeaves()
+    clusterLeaves()
     return LTree(branches, leaves)
 }
 

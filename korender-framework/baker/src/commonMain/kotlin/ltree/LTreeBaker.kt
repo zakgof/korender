@@ -29,7 +29,7 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
         AmbientLight(white(0.5f))
         DirectionalLight(Vec3(3f, 0f, 1f), white(1.0f))
-        camera = camera(4.y + (-30).z, 1.z, 1.y)
+        camera = camera(4.y + (-50).z, 1.z, 1.y)
         renderLTree(lTree)
     }
 }
