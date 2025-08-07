@@ -286,6 +286,12 @@ internal class Engine(
             it.uniforms["normalCubeTexture"] = normalTexture
         }
 
+        override fun pipe() = InternalMaterialModifier {
+            it.vertShaderFile = "!shader/pipe.vert"
+            it.plugins["position"] = "!shader/plugin/position.pipe.frag"
+            it.plugins["normal"] = "!shader/plugin/normal.pipe.frag"
+        }
+
         override fun radiantCapture(radiantMax: Float) = InternalMaterialModifier {
             it.plugins["output"] = "!shader/plugin/output.radiant.frag"
             it.uniforms["radiantMax"] = radiantMax

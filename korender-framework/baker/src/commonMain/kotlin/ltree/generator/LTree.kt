@@ -66,8 +66,8 @@ fun generateLTree(lTreeDef: LTreeDef): LTree {
             branch.raidusAtTail = 0f
             branch.raidusAtHead = 0.01f
         } else {
-            branch.raidusAtTail = sqrt(branch.children.sumOf { it.raidusAtHead.toDouble() * it.raidusAtHead.toDouble() }.toFloat())
-            branch.raidusAtHead = branch.raidusAtTail
+            branch.raidusAtHead = sqrt(branch.children.sumOf { it.raidusAtHead.toDouble() * it.raidusAtHead.toDouble() }.toFloat())
+            branch.raidusAtTail = branch.children.maxOf { it.raidusAtHead.toDouble() }.toFloat()
         }
     }
 

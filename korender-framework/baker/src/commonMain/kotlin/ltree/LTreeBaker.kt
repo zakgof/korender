@@ -1,6 +1,10 @@
 package ltree
 
 import androidx.compose.runtime.Composable
+import com.zakgof.korender.Attributes.NORMAL
+import com.zakgof.korender.Attributes.POS
+import com.zakgof.korender.Attributes.SCALE
+import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Image
 import com.zakgof.korender.Korender
 import com.zakgof.korender.baker.resources.Res
@@ -9,9 +13,7 @@ import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.math.ColorRGB.Companion.White
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
-import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform.Companion.rotate
-import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
@@ -27,6 +29,42 @@ import tree.saveImage
 import kotlin.math.abs
 import kotlin.math.max
 
+
+@Composable
+fun LTreeBaker2() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+
+    Frame {
+        AmbientLight(white(0.05f))
+        DirectionalLight(-1.z)
+        camera = camera(20.z + 3.y, -1.z, 1.y)
+        Renderable(
+            base(color = ColorRGBA.Green),
+            pipe(),
+            mesh = customMesh("pipe", 8, 12, POS, NORMAL, TEX, SCALE) {
+                pos(0.y).normal(3.y + 1.x).tex(0f, 0f).attr(SCALE, 0.2f, 0.4f)
+                pos(0.y).normal(3.y + 1.x).tex(1f, 0f).attr(SCALE, 0.2f, 0.4f)
+                pos(0.y).normal(3.y + 1.x).tex(1f, 1f).attr(SCALE, 0.2f, 0.4f)
+                pos(0.y).normal(3.y + 1.x).tex(0f, 1f).attr(SCALE, 0.2f, 0.4f)
+                pos(3.y + 1.x).normal(2.y - 1.x).tex(0f, 0f).attr(SCALE, 0.4f, 0.3f)
+                pos(3.y + 1.x).normal(2.y - 1.x).tex(1f, 0f).attr(SCALE, 0.4f, 0.3f)
+                pos(3.y + 1.x).normal(2.y - 1.x).tex(1f, 1f).attr(SCALE, 0.4f, 0.3f)
+                pos(3.y + 1.x).normal(2.y - 1.x).tex(0f, 1f).attr(SCALE, 0.4f, 0.3f)
+                index(0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7)
+            }
+        )
+        Renderable(
+            base(color = ColorRGBA.Green),
+            mesh = sphere(0.05f),
+            transform = translate(3.y + 1.x)
+        )
+        Renderable(
+            base(color = ColorRGBA.Green),
+            mesh = sphere(0.05f),
+            transform = translate(0.x)
+        )
+    }
+}
+
 @Composable
 fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
@@ -38,7 +76,7 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
     val lClusteredTree = clusterizeTree(lTree)
 
-    val cards = lClusteredTree.clusters.mapIndexed{ index, cluster  ->
+    val cards = lClusteredTree.clusters.mapIndexed { index, cluster ->
         captureCard(cluster, index)
     }
 
@@ -52,29 +90,12 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         renderLTree(lTree, "genuine", 10.x)
         renderCards(cards)
 
-
-        return@Frame
-
-        val card = cards[0]
-        val cluster = lClusteredTree.clusters[0]
-        val right = (cluster.plane.normal % 1.y).normalize()
-        val up = (right % cluster.plane.normal).normalize()
-
-        camera = camera(card.center - card.normal * 200f, card.normal, up)
-        projection = projection(card.size, card.size, 100f, 300f, ortho())
-        renderLTree(cluster.lTree, "tree1")
-    }
-}
-
-
-private fun FrameContext.renderCards(cards: List<Card>) {
-    cards.forEachIndexed { index, card ->
-        Renderable (
-            base(colorTexture = texture("card$index", card.image)),
-            mesh = biQuad(card.size, card.size),
-            transform = rotate(card.normal, card.up).translate(card.center)
-                .translate(-10.x)
-        )
+        Gui {
+            Column {
+                Filler()
+                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
+            }
+        }
     }
 }
 
@@ -109,41 +130,54 @@ private fun KorenderContext.captureCard(cluster: ClusteredTree.Cluster, index: I
 }
 
 fun FrameContext.renderLTree(lTree: LTree, postfix: String, translation: Vec3 = 0.x) {
-    if (lTree.branches.isNotEmpty()) {
-        Renderable(
-            base(color = ColorRGBA.Blue),
-            mesh = cylinderSide(),
-            instancing = instancing("trunk$postfix", lTree.branches.size, dynamic = true) {
-                lTree.branches.map { branch ->
-                    scale(branch.raidusAtHead, (branch.tail - branch.head).length() * 1.05f, branch.raidusAtHead)
-                        .rotate(Quaternion.shortestArc(1.y, (branch.tail - branch.head).normalize()))
-                        .translate(branch.head)
-                        .translate(translation)
-   //                   .rotate(1.y, frameInfo.time * 0.1f)
-                }.forEach { Instance(it) }
+
+    Renderable(
+        base(color = ColorRGBA.Blue),
+        pipe(),
+        mesh = customMesh("trunk$postfix", 4 * lTree.branches.size, 6 * lTree.branches.size, POS, NORMAL, TEX, SCALE) {
+            lTree.branches.mapIndexed { i, branch ->
+                val len = (branch.tail - branch.head) * 1.05f
+                pos(branch.head).normal(len).tex(0f, 0f).attr(SCALE, branch.raidusAtHead * 3f, branch.raidusAtTail * 3f)
+                pos(branch.head).normal(len).tex(1f, 0f).attr(SCALE, branch.raidusAtHead * 3f, branch.raidusAtTail * 3f)
+                pos(branch.head).normal(len).tex(1f, 1f).attr(SCALE, branch.raidusAtHead * 3f, branch.raidusAtTail * 3f)
+                pos(branch.head).normal(len).tex(0f, 1f).attr(SCALE, branch.raidusAtHead * 3f, branch.raidusAtTail * 3f)
+                index(i * 4 + 0, i * 4 + 1, i * 4 + 2, i * 4 + 0, i * 4 + 2, i * 4 + 3)
             }
-        )
-    }
+        },
+        transform =
+            rotate(1.y, frameInfo.time * 0.1f)
+                .translate(translation)
+    )
+
     Renderable(
         base(colorTexture = texture("model/leaf.png")),
-        mesh = quad(),
-        instancing = instancing("leaves$postfix", lTree.leaves.size * 2, dynamic = true) {
-            lTree.leaves.flatMap { leaf ->
-                listOf(-1f, 1f).map { mult ->
-                    translate(0.5f.y)
-                        .scale(0.16f, 0.88f, 1.0f)
-                        .rotate(leaf.normal * mult, leaf.blade.normalize())
-                        .translate(leaf.mount)
-                        .translate(translation)
-      //                .rotate(1.y, frameInfo.time * 0.1f)
-                }
+        mesh = biQuad(),
+        instancing = instancing("leaves$postfix", lTree.leaves.size, dynamic = true) {
+            lTree.leaves.map { leaf ->
+                translate(0.5f.y)
+                    .scale(0.16f, 0.88f, 1.0f)
+                    .rotate(leaf.normal, leaf.blade.normalize())
+                    .translate(leaf.mount)
+                    .rotate(1.y, frameInfo.time * 0.1f)
+                    .translate(translation)
             }.forEach { Instance(it) }
         }
     )
 
 }
 
-class Card (
+private fun FrameContext.renderCards(cards: List<Card>) {
+    cards.forEachIndexed { index, card ->
+        Renderable(
+            base(colorTexture = texture("card$index", card.image)),
+            mesh = biQuad(card.size, card.size),
+            transform = rotate(card.normal, card.up).translate(card.center)
+                .translate(-10.x)
+        )
+    }
+}
+
+class Card(
     val center: Vec3,
     val normal: Vec3,
     val up: Vec3,

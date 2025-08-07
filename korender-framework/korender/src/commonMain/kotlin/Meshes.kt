@@ -124,6 +124,7 @@ object Attributes {
     val JOINTS_SHORT = MeshAttribute("joints", 4, AttributeType.Short, 3, Short4BufferAccessor)
     val JOINTS_INT = MeshAttribute("joints", 4, AttributeType.Int, 3, Int4BufferAccessor)
     val WEIGHTS = MeshAttribute("weights", 4, AttributeType.Float, 4, Float4BufferAccessor)
+    val SCALE = MeshAttribute("scale", 2, AttributeType.Float, 5, Vec2BufferAccessor)
     val B1 = MeshAttribute("b1", 1, AttributeType.SignedByte, 8, ByteBufferAccessor)
     val B2 = MeshAttribute("b2", 1, AttributeType.SignedByte, 9, ByteBufferAccessor)
     val B3 = MeshAttribute("b3", 1, AttributeType.SignedByte, 10, ByteBufferAccessor)
