@@ -19,12 +19,18 @@ fun PipeExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         Renderable(
             base(color = ColorRGBA.Blue),
             pipe(),
-            mesh = pipeMesh("pipe", 4, false) {
+            mesh = pipeMesh("pipe", 7, false) {
                 cycle {
                     node(-2.x - 2.y, 0.1f)
                     node(-2.x + 2.y, 0.2f)
                     node(2.x + 2.y, 0.3f)
                     node(2.x - 2.y, 0.4f)
+                }
+                sequence {
+                    node(0.y, 0.6f)
+                    node(2.y, 0.6f)
+                    node(4.y+1.x, 0.6f)
+                    node(5.y, 0.6f)
                 }
             }
         )

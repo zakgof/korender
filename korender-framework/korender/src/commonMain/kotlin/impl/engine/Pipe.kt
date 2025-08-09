@@ -1,5 +1,9 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.Attributes.MODEL0
+import com.zakgof.korender.Attributes.MODEL1
+import com.zakgof.korender.Attributes.MODEL2
+import com.zakgof.korender.Attributes.MODEL3
 import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.SCALE
@@ -14,16 +18,17 @@ import com.zakgof.korender.math.Vec3
 import kotlin.math.sqrt
 
 internal fun createPipeMesh(id: String, segments: Int, dynamic: Boolean, retentionPolicy: RetentionPolicy, block: PipeMeshContext.() -> Unit) =
-    CustomMesh(id, segments * 4, segments * 6, listOf(POS, NORMAL, TEX, SCALE), dynamic, indexType = null, retentionPolicy) {
+    CustomMesh(id, segments * 4, segments * 6, listOf(POS, NORMAL, TEX, SCALE, MODEL0, MODEL1, MODEL2, MODEL3), dynamic, indexType = null, retentionPolicy) {
         val pipeMeshContext = DefaultPipeMeshContext()
         block.invoke(pipeMeshContext)
+        var segmentIndex = 0
         pipeMeshContext.sequences.forEach { sequence ->
             sequence.dropLast(1).indices.forEach { index ->
                 val node = sequence[index]
                 val prevNode = if (index > 0) sequence[index - 1] else null
                 val nextNode = sequence[index + 1]
                 val nextNextNode = if (index + 2 < sequence.size) sequence[index + 2] else null
-                pipeSegment(prevNode, node, nextNode, nextNextNode, index)
+                pipeSegment(prevNode, node, nextNode, nextNextNode, segmentIndex++)
             }
         }
         pipeMeshContext.cycles.forEach { sequence ->
@@ -32,7 +37,7 @@ internal fun createPipeMesh(id: String, segments: Int, dynamic: Boolean, retenti
                 val prevNode = sequence[(index + sequence.size - 1) % sequence.size]
                 val nextNode = sequence[(index + 1) % sequence.size]
                 val nextNextNode = sequence[(index + 2) % sequence.size]
-                pipeSegment(prevNode, node, nextNode, nextNextNode, index)
+                pipeSegment(prevNode, node, nextNode, nextNextNode, segmentIndex++)
             }
         }
     }

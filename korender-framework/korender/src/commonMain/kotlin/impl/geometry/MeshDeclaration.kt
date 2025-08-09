@@ -159,7 +159,7 @@ internal data class CustomMesh(
     override fun instancing(meshLink: MeshLink, reverseZ: Boolean, camera: Camera?, inventory: Inventory, addUniforms: MutableMap<String, Any?>, addDefs: MutableSet<String>) {
         if (dynamic) {
             meshLink.cpuMesh.updateMesh(block)
-            meshLink.updateGpu(0, false)
+            meshLink.updateGpu(-1, false)
         }
     }
 }

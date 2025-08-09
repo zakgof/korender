@@ -1,10 +1,6 @@
 package ltree
 
 import androidx.compose.runtime.Composable
-import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.SCALE
-import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Image
 import com.zakgof.korender.Korender
 import com.zakgof.korender.baker.resources.Res
@@ -25,45 +21,8 @@ import ltree.generator.LTree
 import ltree.generator.LTreeDef
 import ltree.generator.generateLTree
 import ltree.generator.leaf.DiagonalLeaves
-import tree.saveImage
 import kotlin.math.abs
 import kotlin.math.max
-
-
-@Composable
-fun LTreeBaker2() = Korender(appResourceLoader = { Res.readBytes(it) }) {
-
-    Frame {
-        AmbientLight(white(0.05f))
-        DirectionalLight(-1.z)
-        camera = camera(20.z + 3.y, -1.z, 1.y)
-        Renderable(
-            base(color = ColorRGBA.Green),
-            pipe(),
-            mesh = customMesh("pipe", 8, 12, POS, NORMAL, TEX, SCALE) {
-                pos(0.y).normal(3.y + 1.x).tex(0f, 0f).attr(SCALE, 0.2f, 0.4f)
-                pos(0.y).normal(3.y + 1.x).tex(1f, 0f).attr(SCALE, 0.2f, 0.4f)
-                pos(0.y).normal(3.y + 1.x).tex(1f, 1f).attr(SCALE, 0.2f, 0.4f)
-                pos(0.y).normal(3.y + 1.x).tex(0f, 1f).attr(SCALE, 0.2f, 0.4f)
-                pos(3.y + 1.x).normal(2.y - 1.x).tex(0f, 0f).attr(SCALE, 0.4f, 0.3f)
-                pos(3.y + 1.x).normal(2.y - 1.x).tex(1f, 0f).attr(SCALE, 0.4f, 0.3f)
-                pos(3.y + 1.x).normal(2.y - 1.x).tex(1f, 1f).attr(SCALE, 0.4f, 0.3f)
-                pos(3.y + 1.x).normal(2.y - 1.x).tex(0f, 1f).attr(SCALE, 0.4f, 0.3f)
-                index(0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7)
-            }
-        )
-        Renderable(
-            base(color = ColorRGBA.Green),
-            mesh = sphere(0.05f),
-            transform = translate(3.y + 1.x)
-        )
-        Renderable(
-            base(color = ColorRGBA.Green),
-            mesh = sphere(0.05f),
-            transform = translate(0.x)
-        )
-    }
-}
 
 @Composable
 fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
@@ -80,15 +39,17 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         captureCard(cluster, index)
     }
 
-
     Frame {
         this.background = ColorRGBA.Transparent
         AmbientLight(white(0.5f))
         DirectionalLight(Vec3(3f, 0f, 1f), white(1.0f))
-        camera = camera(4.y + (-80).z, 1.z, 1.y)
+        projection = projection(5f * width / height, 5f, 5f, 2000f)
+        camera = camera(80.y + (-200).z, 1.z, 1.y)
 
-        renderLTree(lTree, "genuine", 10.x)
-        renderCards(cards)
+        // renderLTree(lTree, "genuine", 10.x)
+        renderTrunkForest(lTree)
+
+        // renderCards(cards)
 
         Gui {
             Column {
@@ -118,7 +79,7 @@ private fun KorenderContext.captureCard(cluster: ClusteredTree.Cluster, index: I
         renderLTree(cluster.lTree, "$index")
     }
 
-    saveImage(image, "png", "D:/p/test$index.png")
+    // saveImage(image, "png", "D:/kot/dev/test$index.png")
 
     return Card(
         center = cluster.plane.center,
@@ -130,25 +91,11 @@ private fun KorenderContext.captureCard(cluster: ClusteredTree.Cluster, index: I
 }
 
 fun FrameContext.renderLTree(lTree: LTree, postfix: String, translation: Vec3 = 0.x) {
+    renderTrunk(lTree, postfix, translation)
+    renderFoliage(postfix, lTree, translation)
+}
 
-    Renderable(
-        base(color = ColorRGBA.Blue),
-        pipe(),
-        mesh = customMesh("trunk$postfix", 4 * lTree.branches.size, 6 * lTree.branches.size, POS, NORMAL, TEX, SCALE) {
-            lTree.branches.mapIndexed { i, branch ->
-                val len = (branch.tail - branch.head) * 1.05f
-                pos(branch.head).normal(len).tex(0f, 0f).attr(SCALE, branch.raidusAtHead * 3f, branch.raidusAtTail * 3f)
-                pos(branch.head).normal(len).tex(1f, 0f).attr(SCALE, branch.raidusAtHead * 3f, branch.raidusAtTail * 3f)
-                pos(branch.head).normal(len).tex(1f, 1f).attr(SCALE, branch.raidusAtHead * 3f, branch.raidusAtTail * 3f)
-                pos(branch.head).normal(len).tex(0f, 1f).attr(SCALE, branch.raidusAtHead * 3f, branch.raidusAtTail * 3f)
-                index(i * 4 + 0, i * 4 + 1, i * 4 + 2, i * 4 + 0, i * 4 + 2, i * 4 + 3)
-            }
-        },
-        transform =
-            rotate(1.y, frameInfo.time * 0.1f)
-                .translate(translation)
-    )
-
+private fun FrameContext.renderFoliage(postfix: String, lTree: LTree, translation: Vec3) {
     Renderable(
         base(colorTexture = texture("model/leaf.png")),
         mesh = biQuad(),
@@ -163,7 +110,26 @@ fun FrameContext.renderLTree(lTree: LTree, postfix: String, translation: Vec3 = 
             }.forEach { Instance(it) }
         }
     )
+}
 
+private fun FrameContext.renderTrunk(lTree: LTree, postfix: String, translation: Vec3) {
+    if (lTree.branches.isNotEmpty()) {
+        Renderable(
+            base(color = ColorRGBA.Blue),
+            pipe(),
+            mesh = pipeMesh("trunk$postfix", lTree.branches.size) {
+                lTree.branches.forEach { branch ->
+                    sequence {
+                        node(branch.head, branch.raidusAtHead)
+                        node(branch.tail, branch.raidusAtTail)
+                    }
+                }
+            },
+            transform =
+                rotate(1.y, frameInfo.time * 0.1f)
+                    .translate(translation)
+        )
+    }
 }
 
 private fun FrameContext.renderCards(cards: List<Card>) {
@@ -184,3 +150,47 @@ class Card(
     val size: Float,
     val image: Image
 )
+
+private fun FrameContext.renderTrunkForestRef(lTree: LTree) {
+    Renderable(
+        base(color = ColorRGBA.Blue),
+        pipe(),
+        mesh = pipeMesh("trunk-forest", lTree.branches.size) {
+            lTree.branches.forEach { branch ->
+                sequence {
+                    node(branch.head, branch.raidusAtHead)
+                    node(branch.tail, branch.raidusAtTail)
+                }
+            }
+        },
+        instancing = instancing("trunk-forest", 41 * 41, false) {
+            for (xx in -20..20) {
+                for (zz in 0..40) {
+                    Instance(translate((xx * 16f).x + (zz * 16f).z))
+                }
+            }
+        }
+    )
+}
+
+private fun FrameContext.renderTrunkForest(lTree: LTree) {
+    Renderable(
+        base(color = ColorRGBA.Blue),
+        pipe(),
+        mesh = pipeMesh("trunk-forest", lTree.branches.size * 41 * 41, true) {
+            for (xx in -20..20) {
+                for (zz in 0..40) {
+                    val transform = translate((xx * 16f).x + (zz * 16f).z)
+                    lTree.branches.forEach { branch ->
+                        if (max(branch.raidusAtHead, branch.raidusAtTail) / (transform * branch.head - camera.position).length() > 0.0005f) {
+                            sequence {
+                                node(transform * branch.head, branch.raidusAtHead)
+                                node(transform * branch.tail, branch.raidusAtTail)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    )
+}
