@@ -181,8 +181,9 @@ private fun FrameContext.renderTrunkForest(lTree: LTree) {
             for (xx in -20..20) {
                 for (zz in 0..40) {
                     val transform = translate((xx * 16f).x + (zz * 16f).z)
+                    val threshold = (transform.offset() - camera.position).lengthSquared() * 1e-6f
                     lTree.branches.forEach { branch ->
-                        if (max(branch.raidusAtHead, branch.raidusAtTail) / (transform * branch.head - camera.position).length() > 0.0005f) {
+                        if (branch.raidusAtHead > threshold) {
                             sequence {
                                 node(transform * branch.head, branch.raidusAtHead)
                                 node(transform * branch.tail, branch.raidusAtTail)

@@ -140,4 +140,17 @@ internal open class CMesh(
         indexBuffer?.rewind()
         apply(block)
     }
+
+    // TODO: Totally rework this
+    fun determineVertexCount(): Int {
+        val verticesEstimates = attrMap.filter { !it.key.instance }
+            .map {
+                it.value.position() / (it.key.structSize * it.key.primitiveType.size())
+            }
+        return verticesEstimates.first()
+    }
+
+    fun determineIndexCount(): Int {
+        return (indexBuffer?.position() ?: 0) / (actualIndexType.size())
+    }
 }

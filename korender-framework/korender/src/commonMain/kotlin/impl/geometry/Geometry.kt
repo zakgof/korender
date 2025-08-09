@@ -36,11 +36,13 @@ internal class MeshLink(val cpuMesh: CMesh, dynamic: Boolean) : AutoCloseable {
     override fun close() = gpuMesh.close()
 
     fun updateGpu(instanceCount: Int, instanceDataOnly: Boolean) {
+        val vertexCount = if (instanceDataOnly) cpuMesh.vertexCount else cpuMesh.determineVertexCount()
+        val indexCount = if (instanceDataOnly) cpuMesh.indexCount else cpuMesh.determineIndexCount()
         gpuMesh.update(
-            cpuMesh.attributeBuffers.onEach { it.rewind() },
-            cpuMesh.indexBuffer?.rewind(),
-            cpuMesh.vertexCount,
-            cpuMesh.indexCount,
+            cpuMesh.attributeBuffers.map { it.slice() },
+            cpuMesh.indexBuffer?.slice(),
+            vertexCount,
+            indexCount,
             instanceCount,
             instanceDataOnly
         )
