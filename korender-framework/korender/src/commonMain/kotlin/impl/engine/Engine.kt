@@ -33,6 +33,7 @@ import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedGltfContext
 import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.PipeMeshContext
 import com.zakgof.korender.context.RoiTexturesContext
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
@@ -204,6 +205,9 @@ internal class Engine(
 
         override fun mesh(id: String, mesh: Mesh) =
             CustomCpuMesh(id, mesh, currentRetentionPolicy)
+
+        override fun pipeMesh(id: String, segments: Int, dynamic: Boolean, block: PipeMeshContext.() -> Unit) =
+            createPipeMesh(id, segments, dynamic, currentRetentionPolicy, block)
 
         override fun vertex(vertShaderFile: String): InternalMaterialModifier =
             InternalMaterialModifier { it.vertShaderFile = vertShaderFile }
