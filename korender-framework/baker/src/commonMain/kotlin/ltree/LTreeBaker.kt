@@ -9,6 +9,7 @@ import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.math.ColorRGB.Companion.White
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
@@ -23,6 +24,7 @@ import ltree.generator.generateLTree
 import ltree.generator.leaf.DiagonalLeaves
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.random.Random
 
 @Composable
 fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
@@ -41,15 +43,14 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
     Frame {
         this.background = ColorRGBA.Transparent
-        AmbientLight(white(0.5f))
+        AmbientLight(white(0.8f))
         DirectionalLight(Vec3(3f, 0f, 1f), white(1.0f))
         projection = projection(5f * width / height, 5f, 5f, 2000f)
-        camera = camera(80.y + (-200).z, 1.z, 1.y)
+        camera = camera(20.y + (-20 + frameInfo.time * 4f).z, 1.z - 0.2f.y, 1.y + 0.2f.z)
 
         // renderLTree(lTree, "genuine", 10.x)
         renderTrunkForest(lTree)
-
-        // renderCards(cards)
+        renderCardForest(cards)
 
         Gui {
             Column {
@@ -132,13 +133,24 @@ private fun FrameContext.renderTrunk(lTree: LTree, postfix: String, translation:
     }
 }
 
-private fun FrameContext.renderCards(cards: List<Card>) {
+private fun FrameContext.renderCardForest(cards: List<Card>) {
     cards.forEachIndexed { index, card ->
+        val r = Random(1)
         Renderable(
             base(colorTexture = texture("card$index", card.image)),
             mesh = biQuad(card.size, card.size),
-            transform = rotate(card.normal, card.up).translate(card.center)
-                .translate(-10.x)
+            instancing = instancing("card$index", 41 * 41, false) {
+                for (xx in -20..20) {
+                    for (zz in 0..40) {
+                        Instance(
+                            rotate(card.normal, card.up)
+                                .translate(card.center)
+                                .rotate(1.y, r.nextFloat() * 2f * PI)
+                                .translate((xx * 16f).x + (zz * 16f).z)
+                        )
+                    }
+                }
+            }
         )
     }
 }
@@ -174,19 +186,28 @@ private fun FrameContext.renderTrunkForestRef(lTree: LTree) {
 }
 
 private fun FrameContext.renderTrunkForest(lTree: LTree) {
+
+    fun thinDown(r: Float, threshold: Float): Float =
+        if (r < 2f * threshold)
+            (r - threshold) * r / threshold
+        else
+            r
+
     Renderable(
-        base(color = ColorRGBA.Blue),
+        base(color = ColorRGBA(0x553311FF)),
         pipe(),
         mesh = pipeMesh("trunk-forest", lTree.branches.size * 41 * 41, true) {
+            val r = Random(1)
             for (xx in -20..20) {
                 for (zz in 0..40) {
-                    val transform = translate((xx * 16f).x + (zz * 16f).z)
-                    val threshold = (transform.offset() - camera.position).lengthSquared() * 1e-6f
+                    val transform = rotate(1.y, r.nextFloat() * 2f * PI)
+                        .translate((xx * 16f).x + (zz * 16f).z)
+                    val threshold = (transform.offset() - camera.position).length() * 5e-4f
                     lTree.branches.forEach { branch ->
                         if (branch.raidusAtHead > threshold) {
                             sequence {
-                                node(transform * branch.head, branch.raidusAtHead)
-                                node(transform * branch.tail, branch.raidusAtTail)
+                                node(transform * branch.head, thinDown(branch.raidusAtHead, threshold))
+                                node(transform * branch.tail, thinDown(branch.raidusAtTail, threshold))
                             }
                         }
                     }
