@@ -39,6 +39,7 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val cards = lClusteredTree.clusters.mapIndexed { index, cluster ->
         captureCard(cluster, index)
     }
+    saveCards(cards)
 
     Frame {
         this.background = ColorRGBA.Transparent
@@ -162,35 +163,10 @@ class Card(
     val image: Image
 )
 
-private fun FrameContext.renderTrunkForestRef(lTree: LTree) {
-    Renderable(
-        base(color = ColorRGBA.Blue),
-        pipe(),
-        mesh = pipeMesh("trunk-forest", lTree.branches.size) {
-            lTree.branches.forEach { branch ->
-                sequence {
-                    node(branch.head, branch.raidusAtHead)
-                    node(branch.tail, branch.raidusAtTail)
-                }
-            }
-        },
-        instancing = instancing("trunk-forest", 41 * 41, false) {
-            for (xx in -20..20) {
-                for (zz in 0..40) {
-                    Instance(translate((xx * 16f).x + (zz * 16f).z))
-                }
-            }
-        }
-    )
-}
-
 private fun FrameContext.renderTrunkForest(lTree: LTree) {
 
     fun thinDown(r: Float, threshold: Float): Float =
-        if (r < 2f * threshold)
-            (r - threshold) * r / threshold
-        else
-            r
+        if (r < 2f * threshold) (r - threshold) * r / threshold else r
 
     Renderable(
         base(color = ColorRGBA(0x553311FF)),

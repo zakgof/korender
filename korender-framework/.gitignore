@@ -8,5 +8,8 @@ local.properties
 /examples/src/commonMain/composeResources/files/island/terrain/color.png
 /examples/src/commonMain/composeResources/files/island/terrain/height.png
 /examples/src/commonMain/composeResources/files/island/terrain/sdf.png
+/examples/src/commonMain/composeResources/files/island/terrain/mountain.png
 /examples/src/commonMain/composeResources/files/island/tree/trees.bin
-yarn.lock
+/examples/src/commonMain/composeResources/files/island/tree/cards.bin
+/examples/src/commonMain/composeResources/files/island/tree/branches.bin
+/examples/src/commonMain/composeResources/files/island/tree/atlas.png

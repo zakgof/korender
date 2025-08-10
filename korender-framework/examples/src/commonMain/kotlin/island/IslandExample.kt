@@ -40,9 +40,8 @@ fun normalizedToWorld(n: Vec3) = Vec3(
 fun IslandExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-        val deferredBranches = load("files/island/ltree/branches.bin") { bytes ->
-            loadBranches(bytes)
-        }
+        val deferredBranches = load("files/island/tree/branches.bin") { loadBranches(it) }
+        val deferredCards = load("files/island/tree/cards.bin") { loadCards(it) }
 
         val deferredBuildings = load("files/island/building/buildings.bin") { bytes ->
 
@@ -66,9 +65,8 @@ fun IslandExample() =
             cityGenerator
         }
         val deferredTrees = load("files/island/tree/trees.bin") { bytes ->
-            val size = bytes.size / 12
             loadBinary(bytes) {
-                (0 until size).map {
+                (0 until bytes.size / 12).map {
                     normalizedToWorld(getVec3())
                 }
             }
@@ -105,8 +103,8 @@ fun IslandExample() =
                 buildings(deferredBuildings.getCompleted())
             }
 
-            if (deferredBranches.isCompleted && deferredTrees.isCompleted) {
-                renderTrunkForest(deferredBranches.getCompleted(), deferredTrees.getCompleted())
+            if (deferredBranches.isCompleted && deferredTrees.isCompleted && deferredCards.isCompleted) {
+                renderTrees(deferredBranches.getCompleted(), deferredCards.getCompleted(), deferredTrees.getCompleted())
             }
         }
     }
