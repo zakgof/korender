@@ -9,6 +9,8 @@ import com.zakgof.korender.Prefab
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.examples.camera.FreeCamera
+import com.zakgof.korender.examples.island.city.CityGenerator
+import com.zakgof.korender.examples.island.city.generateBuilding
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA.Companion.white
 import com.zakgof.korender.math.Transform.Companion.scale
@@ -27,10 +29,20 @@ fun floatAt(bytes: ByteArray, offset: Int): Float {
     return Float.fromBits(bits)
 }
 
+fun normalizedToWorld(n: Vec3) = Vec3(
+    (-0.5f + n.x) * 32f * 512f,
+    n.y * 256f * 16f - 256f * 16f * 0.1f + 64f,
+    (-0.5f + n.z) * 32f * 512f
+)
+
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun IslandExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
+
+        val deferredBranches = load("files/island/ltree/branches.bin") { bytes ->
+            loadBranches(bytes)
+        }
 
         val deferredBuildings = load("files/island/building/buildings.bin") { bytes ->
 
@@ -54,9 +66,11 @@ fun IslandExample() =
             cityGenerator
         }
         val deferredTrees = load("files/island/tree/trees.bin") { bytes ->
-            val size = bytes.size / (3 * 4)
-            (0 until size).map { i ->
-                Vec3(floatAt(bytes, i * (3 * 4)), floatAt(bytes, i * (3 * 4) + 4), floatAt(bytes, i * (3 * 4) + 8))
+            val size = bytes.size / 12
+            loadBinary(bytes) {
+                (0 until size).map {
+                    normalizedToWorld(getVec3())
+                }
             }
         }
 
@@ -90,8 +104,9 @@ fun IslandExample() =
             if (deferredBuildings.isCompleted) {
                 buildings(deferredBuildings.getCompleted())
             }
-            if (deferredTrees.isCompleted) {
-                trees(deferredTrees.getCompleted())
+
+            if (deferredBranches.isCompleted && deferredTrees.isCompleted) {
+                renderTrunkForest(deferredBranches.getCompleted(), deferredTrees.getCompleted())
             }
         }
     }

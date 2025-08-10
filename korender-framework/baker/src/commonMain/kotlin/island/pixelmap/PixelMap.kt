@@ -23,7 +23,7 @@ abstract class PixelMap<P>(val side: Int) {
     fun toVec2(xx: Int, yy: Int): Vec2 = Vec2(toFl(xx), toFl(yy))
 
 
-    fun save(path: String) {
+    fun save(file: File) {
         val bi = BufferedImage(side, side, imageType)
         val raster = bi.raster
         val pixel = IntArray(pixelChannels)
@@ -33,8 +33,7 @@ abstract class PixelMap<P>(val side: Int) {
                 raster.setPixel(xx, zz, pixel)
             }
         }
-        val f = File(path)
-        ImageIO.write(bi, "png", f)
+        ImageIO.write(bi, "png", file)
     }
 
     fun set(xx: Int, zz: Int, value: P) {

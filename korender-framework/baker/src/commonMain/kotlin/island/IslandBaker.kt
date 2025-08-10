@@ -10,6 +10,7 @@ import island.pixelmap.Float2PixelMap
 import island.pixelmap.FloatPixelMap
 import island.pixelmap.channel
 import island.pixelmap.channels
+import java.io.File
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -27,7 +28,8 @@ val random = Random(seed)
 
 fun main() {
 
-    val rootPath = "D:\\p\\dev\\korender\\korender-framework\\examples\\src\\commonMain\\composeResources\\files\\island"
+    val root = File(System.getProperty("projectRoot") ?: "D:\\kot\\dev\\korender\\korender-framework\\baker")
+    val islandRoot = File(root, "../examples/src/commonMain/composeResources/files/island")
 
     val mountainMap = FloatPixelMap(512)
     Erosion(mountainMap)
@@ -52,12 +54,12 @@ fun main() {
     val buildings = seedBuildings(blocks)
     val trees = seedTrees(colorMap, heightMap)
 
-    heightMap.save("$rootPath\\terrain\\height.png")
-    colorMap.save("$rootPath\\terrain\\color.png")
-    sdf.save("$rootPath\\terrain\\sdf.png")
+    heightMap.save(File(islandRoot, "terrain/height.png"))
+    colorMap.save(File(islandRoot, "terrain/color.png"))
+    sdf.save(File(islandRoot, "terrain/sdf.png"))
 
-    saveBuildings(buildings, "$rootPath\\building\\buildings.bin")
-    saveTrees(trees, "$rootPath\\tree\\trees.bin")
+    saveBuildings(buildings, File(islandRoot, "building/buildings.bin"))
+    saveTrees(trees, File(islandRoot, "tree/trees.bin"))
 }
 
 fun seedMountain(random: Random) =
@@ -208,27 +210,27 @@ fun seedTrees(colorMap: ChannelMap, heightMap: Float2PixelMap): List<Vec3> {
     }
 }
 
-fun saveBuildings(buildings: List<Pair<Vec3, Vec3>>, path: String) = save (buildings, buildings.size * 2 * 3 * 4, path){ trees, nb ->
+fun saveBuildings(buildings: List<Pair<Vec3, Vec3>>, file: File) = save(buildings, buildings.size * 2 * 3 * 4, file){ trees, nb ->
     buildings.forEach {
         nb.put(it.first)
         nb.put(it.second)
     }
 }
 
-fun saveTrees(trees: List<Vec3>, path: String) = save(trees, trees.size * 3 * 4, path) { trees, nb ->
+fun saveTrees(trees: List<Vec3>, file: File) = save(trees, trees.size * 3 * 4, file) { trees, nb ->
     trees.forEach {
         nb.put(it)
     }
 }
 
-fun <T> save(data: T, size:Int, path: String, serializer: (T, NativeByteBuffer) -> Unit) {
+fun <T> save(data: T, size:Int, file: File, serializer: (T, NativeByteBuffer) -> Unit) {
     val buffer = ByteBuffer.allocateDirect(size).order(ByteOrder.LITTLE_ENDIAN)
     val nb = NativeByteBuffer(buffer)
 
     serializer(data, nb)
 
     nb.rewind()
-    FileOutputStream(path).use { fos ->
+    FileOutputStream(file).use { fos ->
         fos.channel.write(buffer)
     }
 }

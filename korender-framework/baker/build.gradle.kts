@@ -34,12 +34,9 @@ kotlin {
 }
 
 compose.desktop {
-
     application {
         mainClass = "com.zakgof.korender.baker.MainKt"
-
-        jvmArgs("--add-exports", "java.desktop/sun.awt=ALL-UNNAMED")
-
+        jvmArgs("--add-exports", "java.desktop/sun.awt=ALL-UNNAMED", "-DprojectRoot=${project.projectDir.absolutePath}")
         nativeApplication {
         }
     }

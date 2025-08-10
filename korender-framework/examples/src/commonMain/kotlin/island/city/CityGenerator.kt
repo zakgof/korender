@@ -1,4 +1,4 @@
-package com.zakgof.korender.examples.island
+package com.zakgof.korender.examples.island.city
 
 import com.zakgof.korender.MutableMesh
 import com.zakgof.korender.math.Vec2

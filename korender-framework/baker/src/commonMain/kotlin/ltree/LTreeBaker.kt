@@ -29,11 +29,10 @@ import kotlin.random.Random
 @Composable
 fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-    val lTreeDef = LTreeDef(
-        DiagonalLeaves()
+    val lTreeDef = LTreeDef(DiagonalLeaves()
     )
-
     val lTree = generateLTree(lTreeDef)
+    saveBranches(lTree.branches)
 
     val lClusteredTree = clusterizeTree(lTree)
 

@@ -72,7 +72,7 @@ class Sdf(private val reso: Int) {
             spline.dy.value(t.toDouble()).toFloat()
         )
 
-    fun save(file: String) {
+    fun save(file: File) {
         val steps = 2000
         val distanceScale = 0.01f
         val cellRange = ceil(distanceScale * reso).toInt() + 1
@@ -92,7 +92,6 @@ class Sdf(private val reso: Int) {
             }
         }
 
-        val output = File(file)
         val img = BufferedImage(reso, reso, BufferedImage.TYPE_INT_ARGB)
         val raster = img.raster
         val pixel = FloatArray(4)
@@ -115,7 +114,7 @@ class Sdf(private val reso: Int) {
                 raster.setPixel(xx, zz, pixel)
             }
         }
-        ImageIO.write(img, "png", output)
+        ImageIO.write(img, "png", file)
     }
 
     private fun Pt.cell(): Cell = Cell((x * reso).toInt(), (y * reso).toInt())
