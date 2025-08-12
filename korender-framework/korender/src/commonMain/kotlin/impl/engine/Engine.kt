@@ -521,6 +521,9 @@ internal class Engine(
                 Platform.loadImage(bytes, imageResource.split(".").last()).await()
             }
 
+        override fun loadImage(bytes: ByteArray, type: String): Deferred<Image> =
+            Platform.loadImage(bytes, type)
+
         override fun vsm(blurRadius: Float?): ShadowAlgorithmDeclaration =
             InternalVsmShadow(blurRadius)
 

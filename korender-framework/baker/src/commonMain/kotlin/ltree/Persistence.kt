@@ -25,9 +25,9 @@ fun saveBranches(branches: List<LTree.Branch>) {
     }
 }
 
-fun saveCards(cards: List<Card>) {
+fun saveCards(cards: List<Card>) : ByteArray {
     saveCardsMetadata(cards)
-    saveCardsAtlas(cards)
+    return saveCardsAtlas(cards)
 }
 
 private fun saveCardsMetadata(cards: List<Card>) {
@@ -45,7 +45,7 @@ private fun saveCardsMetadata(cards: List<Card>) {
     }
 }
 
-private fun saveCardsAtlas(cards: List<Card>) {
+private fun saveCardsAtlas(cards: List<Card>): ByteArray {
     val xImages = 4
     val yImages = 4
     val side = cards[0].image.width
@@ -65,7 +65,9 @@ private fun saveCardsAtlas(cards: List<Card>) {
             raster.setPixel(xx, yy, pixel)
         }
     }
-    ImageIO.write(bi, "png", File(islandRoot, "tree/atlas.png"))
+    val file = File(islandRoot, "tree/atlas.png")
+    ImageIO.write(bi, "png", file)
+    return file.readBytes()
 }
 
 private fun FileOutputStream.push(b: Vec3) {

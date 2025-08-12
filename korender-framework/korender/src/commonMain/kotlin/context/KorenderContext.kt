@@ -126,6 +126,7 @@ interface KorenderContext {
 
     fun createImage(width: Int, height: Int, format: Image.Format): Image
     fun loadImage(imageResource: String): Deferred<Image>
+    fun loadImage(bytes: ByteArray, type: String): Deferred<Image>
 
     fun vsm(blurRadius: Float? = null): ShadowAlgorithmDeclaration
     fun hard(): ShadowAlgorithmDeclaration
