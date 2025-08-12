@@ -52,6 +52,10 @@ vec3 look;
 #import "$albedo"
 #endif
 
+#ifdef PLUGIN_DISCARD
+#import "$discard"
+#endif
+
 #ifdef PLUGIN_EMISSION
 #import "$emission"
 #endif
@@ -118,8 +122,13 @@ void main() {
         albedo = pluginAlbedo();
     #endif
 
-    if (albedo.a < 0.1)
-        discard;
+    #ifdef PLUGIN_DISCARD
+        if (pluginDiscard())
+            discard;
+    #else
+        if (albedo.a < 0.001)
+            discard;
+    #endif
 
     emission = vec3(0.);
     #ifdef PLUGIN_EMISSION

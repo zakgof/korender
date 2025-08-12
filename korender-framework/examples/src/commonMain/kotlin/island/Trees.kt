@@ -90,6 +90,7 @@ fun FrameContext.renderCards(cards: List<Card>, seeds: List<Vec3>) {
     val scale = 50.0f
     Renderable(
         base(colorTexture = texture("island/tree/atlas.png")),
+        plugin("discard", "island/tree/shader/island.foliage.discard.frag"),
         mesh = customMesh(
             "foliage", cards.size * seeds.size * 8, cards.size * seeds.size * 12,
             POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3, dynamic = false
