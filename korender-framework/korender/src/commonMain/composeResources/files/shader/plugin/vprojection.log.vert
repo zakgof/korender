@@ -7,7 +7,7 @@
 vec4 pluginVProjection(vec3 viewPos) {
 
     #ifdef VERTEX_SHADER
-    vdepth = 1.0 - viewPos.z;
+        vdepth = 1.0 - viewPos.z;
     #endif
 
     return vec4(

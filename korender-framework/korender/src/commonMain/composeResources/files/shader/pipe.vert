@@ -40,8 +40,9 @@ void main() {
     vleft = normalize(cross(toEye, vnormal));
     float width = mix(scale.x, scale.y, tex.y);
 
-    vpos = basepos - vleft * (tex.x - 0.5) * 2.0 * width + vnormal * tex.y;
+    vec3 back = normalize(cross(vnormal, vleft));
 
+    vpos = basepos - vleft * (tex.x - 0.5) * 2.0 * width + vnormal * tex.y + back * width;
     vtex = tex;
     vscale = scale;
 

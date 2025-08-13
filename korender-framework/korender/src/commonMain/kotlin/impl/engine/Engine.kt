@@ -294,6 +294,7 @@ internal class Engine(
             it.vertShaderFile = "!shader/pipe.vert"
             it.plugins["position"] = "!shader/plugin/position.pipe.frag"
             it.plugins["normal"] = "!shader/plugin/normal.pipe.frag"
+            it.plugins["depth"] = "!shader/plugin/depth.pipe.frag"
         }
 
         override fun radiantCapture(radiantMax: Float) = InternalMaterialModifier {
