@@ -3,12 +3,14 @@ package ltree.generator.leaf
 import ltree.generator.LTree
 import ltree.jitter
 import ltree.randomOrtho
-import java.util.Random
 
 class DiagonalLeaves(val rows: Int = 11, val length: Float = 0.4f) : LeafStrategy {
 
     override fun generateLeaves(branch: LTree.Branch): List<LTree.Leaf> {
-        val r = Random()
+
+        if (!branch.children.isEmpty() && branch.level < 7)
+            return listOf()
+
         val branchVector = (branch.tail - branch.head)
         val branchDir = branchVector.normalize()
         val ortho = branchDir.randomOrtho()

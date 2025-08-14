@@ -27,6 +27,7 @@ import ltree.clusterizer.ClusteredTree
 import ltree.clusterizer.clusterizeTree
 import ltree.generator.LTree
 import ltree.generator.LTreeDef
+import ltree.generator.branch.SplitBranching
 import ltree.generator.generateLTree
 import ltree.generator.leaf.DiagonalLeaves
 import kotlin.math.abs
@@ -37,6 +38,7 @@ import kotlin.random.Random
 fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
     val lTreeDef = LTreeDef(
+        SplitBranching(),
         DiagonalLeaves()
     )
     val lTree = generateLTree(lTreeDef)
@@ -54,11 +56,14 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         AmbientLight(white(0.8f))
         DirectionalLight(Vec3(3f, 0f, 1f), white(1.0f))
         projection = projection(5f * width / height, 5f, 5f, 2000f)
-        camera = camera(20.y + (-20 + frameInfo.time * 4f).z, 1.z - 0.2f.y, 1.y + 0.2f.z)
+        camera = camera(-30.z, 1.z, 1.y)
 
-        // renderLTree(lTree, "genuine", 10.x)
-        renderTrunkForest(lTree)
-        renderCardForest(cards, atlas)
+        renderLTree(lTree, "genuine", 10.x)
+        renderTrunk(lTree, "trunk", -10.x)
+        renderCardFoliage(cards, atlas, -10.x)
+
+        // renderTrunkForest(lTree)
+        // renderCardForest(cards, atlas)
 
         Gui {
             Column {
@@ -114,7 +119,7 @@ private fun FrameContext.renderFoliage(postfix: String, lTree: LTree, translatio
                     .scale(0.16f, 0.88f, 1.0f)
                     .rotate(leaf.normal, leaf.blade.normalize())
                     .translate(leaf.mount)
-                    //                .rotate(1.y, frameInfo.time * 0.1f)
+                    //.rotate(1.y, frameInfo.time * 0.1f)
                     .translate(translation)
             }.forEach { Instance(it) }
         }
@@ -124,7 +129,7 @@ private fun FrameContext.renderFoliage(postfix: String, lTree: LTree, translatio
 private fun FrameContext.renderTrunk(lTree: LTree, postfix: String, translation: Vec3) {
     if (lTree.branches.isNotEmpty()) {
         Renderable(
-            base(color = ColorRGBA.Blue),
+            base(ColorRGBA(0x553311FF)),
             pipe(),
             mesh = pipeMesh("trunk$postfix", lTree.branches.size) {
                 lTree.branches.forEach { branch ->
@@ -135,8 +140,8 @@ private fun FrameContext.renderTrunk(lTree: LTree, postfix: String, translation:
                 }
             },
             transform =
-                rotate(1.y, frameInfo.time * 0.1f)
-                    .translate(translation)
+               // rotate(1.y, frameInfo.time * 0.1f)
+                    translate(translation)
         )
     }
 }
@@ -233,6 +238,38 @@ private fun FrameContext.renderTrunkForest(lTree: LTree) {
                         }
                     }
                 }
+            }
+        }
+    )
+}
+
+private fun FrameContext.renderCardFoliage(cards: List<Card>, atlas: Image, position: Vec3 = 0.x) {
+    Renderable(
+        base(colorTexture = texture("atlas", atlas)),
+        mesh = customMesh(
+            "foliage", cards.size * 8, cards.size * 12,
+            POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3, dynamic = false
+        ) {
+            var indexBase = 0
+            cards.forEachIndexed { index, card ->
+                val right = card.normal % card.up
+                val p1 = card.center + (-card.up - right) * (card.size)
+                val p2 = card.center + (-card.up + right) * (card.size)
+                val p3 = card.center + (card.up + right) * (card.size)
+                val p4 = card.center + (card.up - right) * (card.size)
+                val texX = 0.25f * (index % 4)
+                val texY = 0.25f * (index / 4)
+                pos(position + p1).normal(card.normal).tex(texX, texY)
+                pos(position + p2).normal(card.normal).tex(texX + 0.25f, texY)
+                pos(position + p3).normal(card.normal).tex(texX + 0.25f, texY + 0.25f)
+                pos(position + p4).normal(card.normal).tex(texX, texY + 0.25f)
+                pos(position + p1).normal(-card.normal).tex(texX, texY)
+                pos(position + p2).normal(-card.normal).tex(texX + 0.25f, texY)
+                pos(position + p3).normal(-card.normal).tex(texX + 0.25f, texY + 0.25f)
+                pos(position + p4).normal(-card.normal).tex(texX, texY + 0.25f)
+                index(indexBase + 0, indexBase + 1, indexBase + 2, indexBase + 0, indexBase + 2, indexBase + 3)
+                index(indexBase + 4, indexBase + 6, indexBase + 5, indexBase + 4, indexBase + 7, indexBase + 6)
+                indexBase += 8
             }
         }
     )
