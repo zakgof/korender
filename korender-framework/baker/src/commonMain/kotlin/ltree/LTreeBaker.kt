@@ -123,7 +123,7 @@ private fun FrameContext.renderFoliage(postfix: String, lTree: LTree, translatio
                     .scale(0.16f, 0.88f, 1.0f)
                     .rotate(leaf.normal, leaf.blade.normalize())
                     .translate(leaf.mount)
-                    //.rotate(1.y, frameInfo.time * 0.1f)
+                    .rotate(1.y, frameInfo.time * 0.1f)
                     .translate(translation)
             }.forEach { Instance(it) }
         }
@@ -144,8 +144,8 @@ private fun FrameContext.renderTrunk(lTree: LTree, postfix: String, translation:
                 }
             },
             transform =
-                // rotate(1.y, frameInfo.time * 0.1f)
-                translate(translation)
+                rotate(1.y, frameInfo.time * 0.1f)
+                    .translate(translation)
         )
     }
 }
