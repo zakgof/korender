@@ -4,19 +4,21 @@ import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
-import java.util.Random
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.random.Random
 
-fun Vec3.randomOrtho(): Vec3 {
+fun Vec3.randomOrtho(r: Random): Vec3 {
     val reference = if (abs(this.x) < 0.99) 1.x else 1.y
     val ortho1 = (this % reference).normalize()
     val ortho2 = (this % ortho1).normalize()
-    val angle = Random().nextFloat(2f * PI)
+    val angle = r.nextFloat() * 2f * PI
     return ortho1 * cos(angle) + ortho2 * sin(angle)
 }
 
+fun Vec3.randomOrtho() = randomOrtho(Random)
+
 fun jitter() : Float {
-    return Random().nextFloat(0.9f, 1.1f)
+    return Random.nextFloat() * 0.2f + 0.9f
 }

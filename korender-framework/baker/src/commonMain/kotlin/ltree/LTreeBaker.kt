@@ -22,12 +22,10 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import kotlinx.coroutines.runBlocking
 import ltree.clusterizer.ClusteredTree
-import ltree.clusterizer.clusterizeTree
 import ltree.generator.LTree
 import ltree.generator.LTreeDef
-import ltree.generator.branch.SplitBranching
+import ltree.generator.branch.LevelBranching
 import ltree.generator.generateLTree
 import ltree.generator.leaf.DiagonalLeaves
 import kotlin.math.abs
@@ -37,19 +35,25 @@ import kotlin.random.Random
 @Composable
 fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
+//    val lTreeDef = LTreeDef(
+//        SplitBranching(),
+//        DiagonalLeaves()
+//    )
+
     val lTreeDef = LTreeDef(
-        SplitBranching(),
+        LevelBranching(),
         DiagonalLeaves()
     )
+
+
     val lTree = generateLTree(lTreeDef)
     saveBranches(lTree.branches)
 
-    val lClusteredTree = clusterizeTree(lTree)
-
-    val cards = lClusteredTree.clusters.mapIndexed { index, cluster ->
-        captureCard(cluster, index)
-    }
-    val atlas = runBlocking { loadImage(saveCards(cards), "png").await() }
+    // val lClusteredTree = clusterizeTree(lTree)
+//    val cards = lClusteredTree.clusters.mapIndexed { index, cluster ->
+//        captureCard(cluster, index)
+//    }
+//    val atlas = runBlocking { loadImage(saveCards(cards), "png").await() }
 
     Frame {
         this.background = ColorRGBA.Transparent
@@ -59,8 +63,8 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         camera = camera(-30.z, 1.z, 1.y)
 
         renderLTree(lTree, "genuine", 10.x)
-        renderTrunk(lTree, "trunk", -10.x)
-        renderCardFoliage(cards, atlas, -10.x)
+        // renderTrunk(lTree, "trunk", -10.x)
+        // renderCardFoliage(cards, atlas, -10.x)
 
         // renderTrunkForest(lTree)
         // renderCardForest(cards, atlas)
@@ -140,8 +144,8 @@ private fun FrameContext.renderTrunk(lTree: LTree, postfix: String, translation:
                 }
             },
             transform =
-               // rotate(1.y, frameInfo.time * 0.1f)
-                    translate(translation)
+                // rotate(1.y, frameInfo.time * 0.1f)
+                translate(translation)
         )
     }
 }
