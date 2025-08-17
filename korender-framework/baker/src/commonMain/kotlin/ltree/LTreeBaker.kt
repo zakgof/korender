@@ -25,7 +25,7 @@ import com.zakgof.korender.math.z
 import ltree.clusterizer.ClusteredTree
 import ltree.generator.LTree
 import ltree.generator.LTreeDef
-import ltree.generator.branch.SplitGrowBranching
+import ltree.generator.branch.PineBranching
 import ltree.generator.generateLTree
 import ltree.generator.leaf.DiagonalLeaves
 import kotlin.math.abs
@@ -41,7 +41,7 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 //    )
 
     val lTreeDef = LTreeDef(
-        SplitGrowBranching(),
+        PineBranching(),
         DiagonalLeaves()
     )
 
