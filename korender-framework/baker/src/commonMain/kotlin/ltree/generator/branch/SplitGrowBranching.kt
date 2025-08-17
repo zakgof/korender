@@ -36,45 +36,35 @@ class SplitGrowBranching : BranchStrategy {
                 -20.0 * candidate.tail.y
             }
 
-        fun split() {
-            val growers = branches.filter { it.canGrow() }
-            val winner = (0 until 64).map {
-                val splitter = growers[r.nextInt(growers.size)]
-                val look = (splitter.tail - splitter.head).normalize()
-                val ortho = look.randomOrtho(r)
-                val left = r.floatIn(0.2f, 0.8f)
-                val right = r.floatIn(0.2f, 0.8f)
-
-                val length = r.floatIn(0.3f, 0.6f)
-
-                val p1 = splitter.tail + (look + ortho * left).normalize() * length
-                val p2 = splitter.tail + (look - ortho * right).normalize() * length
-
-                splitter to listOf(p1, p2).map { LBranch(splitter.tail, it, splitter.accumulatedLength + length, splitter) }
+        fun bestFor(splitter: LBranch, split: () -> List<LBranch>) {
+            val winner = (0 until 32).map {
+                splitter to split()
             }.minBy {
-                // println(" Candidate metric ${metric(it.second)}")
                 metric(it.second)
             }
-            println("Total branches: ${branches.size}   Remaining splitters: ${growers.size}")
             branches += winner.second
             winner.first.splittable = false
             winner.first.children += winner.second
         }
 
-        fun grow() {
-            val growers = branches.filter { it.canGrow() }
+        fun split(splitter: LBranch, count: Int) = bestFor(splitter) {
+            val look = (splitter.tail - splitter.head).normalize()
+            (0 until count).map {
+                val ortho = look.randomOrtho(r)
+                val left = r.floatIn(0.1f, 0.9f)
+                val length = r.floatIn(0.3f, 0.6f)
+                val tail = splitter.tail + (look + ortho * left).normalize() * length
+                LBranch(splitter.tail, tail, splitter.accumulatedLength + length, splitter)
+            }
+        }
 
-            val splitter = growers[r.nextInt(growers.size)]
+        fun grow(splitter: LBranch) = bestFor(splitter) {
             val look = (splitter.tail - splitter.head).normalize()
             val ortho = look.randomOrtho(r)
-            val dir = look + ortho * r.floatIn(0.05f, 0.2f)
-
+            val dir = (look + ortho * r.floatIn(0.05f, 0.2f)).normalize()
             val length = r.floatIn(0.3f, 0.6f)
-
-            val child = LBranch(splitter.tail, splitter.tail + dir * length, splitter.accumulatedLength + length, splitter)
-            branches += child
-            splitter.splittable = false
-            splitter.children += child
+            val tail = splitter.tail + dir * length
+            listOf(LBranch(splitter.tail, tail, splitter.accumulatedLength + length, splitter))
         }
 
         fun thicknessDance(branch: LBranch) {
@@ -90,12 +80,30 @@ class SplitGrowBranching : BranchStrategy {
 
         val root = LBranch(-4.y, -2.y)
         branches += root
-        while (branches.any { it.canGrow() }) {
-            if (branches.size < r.nextInt(20) || branches.size > r.floatIn(200f,400f) ||
-                r.nextFloat() > 0.75f)
-                split()
+        while (branches.size < 8192) {
+            val splitters = branches.filter { it.canGrow() }
+            if (splitters.isEmpty())
+                break
+            val splitter = splitters[r.nextInt(splitters.size)]
+
+            val splitChance = when (splitter.accumulatedLength) {
+                in 0f..1f -> 1.0f
+                in 2f..7f -> 0.04f
+                in 7f..13f -> 0.6f
+                else -> 0f
+            }
+
+            val splitCount = when (splitter.accumulatedLength) {
+                in 0f..1f -> 3
+                else -> 2
+            }
+
+            if (r.nextFloat() < splitChance)
+                split(splitter, splitCount)
             else
-                grow()
+                grow(splitter)
+
+            println("Total branches: ${branches.size}   Remaining splitters: ${splitters.size}")
         }
         thicknessDance(root)
         return branches
