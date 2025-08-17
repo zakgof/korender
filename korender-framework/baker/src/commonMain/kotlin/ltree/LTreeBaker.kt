@@ -25,7 +25,7 @@ import com.zakgof.korender.math.z
 import ltree.clusterizer.ClusteredTree
 import ltree.generator.LTree
 import ltree.generator.LTreeDef
-import ltree.generator.branch.LevelBranching
+import ltree.generator.branch.SplitGrowBranching
 import ltree.generator.generateLTree
 import ltree.generator.leaf.DiagonalLeaves
 import kotlin.math.abs
@@ -41,7 +41,7 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 //    )
 
     val lTreeDef = LTreeDef(
-        LevelBranching(),
+        SplitGrowBranching(),
         DiagonalLeaves()
     )
 
@@ -110,7 +110,7 @@ private fun KorenderContext.captureCard(cluster: ClusteredTree.Cluster, index: I
 
 fun FrameContext.renderLTree(lTree: LTree, postfix: String, translation: Vec3 = 0.x) {
     renderTrunk(lTree, postfix, translation)
-    renderFoliage(postfix, lTree, translation)
+    // renderFoliage(postfix, lTree, translation)
 }
 
 private fun FrameContext.renderFoliage(postfix: String, lTree: LTree, translation: Vec3) {

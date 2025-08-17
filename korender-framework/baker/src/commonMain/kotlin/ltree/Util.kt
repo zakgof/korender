@@ -19,6 +19,8 @@ fun Vec3.randomOrtho(r: Random): Vec3 {
 
 fun Vec3.randomOrtho() = randomOrtho(Random)
 
+fun Random.floatIn(f1: Float, f2: Float) = f1 + this.nextFloat() * (f2 - f1)
+
 fun jitter() : Float {
     return Random.nextFloat() * 0.2f + 0.9f
 }

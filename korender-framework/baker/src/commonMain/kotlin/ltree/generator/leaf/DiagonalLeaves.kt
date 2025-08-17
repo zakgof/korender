@@ -8,8 +8,8 @@ class DiagonalLeaves(val rows: Int = 11, val length: Float = 0.4f) : LeafStrateg
 
     override fun generateLeaves(branch: LTree.Branch): List<LTree.Leaf> {
 
-        if (!branch.children.isEmpty() && branch.level < 7)
-            return listOf()
+//        if (!branch.children.isEmpty() && branch.level < 7)
+//            return listOf()
 
         val branchVector = (branch.tail - branch.head)
         val branchDir = branchVector.normalize()

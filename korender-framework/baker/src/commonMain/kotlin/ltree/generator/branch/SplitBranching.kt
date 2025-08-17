@@ -1,5 +1,6 @@
 package ltree.generator.branch
 
+import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import ltree.generator.LTree
 import ltree.randomOrtho
@@ -8,12 +9,22 @@ import kotlin.math.sqrt
 
 class SplitBranching : BranchStrategy {
 
-    override fun generateBranches(): List<LTree.Branch> {
-        val branches = mutableListOf<LTree.Branch>()
-        val splitBranches = mutableListOf<LTree.Branch>()
+    class SBranch (
+        val level: Int,
+        override val head: Vec3,
+        override val tail: Vec3,
+        override var raidusAtHead: Float = 0f,
+        override var raidusAtTail: Float = 0f,
+        val parent: SBranch?,
+        val children: MutableList<SBranch> = mutableListOf()
+    ): LTree.Branch
+
+    override fun generateBranches(): List<SBranch> {
+        val branches = mutableListOf<SBranch>()
+        val splitBranches = mutableListOf<SBranch>()
         val r = Random()
 
-        fun split(branch: LTree.Branch): List<LTree.Branch>? {
+        fun split(branch: SBranch): List<SBranch>? {
 
             if (splitBranches.contains(branch) || branch.level > 10)
                 return null
@@ -26,10 +37,10 @@ class SplitBranching : BranchStrategy {
             val p1 = branch.tail + (look + ortho * left).normalize()
             val p2 = branch.tail + (look - ortho * right).normalize()
 
-            return listOf(p1, p2).map { LTree.Branch(branch.level + 1, branch.tail, it, parent = branch) }
+            return listOf(p1, p2).map { SBranch(branch.level + 1, branch.tail, it, parent = branch) }
         }
 
-        fun thicknessDance(branch: LTree.Branch) {
+        fun thicknessDance(branch: SBranch) {
             branch.children.forEach { thicknessDance(it) }
             if (branch.children.isEmpty()) {
                 branch.raidusAtTail = 0f
@@ -41,7 +52,7 @@ class SplitBranching : BranchStrategy {
         }
 
 
-        val root = LTree.Branch(1, -4.y, 0.y, 0.1f, 0.1f, null)
+        val root = SBranch(1, -4.y, 0.y, 0.1f, 0.1f, null)
         branches += root
 
         var metric = totalMetric(branches)

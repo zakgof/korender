@@ -7,15 +7,12 @@ class LTree(
     val leaves: List<Leaf>,
 ) {
 
-    class Branch(
-        val level: Int,
-        val head: Vec3,
-        val tail: Vec3,
-        var raidusAtHead: Float = 0f,
-        var raidusAtTail: Float = 0f,
-        val parent: Branch?,
-        val children: MutableList<Branch> = mutableListOf()
-    )
+    interface Branch {
+        val head: Vec3
+        val tail: Vec3
+        var raidusAtHead: Float
+        var raidusAtTail: Float
+    }
 
     class Leaf(
         val mount: Vec3,

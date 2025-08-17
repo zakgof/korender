@@ -7,8 +7,8 @@ class RowanLeaves(val rows: Int = 7) : LeafStrategy {
 
     override fun generateLeaves(branch: LTree.Branch): List<LTree.Leaf> {
 
-        if (branch.children.isEmpty() || branch.level > 7)
-            return listOf()
+//        if (branch.children.isEmpty() || branch.level > 7)
+//            return listOf()
 
         val branchVector = (branch.tail - branch.head)
         val dir = branchVector.normalize().randomOrtho()
