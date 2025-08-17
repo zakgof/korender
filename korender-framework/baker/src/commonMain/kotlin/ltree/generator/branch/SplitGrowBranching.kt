@@ -7,23 +7,58 @@ import ltree.generator.LTree
 import ltree.randomOrtho
 import kotlin.random.Random
 
-class SplitGrowBranching : BranchStrategy {
+class SplitGrowBranching(
+    val seed: Int = 0,
+    val tropism: (Float, Vec3) -> Float = { l, t -> 1f * t.y },
+    val splitChance: (Float, Vec3) -> Float = { l, t -> l / 8f },
+    val maxAccumulatedLength: Float = 9f,
+    val maxBranches: Int = 4096,
 
-    class LBranch(
+    val splitStrategy: SplitStrategy = SimpleSplitStrategy(),
+    val growStrategy: GrowStrategy = SimpleGrowStrategy()
+
+) : BranchStrategy {
+
+    interface SplitStrategy {
+        fun split(tail: Vec3, vector: Vec3, accumulatedLength: Float, r: Random): List<Pair<Vec3, Float>>
+    }
+
+    interface GrowStrategy {
+        fun grow(tail: Vec3, vector: Vec3, accumulatedLength: Float, r: Random): Pair<Vec3, Float>
+    }
+
+    class SimpleSplitStrategy : SplitStrategy {
+        override fun split(tail: Vec3, vector: Vec3, accumulatedLength: Float, r: Random): List<Pair<Vec3, Float>> =
+            (0 until 2).map {
+                val ortho = vector.randomOrtho(r)
+                val left = r.floatIn(0.1f, 0.9f)
+                val length = r.floatIn(0.3f, 0.6f)
+                val newVec = (vector.normalize() + ortho * left).normalize() * length
+                newVec to accumulatedLength + length
+            }
+    }
+
+    class SimpleGrowStrategy : GrowStrategy {
+        override fun grow(tail: Vec3, vector: Vec3, accumulatedLength: Float, r: Random): Pair<Vec3, Float> {
+            val ortho = vector.randomOrtho(r)
+            val dir = (vector.normalize() + ortho * r.floatIn(0.05f, 0.2f)).normalize()
+            val length = r.floatIn(0.3f, 0.6f)
+            return dir * length to accumulatedLength + length
+        }
+    }
+
+    private class LBranch(
         override val head: Vec3,
         override val tail: Vec3,
         val accumulatedLength: Float = 0f,
-        val parent: LBranch? = null,
         override var raidusAtHead: Float = 0.05f,
         override var raidusAtTail: Float = 0.05f,
         var splittable: Boolean = true,
-        val children: MutableList<LBranch> = mutableListOf<LBranch>()
-    ) : LTree.Branch {
-        fun canGrow() = splittable && accumulatedLength < 12f
-    }
+        val children: MutableList<LBranch> = mutableListOf()
+    ) : LTree.Branch
 
     override fun generateBranches(): List<LTree.Branch> {
-        val r = Random(0)
+        val r = Random(seed)
         val branches = mutableListOf<LBranch>()
 
         fun metric(candidates: List<LBranch>) =
@@ -33,7 +68,7 @@ class SplitGrowBranching : BranchStrategy {
                 candidates.filter { c2 -> c1 !== c2 }
                     .sumOf { c2 -> 1.0 / (c2.tail - c1.tail).length() }
             } + candidates.sumOf { candidate ->
-                -20.0 * candidate.tail.y
+                tropism(candidate.accumulatedLength, candidate.tail).toDouble()
             }
 
         fun bestFor(splitter: LBranch, split: () -> List<LBranch>) {
@@ -47,24 +82,17 @@ class SplitGrowBranching : BranchStrategy {
             winner.first.children += winner.second
         }
 
-        fun split(splitter: LBranch, count: Int) = bestFor(splitter) {
-            val look = (splitter.tail - splitter.head).normalize()
-            (0 until count).map {
-                val ortho = look.randomOrtho(r)
-                val left = r.floatIn(0.1f, 0.9f)
-                val length = r.floatIn(0.3f, 0.6f)
-                val tail = splitter.tail + (look + ortho * left).normalize() * length
-                LBranch(splitter.tail, tail, splitter.accumulatedLength + length, splitter)
-            }
+        fun split(splitter: LBranch) = bestFor(splitter) {
+            splitStrategy.split(splitter.tail, splitter.tail - splitter.head, splitter.accumulatedLength, r)
+                .map {
+                    LBranch(splitter.tail, splitter.tail + it.first, it.second)
+                }
         }
 
         fun grow(splitter: LBranch) = bestFor(splitter) {
-            val look = (splitter.tail - splitter.head).normalize()
-            val ortho = look.randomOrtho(r)
-            val dir = (look + ortho * r.floatIn(0.05f, 0.2f)).normalize()
-            val length = r.floatIn(0.3f, 0.6f)
-            val tail = splitter.tail + dir * length
-            listOf(LBranch(splitter.tail, tail, splitter.accumulatedLength + length, splitter))
+            listOf(growStrategy.grow(splitter.tail, splitter.tail - splitter.head, splitter.accumulatedLength, r).let {
+                LBranch(splitter.tail, splitter.tail + it.first, it.second)
+            })
         }
 
         fun thicknessDance(branch: LBranch) {
@@ -80,26 +108,16 @@ class SplitGrowBranching : BranchStrategy {
 
         val root = LBranch(-4.y, -2.y)
         branches += root
-        while (branches.size < 8192) {
-            val splitters = branches.filter { it.canGrow() }
+        while (branches.size < maxBranches) {
+            val splitters = branches.filter {
+                it.splittable && it.accumulatedLength < maxAccumulatedLength
+            }
             if (splitters.isEmpty())
                 break
             val splitter = splitters[r.nextInt(splitters.size)]
 
-            val splitChance = when (splitter.accumulatedLength) {
-                in 0f..1f -> 1.0f
-                in 2f..7f -> 0.04f
-                in 7f..13f -> 0.6f
-                else -> 0f
-            }
-
-            val splitCount = when (splitter.accumulatedLength) {
-                in 0f..1f -> 3
-                else -> 2
-            }
-
-            if (r.nextFloat() < splitChance)
-                split(splitter, splitCount)
+            if (r.nextFloat() < splitChance(splitter.accumulatedLength, splitter.tail))
+                split(splitter)
             else
                 grow(splitter)
 
