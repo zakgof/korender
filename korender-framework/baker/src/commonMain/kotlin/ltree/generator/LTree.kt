@@ -22,11 +22,5 @@ class LTree(
 
 }
 
-fun generateLTree(lTreeDef: LTreeDef): LTree {
-    val branches = lTreeDef.branchStrategy.generateBranches()
-    val leaves = branches.flatMap { lTreeDef.leafStrategy.generateLeaves(it) }
-    return LTree(branches, leaves)
-}
-
 
 

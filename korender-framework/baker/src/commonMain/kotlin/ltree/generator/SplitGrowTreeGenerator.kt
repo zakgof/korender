@@ -1,23 +1,27 @@
-package ltree.generator.branch
+package ltree.generator
 
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import ltree.floatIn
-import ltree.generator.LTree
 import ltree.randomOrtho
 import kotlin.random.Random
 
-open class SplitGrowBranching(
+open class SplitGrowTreeGenerator(
     val seed: Int = 0,
     val tropism: (BranchDetail) -> Float = { 0f },
     val maxAge: Float = 9f,
     val maxBranches: Int = 4096,
     val branchingStrategy: BranchingStrategy = SplitOrGrowStrategy(),
+    val leafStrategy: LeafStrategy = RowanLeavesStrategy(7, 5f)
 
-    ) : BranchStrategy {
+    ) : TreeGenerator {
 
     fun interface BranchingStrategy {
         fun step(branch: BranchDetail, r: Random): List<Pair<Vec3, Float>>
+    }
+
+    fun interface LeafStrategy {
+        fun leaves(branch: BranchDetail, r: Random): List<LTree.Leaf>
     }
 
     class SplitOrGrowStrategy : BranchingStrategy {
@@ -45,6 +49,21 @@ open class SplitGrowBranching(
 
     }
 
+    class RowanLeavesStrategy(val rows: Int = 7, val minAge: Float) : LeafStrategy {
+        override fun leaves(branch: BranchDetail, r: Random): List<LTree.Leaf> {
+            if (branch.age < minAge)
+                return listOf()
+
+            val dir = branch.vector.randomOrtho()
+            val normal = (dir % branch.vector).normalize()
+            return (0 until rows).flatMap {
+                listOf(-1f, 1f).map { mult ->
+                    LTree.Leaf(branch.head + branch.vector * ((it + 0.5f) / (rows - 1)), dir * mult, normal * mult)
+                }
+            } + LTree.Leaf(branch.tail, branch.vector.normalize(), normal)
+        }
+    }
+
     interface BranchDetail {
         val head: Vec3
         val tail: Vec3
@@ -63,8 +82,14 @@ open class SplitGrowBranching(
         val children: MutableList<LBranch> = mutableListOf()
     ) : LTree.Branch, BranchDetail
 
-    override fun generateBranches(): List<LTree.Branch> {
+    override fun generateTree(): LTree {
         val r = Random(seed)
+        val branches = generateBranches(r)
+        val leaves = branches.flatMap { leafStrategy.leaves(it, r) }
+        return LTree(branches, leaves)
+    }
+
+    private fun generateBranches(r: Random): List<LBranch> {
         val branches = mutableListOf<LBranch>()
 
         fun metric(candidates: List<LBranch>) =

@@ -24,10 +24,7 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import ltree.clusterizer.ClusteredTree
 import ltree.generator.LTree
-import ltree.generator.LTreeDef
-import ltree.generator.branch.PineBranching
-import ltree.generator.generateLTree
-import ltree.generator.leaf.DiagonalLeaves
+import ltree.generator.PineTreeGenerator
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.random.Random
@@ -35,18 +32,7 @@ import kotlin.random.Random
 @Composable
 fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-//    val lTreeDef = LTreeDef(
-//        SplitBranching(),
-//        DiagonalLeaves()
-//    )
-
-    val lTreeDef = LTreeDef(
-        PineBranching(),
-        DiagonalLeaves()
-    )
-
-
-    val lTree = generateLTree(lTreeDef)
+    val lTree = PineTreeGenerator().generateTree()
     saveBranches(lTree.branches)
 
     // val lClusteredTree = clusterizeTree(lTree)
@@ -60,7 +46,7 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         AmbientLight(white(0.8f))
         DirectionalLight(Vec3(3f, 0f, 1f), white(1.0f))
         projection = projection(5f * width / height, 5f, 5f, 2000f)
-        camera = camera(-30.z, 1.z, 1.y)
+        camera = camera(-20.z, 1.z, 1.y)
 
         renderLTree(lTree, "genuine", 10.x)
         // renderTrunk(lTree, "trunk", -10.x)
@@ -110,17 +96,17 @@ private fun KorenderContext.captureCard(cluster: ClusteredTree.Cluster, index: I
 
 fun FrameContext.renderLTree(lTree: LTree, postfix: String, translation: Vec3 = 0.x) {
     renderTrunk(lTree, postfix, translation)
-    // renderFoliage(postfix, lTree, translation)
+    renderFoliage(postfix, lTree, translation)
 }
 
 private fun FrameContext.renderFoliage(postfix: String, lTree: LTree, translation: Vec3) {
     Renderable(
-        base(colorTexture = texture("model/leaf.png")),
+        base(colorTexture = texture("ltree/spruce.png")),
         mesh = biQuad(),
         instancing = instancing("leaves$postfix", lTree.leaves.size, dynamic = true) {
             lTree.leaves.map { leaf ->
                 translate(0.5f.y)
-                    .scale(0.16f, 0.88f, 1.0f)
+                    .scale(0.66f, 1.00f, 1.0f)
                     .rotate(leaf.normal, leaf.blade.normalize())
                     .translate(leaf.mount)
                     .rotate(1.y, frameInfo.time * 0.1f)
