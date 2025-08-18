@@ -126,7 +126,7 @@ void main() {
         if (pluginDiscard())
             discard;
     #else
-        if (albedo.a < 0.8)
+        if (albedo.a < 0.1)
             discard;
     #endif
 

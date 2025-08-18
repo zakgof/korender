@@ -106,7 +106,7 @@ private fun FrameContext.renderFoliage(postfix: String, lTree: LTree, translatio
         instancing = instancing("leaves$postfix", lTree.leaves.size, dynamic = true) {
             lTree.leaves.map { leaf ->
                 translate(0.5f.y)
-                    .scale(0.66f, 1.00f, 1.0f)
+                    .scale(0.15f, 1.00f, 1.0f)
                     .rotate(leaf.normal, leaf.blade.normalize())
                     .translate(leaf.mount)
                     .rotate(1.y, frameInfo.time * 0.1f)

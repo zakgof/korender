@@ -127,7 +127,7 @@ open class SplitGrowTreeGenerator(
                 branch.raidusAtHead = 0.01f
             } else {
                 branch.raidusAtTail = branch.children.maxOf { it.raidusAtHead.toDouble() }.toFloat()
-                branch.raidusAtHead = branch.raidusAtTail * 1.1f
+                branch.raidusAtHead = branch.raidusAtTail * 1.14f
             }
         }
 
