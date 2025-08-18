@@ -24,7 +24,8 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import ltree.clusterizer.ClusteredTree
 import ltree.generator.LTree
-import ltree.generator.PineTreeGenerator
+import ltree.generator.OakTreeGenerator
+import ltree.generator.SpruceTreeGenerator
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.random.Random
@@ -32,8 +33,9 @@ import kotlin.random.Random
 @Composable
 fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
-    val lTree = PineTreeGenerator().generateTree()
-    saveBranches(lTree.branches)
+    val spruce = SpruceTreeGenerator().generateTree()
+    val oak = OakTreeGenerator().generateTree()
+
 
     // val lClusteredTree = clusterizeTree(lTree)
 //    val cards = lClusteredTree.clusters.mapIndexed { index, cluster ->
@@ -48,7 +50,10 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         projection = projection(5f * width / height, 5f, 5f, 2000f)
         camera = camera(-20.z, 1.z, 1.y)
 
-        renderLTree(lTree, "genuine", 10.x)
+        renderLTree(spruce, "spruce", "ltree/spruce.png", 8.x)
+        renderLTree(oak, "oak","ltree/leaf.png",0.x)
+
+
         // renderTrunk(lTree, "trunk", -10.x)
         // renderCardFoliage(cards, atlas, -10.x)
 
@@ -80,7 +85,7 @@ private fun KorenderContext.captureCard(cluster: ClusteredTree.Cluster, index: I
     val projection = projection(size, size, 100f, 300f, ortho())
     val image = this.captureFrame(1024, 1024, camera, projection) {
         AmbientLight(White)
-        renderLTree(cluster.lTree, "$index")
+        renderLTree(cluster.lTree, "$index", "")
     }
 
     // saveImage(image, "png", "D:/kot/dev/test$index.png")
@@ -94,19 +99,19 @@ private fun KorenderContext.captureCard(cluster: ClusteredTree.Cluster, index: I
     )
 }
 
-fun FrameContext.renderLTree(lTree: LTree, postfix: String, translation: Vec3 = 0.x) {
+fun FrameContext.renderLTree(lTree: LTree, postfix: String, leafTexture: String, translation: Vec3 = 0.x) {
     renderTrunk(lTree, postfix, translation)
-    renderFoliage(postfix, lTree, translation)
+    renderFoliage(postfix, lTree, leafTexture, translation)
 }
 
-private fun FrameContext.renderFoliage(postfix: String, lTree: LTree, translation: Vec3) {
+private fun FrameContext.renderFoliage(postfix: String, lTree: LTree, leafTexture: String, translation: Vec3) {
     Renderable(
-        base(colorTexture = texture("ltree/spruce.png")),
+        base(colorTexture = texture(leafTexture)),
         mesh = biQuad(),
         instancing = instancing("leaves$postfix", lTree.leaves.size, dynamic = true) {
             lTree.leaves.map { leaf ->
                 translate(0.5f.y)
-                    .scale(0.15f, 1.00f, 1.0f)
+                    .scale(leaf.width, leaf.blade.length(), 1.0f)
                     .rotate(leaf.normal, leaf.blade.normalize())
                     .translate(leaf.mount)
                     .rotate(1.y, frameInfo.time * 0.1f)

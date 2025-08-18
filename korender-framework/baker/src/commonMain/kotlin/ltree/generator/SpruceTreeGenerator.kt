@@ -5,8 +5,9 @@ import ltree.floatIn
 import ltree.randomOrtho
 import kotlin.random.Random
 
-class PineTreeGenerator : SplitGrowTreeGenerator(
+class SpruceTreeGenerator : SplitGrowTreeGenerator(
     maxAge = 16.0f,
+    thicknessRatio = 1.14f,
     branchingStrategy = { branch: BranchDetail, r: Random ->
         if (branch.age < 1.6f) {
             listOf(
@@ -19,11 +20,10 @@ class PineTreeGenerator : SplitGrowTreeGenerator(
             )
         } else if (branch.vector.y < 0f) {
             val right = (1.y % branch.vector).normalize() * r.floatIn(0.5f, 1.0f)
-            val length = 1.0f// branch.age * -0.09f + 1.9f
             listOf(
-                (branch.vector + right).normalize() * length to branch.age + length,
-                (branch.vector - right).normalize() * length to branch.age + length,
-                (branch.vector).normalize() * length * 1.3f to branch.age + length * 1.3f
+                (branch.vector + right).normalize() to branch.age + 1f,
+                (branch.vector - right).normalize() to branch.age + 1f,
+                (branch.vector).normalize() * 1.3f to branch.age + 1.3f
             )
         } else {
             listOf()
@@ -34,7 +34,7 @@ class PineTreeGenerator : SplitGrowTreeGenerator(
             listOf()
         else {
             (0 until 3).map {
-                LTree.Leaf(branch.head, branch.vector, branch.vector.randomOrtho(r))
+                LTree.Leaf(branch.head, branch.vector, branch.vector.randomOrtho(r), 0.3f)
             }
         }
 

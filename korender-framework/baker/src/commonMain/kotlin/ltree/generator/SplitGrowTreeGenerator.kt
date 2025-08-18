@@ -12,8 +12,8 @@ open class SplitGrowTreeGenerator(
     val maxAge: Float = 9f,
     val maxBranches: Int = 4096,
     val branchingStrategy: BranchingStrategy = SplitOrGrowStrategy(),
-    val leafStrategy: LeafStrategy = RowanLeavesStrategy(7, 5f)
-
+    val leafStrategy: LeafStrategy = RowanLeavesStrategy(7, 5f),
+    val thicknessRatio: Float = 1.1f
     ) : TreeGenerator {
 
     fun interface BranchingStrategy {
@@ -58,9 +58,9 @@ open class SplitGrowTreeGenerator(
             val normal = (dir % branch.vector).normalize()
             return (0 until rows).flatMap {
                 listOf(-1f, 1f).map { mult ->
-                    LTree.Leaf(branch.head + branch.vector * ((it + 0.5f) / (rows - 1)), dir * mult, normal * mult)
+                    LTree.Leaf(branch.head + branch.vector * ((it + 0.5f) / (rows - 1)), dir * mult, normal * mult, 0.1f)
                 }
-            } + LTree.Leaf(branch.tail, branch.vector.normalize(), normal)
+            } + LTree.Leaf(branch.tail, branch.vector.normalize(), normal, 0.1f)
         }
     }
 
@@ -127,7 +127,7 @@ open class SplitGrowTreeGenerator(
                 branch.raidusAtHead = 0.01f
             } else {
                 branch.raidusAtTail = branch.children.maxOf { it.raidusAtHead.toDouble() }.toFloat()
-                branch.raidusAtHead = branch.raidusAtTail * 1.14f
+                branch.raidusAtHead = branch.raidusAtTail * thicknessRatio
             }
         }
 

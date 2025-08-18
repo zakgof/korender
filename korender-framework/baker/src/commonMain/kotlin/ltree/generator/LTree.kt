@@ -17,7 +17,8 @@ class LTree(
     class Leaf(
         val mount: Vec3,
         val blade: Vec3,
-        val normal: Vec3
+        val normal: Vec3,
+        val width: Float
     )
 
 }
