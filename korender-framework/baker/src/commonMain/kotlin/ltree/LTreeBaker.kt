@@ -9,7 +9,11 @@ import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Image
+import com.zakgof.korender.Image3D
 import com.zakgof.korender.Korender
+import com.zakgof.korender.PixelFormat
+import com.zakgof.korender.Texture3DDeclaration
+import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
@@ -18,6 +22,7 @@ import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Transform.Companion.translate
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
@@ -36,6 +41,8 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val spruce = SpruceTreeGenerator().generateTree()
     val oak = OakTreeGenerator().generateTree()
 
+    val image3D = volumize(oak)
+    val tex3D = texture3D("oak-volume", image3D, wrap = TextureWrap.ClampToEdge)
 
     // val lClusteredTree = clusterizeTree(lTree)
 //    val cards = lClusteredTree.clusters.mapIndexed { index, cluster ->
@@ -51,7 +58,8 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         camera = camera(-20.z, 1.z, 1.y)
 
         renderLTree(spruce, "spruce", "ltree/spruce.png", 8.x)
-        renderLTree(oak, "oak","ltree/leaf.png",0.x)
+        renderLTree(oak, "oak", "ltree/leaf.png", 0.x)
+        renderVolume(tex3D, -8.x)
 
 
         // renderTrunk(lTree, "trunk", -10.x)
@@ -268,4 +276,42 @@ private fun FrameContext.renderCardFoliage(cards: List<Card>, atlas: Image, posi
             }
         }
     )
+}
+
+private fun KorenderContext.volumize(lTree: LTree): Image3D {
+    val image3d = createImage3D(32, 32, 32, PixelFormat.RGBA)
+
+    val minBB = Vec3(
+        lTree.leaves.minOf { it.mount.x },
+        lTree.leaves.minOf { it.mount.y },
+        lTree.leaves.minOf { it.mount.z }
+    )
+    val maxBB = Vec3(
+        lTree.leaves.maxOf { it.mount.x },
+        lTree.leaves.maxOf { it.mount.y },
+        lTree.leaves.maxOf { it.mount.z }
+    )
+
+    lTree.leaves.forEach {
+        val p = it.mount
+        val x = 1 + ((p.x - minBB.x) * 30 / (maxBB.x - minBB.x)).toInt()
+        val y = 1 + ((p.y - minBB.y) * 30 / (maxBB.y - minBB.y)).toInt()
+        val z = 1 + ((p.z - minBB.z) * 30 / (maxBB.z - minBB.z)).toInt()
+        println("$x, $y, $z")
+        image3d.setPixel(x, 31 - y, z, ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f))
+    }
+
+    return image3d
+
+}
+
+private fun FrameContext.renderVolume(tex3D: Texture3DDeclaration, offset: Vec3) {
+
+    Billboard(
+        base(),
+        billboard(offset, scale = Vec2(4f, 4f)),
+        plugin("albedo", "ltree/albedo.volume.frag"),
+        uniforms("volumeTexture" to tex3D),
+    )
+
 }

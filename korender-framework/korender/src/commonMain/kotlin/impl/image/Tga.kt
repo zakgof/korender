@@ -1,11 +1,11 @@
 package com.zakgof.korender.impl.image
 
-import com.zakgof.korender.Image
+import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 
 object Tga {
 
-    fun encode(width: Int, height: Int, format: Image.Format, bytes: NativeByteBuffer): ByteArray {
+    fun encode(width: Int, height: Int, format: PixelFormat, bytes: NativeByteBuffer): ByteArray {
 
         val header = ByteArray(18)
         header[2] = 2 // Uncompressed RGB

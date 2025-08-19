@@ -7,6 +7,7 @@ import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureResources
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.Image
+import com.zakgof.korender.Image3D
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.KeyHandler
@@ -16,6 +17,7 @@ import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
+import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.Platform
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
@@ -23,6 +25,7 @@ import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
+import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -35,6 +38,7 @@ import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.context.PipeMeshContext
 import com.zakgof.korender.context.RoiTexturesContext
+import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.context.DefaultFrameContext
@@ -60,7 +64,9 @@ import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.image.InternalImage
+import com.zakgof.korender.impl.image.impl.image.InternalImage3D
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
+import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
 import com.zakgof.korender.impl.material.ImageTextureDeclaration
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
@@ -133,6 +139,9 @@ internal class Engine(
 
         override fun texture(id: String, image: Image, filter: TextureFilter, wrap: TextureWrap, aniso: Int) =
             ImageTextureDeclaration(id, image as InternalImage, filter, wrap, aniso, currentRetentionPolicy)
+
+        override fun texture3D(id: String, image: Image3D, filter: TextureFilter, wrap: TextureWrap, aniso: Int): Texture3DDeclaration =
+            ImageTexture3DDeclaration(id, image as InternalImage3D, filter, wrap, aniso, currentRetentionPolicy)
 
         override fun textureProbe(frameProbeName: String): TextureDeclaration = ProbeTextureDeclaration(frameProbeName)
 
@@ -513,8 +522,11 @@ internal class Engine(
         override val height: Int
             get() = renderContext.height
 
-        override fun createImage(width: Int, height: Int, format: Image.Format): Image =
+        override fun createImage(width: Int, height: Int, format: PixelFormat): Image =
             Platform.createImage(width, height, format)
+
+        override fun createImage3D(width: Int, height: Int, depth: Int, format: PixelFormat): Image3D =
+            InternalImage3D(width, height, depth, NativeByteBuffer(width * height * depth * format.bytes), format)
 
         override fun loadImage(imageResource: String): Deferred<Image> =
             asyncContext.call {

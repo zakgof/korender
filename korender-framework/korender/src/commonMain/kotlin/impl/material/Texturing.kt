@@ -6,6 +6,7 @@ import com.zakgof.korender.CubeTextureResources
 import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.Platform
 import com.zakgof.korender.RetentionPolicy
+import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -17,7 +18,9 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA
 import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA32F
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
+import com.zakgof.korender.impl.glgpu.GlGpuTexture3D
 import com.zakgof.korender.impl.image.InternalImage
+import com.zakgof.korender.impl.image.impl.image.InternalImage3D
 
 object NotYetLoadedTexture
 
@@ -85,6 +88,23 @@ internal class ImageTextureDeclaration(
 
     override fun generateGpuTexture(loader: Loader): GlGpuTexture =
         GlGpuTexture(image, filter, wrap, aniso)
+}
+
+internal class ImageTexture3DDeclaration(
+    val id: String,
+    val image: InternalImage3D,
+    val filter: TextureFilter,
+    private val wrap: TextureWrap,
+    private val aniso: Int,
+    override val retentionPolicy: RetentionPolicy
+) : Texture3DDeclaration, Retentionable {
+    override fun equals(other: Any?): Boolean =
+        (other is ImageTexture3DDeclaration && other.id == id)
+
+    override fun hashCode(): Int = id.hashCode()
+
+    fun generateGpuTexture3D(loader: Loader): GlGpuTexture3D =
+        GlGpuTexture3D(image, filter, wrap, aniso)
 }
 
 internal class ByteArrayTextureDeclaration(

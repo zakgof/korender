@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.Image
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.Platform
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -83,17 +84,17 @@ internal val wrapMap = mapOf(
 )
 
 internal val formatMap = mapOf(
-    Image.Format.RGBA to GlGpuTexture.GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE),
-    Image.Format.RGB to GlGpuTexture.GlFormat(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE),
-    Image.Format.Gray to GlGpuTexture.GlFormat(GL_R8, GL_RED, GL_UNSIGNED_BYTE),
-    Image.Format.Gray16 to GlGpuTexture.GlFormat(GL_R16, GL_RED, GL_UNSIGNED_SHORT)
+    PixelFormat.RGBA to GlGpuTexture.GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE),
+    PixelFormat.RGB to GlGpuTexture.GlFormat(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE),
+    PixelFormat.Gray to GlGpuTexture.GlFormat(GL_R8, GL_RED, GL_UNSIGNED_BYTE),
+    PixelFormat.Gray16 to GlGpuTexture.GlFormat(GL_R16, GL_RED, GL_UNSIGNED_SHORT)
 )
 
 internal val backFormatMap = mapOf(
-    GL_RGBA to Image.Format.RGBA,
-    GL_RGB to Image.Format.RGB,
-    GL_R8 to Image.Format.Gray,
-    GL_R16 to Image.Format.Gray16
+    GL_RGBA to PixelFormat.RGBA,
+    GL_RGB to PixelFormat.RGB,
+    GL_R8 to PixelFormat.Gray,
+    GL_R16 to PixelFormat.Gray16
 )
 
 internal class GlGpuTexture(private val width: Int, private val height: Int, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024) : GLBindableTexture, AutoCloseable {
@@ -101,7 +102,7 @@ internal class GlGpuTexture(private val width: Int, private val height: Int, fil
     override val glHandle = glGenTextures()
     val mipmapped = filter == TextureFilter.MipMap
 
-    private var format: Image.Format? = null
+    private var format: PixelFormat? = null
     private lateinit var glFormat: GlFormat
 
     constructor(image: InternalImage, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024) : this(image.width, image.height, filter, wrap, aniso) {

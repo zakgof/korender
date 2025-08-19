@@ -94,7 +94,7 @@ internal actual object Platform {
                 ctx.canvas.width,
                 ctx.canvas.height,
                 NativeByteBuffer(uint8Array),
-                Image.Format.RGBA
+                PixelFormat.RGBA
             )
             FontDef(image, widths)
         }
@@ -124,17 +124,17 @@ internal actual object Platform {
             )
             val uint8ClampedArray: Uint8ClampedArray = imageData.data
             val uint8Array = Uint8Array(uint8ClampedArray.buffer, uint8ClampedArray.byteOffset, uint8ClampedArray.length)
-            result.complete(InternalImage(imageData.width, imageData.height, NativeByteBuffer(uint8Array), Image.Format.RGBA))
+            result.complete(InternalImage(imageData.width, imageData.height, NativeByteBuffer(uint8Array), PixelFormat.RGBA))
         }
         return result
     }
 
-    actual fun createImage(width: Int, height: Int, format: Image.Format): InternalImage {
+    actual fun createImage(width: Int, height: Int, format: PixelFormat): InternalImage {
         val pixelBytes = when(format) {
-            Image.Format.RGB -> 3
-            Image.Format.RGBA -> 4
-            Image.Format.Gray -> 1
-            Image.Format.Gray16 -> 2
+            PixelFormat.RGB -> 3
+            PixelFormat.RGBA -> 4
+            PixelFormat.Gray -> 1
+            PixelFormat.Gray16 -> 2
         }
         val buffer = NativeByteBuffer(width * height * pixelBytes)
         return InternalImage(width, height, buffer, format)

@@ -5,6 +5,7 @@ import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureResources
 import com.zakgof.korender.Image
+import com.zakgof.korender.Image3D
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KeyHandler
 import com.zakgof.korender.MaterialModifier
@@ -12,12 +13,14 @@ import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
+import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
+import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -49,6 +52,8 @@ interface KorenderContext {
     fun texture(textureResource: String, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): TextureDeclaration
     fun texture(id: String, image: Image, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): TextureDeclaration
     fun textureProbe(frameProbeName: String): TextureDeclaration
+
+    fun texture3D(id: String, image: Image3D, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): Texture3DDeclaration
 
     fun cubeTexture(resources: CubeTextureResources): CubeTextureDeclaration
     fun cubeTexture(id: String, images: CubeTextureImages): CubeTextureDeclaration
@@ -124,9 +129,11 @@ interface KorenderContext {
     fun ortho(): ProjectionMode
     fun log(c: Float = 1.0f): ProjectionMode
 
-    fun createImage(width: Int, height: Int, format: Image.Format): Image
+    fun createImage(width: Int, height: Int, format: PixelFormat): Image
     fun loadImage(imageResource: String): Deferred<Image>
     fun loadImage(bytes: ByteArray, type: String): Deferred<Image>
+
+    fun createImage3D(width: Int, height: Int, depth: Int, format: PixelFormat): Image3D
 
     fun vsm(blurRadius: Float? = null): ShadowAlgorithmDeclaration
     fun hard(): ShadowAlgorithmDeclaration
