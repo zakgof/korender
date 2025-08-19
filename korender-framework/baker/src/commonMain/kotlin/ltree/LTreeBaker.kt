@@ -59,7 +59,7 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         camera = camera(-20.z, 1.z, 1.y)
 
         renderLTree(spruce, "spruce", "ltree/spruce.png", 8.x)
-        renderLTree(oak, "oak", "ltree/leaf.png", 0.x)
+        renderLTree(oak, "oak", "ltree/oak.png", 0.x)
         renderVolume(tex3D, -8.x)
 
 
@@ -306,7 +306,7 @@ private fun KorenderContext.volumize(lTree: LTree): Image3D {
 
         val image = captureFrame(reso, reso, camera, projection) {
             AmbientLight(White)
-            renderLTree(lTree, "capture-$z", "ltree/leaf.png")
+            renderLTree(lTree, "capture-$z", "ltree/oak.png")
         }
         saveImage(image, "png", "D:/p/test-$z.png")
 
