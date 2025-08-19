@@ -31,6 +31,7 @@ import ltree.clusterizer.ClusteredTree
 import ltree.generator.LTree
 import ltree.generator.OakTreeGenerator
 import ltree.generator.SpruceTreeGenerator
+import tree.saveImage
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.random.Random
@@ -279,7 +280,10 @@ private fun FrameContext.renderCardFoliage(cards: List<Card>, atlas: Image, posi
 }
 
 private fun KorenderContext.volumize(lTree: LTree): Image3D {
-    val image3d = createImage3D(32, 32, 32, PixelFormat.RGBA)
+
+    val reso = 32
+    val pixelsInSlice = 64 / 8
+    val image3d = createImage3D(reso, reso, reso, PixelFormat.RGBA)
 
     val minBB = Vec3(
         lTree.leaves.minOf { it.mount.x },
@@ -292,24 +296,35 @@ private fun KorenderContext.volumize(lTree: LTree): Image3D {
         lTree.leaves.maxOf { it.mount.z }
     )
 
-    lTree.leaves.forEach {
-        val p = it.mount
-        val x = 1 + ((p.x - minBB.x) * 30 / (maxBB.x - minBB.x)).toInt()
-        val y = 1 + ((p.y - minBB.y) * 30 / (maxBB.y - minBB.y)).toInt()
-        val z = 1 + ((p.z - minBB.z) * 30 / (maxBB.z - minBB.z)).toInt()
-        println("$x, $y, $z")
-        image3d.setPixel(x, 31 - y, z, ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f))
+    for (z in 0 until reso) {
+        val pixelDepth = (maxBB.z - minBB.z) / reso
+        val sliceCenter = Vec3((minBB.x + maxBB.x) * 0.5f, (minBB.y + maxBB.y) * 0.5f, minBB.z + (maxBB.z - minBB.z) * ((z + 0.5f) / reso))
+        val camera = camera(sliceCenter - 5.z, 1.z, 1.y)
+        val projection = projection((maxBB.x - minBB.x) * 1.1f, (maxBB.y - minBB.y) * 1.1f, 5f - pixelDepth * pixelsInSlice * 0.5f, 5f + pixelDepth * pixelsInSlice * 0.5f)
+
+        println("Z=$z: z range: ${minBB.z}..${maxBB.z} NEAR: ${projection.near} FAR: ${projection.far}")
+
+        val image = captureFrame(reso, reso, camera, projection) {
+            AmbientLight(White)
+            renderLTree(lTree, "capture-$z", "ltree/leaf.png")
+        }
+        saveImage(image, "png", "D:/p/test-$z.png")
+
+        for (x in 0 until reso) {
+            for (y in 0 until reso) {
+                val color = image.pixel(x, reso - 1 - y)
+                image3d.setPixel(x, y, z, color)
+            }
+        }
     }
-
     return image3d
-
 }
 
 private fun FrameContext.renderVolume(tex3D: Texture3DDeclaration, offset: Vec3) {
 
     Billboard(
         base(),
-        billboard(offset, scale = Vec2(4f, 4f)),
+        billboard(offset, scale = Vec2(5f, 5f)),
         plugin("albedo", "ltree/albedo.volume.frag"),
         uniforms("volumeTexture" to tex3D),
     )
