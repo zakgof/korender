@@ -67,7 +67,7 @@ fun IslandExample() =
         val deferredTrees = load("files/island/tree/trees.bin") { bytes ->
             loadBinary(bytes) {
                 (0 until bytes.size / 12).map {
-                    normalizedToWorld(getVec3())
+                    normalizedToWorld(getVec3()) + 2.y
                 }
             }
         }
@@ -82,15 +82,15 @@ fun IslandExample() =
 
         Frame {
 
-            DeferredShading()
+            // DeferredShading()
 
             projection = projection(2f, 2f * height / width, 2f, 32000f, log())
             camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
             AmbientLight(ColorRGB.white(0.5f))
-            DirectionalLight(Vec3(15.0f, -3.0f, 1.0f), ColorRGB.white(1.5f)) {
-                Cascade(512, 2f, 3000f, 0f to 4000f, hardwarePcf())
-                Cascade(512, 2500f, 12000f, 0f to 4000f, hardwarePcf())
+            DirectionalLight(Vec3(3.0f, -3.0f, 1.0f), ColorRGB.white(3.5f)) {
+                 Cascade(512, 2f, 3000f, 0f to 2000f, hardwarePcf())
+                 Cascade(512, 2500f, 12000f, 0f to 2000f, hardwarePcf(0.01f))
             }
 
             if (heightMapLoading.isCompleted && fbmLoading.isCompleted) {

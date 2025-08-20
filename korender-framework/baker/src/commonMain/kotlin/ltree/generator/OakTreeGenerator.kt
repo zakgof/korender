@@ -45,9 +45,9 @@ class OakTreeGenerator : SplitGrowTreeGenerator(
                 val blade = if ((it and 1) == 1) blade1 else blade2
                 LTree.Leaf(
                     branch.head + branch.vector * (it / (5 - 1f)),
-                    blade * jitter(),
+                    blade * 2.0f * jitter(),
                     normal,
-                    0.1f
+                    0.2f
                 )
             }
         }

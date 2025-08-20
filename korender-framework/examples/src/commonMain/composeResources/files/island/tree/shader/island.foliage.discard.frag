@@ -1,3 +1,4 @@
 bool pluginDiscard() {
-    return albedo.a < max(0.15, 1.0 - dot(normalize(vpos - cameraPos), normal));
+    float d = 1.0 - abs(dot(normalize(vpos - cameraPos), normal));
+    return albedo.a < max(0.12, d);
 }

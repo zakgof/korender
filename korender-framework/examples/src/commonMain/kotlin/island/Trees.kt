@@ -75,8 +75,9 @@ fun FrameContext.renderBranches(branches: List<Branch>, seeds: List<Vec3>) {
                 branches.forEach { branch ->
                     if (branch.radiusAtHead * 50.0f > threshold) {
                         sequence {
+                            val tail = branch.head + (branch.tail - branch.head) * 1.06f
                             node(transform * branch.head, thinDown(branch.radiusAtHead * 50.0f, threshold))
-                            node(transform * branch.tail, thinDown(branch.radiusAtTail * 50.0f, threshold))
+                            node(transform * tail, thinDown(branch.radiusAtTail * 50.0f, threshold))
                         }
                     }
                 }
@@ -89,7 +90,11 @@ fun FrameContext.renderCards(cards: List<Card>, seeds: List<Vec3>) {
     val r = Random(1)
     val scale = 50.0f
     Renderable(
-        base(colorTexture = texture("island/tree/atlas.png")),
+        base(
+            colorTexture = texture("island/tree/atlas.png"),
+            metallicFactor = 0.4f,
+            roughnessFactor = 0.6f
+        ),
         plugin("discard", "island/tree/shader/island.foliage.discard.frag"),
         mesh = customMesh(
             "foliage", cards.size * seeds.size * 8, cards.size * seeds.size * 12,
@@ -105,14 +110,14 @@ fun FrameContext.renderCards(cards: List<Card>, seeds: List<Vec3>) {
                 val texX = 0.25f * (index % 4)
                 val texY = 0.25f * (index / 4)
                 seeds.forEach { seed ->
-                    pos(seed + p1).normal(card.normal).tex(texX, texY)
-                    pos(seed + p2).normal(card.normal).tex(texX + 0.25f, texY)
-                    pos(seed + p3).normal(card.normal).tex(texX + 0.25f, texY + 0.25f)
-                    pos(seed + p4).normal(card.normal).tex(texX, texY + 0.25f)
                     pos(seed + p1).normal(-card.normal).tex(texX, texY)
                     pos(seed + p2).normal(-card.normal).tex(texX + 0.25f, texY)
                     pos(seed + p3).normal(-card.normal).tex(texX + 0.25f, texY + 0.25f)
                     pos(seed + p4).normal(-card.normal).tex(texX, texY + 0.25f)
+                    pos(seed + p1).normal(card.normal).tex(texX, texY)
+                    pos(seed + p2).normal(card.normal).tex(texX + 0.25f, texY)
+                    pos(seed + p3).normal(card.normal).tex(texX + 0.25f, texY + 0.25f)
+                    pos(seed + p4).normal(card.normal).tex(texX, texY + 0.25f)
                     index(indexBase + 0, indexBase + 1, indexBase + 2, indexBase + 0, indexBase + 2, indexBase + 3)
                     index(indexBase + 4, indexBase + 6, indexBase + 5, indexBase + 4, indexBase + 7, indexBase + 6)
                     indexBase += 8
