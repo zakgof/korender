@@ -48,6 +48,10 @@ vec3 look;
 #import "$texturing"
 #endif
 
+#ifdef PLUGIN_NORMAL
+#import "$normal"
+#endif
+
 #ifdef PLUGIN_ALBEDO
 #import "$albedo"
 #endif
@@ -58,10 +62,6 @@ vec3 look;
 
 #ifdef PLUGIN_EMISSION
 #import "$emission"
-#endif
-
-#ifdef PLUGIN_NORMAL
-#import "$normal"
 #endif
 
 #ifdef PLUGIN_METALLIC_ROUGHNESS

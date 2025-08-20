@@ -9,9 +9,7 @@ import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Image
-import com.zakgof.korender.Image3D
 import com.zakgof.korender.Korender
-import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.baker.resources.Res
@@ -31,7 +29,6 @@ import ltree.clusterizer.ClusteredTree
 import ltree.generator.LTree
 import ltree.generator.OakTreeGenerator
 import ltree.generator.SpruceTreeGenerator
-import tree.saveImage
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.random.Random
@@ -42,8 +39,9 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val spruce = SpruceTreeGenerator().generateTree()
     val oak = OakTreeGenerator().generateTree()
 
-    val image3D = volumize(oak)
-    val tex3D = texture3D("oak-volume", image3D, wrap = TextureWrap.ClampToEdge)
+    val images3d = volumize(oak)
+    val albedo3d = texture3D("oak-volume", images3d.first, wrap = TextureWrap.ClampToEdge)
+    val normal3d = texture3D("oak-normal", images3d.second, wrap = TextureWrap.ClampToEdge)
 
     // val lClusteredTree = clusterizeTree(lTree)
 //    val cards = lClusteredTree.clusters.mapIndexed { index, cluster ->
@@ -53,14 +51,14 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 
     Frame {
         this.background = ColorRGBA.Transparent
-        AmbientLight(white(0.8f))
-        DirectionalLight(Vec3(3f, 0f, 1f), white(1.0f))
+        AmbientLight(white(0.6f))
+        DirectionalLight(Vec3(3f, 0f, 1f), white(2.5f))
         projection = projection(5f * width / height, 5f, 5f, 2000f)
         camera = camera(-20.z, 1.z, 1.y)
 
-        renderLTree(spruce, "spruce", "ltree/spruce.png", 8.x)
+        renderLTree(spruce, "spruce", "ltree/spruce.png", 10.x)
         renderLTree(oak, "oak", "ltree/oak.png", 0.x)
-        renderVolume(tex3D, -8.x)
+        renderVolume(albedo3d, normal3d, -10.x)
 
 
         // renderTrunk(lTree, "trunk", -10.x)
@@ -279,54 +277,15 @@ private fun FrameContext.renderCardFoliage(cards: List<Card>, atlas: Image, posi
     )
 }
 
-private fun KorenderContext.volumize(lTree: LTree): Image3D {
-
-    val reso = 32
-    val pixelsInSlice = 64 / 8
-    val image3d = createImage3D(reso, reso, reso, PixelFormat.RGBA)
-
-    val minBB = Vec3(
-        lTree.leaves.minOf { it.mount.x },
-        lTree.leaves.minOf { it.mount.y },
-        lTree.leaves.minOf { it.mount.z }
-    )
-    val maxBB = Vec3(
-        lTree.leaves.maxOf { it.mount.x },
-        lTree.leaves.maxOf { it.mount.y },
-        lTree.leaves.maxOf { it.mount.z }
-    )
-
-    for (z in 0 until reso) {
-        val pixelDepth = (maxBB.z - minBB.z) / reso
-        val sliceCenter = Vec3((minBB.x + maxBB.x) * 0.5f, (minBB.y + maxBB.y) * 0.5f, minBB.z + (maxBB.z - minBB.z) * ((z + 0.5f) / reso))
-        val camera = camera(sliceCenter - 5.z, 1.z, 1.y)
-        val projection = projection((maxBB.x - minBB.x) * 1.1f, (maxBB.y - minBB.y) * 1.1f, 5f - pixelDepth * pixelsInSlice * 0.5f, 5f + pixelDepth * pixelsInSlice * 0.5f)
-
-        println("Z=$z: z range: ${minBB.z}..${maxBB.z} NEAR: ${projection.near} FAR: ${projection.far}")
-
-        val image = captureFrame(reso, reso, camera, projection) {
-            AmbientLight(White)
-            renderLTree(lTree, "capture-$z", "ltree/oak.png")
-        }
-        saveImage(image, "png", "D:/p/test-$z.png")
-
-        for (x in 0 until reso) {
-            for (y in 0 until reso) {
-                val color = image.pixel(x, reso - 1 - y)
-                image3d.setPixel(x, y, z, color)
-            }
-        }
-    }
-    return image3d
-}
-
-private fun FrameContext.renderVolume(tex3D: Texture3DDeclaration, offset: Vec3) {
+private fun FrameContext.renderVolume(albedo3d: Texture3DDeclaration, normal3d: Texture3DDeclaration, offset: Vec3) {
 
     Billboard(
         base(),
-        billboard(offset, scale = Vec2(5f, 5f)),
+        billboard(offset, scale = Vec2(11f, 9f)),
         plugin("albedo", "ltree/albedo.volume.frag"),
-        uniforms("volumeTexture" to tex3D),
+        plugin("normal", "ltree/normal.volume.frag"),
+        uniforms("volumeAlbedoTexture" to albedo3d),
+        uniforms("volumeNormalTexture" to normal3d),
     )
 
 }
