@@ -547,7 +547,8 @@ internal class Scene(
     fun renderRenderable(
         declaration: RenderableDeclaration,
         camera: Camera?,
-        reverseZ: Boolean = false
+        reverseZ: Boolean = false,
+        isShadow: Boolean = false
     ): Boolean {
         val addUniforms = mutableMapOf<String, Any?>()
         val addDefs = mutableSetOf<String>()
@@ -560,6 +561,10 @@ internal class Scene(
 
         val materialModifiers = listOf(contextMaterialModifier) + declaration.materialModifiers + InternalMaterialModifier { it.shaderDefs += addDefs }
         val materialDeclaration = materialDeclaration(declaration.base, deferredShading, declaration.retentionPolicy, materialModifiers)
+
+        if (materialDeclaration.shader.defs.contains("NO_SHADOW_CAST") && isShadow)
+            return true
+
         val shader = inventory.shader(materialDeclaration.shader) ?: return false
 
         // TODO move this to where it is supported

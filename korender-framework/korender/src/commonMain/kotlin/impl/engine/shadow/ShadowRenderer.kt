@@ -110,7 +110,7 @@ internal object ShadowRenderer {
                     renderableDeclaration.transform,
                     renderableDeclaration.retentionPolicy
                 )
-                scene.renderRenderable(casterRenderableDeclaration, shadowCamera)
+                scene.renderRenderable(casterRenderableDeclaration, shadowCamera, isShadow = true)
             }
             scene.inventory.uniformBufferHolder.flush()
         }
