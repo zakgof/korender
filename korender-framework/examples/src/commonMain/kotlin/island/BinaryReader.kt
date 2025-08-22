@@ -1,5 +1,6 @@
 package com.zakgof.korender.examples.island
 
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
 fun <T> loadBinary(bytes: ByteArray, block: BinaryLoaderContext.() -> T): T {
@@ -27,6 +28,12 @@ class BinaryLoaderContext(val bytes: ByteArray) {
         val y = getFloat()
         val z = getFloat()
         return Vec3(x, y, z)
+    }
+
+    fun getVec2(): Vec2 {
+        val x = getFloat()
+        val y = getFloat()
+        return Vec2(x, y)
     }
 
 }

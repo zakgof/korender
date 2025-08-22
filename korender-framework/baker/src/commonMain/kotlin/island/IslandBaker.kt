@@ -18,8 +18,6 @@ import kotlin.math.atan2
 import kotlin.random.Random
 
 // 0.1 - water
-// 0.2 - flat island
-
 
 const val seed = 7
 val noise1 = Perlin1D(seed)
@@ -31,19 +29,15 @@ fun main() {
     val root = File(System.getProperty("projectRoot") ?: "D:\\p\\dev\\korender\\korender-framework\\baker")
     val islandRoot = File(root, "../examples/src/commonMain/composeResources/files/island")
 
-    val mountainMap = FloatPixelMap(512)
-    Erosion(mountainMap)
-
     val heightMap = Float2PixelMap(512)
     val colorMap = ChannelMap(512)
     val sdf = Sdf(256)
 
-    val mt = seedMountain(random)
-    heightMap.populate { pt ->
-        ht(pt, mt, mountainMap)
-    }
 
-    val cells = seedCells(heightMap)
+    heightMap.populate { pt -> ht(pt) }
+
+    val runwaySeed = Vec2(0.3f + 0.3f * random.nextFloat(), 0.3f + 0.3f * random.nextFloat())
+    val cells = seedCells(heightMap, runwaySeed)
     fillRoads(cells, sdf)
 
     val blocks = cells.map { it.toBlock() }
@@ -52,7 +46,7 @@ fun main() {
     }
 
     val buildings = seedBuildings(blocks)
-    val trees = seedTrees(colorMap, heightMap)
+    val trees = seedTrees(colorMap, heightMap, runwaySeed)
 
     heightMap.save(File(islandRoot, "terrain/height.png"))
     colorMap.save(File(islandRoot, "terrain/color.png"))
@@ -60,14 +54,14 @@ fun main() {
 
     saveBuildings(buildings, File(islandRoot, "building/buildings.bin"))
     saveTrees(trees, File(islandRoot, "tree/trees.bin"))
-}
 
-fun seedMountain(random: Random) =
-    Vec2(0.3f + 0.4f * random.nextFloat(), 0.3f + 0.4f * random.nextFloat())
+    val runWayDir = Vec2.random(seed)
+    saveRunway(runwaySeed + runWayDir * 0.14f, runwaySeed - runWayDir * 0.14f, File(islandRoot, "terrain/runway.bin"))
+}
 
 //   0.1 sea level
 //   0.11..0.13 flat
-fun ht(pt: Vec2, mtCenter: Vec2, mountain: FloatPixelMap): Float {
+fun ht(pt: Vec2): Float {
 
     val phi = atan2(pt.y - 0.5f, pt.x - 0.5f)
     val radius = (pt - Vec2(0.5f, 0.5f)).length()
@@ -84,9 +78,7 @@ fun ht(pt: Vec2, mtCenter: Vec2, mountain: FloatPixelMap): Float {
                     radius
                 ))
 
-    val c = (pt - mtCenter).lengthSquared()
-
-    return flatIsland + mountain[(pt - mtCenter) * 2.0f + Vec2(0.5f, 0.5f)]
+    return flatIsland
 }
 
 
@@ -112,11 +104,12 @@ fun color(pt: Vec2, heightMap: FloatPixelMap, cells: Set<Cell>): FloatArray {
     return channel(1, 1f)
 }
 
-fun seedCells(heightMap: FloatPixelMap): Set<Cell> {
+fun seedCells(heightMap: FloatPixelMap, runwaySeed: Vec2): Set<Cell> {
     val cellz = 16
     val nodes = grid(cellz).filter {
-        val h = heightMap[Vec2(it.first.toFloat() / cellz, it.second.toFloat() / cellz)]
-        h > 0.113f && h < 0.155f
+        val pt = Vec2(it.first.toFloat() / cellz, it.second.toFloat() / cellz)
+        val h = heightMap[pt]
+        h > 0.113f && h < 0.155f && (pt - runwaySeed).length() > 0.15f
     }.toSet()
     return nodes.filter {
         nodes.contains((it.first + 1) to it.second) &&
@@ -198,19 +191,19 @@ fun seedBuildings(blocks: List<Pair<Vec2, Vec2>>) =
         Vec3(it.first.x, 0.0f, it.first.y) to Vec3(it.second.x, random.nextFloat() * 0.7f + 0.3f, it.second.y)
     }
 
-fun seedTrees(colorMap: ChannelMap, heightMap: Float2PixelMap): List<Vec3> {
+fun seedTrees(colorMap: ChannelMap, heightMap: Float2PixelMap, runwaySeed: Vec2): List<Vec3> {
     val count = 80
     return (0 until count).map {
         val pt = generateSequence { Vec2(random.nextFloat(), random.nextFloat()) }
             .first { pt ->
                 val color = colorMap.get(colorMap.toPix(pt.x), colorMap.toPix(pt.y))
-                color[1] > 0.99f
+                color[1] > 0.99f && (pt - runwaySeed).length() > 0.15f
             }
         Vec3(pt.x, heightMap[pt], pt.y)
     }
 }
 
-fun saveBuildings(buildings: List<Pair<Vec3, Vec3>>, file: File) = save(buildings, buildings.size * 2 * 3 * 4, file){ trees, nb ->
+fun saveBuildings(buildings: List<Pair<Vec3, Vec3>>, file: File) = save(buildings, buildings.size * 2 * 3 * 4, file) { trees, nb ->
     buildings.forEach {
         nb.put(it.first)
         nb.put(it.second)
@@ -223,7 +216,14 @@ fun saveTrees(trees: List<Vec3>, file: File) = save(trees, trees.size * 3 * 4, f
     }
 }
 
-fun <T> save(data: T, size:Int, file: File, serializer: (T, NativeByteBuffer) -> Unit) {
+fun saveRunway(rw1: Vec2, rw2: Vec2, file: File) = save(rw1 to rw2, 16, file) { pts, nb ->
+    nb.put(pts.first.x)
+    nb.put(pts.first.y)
+    nb.put(pts.second.x)
+    nb.put(pts.second.y)
+}
+
+fun <T> save(data: T, size: Int, file: File, serializer: (T, NativeByteBuffer) -> Unit) {
     val buffer = ByteBuffer.allocateDirect(size).order(ByteOrder.LITTLE_ENDIAN)
     val nb = NativeByteBuffer(buffer)
 

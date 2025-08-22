@@ -1,26 +1,16 @@
 #import "!shader/lib/noise.glsl"
 
 uniform sampler2D patchTexture;
-uniform sampler2D roiTextures[2];
-uniform vec3[2] roiuvs;
-uniform int roiCount;
-
-vec4 roi(vec2 uv) {
-    vec4 color = vec4(0.);
-    //    for (int r=0; r<roiCount; r++) {
-    //        vec3 r3 = roiuvs[r];
-    //        vec2 roiuv = (uv - r3.xy) / r3.z;
-    //        if (roiuv.x >= 0.0 && roiuv.x <= 1.0 && roiuv.y >= 0.0 && roiuv.y <= 1.0) {
-    //            color += texture(roiTextures[r], roiuv);
-    //        }
-    //    }
-    return color;
-}
 
 uniform sampler2D sdf;
 uniform sampler2D road;
 
 uniform sampler2D grassTexture;
+
+uniform sampler2D runwayTexture;
+
+#uniform vec2 runwayP1;
+#uniform vec2 runwayP2;
 
 vec3 colorAtIndex(int patchIndex, vec2 uv) {
     vec3 color = vec3(0.1);
@@ -35,6 +25,17 @@ vec3 colorAtIndex(int patchIndex, vec2 uv) {
     return color;
 }
 
+vec2 toRoi(vec2 uv) {
+    float width = 0.03;
+    vec2 v = runwayP2 - runwayP1;
+    float height = length(v);
+    vec2 v_hat = v / height;
+    vec2 u_hat = vec2(-v_hat.y, v_hat.x);
+    return vec2(
+        -dot(uv - runwayP1, u_hat) / width + 0.5,
+        dot(uv - runwayP1, v_hat) / height
+    );
+}
 
 vec4 pluginAlbedo() {
 
@@ -50,6 +51,11 @@ vec4 pluginAlbedo() {
     float sdfCross = (sdfSample.r - 0.35) / (1. - 2. * 0.35);
     if (sdfCross > 0. && sdfCross < 1. && sdfSample.b >= 1.0) {
         color = texture(road, vec2(sdfCross, sdfSample.g * 5.0f)).rgb;
+    }
+
+    vec2 roiTex = toRoi(vtex);
+    if (roiTex.x > 0. && roiTex.x < 1. && roiTex.y > 0. && roiTex.y < 1.) {
+        color = texture(runwayTexture, roiTex).xyz;
     }
 
     return vec4(color, 1.0);

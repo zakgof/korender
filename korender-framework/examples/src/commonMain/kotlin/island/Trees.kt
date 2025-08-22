@@ -56,9 +56,9 @@ fun loadCards(bytes: ByteArray): List<Card> =
         }
     }
 
-fun loadTreeSeeds(bytes: ByteArray) = loadBinary(bytes) {
+fun loadTreeSeeds(heightFunc: Height, bytes: ByteArray) = loadBinary(bytes) {
     (0 until bytes.size / 12).map {
-        normalizedToWorld(getVec3()) + 64.y
+        heightFunc.texToWorld(getVec3()) + 64.y
     }
 }
 
