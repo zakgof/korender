@@ -35,3 +35,4 @@ interface FrameContext : KorenderContext {
 
     fun OnLoading(block: FrameContext.() -> Unit)
 }
+
