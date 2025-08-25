@@ -26,6 +26,7 @@ fun IslandExample() =
 
         Frame {
             if (loader.loaded()) {
+                game.frame(frameInfo.dt)
                 gameFrame(game, loader, terrain)
             } else {
                 loadingScreen(loader.percent())
