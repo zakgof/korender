@@ -91,6 +91,8 @@ actual fun Korender(
         }
     }
 
+    fun awtKeyCodeToKorender(awtKeyCode: Int): String = KEY_MAPPING.getOrDefault(awtKeyCode, "UNKNOWN")
+
     SwingPanel(
         modifier = Modifier.fillMaxSize(),
         update = {
@@ -175,11 +177,11 @@ actual fun Korender(
             })
             canvas.addKeyListener(object : KeyAdapter() {
                 override fun keyPressed(e: KeyEvent) {
-                    sendKey(com.zakgof.korender.KeyEvent.Type.DOWN, e.keyChar.toString()) // TODO all keycodes
+                    sendKey(com.zakgof.korender.KeyEvent.Type.DOWN, awtKeyCodeToKorender(e.keyCode)) // TODO all keycodes
                 }
 
                 override fun keyReleased(e: KeyEvent) {
-                    sendKey(com.zakgof.korender.KeyEvent.Type.UP, e.keyChar.toString()) // TODO all keycodes
+                    sendKey(com.zakgof.korender.KeyEvent.Type.UP, awtKeyCodeToKorender(e.keyCode)) // TODO all keycodes
                 }
             })
 

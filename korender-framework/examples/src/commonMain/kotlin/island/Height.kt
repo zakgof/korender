@@ -39,21 +39,21 @@ class Height(private val deferredMap: Deferred<Image>) {
         val image = deferredMap.getCompleted()
 
 
-        val fx = tex.x.coerceIn(0f, 1f) * (image.width  - 1).toFloat()
+        val fx = tex.x.coerceIn(0f, 1f) * (image.width - 1).toFloat()
         val fy = tex.y.coerceIn(0f, 1f) * (image.height - 1).toFloat()
 
         val x0 = floor(fx).toInt()
         val y0 = floor(fy).toInt()
-        val x1 = (x0 + 1).coerceIn(0, image.width  - 1)
+        val x1 = (x0 + 1).coerceIn(0, image.width - 1)
         val y1 = (y0 + 1).coerceIn(0, image.height - 1)
 
         val tx = fx - x0
         val ty = fy - y0
 
         val h00 = pixel(image, x0, y0)
-        val h10 = pixel(image,x1, y0)
-        val h01 = pixel(image,x0, y1)
-        val h11 = pixel(image,x1, y1)
+        val h10 = pixel(image, x1, y0)
+        val h01 = pixel(image, x0, y1)
+        val h11 = pixel(image, x1, y1)
 
         val hx0 = h00 + (h10 - h00) * tx
         val hx1 = h01 + (h11 - h01) * tx
@@ -71,6 +71,21 @@ class Height(private val deferredMap: Deferred<Image>) {
         val tex = worldToTex(world.x, world.z)
         val ts = texSample(tex)
         return Vec3(world.x, ts + elevation, world.z)
+    }
+
+    fun height(world: Vec3) = texSample(worldToTex(world.x, world.z))
+
+    fun altitute(world: Vec3) = world.y - height(world)
+
+    fun normal(world: Vec3): Vec3 {
+        val eps = 32f
+        val hL = height(Vec3(world.x - eps, 0f, world.z))
+        val hR = height(Vec3(world.x + eps, 0f, world.z))
+        val hD = height(Vec3(world.x, 0f, world.z - eps))
+        val hU = height(Vec3(world.x, 0f, world.z + eps))
+        val dx = (hR - hL) / (2f * eps)
+        val dz = (hU - hD) / (2f * eps)
+        return Vec3(-dx, 1f, -dz).normalize()
     }
 
 }

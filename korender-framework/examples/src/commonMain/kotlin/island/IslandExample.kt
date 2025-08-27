@@ -44,7 +44,7 @@ private fun FrameContext.gameFrame(game: Game, loader: Loader, terrain: Prefab) 
     buildings(loader.deferredBuildings.getCompleted())
     trees(loader.deferredBranches.getCompleted(), loader.deferredCards.getCompleted(), loader.deferredTreeSeeds.getCompleted())
     plane(game.plane.position, game.plane.look, game.plane.up)
-    gui()
+    gui(game)
 }
 
 
@@ -52,7 +52,7 @@ private fun FrameContext.plane(position: Vec3, look: Vec3, up: Vec3) = Gltf(
     "island/models/plane.glb",
     rotate(look, up)
         .scale(100.0f)
-        .translate(position)
+        .translate(position + 16.y)
 )
 
 private fun FrameContext.atmosphere() {
@@ -67,12 +67,12 @@ private fun FrameContext.atmosphere() {
     }
 }
 
-private fun FrameContext.gui() =
+private fun FrameContext.gui(game: Game) =
     Gui {
         Column {
             Filler()
             Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
-            Text(id = "debug", text = "Debug ${(camera.position - 400.y).length().toInt()}")
+            Text(id = "velocity", text = "Speed ${game.plane.velocity.length().toInt()}")
         }
     }
 

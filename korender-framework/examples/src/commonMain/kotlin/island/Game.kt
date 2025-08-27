@@ -49,6 +49,22 @@ class Game(private val loader: Loader) {
             (event.type == KeyEvent.Type.UP && event.key == "A") -> {
                 plane.rolling = 0.0f
             }
+
+            (event.type == KeyEvent.Type.DOWN && event.key == "UP") -> {
+                plane.pitching = 1.0f
+            }
+
+            (event.type == KeyEvent.Type.UP && event.key == "UP") -> {
+                plane.pitching = 0.0f
+            }
+
+            (event.type == KeyEvent.Type.DOWN && event.key == "DOWN") -> {
+                plane.pitching = -1.0f
+            }
+
+            (event.type == KeyEvent.Type.UP && event.key == "DOWN") -> {
+                plane.pitching = 0.0f
+            }
         }
     }
 
@@ -57,22 +73,42 @@ class Game(private val loader: Loader) {
     val cameraDir: Vec3
         get() = plane.look
     val cameraPos: Vec3
-        get() = plane.position - plane.look * 240f + plane.up * 30f
+        get() = plane.position - cameraDir * 240f + cameraUp * 64f // TODO: above surface
 
     var plane: Plane = Plane(0.y, 0.y, 0.y, 0.y)
 
     fun frame(dt: Float) {
         if (!started) {
             val rw = loader.runwaySeedLoading.getCompleted()
-            val rw1 = heightFunc.texToWorld(rw.first, 32.0f)
-            val rw2 = heightFunc.texToWorld(rw.second, 32.0f)
+            val rw1 = heightFunc.texToWorld(rw.first, 5.0f)
+            val rw2 = heightFunc.texToWorld(rw.second, 5.0f)
             val look = (rw2 - rw1).normalize()
             val up = 1.y
             val position = rw1 + look * (rw2 - rw1).length() * 0.1f
             plane = Plane(position, look, up, 0.y)
             started = true
         }
+        if (dt > 0.5f) return
         plane.update(dt)
+        adjustLandedPlane(dt)
+    }
+
+    private fun adjustLandedPlane(dt: Float) {
+        val alt = heightFunc.altitute(plane.position)
+        val normal = heightFunc.normal(plane.position)
+
+        println(">>>> Height $alt    dot: ${(plane.up * normal)}")
+
+        if (alt < 0.1f && alt > -16.0f && (plane.up * normal) > 0.9f) {
+            plane.position += -alt.y
+            plane.velocity -= plane.velocity.y.y
+
+            val right = plane.look % plane.up
+            plane.up = normal
+            plane.look = (plane.up % right).normalize()
+
+            println(">>>> Landed ${plane.position} - UP ${plane.up}")
+        }
     }
 }
 
@@ -84,9 +120,19 @@ class Plane(
 ) {
     var throttle: Float = 0f
     var rolling: Float = 0f
+    var pitching: Float = 0f
 
     fun update(dt: Float) {
-        velocity = velocity + look * (throttle * 30.0f * dt) - velocity * (0.01f * dt)
+
+        val right = look % up
+        look = (look + up * pitching * dt).normalize()
+
+        val stallFactor = (1000f - (velocity * look) * (velocity * look)).coerceIn(0f, 100f)
+        println(">>>> DT $dt STALL $stallFactor")
+        look = (look - stallFactor.y * dt * 0.01f).normalize()
+        up = (right % look).normalize()
+
+        velocity = velocity + look * (throttle * 50.0f * dt) - velocity * (0.1f * dt) - 1.y * (9.0f * dt)
         position = position + velocity * dt
     }
 }
