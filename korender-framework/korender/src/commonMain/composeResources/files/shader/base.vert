@@ -18,6 +18,8 @@ out vec2 vtex;
 #uniform mat4 model;
 #uniforms
 
+mat4 totalModel;
+
 #ifdef PLUGIN_VPOSITION
 #import "$vposition"
 #endif
@@ -30,7 +32,7 @@ out vec2 vtex;
 
 void main() {
 
-    mat4 totalModel = model;
+    totalModel = model;
 
     #ifdef INSTANCING
         totalModel = model * mat4(instanceModel0, instanceModel1, instanceModel2, instanceModel3);
