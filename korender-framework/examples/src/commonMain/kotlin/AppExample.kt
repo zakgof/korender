@@ -29,17 +29,12 @@ import com.zakgof.app.resources.Res
 import com.zakgof.app.resources.korender32
 import com.zakgof.app.resources.menu
 import com.zakgof.korender.examples.infcity.InfiniteCity
-import com.zakgof.korender.examples.island.IslandExample
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun AppExample() {
     val options = listOf(
-
-
-        Demo("HY") { IslandExample() },
-        Demo("Pipes") { PipeExample() },
 
         Demo("Heightmap Terrain") { HeightmapTerrainExample() },
         Demo("Procedural Terrain") { ProcTerrainExample() },

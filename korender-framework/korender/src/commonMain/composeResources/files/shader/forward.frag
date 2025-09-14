@@ -126,7 +126,7 @@ void main() {
         if (pluginDiscard())
             discard;
     #else
-        if (albedo.a < 0.1)
+        if (albedo.a < 0.001)
             discard;
     #endif
 
@@ -178,7 +178,7 @@ void main() {
     #ifdef PLUGIN_OUTPUT
         fragColor = pluginOutput();
     #else
-        fragColor = vec4(color, 1.0);
+        fragColor = vec4(color, albedo.a);
     #endif
 
     #ifdef PLUGIN_DEPTH
