@@ -56,7 +56,7 @@ internal actual object Platform {
         bitmap.copyPixelsToBuffer(byteBuffer)
         val format = bitmap.config
         val gpuFormat = when (format) {
-            Bitmap.Config.ARGB_8888 -> Image.Format.RGBA
+            Bitmap.Config.ARGB_8888 -> PixelFormat.RGBA
             else -> throw KorenderException("Unsupported image format $format")
         }
         val gpuBytes = when (format) {
@@ -109,7 +109,7 @@ internal actual object Platform {
     }
 
     actual fun nanoTime() = System.nanoTime()
-    internal actual fun createImage(width: Int, height: Int, format: Image.Format): InternalImage {
+    internal actual fun createImage(width: Int, height: Int, format: PixelFormat): InternalImage {
         // TODO image types support!
         val bitmap = createBitmap(width, height)
         return bitmapToImage(bitmap)

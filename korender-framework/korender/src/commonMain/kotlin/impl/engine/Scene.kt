@@ -30,6 +30,7 @@ import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Vec3List
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
+import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalTexture
@@ -76,6 +77,7 @@ internal class Scene(
             is ResourceCubeTextureDeclaration -> inventory.cubeTexture(value) ?: NotYetLoadedTexture
             is ImageCubeTextureDeclaration -> inventory.cubeTexture(value) ?: NotYetLoadedTexture
             is ProbeCubeTextureDeclaration -> renderContext.envProbes[value.envProbeName] ?: NotYetLoadedTexture
+            is ImageTexture3DDeclaration -> inventory.texture3D(value) ?: NotYetLoadedTexture
             else -> value
         }
     }
@@ -147,15 +149,16 @@ internal class Scene(
 
         renderDeferredOpaques()
 
+        var pingPong = 0
         val postShadingEffects = sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects
-        renderDeferredShading(if (postShadingEffects.isEmpty() && sceneDeclaration.filters.isEmpty()) null else sceneDeclaration.filters.size + 1)
+        renderDeferredShading(if (postShadingEffects.isEmpty() && sceneDeclaration.filters.isEmpty()) null else pingPong++)
 
         if (postShadingEffects.isNotEmpty()) {
             postShadingEffects.forEach { renderPostShadingEffect(it as InternalPostShadingEffect) }
-            renderComposition(if (sceneDeclaration.filters.isEmpty()) null else sceneDeclaration.filters.size)
+            renderComposition(if (sceneDeclaration.filters.isEmpty()) null else pingPong++)
         }
         sceneDeclaration.filters.forEachIndexed { filterIndex, filter ->
-            renderToReusableFb(if (sceneDeclaration.filters.size - 1 == filterIndex) null else sceneDeclaration.filters.size - 1 - filterIndex) {
+            renderToReusableFb(if (sceneDeclaration.filters.size - 1 == filterIndex) null else pingPong++) {
                 renderPostProcess(filter)
             }
         }
@@ -544,7 +547,8 @@ internal class Scene(
     fun renderRenderable(
         declaration: RenderableDeclaration,
         camera: Camera?,
-        reverseZ: Boolean = false
+        reverseZ: Boolean = false,
+        isShadow: Boolean = false
     ): Boolean {
         val addUniforms = mutableMapOf<String, Any?>()
         val addDefs = mutableSetOf<String>()
@@ -557,6 +561,10 @@ internal class Scene(
 
         val materialModifiers = listOf(contextMaterialModifier) + declaration.materialModifiers + InternalMaterialModifier { it.shaderDefs += addDefs }
         val materialDeclaration = materialDeclaration(declaration.base, deferredShading, declaration.retentionPolicy, materialModifiers)
+
+        if (materialDeclaration.shader.defs.contains("NO_SHADOW_CAST") && isShadow)
+            return true
+
         val shader = inventory.shader(materialDeclaration.shader) ?: return false
 
         // TODO move this to where it is supported

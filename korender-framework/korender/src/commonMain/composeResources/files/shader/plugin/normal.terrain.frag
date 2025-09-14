@@ -11,8 +11,8 @@ vec3 pluginNormal() {
     float hD = pluginTerrainHeight(vtex + vec2(0, -nstep));
     float hU = pluginTerrainHeight(vtex + vec2(0, nstep));
 
-    vec3 dx = normalize(vec3(2.0,  hR - hL, 0.0));
-    vec3 dz = normalize(vec3(0.0,  hU - hD, 2.0));
+    vec3 dx = normalize(vec3(64.0,  hR - hL, 0.0));
+    vec3 dz = normalize(vec3(0.0,  hU - hD, 64.0));
 
     return normalize(cross(dz, dx));
 }

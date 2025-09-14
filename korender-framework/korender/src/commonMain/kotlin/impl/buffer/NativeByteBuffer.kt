@@ -26,6 +26,8 @@ expect class NativeByteBuffer(size: Int) : NativeBuffer {
 
     fun put(other: NativeByteBuffer)
 
+    fun slice(): NativeByteBuffer
+
     override fun rewind(): NativeByteBuffer
 
     override fun size(): Int

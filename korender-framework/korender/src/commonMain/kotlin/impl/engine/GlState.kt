@@ -13,8 +13,8 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_BLEND
 import com.zakgof.korender.impl.gl.GLConstants.GL_CULL_FACE
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_TEST
 import com.zakgof.korender.impl.gl.GLConstants.GL_LEQUAL
+import com.zakgof.korender.impl.gl.GLConstants.GL_ONE
 import com.zakgof.korender.impl.gl.GLConstants.GL_ONE_MINUS_SRC_ALPHA
-import com.zakgof.korender.impl.gl.GLConstants.GL_SRC_ALPHA
 import com.zakgof.korender.math.ColorRGBA
 
 internal class GlState {
@@ -51,7 +51,7 @@ internal class GlState {
         true,
         GL_BACK,
         true,
-        GL_SRC_ALPHA to GL_ONE_MINUS_SRC_ALPHA,
+        GL_ONE to GL_ONE_MINUS_SRC_ALPHA,
         GL_LEQUAL,
         true,
         true

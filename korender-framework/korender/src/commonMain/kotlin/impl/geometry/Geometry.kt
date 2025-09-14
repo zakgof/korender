@@ -15,6 +15,7 @@ import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.glgpu.GlGpuMesh
@@ -35,11 +36,13 @@ internal class MeshLink(val cpuMesh: CMesh, dynamic: Boolean) : AutoCloseable {
     override fun close() = gpuMesh.close()
 
     fun updateGpu(instanceCount: Int, instanceDataOnly: Boolean) {
+        val vertexCount = if (instanceDataOnly) cpuMesh.vertexCount else cpuMesh.determineVertexCount()
+        val indexCount = if (instanceDataOnly) cpuMesh.indexCount else cpuMesh.determineIndexCount()
         gpuMesh.update(
-            cpuMesh.attributeBuffers.onEach { it.rewind() },
-            cpuMesh.indexBuffer?.rewind(),
-            cpuMesh.vertexCount,
-            cpuMesh.indexCount,
+            cpuMesh.attributeBuffers.map { it.slice() },
+            cpuMesh.indexBuffer?.slice(),
+            vertexCount,
+            indexCount,
             instanceCount,
             instanceDataOnly
         )
@@ -72,12 +75,13 @@ internal object Geometry {
             is Billboard -> billboard(count)
             is ImageQuad -> imageQuad()
             is Quad -> quad(simpleMeshDeclaration.halfSideX, simpleMeshDeclaration.halfSideY, count)
+            is BiQuad -> biquad(simpleMeshDeclaration.halfSideX, simpleMeshDeclaration.halfSideY, count)
             is Disk -> disk(simpleMeshDeclaration.radius, simpleMeshDeclaration.sectors, count)
             is CylinderSide -> cylinderSide(simpleMeshDeclaration.radius, simpleMeshDeclaration.height, simpleMeshDeclaration.sectors, count)
             is ConeTop -> coneTop(simpleMeshDeclaration.radius, simpleMeshDeclaration.height, simpleMeshDeclaration.sectors, count)
             is HeightField -> heightField(simpleMeshDeclaration.cellsX, simpleMeshDeclaration.cellsZ, simpleMeshDeclaration.cellWidth, simpleMeshDeclaration.height, count)
             is ObjMesh -> loader.safeBytes(simpleMeshDeclaration.objFile) { obj(it, count) }
-            is CustomCpuMesh -> simpleMeshDeclaration.mesh
+            is CustomCpuMesh -> toCMesh(simpleMeshDeclaration.mesh, count)
             is CustomMesh -> CMesh(simpleMeshDeclaration.vertexCount, simpleMeshDeclaration.indexCount, count, attributes = simpleMeshDeclaration.attributes.toTypedArray(), simpleMeshDeclaration.indexType, simpleMeshDeclaration.block)
             is FontMesh -> font(count)
             else -> throw KorenderException("Unknown mesh type $meshDeclaration")
@@ -95,6 +99,25 @@ internal object Geometry {
         pos(Vec3(halfSideX, halfSideY, 0f)).tex(1f, 1f).normal(1.z)
         pos(Vec3(-halfSideX, halfSideY, 0f)).tex(0f, 1f).normal(1.z)
         index(0, 1, 2, 0, 2, 3)
+    }
+
+    private fun biquad(halfSideX: Float, halfSideY: Float, count: Int) = CMesh(
+        8,
+        12,
+        count,
+        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+    ) {
+        pos(Vec3(-halfSideX, -halfSideY, 0f)).tex(0f, 0f).normal(1.z)
+        pos(Vec3(halfSideX, -halfSideY, 0f)).tex(1f, 0f).normal(1.z)
+        pos(Vec3(halfSideX, halfSideY, 0f)).tex(1f, 1f).normal(1.z)
+        pos(Vec3(-halfSideX, halfSideY, 0f)).tex(0f, 1f).normal(1.z)
+
+        pos(Vec3(-halfSideX, -halfSideY, 0f)).tex(0f, 0f).normal(-1.z)
+        pos(Vec3(halfSideX, -halfSideY, 0f)).tex(1f, 0f).normal(-1.z)
+        pos(Vec3(halfSideX, halfSideY, 0f)).tex(1f, 1f).normal(-1.z)
+        pos(Vec3(-halfSideX, halfSideY, 0f)).tex(0f, 1f).normal(-1.z)
+
+        index(0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6)
     }
 
     private fun disk(radius: Float, sectors: Int, count: Int) = CMesh(
@@ -152,7 +175,7 @@ internal object Geometry {
             val phi = PI * 2f * sector / sectors
             val cosPhi = cos(phi)
             val sinPhi = sin(phi)
-            val normal = Vec3(-sinPhi, 0f, cosPhi)
+            val normal = Vec3(cosPhi, 0f, sinPhi)
             pos(Vec3(radius * cosPhi, 0f, radius * sinPhi))
                 .normal(normal)
                 .tex(sector.toFloat() / sectors, 0f)
@@ -307,15 +330,15 @@ internal object Geometry {
     private fun decalCube(halfSide: Float, count: Int) =
         CMesh(8, 36, count, POS, MODEL0, MODEL1, MODEL2, MODEL3) {
             pos(-halfSide, -halfSide, -halfSide)
-            pos( halfSide, -halfSide, -halfSide)
-            pos(-halfSide,  halfSide, -halfSide)
-            pos( halfSide,  halfSide, -halfSide)
-            pos(-halfSide, -halfSide,  halfSide)
-            pos( halfSide, -halfSide,  halfSide)
-            pos(-halfSide,  halfSide,  halfSide)
-            pos( halfSide,  halfSide,  halfSide)
+            pos(halfSide, -halfSide, -halfSide)
+            pos(-halfSide, halfSide, -halfSide)
+            pos(halfSide, halfSide, -halfSide)
+            pos(-halfSide, -halfSide, halfSide)
+            pos(halfSide, -halfSide, halfSide)
+            pos(-halfSide, halfSide, halfSide)
+            pos(halfSide, halfSide, halfSide)
 
-            index( 0, 1, 2, 1, 3, 2)
+            index(0, 1, 2, 1, 3, 2)
             index(5, 4, 7, 4, 6, 7)
             index(4, 0, 6, 0, 2, 6)
             index(1, 5, 3, 5, 7, 3)
@@ -343,6 +366,24 @@ internal object Geometry {
             tex(0f, 0f).tex(0f, 1f).tex(1f, 1f).tex(1f, 0f)
             index(0, 1, 2, 0, 2, 3)
         }
+
+    private fun toCMesh(mesh: Mesh, count: Int): CMesh? {
+        if (mesh is CMesh) {
+            return mesh
+        }
+        return CMesh(mesh.vertices.size, mesh.indices?.size ?: -1, count, POS, NORMAL, TEX) {
+            (0 until mesh.vertices.size).forEach {
+                val vertex = mesh.vertices[it]
+                pos(vertex.pos!!).normal(vertex.normal!!).tex(vertex.tex!!)
+            }
+            mesh.indices?.let {indices ->
+                (0 until indices.size).forEach {
+                    index(indices[it])
+                }
+            }
+        }
+    }
+
 }
 
 fun IndexType.size() = when (this) {

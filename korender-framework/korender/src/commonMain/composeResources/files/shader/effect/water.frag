@@ -28,16 +28,19 @@ void main() {
     vec3 color = texture(colorTexture, vtex).rgb;
     float depth = texture(depthTexture, vtex).r;
 
-    vec3 look = screenToLook(vtex);
     vec3 world = screenToWorldSpace(vtex, depth);
-    if (depth > 0.9999) {
-        world = cameraPos + look * 10000000.0;
+    vec3 look = normalize(world - cameraPos);
+    vec3 surface = cameraPos - look * cameraPos.y / look.y;
+    float fbmA = fbm(surface.xz / waveScale - 0.03 * time) - 0.5;
+    surface.y += waveMagnitude * 64.0 * fbmA;
+
+    gl_FragDepth = depth;
+    if (depth > 0.999 && look.y < 0.0) {
+        gl_FragDepth = 0.998;
+        world = cameraPos + look * projectionFar * 1e20;
     }
 
-    vec3 surface = cameraPos - look * cameraPos.y / look.y;
-
-    float fbmA = fbm(surface.xz / waveScale - 0.03 * time) - 0.5;
-    if (world.y < waveMagnitude * fbmA) {
+    if (world.y < surface.y) {
 
         vec3 normal = normalize(vec3(
             waveMagnitude * fbmA,
@@ -66,5 +69,4 @@ void main() {
     }
 
     fragColor = vec4(color, 1.0);
-    gl_FragDepth = texture(depthTexture, vtex).r;
 }

@@ -7,6 +7,7 @@ import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureResources
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.Image
+import com.zakgof.korender.Image3D
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.KeyHandler
@@ -16,6 +17,7 @@ import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
+import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.Platform
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
@@ -23,6 +25,7 @@ import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
+import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -33,7 +36,9 @@ import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedGltfContext
 import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.PipeMeshContext
 import com.zakgof.korender.context.RoiTexturesContext
+import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.context.DefaultFrameContext
@@ -44,7 +49,7 @@ import com.zakgof.korender.impl.engine.shadow.InternalHardShadow
 import com.zakgof.korender.impl.engine.shadow.InternalHardwarePcfShadow
 import com.zakgof.korender.impl.engine.shadow.InternalSoftwarePcfShadow
 import com.zakgof.korender.impl.engine.shadow.InternalVsmShadow
-import com.zakgof.korender.impl.geometry.CMesh
+import com.zakgof.korender.impl.geometry.BiQuad
 import com.zakgof.korender.impl.geometry.ConeTop
 import com.zakgof.korender.impl.geometry.Cube
 import com.zakgof.korender.impl.geometry.CustomCpuMesh
@@ -59,7 +64,9 @@ import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.image.InternalImage
+import com.zakgof.korender.impl.image.impl.image.InternalImage3D
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
+import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
 import com.zakgof.korender.impl.material.ImageTextureDeclaration
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
@@ -78,7 +85,10 @@ import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 
 internal class Engine(
@@ -121,11 +131,17 @@ internal class Engine(
             keyHandlers.add(handler)
         }
 
+        override fun <T> load(resource: String, mapper: (ByteArray) -> T): Deferred<T> =
+            CoroutineScope(Dispatchers.Default).async { mapper(asyncContext.appResourceLoader(resource)) }
+
         override fun texture(textureResource: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int) =
             ResourceTextureDeclaration(textureResource, filter, wrap, aniso, currentRetentionPolicy)
 
         override fun texture(id: String, image: Image, filter: TextureFilter, wrap: TextureWrap, aniso: Int) =
             ImageTextureDeclaration(id, image as InternalImage, filter, wrap, aniso, currentRetentionPolicy)
+
+        override fun texture3D(id: String, image: Image3D, filter: TextureFilter, wrap: TextureWrap, aniso: Int): Texture3DDeclaration =
+            ImageTexture3DDeclaration(id, image as InternalImage3D, filter, wrap, aniso, currentRetentionPolicy)
 
         override fun textureProbe(frameProbeName: String): TextureDeclaration = ProbeTextureDeclaration(frameProbeName)
 
@@ -176,6 +192,8 @@ internal class Engine(
 
         override fun quad(halfSideX: Float, halfSideY: Float) = Quad(halfSideX, halfSideY, currentRetentionPolicy)
 
+        override fun biQuad(halfSideX: Float, halfSideY: Float) = BiQuad(halfSideX, halfSideY, currentRetentionPolicy)
+
         override fun cube(halfSide: Float) = Cube(halfSide, currentRetentionPolicy)
 
         override fun sphere(radius: Float, slices: Int, sectors: Int) = Sphere(radius, slices, sectors, currentRetentionPolicy)
@@ -195,7 +213,10 @@ internal class Engine(
             HeightField(id, cellsX, cellsZ, cellWidth, height, currentRetentionPolicy)
 
         override fun mesh(id: String, mesh: Mesh) =
-            CustomCpuMesh(id, mesh as CMesh, currentRetentionPolicy)
+            CustomCpuMesh(id, mesh, currentRetentionPolicy)
+
+        override fun pipeMesh(id: String, segments: Int, dynamic: Boolean, block: PipeMeshContext.() -> Unit) =
+            createPipeMesh(id, segments, dynamic, currentRetentionPolicy, block)
 
         override fun vertex(vertShaderFile: String): InternalMaterialModifier =
             InternalMaterialModifier { it.vertShaderFile = vertShaderFile }
@@ -276,6 +297,13 @@ internal class Engine(
             it.uniforms["radiantNormalTexture"] = radiantNormalTexture
             it.uniforms["colorCubeTexture"] = colorTexture
             it.uniforms["normalCubeTexture"] = normalTexture
+        }
+
+        override fun pipe() = InternalMaterialModifier {
+            it.vertShaderFile = "!shader/pipe.vert"
+            it.plugins["position"] = "!shader/plugin/position.pipe.frag"
+            it.plugins["normal"] = "!shader/plugin/normal.pipe.frag"
+            it.plugins["depth"] = "!shader/plugin/depth.pipe.frag"
         }
 
         override fun radiantCapture(radiantMax: Float) = InternalMaterialModifier {
@@ -494,14 +522,20 @@ internal class Engine(
         override val height: Int
             get() = renderContext.height
 
-        override fun createImage(width: Int, height: Int, format: Image.Format): Image =
+        override fun createImage(width: Int, height: Int, format: PixelFormat): Image =
             Platform.createImage(width, height, format)
+
+        override fun createImage3D(width: Int, height: Int, depth: Int, format: PixelFormat): Image3D =
+            InternalImage3D(width, height, depth, NativeByteBuffer(width * height * depth * format.bytes), format)
 
         override fun loadImage(imageResource: String): Deferred<Image> =
             asyncContext.call {
                 val bytes = resourceBytes(asyncContext.appResourceLoader, imageResource)
                 Platform.loadImage(bytes, imageResource.split(".").last()).await()
             }
+
+        override fun loadImage(bytes: ByteArray, type: String): Deferred<Image> =
+            Platform.loadImage(bytes, type)
 
         override fun vsm(blurRadius: Float?): ShadowAlgorithmDeclaration =
             InternalVsmShadow(blurRadius)

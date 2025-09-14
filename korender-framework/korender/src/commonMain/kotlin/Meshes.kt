@@ -1,5 +1,8 @@
 package com.zakgof.korender
 
+import com.zakgof.korender.Attributes.NORMAL
+import com.zakgof.korender.Attributes.POS
+import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
@@ -121,6 +124,7 @@ object Attributes {
     val JOINTS_SHORT = MeshAttribute("joints", 4, AttributeType.Short, 3, Short4BufferAccessor)
     val JOINTS_INT = MeshAttribute("joints", 4, AttributeType.Int, 3, Int4BufferAccessor)
     val WEIGHTS = MeshAttribute("weights", 4, AttributeType.Float, 4, Float4BufferAccessor)
+    val SCALE = MeshAttribute("scale", 2, AttributeType.Float, 5, Vec2BufferAccessor)
     val B1 = MeshAttribute("b1", 1, AttributeType.SignedByte, 8, ByteBufferAccessor)
     val B2 = MeshAttribute("b2", 1, AttributeType.SignedByte, 9, ByteBufferAccessor)
     val B3 = MeshAttribute("b3", 1, AttributeType.SignedByte, 10, ByteBufferAccessor)
@@ -163,9 +167,9 @@ interface Mesh {
     }
 
     interface Vertex {
-        fun pos(): Vec3?
-        fun normal(): Vec3?
-        fun tex(): Vec2?
+        val pos: Vec3?
+        val normal: Vec3?
+        val tex: Vec2?
         fun <T> value(attribute: MeshAttribute<T>): T?
     }
 
@@ -173,4 +177,51 @@ interface Mesh {
         val size: Int
         operator fun get(index: Int): Int
     }
+}
+
+class MutableMesh : Mesh {
+
+    override val vertices = MutableVertices()
+    override val indices = MutableIndices()
+
+    class MutableVertices : Mesh.Vertices {
+        private val list = mutableListOf<Mesh.Vertex>()
+        override val size
+            get() = list.size
+
+        override fun get(index: Int) = list[index]
+        operator fun plusAssign(vertex: Mesh.Vertex) {
+            list += vertex
+        }
+    }
+
+    class MutableVertex : Mesh.Vertex {
+
+        override var pos: Vec3? = null
+        override var normal: Vec3? = null
+        override var tex: Vec2? = null
+
+        fun pos(p: Vec3) = apply { pos = p }
+        fun normal(n: Vec3) = apply { normal = n }
+        fun tex(t: Vec2) = apply { tex = t }
+
+        @Suppress("UNCHECKED_CAST")
+        override fun <T> value(attribute: MeshAttribute<T>): T? = when (attribute) {
+            POS -> pos
+            NORMAL -> normal
+            TEX -> tex
+            else -> null
+        } as T?
+    }
+
+    class MutableIndices : Mesh.Indices {
+        private val list = mutableListOf<Int>()
+        override val size
+            get() = list.size
+
+        override fun get(index: Int) = list[index]
+
+        fun index(vararg i: Int) = apply { list += i.toList() }
+    }
+
 }

@@ -88,14 +88,9 @@ float casc(int s, float plane, vec3 vpos, sampler2D shadowTexture, sampler2DShad
 }
 
 void populateShadowRatios(float plane, vec3 vpos) {
-    #ifdef OPENGL
-        for (int s=0; s<numShadows; s++)
-            shadowRatios[s] = casc(s, plane, vpos, shadowTextures[s], pcfTextures[s]);
-    #else
-        if (numShadows > 0) shadowRatios[0] = casc(0, plane, vpos, shadowTextures[0], pcfTextures[0]);
-        if (numShadows > 1) shadowRatios[1] = casc(1, plane, vpos, shadowTextures[1], pcfTextures[1]);
-        if (numShadows > 2) shadowRatios[2] = casc(2, plane, vpos, shadowTextures[2], pcfTextures[2]);
-        if (numShadows > 3) shadowRatios[3] = casc(3, plane, vpos, shadowTextures[3], pcfTextures[3]);
-        if (numShadows > 4) shadowRatios[4] = casc(4, plane, vpos, shadowTextures[4], pcfTextures[4]);
-    #endif
+    if (numShadows > 0) shadowRatios[0] = casc(0, plane, vpos, shadowTextures[0], pcfTextures[0]);
+    if (numShadows > 1) shadowRatios[1] = casc(1, plane, vpos, shadowTextures[1], pcfTextures[1]);
+    if (numShadows > 2) shadowRatios[2] = casc(2, plane, vpos, shadowTextures[2], pcfTextures[2]);
+    if (numShadows > 3) shadowRatios[3] = casc(3, plane, vpos, shadowTextures[3], pcfTextures[3]);
+    if (numShadows > 4) shadowRatios[4] = casc(4, plane, vpos, shadowTextures[4], pcfTextures[4]);
 }

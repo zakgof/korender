@@ -1,6 +1,7 @@
 package com.zakgof.korender.math
 
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 class Vec2(val x: Float, val y: Float) {
 
@@ -8,6 +9,19 @@ class Vec2(val x: Float, val y: Float) {
         val ZERO = Vec2(0f, 0f)
         val X = Vec2(1f, 0f)
         val Y = Vec2(0f, 1f)
+
+        fun random(seed: Int): Vec2 {
+            val r = Random(seed)
+            return Vec2(
+                r.nextFloat() - 0.5f,
+                r.nextFloat() - 0.5f,
+            ).normalize()
+        }
+
+        fun random() = Vec2(
+            Random.nextFloat() - 0.5f,
+            Random.nextFloat() - 0.5f,
+        ).normalize()
     }
 
     operator fun unaryMinus(): Vec2 = Vec2(-x, -y)

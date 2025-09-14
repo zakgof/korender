@@ -4,6 +4,7 @@
 in vec3 vpos;
 in vec3 vnormal;
 in vec2 vtex;
+
 #ifdef VERTEX_COLOR
     in vec4 vcolor;
 #endif
@@ -47,16 +48,20 @@ vec3 look;
 #import "$texturing"
 #endif
 
+#ifdef PLUGIN_NORMAL
+#import "$normal"
+#endif
+
 #ifdef PLUGIN_ALBEDO
 #import "$albedo"
 #endif
 
-#ifdef PLUGIN_EMISSION
-#import "$emission"
+#ifdef PLUGIN_DISCARD
+#import "$discard"
 #endif
 
-#ifdef PLUGIN_NORMAL
-#import "$normal"
+#ifdef PLUGIN_EMISSION
+#import "$emission"
 #endif
 
 #ifdef PLUGIN_METALLIC_ROUGHNESS
@@ -117,8 +122,13 @@ void main() {
         albedo = pluginAlbedo();
     #endif
 
-    if (albedo.a < 0.001)
-        discard;
+    #ifdef PLUGIN_DISCARD
+        if (pluginDiscard())
+            discard;
+    #else
+        if (albedo.a < 0.1)
+            discard;
+    #endif
 
     emission = vec3(0.);
     #ifdef PLUGIN_EMISSION
@@ -168,7 +178,7 @@ void main() {
     #ifdef PLUGIN_OUTPUT
         fragColor = pluginOutput();
     #else
-        fragColor = vec4(color, albedo.a);
+        fragColor = vec4(color, 1.0);
     #endif
 
     #ifdef PLUGIN_DEPTH

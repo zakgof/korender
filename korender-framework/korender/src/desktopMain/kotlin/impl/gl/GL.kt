@@ -63,28 +63,17 @@ actual object GL {
     actual fun glCullFace(mode: Int) =
         GL30.glCullFace(mode)
 
-    actual fun glTexImage2D(
-        target: Int,
-        level: Int,
-        internalformat: Int,
-        width: Int,
-        height: Int,
-        border: Int,
-        format: Int,
-        type: Int,
-        buffer: NativeBuffer?
-    ) = GL30.glTexImage2D(target, level, internalformat, width, height, border, format, type, buffer?.byteBuffer)
+    actual fun glTexImage2D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, border: Int, format: Int, type: Int, buffer: NativeBuffer?) =
+        GL30.glTexImage2D(target, level, internalformat, width, height, border, format, type, buffer?.byteBuffer)
 
-    actual fun glTexSubImage2D(
-        target: Int,
-        level: Int,
-        x: Int, y: Int,
-        width: Int,
-        height: Int,
-        format: Int,
-        type: Int,
-        buffer: NativeBuffer
-    ) = GL30.glTexSubImage2D(target, level, x, y, width, height, format, type, buffer.byteBuffer)
+    actual fun glTexImage3D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, depth: Int, border: Int, format: Int, type: Int, buffer: NativeBuffer?) =
+        GL30.glTexImage3D(target, level, internalformat, width, height, depth, border, format, type, buffer?.byteBuffer)
+
+    actual fun glTexSubImage2D(target: Int, level: Int, x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, buffer: NativeBuffer) =
+        GL30.glTexSubImage2D(target, level, x, y, width, height, format, type, buffer.byteBuffer)
+
+    actual fun glTexSubImage3D(target: Int, level: Int, x: Int, y: Int, z: Int, width: Int, height: Int, depth: Int, format: Int, type: Int, buffer: NativeBuffer) =
+        GL30.glTexSubImage3D(target, level, x, y, z, width, height, depth, format, type, buffer.byteBuffer)
 
     actual fun glGetFloatv(pname: Int): Float? =
         FloatArray(1).apply { GL30.glGetFloatv(pname, this) }[0]

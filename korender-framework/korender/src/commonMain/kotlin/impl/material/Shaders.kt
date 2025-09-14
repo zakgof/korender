@@ -26,8 +26,6 @@ internal object Shaders {
 
     private suspend fun load(declaration: ShaderDeclaration, appResourceLoader: ResourceLoader): ShaderData {
         val defs = declaration.defs + shaderEnv + declaration.plugins.keys.map { "PLUGIN_" + it.uppercase() }
-
-
         val shaderBaker = ShaderBaker(defs, declaration.plugins, appResourceLoader)
         return shaderBaker.load(declaration.vertFile, declaration.fragFile)
     }
@@ -38,8 +36,8 @@ internal object Shaders {
 
         suspend fun load(vertFile: String, fragFile: String): ShaderData {
 
-            val vertLines = ShaderLoader().preprocessFile(vertFile)
-            val fragLines = ShaderLoader().preprocessFile(fragFile)
+            val vertLines = ShaderLoader(appResourceLoader, defs + "VERTEX_SHADER", plugins, uniforms).preprocessFile(vertFile)
+            val fragLines = ShaderLoader(appResourceLoader, defs + "FRAGMENT_SHADER", plugins, uniforms).preprocessFile(fragFile)
 
             val uniformBlock = buildUniformBlock()
             injectUniforms(vertLines, uniformBlock)
@@ -98,7 +96,7 @@ internal object Shaders {
                     return info
                 } ?: error
 
-        private inner class ShaderLoader {
+        private class ShaderLoader(private val appResourceLoader: ResourceLoader, private val defs: Set<String>, private val plugins: Map<String, String>, private val uniforms: MutableList<String>) {
 
             private val includedFnames = mutableSetOf<String>()
 

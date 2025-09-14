@@ -110,7 +110,7 @@ internal class GlGpuShader(
 
         val frameUboBlockIndex = glGetUniformBlockIndex(programHandle, "Frame")
         if (frameUboBlockIndex >= 0) {
-            dumpUboBlock(frameUboBlockIndex)
+            // dumpUboBlock(frameUboBlockIndex)
             glUniformBlockBinding(programHandle, frameUboBlockIndex, 0)
         }
 
@@ -204,8 +204,8 @@ internal class GlGpuShader(
             }
             currentTextureUnit += bindUniform(it.key, uniformValue, it.value, currentTextureUnit)
         }
-        // glActiveTexture(GL_TEXTURE0)
-        // glBindTexture(GL_TEXTURE_2D, null)
+//        glActiveTexture(GL_TEXTURE0)
+//        glBindTexture(GL_TEXTURE_2D, null)
         return true
     }
 

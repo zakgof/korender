@@ -78,6 +78,12 @@ actual class NativeByteBuffer(override val array: Uint8Array) : NativeBuffer {
         position += other.array.length
     }
 
+    actual fun slice(): NativeByteBuffer =
+        if (position == array.length)
+            this
+        else
+            NativeByteBuffer(array.subarray(0, position))
+
     actual override fun size(): Int = array.length
 
     actual override fun position() = position
