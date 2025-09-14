@@ -32,7 +32,7 @@ void main() {
     vec3 look = normalize(world - cameraPos);
     vec3 surface = cameraPos - look * cameraPos.y / look.y;
     float fbmA = fbm(surface.xz / waveScale - 0.03 * time) - 0.5;
-    surface.y += waveMagnitude * 64.0 * fbmA;
+    surface.y += waveMagnitude * fbmA;
 
     gl_FragDepth = depth;
     if (depth > 0.999 && look.y < 0.0) {

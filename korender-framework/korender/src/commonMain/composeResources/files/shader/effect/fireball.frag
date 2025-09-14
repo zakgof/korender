@@ -29,7 +29,7 @@ void main() {
 
     vec3 color = vec3(3.0*n, 0.5*n+n*n-0.4, 3.0*n-2.5);
 
-    fragColor = vec4(color, a);
+    fragColor = vec4(color * a, a);
 
     float zoffset = sqrt(vtex.x - vtex.x*vtex.x) * vsize.x * 1.5f + ripple1;
     vec4 vclip = pluginVProjection((view * vec4(vpos, 1.0) + vec4(0., 0., zoffset, 0.)).xyz);
