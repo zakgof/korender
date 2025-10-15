@@ -9,5 +9,6 @@ uniform sampler2D fontTexture;
 out vec4 fragColor;
 
 void main() {
-    fragColor = texture(fontTexture, vtex) * color;
+    vec4 texel = texture(fontTexture, vtex) * color;
+    fragColor = vec4(texel.rgb * texel.a, texel.a);
 }

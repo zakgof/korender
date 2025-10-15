@@ -82,7 +82,7 @@ interface KorenderContext {
     fun plugin(name: String, shaderFile: String): MaterialModifier
     fun uniforms(vararg pairs: Pair<String, Any?>): MaterialModifier
 
-    fun base(color: ColorRGBA = ColorRGBA.White, colorTexture: TextureDeclaration? = null, metallicFactor: Float = 0.1f, roughnessFactor: Float = 0.5f): MaterialModifier
+    fun base(color: ColorRGBA = ColorRGBA.White, colorTexture: TextureDeclaration? = null, metallicFactor: Float = 0.1f, roughnessFactor: Float = 0.5f, alphaCutoff: Float = 0.01f): MaterialModifier
     fun triplanar(scale: Float = 1.0f): MaterialModifier
     fun normalTexture(normalTexture: TextureDeclaration): MaterialModifier
     fun emission(factor: ColorRGB): MaterialModifier

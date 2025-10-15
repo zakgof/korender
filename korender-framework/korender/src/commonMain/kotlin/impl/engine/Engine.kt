@@ -231,11 +231,12 @@ internal class Engine(
             it.plugins[name] = shaderFile
         }
 
-        override fun base(color: ColorRGBA, colorTexture: TextureDeclaration?, metallicFactor: Float, roughnessFactor: Float) = InternalMaterialModifier {
+        override fun base(color: ColorRGBA, colorTexture: TextureDeclaration?, metallicFactor: Float, roughnessFactor: Float, alphaCutoff: Float) = InternalMaterialModifier {
             it.uniforms["baseColor"] = color
             it.uniforms["baseColorTexture"] = colorTexture
             it.uniforms["metallicFactor"] = metallicFactor
             it.uniforms["roughnessFactor"] = roughnessFactor
+            it.uniforms["alphaCutoff"] = alphaCutoff
             if (colorTexture != null) {
                 it.shaderDefs += "BASE_COLOR_MAP";
             }

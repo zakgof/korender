@@ -19,6 +19,7 @@ in vec2 vtex;
 
 #uniform float metallicFactor;
 #uniform float roughnessFactor;
+#uniform float alphaCutoff;
 
 uniform sampler2D shadowTextures[5];
 uniform sampler2DShadow pcfTextures[5];
@@ -126,7 +127,7 @@ void main() {
         if (pluginDiscard())
             discard;
     #else
-        if (albedo.a < 0.001)
+        if (albedo.a < alphaCutoff)
             discard;
     #endif
 
@@ -178,7 +179,7 @@ void main() {
     #ifdef PLUGIN_OUTPUT
         fragColor = pluginOutput();
     #else
-        fragColor = vec4(color, albedo.a);
+        fragColor = vec4(color * albedo.a, albedo.a);
     #endif
 
     #ifdef PLUGIN_DEPTH
