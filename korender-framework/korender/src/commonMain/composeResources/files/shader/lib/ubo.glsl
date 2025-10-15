@@ -32,6 +32,7 @@ layout(std140) uniform Frame {
     float yMax[5];
     int shadowMode[5];
     float f1[5];
+    float f2[5];
     int i1[5];
 
 };

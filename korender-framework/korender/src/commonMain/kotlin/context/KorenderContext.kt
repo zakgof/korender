@@ -137,7 +137,7 @@ interface KorenderContext {
 
     fun vsm(blurRadius: Float? = null): ShadowAlgorithmDeclaration
     fun hard(): ShadowAlgorithmDeclaration
-    fun softwarePcf(samples: Int = 8, blurRadius: Float = 0.005f): ShadowAlgorithmDeclaration
+    fun softwarePcf(samples: Int = 8, blurRadius: Float = 0.005f, bias: Float = 0.0005f): ShadowAlgorithmDeclaration
     fun hardwarePcf(bias: Float = 0.005f): ShadowAlgorithmDeclaration
 
     fun clipmapTerrainPrefab(id: String, cellSize: Float, hg: Int, rings: Int): Prefab

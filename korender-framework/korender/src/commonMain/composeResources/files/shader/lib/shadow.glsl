@@ -29,8 +29,7 @@ vec2 vogelDiskSample(int sampleIndex, int numSamples, float phi) {
     return vec2(cos(angle), sin(angle)) * sqrt(sampleVal + 0.5) / sqrt(float(numSamples));
 }
 
-float swPcf(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float penumbraWidth) {
-    float beavis = 0.005;
+float swPcf(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float penumbraWidth, float bias) {
 
     const float PHI = 1.61803398874989484820459;
     float phi = 0.;
@@ -43,7 +42,7 @@ float swPcf(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float penumb
         vec2 offset = vogelDiskSample(s, sampleCount, phi) * penumbraWidth;
         vec2 uv = vshadow.xy + offset;
         float shadowSample = textureGrad(shadowTexture, uv, dx, dy).r;
-        float val = (shadowSample < vshadow.z - beavis
+        float val = (shadowSample < vshadow.z - bias
             && uv.x > 0.001 && uv.x < 0.999
             && uv.y > 0.001 && uv.y < 0.999) ? 1. : 0.;
         cumulative += val;
@@ -69,7 +68,7 @@ float shadow(sampler2D shadowTexture, sampler2DShadow pcfTexture, int index, vec
     float sh = 0.;
     switch (mode) {
           case 0: sh = hard(shadowTexture, vshadow); break;
-          case 1: sh =  swPcf(shadowTexture, vshadow, i1[index], f1[index]); break;
+          case 1: sh =  swPcf(shadowTexture, vshadow, i1[index], f1[index], f2[index]); break;
           case 2: sh =  vsm(shadowTexture, vshadow); break;
           case 3: sh =  hwPcf(pcfTexture, vshadow, f1[index]); break;
     }

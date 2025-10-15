@@ -149,6 +149,10 @@ internal object ShadowRenderer {
                 is InternalSoftwarePcfShadow -> declaration.algorithm.blurRadius / shadowProjection.width
                 is InternalHardwarePcfShadow -> declaration.algorithm.bias
                 else -> 0f
+            },
+            when (declaration.algorithm) {
+                is InternalSoftwarePcfShadow -> declaration.algorithm.bias
+                else -> 0f
             }
         )
     }
@@ -314,7 +318,8 @@ internal class ShadowerData(
     val yMax: Float,
     val mode: Int,
     val i1: Int,
-    val f1: Float
+    val f1: Float,
+    val f2: Float
 )
 
 internal fun List<ShadowerData>.uniforms(m: MutableMap<String, Any?>, u: MutableMap<String, Any?>) {
@@ -326,6 +331,7 @@ internal fun List<ShadowerData>.uniforms(m: MutableMap<String, Any?>, u: Mutable
     m["shadowMode[0]"] = IntList(this.map { it.mode })
     m["i1[0]"] = IntList(this.map { it.i1 })
     m["f1[0]"] = FloatList(this.map { it.f1 })
+    m["f2[0]"] = FloatList(this.map { it.f2 })
 
     u["shadowTextures[0]"] = GlGpuTextureList(this.map { it.texture }, 5)
     u["pcfTextures[0]"] = GlGpuShadowTextureList(this.map { it.pcfTexture }, 5)

@@ -543,8 +543,8 @@ internal class Engine(
         override fun hard(): ShadowAlgorithmDeclaration =
             InternalHardShadow()
 
-        override fun softwarePcf(samples: Int, blurRadius: Float): ShadowAlgorithmDeclaration =
-            InternalSoftwarePcfShadow(samples, blurRadius)
+        override fun softwarePcf(samples: Int, blurRadius: Float, bias: Float): ShadowAlgorithmDeclaration =
+            InternalSoftwarePcfShadow(samples, blurRadius, bias)
 
         override fun hardwarePcf(bias: Float): ShadowAlgorithmDeclaration =
             InternalHardwarePcfShadow(bias)

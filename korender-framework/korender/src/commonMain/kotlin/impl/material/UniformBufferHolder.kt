@@ -39,7 +39,8 @@ internal class UniformBufferHolder {
         "yMax[0]" to 4240,
         "shadowMode[0]" to 4320,
         "f1[0]" to 4400,
-        "i1[0]" to 4480,
+        "f2[0]" to 4480,
+        "i1[0]" to 4560
     )
 
     private val bufferOffsetAlignment = glGetInteger(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT)
