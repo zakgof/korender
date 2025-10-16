@@ -21,7 +21,7 @@ void main() {
     float n = (fbm(seed +      vtex * 0.1 + time * 0.005) * 0.7 +
                fbm(seed * 2. + vtex * 0.2 - time * 0.005) * 0.7 - 0.66) * a;
     n = clamp(n, 0., 1.);
-    fragColor = vec4(0.3, 0.3, 0.3, 1.0) * n;
+    fragColor = vec4(0.05, 0.05, 0.05, 1.0) * n;
 
     float zoffset = sqrt(vtex.x - vtex.x * vtex.x) * vsize.x * 2.f;
     vec4 vclip = pluginVProjection((view * vec4(vpos, 1.) + vec4(0., 0., zoffset, 0.)).xyz);
