@@ -13,6 +13,7 @@ import org.khronos.webgl.get
 import org.khronos.webgl.toFloat32Array
 import org.khronos.webgl.toInt32Array
 
+@OptIn(ExperimentalWasmJsInterop::class)
 actual object GL {
 
     // TODO: Check with multiple Korender windows
@@ -67,19 +68,8 @@ actual object GL {
     actual fun glCullFace(mode: Int) =
         gl!!.cullFace(mode)
 
-    actual fun glTexImage2D(
-        target: Int,
-        level: Int,
-        internalformat: Int,
-        width: Int,
-        height: Int,
-        border: Int,
-        format: Int,
-        type: Int,
-        buffer: NativeBuffer?
-    ) = gl!!.texImage2D(
-        target, level, internalformat, width, height, border, format, type, buffer?.array
-    )
+    actual fun glTexImage2D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, border: Int, format: Int, type: Int, buffer: NativeBuffer?) =
+        gl!!.texImage2D(target, level, internalformat, width, height, border, format, type, buffer?.array)
 
     actual fun glTexSubImage2D(target: Int, level: Int, x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, buffer: NativeBuffer) =
         gl!!.texSubImage2D(target, level, x, y, width, height, format, type, buffer.array)
@@ -327,4 +317,10 @@ actual object GL {
 
     actual fun glGetInteger(pname: Int) =
         (gl!!.getParameter(pname) as JsNumber).toInt()
+
+    actual fun glTexImage3D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, depth: Int, border: Int, format: Int, type: Int, buffer: NativeBuffer?) =
+        gl!!.texImage3D(target, level, internalformat, width, height, depth, border, format, type, buffer?.array)
+
+    actual fun glTexSubImage3D(target: Int, level: Int, x: Int, y: Int, z: Int, width: Int, height: Int, depth: Int, format: Int, type: Int, buffer: NativeBuffer) =
+        gl!!.texSubImage3D(target, level, x, y, z, width, height, depth, format, type, buffer.array)
 }

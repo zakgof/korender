@@ -12,6 +12,7 @@ import org.w3c.dom.RenderingContext
 import kotlin.js.Promise
 
 
+@OptIn(ExperimentalWasmJsInterop::class)
 abstract external class WebGL2RenderingContext : WebGLRenderingContextBase, RenderingContext, JsAny {
     abstract fun createVertexArray(): WebGLVertexArray?
     abstract fun deleteVertexArray(vertexArray: WebGLVertexArray)
@@ -30,10 +31,14 @@ abstract external class WebGL2RenderingContext : WebGLRenderingContextBase, Rend
     abstract fun getActiveUniforms(program: WebGLProgram, uniformIndices: JsArray<JsNumber>, param: Int): JsArray<*>
     abstract fun texSubImage2D(target: Int, level: Int, x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, array: ArrayBufferView)
     abstract fun bindBufferRange(target: Int, blockBinding: Int, buffer: WebGLBuffer, shift: Int, size: Int)
+    abstract fun texImage3D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, depth: Int, border: Int, format: Int, type: Int, pixels: ArrayBufferView?)
+    abstract fun texSubImage3D(target: Int, level: Int, x: Int, y: Int, z: Int, width: Int, height: Int, depth: Int, format: Int, type: Int, array: ArrayBufferView)
 }
 
+@OptIn(ExperimentalWasmJsInterop::class)
 abstract external class WebGLVertexArray : WebGLObject, JsAny
 
+@OptIn(ExperimentalWasmJsInterop::class)
 internal fun jsLoadFont(fontArray: Int8Array): FontFace = js(
     """
         {
@@ -44,6 +49,7 @@ internal fun jsLoadFont(fontArray: Int8Array): FontFace = js(
     """
 )
 
+@OptIn(ExperimentalWasmJsInterop::class)
 internal fun jsAddFont(fontFace: FontFace): JsAny =
     js(
         """
@@ -58,12 +64,16 @@ internal fun jsAddFont(fontFace: FontFace): JsAny =
 
 internal fun performanceNow(): Double = js("performance.now()")
 
+@OptIn(ExperimentalWasmJsInterop::class)
 internal fun typeOf(obj: JsAny): JsAny = js("(typeof obj).toString()")
 
+@OptIn(ExperimentalWasmJsInterop::class)
 external class FontFace : JsAny {
     fun load(): Promise<FontFace>
 }
 
+@OptIn(ExperimentalWasmJsInterop::class)
 internal fun maxTexAniso(ext: JsAny): Int = js("ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT")
 
+@OptIn(ExperimentalWasmJsInterop::class)
 internal fun texAniso(ext: JsAny): Int = js("ext.TEXTURE_MAX_ANISOTROPY_EXT")

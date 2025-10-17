@@ -55,6 +55,12 @@ actual object GL {
     actual fun glTexSubImage2D(target: Int, level: Int, x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, buffer: NativeBuffer) =
         GLES30.glTexSubImage2D(target, level, x, y, width, height, format, type, buffer.byteBuffer)
 
+    actual fun glTexImage3D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, depth: Int, border: Int, format: Int, type: Int, buffer: NativeBuffer?) =
+        GLES30.glTexImage3D(target, level, internalformat, width, height, depth,border, format, type, buffer?.byteBuffer)
+
+    actual fun glTexSubImage3D(target: Int, level: Int, x: Int, y: Int, z: Int, width: Int, height: Int, depth: Int, format: Int, type: Int, buffer: NativeBuffer) =
+        GLES30.glTexSubImage3D(target, level, x, y, z, width, height, depth, format, type, buffer.byteBuffer)
+
     actual fun glGetFloatv(pname: Int): Float? =
         FloatArray(1).also { GLES30.glGetFloatv(pname, it, 0) }[0]
 
