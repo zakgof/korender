@@ -108,6 +108,7 @@ internal object ShadowRenderer {
                     renderableDeclaration.materialModifiers + shadowMaterialModifier,
                     renderableDeclaration.mesh,
                     renderableDeclaration.transform,
+                    renderableDeclaration.transparent,
                     renderableDeclaration.retentionPolicy
                 )
                 scene.renderRenderable(casterRenderableDeclaration, shadowCamera, isShadow = true)
@@ -233,6 +234,7 @@ internal object ShadowRenderer {
         }),
         ScreenQuad(ImmediatelyFreeRetentionPolicy),
         Transform.IDENTITY,
+        false,
         ImmediatelyFreeRetentionPolicy
     )
 

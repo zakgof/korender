@@ -60,8 +60,8 @@ internal class DefaultFrameContext(
         val meshDeclaration = (instancing as? InternalInstancingDeclaration)?.let {
             InstancedMesh(instancing.id, instancing.count, mesh, !instancing.dynamic, transparent, korenderContext.currentRetentionPolicy, instancing.instancer)
         } ?: mesh
-        val rd = RenderableDeclaration(BaseMaterial.Renderable, materialModifiers.asList(), meshDeclaration, transform, korenderContext.currentRetentionPolicy)
-        addToScene(transparent, rd)
+        val rd = RenderableDeclaration(BaseMaterial.Renderable, materialModifiers.asList(), meshDeclaration, transform, transparent, korenderContext.currentRetentionPolicy)
+        sceneDeclaration.append(rd)
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, prefab: Prefab) {
@@ -81,26 +81,20 @@ internal class DefaultFrameContext(
             materialModifiers.asList(),
             meshDeclaration,
             IDENTITY,
+            transparent,
             korenderContext.currentRetentionPolicy
         )
-        addToScene(transparent, rd)
+        sceneDeclaration.append(rd)
     }
 
     override fun Sky(vararg materialModifiers: MaterialModifier) {
-        sceneDeclaration.skies += RenderableDeclaration(BaseMaterial.Sky, materialModifiers.asList(), ScreenQuad(korenderContext.currentRetentionPolicy), Transform.IDENTITY, korenderContext.currentRetentionPolicy)
+        sceneDeclaration.skies += RenderableDeclaration(BaseMaterial.Sky, materialModifiers.asList(), ScreenQuad(korenderContext.currentRetentionPolicy), Transform.IDENTITY, false, korenderContext.currentRetentionPolicy)
     }
 
     override fun Gui(block: GuiContainerContext.() -> Unit) {
         val root = ElementDeclaration.Container(Direction.Vertical)
         DefaultContainerContext(this, root).apply(block)
         sceneDeclaration.guis += root
-    }
-
-    private fun addToScene(transparent: Boolean, rd: RenderableDeclaration) {
-        if (transparent)
-            sceneDeclaration.transparents += rd
-        else
-            sceneDeclaration.opaques += rd
     }
 
     override fun DirectionalLight(direction: Vec3, color: ColorRGB, block: ShadowContext.() -> Unit) {

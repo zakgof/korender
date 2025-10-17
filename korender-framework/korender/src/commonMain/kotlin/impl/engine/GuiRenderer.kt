@@ -106,6 +106,7 @@ internal class GuiRenderer(
             }),
             ImageQuad(declaration.retentionPolicy),
             Transform.IDENTITY,
+            true,
             declaration.retentionPolicy
         )
 
@@ -132,6 +133,7 @@ internal class GuiRenderer(
                 }),
                 FontMesh(declaration.id, 256, declaration, width.toFloat(), height.toFloat(), xxx.toFloat(), yyy.toFloat(), font),
                 Transform.IDENTITY,
+                true,
                 declaration.retentionPolicy
             )
             touchBoxes.add(TouchBox(xxx, yyy, w, declaration.height, declaration.id, declaration.onTouch))

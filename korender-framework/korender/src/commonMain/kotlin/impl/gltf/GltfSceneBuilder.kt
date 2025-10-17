@@ -82,7 +82,7 @@ internal class GltfSceneBuilder(
                 )
             }
             instanceData.jointMatrices += model.skins?.map { skin ->
-                skin.joints.map { instanceData.nodeMatrices[it]!!.mat4 }
+                skin.joints.map { instanceData.nodeMatrices[it].mat4 }
             } ?: listOf() // TODO optimize
         }
         return meshNodes.flatMap {
@@ -164,10 +164,11 @@ internal class GltfSceneBuilder(
             val materialModifier = createMaterialModifiers(primitive, skinIndex, jointMatrices)
             RenderableDeclaration(
                 BaseMaterial.Renderable,
-                listOf(materialModifier),
+                listOf(materialModifier.second),
                 mesh = meshDeclaration,
                 transform = if (declaration.instancingDeclaration == null) declaration.transform * instances[0].transform else declaration.transform,
-                declaration.retentionPolicy
+                materialModifier.first,
+                declaration.retentionPolicy,
             )
         }
 
@@ -176,7 +177,7 @@ internal class GltfSceneBuilder(
         primitive: Gltf.Mesh.Primitive,
         skinIndex: Int?,
         jointMatrices: List<Mat4>?
-    ): MaterialModifier {
+    ): Pair<Boolean, MaterialModifier> {
 
         // TODO: split into 2 parts, precompute textures modifier, calc only skin modifier
         val material = primitive.material?.let { gltfLoaded.model.materials!![it] }
@@ -185,7 +186,7 @@ internal class GltfSceneBuilder(
                 as? Gltf.KHRMaterialsPbrSpecularGlossiness
 
         // TODO: Precreate all except jointMatrices
-        return InternalMaterialModifier { mb ->
+        val imm = InternalMaterialModifier { mb ->
 
             if (skinIndex != null) {
                 mb.plugins["vposition"] = "!shader/plugin/vposition.skinning.vert"
@@ -206,6 +207,8 @@ internal class GltfSceneBuilder(
                 mb.uniforms["baseColorTexture"] = it
                 mb.shaderDefs += "BASE_COLOR_MAP";
             }
+            val alphaCutoff = if (material?.alphaMode == "MASK") material.alphaCutoff else 0.001f
+            mb.uniforms["alphaCutoff"] = alphaCutoff
 
             mb.uniforms["metallicFactor"] = matPbr?.metallicFactor ?: 0.1f
             mb.uniforms["roughnessFactor"] = matPbr?.roughnessFactor ?: 0.5f
@@ -214,6 +217,7 @@ internal class GltfSceneBuilder(
                 mb.plugins["normal"] = "!shader/plugin/normal.texture.frag"
                 mb.uniforms["normalTexture"] = it
             }
+
             matPbr?.metallicRoughnessTexture?.let { getTexture(it) }?.let {
                 mb.plugins["metallic_roughness"] = "!shader/plugin/metallic_roughness.texture.frag"
                 mb.uniforms["metallicRoughnessTexture"] = it
@@ -229,6 +233,7 @@ internal class GltfSceneBuilder(
                 mb.uniforms["glossinessFactor"] = sg.glossinessFactor
             }
         }
+        return (material?.alphaMode == "BLEND") to imm
     }
 
     private fun createMeshDeclaration(primitive: Gltf.Mesh.Primitive, meshIndex: Int, primitiveIndex: Int, skinIndex: Int?): InternalMeshDeclaration {

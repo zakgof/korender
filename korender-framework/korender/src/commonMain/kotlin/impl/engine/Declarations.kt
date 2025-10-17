@@ -35,6 +35,12 @@ internal class SceneDeclaration {
     val envCaptures = mutableMapOf<String, EnvCaptureContext>()
     val frameCaptures = mutableMapOf<String, FrameCaptureContext>()
     var loaderSceneDeclaration: SceneDeclaration? = null
+
+    fun append(renderableDeclaration: RenderableDeclaration) =
+        if (renderableDeclaration.transparent)
+            transparents += renderableDeclaration
+        else
+            opaques += renderableDeclaration
 }
 
 internal class DeferredShadingDeclaration() {
@@ -65,6 +71,7 @@ internal class RenderableDeclaration(
     val materialModifiers: List<MaterialModifier>,
     val mesh: MeshDeclaration,
     val transform: Transform = Transform.IDENTITY,
+    val transparent: Boolean,
     override val retentionPolicy: RetentionPolicy
 ) : Retentionable
 

@@ -85,8 +85,7 @@ internal class Scene(
     init {
         sceneDeclaration.gltfs.forEach {
             inventory.gltf(it)?.let { gltfLoaded ->
-                // TODO: support transparency
-                sceneDeclaration.opaques += GltfSceneBuilder(it, gltfLoaded).build()
+                GltfSceneBuilder(it, gltfLoaded).build().forEach { rd -> sceneDeclaration.append(rd) }
             }
         }
     }
@@ -305,7 +304,7 @@ internal class Scene(
                         val materialModifiers = decalDeclaration.materialModifiers + InternalMaterialModifier {
                             it.uniforms["renderSize"] = Vec2(renderContext.width.toFloat(), renderContext.height.toFloat())
                         }
-                        val renderableDeclaration = RenderableDeclaration(BaseMaterial.Decal, materialModifiers, DecalCube(0.5f, currentRetentionPolicy), Transform(model), currentRetentionPolicy)
+                        val renderableDeclaration = RenderableDeclaration(BaseMaterial.Decal, materialModifiers, DecalCube(0.5f, currentRetentionPolicy), Transform(model), true,currentRetentionPolicy)
                         renderRenderable(renderableDeclaration, renderContext.camera)
                     }
                     inventory.uniformBufferHolder.flush()
