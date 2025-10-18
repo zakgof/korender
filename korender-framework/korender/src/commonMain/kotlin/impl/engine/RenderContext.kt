@@ -19,8 +19,15 @@ import com.zakgof.korender.math.z
 
 internal class RenderContext(var width: Int, var height: Int) {
 
+    var customProjection: Projection? = null
+
+    var projection: Projection
+        get() = customProjection ?: Projection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f, FrustumProjectionMode)
+        set(value) {
+            customProjection = value
+        }
+
     var camera: Camera = DefaultCamera(20.z, -1.z, 1.y)
-    var projection = Projection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f, FrustumProjectionMode)
     var backgroundColor = ColorRGBA.Transparent
 
     val frameInfoManager = FrameInfoManager()
