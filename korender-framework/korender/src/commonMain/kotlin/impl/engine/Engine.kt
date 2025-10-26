@@ -449,23 +449,26 @@ internal class Engine(
             )
         }
 
-        override fun bloom(width: Int?, height: Int?) = InternalPostShadingEffect(
+        override fun bloom(width: Int?, height: Int?, threshold: Float, radius: Float) = InternalPostShadingEffect(
             "bloom",
             width ?: renderContext.width,
             height ?: renderContext.height,
             effectPassMaterialModifiers = listOf(
                 InternalMaterialModifier {
                     it.fragShaderFile = "!shader/effect/bloom.frag"
+                    it.uniforms["threshold"] = threshold
                 },
                 InternalMaterialModifier {
                     it.fragShaderFile = "!shader/effect/blurv.frag"
+                    it.shaderDefs += "SAME_DEPTH"
                     it.uniforms["screenHeight"] = (width ?: renderContext.height).toFloat()
-                    it.uniforms["radius"] = 2.2f
+                    it.uniforms["radius"] = radius
                 },
                 InternalMaterialModifier {
                     it.fragShaderFile = "!shader/effect/blurh.frag"
+                    it.shaderDefs += "SAME_DEPTH"
                     it.uniforms["screenWidth"] = (height ?: renderContext.width).toFloat()
-                    it.uniforms["radius"] = 2.2f
+                    it.uniforms["radius"] = radius
                 }
             ),
             "bloomTexture",
