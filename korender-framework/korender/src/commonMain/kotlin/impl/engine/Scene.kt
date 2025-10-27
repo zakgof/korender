@@ -152,8 +152,10 @@ internal class Scene(
         val postShadingEffects = sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects
         renderDeferredShading(if (postShadingEffects.isEmpty() && sceneDeclaration.filters.isEmpty()) null else pingPong++)
 
+        val geometryDepth = contextAdditionalUniforms["depthTexture"]
         if (postShadingEffects.isNotEmpty()) {
             postShadingEffects.forEach { renderPostShadingEffect(it as InternalPostShadingEffect) }
+            contextAdditionalUniforms["depthTexture"] = geometryDepth
             renderComposition(if (sceneDeclaration.filters.isEmpty()) null else pingPong++)
         }
         sceneDeclaration.filters.forEachIndexed { filterIndex, filter ->

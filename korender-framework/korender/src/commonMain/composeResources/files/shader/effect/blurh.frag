@@ -14,11 +14,6 @@ uniform sampler2D depthTexture;
 out vec4 fragColor;
 
 void main() {
-    float depth = texture(depthTexture, vtex).r;
-    #ifdef SAME_DEPTH
-        fragColor = vec4(blur(colorTexture, vtex, radius, vec2(1., 0.), screenHeight), 1.);
-    #else
-        fragColor = vec4(blurSameDepth(colorTexture, depthTexture, depth, vtex, radius, vec2(1., 0.), screenHeight), 1., 0.001);
-    #endif
-    gl_FragDepth = depth;
+    fragColor = vec4(blur(colorTexture, vtex, radius, vec2(1., 0.), screenWidth), 1.);
+    gl_FragDepth = texture(depthTexture, vtex).r;
 }

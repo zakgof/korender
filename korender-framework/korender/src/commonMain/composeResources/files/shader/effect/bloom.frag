@@ -20,5 +20,4 @@ void main() {
 
     vec3 result =  (lumi > threshold ? color : vec3(0.0)) + emission;
     gl_FragColor = vec4(result, 1.0);
-    gl_FragDepth = depth;
 }

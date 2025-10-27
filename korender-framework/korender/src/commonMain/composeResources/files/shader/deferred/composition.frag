@@ -7,7 +7,7 @@ uniform sampler2D finalColorTexture;
 uniform sampler2D depthTexture;
 
 #ifdef SSR
-uniform sampler2D ssrTexture;
+    uniform sampler2D ssrTexture;
     #ifdef SSR_FXAA
         #uniform float ssrWidth;
         #uniform float ssrHeight;
@@ -15,7 +15,7 @@ uniform sampler2D ssrTexture;
 #endif
 
 #ifdef BLOOM
-uniform sampler2D bloomTexture;
+    uniform sampler2D bloomTexture;
 #endif
 
 #uniforms
@@ -40,7 +40,8 @@ void main() {
 #endif
 
 #ifdef BLOOM
-    color += texture(bloomTexture, vtex).rgb;
+    vec4 bloomSample = texture(bloomTexture, vtex);
+    color += bloomSample.rgb;
 #endif
 
     fragColor = vec4(color, 1.);
