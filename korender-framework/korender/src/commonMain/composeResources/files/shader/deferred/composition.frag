@@ -41,7 +41,7 @@ void main() {
 
 #ifdef BLOOM
     vec4 bloomSample = texture(bloomTexture, vtex);
-    color += bloomSample.rgb;
+    color += bloomSample.rgb * 3.0;
 #endif
 
     fragColor = vec4(color, 1.);

@@ -36,7 +36,7 @@ import org.jetbrains.compose.resources.painterResource
 fun AppExample() {
     val options = listOf(
 
-        Demo("City demo") { InfiniteCity() },
+        Demo("Bloom effect") { BloomExample() },
         // Demo("Island Demo") { IslandExample() },
 
         Demo("Heightmap Terrain") { HeightmapTerrainExample() },

@@ -460,12 +460,12 @@ internal class Engine(
                 },
                 InternalMaterialModifier {
                     it.fragShaderFile = "!shader/effect/blurv.frag"
-                    it.uniforms["screenHeight"] = this.height
+                    it.uniforms["screenHeight"] = (renderContext.height / downsampleRatio).toInt()
                     it.uniforms["radius"] = radius
                 },
                 InternalMaterialModifier {
                     it.fragShaderFile = "!shader/effect/blurh.frag"
-                    it.uniforms["screenWidth"] = this.width
+                    it.uniforms["screenWidth"] = (renderContext.width / downsampleRatio).toInt()
                     it.uniforms["radius"] = radius
                 }
             ),
