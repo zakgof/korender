@@ -72,5 +72,6 @@ internal class RenderContext(var width: Int, var height: Int) {
         else -> ""
     }
 
+    fun defaultTarget() = FrameTarget(width, height, "colorTexture", "depthTexture")
 }
 

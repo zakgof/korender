@@ -3,7 +3,7 @@
 
 in vec2 vtex;
 
-uniform sampler2D finalColorTexture;
+uniform sampler2D colorTexture;
 uniform sampler2D depthTexture;
 
 #ifdef SSR
@@ -29,7 +29,7 @@ out vec4 fragColor;
 void main() {
 
     float depth = texture(depthTexture, vtex).r;
-    vec3 color = texture(finalColorTexture, vtex).rgb;
+    vec3 color = texture(colorTexture, vtex).rgb;
 
 #ifdef SSR
     #ifdef SSR_FXAA

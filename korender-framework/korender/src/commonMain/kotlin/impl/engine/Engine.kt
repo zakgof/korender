@@ -422,10 +422,10 @@ internal class Engine(
             val w = width ?: renderContext.width
             val h = height ?: renderContext.height
             return InternalPostShadingEffect(
-                "ssr", w, h,
-                effectPassMaterialModifiers =
-                    listOf(
-                        InternalMaterialModifier {
+                "ssr",
+                effectPasses = listOf(
+                    InternalPassDeclaration(
+                        listOf(InternalMaterialModifier {
                             it.fragShaderFile = "!shader/effect/ssr.frag"
                             it.uniforms["linearSteps"] = linearSteps
                             it.uniforms["binarySteps"] = binarySteps
@@ -434,10 +434,12 @@ internal class Engine(
                                 it.uniforms["envTexture"] = et
                                 it.shaderDefs += "SSR_ENV"
                             }
-                        }
-                    ),
-                "ssrTexture",
-                "ssrDepthTexture",
+                        }),
+                        null,
+                        FrameTarget(w, h, "ssrTexture", "ssrDepthTexture"),
+                        currentRetentionPolicy
+                    )
+                ),
                 compositionMaterialModifier = {
                     it.shaderDefs += "SSR"
                     if (fxaa) {
@@ -451,26 +453,55 @@ internal class Engine(
 
         override fun bloom(downsampleRatio: Float, threshold: Float, radius: Float) = InternalPostShadingEffect(
             "bloom",
-            (renderContext.width / downsampleRatio).toInt(),
-            (renderContext.height / downsampleRatio).toInt(),
-            effectPassMaterialModifiers = listOf(
-                InternalMaterialModifier {
-                    it.fragShaderFile = "!shader/effect/bloom.frag"
-                    it.uniforms["threshold"] = threshold
-                },
-                InternalMaterialModifier {
-                    it.fragShaderFile = "!shader/effect/blurv.frag"
-                    it.uniforms["screenHeight"] = (renderContext.height / downsampleRatio).toInt()
-                    it.uniforms["radius"] = radius
-                },
-                InternalMaterialModifier {
-                    it.fragShaderFile = "!shader/effect/blurh.frag"
-                    it.uniforms["screenWidth"] = (renderContext.width / downsampleRatio).toInt()
-                    it.uniforms["radius"] = radius
-                }
-            ),
-            "bloomTexture",
-            "bloomDepthTexture",
+            effectPasses = listOf(
+                InternalPassDeclaration(
+                    listOf(
+                        InternalMaterialModifier {
+                            it.fragShaderFile = "!shader/effect/bloom.frag"
+                            it.uniforms["threshold"] = threshold
+                        }),
+                    null,
+                    FrameTarget(
+                        (renderContext.width / downsampleRatio).toInt(),
+                        (renderContext.height / downsampleRatio).toInt(),
+                        "bloomTexture",
+                        "bloomDepthTexture"
+                    ),
+                    currentRetentionPolicy
+                ),
+                InternalPassDeclaration(
+                    listOf(
+                        InternalMaterialModifier {
+                            it.fragShaderFile = "!shader/effect/blurv.frag"
+                            it.uniforms["screenHeight"] = (renderContext.height / downsampleRatio).toInt()
+                            it.uniforms["radius"] = radius
+                        }),
+                    null,
+                    FrameTarget(
+                        (renderContext.width / downsampleRatio).toInt(),
+                        (renderContext.height / downsampleRatio).toInt(),
+                        "bloomTexture",
+                        "bloomDepthTexture"
+                    ),
+                    currentRetentionPolicy
+                ),
+                InternalPassDeclaration(
+                    listOf(
+                        InternalMaterialModifier {
+                            it.fragShaderFile = "!shader/effect/blurh.frag"
+                            it.uniforms["screenWidth"] = (renderContext.width / downsampleRatio).toInt()
+                            it.uniforms["radius"] = radius
+                        }
+                    ),
+                    null,
+                    FrameTarget(
+                        (renderContext.width / downsampleRatio).toInt(),
+                        (renderContext.height / downsampleRatio).toInt(),
+                        "bloomTexture",
+                        "bloomDepthTexture"
+                    ),
+                    currentRetentionPolicy
+                )),
             compositionMaterialModifier = {
                 it.shaderDefs += "BLOOM"
             }, currentRetentionPolicy
@@ -488,40 +519,47 @@ internal class Engine(
         override fun camera(position: Vec3, direction: Vec3, up: Vec3): CameraDeclaration =
             DefaultCamera(position, direction.normalize(), up.normalize())
 
-        override var retentionPolicy: RetentionPolicy
+        override
+        var retentionPolicy: RetentionPolicy
             get() = currentRetentionPolicy
             set(value) {
                 currentRetentionPolicy = value
             }
 
-        override var retentionGeneration: Int
+        override
+        var retentionGeneration: Int
             get() = currentRetentionGeneration
             set(value) {
                 currentRetentionGeneration = value
             }
 
-        override var camera: CameraDeclaration
+        override
+        var camera: CameraDeclaration
             get() = renderContext.camera
             set(value) {
                 renderContext.camera = value as Camera
             }
 
-        override var projection: ProjectionDeclaration
+        override
+        var projection: ProjectionDeclaration
             get() = renderContext.projection
             set(value) {
                 renderContext.projection = value as Projection
             }
 
-        override var background: ColorRGBA
+        override
+        var background: ColorRGBA
             get() = renderContext.backgroundColor
             set(value) {
                 renderContext.backgroundColor = value
             }
 
-        override val width: Int
+        override
+        val width: Int
             get() = renderContext.width
 
-        override val height: Int
+        override
+        val height: Int
             get() = renderContext.height
 
         override fun createImage(width: Int, height: Int, format: PixelFormat): Image =

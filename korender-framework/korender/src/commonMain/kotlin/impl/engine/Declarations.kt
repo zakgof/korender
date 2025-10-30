@@ -11,6 +11,7 @@ import com.zakgof.korender.context.GltfInstancingDeclaration
 import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
+import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
@@ -186,4 +187,10 @@ internal class InternalGltfInstancingDeclaration(val id: String, val count: Int,
 
 internal class InternalBillboardInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<BillboardInstance>) : BillboardInstancingDeclaration
 
-internal class InternalFilterDeclaration(val modifiers: List<MaterialModifier>, val sceneDeclaration: SceneDeclaration, override val retentionPolicy: RetentionPolicy) : Retentionable
+internal class InternalFilterDeclaration(val passes: List<InternalPassDeclaration>)
+
+internal class InternalPassDeclaration(val modifiers: List<InternalMaterialModifier>, val sceneDeclaration: SceneDeclaration?, val target: FrameTarget, override val retentionPolicy: RetentionPolicy) : Retentionable
+
+internal data class ReusableFrameBufferDefinition(val pingPong: Int, val width: Int, val height: Int)
+
+internal data class FrameTarget(val width: Int, val height: Int, val colorOutput: String, val depthOutput: String)

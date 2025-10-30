@@ -22,11 +22,13 @@ import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.engine.EnvCaptureContext
 import com.zakgof.korender.impl.engine.FrameCaptureContext
+import com.zakgof.korender.impl.engine.FrameTarget
 import com.zakgof.korender.impl.engine.GltfDeclaration
 import com.zakgof.korender.impl.engine.InternalBillboardInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalFilterDeclaration
 import com.zakgof.korender.impl.engine.InternalGltfInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalInstancingDeclaration
+import com.zakgof.korender.impl.engine.InternalPassDeclaration
 import com.zakgof.korender.impl.engine.PointLightDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.SceneDeclaration
@@ -34,6 +36,7 @@ import com.zakgof.korender.impl.engine.ShadowDeclaration
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.ScreenQuad
+import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.prefab.InternalPrefab
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGB
@@ -115,7 +118,15 @@ internal class DefaultFrameContext(
         val sd = SceneDeclaration()
         val fc = DefaultFrameContext(korenderContext, sd, frameInfo)
         fc.apply(block)
-        sceneDeclaration.filters += InternalFilterDeclaration(materialModifiers.asList(), sd, korenderContext.currentRetentionPolicy)
+        sceneDeclaration.filters += InternalFilterDeclaration(
+            listOf(
+                InternalPassDeclaration(
+                    materialModifiers.asList().map { it as InternalMaterialModifier }, sd,
+                    FrameTarget(fc.width, fc.height, "colorTexture", "depthTexture"),
+                    korenderContext.currentRetentionPolicy
+                )
+            )
+        )
     }
 
     override fun CaptureEnv(envProbeName: String, resolution: Int, position: Vec3, near: Float, far: Float, insideOut: Boolean, block: FrameContext.() -> Unit) {
