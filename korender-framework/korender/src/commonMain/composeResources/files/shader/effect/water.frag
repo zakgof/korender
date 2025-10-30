@@ -10,8 +10,8 @@ in vec2 vtex;
 
 #uniforms
 
-uniform sampler2D colorTexture;
-uniform sampler2D depthTexture;
+uniform sampler2D colorInputTexture;
+uniform sampler2D depthInputTexture;
 
 out vec4 fragColor;
 
@@ -25,8 +25,8 @@ out vec4 fragColor;
 
 void main() {
 
-    vec3 color = texture(colorTexture, vtex).rgb;
-    float depth = texture(depthTexture, vtex).r;
+    vec3 color = texture(colorInputTexture, vtex).rgb;
+    float depth = texture(depthInputTexture, vtex).r;
 
     vec3 world = screenToWorldSpace(vtex, depth);
     vec3 look = normalize(world - cameraPos);

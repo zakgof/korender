@@ -3,7 +3,6 @@
 
 in vec2 vtex;
 
-uniform sampler2D colorTexture;
 uniform samplerCube envTexture0;
 
 #uniforms

@@ -121,9 +121,10 @@ internal class DefaultFrameContext(
         sceneDeclaration.filters += InternalFilterDeclaration(
             listOf(
                 InternalPassDeclaration(
-                    materialModifiers.asList().map { it as InternalMaterialModifier }, sd,
-                    FrameTarget(fc.width, fc.height, "colorTexture", "depthTexture"),
-                    korenderContext.currentRetentionPolicy
+                    modifiers = materialModifiers.asList().map { it as InternalMaterialModifier },
+                    sceneDeclaration = sd,
+                    target = FrameTarget(fc.width, fc.height, "colorTexture", "depthTexture"),
+                    retentionPolicy = korenderContext.currentRetentionPolicy
                 )
             )
         )

@@ -3,7 +3,7 @@
 
 in vec2 vtex;
 
-uniform sampler2D colorTexture;
+uniform sampler2D colorInputTexture;
 uniform sampler2D shadowTextures[12];
 
 out vec4 fragColor;
@@ -22,7 +22,7 @@ vec4 box(vec4 color, int index, sampler2D sampler) {
 
 
 void main() {
-    vec4 color = texture(colorTexture, vtex);
+    vec4 color = texture(colorInputTexture, vtex);
     color = box(color, 0, shadowTextures[0]);
     color = box(color, 1, shadowTextures[1]);
     color = box(color, 2, shadowTextures[2]);

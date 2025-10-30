@@ -425,6 +425,7 @@ internal class Engine(
                 "ssr",
                 effectPasses = listOf(
                     InternalPassDeclaration(
+                        "colorTexture", "depthTexture",
                         listOf(InternalMaterialModifier {
                             it.fragShaderFile = "!shader/effect/ssr.frag"
                             it.uniforms["linearSteps"] = linearSteps
@@ -455,6 +456,7 @@ internal class Engine(
             "bloom",
             effectPasses = listOf(
                 InternalPassDeclaration(
+                    "colorTexture", "dummy",
                     listOf(
                         InternalMaterialModifier {
                             it.fragShaderFile = "!shader/effect/bloom.frag"
@@ -464,12 +466,13 @@ internal class Engine(
                     FrameTarget(
                         (renderContext.width / downsampleRatio).toInt(),
                         (renderContext.height / downsampleRatio).toInt(),
-                        "bloomTexture",
-                        "bloomDepthTexture"
+                        "brightTexture",
+                        "dummy"
                     ),
                     currentRetentionPolicy
                 ),
                 InternalPassDeclaration(
+                    "brightTexture", "dummy",
                     listOf(
                         InternalMaterialModifier {
                             it.fragShaderFile = "!shader/effect/blurv.frag"
@@ -480,12 +483,13 @@ internal class Engine(
                     FrameTarget(
                         (renderContext.width / downsampleRatio).toInt(),
                         (renderContext.height / downsampleRatio).toInt(),
-                        "bloomTexture",
-                        "bloomDepthTexture"
+                        "bloom1",
+                        "dummy"
                     ),
                     currentRetentionPolicy
                 ),
                 InternalPassDeclaration(
+                    "bloom1", "dummy",
                     listOf(
                         InternalMaterialModifier {
                             it.fragShaderFile = "!shader/effect/blurh.frag"

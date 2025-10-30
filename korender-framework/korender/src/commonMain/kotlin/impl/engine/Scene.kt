@@ -176,8 +176,10 @@ internal class Scene(
     private fun renderPostShadingEffect(effect: InternalPostShadingEffect, prevFb: ReusableFrameBufferDefinition?): ReusableFrameBufferDefinition? {
         var prevFb1 = prevFb
         effect.effectPasses.forEach { pass ->
-            val material = materialDeclaration(BaseMaterial.Screen, true, currentRetentionPolicy, listOf(contextMaterialModifier) + pass.modifiers)
             prevFb1 = renderToReusableFb(pass.target, prevFb1) {
+                contextAdditionalUniforms["colorInputTexture"] = contextAdditionalUniforms[pass.colorInput]
+                contextAdditionalUniforms["depthInputTexture"] = contextAdditionalUniforms[pass.depthInput]
+                val material = materialDeclaration(BaseMaterial.Screen, true, currentRetentionPolicy, listOf(contextMaterialModifier) + pass.modifiers)
                 renderFullscreen(material, pass.target.width, pass.target.height)
             }
         }
@@ -423,6 +425,8 @@ internal class Scene(
     }
 
     private fun renderPostProcessPass(pass: InternalPassDeclaration) {
+        contextAdditionalUniforms["colorInputTexture"] = contextAdditionalUniforms[pass.colorInput]
+        contextAdditionalUniforms["depthInputTexture"] = contextAdditionalUniforms[pass.depthInput]
         val filterMaterial = materialDeclaration(BaseMaterial.Screen, deferredShading, pass.retentionPolicy, listOf(contextMaterialModifier) + pass.modifiers)
         renderFullscreen(filterMaterial, pass.target.width, pass.target.height)
         pass.sceneDeclaration?.let { renderForwardOpaques(it) }
@@ -455,7 +459,7 @@ internal class Scene(
             block()
             return null
         } else {
-            val pingPong = if (prevFb != null && prevFb.width == target!!.width && prevFb.height == target.height) 1 - prevFb.pingPong else 0
+            val pingPong = if (prevFb != null && prevFb.width == target.width && prevFb.height == target.height) 1 - prevFb.pingPong else 0
             val fb = inventory.frameBuffer(FrameBufferDeclaration("filter-$pingPong", target!!.width, target.height, listOf(GlGpuTexture.Preset.RGBFilter), true, TransientProperty(currentRetentionPolicy)))
                 ?: throw SkipRender("Reusable FB 'filter-$pingPong'")
             fb.exec { block() }

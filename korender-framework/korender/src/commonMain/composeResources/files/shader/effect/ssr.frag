@@ -3,7 +3,7 @@
 
 in vec2 vtex;
 
-uniform sampler2D colorTexture;
+uniform sampler2D colorInputTexture;
 
 uniform sampler2D normalGeometryTexture;
 uniform sampler2D materialGeometryTexture;
@@ -81,7 +81,7 @@ vec3 ssr(vec3 vpos, vec3 N, vec3 V) {
             uv = wToS(rayPoint);
             w *= smoothstep (peel, 0.0, abs(deepen));
             w *= smoothstep(maxRayTravel * maxRayTravel, 0., travel * travel);
-            return mix(dflt, texture(colorTexture, uv.xy).rgb, w);
+            return mix(dflt, texture(colorInputTexture, uv.xy).rgb, w);
         }
     }
     return dflt;
