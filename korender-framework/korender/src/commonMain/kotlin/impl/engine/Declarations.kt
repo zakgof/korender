@@ -189,7 +189,7 @@ internal class InternalBillboardInstancingDeclaration(val id: String, val count:
 
 internal class InternalFilterDeclaration(val passes: List<InternalPassDeclaration>)
 
-internal class InternalPassDeclaration(val colorInput: String = "colorTexture", val depthInput: String = "depthTexture", val modifiers: List<InternalMaterialModifier>, val sceneDeclaration: SceneDeclaration?, val target: FrameTarget, override val retentionPolicy: RetentionPolicy) : Retentionable
+internal class InternalPassDeclaration(val mapping: Map<String, String>, val modifiers: List<InternalMaterialModifier>, val sceneDeclaration: SceneDeclaration?, val target: FrameTarget, override val retentionPolicy: RetentionPolicy) : Retentionable
 
 internal data class ReusableFrameBufferDefinition(val pingPong: Int, val width: Int, val height: Int)
 

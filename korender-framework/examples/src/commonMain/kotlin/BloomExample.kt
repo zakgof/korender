@@ -16,20 +16,21 @@ fun BloomExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         Frame {
-            camera = camera(20.z + 1.5f.x * sin(frameInfo.time), -1.z, 1.y)
+            camera = camera(20.z + 1.5f.x * sin(frameInfo.time * 0.4f), -1.z, 1.y)
             DeferredShading {
-                PostShading(bloom(4.0f, 2.0f, 32.0f))
+                // PostShading(bloom(radius = 36f))
+                PostShading(bloom2())
             }
             Renderable(
                 base(color = white(0.5f)),
                 emission(ColorRGB(1.0f, 0.1f, 0.8f)),
-                mesh = cylinderSide(5f, 0.03f),
+                mesh = cylinderSide(5f, 0.06f),
                 transform = rotate(1.z, 0.4f).translate(-2.5f.y + 1.x + 0.3f.z)
             )
             Renderable(
                 base(color = white(0.5f)),
                 emission(ColorRGB(0.1f, 0.8f, 0.8f)),
-                mesh = cylinderSide(5f, 0.03f),
+                mesh = cylinderSide(5f, 0.06f),
                 transform = rotate(1.z, -0.3f).translate(-2.5f.y)
             )
             Gui {

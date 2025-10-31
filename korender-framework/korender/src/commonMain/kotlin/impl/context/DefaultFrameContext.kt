@@ -121,6 +121,7 @@ internal class DefaultFrameContext(
         sceneDeclaration.filters += InternalFilterDeclaration(
             listOf(
                 InternalPassDeclaration(
+                    mapping = mapOf(),
                     modifiers = materialModifiers.asList().map { it as InternalMaterialModifier },
                     sceneDeclaration = sd,
                     target = FrameTarget(fc.width, fc.height, "colorTexture", "depthTexture"),

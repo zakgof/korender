@@ -121,7 +121,8 @@ interface KorenderContext {
     fun roiTextures(block: RoiTexturesContext.() -> Unit): MaterialModifier
 
     fun ssr(width: Int? = null, height: Int? = null, fxaa: Boolean = false, maxRayTravel: Float = 10f, linearSteps: Int = 12, binarySteps: Int = 5, envTexture: CubeTextureDeclaration? = null): PostShadingEffect
-    fun bloom(downsampleRatio: Float = 1f, threshold: Float = 0.9f, radius: Float = 10f): PostShadingEffect
+    fun bloom(downsampleRatio: Float = 2f, threshold: Float = 0.9f, radius: Float = 10f): PostShadingEffect
+    fun bloom2(): PostShadingEffect
 
     fun projection(width: Float, height: Float, near: Float, far: Float, mode: ProjectionMode = frustum()): ProjectionDeclaration
     fun camera(position: Vec3, direction: Vec3, up: Vec3): CameraDeclaration

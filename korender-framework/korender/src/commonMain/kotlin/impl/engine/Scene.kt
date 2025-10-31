@@ -177,8 +177,9 @@ internal class Scene(
         var prevFb1 = prevFb
         effect.effectPasses.forEach { pass ->
             prevFb1 = renderToReusableFb(pass.target, prevFb1) {
-                contextAdditionalUniforms["colorInputTexture"] = contextAdditionalUniforms[pass.colorInput]
-                contextAdditionalUniforms["depthInputTexture"] = contextAdditionalUniforms[pass.depthInput]
+                pass.mapping.forEach {
+                    contextAdditionalUniforms[it.key] = contextAdditionalUniforms[it.value]
+                }
                 val material = materialDeclaration(BaseMaterial.Screen, true, currentRetentionPolicy, listOf(contextMaterialModifier) + pass.modifiers)
                 renderFullscreen(material, pass.target.width, pass.target.height)
             }
@@ -425,8 +426,11 @@ internal class Scene(
     }
 
     private fun renderPostProcessPass(pass: InternalPassDeclaration) {
-        contextAdditionalUniforms["colorInputTexture"] = contextAdditionalUniforms[pass.colorInput]
-        contextAdditionalUniforms["depthInputTexture"] = contextAdditionalUniforms[pass.depthInput]
+        contextAdditionalUniforms["colorInputTexture"] =  contextAdditionalUniforms["colorTexture"]
+        contextAdditionalUniforms["depthInputTexture"] =  contextAdditionalUniforms["depthTexture"]
+        pass.mapping.forEach {
+            contextAdditionalUniforms[it.key] = contextAdditionalUniforms[it.value]
+        }
         val filterMaterial = materialDeclaration(BaseMaterial.Screen, deferredShading, pass.retentionPolicy, listOf(contextMaterialModifier) + pass.modifiers)
         renderFullscreen(filterMaterial, pass.target.width, pass.target.height)
         pass.sceneDeclaration?.let { renderForwardOpaques(it) }
@@ -460,7 +464,7 @@ internal class Scene(
             return null
         } else {
             val pingPong = if (prevFb != null && prevFb.width == target.width && prevFb.height == target.height) 1 - prevFb.pingPong else 0
-            val fb = inventory.frameBuffer(FrameBufferDeclaration("filter-$pingPong", target!!.width, target.height, listOf(GlGpuTexture.Preset.RGBFilter), true, TransientProperty(currentRetentionPolicy)))
+            val fb = inventory.frameBuffer(FrameBufferDeclaration("filter-$pingPong", target.width, target.height, listOf(GlGpuTexture.Preset.RGBFilter), true, TransientProperty(currentRetentionPolicy)))
                 ?: throw SkipRender("Reusable FB 'filter-$pingPong'")
             fb.exec { block() }
             contextAdditionalUniforms[target.colorOutput] = fb.colorTextures[0]

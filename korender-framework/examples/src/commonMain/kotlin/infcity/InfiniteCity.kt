@@ -52,7 +52,7 @@ private fun FrameContext.frame() {
     val z = frameInfo.time * 0.2f
 
     DeferredShading {
-        PostShading(bloom(4f, 2.0f, 6f))
+        PostShading(bloom2())
     }
 
     projection = projection(0.3f * width / height, 0.3f, 0.3f, 200f)

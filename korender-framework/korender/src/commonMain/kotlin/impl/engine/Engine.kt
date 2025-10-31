@@ -425,7 +425,7 @@ internal class Engine(
                 "ssr",
                 effectPasses = listOf(
                     InternalPassDeclaration(
-                        "colorTexture", "depthTexture",
+                        mapOf(),
                         listOf(InternalMaterialModifier {
                             it.fragShaderFile = "!shader/effect/ssr.frag"
                             it.uniforms["linearSteps"] = linearSteps
@@ -456,7 +456,7 @@ internal class Engine(
             "bloom",
             effectPasses = listOf(
                 InternalPassDeclaration(
-                    "colorTexture", "dummy",
+                    mapOf("colorInputTexture" to "colorTexture"),
                     listOf(
                         InternalMaterialModifier {
                             it.fragShaderFile = "!shader/effect/bloom.frag"
@@ -472,7 +472,7 @@ internal class Engine(
                     currentRetentionPolicy
                 ),
                 InternalPassDeclaration(
-                    "brightTexture", "dummy",
+                    mapOf("colorInputTexture" to "brightTexture"),
                     listOf(
                         InternalMaterialModifier {
                             it.fragShaderFile = "!shader/effect/blurv.frag"
@@ -489,7 +489,7 @@ internal class Engine(
                     currentRetentionPolicy
                 ),
                 InternalPassDeclaration(
-                    "bloom1", "dummy",
+                    mapOf("colorInputTexture" to "bloom1"),
                     listOf(
                         InternalMaterialModifier {
                             it.fragShaderFile = "!shader/effect/blurh.frag"
@@ -510,6 +510,8 @@ internal class Engine(
                 it.shaderDefs += "BLOOM"
             }, currentRetentionPolicy
         )
+
+        override fun bloom2() = bloomEffect(renderContext, currentRetentionPolicy, 2, 3)
 
         override fun projection(width: Float, height: Float, near: Float, far: Float, mode: ProjectionMode) =
             Projection(width, height, near, far, mode)
