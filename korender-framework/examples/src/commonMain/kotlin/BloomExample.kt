@@ -19,7 +19,7 @@ fun BloomExample() =
             camera = camera(20.z + 1.5f.x * sin(frameInfo.time * 0.4f), -1.z, 1.y)
             DeferredShading {
                 // PostShading(bloom(radius = 36f))
-                PostShading(bloom2())
+                PostShading(bloomWide())
             }
             Renderable(
                 base(color = white(0.5f)),

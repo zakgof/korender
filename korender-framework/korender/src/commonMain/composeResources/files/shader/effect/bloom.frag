@@ -7,14 +7,24 @@ in vec2 vtex;
 #uniform float threshold;
 
 uniform sampler2D colorInputTexture;
+uniform sampler2D depthInputTexture;
 uniform sampler2D emissionGeometryTexture;
+
+
+float lumi(vec3 color) {
+    return max(color.r, max(color.g, color.b));
+}
 
 void main() {
     vec3 color = texture(colorInputTexture, vtex).rgb;
     vec3 emission = texture(emissionGeometryTexture, vtex).rgb;
 
-    float lumi = dot(color, vec3(0.2126, 0.7152, 0.0722));
+    float colorSoft = smoothstep(threshold - 0.1, threshold, lumi(color)); // TODO knee
+    float emissionSoft = lumi(emission);
 
-    vec3 result =  (lumi > threshold ? color : vec3(0.0)) + emission;
+    float soft = max(colorSoft, emissionSoft);
+
+    vec3 result = color * soft;
     gl_FragColor = vec4(result, 1.0);
+    gl_FragDepth = (soft < 0.1) ? 1.0 : texture(depthInputTexture, vtex).r;
 }

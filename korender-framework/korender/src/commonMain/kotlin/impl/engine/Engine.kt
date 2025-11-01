@@ -511,7 +511,8 @@ internal class Engine(
             }, currentRetentionPolicy
         )
 
-        override fun bloom2() = bloomEffect(renderContext, currentRetentionPolicy, 2, 3)
+        override fun bloomWide(threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float) =
+            bloomEffect(renderContext, currentRetentionPolicy, threshold, amount, downsample, mips, offset)
 
         override fun projection(width: Float, height: Float, near: Float, far: Float, mode: ProjectionMode) =
             Projection(width, height, near, far, mode)
