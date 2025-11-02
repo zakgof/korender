@@ -17,6 +17,7 @@ uniform sampler2D depthTexture;
 #ifdef BLOOM
     uniform sampler2D bloomTexture;
     uniform sampler2D bloomDepth;
+    uniform sampler2D downsample0;
     #uniform float bloomAmount;
 #endif
 
@@ -46,6 +47,8 @@ void main() {
     float bDepth = texture(bloomDepth, vtex).r;
     float depthRatio = smoothstep(depth + 0.1, depth - 0.1, bDepth);
     color += bloomSample.rgb * depthRatio * bloomAmount;
+
+    color = vec3(vtex, 0.);
 #endif
 
     fragColor = vec4(color, 1.);

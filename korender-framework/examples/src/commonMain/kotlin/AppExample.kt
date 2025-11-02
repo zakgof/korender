@@ -37,6 +37,7 @@ fun AppExample() {
     val options = listOf(
 
         Demo("Bloom effect") { BloomExample() },
+        Demo("City demo") { InfiniteCity() },
         // Demo("Island Demo") { IslandExample() },
 
         Demo("Heightmap Terrain") { HeightmapTerrainExample() },
@@ -55,6 +56,7 @@ fun AppExample() {
         Demo("Effects") { EffectsExample() },
         Demo("Decals") { DecalExample() },
 
+        Demo("Bloom effect") { BloomExample() },
         Demo("SSR") { SsrExample() },
         Demo("Sky") { SkyExample() },
         Demo("Transparency") { TransparencyExample() },

@@ -22,7 +22,8 @@ fun BloomExample() =
             camera = camera(20.z + 1.5f.x * sin(frameInfo.time * 0.4f), -1.z, 1.y)
             DirectionalLight(Vec3(1f, -1f, -1f), ColorRGB.white(3f))
             DeferredShading {
-                PostShading(bloomWide())
+                PostShading(bloomWide(amount = 4.0f, downsample = 2, offset = 1f, highResolutionRatio = 0f))
+                // PostShading(bloom(amount = 5f, radius = 32f))
             }
             Renderable(
                 base(color = white(0.1f)),

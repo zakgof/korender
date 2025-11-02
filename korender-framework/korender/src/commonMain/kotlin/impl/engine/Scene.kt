@@ -184,7 +184,7 @@ internal class Scene(
                 renderFullscreen(material, pass.target.width, pass.target.height)
             }
         }
-        return prevFb
+        return prevFb1
     }
 
     private fun renderComposition(reusable: Boolean, prevFb: ReusableFrameBufferDefinition?): ReusableFrameBufferDefinition? {

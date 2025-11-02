@@ -6,6 +6,11 @@ in vec2 vtex;
 
 #uniform float offset;
 uniform sampler2D colorInputTexture;
+#ifdef UPSAMPLE
+uniform sampler2D highResTexture;
+#uniform float highResolutionRatio;
+#endif
+
 uniform sampler2D depthInputTexture;
 
 void main() {
@@ -15,8 +20,6 @@ void main() {
     vec2 t2 = vtex + off * vec2( 1.0, -1.0);
     vec2 t3 = vtex + off * vec2(-1.0,  1.0);
     vec2 t4 = vtex + off * vec2( 1.0,  1.0);
-
-
     vec3 c1 = texture(colorInputTexture, t1).rgb;
     vec3 c2 = texture(colorInputTexture, t2).rgb;
     vec3 c3 = texture(colorInputTexture, t3).rgb;
@@ -29,6 +32,13 @@ void main() {
     float d4 = texture(depthInputTexture, t4).r;
     float d  = texture(depthInputTexture, vtex).r;
 
-    gl_FragColor = vec4((c1 + c2 + c3 + c4 + 4.0 * c) / 8.0, 1.0);
+    vec3 color = (c1 + c2 + c3 + c4 + 4.0 * c) / 8.0;
+
+    #ifdef UPSAMPLE
+        vec3 highColor = texture(highResTexture, vtex).rgb;
+        color += highColor * highResolutionRatio;
+    #endif
+
+    gl_FragColor = vec4(color, 1.0);
     gl_FragDepth = min(d, min(min(d1, d2), min(d3, d4)));
 }

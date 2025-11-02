@@ -95,7 +95,7 @@ internal class Engine(
     width: Int,
     height: Int,
     private val asyncContext: AsyncContext,
-    block: KorenderContext.() -> Unit
+    block: KorenderContext.() -> Unit,
 ) {
 
     private val touchQueue = Channel<TouchEvent>(Channel.UNLIMITED)
@@ -452,67 +452,11 @@ internal class Engine(
             )
         }
 
-        override fun bloom(downsampleRatio: Float, threshold: Float, radius: Float) = InternalPostShadingEffect(
-            "bloom",
-            effectPasses = listOf(
-                InternalPassDeclaration(
-                    mapOf("colorInputTexture" to "colorTexture"),
-                    listOf(
-                        InternalMaterialModifier {
-                            it.fragShaderFile = "!shader/effect/bloom.frag"
-                            it.uniforms["threshold"] = threshold
-                        }),
-                    null,
-                    FrameTarget(
-                        (renderContext.width / downsampleRatio).toInt(),
-                        (renderContext.height / downsampleRatio).toInt(),
-                        "brightTexture",
-                        "dummy"
-                    ),
-                    currentRetentionPolicy
-                ),
-                InternalPassDeclaration(
-                    mapOf("colorInputTexture" to "brightTexture"),
-                    listOf(
-                        InternalMaterialModifier {
-                            it.fragShaderFile = "!shader/effect/blurv.frag"
-                            it.uniforms["screenHeight"] = (renderContext.height / downsampleRatio).toInt()
-                            it.uniforms["radius"] = radius
-                        }),
-                    null,
-                    FrameTarget(
-                        (renderContext.width / downsampleRatio).toInt(),
-                        (renderContext.height / downsampleRatio).toInt(),
-                        "bloom1",
-                        "dummy"
-                    ),
-                    currentRetentionPolicy
-                ),
-                InternalPassDeclaration(
-                    mapOf("colorInputTexture" to "bloom1"),
-                    listOf(
-                        InternalMaterialModifier {
-                            it.fragShaderFile = "!shader/effect/blurh.frag"
-                            it.uniforms["screenWidth"] = (renderContext.width / downsampleRatio).toInt()
-                            it.uniforms["radius"] = radius
-                        }
-                    ),
-                    null,
-                    FrameTarget(
-                        (renderContext.width / downsampleRatio).toInt(),
-                        (renderContext.height / downsampleRatio).toInt(),
-                        "bloomTexture",
-                        "bloomDepthTexture"
-                    ),
-                    currentRetentionPolicy
-                )),
-            compositionMaterialModifier = {
-                it.shaderDefs += "BLOOM"
-            }, currentRetentionPolicy
-        )
+        override fun bloom(threshold: Float, amount: Float, radius: Float, downsample: Int) =
+            bloomSimpleEffect(renderContext, currentRetentionPolicy, threshold, amount, radius, downsample)
 
-        override fun bloomWide(threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float) =
-            bloomEffect(renderContext, currentRetentionPolicy, threshold, amount, downsample, mips, offset)
+        override fun bloomWide(threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float) =
+            bloomMipEffect(renderContext, currentRetentionPolicy, threshold, amount, downsample, mips, offset, highResolutionRatio)
 
         override fun projection(width: Float, height: Float, near: Float, far: Float, mode: ProjectionMode) =
             Projection(width, height, near, far, mode)
