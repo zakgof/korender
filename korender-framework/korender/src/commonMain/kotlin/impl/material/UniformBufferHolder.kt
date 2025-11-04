@@ -45,7 +45,7 @@ internal class UniformBufferHolder {
 
     private val bufferOffsetAlignment = glGetInteger(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT)
     private val maxBindings = glGetInteger(GL_MAX_UNIFORM_BUFFER_BINDINGS)
-    private val shaderUboSize = glGetInteger(GL_MAX_UNIFORM_BLOCK_SIZE)
+    private val shaderUboSize = glGetInteger(GL_MAX_UNIFORM_BLOCK_SIZE).coerceIn(0, 65536)
 
     private val shaderUbo = GlGpuUniformBuffer(shaderUboSize)
 
@@ -59,7 +59,7 @@ internal class UniformBufferHolder {
 
     fun populateFrame(uniforms: (String) -> Any?, ignoreMissing: Boolean = false) {
         frameUbo.populate(uniforms, 0, frameOffsets, "FrameContext", ignoreMissing)
-        frameUbo.upload(4608)
+        frameUbo.upload(4650)
     }
 
     fun populate(
