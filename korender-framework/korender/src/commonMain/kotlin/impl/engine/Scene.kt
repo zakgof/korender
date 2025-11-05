@@ -148,21 +148,16 @@ internal class Scene(
 
         renderDeferredOpaques()
 
-        val postShadingEffects = sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects
+        val postShadingEffects = sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects.map { it as InternalPostShadingEffect }
         renderDeferredShading(postShadingEffects.isNotEmpty() || sceneDeclaration.filters.isNotEmpty())
 
         if (postShadingEffects.isNotEmpty()) {
             postShadingEffects.forEach {
-                renderPostShadingEffect(it as InternalPostShadingEffect)
+                renderPostShadingEffect(it)
             }
             renderComposition(sceneDeclaration.filters.isNotEmpty())
-            postShadingEffects
-                .map { it as InternalPostShadingEffect }
-                .map { it.effectPasses.last() }
-                .forEach {
-                    reusableFrameBufferHolder.unlock(it.target.colorOutput)
-                    reusableFrameBufferHolder.unlock(it.target.depthOutput)
-                }
+            postShadingEffects.flatMap { it.keepTextures }
+                .forEach { reusableFrameBufferHolder.unlock(it) }
         }
         renderPostProcess()
         // TODO fog over transparents ??
@@ -189,9 +184,8 @@ internal class Scene(
                 renderFullscreen(material, pass.target.width, pass.target.height)
             }
         }
-        val keepTextures = setOf(effect.effectPasses.last().target.colorOutput, effect.effectPasses.last().target.depthOutput)
         effect.effectPasses.flatMap { listOf(it.target.colorOutput, it.target.depthOutput) }
-            .filter {!keepTextures.contains(it)}
+            .filter { !effect.keepTextures.contains(it) }
             .forEach { reusableFrameBufferHolder.unlock(it) }
     }
 

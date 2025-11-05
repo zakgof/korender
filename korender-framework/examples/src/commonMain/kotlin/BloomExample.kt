@@ -19,22 +19,22 @@ fun BloomExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         Frame {
-            camera = camera(20.z + 1.5f.x * sin(frameInfo.time * 0.4f), -1.z, 1.y)
+            camera = camera(20.z + 1.5f.x * sin(frameInfo.time * 0.4f * 0f), -1.z, 1.y)
             DirectionalLight(Vec3(1f, -1f, -1f), ColorRGB.white(3f))
             DeferredShading {
-                PostShading(bloomWide(amount = 5.0f, downsample = 2, offset = 1f, highResolutionRatio = 0f))
+                PostShading(bloomWide(amount = 2.0f, downsample = 2, highResolutionRatio = 0.1f))
                 // PostShading(bloom(amount = 5f, radius = 32f))
             }
             Renderable(
                 base(color = white(0.1f)),
                 emission(ColorRGB(2.0f, 0.1f, 1.8f)),
-                mesh = cylinderSide(5f, 0.06f),
+                mesh = cylinderSide(7f, 0.16f),
                 transform = rotate(1.z, 0.4f).translate(-2.5f.y + 1.x + 0.3f.z)
             )
             Renderable(
                 base(color = white(0.1f)),
                 emission(ColorRGB(0.1f, 0.8f, 0.8f)),
-                mesh = cylinderSide(5f, 0.06f),
+                mesh = cylinderSide(7f, 0.16f),
                 transform = rotate(1.z, -0.3f).translate(-2.5f.y)
             )
             Renderable(

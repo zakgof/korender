@@ -422,10 +422,9 @@ internal class Engine(
             val w = width ?: renderContext.width
             val h = height ?: renderContext.height
             return InternalPostShadingEffect(
-                "ssr",
                 effectPasses = listOf(
                     InternalPassDeclaration(
-                        mapOf(),
+                        mapOf("colorInputTexture" to "colorTexture"),
                         listOf(InternalMaterialModifier {
                             it.fragShaderFile = "!shader/effect/ssr.frag"
                             it.uniforms["linearSteps"] = linearSteps
@@ -441,6 +440,7 @@ internal class Engine(
                         currentRetentionPolicy
                     )
                 ),
+                keepTextures = setOf("ssrTexture"),
                 compositionMaterialModifier = {
                     it.shaderDefs += "SSR"
                     if (fxaa) {

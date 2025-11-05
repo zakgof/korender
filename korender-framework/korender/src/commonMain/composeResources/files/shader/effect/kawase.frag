@@ -13,7 +13,15 @@ uniform sampler2D highResTexture;
 
 uniform sampler2D depthInputTexture;
 
+out vec4 fragColor;
+
 void main() {
+
+    #ifdef UPSAMPLE
+        float centerWeight = 4.0;
+    #else
+        float centerWeight = 0.0;
+    #endif
 
     vec2 off = offset / vec2(textureSize(colorInputTexture, 0));
     vec2 t1 = vtex + off * vec2(-1.0, -1.0);
@@ -32,13 +40,13 @@ void main() {
     float d4 = texture(depthInputTexture, t4).r;
     float d  = texture(depthInputTexture, vtex).r;
 
-    vec3 color = (c1 + c2 + c3 + c4 + 4.0 * c) / 8.0;
+    vec3 color = (c1 + c2 + c3 + c4 + centerWeight * c) / (centerWeight + 4.0);
 
     #ifdef UPSAMPLE
         vec3 highColor = texture(highResTexture, vtex).rgb;
         color += highColor * highResolutionRatio;
     #endif
 
-    gl_FragColor = vec4(color, 1.0);
+    fragColor = vec4(color, 1.0);
     gl_FragDepth = min(d, min(min(d1, d2), min(d3, d4)));
 }

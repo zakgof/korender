@@ -8,10 +8,10 @@ internal fun bloomMipEffect(
     renderContext: RenderContext, currentRetentionPolicy: RetentionPolicy,
     threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float,
 ) = InternalPostShadingEffect(
-    "bloom2",
     effectPasses = listOf(bloomBrightnessPass(renderContext, currentRetentionPolicy, downsample, threshold)) +
             bloomDownsamplePasses(renderContext, currentRetentionPolicy, downsample, mips, offset) +
             bloomUpsamplePasses(renderContext, currentRetentionPolicy, downsample, mips, offset, highResolutionRatio),
+    keepTextures = setOf("bloomTexture", "bloomDepth"),
     compositionMaterialModifier = {
         it.shaderDefs += "BLOOM"
         it.uniforms["bloomAmount"] = amount
@@ -22,12 +22,12 @@ internal fun bloomSimpleEffect(
     renderContext: RenderContext, currentRetentionPolicy: RetentionPolicy,
     threshold: Float, amount: Float, radius: Float, downsample: Int,
 ) = InternalPostShadingEffect(
-    "bloom",
     effectPasses = listOf(
         bloomBrightnessPass(renderContext, currentRetentionPolicy, downsample, threshold),
         bloomVerticalBlur(renderContext, currentRetentionPolicy, downsample, radius),
         bloomHorizontalBlur(renderContext, currentRetentionPolicy, downsample, radius)
     ),
+    keepTextures = setOf("bloomTexture", "bloomDepth"),
     compositionMaterialModifier = {
         it.shaderDefs += "BLOOM"
         it.uniforms["bloomAmount"] = amount

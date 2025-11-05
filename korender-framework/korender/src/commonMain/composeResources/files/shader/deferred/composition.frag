@@ -17,7 +17,6 @@ uniform sampler2D depthTexture;
 #ifdef BLOOM
     uniform sampler2D bloomTexture;
     uniform sampler2D bloomDepth;
-    uniform sampler2D downsample0;
     #uniform float bloomAmount;
 #endif
 

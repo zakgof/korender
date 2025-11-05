@@ -10,6 +10,7 @@ uniform sampler2D colorInputTexture;
 uniform sampler2D depthInputTexture;
 uniform sampler2D emissionGeometryTexture;
 
+out vec4 fragColor;
 
 float lumi(vec3 color) {
     return max(color.r, max(color.g, color.b));
@@ -25,6 +26,7 @@ void main() {
     float soft = max(colorSoft, emissionSoft);
 
     vec3 result = color * soft;
-    gl_FragColor = vec4(result, 1.0);
+
+    fragColor = vec4(result, 1.0);
     gl_FragDepth = (soft < 0.1) ? 1.0 : texture(depthInputTexture, vtex).r;
 }

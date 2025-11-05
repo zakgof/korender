@@ -9,8 +9,8 @@ import com.zakgof.korender.impl.engine.Retentionable
 import com.zakgof.korender.math.Vec3
 
 internal class InternalPostShadingEffect(
-    val name: String,
     val effectPasses: List<InternalPassDeclaration>,
+    val keepTextures: Set<String>,
     val compositionMaterialModifier: InternalMaterialModifier,
     override val retentionPolicy: RetentionPolicy
 ) : PostShadingEffect, Retentionable
