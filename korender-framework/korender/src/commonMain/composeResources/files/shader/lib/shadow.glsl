@@ -75,6 +75,10 @@ float shadow(sampler2D shadowTexture, sampler2DShadow pcfTexture, int index, vec
     return sh;
 }
 
+float linstep(float edge0, float edge1, float x) {
+    return clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+}
+
 float casc(int s, float plane, vec3 vpos, sampler2D shadowTexture, sampler2DShadow pcfTexture) {
     vec3 vshadow = (bsps[s] * vec4(vpos, 1.0)).xyz;
     if ((shadowMode[s] & 0x80) != 0) {
@@ -82,7 +86,7 @@ float casc(int s, float plane, vec3 vpos, sampler2D shadowTexture, sampler2DShad
     }
     float sh = shadow(shadowTexture, pcfTexture, s, vshadow, shadowMode[s] & 0x07);
     vec4 ci = cascade[s];
-    float cascadeContribution = smoothstep(ci.r, ci.g, plane) * (1.0 - smoothstep(ci.b, ci.a, plane));
+    float cascadeContribution = linstep(ci.r, ci.g, plane) * (1.0 - linstep(ci.b, ci.a, plane));
     return sh * cascadeContribution;
 }
 

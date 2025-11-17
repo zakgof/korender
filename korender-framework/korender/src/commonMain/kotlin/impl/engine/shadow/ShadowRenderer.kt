@@ -139,8 +139,8 @@ internal object ShadowRenderer {
             listOf(
                 if (index == 0) 0f else declaration.near,
                 if (index == 0) 0f else declarations[index - 1].far,
-                if (index == declarations.size - 1) 1e10f else declarations[index + 1].near,
-                if (index == declarations.size - 1) 1e10f else declaration.far
+                if (index == declarations.size - 1) declaration.far - (declaration.far - declaration.near) * 0.1f else declarations[index + 1].near,
+                declaration.far
             ),
             declaration.fixedYRange?.first ?: 0f,
             declaration.fixedYRange?.second ?: 0f,

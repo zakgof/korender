@@ -74,16 +74,16 @@ class FreeCamera(private val context: KorenderContext, initialPosition: Vec3, in
     }
 
     fun handle(keyEvent: KeyEvent) {
-        if (keyEvent.key == "w" && keyEvent.type == KeyEvent.Type.DOWN) {
+        if (keyEvent.key == "W" && keyEvent.type == KeyEvent.Type.DOWN) {
             thrust = 1.0f
         }
-        if (keyEvent.key == "w" && keyEvent.type == KeyEvent.Type.UP) {
+        if (keyEvent.key == "W" && keyEvent.type == KeyEvent.Type.UP) {
             thrust = 0.0f
         }
-        if (keyEvent.key == "s" && keyEvent.type == KeyEvent.Type.DOWN) {
+        if (keyEvent.key == "S" && keyEvent.type == KeyEvent.Type.DOWN) {
             thrust = -1.0f
         }
-        if (keyEvent.key == "s" && keyEvent.type == KeyEvent.Type.UP) {
+        if (keyEvent.key == "S" && keyEvent.type == KeyEvent.Type.UP) {
             thrust = 0.0f
         }
     }
