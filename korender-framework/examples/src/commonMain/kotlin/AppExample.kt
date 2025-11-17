@@ -36,7 +36,7 @@ import org.jetbrains.compose.resources.painterResource
 fun AppExample() {
     val options = listOf(
 
-        Demo("Bloom effect") { BloomExample() },
+        Demo("SSR") { SsrExample() },
         Demo("City demo") { InfiniteCity() },
         // Demo("Island Demo") { IslandExample() },
 
@@ -55,8 +55,8 @@ fun AppExample() {
         Demo("Blur") { BlurExample() },
         Demo("Effects") { EffectsExample() },
         Demo("Decals") { DecalExample() },
+        Demo("Bloom") { BloomExample() },
 
-        Demo("Bloom effect") { BloomExample() },
         Demo("SSR") { SsrExample() },
         Demo("Sky") { SkyExample() },
         Demo("Transparency") { TransparencyExample() },

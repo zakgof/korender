@@ -9,6 +9,8 @@ uniform sampler2D normalGeometryTexture;
 uniform sampler2D materialGeometryTexture;
 uniform sampler2D depthGeometryTexture;
 
+uniform sampler2D noiseTexture;
+
 #uniform float maxRayTravel;
 #uniform int linearSteps;
 #uniform int binarySteps;
@@ -38,16 +40,18 @@ vec3 ssr(vec3 vpos, vec3 N, vec3 V) {
     vec3 dflt =  vec3(0.);
 #endif
 
+    float R = pow(4.0, 1.0/(float(linearSteps) + 1.0));
+    float step = maxRayTravel * (1.0 - R) / (1.0 - pow(R, float(linearSteps)));
+
     float w = 1.;
-
-
-
     float peel = 0.01;
 
     float travel = 0.;
-    float step = maxRayTravel / float(linearSteps);
     vec3 rayPoint = vpos;
     vec3 rayStep = rayDir * step;
+
+    float startOffset = textureLod(noiseTexture, vtex * 1.0, 0.0).r * 1.0;
+    rayPoint -= rayStep * startOffset;
 
     for (int i = 0; i < linearSteps; i++) {
 
@@ -56,8 +60,10 @@ vec3 ssr(vec3 vpos, vec3 N, vec3 V) {
         travel += step;
 
         vec3 uv = wToS(rayPoint);
-        if (uv.x < 0. || uv.x > 1. || uv.y < 0. || uv.y > 1. || uv.z < 0. || uv.z > 1.)
+        if (uv.x < 0. || uv.x > 1. || uv.y < 0. || uv.y > 1. || uv.z < 0. || uv.z > 1.) {
+            return vec3(0., 0., 1.);
             break;
+        }
 
         float deepen = uv.z - texture(depthGeometryTexture, uv.xy).r;
 
@@ -83,7 +89,10 @@ vec3 ssr(vec3 vpos, vec3 N, vec3 V) {
             w *= smoothstep(maxRayTravel * maxRayTravel, 0., travel * travel);
             return mix(dflt, texture(colorInputTexture, uv.xy).rgb, w);
         }
+
+        rayStep *= R;
     }
+    return vec3(1., 0., 1.);
     return dflt;
 }
 

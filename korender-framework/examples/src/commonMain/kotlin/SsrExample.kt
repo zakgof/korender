@@ -25,10 +25,10 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                     ssr(
                         width = width / 4,
                         height = height / 4,
-                        fxaa = true,
+                        fxaa = false,
                         maxRayTravel = 12f,
-                        linearSteps = 120,
-                        binarySteps = 4,
+                        linearSteps = 16,
+                        binarySteps = 5,
                         envTexture = env
                     )
                 )
@@ -41,7 +41,8 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         DirectionalLight(Vec3(1f, -1f, 0f))
         Sky(cubeSky(env))
         Renderable(
-            base(color = ColorRGBA.Red, metallicFactor = 0f, roughnessFactor = 0.2f),
+            base(colorTexture = texture("texture/brick.jpg"),
+                metallicFactor = 0f, roughnessFactor = 0.2f),
             mesh = sphere(),
             transform = translate(-2f, -1f, -4f),
             transparent = false
@@ -52,7 +53,7 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             transform = translate(2f, -1f, -4f)
         )
         Renderable(
-            base(colorTexture = texture("texture/asphalt-albedo.jpg"), metallicFactor = 0.3f, roughnessFactor = 0.2f),
+            base(colorTexture = texture("texture/asphalt-albedo.jpg"), metallicFactor = 0.8f, roughnessFactor = 0.2f),
             triplanar(0.4f),
             mesh = cube(6f),
             transform = translate(-8.y)
