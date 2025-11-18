@@ -3,7 +3,6 @@ package com.zakgof.korender
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.image.InternalImage
-import com.zakgof.korender.impl.image.impl.image.InternalImage3D
 import kotlinx.coroutines.Deferred
 
 internal expect object Platform {
@@ -19,9 +18,3 @@ internal expect object Platform {
     fun nanoTime(): Long
 
 }
-
-internal interface AsyncContext {
-    val appResourceLoader: ResourceLoader
-    fun <R> call(function: suspend () -> R): Deferred<R>
-}
-

@@ -222,12 +222,6 @@ actual fun Korender(
 
         GL.gl = gl
 
-        val async = object : AsyncContext {
-            override val appResourceLoader = appResourceLoader
-            override fun <R> call(function: suspend () -> R): Deferred<R> =
-                GlobalScope.async { function() }
-        }
-
         fun animate() {
             window.requestAnimationFrame {
                 try {
@@ -244,7 +238,7 @@ actual fun Korender(
             }
         }
 
-        engine = Engine(800, 600, async, block)
+        engine = Engine(800, 600, appResourceLoader, block)
 
         animate()
 

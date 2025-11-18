@@ -72,11 +72,9 @@ internal class Loader(private val appResourceLoader: ResourceLoader) {
 
     fun onWaitUpdate(block: () -> Unit) {
         updaters += block
-        println("Adding an updater, total = ${updaters.size}")
     }
 
     private fun fireUpdaters() {
-        println("Fire updaters, pending=${pending()}")
         val fire = updaters.toList()
         updaters.clear()
         fire.forEach { CoroutineScope(Dispatchers.Default).launch { it() } }

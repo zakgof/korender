@@ -32,7 +32,6 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -125,12 +124,7 @@ actual fun Korender(appResourceLoader: ResourceLoader, block: KorenderContext.()
     class KorenderGLRenderer(private val view: View) : GLSurfaceView.Renderer {
 
         override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
-            val async = object : AsyncContext {
-                override val appResourceLoader = appResourceLoader
-                override fun <R> call(function: suspend () -> R): Deferred<R> =
-                    CompletableDeferred(runBlocking { function() })
-            }
-            engine = Engine(view.width, view.height, async, block)
+            engine = Engine(view.width, view.height, appResourceLoader, block)
         }
 
         override fun onDrawFrame(unused: GL10) {

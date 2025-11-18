@@ -1,6 +1,5 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.AsyncContext
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
@@ -23,6 +22,7 @@ import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ProjectionMode
+import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.Texture3DDeclaration
@@ -95,14 +95,14 @@ import kotlinx.coroutines.channels.Channel
 internal class Engine(
     width: Int,
     height: Int,
-    private val asyncContext: AsyncContext,
+    private val appResourceLoader: ResourceLoader,
     block: KorenderContext.() -> Unit,
 ) {
 
     private val touchQueue = Channel<TouchEvent>(Channel.UNLIMITED)
     private val keyQueue = Channel<KeyEvent>(Channel.UNLIMITED)
     private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
-    private val inventory = Inventory(asyncContext)
+    private val inventory = Inventory(appResourceLoader)
     private val renderContext = RenderContext(width, height)
 
     private var touchBoxes: List<TouchBox> = listOf()
@@ -134,7 +134,7 @@ internal class Engine(
         }
 
         override fun <T> load(resource: String, mapper: (ByteArray) -> T): Deferred<T> =
-            CoroutineScope(Dispatchers.Default).async { mapper(asyncContext.appResourceLoader(resource)) }
+            CoroutineScope(Dispatchers.Default).async { mapper(appResourceLoader(resource)) }
 
         override fun texture(textureResource: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int) =
             ResourceTextureDeclaration(textureResource, filter, wrap, aniso, currentRetentionPolicy)
@@ -157,21 +157,18 @@ internal class Engine(
             val sd = SceneDeclaration()
             block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f, 0)))
             val images = CompletableDeferred<CubeTextureImages>()
-            var counter = 0
             val startNano = Platform.nanoTime()
 
             val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
             fun tryRender(): Boolean {
-                print("Try render capture scene")
-                counter++
                 scene.renderToEnvProbe(EnvCaptureContext(resolution, position, near, far, insideOut, sd), "#immediate")
                     ?.fetch()
                     ?.let {
                         images.complete(it)
-                        println("Capture complete !!!!!!!!!!!!!!!!!!!!! counter=${counter} time=${(Platform.nanoTime() - startNano) * 1e-9}s")
+                        println("Capture env done in ${(Platform.nanoTime() - startNano) * 1e-9}s")
                         return true
                     }
-                println("Capture not complete pending = ${inventory.pending()}")
+                println("Capturing env not complete, retrying...")
                 return false
             }
 
@@ -190,23 +187,38 @@ internal class Engine(
             return images
         }
 
-        override fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameContext.() -> Unit): Image {
+        override fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameContext.() -> Unit): Deferred<Image> {
             val sd = SceneDeclaration()
             block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f, 0)))
-            var image: Image? = null
-            inventory.go(0f, 0) {
-                val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
-                while (true) {
-                    val texture = scene.renderToFrameProbe(FrameCaptureContext(width, height, camera as Camera, projection as Projection, sd), "#immediate")
-                    if (texture != null) {
-                        image = texture.fetch()
-                        break
+            val image = CompletableDeferred<Image>()
+            val startNano = Platform.nanoTime()
+
+            val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
+            fun tryRender(): Boolean {
+                scene.renderToFrameProbe(FrameCaptureContext(width, height, camera as Camera, projection as Projection, sd), "#immediate")
+                    ?.fetch()
+                    ?.let {
+                        image.complete(it)
+                        println("Capture frame done in ${(Platform.nanoTime() - startNano) * 1e-9}s")
+                        return true
                     }
-                    println("Resources pending, retrying frame capture... " + inventory.pending())
-                }
-                true
+                println("Capturing frame not complete, retrying...")
+                return false
             }
-            return image!!
+
+            fun cycle() {
+                inventory.onWaitUpdate {
+                    preFrames.addLast {
+                        if (!tryRender()) {
+                            cycle()
+                        }
+                    }
+                }
+            }
+            if (!tryRender()) {
+                cycle()
+            }
+            return image
         }
 
         override fun quad(halfSideX: Float, halfSideY: Float) = Quad(halfSideX, halfSideY, currentRetentionPolicy)
@@ -538,11 +550,10 @@ internal class Engine(
         override fun createImage3D(width: Int, height: Int, depth: Int, format: PixelFormat): Image3D =
             InternalImage3D(width, height, depth, NativeByteBuffer(width * height * depth * format.bytes), format)
 
-        override fun loadImage(imageResource: String): Deferred<Image> =
-            asyncContext.call {
-                val bytes = resourceBytes(asyncContext.appResourceLoader, imageResource)
-                Platform.loadImage(bytes, imageResource.split(".").last()).await()
-            }
+        override fun loadImage(imageResource: String): Deferred<Image> = CoroutineScope(Dispatchers.Default).async {
+            val bytes = resourceBytes(appResourceLoader, imageResource)
+            Platform.loadImage(bytes, imageResource.split(".").last()).await()
+        }
 
         override fun loadImage(bytes: ByteArray, type: String): Deferred<Image> =
             Platform.loadImage(bytes, type)

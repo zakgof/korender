@@ -1,6 +1,6 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.AsyncContext
+import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.impl.font.Font
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.font.InternalFontDeclaration
@@ -25,9 +25,9 @@ import com.zakgof.korender.impl.material.TextureLinkDeclaration
 import com.zakgof.korender.impl.material.Texturing
 import com.zakgof.korender.impl.material.UniformBufferHolder
 
-internal class Inventory(asyncContext: AsyncContext) {
+internal class Inventory(appResourceLoader: ResourceLoader) {
 
-    private val loader = Loader(asyncContext.appResourceLoader)
+    private val loader = Loader(appResourceLoader)
 
     private val zeroTex = GlGpuTexture.zeroTex()
     private val zeroShadowTex = GlGpuTexture.zeroShadowTex()

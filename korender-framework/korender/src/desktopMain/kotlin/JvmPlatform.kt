@@ -130,16 +130,10 @@ actual fun Korender(
                     createCapabilities()
                     println("OpenGL Vendor:[${glGetString(GL_VENDOR)}] Renderer:[${glGetString(GL_RENDERER)}] Version:[${glGetString(GL_VERSION)}] Effective context version: [${effective.majorVersion}.${effective.minorVersion} (Profile: ${effective.profile})]")
 
-                    val async = object : AsyncContext {
-                        override val appResourceLoader = appResourceLoader
-                        override fun <R> call(function: suspend () -> R): Deferred<R> =
-                            asyncInContext(function)
-                    }
-
                     engine = Engine(
                         (this.size.width * pixelRatio[0]).toInt(),
                         (this.size.height * pixelRatio[1]).toInt(),
-                        async,
+                        appResourceLoader,
                         block
                     )
 
