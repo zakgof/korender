@@ -9,8 +9,10 @@ import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.z
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.random.Random
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun CaptureEnvExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val env = captureEnv(1024, 1f, 1000f) {
@@ -21,8 +23,8 @@ fun CaptureEnvExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
         camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
-        if (fract(frameInfo.time * 0.2f) > 0.5f) {
-            Sky(cubeSky(cubeTexture("spheres", env)))
+        if (fract(frameInfo.time * 0.2f) > 0.5f && env.isCompleted) {
+            Sky(cubeSky(cubeTexture("spheres", env.getCompleted())))
         } else {
             scene()
         }

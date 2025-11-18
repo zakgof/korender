@@ -59,7 +59,7 @@ interface KorenderContext {
     fun cubeTexture(id: String, images: CubeTextureImages): CubeTextureDeclaration
     fun cubeTextureProbe(envProbeName: String): CubeTextureDeclaration
 
-    fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3 = ZERO, insideOut: Boolean = false, block: FrameContext.() -> Unit): CubeTextureImages
+    fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3 = ZERO, insideOut: Boolean = false, block: FrameContext.() -> Unit): Deferred<CubeTextureImages>
     fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameContext.() -> Unit): Image
 
     fun quad(halfSideX: Float = 0.5f, halfSideY: Float = 0.5f): MeshDeclaration

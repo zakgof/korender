@@ -85,6 +85,7 @@ import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -110,6 +111,7 @@ internal class Engine(
     private val keyHandlers = mutableListOf<KeyHandler>()
     private val kc = KorenderContextImpl()
     private var loaderLoaded = false
+    private val preFrames = ArrayDeque<() -> Unit>()
 
     inner class KorenderContextImpl : KorenderContext {
 
@@ -151,24 +153,41 @@ internal class Engine(
 
         override fun cubeTextureProbe(envProbeName: String): CubeTextureDeclaration = ProbeCubeTextureDeclaration(envProbeName)
 
-        override fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3, insideOut: Boolean, block: FrameContext.() -> Unit): CubeTextureImages {
+        override fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3, insideOut: Boolean, block: FrameContext.() -> Unit): Deferred<CubeTextureImages> {
             val sd = SceneDeclaration()
             block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f, 0)))
-            var images: CubeTextureImages? = null
-            inventory.go(0f, 0) {
-                val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
-                while (true) {
-                    val cubeTexture = scene.renderToEnvProbe(EnvCaptureContext(resolution, position, near, far, insideOut, sd), "#immediate")
-                    if (cubeTexture != null) {
-                        images = cubeTexture.fetch()
-                        println("Fetch done " + inventory.pending())
-                        break
+            val images = CompletableDeferred<CubeTextureImages>()
+            var counter = 0
+            val startNano = Platform.nanoTime()
+
+            val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
+            fun tryRender(): Boolean {
+                print("Try render capture scene")
+                counter++
+                scene.renderToEnvProbe(EnvCaptureContext(resolution, position, near, far, insideOut, sd), "#immediate")
+                    ?.fetch()
+                    ?.let {
+                        images.complete(it)
+                        println("Capture complete !!!!!!!!!!!!!!!!!!!!! counter=${counter} time=${(Platform.nanoTime() - startNano) * 1e-9}s")
+                        return true
                     }
-                    println("Resources pending, retrying env capture... " + inventory.pending())
-                }
-                true
+                println("Capture not complete pending = ${inventory.pending()}")
+                return false
             }
-            return images!!
+
+            fun cycle() {
+                inventory.onWaitUpdate {
+                    preFrames.addLast {
+                        if (!tryRender()) {
+                            cycle()
+                        }
+                    }
+                }
+            }
+            if (!tryRender()) {
+                cycle()
+            }
+            return images
         }
 
         override fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameContext.() -> Unit): Image {
@@ -582,6 +601,7 @@ internal class Engine(
     }
 
     fun frame() {
+        preFrames.removeFirstOrNull()?.let { it() }
         val frameInfo = renderContext.frameInfoManager.frame(inventory.pending())
         processTouches()
         processKeys()

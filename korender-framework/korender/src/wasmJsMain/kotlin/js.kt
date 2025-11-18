@@ -54,18 +54,14 @@ internal fun jsAddFont(fontFace: FontFace): JsAny =
     js(
         """
       {
-          console.log("d.f", document.fonts)
           document.fonts.add(fontFace)
-          console.log("added", document.fonts)
           return 0
       }
     """
     )
 
-internal fun performanceNow(): Double = js("performance.now()")
-
 @OptIn(ExperimentalWasmJsInterop::class)
-internal fun typeOf(obj: JsAny): JsAny = js("(typeof obj).toString()")
+internal fun performanceNow(): Double = js("performance.now()")
 
 @OptIn(ExperimentalWasmJsInterop::class)
 external class FontFace : JsAny {

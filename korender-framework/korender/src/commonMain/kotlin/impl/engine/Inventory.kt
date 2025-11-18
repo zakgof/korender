@@ -70,4 +70,6 @@ internal class Inventory(asyncContext: AsyncContext) {
     fun frameBuffer(decl: FrameBufferDeclaration): GlGpuFrameBuffer? = frameBuffers[decl]
     fun cubeFrameBuffer(decl: CubeFrameBufferDeclaration): GlGpuCubeFrameBuffer? = cubeFrameBuffers[decl]
     fun gltf(decl: GltfDeclaration): GltfLoaded? = gltfs[decl]
+
+    fun onWaitUpdate(block: () -> Unit) = loader.onWaitUpdate(block)
 }

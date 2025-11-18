@@ -37,7 +37,6 @@ import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLDivElement
 import org.w3c.dom.HTMLImageElement
-import org.w3c.dom.Window
 import org.w3c.dom.events.Event
 import org.w3c.dom.events.MouseEvent
 import org.w3c.dom.get
@@ -75,9 +74,6 @@ internal actual object Platform {
             val widths = metrics.map { it.width.toFloat() / 256.0f }.toFloatArray()
 
             texts.indices.forEach {
-//                ctx.fillStyle = listOf("red".toJsString(), "blue".toJsString(), "magenta".toJsString())[it % 3]
-//                ctx.fillRect((it % 16) * 256.0, (it / 16) * 256.0, 256.0, 256.0)
-//                ctx.fillStyle = "white".toJsString()
                 ctx.fillText(
                     texts[it],
                     (it % 16) * 256.0,
@@ -232,9 +228,25 @@ actual fun Korender(
                 GlobalScope.async { function() }
         }
 
+        fun animate() {
+            window.requestAnimationFrame {
+                try {
+                    if (canvas.isConnected) {
+                        engine!!.frame()
+                        animate()
+                    } else {
+                        println("Canvas disconnected")
+                    }
+                } catch (e: Throwable) {
+                    println(e)
+                    e.printStackTrace()
+                }
+            }
+        }
+
         engine = Engine(800, 600, async, block)
 
-        animate(window, canvas, engine!!)
+        animate()
 
         fun Short.toButton() : TouchEvent.Button = when (this) {
             0.toShort() -> TouchEvent.Button.LEFT
@@ -317,21 +329,5 @@ actual fun Korender(
         }
     }
 
-}
-
-private fun animate(window: Window, canvas: HTMLCanvasElement, engine: Engine) {
-    window.requestAnimationFrame {
-        try {
-            if (canvas.isConnected) {
-                engine.frame()
-                animate(window, canvas, engine)
-            } else {
-                println("Canvas not connected")
-            }
-        } catch (e: Throwable) {
-            println(e)
-            e.printStackTrace()
-        }
-    }
 }
 
