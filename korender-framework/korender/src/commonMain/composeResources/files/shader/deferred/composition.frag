@@ -8,10 +8,7 @@ uniform sampler2D depthTexture;
 
 #ifdef SSR
     uniform sampler2D ssrTexture;
-    #ifdef SSR_FXAA
-        #uniform float ssrWidth;
-        #uniform float ssrHeight;
-    #endif
+    uniform sampler2D ssrDepth;
 #endif
 
 #ifdef BLOOM
@@ -34,11 +31,9 @@ void main() {
     vec3 color = texture(colorTexture, vtex).rgb;
 
 #ifdef SSR
-    #ifdef SSR_FXAA
-        color += fxaa(ssrTexture, vtex, ssrWidth, ssrHeight);
-    #else
-        color += texture(ssrTexture, vtex).rgb;
-    #endif
+    float ssrD = texture(ssrDepth, vtex).r;
+    float ssrW  = 1.0 - smoothstep(depth - 0.23, depth + 0.23, ssrD);
+    color += ssrW * texture(ssrTexture, vtex).rgb;
 #endif
 
 #ifdef BLOOM

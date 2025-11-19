@@ -4,6 +4,7 @@ import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.math.ColorRGB
@@ -22,6 +23,7 @@ interface FrameContext : KorenderContext {
     fun Sky(vararg materialModifiers: MaterialModifier)
     fun Gui(block: GuiContainerContext.() -> Unit)
 
+    fun PostProcess(postProcessingEffect: PostProcessingEffect, block: FrameContext.() -> Unit = {})
     fun PostProcess(vararg materialModifiers: MaterialModifier, block: FrameContext.() -> Unit = {})
 
     fun DirectionalLight(direction: Vec3, color: ColorRGB = ColorRGB.White, block: ShadowContext.() -> Unit = {})

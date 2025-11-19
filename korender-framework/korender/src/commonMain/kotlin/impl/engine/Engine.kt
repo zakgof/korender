@@ -18,6 +18,7 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.Platform
+import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
@@ -363,6 +364,31 @@ internal class Engine(
             it.uniforms["radius"] = radius
         }
 
+        override fun blur(radius: Float): PostProcessingEffect = InternalFilterDeclaration(
+            listOf(
+                InternalPassDeclaration(
+                    mapOf(
+                        "colorInputTexture" to "colorTexture",
+                        "depthInputTexture" to "depthTexture"
+                    ),
+                    modifiers = listOf(blurVert(radius)),
+                    retentionPolicy = currentRetentionPolicy,
+                    sceneDeclaration = SceneDeclaration(),
+                    target = renderContext.defaultTarget()
+                ),
+                InternalPassDeclaration(
+                    mapOf(
+                        "colorInputTexture" to "colorTexture",
+                        "depthInputTexture" to "depthTexture"
+                    ),
+                    modifiers = listOf(blurHorz(radius)),
+                    retentionPolicy = currentRetentionPolicy,
+                    sceneDeclaration = SceneDeclaration(),
+                    target = renderContext.defaultTarget()
+                )
+            )
+        )
+
         override fun adjust(brightness: Float, contrast: Float, saturation: Float) = InternalMaterialModifier {
             it.fragShaderFile = "!shader/effect/adjust.frag"
             it.uniforms["brightness"] = brightness
@@ -467,7 +493,7 @@ internal class Engine(
                             }
                         }),
                         null,
-                        FrameTarget(w, h, "ssrTexture", "ssrDepthTexture"),
+                        FrameTarget(w, h, "ssrTexture", "ssrDepth"),
                         currentRetentionPolicy
                     )
                 ),

@@ -23,12 +23,12 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             if (phase == 1) {
                 PostShading(
                     ssr(
-                        width = width / 4,
-                        height = height / 4,
+                        width = width / 2,
+                        height = height / 2,
                         fxaa = false,
-                        maxRayTravel = 12f,
-                        linearSteps = 16,
-                        binarySteps = 5,
+                        maxRayTravel = 10f,
+                        linearSteps = 64,
+                        binarySteps = 3,
                         envTexture = env
                     )
                 )
