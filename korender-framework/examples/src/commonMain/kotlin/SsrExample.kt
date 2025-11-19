@@ -21,12 +21,7 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         DeferredShading {
             PostShading(
                 ssr(
-                    width = width / 4,
-                    height = height / 4,
-                    fxaa = false,
-                    maxRayTravel = 10f,
-                    linearSteps = 64,
-                    binarySteps = 3,
+                    downsample = 4,
                     envTexture = env
                 )
             )

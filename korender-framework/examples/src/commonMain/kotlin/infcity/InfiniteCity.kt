@@ -54,10 +54,8 @@ private fun FrameContext.frame() {
     DeferredShading {
         PostShading(
             ssr(
-                width = width / 2,
-                height = height / 2,
-                maxRayTravel = 30.0f,
-                linearSteps = 64,
+                downsample = 4,
+                maxReflectionDistance = 30.0f
             )
         )
     }

@@ -1,23 +1,22 @@
 uniform sampler2D ssrTexture;
 uniform sampler2D ssrDepth;
+#uniform float ssrDepthTolerance;
 
 vec3 compositionSsr(vec3 originalColor, float originalDepth, vec2 vtex) {
-
-    float ssrDepthTolerance = 0.55;
 
     vec2 offset = 1.0 / vec2(textureSize(ssrDepth, 0));
 
     vec3 ssrc0 = texture(ssrTexture, vtex).rgb;
-    vec3 ssrc1 = texture(ssrTexture, vtex + offset * vec2(1.0, 0.0)).rgb;
-    vec3 ssrc2 = texture(ssrTexture, vtex + offset * vec2(-1.0, 0.0)).rgb;
-    vec3 ssrc3 = texture(ssrTexture, vtex + offset * vec2(0.0, -1.0)).rgb;
-    vec3 ssrc4 = texture(ssrTexture, vtex + offset * vec2(0.0, 1.0)).rgb;
+    vec3 ssrc1 = texture(ssrTexture, vtex + offset * vec2( 1.0,  1.0)).rgb;
+    vec3 ssrc2 = texture(ssrTexture, vtex + offset * vec2(-1.0,  1.0)).rgb;
+    vec3 ssrc3 = texture(ssrTexture, vtex + offset * vec2( 1.0, -1.0)).rgb;
+    vec3 ssrc4 = texture(ssrTexture, vtex + offset * vec2(-1.0, -1.0)).rgb;
 
     float ssrd0 = texture(ssrDepth, vtex).r;
-    float ssrd1 = texture(ssrDepth, vtex + offset * vec2(1.0, 0.0)).r;
-    float ssrd2 = texture(ssrDepth, vtex + offset * vec2(-1.0, 0.0)).r;
-    float ssrd3 = texture(ssrDepth, vtex + offset * vec2(0.0, -1.0)).r;
-    float ssrd4 = texture(ssrDepth, vtex + offset * vec2(0.0, 1.0)).r;
+    float ssrd1 = texture(ssrDepth, vtex + offset * vec2( 1.0,  1.0)).r;
+    float ssrd2 = texture(ssrDepth, vtex + offset * vec2(-1.0,  1.0)).r;
+    float ssrd3 = texture(ssrDepth, vtex + offset * vec2( 1.0, -1.0)).r;
+    float ssrd4 = texture(ssrDepth, vtex + offset * vec2(-1.0, -1.0)).r;
 
     float ssrR0  = 1.0 - smoothstep(originalDepth - ssrDepthTolerance, originalDepth + ssrDepthTolerance, ssrd0);
     float ssrR1  = 1.0 - smoothstep(originalDepth - ssrDepthTolerance, originalDepth + ssrDepthTolerance, ssrd1);

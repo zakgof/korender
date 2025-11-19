@@ -11,7 +11,9 @@ uniform sampler2D depthGeometryTexture;
 
 uniform sampler2D noiseTexture;
 
-#uniform float maxRayTravel;
+#uniform float startStep;
+#uniform float nextStepRatio;
+#uniform float maxReflectionDistance;
 #uniform int linearSteps;
 #uniform int binarySteps;
 
@@ -40,9 +42,7 @@ vec4 ssr(vec3 vpos, vec3 N, vec3 V, float roughness) {
     vec4 dflt =  vec4(0., 0., 0., 1.);
 #endif
 
-    float R = pow(4.0, 1.0/(float(linearSteps) + 1.0));
-    float step = maxRayTravel * (1.0 - R) / (1.0 - pow(R, float(linearSteps)));
-
+    float step = startStep;
     float w = 1.;
     float peel = 0.01;
 
@@ -95,13 +95,14 @@ vec4 ssr(vec3 vpos, vec3 N, vec3 V, float roughness) {
             }
             uv = wToS(rayPoint);
             w *= smoothstep (peel, 0.0, abs(deepen));
-            w *= smoothstep(maxRayTravel, 0., travel);
+            w *= smoothstep(maxReflectionDistance, 0., travel);
             vec3 clr =  mix(dflt.rgb, texture(colorInputTexture, uv.xy).rgb, w);
             float dpth = texture(depthGeometryTexture, uv.xy).r;
             return vec4(clr, dpth);
         }
 
-        rayStep *= R;
+        step *= nextStepRatio;
+        rayStep *= nextStepRatio;
     }
     return dflt;
 }

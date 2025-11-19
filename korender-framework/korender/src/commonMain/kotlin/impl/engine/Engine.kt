@@ -92,6 +92,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlin.math.pow
 
 internal class Engine(
     width: Int,
@@ -475,9 +476,7 @@ internal class Engine(
             InternalRoiTexturesContext().apply(block).collect(it)
         }
 
-        override fun ssr(width: Int?, height: Int?, fxaa: Boolean, maxRayTravel: Float, linearSteps: Int, binarySteps: Int, envTexture: CubeTextureDeclaration?): PostShadingEffect {
-            val w = width ?: renderContext.width
-            val h = height ?: renderContext.height
+        override fun ssr(downsample: Int, maxReflectionDistance: Float, linearSteps: Int, binarySteps: Int, lastStepRatio: Float, depthTolerance: Float, envTexture: CubeTextureDeclaration?): PostShadingEffect {
             return InternalPostShadingEffect(
                 effectPasses = listOf(
                     InternalPassDeclaration(
@@ -486,25 +485,24 @@ internal class Engine(
                             it.fragShaderFile = "!shader/effect/ssr.frag"
                             it.uniforms["linearSteps"] = linearSteps
                             it.uniforms["binarySteps"] = binarySteps
-                            it.uniforms["maxRayTravel"] = maxRayTravel
+                            it.uniforms["maxReflectionDistance"] = maxReflectionDistance
+                            val nextStepRatio = lastStepRatio.pow(1f / (linearSteps + 1f))
+                            it.uniforms["nextStepRatio"] = nextStepRatio
+                            it.uniforms["startStep"] = maxReflectionDistance * (1f - nextStepRatio) / (1f - nextStepRatio.pow(linearSteps))
                             envTexture?.let { et ->
                                 it.uniforms["envTexture"] = et
                                 it.shaderDefs += "SSR_ENV"
                             }
                         }),
                         null,
-                        FrameTarget(w, h, "ssrTexture", "ssrDepth"),
+                        FrameTarget(renderContext.width / downsample, renderContext.height / downsample, "ssrTexture", "ssrDepth"),
                         currentRetentionPolicy
                     )
                 ),
                 keepTextures = setOf("ssrTexture"),
                 compositionMaterialModifier = {
                     it.shaderDefs += "SSR"
-                    if (fxaa) {
-                        it.shaderDefs += "SSR_FXAA"
-                        it.uniforms["ssrWidth"] = w.toFloat()
-                        it.uniforms["ssrHeight"] = h.toFloat()
-                    }
+                    it.uniforms["ssrDepthTolerance"] = 0.4f
                 }, currentRetentionPolicy
             )
         }
