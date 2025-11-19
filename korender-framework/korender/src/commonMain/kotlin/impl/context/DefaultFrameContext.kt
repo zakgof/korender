@@ -4,6 +4,7 @@ import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.context.BillboardInstancingDeclaration
@@ -112,6 +113,13 @@ internal class DefaultFrameContext(
 
     override fun AmbientLight(color: ColorRGB) {
         sceneDeclaration.ambientLightColor = color
+    }
+
+    override fun PostProcess(postProcessingEffect: PostProcessingEffect, block: FrameContext.() -> Unit) {
+        val sd = SceneDeclaration()
+        val fc = DefaultFrameContext(korenderContext, sd, frameInfo)
+        fc.apply(block)
+        sceneDeclaration.filters += postProcessingEffect as InternalFilterDeclaration
     }
 
     override fun PostProcess(vararg materialModifiers: MaterialModifier, block: FrameContext.() -> Unit) {

@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
@@ -187,7 +188,7 @@ internal class InternalGltfInstancingDeclaration(val id: String, val count: Int,
 
 internal class InternalBillboardInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<BillboardInstance>) : BillboardInstancingDeclaration
 
-internal class InternalFilterDeclaration(val passes: List<InternalPassDeclaration>)
+internal class InternalFilterDeclaration(val passes: List<InternalPassDeclaration>) : PostProcessingEffect
 
 internal class InternalPassDeclaration(val mapping: Map<String, String>, val modifiers: List<InternalMaterialModifier>, val sceneDeclaration: SceneDeclaration?, val target: FrameTarget, override val retentionPolicy: RetentionPolicy) : Retentionable
 
