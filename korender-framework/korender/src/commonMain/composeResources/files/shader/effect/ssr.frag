@@ -52,7 +52,7 @@ vec4 ssr(vec3 vpos, vec3 N, vec3 V, float roughness) {
     vec3 bentNormal = normalize(mix(N, V, f * bendAmount));
 
     // Adaptive bias
-    float angle = abs(dot(bentNormal, V));
+    float angle = abs(dot(N, V));
     float bias = mix(0.5 * 0.2, 0.5, 1.0 - angle);  // more bias for grazing
     bias = mix(bias, bias * 0.5, roughness);  // glossy reduces bias slightly
 
@@ -60,7 +60,7 @@ vec4 ssr(vec3 vpos, vec3 N, vec3 V, float roughness) {
     vec3 rayStep = rayDir * step;
     float travel = 0.;
 
-    float startOffset = textureLod(noiseTexture, vtex * 1.0, 0.0).r * 0.0;
+    float startOffset = textureLod(noiseTexture, vtex * 1.0, 0.0).r * 1.0;
     rayPoint -= rayStep * startOffset;
 
     for (int i = 0; i < linearSteps; i++) {
@@ -95,7 +95,7 @@ vec4 ssr(vec3 vpos, vec3 N, vec3 V, float roughness) {
             }
             uv = wToS(rayPoint);
             w *= smoothstep (peel, 0.0, abs(deepen));
-            w *= smoothstep(maxRayTravel * maxRayTravel, 0., travel * travel);
+            w *= smoothstep(maxRayTravel, 0., travel);
             vec3 clr =  mix(dflt.rgb, texture(colorInputTexture, uv.xy).rgb, w);
             float dpth = texture(depthGeometryTexture, uv.xy).r;
             return vec4(clr, dpth);

@@ -1,29 +1,23 @@
 #import "!shader/lib/header.glsl"
 #import "!shader/lib/ubo.glsl"
+#import "!shader/lib/blur.glsl"
 
 in vec2 vtex;
 
 uniform sampler2D colorTexture;
 uniform sampler2D depthTexture;
 
+#uniforms
+
 #ifdef SSR
-    uniform sampler2D ssrTexture;
-    uniform sampler2D ssrDepth;
+    #import "!shader/deferred/composition-ssr.glsl"
 #endif
 
 #ifdef BLOOM
-    uniform sampler2D bloomTexture;
-    uniform sampler2D bloomDepth;
-    #uniform float bloomAmount;
+    #import "!shader/deferred/composition-bloom.glsl"
 #endif
-
-#uniforms
 
 out vec4 fragColor;
-
-#ifdef SSR_FXAA
-    #import "!shader/lib/fxaa.glsl"
-#endif
 
 void main() {
 
@@ -31,16 +25,11 @@ void main() {
     vec3 color = texture(colorTexture, vtex).rgb;
 
 #ifdef SSR
-    float ssrD = texture(ssrDepth, vtex).r;
-    float ssrW  = 1.0 - smoothstep(depth - 0.23, depth + 0.23, ssrD);
-    color += ssrW * texture(ssrTexture, vtex).rgb;
+    color = compositionSsr(color, depth, vtex);
 #endif
 
 #ifdef BLOOM
-    vec4 bloomSample = texture(bloomTexture, vtex);
-    float bDepth = texture(bloomDepth, vtex).r;
-    float depthRatio = smoothstep(depth + 0.1, depth - 0.1, bDepth);
-    color += bloomSample.rgb * depthRatio * bloomAmount;
+    color = compositionBloom(color, depth, vtex);
 #endif
 
     fragColor = vec4(color, 1.);
