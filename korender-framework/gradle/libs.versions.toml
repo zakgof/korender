@@ -1,12 +1,13 @@
 [versions]
-agp = "8.13.0"
+agp = "9.0.0-beta01"
 android-compileSdk = "36"
 android-minSdk = "29"
 android-targetSdk = "36"
-androidx-activityCompose = "1.11.0"
+androidx-activityCompose = "1.12.0-rc01"
 commonsMath3 = "3.6.1"
-compose-plugin = "1.9.1"
-kotlin = "2.2.20"
+commonsMath4 = "4.0-beta1"
+compose-plugin = "1.10.0-beta01"
+kotlin = "2.3.0-RC"
 kotlinxCoroutinesCore = "1.10.2"
 kotlinxBrowser = "0.5.0"
 kotlinxSerializationJson = "1.9.0"
@@ -15,6 +16,7 @@ lwjgl = "3.3.6"
 
 [libraries]
 commons-math3 = { module = "org.apache.commons:commons-math3", version.ref = "commonsMath3" }
+commons-math4 = { module = "org.apache.commons:commons-math4-core", version.ref = "commonsMath4" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
@@ -29,8 +31,7 @@ lwjgl-opengl = { module = "org.lwjgl:lwjgl-opengl", version.ref = "lwjgl" }
 lwjgl3-awt = { module = "org.lwjglx:lwjgl3-awt", version.ref = "lwjgl3-awt" }
 
 [plugins]
-androidApplication = { id = "com.android.application", version.ref = "agp" }
-androidLibrary = { id = "com.android.library", version.ref = "agp" }
+androidLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

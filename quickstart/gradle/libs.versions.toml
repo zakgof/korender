@@ -1,20 +1,19 @@
 [versions]
-agp = "8.11.0"
+agp = "9.0.0-beta01"
 android-compileSdk = "36"
 android-minSdk = "29"
 android-targetSdk = "36"
-androidx-activityCompose = "1.10.1"
-compose-plugin = "1.8.2"
-kotlin = "2.2.0"
-korender = "0.5.1"
+androidx-activityCompose = "1.12.0-rc01"
+compose-plugin = "1.10.0-beta01"
+kotlin = "2.3.0-RC"
+korender = "0.5.1-SNAPSHOT"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
 korender = { module = "com.github.zakgof:korender", version.ref = "korender" }
 
 [plugins]
-androidApplication = { id = "com.android.application", version.ref = "agp" }
-androidLibrary = { id = "com.android.library", version.ref = "agp" }
+androidLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

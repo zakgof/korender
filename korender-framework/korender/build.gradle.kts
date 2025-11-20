@@ -1,6 +1,5 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import java.util.Properties
+import java.util.*
 
 plugins {
     alias(libs.plugins.composeCompiler)
@@ -12,7 +11,7 @@ plugins {
     id("signing")
 }
 
-val libraryVersion = "0.5.1"
+val libraryVersion = "0.5.1-SNAPSHOT"
 val libraryGroup = "com.github.zakgof"
 
 compose.resources {
@@ -29,10 +28,14 @@ kotlin {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 
-    androidTarget {
-        publishLibraryVariants("release")
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
+    androidLibrary {
+        namespace = "com.zakgof.korender"
+        compileSdk { version = release(libs.versions.android.compileSdk.get().toInt()) }
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        packaging {
+            resources {
+                excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            }
         }
     }
 
@@ -80,29 +83,29 @@ kotlin {
     }
 }
 
-android {
-
-    namespace = "com.zakgof.korender"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-
-    defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-}
+//android {
+//
+//    namespace = "com.zakgof.korender"
+//    compileSdk = libs.versions.android.compileSdk.get().toInt()
+//
+//    defaultConfig {
+//        minSdk = libs.versions.android.minSdk.get().toInt()
+//    }
+//    packaging {
+//        resources {
+//            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+//        }
+//    }
+//    buildTypes {
+//        getByName("release") {
+//            isMinifyEnabled = false
+//        }
+//    }
+//    compileOptions {
+//        sourceCompatibility = JavaVersion.VERSION_17
+//        targetCompatibility = JavaVersion.VERSION_17
+//    }
+//}
 
 // Stub secrets to let the project sync and build without the publication values set up
 ext["signing.keyId"] = null
@@ -187,7 +190,7 @@ signing {
     }
 }
 
-//https://github.com/gradle/gradle/issues/26132
+//https://github.com/gradle/gradle/issues/26091
 val signingTasks = tasks.withType<Sign>()
 tasks.withType<AbstractPublishToMaven>().configureEach {
     mustRunAfter(signingTasks)

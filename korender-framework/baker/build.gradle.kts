@@ -25,7 +25,7 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(libs.commons.math3)
-            implementation("com.github.haifengl:smile-core:4.4.0")
+            implementation("com.github.haifengl:smile-core:5.0.0")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
