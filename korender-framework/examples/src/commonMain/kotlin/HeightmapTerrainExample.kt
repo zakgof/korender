@@ -30,7 +30,6 @@ fun HeightmapTerrainExample() =
                 ),
                 terrain(
                     heightTexture = texture("terrain/terrain-height.png"),
-                    heightTextureSize = 1024,
                     heightScale = 200.0f,
                     outsideHeight = -100.0f,
                     terrainCenter = Vec3(0f, -14f, 0f)

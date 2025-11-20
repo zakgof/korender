@@ -38,7 +38,6 @@ import com.zakgof.korender.context.InstancedGltfContext
 import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.context.PipeMeshContext
-import com.zakgof.korender.context.RoiTexturesContext
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
@@ -71,7 +70,6 @@ import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
 import com.zakgof.korender.impl.material.ImageTextureDeclaration
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
-import com.zakgof.korender.impl.material.InternalRoiTexturesContext
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
@@ -312,11 +310,10 @@ internal class Engine(
             it.uniforms["rotation"] = rotation
         }
 
-        override fun terrain(heightTexture: TextureDeclaration, heightTextureSize: Int, heightScale: Float, outsideHeight: Float, terrainCenter: Vec3) = InternalMaterialModifier {
+        override fun terrain(heightTexture: TextureDeclaration, heightScale: Float, outsideHeight: Float, terrainCenter: Vec3) = InternalMaterialModifier {
             it.plugins["normal"] = "!shader/plugin/normal.terrain.frag"
             it.plugins["terrain"] = "!shader/plugin/terrain.texture.frag"
             it.uniforms["heightTexture"] = heightTexture
-            it.uniforms["heightTextureSize"] = heightTextureSize
             it.uniforms["heightScale"] = heightScale
             it.uniforms["outsideHeight"] = outsideHeight
             it.uniforms["terrainCenter"] = terrainCenter
@@ -470,11 +467,6 @@ internal class Engine(
         override fun ibl(env: CubeTextureDeclaration) = cubeSky(env)
 
         override fun ibl(env: MaterialModifier) = env
-
-        override fun roiTextures(block: RoiTexturesContext.() -> Unit) = InternalMaterialModifier {
-            it.shaderDefs += "ROI"
-            InternalRoiTexturesContext().apply(block).collect(it)
-        }
 
         override fun ssr(downsample: Int, maxReflectionDistance: Float, linearSteps: Int, binarySteps: Int, lastStepRatio: Float, depthTolerance: Float, envTexture: CubeTextureDeclaration?): PostShadingEffect {
             return InternalPostShadingEffect(

@@ -2,14 +2,13 @@ uniform sampler2D heightTexture;
 #uniform float heightScale;
 #uniform float outsideHeight;
 #uniform vec3 terrainCenter;
-#uniform int heightTextureSize;
 
 vec3 pluginTerrainCenter() {
     return terrainCenter;
 }
 
 int pluginTerrainTextureSize() {
-    return heightTextureSize;
+    return textureSize(heightTexture, 0).x;
 }
 
 float pluginTerrainHeight(vec2 uv) {
