@@ -49,7 +49,6 @@ kotlin {
 
     sourceSets {
         val desktopMain by getting
-        val wasmJsMain by getting
 
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
@@ -61,6 +60,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
         }
+
         desktopMain.dependencies {
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.kotlin.reflect)
@@ -77,7 +77,7 @@ kotlin {
                 runtimeOnly(dependencies.variantOf(libs.lwjgl.opengl) { classifier("natives-$it") })
             }
         }
-        wasmJsMain.dependencies {
+        webMain.dependencies {
             implementation(libs.kotlinx.browser)
         }
     }
