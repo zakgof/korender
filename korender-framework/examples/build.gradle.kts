@@ -1,4 +1,3 @@
-
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -19,10 +18,16 @@ compose.resources {
 
 kotlin {
     android {
-        namespace = "com.example"
+        namespace = "com.zakgof.korender"
         compileSdk { version = release(libs.versions.android.compileSdk.get().toInt()) }
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
+        }
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        packaging {
+            resources {
+                excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            }
         }
     }
 
@@ -111,6 +116,12 @@ kotlin {
 //        targetCompatibility = JavaVersion.VERSION_17
 //    }
 //}
+
+androidComponents {
+    //beforeVariants(selector().withBuildType("release")) { // TODO not supported yet
+    //    it.isMinifyEnabled = false
+    //}
+}
 
 compose.desktop {
 
