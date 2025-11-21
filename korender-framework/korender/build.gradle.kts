@@ -40,6 +40,7 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
+        withJava()
     }
 
     jvm("desktop")
@@ -111,8 +112,14 @@ kotlin {
 //}
 
 androidComponents {
-    //beforeVariants(selector().withBuildType("release")) { // TODO not supported yet
-    //    it.isMinifyEnabled = false
+    onVariants(selector().withBuildType("release")) { variant ->
+        logger.info(variant.isMinifyEnabled.toString())
+        // We cant reassigned
+        // variant.isMinifyEnabled = false
+    }
+    //
+    //beforeVariants(selector().withBuildType("release")) { variant -> // TODO not supported yet
+    //    variant.isMinifyEnabled = false
     //}
 }
 

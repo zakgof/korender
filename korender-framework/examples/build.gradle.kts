@@ -29,6 +29,10 @@ kotlin {
                 excludes += "/META-INF/{AL2.0,LGPL2.1}"
             }
         }
+        androidResources {
+            enable = true
+        }
+        withJava()
     }
 
     jvm("desktop")
@@ -118,8 +122,14 @@ kotlin {
 //}
 
 androidComponents {
-    //beforeVariants(selector().withBuildType("release")) { // TODO not supported yet
-    //    it.isMinifyEnabled = false
+    onVariants(selector().withBuildType("release")) { variant ->
+        logger.info(variant.isMinifyEnabled.toString())
+        // We cant reassigned
+        // variant.isMinifyEnabled = false
+    }
+    //
+    //beforeVariants(selector().withBuildType("release")) { variant -> // TODO not supported yet
+    //    variant.isMinifyEnabled = false
     //}
 }
 
