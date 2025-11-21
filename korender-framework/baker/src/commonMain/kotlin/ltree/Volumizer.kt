@@ -8,6 +8,7 @@ import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import kotlinx.coroutines.runBlocking
 import ltree.generator.LTree
 import tree.saveImage
 
@@ -38,9 +39,11 @@ fun KorenderContext.volumize(lTree: LTree): Pair<Image3D, Image3D> {
 
         println("Z=$z: z range: ${minBB.z}..${maxBB.z} NEAR: ${projection.near} FAR: ${projection.far}")
 
-        val image = captureFrame(reso, reso, camera, projection) {
-            AmbientLight(White)
-            renderLTree(lTree, "capture-$z", "ltree/oak.png")
+        val image = runBlocking {
+            captureFrame(reso, reso, camera, projection) {
+                AmbientLight(White)
+                renderLTree(lTree, "capture-$z", "ltree/oak.png")
+            }.await()
         }
         saveImage(image, "png", "D:/p/test-$z.png")
 

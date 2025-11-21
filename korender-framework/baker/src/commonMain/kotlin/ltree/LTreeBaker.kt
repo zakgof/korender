@@ -92,9 +92,11 @@ private fun KorenderContext.captureCard(cluster: ClusteredTree.Cluster, index: I
     ) * 1.1f
     val camera = camera(cluster.plane.center - cluster.plane.normal * 200f, cluster.plane.normal, up)
     val projection = projection(size, size, 100f, 300f, ortho())
-    val image = this.captureFrame(1024, 1024, camera, projection) {
-        AmbientLight(White)
-        renderLTree(cluster.lTree, "$index", leafTexture)
+    val image = runBlocking {
+        captureFrame(1024, 1024, camera, projection) {
+            AmbientLight(White)
+            renderLTree(cluster.lTree, "$index", leafTexture)
+        }.await()
     }
     // saveImage(image, "png", "D:/kot/dev/test$index.png")
 
@@ -139,7 +141,7 @@ private fun FrameContext.renderTrunk(lTree: LTree, postfix: String, translation:
                     .filter { branch -> branch.raidusAtHead > 0.04f }
                     .forEach { branch ->
                         sequence {
-                            val fixedTail= branch.head + (branch.tail - branch.head) * 1.06f
+                            val fixedTail = branch.head + (branch.tail - branch.head) * 1.06f
                             node(branch.head, branch.raidusAtHead)
                             node(fixedTail, branch.raidusAtTail)
                         }

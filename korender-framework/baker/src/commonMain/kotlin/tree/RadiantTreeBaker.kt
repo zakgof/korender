@@ -26,6 +26,7 @@ import com.zakgof.korender.math.Vec3.Companion.ZERO
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import kotlinx.coroutines.runBlocking
 import java.awt.image.BufferedImage
 import java.awt.image.BufferedImage.TYPE_INT_RGB
 import java.io.File
@@ -67,24 +68,32 @@ fun RadiantTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             .translate((pt.pos - hull.center))
     }
 
-    val radiantImages = captureEnv(resolution = 128, near = 0.2f, far = 15f, insideOut = true) {
-        renderHull(hullMesh, ZERO, radiantCapture(15f))
+    val radiantImages = runBlocking {
+        captureEnv(resolution = 128, near = 0.2f, far = 15f, insideOut = true) {
+            renderHull(hullMesh, ZERO, radiantCapture(15f))
+        }.await()
     }
     saveCubeMap(radiantImages, basePath + "radiant-")
 
-    val radiantNormalImages = captureEnv(resolution = 128, near = 0.2f, far = 15f, insideOut = true) {
-        renderHull(hullMesh, ZERO, normalCapture())
+    val radiantNormalImages = runBlocking {
+        captureEnv(resolution = 128, near = 0.2f, far = 15f, insideOut = true) {
+            renderHull(hullMesh, ZERO, normalCapture())
+        }.await()
     }
     saveCubeMap(radiantNormalImages, basePath + "radiant-normal-")
 
-    val normalImages = captureEnv(resolution = 128, near = 0.2f, far = 15f, insideOut = true) {
-        renderTree(leaf, leafInstances, normalCapture())
+    val normalImages = runBlocking {
+        captureEnv(resolution = 128, near = 0.2f, far = 15f, insideOut = true) {
+            renderTree(leaf, leafInstances, normalCapture())
+        }.await()
     }
     saveCubeMap(normalImages, basePath + "normal-")
 
-    val albedoImages = captureEnv(resolution = 256, near = 0.2f, far = 15f, insideOut = true) {
-        AmbientLight(white(1f))
-        renderTree(leaf, leafInstances)
+    val albedoImages = runBlocking {
+        captureEnv(resolution = 256, near = 0.2f, far = 15f, insideOut = true) {
+            AmbientLight(white(1f))
+            renderTree(leaf, leafInstances)
+        }.await()
     }
     saveCubeMap(albedoImages, basePath + "albedo-")
 
