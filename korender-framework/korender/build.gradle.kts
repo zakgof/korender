@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.*
 
 plugins {
@@ -21,7 +22,6 @@ compose.resources {
 }
 
 kotlin {
-
     jvmToolchain(17)
 
     compilerOptions {
@@ -36,6 +36,9 @@ kotlin {
             resources {
                 excludes += "/META-INF/{AL2.0,LGPL2.1}"
             }
+        }
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
 

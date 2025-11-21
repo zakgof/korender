@@ -1,6 +1,7 @@
 
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
@@ -20,12 +21,10 @@ kotlin {
     android {
         namespace = "com.example"
         compileSdk { version = release(libs.versions.android.compileSdk.get().toInt()) }
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
     }
-    //androidTarget {
-    //    compilerOptions {
-    //        jvmTarget.set(JvmTarget.JVM_21)
-    //    }
-    //}
 
     jvm("desktop")
 
@@ -108,8 +107,8 @@ kotlin {
 //        }
 //    }
 //    compileOptions {
-//        sourceCompatibility = JavaVersion.VERSION_25
-//        targetCompatibility = JavaVersion.VERSION_25
+//        sourceCompatibility = JavaVersion.VERSION_17
+//        targetCompatibility = JavaVersion.VERSION_17
 //    }
 //}
 
