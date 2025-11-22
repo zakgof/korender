@@ -116,7 +116,6 @@ actual fun Korender(
             data.profile = GLData.Profile.COMPATIBILITY
             // TODO
             data.samples = 1
-
             data.depthSize = 24
 
             val canvas = object : AWTGLCanvas(data) {

@@ -35,7 +35,6 @@ import org.khronos.webgl.WebGLRenderingContext.Companion.VERSION
 import org.khronos.webgl.toInt8Array
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
-import org.w3c.dom.HTMLDivElement
 import org.w3c.dom.HTMLImageElement
 import org.w3c.dom.events.Event
 import org.w3c.dom.events.MouseEvent
@@ -180,27 +179,9 @@ actual fun Korender(
             position = "absolute"
             left = "0px"
             top = "0px"
-            background = "black"
+            // background = "black"
         }
         document.documentElement!!.appendChild(canvas)
-
-        val overlay = document.createElement("div") as HTMLDivElement
-        overlay.id = "kotlin-overlay"
-        overlay.style.apply {
-            position = "fixed"
-            top = "0"
-            left = "0"
-            right = "0"
-            bottom = "0"
-            backgroundColor = "rgba(0,0,0,0.5)"
-            zIndex = "2147483647" // max possible to stay on top
-            display = "flex"
-            justifyContent = "center"
-            alignItems = "center"
-            color = "white"
-            fontSize = "2em"
-        }
-        //document.documentElement!!.appendChild(overlay)
 
         val gl2 = canvas.getContext("webgl2")
         if (gl2 == null) {
@@ -226,6 +207,7 @@ actual fun Korender(
             window.requestAnimationFrame {
                 try {
                     if (canvas.isConnected) {
+                        GL.gl = gl
                         engine!!.frame()
                         animate()
                     } else {
