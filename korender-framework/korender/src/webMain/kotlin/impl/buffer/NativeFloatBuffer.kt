@@ -1,16 +1,17 @@
 package com.zakgof.korender.impl.buffer
 
-import org.khronos.webgl.Float32Array
-import org.khronos.webgl.set
+import js.buffer.ArrayBuffer
+import js.core.JsPrimitives.toJsFloat
+import js.typedarrays.Float32Array
 
-actual class NativeFloatBuffer(override val array: Float32Array) : NativeBuffer {
+actual class NativeFloatBuffer(override val array: Float32Array<ArrayBuffer>) : NativeBuffer {
 
     actual constructor(size: Int) : this(Float32Array(size))
 
     private var position = 0
 
     actual fun put(v: Float) {
-        array[position++] = v
+        array[position++] = v.toJsFloat()
     }
 
     actual override fun rewind(): NativeFloatBuffer {

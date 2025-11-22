@@ -1,7 +1,6 @@
 package com.zakgof.korender
 
 import org.khronos.webgl.ArrayBufferView
-import org.khronos.webgl.Int8Array
 import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.WebGLBuffer
 import org.khronos.webgl.WebGLObject
@@ -39,7 +38,7 @@ abstract external class WebGL2RenderingContext : WebGLRenderingContextBase, Rend
 abstract external class WebGLVertexArray : WebGLObject, JsAny
 
 @OptIn(ExperimentalWasmJsInterop::class)
-internal fun jsLoadFont(fontArray: Int8Array): FontFace = js(
+internal fun jsLoadFont(fontArray: js.typedarrays.Int8Array<js.buffer.ArrayBuffer>): FontFace = js(
     """
         {
             const fontBlob = new Blob([fontArray], { type: 'font/ttf' })

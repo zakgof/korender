@@ -1,17 +1,13 @@
 package com.zakgof.korender.impl.gl
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.WebGL2RenderingContext
 import com.zakgof.korender.impl.buffer.NativeBuffer
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_TEXTURE_MAX_ANISOTROPY
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MAX_ANISOTROPY
 import com.zakgof.korender.maxTexAniso
 import com.zakgof.korender.texAniso
-import org.khronos.webgl.Uint32Array
-import org.khronos.webgl.get
-import org.khronos.webgl.toFloat32Array
-import org.khronos.webgl.toInt32Array
+import web.gl.WebGL2RenderingContext
 
 @OptIn(ExperimentalWasmJsInterop::class)
 actual object GL {
@@ -22,7 +18,7 @@ actual object GL {
     actual val shaderEnv = "WEBGL"
 
     actual fun glDrawElements(mode: Int, count: Int, type: Int, indices: Int) =
-        gl!!.drawElements(mode, count, type, indices)
+        gl!!.drawElements(mode.toGlEnum(), count, type, indices)
 
     actual fun glDrawElementsInstanced(mode: Int, count: Int, type: Int, indices: Int, instances: Int) =
         gl!!.drawElementsInstanced(mode, count, type, indices, instances)
@@ -323,4 +319,8 @@ actual object GL {
 
     actual fun glTexSubImage3D(target: Int, level: Int, x: Int, y: Int, z: Int, width: Int, height: Int, depth: Int, format: Int, type: Int, buffer: NativeBuffer) =
         gl!!.texSubImage3D(target, level, x, y, z, width, height, depth, format, type, buffer.array)
+}
+
+private fun Int.toGlEnum() {
+    TODO("Not yet implemented")
 }

@@ -1,15 +1,18 @@
 package com.zakgof.korender.impl.buffer
 
-import org.khronos.webgl.Uint8Array
-import org.khronos.webgl.get
-import org.khronos.webgl.set
-import org.khronos.webgl.toUint8Array
+import js.buffer.ArrayBuffer
+import js.core.JsPrimitives.toJsByte
+import js.core.JsPrimitives.toKotlinByte
+import js.core.JsPrimitives.toKotlinInt
+import js.typedarrays.Uint8Array
+import js.typedarrays.toUint8Array
 
-actual class NativeByteBuffer(override val array: Uint8Array) : NativeBuffer {
 
-    actual constructor(size: Int) : this(Uint8Array(size))
+actual class NativeByteBuffer(override val array: Uint8Array<ArrayBuffer>) : NativeBuffer {
 
-    constructor(byteArray: ByteArray) : this(Uint8Array(byteArray.size)) {
+    actual constructor(size: Int) : this(Uint8Array<ArrayBuffer>(size))
+
+    constructor(byteArray: ByteArray) : this(Uint8Array<ArrayBuffer>(byteArray.size)) {
         put(byteArray)
         rewind()
     }
@@ -17,11 +20,11 @@ actual class NativeByteBuffer(override val array: Uint8Array) : NativeBuffer {
     private var position = 0
 
     actual fun put(v: Byte) {
-        array[position++] = v
+        array[position++] = v.toJsByte()
     }
 
     actual operator fun set(index: Int, byte: Byte) {
-        array[index] = byte
+        array[index] = byte.toJsByte()
     }
 
     actual fun put(v: Short) {
@@ -48,20 +51,20 @@ actual class NativeByteBuffer(override val array: Uint8Array) : NativeBuffer {
     }
 
     actual fun int(index: Int): Int {
-        return (array[index * 4 + 0].toInt() and 0xFF) or
-                ((array[index * 4 + 1].toInt() and 0xFF) shl 8) or
-                ((array[index * 4 + 2].toInt() and 0xFF) shl 16) or
-                ((array[index * 4 + 3].toInt() and 0xFF) shl 24)
+        return (array[index * 4 + 0].toKotlinInt() and 0xFF) or
+                ((array[index * 4 + 1].toKotlinInt() and 0xFF) shl 8) or
+                ((array[index * 4 + 2].toKotlinInt() and 0xFF) shl 16) or
+                ((array[index * 4 + 3].toKotlinInt() and 0xFF) shl 24)
     }
 
     actual fun short(index: Int): Short {
-        return ((array[index * 2].toInt() and 0xFF) or
-                ((array[index * 2 + 1].toInt() and 0xFF) shl 8)
+        return ((array[index * 2].toKotlinInt() and 0xFF) or
+                ((array[index * 2 + 1].toKotlinInt() and 0xFF) shl 8)
                 ).toShort()
     }
 
     actual fun byte(index: Int): Byte {
-        return array[index]
+        return array[index].toKotlinByte()
     }
 
     actual fun float(index: Int): Float {

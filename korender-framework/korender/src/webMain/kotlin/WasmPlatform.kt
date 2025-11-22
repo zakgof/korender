@@ -17,7 +17,8 @@ import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.gl.GL
 import com.zakgof.korender.impl.image.InternalImage
-import kotlinx.browser.document
+import js.typedarrays.Uint8Array
+import js.typedarrays.toInt8Array
 import kotlinx.browser.window
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
@@ -26,19 +27,37 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.await
 import kotlinx.coroutines.launch
-import org.khronos.webgl.Uint8Array
-import org.khronos.webgl.Uint8ClampedArray
-import org.khronos.webgl.WebGLRenderingContext.Companion.RENDERER
-import org.khronos.webgl.WebGLRenderingContext.Companion.SHADING_LANGUAGE_VERSION
-import org.khronos.webgl.WebGLRenderingContext.Companion.VENDOR
-import org.khronos.webgl.WebGLRenderingContext.Companion.VERSION
-import org.khronos.webgl.toInt8Array
-import org.w3c.dom.CanvasRenderingContext2D
-import org.w3c.dom.HTMLCanvasElement
-import org.w3c.dom.HTMLImageElement
-import org.w3c.dom.events.Event
-import org.w3c.dom.events.MouseEvent
-import org.w3c.dom.get
+import web.canvas.CanvasRenderingContext2D
+import web.canvas.ID
+import web.device.devicePixelRatio
+import web.dom.document
+import web.dom.errorEvent
+import web.dom.keyDownEvent
+import web.dom.keyUpEvent
+import web.dom.loadEvent
+import web.dom.mouseDownEvent
+import web.dom.mouseMoveEvent
+import web.dom.mouseUpEvent
+import web.dom.touchEndEvent
+import web.dom.touchMoveEvent
+import web.dom.touchStartEvent
+import web.events.Event
+import web.events.addHandler
+import web.gl.ID
+import web.gl.WebGL2RenderingContext
+import web.gl.WebGL2RenderingContext.Companion.RENDERER
+import web.gl.WebGL2RenderingContext.Companion.SHADING_LANGUAGE_VERSION
+import web.gl.WebGL2RenderingContext.Companion.VERSION
+import web.gl.WebGLRenderingContext.Companion.VENDOR
+import web.html.HTMLCanvasElement
+import web.html.HTMLImageElement
+import web.html.webglContextLostEvent
+import web.keyboard.KeyboardEvent
+import web.mouse.MouseButton
+import web.mouse.MouseButtons
+import web.mouse.MouseEvent
+import web.mouse.PRIMARY
+import web.mouse.SECONDARY
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -56,7 +75,7 @@ internal actual object Platform {
             val canvas = document.createElement("canvas") as HTMLCanvasElement
             canvas.height = 16 * 256
             canvas.width = 16 * 256
-            val ctx = canvas.getContext("2d") as CanvasRenderingContext2D
+            val ctx = canvas.getContext(CanvasRenderingContext2D.ID)!!
             ctx.font = "256px KorenderFont"
             val texts = (0 until 128).map { "" + it.toChar() }
             val origMetrics = texts.map { ctx.measureText(it) }
@@ -80,12 +99,12 @@ internal actual object Platform {
                 )
             }
             val imageData = ctx.getImageData(
-                0.0,
-                0.0,
-                ctx.canvas.width.toDouble(),
-                ctx.canvas.height.toDouble()
+                0,
+                0,
+                ctx.canvas.width,
+                ctx.canvas.height
             )
-            val uint8ClampedArray: Uint8ClampedArray = imageData.data
+            val uint8ClampedArray = imageData.data
             val uint8Array = Uint8Array(uint8ClampedArray.buffer, uint8ClampedArray.byteOffset, uint8ClampedArray.length)
             val image = InternalImage(
                 ctx.canvas.width,
@@ -103,23 +122,24 @@ internal actual object Platform {
         val base64Data = Base64.encode(bytes)
         val image = document.createElement("img") as HTMLImageElement
         image.src = "data:image/$type;base64,$base64Data"
-        image.onerror = { a, b, c, d, e ->
-            result.completeExceptionally(KorenderException("$a $b $c $d $e"))
-            null
+
+        image.errorEvent.addHandler {
+            result.completeExceptionally(KorenderException("Image loading error"))
         }
-        image.onload = {
+
+        image.loadEvent.addHandler {
             val canvas = document.createElement("canvas") as HTMLCanvasElement
-            val context = canvas.getContext("2d") as CanvasRenderingContext2D
+            val context = canvas.getContext(CanvasRenderingContext2D.ID)!!
             canvas.width = image.width
             canvas.height = image.height
             context.drawImage(image, 0.0, 0.0)
             val imageData = context.getImageData(
-                0.0,
-                0.0,
-                canvas.width.toDouble(),
-                canvas.height.toDouble()
+                0,
+                0,
+                canvas.width,
+                canvas.height
             )
-            val uint8ClampedArray: Uint8ClampedArray = imageData.data
+            val uint8ClampedArray = imageData.data
             val uint8Array = Uint8Array(uint8ClampedArray.buffer, uint8ClampedArray.byteOffset, uint8ClampedArray.length)
             result.complete(InternalImage(imageData.width, imageData.height, NativeByteBuffer(uint8Array), PixelFormat.RGBA))
         }
@@ -127,7 +147,7 @@ internal actual object Platform {
     }
 
     actual fun createImage(width: Int, height: Int, format: PixelFormat): InternalImage {
-        val pixelBytes = when(format) {
+        val pixelBytes = when (format) {
             PixelFormat.RGB -> 3
             PixelFormat.RGBA -> 4
             PixelFormat.Gray -> 1
@@ -146,7 +166,7 @@ internal actual object Platform {
 @Composable
 actual fun Korender(
     appResourceLoader: ResourceLoader,
-    block: KorenderContext.() -> Unit
+    block: KorenderContext.() -> Unit,
 ) {
     var engine: Engine? by remember { mutableStateOf(null) }
     val canvas by remember { mutableStateOf(document.createElement("canvas") as HTMLCanvasElement) }
@@ -155,17 +175,17 @@ actual fun Korender(
         modifier = Modifier.onGloballyPositioned { coordinates ->
             val crds = coordinates.boundsInWindow()
 
-            canvas.width = (crds.width / window.devicePixelRatio).toInt()
-            canvas.height = (crds.height / window.devicePixelRatio).toInt()
+            canvas.width = (crds.width / devicePixelRatio).toInt()
+            canvas.height = (crds.height / devicePixelRatio).toInt()
             canvas.style.apply {
                 position = "absolute"
-                left = "${(crds.left / window.devicePixelRatio).toInt()}px"
-                top = "${(crds.top / window.devicePixelRatio)}px"
+                left = "${(crds.left / devicePixelRatio).toInt()}px"
+                top = "${(crds.top / devicePixelRatio)}px"
                 background = "black"
             }
             engine?.resize(
-                (crds.width / window.devicePixelRatio).toInt(),
-                (crds.height / window.devicePixelRatio).toInt()
+                (crds.width / devicePixelRatio).toInt(),
+                (crds.height / devicePixelRatio).toInt()
             )
         }.fillMaxSize() // TODO
     )
@@ -181,14 +201,14 @@ actual fun Korender(
             top = "0px"
             // background = "black"
         }
-        document.documentElement!!.appendChild(canvas)
+        document.appendChild(canvas)
 
-        val gl2 = canvas.getContext("webgl2")
+        val gl2 = canvas.getContext(WebGL2RenderingContext.ID)
         if (gl2 == null) {
             println("WebGL2 is not supported in this browser")
         }
 
-        val gl = gl2 as WebGL2RenderingContext
+        val gl = gl2!!
 
         println("Renderer: " + gl.getParameter(RENDERER));
         println("Vendor: " + gl.getParameter(VENDOR));
@@ -224,13 +244,12 @@ actual fun Korender(
 
         animate()
 
-        fun Short.toButton() : TouchEvent.Button = when (this) {
-            0.toShort() -> TouchEvent.Button.LEFT
-            2.toShort() -> TouchEvent.Button.RIGHT
-            else -> TouchEvent.Button.NONE
+        fun MouseButton.toButton() = when (this) {
+            MouseButtons.PRIMARY -> TouchEvent.Button.LEFT
+            MouseButtons.SECONDARY -> TouchEvent.Button.RIGHT
         }
 
-        canvas.addEventListener("webglcontextlost") {
+        canvas.webglContextLostEvent.addHandler {
             it.preventDefault()
             println("WebGL context lost !")
         }
@@ -245,8 +264,8 @@ actual fun Korender(
         }
 
         fun sendTouchTouch(type: TouchEvent.Type, event: Event) {
-            val te = event as org.w3c.dom.TouchEvent
-            te.touches[0]?.let { touch ->
+            val te = event as web.touch.TouchEvent
+            te.touches[0].let { touch ->
                 val x = touch.pageX - canvas.offsetLeft
                 val y = touch.pageY - canvas.offsetTop
                 GlobalScope.launch {
@@ -254,8 +273,8 @@ actual fun Korender(
                 }
             }
             // TODO improve this POC
-            if (type == TouchEvent.Type.UP && te.touches[0] == null) {
-                te.changedTouches[0]?.let { touch ->
+            if (type == TouchEvent.Type.UP) {
+                te.changedTouches[0].let { touch ->
                     val x = touch.pageX - canvas.offsetLeft
                     val y = touch.pageY - canvas.offsetTop
                     GlobalScope.launch {
@@ -266,36 +285,36 @@ actual fun Korender(
         }
 
         fun sendKey(type: KeyEvent.Type, event: Event) {
-            val ke = event as org.w3c.dom.events.KeyboardEvent
+            val ke = event as KeyboardEvent
             GlobalScope.launch {
                 engine?.pushKey(KeyEvent(type, ke.key))
             }
         }
 
-        canvas.addEventListener("mouseup") {
+        canvas.mouseUpEvent.addHandler {
             sendMouseTouch(TouchEvent.Type.UP, it)
         }
-        canvas.addEventListener("mousedown") {
+        canvas.mouseDownEvent.addHandler {
             sendMouseTouch(TouchEvent.Type.DOWN, it)
         }
-        canvas.addEventListener("mousemove") {
+        canvas.mouseMoveEvent.addHandler {
             sendMouseTouch(TouchEvent.Type.MOVE, it)
         }
 
-        canvas.addEventListener("touchstart") {
+        canvas.touchStartEvent.addHandler {
             sendTouchTouch(TouchEvent.Type.DOWN, it)
         }
-        canvas.addEventListener("touchend") {
+        canvas.touchEndEvent.addHandler  {
             sendTouchTouch(TouchEvent.Type.UP, it)
         }
-        canvas.addEventListener("touchmove") {
+        canvas.touchMoveEvent.addHandler {
             sendTouchTouch(TouchEvent.Type.MOVE, it)
         }
         // TODO cleanup
-        document.addEventListener("keydown") {
+        document.keyDownEvent.addHandler {
             sendKey(KeyEvent.Type.DOWN, it)
         }
-        document.addEventListener("keyup") {
+        document.keyUpEvent.addHandler {
             sendKey(KeyEvent.Type.UP, it)
         }
 

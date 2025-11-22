@@ -1,9 +1,11 @@
 package com.zakgof.korender.impl.buffer
 
-import org.khronos.webgl.ArrayBufferView
+import js.buffer.ArrayBuffer
+import js.buffer.ArrayBufferView
+
 
 actual interface NativeBuffer {
-    val array: ArrayBufferView
+    val array: ArrayBufferView<ArrayBuffer>
     actual fun rewind(): NativeBuffer
     actual fun size(): Int
     actual fun position(): Int

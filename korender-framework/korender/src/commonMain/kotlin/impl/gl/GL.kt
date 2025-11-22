@@ -7,41 +7,41 @@ expect object GL {
 
     val shaderEnv: String
 
-    fun glDrawElements(mode: Int, count: Int, type: Int, indices: Int)
+    fun glDrawElements(mode: GLConstant, count: Int, type: GLConstant, indices: Int)
 
-    fun glDrawElementsInstanced(mode: Int, count: Int, type: Int, indices: Int, instances: Int)
+    fun glDrawElementsInstanced(mode: GLConstant, count: Int, type: GLConstant, indices: Int, instances: Int)
 
-    fun glDrawArrays(mode: Int, starting: Int, count: Int)
+    fun glDrawArrays(mode: GLConstant, starting: Int, count: Int)
 
-    fun glDrawArraysInstanced(mode: Int, starting: Int, count: Int, instances: Int)
+    fun glDrawArraysInstanced(mode: GLConstant, starting: Int, count: Int, instances: Int)
 
-    fun glEnable(target: Int)
+    fun glEnable(target: GLConstant)
 
     // fun glPolygonMode(sides: Int, mode: Int)
 
-    fun glDisable(target: Int)
+    fun glDisable(target: GLConstant)
 
-    fun glBindTexture(target: Int, texture: GLTexture?)
+    fun glBindTexture(target: GLConstant, texture: GLTexture?)
 
-    fun glTexParameterf(target: Int, pname: Int, param: Float)
+    fun glTexParameterf(target: GLConstant, pname: Int, param: Float)
 
     fun glDeleteTextures(texture: GLTexture)
 
-    fun glPixelStorei(pname: Int, param: Int)
+    fun glPixelStorei(pname: GLConstant, param: Int)
 
     fun glGenTextures(): GLTexture
 
-    fun glBlendFunc(sfactor: Int, dfactor: Int)
+    fun glBlendFunc(sfactor: GLConstant, dfactor: GLConstant)
 
-    fun glDepthFunc(func: Int)
+    fun glDepthFunc(func: GLConstant)
 
     fun glDepthMask(flag: Boolean)
 
-    fun glCullFace(mode: Int)
+    fun glCullFace(mode: GLConstant)
 
-    fun glTexImage2D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, border: Int, format: Int, type: Int, buffer: NativeBuffer?)
+    fun glTexImage2D(target: GLConstant, level: Int, internalformat: Int, width: Int, height: Int, border: Int, format: Int, type: Int, buffer: NativeBuffer?)
 
-    fun glTexImage3D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, depth: Int, border: Int, format: Int, type: Int, buffer: NativeBuffer?)
+    fun glTexImage3D(target: GLConstant, level: Int, internalformat: Int, width: Int, height: Int, depth: Int, border: Int, format: Int, type: Int, buffer: NativeBuffer?)
 
     fun glTexSubImage2D(target: Int, level: Int, x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, buffer: NativeBuffer)
 

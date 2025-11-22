@@ -32,7 +32,7 @@ kotlin {
     jvmToolchain(17)
 
     compilerOptions {
-        freeCompilerArgs.add("-Xexpect-actual-classes")
+        freeCompilerArgs.addAll("-Xexpect-actual-classes", "-Xcontext-parameters")
     }
 
     @OptIn(ExperimentalWasmDsl::class)
@@ -71,7 +71,8 @@ kotlin {
             }
         }
         webMain.dependencies {
-            implementation(libs.kotlinx.browser)
+            implementation(libs.kotlin.web)
+            implementation(libs.kotlin.browser)
         }
     }
 }
@@ -92,8 +93,8 @@ mavenPublishing {
         licenses {
             license {
                 name = "The Apache License, Version 2.0"
-                url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
-                distribution = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+                distribution = "https://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         }
         developers {
