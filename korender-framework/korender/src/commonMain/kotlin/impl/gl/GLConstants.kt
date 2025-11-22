@@ -1,10 +1,16 @@
 package com.zakgof.korender.impl.gl
 
+expect class GLConstant
+
+expect class GLBitConstant {
+    infix fun or(other: GLBitConstant): GLBitConstant
+}
+
 expect object GLConstants {
     val GL_LEQUAL: GLConstant
     val GL_GEQUAL: GLConstant
-    val GL_DEPTH_BUFFER_BIT: GLConstant
-    val GL_COLOR_BUFFER_BIT: GLConstant
+    val GL_DEPTH_BUFFER_BIT: GLBitConstant
+    val GL_COLOR_BUFFER_BIT: GLBitConstant
     val GL_TRIANGLES: GLConstant
     val GL_ONE: GLConstant
     val GL_ONE_MINUS_SRC_ALPHA: GLConstant

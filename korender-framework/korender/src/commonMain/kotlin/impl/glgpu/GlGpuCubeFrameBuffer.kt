@@ -10,6 +10,7 @@ import com.zakgof.korender.impl.gl.GL.glFramebufferTexture2D
 import com.zakgof.korender.impl.gl.GL.glGenFramebuffers
 import com.zakgof.korender.impl.gl.GL.glGenerateMipmap
 import com.zakgof.korender.impl.gl.GL.glViewport
+import com.zakgof.korender.impl.gl.GLConstant
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_ATTACHMENT0
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_ATTACHMENT
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER
@@ -61,12 +62,12 @@ internal class GlGpuCubeFrameBuffer(
         depthTexture?.close()
     }
 
-    fun exec(glSide: Int, block: () -> Unit) {
+    fun exec(glSide: GLConstant, block: () -> Unit) {
         bind(glSide)
         block.invoke()
     }
 
-    private fun bind(glSide: Int) {
+    private fun bind(glSide: GLConstant) {
         glBindFramebuffer(GL_FRAMEBUFFER, fbHandle)
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, glSide, colorTexture.glHandle, 0)
         if (depthTexture != null) {

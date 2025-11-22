@@ -39,43 +39,43 @@ expect object GL {
 
     fun glCullFace(mode: GLConstant)
 
-    fun glTexImage2D(target: GLConstant, level: Int, internalformat: Int, width: Int, height: Int, border: Int, format: Int, type: Int, buffer: NativeBuffer?)
+    fun glTexImage2D(target: GLConstant, level: Int, internalformat: GLConstant, width: Int, height: Int, border: Int, format: GLConstant, type: GLConstant, buffer: NativeBuffer?)
 
-    fun glTexImage3D(target: GLConstant, level: Int, internalformat: Int, width: Int, height: Int, depth: Int, border: Int, format: Int, type: Int, buffer: NativeBuffer?)
+    fun glTexImage3D(target: GLConstant, level: Int, internalformat: GLConstant, width: Int, height: Int, depth: Int, border: Int, format: GLConstant, type: GLConstant, buffer: NativeBuffer?)
 
-    fun glTexSubImage2D(target: Int, level: Int, x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, buffer: NativeBuffer)
+    fun glTexSubImage2D(target: GLConstant, level: Int, x: Int, y: Int, width: Int, height: Int, format: GLConstant, type: GLConstant, buffer: NativeBuffer)
 
-    fun glTexSubImage3D(target: Int, level: Int, x: Int, y: Int, z: Int, width: Int, height: Int, depth: Int, format: Int, type: Int, buffer: NativeBuffer)
+    fun glTexSubImage3D(target: GLConstant, level: Int, x: Int, y: Int, z: Int, width: Int, height: Int, depth: Int, format: GLConstant, type: GLConstant, buffer: NativeBuffer)
 
-    fun glGetTexImage(tex: Int, level: Int, format: Int, type: Int, pixels: NativeByteBuffer)
+    fun glGetTexImage(tex: GLConstant, level: Int, format: GLConstant, type: GLConstant, pixels: NativeByteBuffer)
 
-    fun glGetFloatv(pname: Int): Float?
+    fun glGetFloatv(pname: GLConstant): Float?
 
     fun glGetError(): Int
 
-    fun glClear(mask: Int)
+    fun glClear(mask: GLBitConstant)
 
     fun glViewport(x: Int, y: Int, w: Int, h: Int)
 
-    fun glTexParameteri(target: Int, pname: Int, param: Int)
+    fun glTexParameteri(target: GLConstant, pname: GLConstant, param: GLConstant)
 
-    fun glTexParameterfv(target: Int, pname: Int, param: FloatArray)
+    fun glTexParameterfv(target: GLConstant, pname: GLConstant, param: FloatArray)
 
     fun glClearColor(fl: Float, fl1: Float, fl2: Float, fl3: Float)
 
     fun glClearDepth(fl: Float)
 
-    fun glActiveTexture(texture: Int)
+    fun glActiveTexture(texture: GLConstant)
 
-    fun glBindBuffer(target: Int, buffer: GLBuffer)
+    fun glBindBuffer(target: GLConstant, buffer: GLBuffer)
 
     fun glBindVertexArray(vertexArray: GLVertexArray?)
 
     fun glBindAttribLocation(program: GLProgram, index: Int, attr: String)
 
-    fun glBufferData(target: Int, data: NativeByteBuffer, usage: Int)
+    fun glBufferData(target: GLConstant, data: NativeByteBuffer, usage: Int)
 
-    fun glBufferData(target: Int, size: Long, usage: Int)
+    fun glBufferData(target: GLConstant, size: Long, usage: Int)
 
     fun glGenBuffers(): GLBuffer
 
@@ -87,7 +87,7 @@ expect object GL {
 
     fun glCreateProgram(): GLProgram
 
-    fun glCreateShader(type: Int): GLShader
+    fun glCreateShader(type: GLConstant): GLShader
 
     fun glAttachShader(program: GLProgram, shader: GLShader)
 
@@ -97,7 +97,7 @@ expect object GL {
 
     fun glValidateProgram(program: GLProgram)
 
-    fun glGetProgrami(program: GLProgram, pname: Int): Int
+    fun glGetProgrami(program: GLProgram, pname: GLConstant): Int
 
     fun glGetShaderInfoLog(shader: GLShader): String
 
@@ -135,7 +135,7 @@ expect object GL {
     fun glVertexAttribPointer(
         index: Int,
         size: Int,
-        type: Int,
+        type: GLConstant,
         normalized: Boolean,
         stride: Int,
         pointer: Int
@@ -144,7 +144,7 @@ expect object GL {
     fun glVertexAttribIPointer(
         index: Int,
         size: Int,
-        type: Int,
+        type: GLConstant,
         stride: Int,
         pointer: Int
     )
@@ -155,27 +155,27 @@ expect object GL {
 
     fun glDeleteProgram(program: GLProgram)
 
-    fun glGenerateMipmap(target: Int)
+    fun glGenerateMipmap(target: GLConstant)
 
     fun glGenFramebuffers(): GLFrameBuffer
 
     fun glFramebufferTexture2D(
-        target: Int,
-        attachment: Int,
-        textarget: Int,
+        target: GLConstant,
+        attachment: GLConstant,
+        textarget: GLConstant,
         texture: GLTexture,
         level: Int
     )
 
     fun glDeleteFramebuffers(framebuffer: GLFrameBuffer)
 
-    fun glBindFramebuffer(target: Int, framebuffer: GLFrameBuffer?)
+    fun glBindFramebuffer(target: GLConstant, framebuffer: GLFrameBuffer?)
 
-    fun glCheckFramebufferStatus(target: Int): Int
+    fun glCheckFramebufferStatus(target: GLConstant): Int
 
-    fun glDrawBuffers(vararg targets: Int)
+    fun glDrawBuffers(vararg targets: GLConstant)
 
-    fun glReadPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, data: NativeByteBuffer)
+    fun glReadPixels(x: Int, y: Int, width: Int, height: Int, format: GLConstant, type: GLConstant, data: NativeByteBuffer)
 
     fun glGetMaxTextureMaxAnisotropyConstant(): Int
 
@@ -191,12 +191,12 @@ expect object GL {
 
     fun glUniformBlockBinding(program: GLProgram, blockIndex: Int, blockBinding: Int)
 
-    fun glBindBufferBase(target: Int, blockBinding: Int, buffer: GLBuffer)
+    fun glBindBufferBase(target: GLConstant, blockBinding: Int, buffer: GLBuffer)
 
-    fun glBufferSubData(target: Int, offset: Long, buffer: NativeByteBuffer)
+    fun glBufferSubData(target: GLConstant, offset: Long, buffer: NativeByteBuffer)
 
-    fun glBindBufferRange(target: Int, blockBinding: Int, buffer: GLBuffer, shift: Int, size: Int)
+    fun glBindBufferRange(target: GLConstant, blockBinding: Int, buffer: GLBuffer, shift: Int, size: Int)
 
-    fun glGetInteger(pname: Int): Int
+    fun glGetInteger(pname: GLConstant): Int
 
 }

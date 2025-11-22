@@ -1,10 +1,16 @@
 package com.zakgof.korender.impl.gl
 
+actual class GLConstant(val int: Int)
+
+actual class GLBitConstant(val int: Int) {
+    actual infix fun or(other: GLBitConstant): GLBitConstant = GLBitConstant(int or other.int)
+}
+
 actual object GLConstants {
     actual val GL_LEQUAL = GLConstant(0x203)
     actual val GL_GEQUAL = GLConstant(0x206)
-    actual val GL_DEPTH_BUFFER_BIT = GLConstant(0x100)
-    actual val GL_COLOR_BUFFER_BIT = GLConstant(0x4000)
+    actual val GL_DEPTH_BUFFER_BIT = GLBitConstant(0x100)
+    actual val GL_COLOR_BUFFER_BIT = GLBitConstant(0x4000)
     actual val GL_TRIANGLES = GLConstant(0x4)
     actual val GL_ONE = GLConstant(1)
     actual val GL_ONE_MINUS_SRC_ALPHA = GLConstant(0x303)

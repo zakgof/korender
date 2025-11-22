@@ -8,6 +8,7 @@ import com.zakgof.korender.impl.gl.GL.glDepthFunc
 import com.zakgof.korender.impl.gl.GL.glDepthMask
 import com.zakgof.korender.impl.gl.GL.glDisable
 import com.zakgof.korender.impl.gl.GL.glEnable
+import com.zakgof.korender.impl.gl.GLConstant
 import com.zakgof.korender.impl.gl.GLConstants.GL_BACK
 import com.zakgof.korender.impl.gl.GLConstants.GL_BLEND
 import com.zakgof.korender.impl.gl.GLConstants.GL_CULL_FACE
@@ -24,10 +25,10 @@ internal class GlState {
     private val CLEAR_COLOR = Key<ColorRGBA>(0) { glClearColor(it.r, it.g, it.b, it.a) }
     private val CLEAR_DEPTH = Key<Float>(1) { glClearDepth(it) }
     private val CULL_FACE = Key<Boolean>(2) { toggle(GL_CULL_FACE, it) }
-    private val CULL_FACE_MODE = Key<Int>(3) { glCullFace(it) }
+    private val CULL_FACE_MODE = Key<GLConstant>(3) { glCullFace(it) }
     private val BLEND = Key<Boolean>(4) { toggle(GL_BLEND, it) }
-    private val BLEND_FUNC = Key<Pair<Int, Int>>(5) { glBlendFunc(it.first, it.second) }
-    private val DEPTH_FUNC = Key<Int>(6) { glDepthFunc(it) }
+    private val BLEND_FUNC = Key<Pair<GLConstant, GLConstant>>(5) { glBlendFunc(it.first, it.second) }
+    private val DEPTH_FUNC = Key<GLConstant>(6) { glDepthFunc(it) }
     private val DEPTH_MASK = Key<Boolean>(7) { glDepthMask(it) }
     private val DEPTH_TEST = Key<Boolean>(8) { toggle(GL_DEPTH_TEST, it) }
 
@@ -43,7 +44,7 @@ internal class GlState {
         DEPTH_TEST,
     )
 
-    private fun toggle(mode: Int, value: Boolean) = if (value) glEnable(mode) else glDisable(mode)
+    private fun toggle(mode: GLConstant, value: Boolean) = if (value) glEnable(mode) else glDisable(mode)
 
     private val defaults = arrayOf(
         ColorRGBA.Black,
@@ -77,12 +78,12 @@ internal class GlState {
         fun clearColor(c: ColorRGBA) = put(CLEAR_COLOR, c)
         fun clearDepth(d: Float) = put(CLEAR_DEPTH, d)
         fun cullFace(v: Boolean) = put(CULL_FACE, v)
-        fun cullFaceMode(glValue: Int) = put(CULL_FACE_MODE, glValue)
+        fun cullFaceMode(glValue: GLConstant) = put(CULL_FACE_MODE, glValue)
         fun blend(v: Boolean) = put(BLEND, v)
-        fun depthFunc(glValue: Int) = put(DEPTH_FUNC, glValue)
+        fun depthFunc(glValue: GLConstant) = put(DEPTH_FUNC, glValue)
         fun depthMask(v: Boolean) = put(DEPTH_MASK, v)
         fun depthTest(v: Boolean) = put(DEPTH_TEST, v)
-        fun blendFunc(sfactor: Int, dfactor: Int) = put(BLEND_FUNC, sfactor to dfactor)
+        fun blendFunc(sfactor: GLConstant, dfactor: GLConstant) = put(BLEND_FUNC, sfactor to dfactor)
 
         private fun put(key: Key<*>, value: Any) {
             target[key.ordinal] = value

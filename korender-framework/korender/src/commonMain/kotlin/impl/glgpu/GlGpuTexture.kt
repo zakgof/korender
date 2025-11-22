@@ -26,6 +26,7 @@ import com.zakgof.korender.impl.gl.GL.glReadPixels
 import com.zakgof.korender.impl.gl.GL.glTexImage2D
 import com.zakgof.korender.impl.gl.GL.glTexParameteri
 import com.zakgof.korender.impl.gl.GL.glTexSubImage2D
+import com.zakgof.korender.impl.gl.GLConstant
 import com.zakgof.korender.impl.gl.GLConstants.GL_CLAMP_TO_EDGE
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_ATTACHMENT0
 import com.zakgof.korender.impl.gl.GLConstants.GL_COMPARE_REF_TO_TEXTURE
@@ -247,9 +248,9 @@ internal class GlGpuTexture(private val width: Int, private val height: Int, fil
     }
 
     class GlFormat(
-        val internal: Int,
-        val format: Int,
-        val type: Int
+        val internal: GLConstant,
+        val format: GLConstant,
+        val type: GLConstant
     )
 
     companion object {

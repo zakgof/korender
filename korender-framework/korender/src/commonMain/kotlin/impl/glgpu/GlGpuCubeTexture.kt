@@ -20,6 +20,7 @@ import com.zakgof.korender.impl.gl.GL.glGetFloatv
 import com.zakgof.korender.impl.gl.GL.glReadPixels
 import com.zakgof.korender.impl.gl.GL.glTexImage2D
 import com.zakgof.korender.impl.gl.GL.glTexParameteri
+import com.zakgof.korender.impl.gl.GLConstant
 import com.zakgof.korender.impl.gl.GLConstants
 import com.zakgof.korender.impl.gl.GLConstants.GL_CLAMP_TO_EDGE
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_ATTACHMENT0
@@ -114,7 +115,7 @@ internal class GlGpuCubeTexture : GLBindableTexture, AutoCloseable {
         }
     }
 
-    private fun loadSide(glSide: Int, image: InternalImage) {
+    private fun loadSide(glSide: GLConstant, image: InternalImage) {
         val glFormat = formatMap[image.format]!!
         glTexImage2D(glSide, 0, glFormat.internal, image.width, image.height, 0, glFormat.format, glFormat.type, image.bytes)
     }
