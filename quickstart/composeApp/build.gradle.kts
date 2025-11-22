@@ -9,6 +9,12 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "com.example"
+    generateResClass = auto
+}
+
 kotlin {
     androidTarget {
         compilerOptions {
@@ -34,6 +40,7 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.foundation)
             implementation(compose.material)
+            implementation(compose.components.resources)
             implementation(libs.korender)
         }
         desktopMain.dependencies {
@@ -45,10 +52,6 @@ kotlin {
 android {
     namespace = "com.example"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
-
-    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
-    sourceSets["main"].res.srcDirs("src/androidMain/res")
-    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
     defaultConfig {
         applicationId = "com.example"
@@ -64,7 +67,7 @@ android {
     }
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
         }
     }
     compileOptions {
