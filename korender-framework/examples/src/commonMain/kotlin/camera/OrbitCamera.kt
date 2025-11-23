@@ -1,13 +1,12 @@
 package com.zakgof.korender.examples.camera
 
 import com.zakgof.korender.CameraDeclaration
-import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 
-class OrbitCamera(private val context: KorenderContext, initialPosition: Vec3, private val targetPosition: Vec3) {
+class OrbitCamera(initialPosition: Vec3, private val targetPosition: Vec3 = Vec3.ZERO) {
 
     private var deltaX: Float = 0f
     private var deltaY: Float = 0f
@@ -18,7 +17,7 @@ class OrbitCamera(private val context: KorenderContext, initialPosition: Vec3, p
 
     private val r = (targetPosition - initialPosition).length()
 
-    fun camera(projection: ProjectionDeclaration, width: Int, height: Int): CameraDeclaration {
+    fun KorenderContext.camera(): CameraDeclaration {
         if (startPosition != null) {
             val startDirection = (targetPosition - startPosition!!).normalize()
             val startRight = (startDirection % 1.y).normalize()
@@ -35,7 +34,7 @@ class OrbitCamera(private val context: KorenderContext, initialPosition: Vec3, p
         val direction = (targetPosition - position).normalize()
         val right = (direction % 1.y).normalize()
         val up = (right % direction).normalize()
-        return context.camera(position, direction, up)
+        return camera(position, direction, up)
     }
 
     fun touch(touchEvent: TouchEvent) {

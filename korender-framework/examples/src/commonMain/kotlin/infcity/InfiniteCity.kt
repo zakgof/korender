@@ -51,14 +51,7 @@ private fun FrameContext.loader() =
 private fun FrameContext.frame() {
     val z = frameInfo.time * 0.2f
 
-    DeferredShading {
-        PostShading(
-            ssr(
-                downsample = 4,
-                maxReflectionDistance = 30.0f
-            )
-        )
-    }
+    DeferredShading()
 
     projection = projection(0.3f * width / height, 0.3f, 0.3f, 200f)
     camera = camera(Vec3(0.05f, 0.3f, z - 1f), Quaternion.fromAxisAngle(1.y, 0.05f * cos(frameInfo.time)) * 1.z, 1.y)

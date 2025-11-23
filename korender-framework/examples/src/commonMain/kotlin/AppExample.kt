@@ -36,6 +36,8 @@ import org.jetbrains.compose.resources.painterResource
 fun AppExample() {
     val options = listOf(
 
+        Demo("SSR") { SsrExample() },
+
         Demo("Heightmap Terrain") { HeightmapTerrainExample() },
         Demo("Procedural Terrain") { ProcTerrainExample() },
         Demo("City demo") { InfiniteCity() },
@@ -52,9 +54,10 @@ fun AppExample() {
         Demo("Effects") { EffectsExample() },
         Demo("Decals") { DecalExample() },
         Demo("Bloom") { BloomExample() },
-
-        Demo("Multiple viewports") { MultipleViewportsExample() },
         Demo("SSR") { SsrExample() },
+
+        /*
+        Demo("Multiple viewports") { MultipleViewportsExample() },
         Demo("Sky") { SkyExample() },
         Demo("Transparency") { TransparencyExample() },
         Demo("Meshes") { MeshesExample() },
@@ -63,6 +66,7 @@ fun AppExample() {
         Demo("Env") { CaptureEnvExample() },
         Demo("Capture frame") { CaptureFrameExample() },
         Demo("Shapes") { BasicShapesExample() }
+         */
     )
 
     var isExpanded by remember { mutableStateOf(false) }
