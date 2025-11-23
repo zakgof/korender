@@ -1,4 +1,4 @@
-vec3 dirLight(int l, vec3 N, vec3 V, vec3 c_diff, vec3 F0, float rough, float occlusion) {
+vec3 dirLight(int l, vec3 N, vec3 V, vec3 albedo, float metallic, float roughness, float occlusion) {
     float shadowRatio = 0.;
     int shadowCount = directionalLightShadowTextureCount[l];
     for (int c=0; c<shadowCount; c++) {
@@ -8,10 +8,10 @@ vec3 dirLight(int l, vec3 N, vec3 V, vec3 c_diff, vec3 F0, float rough, float oc
     float lightCoef = min(occlusion, 1. - shadowRatio);
     vec3 lightValue = directionalLightColor[l].rgb * lightCoef;
     vec3 L = normalize(-directionalLightDir[l]);
-    return calculatePBR(N, V, L, c_diff, F0, rough, lightValue);
+    return calculatePBR(N, V, L, albedo, metallic, roughness, lightValue);
 }
 
-vec3 pointLight(vec3 vpos, int l, vec3 N, vec3 V, vec3 c_diff, vec3 F0, float rough, float occlusion) {
+vec3 pointLight(vec3 vpos, int l, vec3 N, vec3 V, vec3 albedo, float metallic, float roughness, float occlusion) {
     float shadowRatio = 0.;
     vec3 ftol = pointLightPos[l] - vpos;
     float distance = length(ftol);
@@ -20,5 +20,5 @@ vec3 pointLight(vec3 vpos, int l, vec3 N, vec3 V, vec3 c_diff, vec3 F0, float ro
     float lightCoef = min(occlusion, 1. - shadowRatio);
     vec3 lightValue = pointLightColor[l].rgb * lightCoef * att;
     vec3 L = normalize(ftol);
-    return calculatePBR(N, V, L, c_diff, F0, rough, lightValue);
+    return calculatePBR(N, V, L, albedo, metallic, roughness, lightValue);
 }

@@ -1,5 +1,6 @@
 #import "!shader/lib/header.glsl"
 #import "!shader/lib/ubo.glsl"
+#import "!shader/lib/octa.glsl"
 
 in vec3 vpos;
 in vec3 vnormal;
@@ -21,10 +22,9 @@ in vec2 vtex;
 
 #uniforms
 
-layout(location = 0) out vec3 cdiffChannel;
-layout(location = 1) out vec3 normalChannel;
-layout(location = 2) out vec4 materialChannel;
-layout(location = 3) out vec3 emissionChannel;
+layout(location = 0) out vec4 albedoChannel;
+layout(location = 1) out vec4 normalChannel;
+layout(location = 2) out vec3 emissionChannel;
 
 vec3 position;
 vec4 albedo;
@@ -32,8 +32,6 @@ vec3 normal;
 vec3 emission;
 float metallic;
 float roughness;
-vec3 diffuse;
-vec3 f0;
 vec3 color;
 
 #ifdef PLUGIN_POSITION
@@ -126,21 +124,20 @@ void main() {
         roughness = mr.y;
     #endif
 
-    diffuse = mix(albedo.rgb, vec3(0.), metallic);
-    f0 = mix(vec3(0.04), albedo.rgb, metallic);
-
     #ifdef PLUGIN_SPECULAR_GLOSSINESS
-    vec4 sg = pluginSpecularGlossiness();
-    diffuse = albedo.rgb * (1. - max(max(sg.r, sg.g), sg.b));
-    f0 = sg.rgb;
-    roughness = 1. - sg.a;
+        vec4 sg = pluginSpecularGlossiness();
+        float maxSpec = max(max(sg.r, sg.g), sg.b);
+        metallic = clamp((maxSpec - 0.04) / (1.0 - 0.04), 0.0, 1.0);
+        if (metallic > 0.01) {
+            albedo.rgb = sg.rgb;
+        }
+        roughness = 1. - sg.a;
     #endif
 
     ///////////////////////
 
-    cdiffChannel = diffuse;
-    normalChannel = normal * 0.5 + 0.5;
-    materialChannel = vec4(f0, roughness);
+    albedoChannel = vec4(albedo.rgb, metallic);
+    normalChannel = vec4(normal * 0.5 + 0.5, roughness);
     emissionChannel = emission;
 
     #ifdef PLUGIN_DEPTH

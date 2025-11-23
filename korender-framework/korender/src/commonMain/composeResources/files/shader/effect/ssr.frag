@@ -4,9 +4,8 @@
 in vec2 vtex;
 
 uniform sampler2D colorInputTexture;
-
+uniform sampler2D albedoGeometryTexture;
 uniform sampler2D normalGeometryTexture;
-uniform sampler2D materialGeometryTexture;
 uniform sampler2D depthGeometryTexture;
 
 uniform sampler2D noiseTexture;
@@ -100,11 +99,13 @@ void main() {
     float depth = texture(depthGeometryTexture, vtex).r;
     vec3 vpos = screenToWorldSpace(vtex, depth);
 
-    vec4 materialTexel = texture(materialGeometryTexture, vtex);
+    vec4 albedoTexel = texture(albedoGeometryTexture, vtex);
     vec4 normalTexel = texture(normalGeometryTexture, vtex);
 
-    vec3 F0 = materialTexel.rgb;
-    float rough = materialTexel.a;
+    vec3 albedo = albedoTexel.rgb;
+    float metallic = albedoTexel.a;
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+    float rough = normalTexel.a;
 
     vec3 V = normalize(cameraPos - vpos);
     vec3 N = normalize(normalTexel.rgb * 2.0 - 1.0);

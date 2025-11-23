@@ -3,9 +3,8 @@
 
 in vec2 vtex;
 
-uniform sampler2D diffuseGeometryTexture;
+uniform sampler2D albedoGeometryTexture;
 uniform sampler2D normalGeometryTexture;
-uniform sampler2D materialGeometryTexture;
 uniform sampler2D emissionGeometryTexture;
 uniform sampler2D depthGeometryTexture;
 
@@ -37,27 +36,40 @@ void main() {
 
     vec3 vpos = screenToWorldSpace(vtex, depth);
 
-    vec3 c_diff = texture(diffuseGeometryTexture, vtex).rgb;
-    vec4 materialTexel = texture(materialGeometryTexture, vtex);
-    vec4 emissionTexel = texture(emissionGeometryTexture, vtex);
+    vec4 albedoTexel = texture(albedoGeometryTexture, vtex);
     vec4 normalTexel = texture(normalGeometryTexture, vtex);
+    vec4 emissionTexel = texture(emissionGeometryTexture, vtex);
 
-    vec3 F0 = materialTexel.rgb;
-    float rough = materialTexel.a;
+    vec3 albedo = albedoTexel.rgb;
+    float metallic = albedoTexel.a;
+    float roughness = normalTexel.a;
 
     vec3 V = normalize(cameraPos - vpos);
     vec3 N = normalize(normalTexel.rgb * 2.0 - 1.0);
 
-    vec3 color = c_diff * ambientColor.rgb + emissionTexel.rgb;
+    vec3 color = ambientColor * albedo.rgb * (1.0 - metallic) + emissionTexel.rgb;
 
     float plane = dot((vpos - cameraPos), cameraDir);
     populateShadowRatios(plane, vpos);
 
     for (int l=0; l<numDirectionalLights; l++)
-        color += dirLight(l, N, V, c_diff, F0, rough, 1.0);
+        color += dirLight(l, N, V, albedo, metallic, roughness, 1.0);
 
     for (int l=0; l<numPointLights; l++)
-        color += pointLight(vpos, l, N, V, c_diff, F0, rough, 1.0);
+        color += pointLight(vpos, l, N, V, albedo, metallic, roughness, 1.0);
+
+    #ifdef PLUGIN_SKY
+        vec3 R = reflect(-V, N);
+        vec3 dndx = dFdx(R);
+        vec3 dndy = dFdy(R);
+        float variance = dot(dndx, dndx) + dot(dndy, dndy);
+        float roughnessAA = clamp(roughness + variance * 5.25, 0., 1.);
+        vec3 F0 = mix(vec3(0.04), albedo, metallic);
+        float maxBias = 8.; // TODO ! Get from da sky
+        vec3 envDiffuse = sky(N, maxBias) * albedo * (1.0 - metallic);
+        vec3 envSpec = sky(R, roughnessAA * maxBias) * fresnelSchlick(max(dot(V, N), 0.), F0);
+        color += envDiffuse + envSpec;
+    #endif
 
     fragColor = vec4(color, 1.);
     gl_FragDepth = depth;

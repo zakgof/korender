@@ -36,8 +36,6 @@ vec3 normal;
 vec3 emission;
 float metallic;
 float roughness;
-vec3 diffuse;
-vec3 f0;
 vec3 color;
 vec3 look;
 
@@ -145,21 +143,19 @@ void main() {
         roughness = mr.y;
     #endif
 
-    diffuse = mix(albedo.rgb, vec3(0.), metallic);
-    f0 = mix(vec3(0.04), albedo.rgb, metallic);
-
     #ifdef PLUGIN_SPECULAR_GLOSSINESS
         vec4 sg = pluginSpecularGlossiness();
-        diffuse = albedo.rgb * (1. - max(max(sg.r, sg.g), sg.b));
-        f0 = sg.rgb;
+        float maxSpec = max(max(sg.r, sg.g), sg.b);
+        metallic = clamp((maxSpec - 0.04) / (1.0 - 0.04), 0.0, 1.0);
+        if (metallic > 0.01) {
+            albedo.rgb = sg.rgb;
+        }
         roughness = 1. - sg.a;
     #endif
 
     ///////////////////////
 
     look = normalize(cameraPos - position);
-    color = diffuse * ambientColor + emission;
-
     float plane = dot((position - cameraPos), cameraDir);
 
     float occlusion = 1.0;
@@ -169,12 +165,23 @@ void main() {
 
     populateShadowRatios(plane, position);
 
+    color = ambientColor * albedo.rgb * (1.0 - metallic) + emission;
+
     for (int l=0; l<numDirectionalLights; l++) {
-        color += dirLight(l, normal, look, diffuse, f0, roughness, occlusion);
+        color += dirLight(l, normal, look, albedo.rgb, metallic, roughness, occlusion);
     }
     for (int l=0; l<numPointLights; l++) {
-        color += pointLight(vpos, l, normal, look, diffuse, f0, roughness, occlusion);
+        color += pointLight(vpos, l, normal, look, albedo.rgb, metallic, roughness, occlusion);
     }
+
+    #ifdef PLUGIN_SKY
+        vec3 R = reflect(-look, normal);
+        vec3 F0 = mix(vec3(0.04), albedo.rgb, metallic);
+        float maxBias = 8.; // TODO ! Get from da sky
+        vec3 envDiffuse = sky(normal, maxBias) * albedo.rgb * (1.0 - metallic);
+        vec3 envSpec = sky(R, roughness * maxBias) * fresnelSchlick(max(dot(look, normal), 0.), F0);
+        color += envDiffuse + envSpec;
+    #endif
 
     #ifdef PLUGIN_OUTPUT
         fragColor = pluginOutput();

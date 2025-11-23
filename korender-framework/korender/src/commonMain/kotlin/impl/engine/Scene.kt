@@ -228,10 +228,9 @@ internal class Scene(
             FrameBufferDeclaration(
                 "geometry", renderContext.width, renderContext.height,
                 listOf(
-                    GlGpuTexture.Preset.RGBANoFilter, // TODO review
-                    GlGpuTexture.Preset.RGBANoFilter,
-                    GlGpuTexture.Preset.RGBANoFilter,
-                    GlGpuTexture.Preset.RGBANoFilter,
+                    GlGpuTexture.Preset.RGBAFilter, // TODO review
+                    GlGpuTexture.Preset.RGBAFilter,
+                    GlGpuTexture.Preset.RGBFilter,
                 ),
                 true, TransientProperty(currentRetentionPolicy)
             )
@@ -244,10 +243,9 @@ internal class Scene(
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             renderBucket(sceneDeclaration.opaques)
         }
-        contextAdditionalUniforms["diffuseGeometryTexture"] = geometryBuffer.colorTextures[0]
+        contextAdditionalUniforms["albedoGeometryTexture"] = geometryBuffer.colorTextures[0]
         contextAdditionalUniforms["normalGeometryTexture"] = geometryBuffer.colorTextures[1]
-        contextAdditionalUniforms["materialGeometryTexture"] = geometryBuffer.colorTextures[2]
-        contextAdditionalUniforms["emissionGeometryTexture"] = geometryBuffer.colorTextures[3]
+        contextAdditionalUniforms["emissionGeometryTexture"] = geometryBuffer.colorTextures[2]
         contextAdditionalUniforms["depthGeometryTexture"] = geometryBuffer.depthTexture!!
 
         renderDecals()
@@ -267,7 +265,7 @@ internal class Scene(
             val decalBlendFb = inventory.frameBuffer(
                 FrameBufferDeclaration(
                     "decal-blend", renderContext.width, renderContext.height,
-                    listOf(GlGpuTexture.Preset.RGBFilter, GlGpuTexture.Preset.RGBFilter, GlGpuTexture.Preset.RGBAFilter), false, TransientProperty(currentRetentionPolicy)
+                    listOf(GlGpuTexture.Preset.RGBAFilter, GlGpuTexture.Preset.RGBAFilter), false, TransientProperty(currentRetentionPolicy)
                 )
             )
 
@@ -298,9 +296,8 @@ internal class Scene(
                     }
                     inventory.uniformBufferHolder.flush()
                 }
-                contextAdditionalUniforms["decalDiffuse"] = decalsFb.colorTextures[0]
+                contextAdditionalUniforms["decalAlbedo"] = decalsFb.colorTextures[0]
                 contextAdditionalUniforms["decalNormal"] = decalsFb.colorTextures[1]
-                contextAdditionalUniforms["decalMaterial"] = decalsFb.colorTextures[2]
                 decalBlendFb.exec {
 
                     val blendMaterialDeclaration = materialDeclaration(
@@ -311,9 +308,8 @@ internal class Scene(
                     )
                     renderFullscreen(blendMaterialDeclaration) { blend(false) }
                 }
-                contextAdditionalUniforms["diffuseGeometryTexture"] = decalBlendFb.colorTextures[0]
+                contextAdditionalUniforms["albedoGeometryTexture"] = decalBlendFb.colorTextures[0]
                 contextAdditionalUniforms["normalGeometryTexture"] = decalBlendFb.colorTextures[1]
-                contextAdditionalUniforms["materialGeometryTexture"] = decalBlendFb.colorTextures[2]
             }
         }
     }

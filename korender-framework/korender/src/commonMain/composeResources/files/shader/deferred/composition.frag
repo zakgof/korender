@@ -6,8 +6,8 @@ in vec2 vtex;
 
 uniform sampler2D colorTexture;
 uniform sampler2D depthTexture;
+uniform sampler2D albedoGeometryTexture;
 uniform sampler2D normalGeometryTexture;
-uniform sampler2D materialGeometryTexture;
 
 out vec4 fragColor;
 float depth;
