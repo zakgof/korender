@@ -33,7 +33,7 @@ fun ColumnScope.SsrDemo(orbitCamera: OrbitCamera, ssr: Boolean) = Box(modifier =
             camera = orbitCamera.run { camera() }
             DeferredShading {
                 if (ssr) {
-                    PostShading(ssr(downsample = 4, envTexture = env))
+                    PostShading(ssr(downsample = 3, envTexture = env))
                 } else {
                     Shading(ibl(env))
                 }

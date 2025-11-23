@@ -6,6 +6,12 @@ in vec2 vtex;
 
 uniform sampler2D colorTexture;
 uniform sampler2D depthTexture;
+uniform sampler2D normalGeometryTexture;
+uniform sampler2D materialGeometryTexture;
+
+out vec4 fragColor;
+float depth;
+vec3 color;
 
 #uniforms
 
@@ -17,19 +23,17 @@ uniform sampler2D depthTexture;
     #import "!shader/deferred/composition-bloom.glsl"
 #endif
 
-out vec4 fragColor;
-
 void main() {
 
-    float depth = texture(depthTexture, vtex).r;
-    vec3 color = texture(colorTexture, vtex).rgb;
+    depth = texture(depthTexture, vtex).r;
+    color = texture(colorTexture, vtex).rgb;
 
 #ifdef SSR
-    color = compositionSsr(color, depth, vtex);
+    compositionSsr();
 #endif
 
 #ifdef BLOOM
-    color = compositionBloom(color, depth, vtex);
+    compositionBloom();
 #endif
 
     fragColor = vec4(color, 1.);

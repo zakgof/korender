@@ -619,10 +619,9 @@ interface KorenderContext {
      * @param linearSteps number of forward raytracing steps
      * @param binarySteps number of binary search steps after the forward tracing
      * @param lastStepRatio factor to multiply forward raytracing step at maxReflectionDistance
-     * @param depthTolerance tolerance for depth testing when applying SSR buffer
      * @param envTexture cube texture declaration for environment reflections
      */
-    fun ssr(downsample: Int = 2, maxReflectionDistance: Float = 10f, linearSteps: Int = 64, binarySteps: Int = 5, lastStepRatio: Float = 4f, depthTolerance: Float = 0.2f, envTexture: CubeTextureDeclaration? = null): PostShadingEffect
+    fun ssr(downsample: Int = 2, maxReflectionDistance: Float = 10f, linearSteps: Int = 64, binarySteps: Int = 5, lastStepRatio: Float = 4f, envTexture: CubeTextureDeclaration? = null): PostShadingEffect
 
     /**
      * Creates a bloom (glow) post shading effect for deferred rendering pipeline.

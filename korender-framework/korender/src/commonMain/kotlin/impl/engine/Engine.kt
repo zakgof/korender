@@ -468,7 +468,7 @@ internal class Engine(
 
         override fun ibl(env: MaterialModifier) = env
 
-        override fun ssr(downsample: Int, maxReflectionDistance: Float, linearSteps: Int, binarySteps: Int, lastStepRatio: Float, depthTolerance: Float, envTexture: CubeTextureDeclaration?): PostShadingEffect {
+        override fun ssr(downsample: Int, maxReflectionDistance: Float, linearSteps: Int, binarySteps: Int, lastStepRatio: Float, envTexture: CubeTextureDeclaration?): PostShadingEffect {
             return InternalPostShadingEffect(
                 effectPasses = listOf(
                     InternalPassDeclaration(
@@ -481,10 +481,7 @@ internal class Engine(
                             val nextStepRatio = lastStepRatio.pow(1f / (linearSteps + 1f))
                             it.uniforms["nextStepRatio"] = nextStepRatio
                             it.uniforms["startStep"] = maxReflectionDistance * (1f - nextStepRatio) / (1f - nextStepRatio.pow(linearSteps))
-                            envTexture?.let { et ->
-                                it.uniforms["envTexture"] = et
-                                it.shaderDefs += "SSR_ENV"
-                            }
+
                         }),
                         null,
                         FrameTarget(renderContext.width / downsample, renderContext.height / downsample, "ssrTexture", "ssrDepth"),
@@ -494,7 +491,10 @@ internal class Engine(
                 keepTextures = setOf("ssrTexture"),
                 compositionMaterialModifier = {
                     it.shaderDefs += "SSR"
-                    it.uniforms["ssrDepthTolerance"] = 0.4f
+                    envTexture?.let { et ->
+                        it.uniforms["envTexture"] = et
+                        it.shaderDefs += "SSR_ENV"
+                    }
                 }, currentRetentionPolicy
             )
         }

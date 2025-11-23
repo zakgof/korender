@@ -14,7 +14,7 @@ internal class ReusableFrameBufferHolder {
             if (!locks.values.contains(fbName)) {
                 locks[target.colorOutput] = fbName
                 locks[target.depthOutput] = fbName
-                return FrameBufferDeclaration(fbName, target.width, target.height, listOf(GlGpuTexture.Preset.RGBFilter), true, TransientProperty(currentRetentionPolicy))
+                return FrameBufferDeclaration(fbName, target.width, target.height, listOf(GlGpuTexture.Preset.RGBAFilter), true, TransientProperty(currentRetentionPolicy))
             }
             index++
         }

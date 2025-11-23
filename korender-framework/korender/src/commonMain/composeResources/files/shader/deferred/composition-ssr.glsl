@@ -1,30 +1,31 @@
 uniform sampler2D ssrTexture;
-uniform sampler2D ssrDepth;
-#uniform float ssrDepthTolerance;
 
-vec3 compositionSsr(vec3 originalColor, float originalDepth, vec2 vtex) {
+#import "!shader/lib/space.glsl"
 
-    vec2 offset = 1.0 / vec2(textureSize(ssrDepth, 0));
+#ifdef SSR_ENV
+    uniform samplerCube envTexture;
+#endif
 
-    vec3 ssrc0 = texture(ssrTexture, vtex).rgb;
-    vec3 ssrc1 = texture(ssrTexture, vtex + offset * vec2( 1.0,  1.0)).rgb;
-    vec3 ssrc2 = texture(ssrTexture, vtex + offset * vec2(-1.0,  1.0)).rgb;
-    vec3 ssrc3 = texture(ssrTexture, vtex + offset * vec2( 1.0, -1.0)).rgb;
-    vec3 ssrc4 = texture(ssrTexture, vtex + offset * vec2(-1.0, -1.0)).rgb;
+void compositionSsr() {
 
-    float ssrd0 = texture(ssrDepth, vtex).r;
-    float ssrd1 = texture(ssrDepth, vtex + offset * vec2( 1.0,  1.0)).r;
-    float ssrd2 = texture(ssrDepth, vtex + offset * vec2(-1.0,  1.0)).r;
-    float ssrd3 = texture(ssrDepth, vtex + offset * vec2( 1.0, -1.0)).r;
-    float ssrd4 = texture(ssrDepth, vtex + offset * vec2(-1.0, -1.0)).r;
+    vec4 ssrSample = texture(ssrTexture, vtex);
+    color += ssrSample.rgb * ssrSample.a;
 
-    float ssrR0  = 1.0 - smoothstep(originalDepth - ssrDepthTolerance, originalDepth + ssrDepthTolerance, ssrd0);
-    float ssrR1  = 1.0 - smoothstep(originalDepth - ssrDepthTolerance, originalDepth + ssrDepthTolerance, ssrd1);
-    float ssrR2  = 1.0 - smoothstep(originalDepth - ssrDepthTolerance, originalDepth + ssrDepthTolerance, ssrd2);
-    float ssrR3  = 1.0 - smoothstep(originalDepth - ssrDepthTolerance, originalDepth + ssrDepthTolerance, ssrd3);
-    float ssrR4  = 1.0 - smoothstep(originalDepth - ssrDepthTolerance, originalDepth + ssrDepthTolerance, ssrd4);
+#ifdef SSR_ENV
+    vec3 vpos = screenToWorldSpace(vtex, depth);
+    vec4 materialTexel = texture(materialGeometryTexture, vtex);
+    vec4 normalTexel = texture(normalGeometryTexture, vtex);
+    vec3 F0 = materialTexel.rgb;
+    float roughness = materialTexel.a;
+    vec3 V = normalize(cameraPos - vpos);
+    vec3 N = normalize(normalTexel.rgb * 2.0 - 1.0);
 
-    vec3 ssrColor = (4.0 * ssrc0 * ssrR0 + ssrc1 * ssrR1 + ssrc2 * ssrR2 + ssrc3 * ssrR3 + ssrc4 * ssrR4) / 8.0;
+    vec3 R = reflect(-V, N);
+    float NdotV = max(dot(N, V), 0.0);
+    float maxBias = 8.; // TODO ! Get from da sky
+    vec3 envColor = texture(envTexture, R, roughness * maxBias).rgb;
+    vec3 FR = F0 + (1. - F0) * pow(1. - NdotV, 5.);
+    color += envColor * FR * (1. - ssrSample.a);
+#endif
 
-    return originalColor + ssrColor;
 }

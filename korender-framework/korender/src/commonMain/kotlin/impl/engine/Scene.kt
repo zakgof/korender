@@ -446,6 +446,7 @@ internal class Scene(
         val mesh = inventory.mesh(ScreenQuad(currentRetentionPolicy))
         val shader = inventory.shader(quadMaterial.shader)
         renderContext.state.set {
+            blend(false)
             state()
         }
         glViewport(0, 0, width, height)
