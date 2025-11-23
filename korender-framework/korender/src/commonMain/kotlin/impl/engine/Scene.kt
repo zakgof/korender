@@ -229,7 +229,7 @@ internal class Scene(
                 "geometry", renderContext.width, renderContext.height,
                 listOf(
                     GlGpuTexture.Preset.RGBAFilter, // TODO review
-                    GlGpuTexture.Preset.RGBAFilter,
+                    GlGpuTexture.Preset.Normal,
                     GlGpuTexture.Preset.RGBFilter,
                 ),
                 true, TransientProperty(currentRetentionPolicy)
