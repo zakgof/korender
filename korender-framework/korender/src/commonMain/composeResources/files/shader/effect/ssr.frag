@@ -1,5 +1,6 @@
 #import "!shader/lib/header.glsl"
 #import "!shader/lib/ubo.glsl"
+#import "!shader/lib/pbr.glsl"
 
 in vec2 vtex;
 
@@ -85,7 +86,7 @@ vec4 ssr(vec3 vpos, vec3 N, vec3 V, float roughness) {
             uv = wToS(rayPoint);
             w *= smoothstep (peel, 0.0, abs(deepen));
             w *= smoothstep(maxReflectionDistance, 0., travel);
-            return vec4(texture(colorInputTexture, uv.xy).rgb, w);
+            return vec4(texture(colorInputTexture, uv.xy /*, 8. * roughness*/).rgb, w);
         }
 
         step *= nextStepRatio;
@@ -97,24 +98,23 @@ vec4 ssr(vec3 vpos, vec3 N, vec3 V, float roughness) {
 void main() {
 
     float depth = texture(depthGeometryTexture, vtex).r;
-    vec3 vpos = screenToWorldSpace(vtex, depth);
-
-    vec4 albedoTexel = texture(albedoGeometryTexture, vtex);
-    vec4 normalTexel = texture(normalGeometryTexture, vtex);
-
-    vec3 albedo = albedoTexel.rgb;
-    float metallic = albedoTexel.a;
-    vec3 F0 = mix(vec3(0.04), albedo, metallic);
-    float rough = normalTexel.a;
-
-    vec3 V = normalize(cameraPos - vpos);
-    vec3 N = normalize(normalTexel.rgb * 2.0 - 1.0);
-
     vec4 reflection = vec4(0.);
     if (depth < 1.0) {
+        vec3 vpos = screenToWorldSpace(vtex, depth);
+
+        vec4 albedoTexel = texture(albedoGeometryTexture, vtex);
+        vec4 normalTexel = texture(normalGeometryTexture, vtex);
+
+        vec3 albedo = albedoTexel.rgb;
+        float metallic = albedoTexel.a;
+        vec3 F0 = mix(vec3(0.04), albedo, metallic);
+        float rough = normalTexel.a;
+
+        vec3 V = normalize(cameraPos - vpos);
+        vec3 N = normalize(normalTexel.rgb * 2.0 - 1.0);
         reflection = ssr(vpos, N, V, rough);
         float NdotV = clamp(dot(N, V), 0.0, 1.0);
-        vec3 FR = F0 + (1. - F0) * pow(1. - NdotV, 5.);
+        vec3 FR = fresnelSchlick(NdotV, F0);
         reflection.rgb *= FR;
     }
     fragColor = reflection;

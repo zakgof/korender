@@ -46,7 +46,7 @@ fun MetallicRoughnessExample() = Korender(appResourceLoader = { Res.readBytes(it
         Gui {
             Column {
                 Filler()
-                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
+                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()} " + (if (deferred) "DEFERRED" else "FORWARD"))
             }
         }
     }

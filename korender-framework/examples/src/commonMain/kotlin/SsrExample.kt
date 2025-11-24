@@ -45,7 +45,7 @@ fun ColumnScope.SsrDemo(orbitCamera: OrbitCamera, ssr: Boolean) = Box(modifier =
                     base(
                         colorTexture = texture("texture/brick.jpg"),
                         metallicFactor = 0f,
-                        roughnessFactor = 0.2f
+                        roughnessFactor = 0.5f
                     ),
                     mesh = sphere(),
                     transform = translate(-8f + it * 4, -1f, -4f),

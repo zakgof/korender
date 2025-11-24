@@ -26,7 +26,8 @@ void compositionSsr() {
     float maxBias = 8.; // TODO ! Get from da sky
     vec3 envDiffuse = texture(envTexture, N, maxBias).rgb * albedo * (1.0 - metallic);
     vec3 envSpec = texture(envTexture, R, roughness * maxBias).rgb * fresnelSchlick(max(dot(V, N), 0.), F0);
-    color += envDiffuse + envSpec;
-#endif
 
+    if (length(normalTexel.rgb) > 0.1)
+        color += envDiffuse + envSpec * (1.0 - ssrSample.a);
+#endif
 }

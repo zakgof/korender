@@ -79,15 +79,16 @@ vec3 look;
 #import "$depth"
 #endif
 
+#import "!shader/lib/shadow.glsl"
+#import "!shader/lib/pbr.glsl"
+#import "!shader/lib/light.glsl"
+
 #ifdef PLUGIN_SKY
 #import "!shader/lib/space.glsl"
 #import "!shader/lib/sky.glsl"
 #import "$sky"
+#import "!shader/lib/skyibl.glsl"
 #endif
-
-#import "!shader/lib/shadow.glsl"
-#import "!shader/lib/pbr.glsl"
-#import "!shader/lib/light.glsl"
 
 void main() {
 
@@ -175,12 +176,8 @@ void main() {
     }
 
     #ifdef PLUGIN_SKY
-        vec3 R = reflect(-look, normal);
-        vec3 F0 = mix(vec3(0.04), albedo.rgb, metallic);
-        float maxBias = 8.; // TODO ! Get from da sky
-        vec3 envDiffuse = sky(normal, maxBias) * albedo.rgb * (1.0 - metallic);
-        vec3 envSpec = sky(R, roughness * maxBias) * fresnelSchlick(max(dot(look, normal), 0.), F0);
-        color += envDiffuse + envSpec;
+        float roughnessAA = antiAliasRoughness(roughness, normal, look);
+        color += skyibl(normal, look, albedo.rgb, metallic, roughnessAA);
     #endif
 
     #ifdef PLUGIN_OUTPUT

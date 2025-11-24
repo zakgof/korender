@@ -1,4 +1,3 @@
-// Constants
 const float PI = 3.14159265359;
 
 vec3 fresnelSchlick(float cosTheta, vec3 F0) {
@@ -47,4 +46,11 @@ vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 albedo, float metallic, float rou
     vec3 specular = D * G * F / (4.0 * NdotV * NdotL + 0.001);
     vec3 diffuse = (1.0 - F) * (1.0 - metallic) * albedo / PI;
     return (diffuse + specular) * lightColor * NdotL;
+}
+
+float antiAliasRoughness(float roughness, vec3 N, vec3 V) {
+    vec3 dndx = dFdx(N);
+    vec3 dndy = dFdy(N);
+    float varianceD = dot(dndx, dndx) + dot(dndy, dndy);
+    return clamp(sqrt(roughness * roughness + varianceD * 4.0), 0., 1.);
 }

@@ -21,14 +21,15 @@ float shadowRatios[5];
 
 #import "!shader/lib/space.glsl"
 
-#ifdef PLUGIN_SKY
-#import "!shader/lib/sky.glsl"
-#import "$sky"
-#endif
-
 #import "!shader/lib/shadow.glsl"
 #import "!shader/lib/pbr.glsl"
 #import "!shader/lib/light.glsl"
+
+#ifdef PLUGIN_SKY
+    #import "!shader/lib/sky.glsl"
+    #import "$sky"
+    #import "!shader/lib/skyibl.glsl"
+#endif
 
 void main() {
 
@@ -59,16 +60,8 @@ void main() {
         color += pointLight(vpos, l, N, V, albedo, metallic, roughness, 1.0);
 
     #ifdef PLUGIN_SKY
-        vec3 R = reflect(-V, N);
-//        vec3 dndx = dFdx(R);
-//        vec3 dndy = dFdy(R);
-//        float variance = dot(dndx, dndx) + dot(dndy, dndy);
-//        float roughnessAA = clamp(roughness + variance * 5.25, 0., 1.);
-        vec3 F0 = mix(vec3(0.04), albedo, metallic);
-        float maxBias = 8.; // TODO ! Get from da sky
-        vec3 envDiffuse = sky(N, maxBias) * albedo * (1.0 - metallic);
-        vec3 envSpec = sky(R, roughness * maxBias) * fresnelSchlick(max(dot(V, N), 0.), F0);
-        color += envDiffuse + envSpec;
+        float roughnessAA = antiAliasRoughness(roughness, N, V);
+        color += skyibl(N, V, albedo, metallic, roughnessAA);
     #endif
 
     fragColor = vec4(color, 1.);
