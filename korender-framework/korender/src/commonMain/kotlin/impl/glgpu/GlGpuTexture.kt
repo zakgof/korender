@@ -110,16 +110,16 @@ internal class GlGpuTexture(private val width: Int, private val height: Int, fil
         uploadData(image.bytes, formatMap[image.format]!!)
     }
 
-    constructor(width: Int, height: Int, preset: Preset) : this(width, height, preset.filter, preset.wrap, preset.aniso) {
+    constructor(width: Int, height: Int, preset: Preset, formatOffset: Int = 0) : this(width, height, preset.filter, preset.wrap, preset.aniso) {
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, glHandle)
-        for (format in preset.formats) {
-            if (upload(width, height, null, format)) {
+        preset.formats.drop(formatOffset).forEach {
+            if (upload(width, height, null, it)) {
                 glBindTexture(GL_TEXTURE_2D, null)
                 return
             }
         }
-        throw KorenderException("Could not create texture with preset $preset")
+        throw KorenderException("Could not create texture with preset [$preset]")
     }
 
     init {
@@ -227,10 +227,12 @@ internal class GlGpuTexture(private val width: Int, private val height: Int, fil
         RGBAFilter(TextureFilter.Linear, TextureWrap.Repeat, 0, listOf(GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE))),
         RGBNoFilter(TextureFilter.Nearest, TextureWrap.Repeat, 0, listOf(GlFormat(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE))),
         RGBANoFilter(TextureFilter.Nearest, TextureWrap.Repeat, 0, listOf(GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE))),
-        Normal(TextureFilter.Nearest, TextureWrap.Repeat, 0, listOf(
-            GlFormat(GL_RGBA16F, GL_RGBA, GL_FLOAT),
-            GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE)
-        )),
+        Normal(
+            TextureFilter.Nearest, TextureWrap.Repeat, 0, listOf(
+                GlFormat(GL_RGBA16F, GL_RGBA, GL_FLOAT),
+                GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE)
+            )
+        ),
         Depth(
             TextureFilter.Nearest, TextureWrap.Repeat, 0,
             listOf(
@@ -255,7 +257,7 @@ internal class GlGpuTexture(private val width: Int, private val height: Int, fil
     class GlFormat(
         val internal: Int,
         val format: Int,
-        val type: Int
+        val type: Int,
     )
 
     companion object {
