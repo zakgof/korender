@@ -46,7 +46,7 @@ interface FrameContext : KorenderContext {
      * @param animation index of animation to apply
      * @param instancing instancing declaration to render multiple objects in a batch
      */
-    fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, time: Float? = null, animation:Int? = null, instancing: GltfInstancingDeclaration? = null)
+    fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, time: Float? = null, animation:Int? = null, instancing: GltfInstancingDeclaration? = null, materialOverrides: Map<String, MaterialModifier> = emptyMap())
 
     /**
      * Renders a billboard - camera facing quad.

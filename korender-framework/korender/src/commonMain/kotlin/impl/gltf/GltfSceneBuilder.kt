@@ -85,12 +85,17 @@ internal class GltfSceneBuilder(
                 skin.joints.map { instanceData.nodeMatrices[it].mat4 }
             } ?: listOf() // TODO optimize
         }
-        return meshNodes.flatMap {
-            createRenderables(
-                gltfLoaded.model.meshes!![it.first],
-                it.first,
-                gltfLoaded.model.nodes!![it.second].skin,
-            )
+
+        return meshNodes.flatMap { meshes ->
+            gltfLoaded.model.nodes!![meshes.second].let { node ->
+                //node.name?.also { println(it) }
+                createRenderables(
+                    gltfLoaded.model.meshes!![meshes.first],
+                    meshes.first,
+                    node.skin,
+                    node.name
+                )
+            }
         }
     }
 
@@ -137,7 +142,7 @@ internal class GltfSceneBuilder(
 
         var transform = parentTransform
 
-        val na = instanceData.nodeAnimations[nodeIndex]
+        val na = instanceData.nodeAnimations.getOrNull(nodeIndex)
 
         val translation = na?.translation ?: node.translation
         val rotation = na?.rotation ?: node.rotation
@@ -155,16 +160,26 @@ internal class GltfSceneBuilder(
         }
     }
 
-    private fun createRenderables(mesh: Gltf.Mesh, meshIndex: Int, skinIndex: Int?): List<RenderableDeclaration> =
+    private fun createRenderables(mesh: Gltf.Mesh, meshIndex: Int, skinIndex: Int?, nodeName: String?): List<RenderableDeclaration> =
         mesh.primitives.mapIndexed { primitiveIndex, primitive ->
             val meshDeclaration = createMeshDeclaration(primitive, meshIndex, primitiveIndex, skinIndex)
             val jointMatrices = skinIndex?.let {
                 if (declaration.instancingDeclaration == null) instanceData[0].jointMatrices[it] else null
             }
             val materialModifier = createMaterialModifiers(primitive, skinIndex, jointMatrices)
+
+            val overrideModifier = declaration.materialOverrides[nodeName]
+                ?: declaration.materialOverrides[mesh.name]
+
+            val finalModifiers = if (overrideModifier != null) {
+                listOf(materialModifier.second, overrideModifier)
+            } else {
+                listOf(materialModifier.second)
+            }
+
             RenderableDeclaration(
                 BaseMaterial.Renderable,
-                listOf(materialModifier.second),
+                finalModifiers,
                 mesh = meshDeclaration,
                 transform = if (declaration.instancingDeclaration == null) declaration.transform * instances[0].transform else declaration.transform,
                 materialModifier.first,
@@ -205,7 +220,7 @@ internal class GltfSceneBuilder(
 
             (matPbr?.baseColorTexture ?: matSpecularGlossiness?.diffuseTexture)?.let { getTexture(it) }?.let {
                 mb.uniforms["baseColorTexture"] = it
-                mb.shaderDefs += "BASE_COLOR_MAP";
+                mb.shaderDefs += "BASE_COLOR_MAP"
             }
             val alphaCutoff = if (material?.alphaMode == "MASK") material.alphaCutoff else 0.001f
             mb.uniforms["alphaCutoff"] = alphaCutoff
@@ -223,9 +238,25 @@ internal class GltfSceneBuilder(
                 mb.uniforms["metallicRoughnessTexture"] = it
             }
 
-            // TODO
-            val occlusionTexture = material?.occlusionTexture?.let { getTexture(it) }
-            val emissiveTexture = material?.emissiveTexture?.let { getTexture(it) }
+            val occlusionTex = material?.occlusionTexture?.let { getTexture(it) }
+            if (occlusionTex != null) {
+                mb.plugins["occlusion"] = "!shader/plugin/occlusion.texture.frag"
+                mb.uniforms["occlusionTexture"] = occlusionTex
+                mb.uniforms["occlusionStrength"] = material.occlusionTexture.strength
+            }
+
+            val emissiveTex = material?.emissiveTexture?.let { getTexture(it) }
+            val emissiveFactorVec = material?.emissiveFactor ?: listOf(0f, 0f, 0f)
+            val emissiveFactor = ColorRGB(emissiveFactorVec[0], emissiveFactorVec[1], emissiveFactorVec[2])
+
+            if (emissiveTex != null) {
+                mb.plugins["emission"] = "!shader/plugin/emission.texture.frag"
+                mb.uniforms["emissiveTexture"] = emissiveTex
+                mb.uniforms["emissionFactor"] = emissiveFactor
+            } else if (emissiveFactorVec.any { it > 0f }) {
+                mb.plugins["emission"] = "!shader/plugin/emission.factor.frag"
+                mb.uniforms["emissionFactor"] = emissiveFactor
+            }
 
             matSpecularGlossiness?.let { sg ->
                 mb.plugins["specular_glossiness"] = "!shader/plugin/specular_glossiness.factor.frag"
