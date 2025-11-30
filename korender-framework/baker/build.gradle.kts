@@ -24,6 +24,8 @@ kotlin {
             implementation(compose.material)
             implementation(compose.ui)
             implementation(compose.components.resources)
+            implementation(libs.commons.math3)
+            implementation("com.github.haifengl:smile-core:4.4.0")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -32,12 +34,9 @@ kotlin {
 }
 
 compose.desktop {
-
     application {
         mainClass = "com.zakgof.korender.baker.MainKt"
-
-        jvmArgs("--add-exports", "java.desktop/sun.awt=ALL-UNNAMED")
-
+        jvmArgs("--add-exports", "java.desktop/sun.awt=ALL-UNNAMED", "-DprojectRoot=${project.projectDir.absolutePath}")
         nativeApplication {
         }
     }

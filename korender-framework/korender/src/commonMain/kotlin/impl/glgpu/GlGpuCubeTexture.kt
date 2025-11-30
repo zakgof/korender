@@ -2,8 +2,8 @@ package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureSide
-import com.zakgof.korender.Image
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.Platform
 import com.zakgof.korender.impl.gl.GL
 import com.zakgof.korender.impl.gl.GL.glActiveTexture
@@ -51,7 +51,7 @@ internal class GlGpuCubeTexture : GLBindableTexture, AutoCloseable {
 
     var width: Int? = null
     var height: Int? = null
-    private var format: Image.Format? = null
+    private var format: PixelFormat? = null
     private var glFormat: GlGpuTexture.GlFormat? = null
 
     val sides = listOf(

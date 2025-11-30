@@ -1,19 +1,13 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import java.util.Properties
 
 plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.kotlinSerialization)
-    id("maven-publish")
-    id("signing")
+    alias(libs.plugins.vanniktech.mavenPublish)
 }
-
-val libraryVersion = "0.5.1"
-val libraryGroup = "com.github.zakgof"
 
 compose.resources {
     publicResClass = true
@@ -23,20 +17,23 @@ compose.resources {
 
 kotlin {
 
+    jvm("desktop")
+    androidLibrary {
+        namespace = "com.zakgof.korender"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        packaging {
+            resources {
+                excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            }
+        }
+        androidResources.enable = true
+    }
     jvmToolchain(17)
 
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
-
-    androidTarget {
-        publishLibraryVariants("release")
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
-        }
-    }
-
-    jvm("desktop")
 
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
@@ -46,7 +43,6 @@ kotlin {
 
     sourceSets {
         val desktopMain by getting
-        val wasmJsMain by getting
 
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
@@ -74,121 +70,43 @@ kotlin {
                 runtimeOnly(dependencies.variantOf(libs.lwjgl.opengl) { classifier("natives-$it") })
             }
         }
-        wasmJsMain.dependencies {
+        webMain.dependencies {
             implementation(libs.kotlinx.browser)
         }
     }
 }
 
-android {
+mavenPublishing {
+    val korenderVersion: String by project
+    val korenderVersionSuffix: String by project
 
-    namespace = "com.zakgof.korender"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    publishToMavenCentral()
+    signAllPublications()
+    coordinates("com.github.zakgof", "korender", korenderVersion + korenderVersionSuffix)
 
-    defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-}
-
-// Stub secrets to let the project sync and build without the publication values set up
-ext["signing.keyId"] = null
-ext["signing.password"] = null
-ext["signing.secretKeyRingFile"] = null
-ext["ossrhUsername"] = null
-ext["ossrhPassword"] = null
-
-// Grabbing secrets from local.properties file or from environment variables, which could be used on CI
-val secretPropsFile = project.rootProject.file("local.properties")
-if (secretPropsFile.exists()) {
-    secretPropsFile.reader().use {
-        Properties().apply { load(it) }
-    }.onEach { (name, value) ->
-        ext[name.toString()] = value
-    }
-} else {
-    ext["signing.keyId"] = System.getenv("SIGNING_KEY_ID")
-    ext["signing.password"] = System.getenv("SIGNING_PASSWORD")
-    ext["signing.secretKeyRingFile"] = System.getenv("SIGNING_SECRET_KEY_RING_FILE")
-    ext["ossrhUsername"] = System.getenv("OSSRH_USERNAME")
-    ext["ossrhPassword"] = System.getenv("OSSRH_PASSWORD")
-}
-
-val javadocJar by tasks.registering(Jar::class) {
-    archiveClassifier.set("javadoc")
-}
-
-fun getExtraString(name: String) = ext[name]?.toString()
-
-publishing {
-    repositories {
-        maven {
-            name = "ossrh-staging-api"
-            setUrl(
-                if (libraryVersion.contains("SNAPSHOT"))
-                    "https://ossrh-staging-api.central.sonatype.com/content/repositories/snapshots/"
-                else
-                    "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
-            )
-            credentials {
-                username = getExtraString("ossrhUsername")
-                password = getExtraString("ossrhPassword")
+    pom {
+        name = "korender"
+        description = "Kotlin Multiplatform 3D rendering framework"
+        inceptionYear = "2024"
+        url = "https://github.com/zakgof/korender"
+        licenses {
+            license {
+                name = "The Apache License, Version 2.0"
+                url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                distribution = "http://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         }
-    }
-
-    publications.withType<MavenPublication> {
-        artifact(javadocJar)
-        groupId = libraryGroup
-        version = libraryVersion
-        pom {
-            name.set("korender")
-            description.set("Kotlin Multiplatform 3D rendering framework")
-            url.set("https://github.com/zakgof/korender")
-
-            licenses {
-                license {
-                    name.set("The Apache License, Version 2.0")
-                    url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                }
-            }
-            developers {
-                developer {
-                    id.set("zakgof")
-                    name.set("Oleksandr Zakusylo")
-                    email.set("zakgof@gmail.com")
-                }
-            }
-            scm {
-                url.set("https://github.com/zakgof/korender")
-                connection.set("scm:git:https://github.com/zakgof/korender.git")
-                developerConnection.set("scm:git:https://github.com/zakgof/korender.git")
+        developers {
+            developer {
+                id = "zakgof"
+                name = "Oleksandr Zakusylo"
+                url = "https://github.com/zakgof"
             }
         }
+        scm {
+            url = "https://github.com/zakgof/korender"
+            connection = "scm:git:https://github.com/zakgof/korender.git"
+            developerConnection = "scm:git:https://github.com/zakgof/korender.git"
+        }
     }
-}
-
-signing {
-    if (getExtraString("signing.keyId") != null) {
-        sign(publishing.publications)
-    }
-}
-
-//https://github.com/gradle/gradle/issues/26132
-val signingTasks = tasks.withType<Sign>()
-tasks.withType<AbstractPublishToMaven>().configureEach {
-    mustRunAfter(signingTasks)
 }

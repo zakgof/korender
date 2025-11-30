@@ -39,26 +39,13 @@ expect object GL {
 
     fun glCullFace(mode: Int)
 
-    fun glTexImage2D(
-        target: Int,
-        level: Int,
-        internalformat: Int,
-        width: Int,
-        height: Int,
-        border: Int,
-        format: Int,
-        type: Int,
-        buffer: NativeBuffer?
-    )
+    fun glTexImage2D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, border: Int, format: Int, type: Int, buffer: NativeBuffer?)
 
-    fun glTexSubImage2D(target: Int,
-                       level: Int,
-                       x: Int, y: Int,
-                       width: Int,
-                       height: Int,
-                       format: Int,
-                       type: Int,
-                       buffer: NativeBuffer)
+    fun glTexImage3D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, depth: Int, border: Int, format: Int, type: Int, buffer: NativeBuffer?)
+
+    fun glTexSubImage2D(target: Int, level: Int, x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, buffer: NativeBuffer)
+
+    fun glTexSubImage3D(target: Int, level: Int, x: Int, y: Int, z: Int, width: Int, height: Int, depth: Int, format: Int, type: Int, buffer: NativeBuffer)
 
     fun glGetTexImage(tex: Int, level: Int, format: Int, type: Int, pixels: NativeByteBuffer)
 

@@ -11,16 +11,15 @@ import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @Composable
 fun TransparencyExample() {
     Korender(appResourceLoader = { Res.readBytes(it) }) {
-        val orbitCamera = OrbitCamera(this, 20.z, 0.y)
+        val orbitCamera = OrbitCamera(20.z, 0.y)
         OnTouch { orbitCamera.touch(it) }
         Frame {
             AmbientLight(ColorRGB.White)
-            camera = orbitCamera.camera(projection, width, height)
+            camera = orbitCamera.run { camera() }
             fun semitransparent(color: ColorRGBA, position: Vec3) = Renderable(
                 base(color = color),
                 mesh = cube(),
@@ -28,9 +27,9 @@ fun TransparencyExample() {
                 transparent = true
             )
 
-            semitransparent(ColorRGBA(0.5f, 0.0f, 0.0f,0.5f ), Vec3(0f, 0f, 0f))
-            semitransparent(ColorRGBA(0.0f, 0.5f, 0.0f,0.5f), Vec3(1f, 1f, 1f))
-            semitransparent(ColorRGBA(0.0f, 0.0f, 0.5f,0.5f), Vec3(-1f, -1f, -1f))
+            semitransparent(ColorRGBA(0.5f, 0.0f, 0.0f, 0.5f), Vec3(0f, 0f, 0f))
+            semitransparent(ColorRGBA(0.0f, 0.5f, 0.0f, 0.5f), Vec3(1f, 1f, 1f))
+            semitransparent(ColorRGBA(0.0f, 0.0f, 0.5f, 0.5f), Vec3(-1f, -1f, -1f))
         }
     }
 }

@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.Image
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.Platform
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -49,6 +50,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_RG16
 import com.zakgof.korender.impl.gl.GLConstants.GL_RG8
 import com.zakgof.korender.impl.gl.GLConstants.GL_RGB
 import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA
+import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA16F
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE0
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_2D
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_COMPARE_FUNC
@@ -83,17 +85,17 @@ internal val wrapMap = mapOf(
 )
 
 internal val formatMap = mapOf(
-    Image.Format.RGBA to GlGpuTexture.GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE),
-    Image.Format.RGB to GlGpuTexture.GlFormat(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE),
-    Image.Format.Gray to GlGpuTexture.GlFormat(GL_R8, GL_RED, GL_UNSIGNED_BYTE),
-    Image.Format.Gray16 to GlGpuTexture.GlFormat(GL_R16, GL_RED, GL_UNSIGNED_SHORT)
+    PixelFormat.RGBA to GlGpuTexture.GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE),
+    PixelFormat.RGB to GlGpuTexture.GlFormat(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE),
+    PixelFormat.Gray to GlGpuTexture.GlFormat(GL_R8, GL_RED, GL_UNSIGNED_BYTE),
+    PixelFormat.Gray16 to GlGpuTexture.GlFormat(GL_R16, GL_RED, GL_UNSIGNED_SHORT)
 )
 
 internal val backFormatMap = mapOf(
-    GL_RGBA to Image.Format.RGBA,
-    GL_RGB to Image.Format.RGB,
-    GL_R8 to Image.Format.Gray,
-    GL_R16 to Image.Format.Gray16
+    GL_RGBA to PixelFormat.RGBA,
+    GL_RGB to PixelFormat.RGB,
+    GL_R8 to PixelFormat.Gray,
+    GL_R16 to PixelFormat.Gray16
 )
 
 internal class GlGpuTexture(private val width: Int, private val height: Int, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024) : GLBindableTexture, AutoCloseable {
@@ -101,23 +103,23 @@ internal class GlGpuTexture(private val width: Int, private val height: Int, fil
     override val glHandle = glGenTextures()
     val mipmapped = filter == TextureFilter.MipMap
 
-    private var format: Image.Format? = null
+    private var format: PixelFormat? = null
     private lateinit var glFormat: GlFormat
 
     constructor(image: InternalImage, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024) : this(image.width, image.height, filter, wrap, aniso) {
         uploadData(image.bytes, formatMap[image.format]!!)
     }
 
-    constructor(width: Int, height: Int, preset: Preset) : this(width, height, preset.filter, preset.wrap, preset.aniso) {
+    constructor(width: Int, height: Int, preset: Preset, formatOffset: Int = 0) : this(width, height, preset.filter, preset.wrap, preset.aniso) {
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, glHandle)
-        for (format in preset.formats) {
-            if (upload(width, height, null, format)) {
+        preset.formats.drop(formatOffset).forEach {
+            if (upload(width, height, null, it)) {
                 glBindTexture(GL_TEXTURE_2D, null)
                 return
             }
         }
-        throw KorenderException("Could not create texture with preset $preset")
+        throw KorenderException("Could not create texture with preset [$preset]")
     }
 
     init {
@@ -220,10 +222,17 @@ internal class GlGpuTexture(private val width: Int, private val height: Int, fil
 
     enum class Preset(val filter: TextureFilter, val wrap: TextureWrap, val aniso: Int, val formats: List<GlFormat>) {
         RGBMipmap(TextureFilter.MipMap, TextureWrap.Repeat, 1024, listOf(GlFormat(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE))),
+        RGBAMipmap(TextureFilter.MipMap, TextureWrap.Repeat, 1024, listOf(GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE))),
         RGBFilter(TextureFilter.Linear, TextureWrap.MirroredRepeat, 1024, listOf(GlFormat(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE))),
         RGBAFilter(TextureFilter.Linear, TextureWrap.Repeat, 0, listOf(GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE))),
         RGBNoFilter(TextureFilter.Nearest, TextureWrap.Repeat, 0, listOf(GlFormat(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE))),
         RGBANoFilter(TextureFilter.Nearest, TextureWrap.Repeat, 0, listOf(GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE))),
+        Normal(
+            TextureFilter.Nearest, TextureWrap.Repeat, 0, listOf(
+                GlFormat(GL_RGBA16F, GL_RGBA, GL_FLOAT),
+                GlFormat(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE)
+            )
+        ),
         Depth(
             TextureFilter.Nearest, TextureWrap.Repeat, 0,
             listOf(
@@ -248,7 +257,7 @@ internal class GlGpuTexture(private val width: Int, private val height: Int, fil
     class GlFormat(
         val internal: Int,
         val format: Int,
-        val type: Int
+        val type: Int,
     )
 
     companion object {

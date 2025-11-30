@@ -4,7 +4,10 @@ layout(std140) uniform Frame {
     vec3 cameraDir;
 
     mat4 view;
-    mat4 projection;
+    float projectionWidth;
+    float projectionHeight;
+    float projectionNear;
+    float projectionFar;
 
     float screenWidth;
     float screenHeight;
@@ -29,6 +32,7 @@ layout(std140) uniform Frame {
     float yMax[5];
     int shadowMode[5];
     float f1[5];
+    float f2[5];
     int i1[5];
 
 };

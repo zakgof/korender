@@ -1,13 +1,12 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.AsyncContext
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureResources
 import com.zakgof.korender.FrameInfo
-import com.zakgof.korender.FrustumProjectionDeclaration
 import com.zakgof.korender.Image
+import com.zakgof.korender.Image3D
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.KeyHandler
@@ -17,13 +16,17 @@ import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
-import com.zakgof.korender.OrthoProjectionDeclaration
+import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.Platform
+import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.ProjectionMode
+import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
+import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -34,7 +37,8 @@ import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedGltfContext
 import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.KorenderContext
-import com.zakgof.korender.context.RoiTexturesContext
+import com.zakgof.korender.context.PipeMeshContext
+import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.context.DefaultFrameContext
@@ -45,7 +49,7 @@ import com.zakgof.korender.impl.engine.shadow.InternalHardShadow
 import com.zakgof.korender.impl.engine.shadow.InternalHardwarePcfShadow
 import com.zakgof.korender.impl.engine.shadow.InternalSoftwarePcfShadow
 import com.zakgof.korender.impl.engine.shadow.InternalVsmShadow
-import com.zakgof.korender.impl.geometry.CMesh
+import com.zakgof.korender.impl.geometry.BiQuad
 import com.zakgof.korender.impl.geometry.ConeTop
 import com.zakgof.korender.impl.geometry.Cube
 import com.zakgof.korender.impl.geometry.CustomCpuMesh
@@ -60,38 +64,45 @@ import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.image.InternalImage
+import com.zakgof.korender.impl.image.impl.image.InternalImage3D
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
+import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
 import com.zakgof.korender.impl.material.ImageTextureDeclaration
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
-import com.zakgof.korender.impl.material.InternalRoiTexturesContext
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.prefab.terrain.Clipmaps
-import com.zakgof.korender.impl.projection.FrustumProjection
-import com.zakgof.korender.impl.projection.OrthoProjection
+import com.zakgof.korender.impl.projection.FrustumProjectionMode
+import com.zakgof.korender.impl.projection.LogProjectionMode
+import com.zakgof.korender.impl.projection.OrthoProjectionMode
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlin.math.pow
 
 internal class Engine(
     width: Int,
     height: Int,
-    private val asyncContext: AsyncContext,
-    block: KorenderContext.() -> Unit
+    private val appResourceLoader: ResourceLoader,
+    block: KorenderContext.() -> Unit,
 ) {
 
     private val touchQueue = Channel<TouchEvent>(Channel.UNLIMITED)
     private val keyQueue = Channel<KeyEvent>(Channel.UNLIMITED)
     private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
-    private val inventory = Inventory(asyncContext)
+    private val inventory = Inventory(appResourceLoader)
     private val renderContext = RenderContext(width, height)
 
     private var touchBoxes: List<TouchBox> = listOf()
@@ -100,6 +111,7 @@ internal class Engine(
     private val keyHandlers = mutableListOf<KeyHandler>()
     private val kc = KorenderContextImpl()
     private var loaderLoaded = false
+    private val preFrames = ArrayDeque<() -> Unit>()
 
     inner class KorenderContextImpl : KorenderContext {
 
@@ -121,11 +133,17 @@ internal class Engine(
             keyHandlers.add(handler)
         }
 
+        override fun <T> load(resource: String, mapper: (ByteArray) -> T): Deferred<T> =
+            CoroutineScope(Dispatchers.Default).async { mapper(appResourceLoader(resource)) }
+
         override fun texture(textureResource: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int) =
             ResourceTextureDeclaration(textureResource, filter, wrap, aniso, currentRetentionPolicy)
 
         override fun texture(id: String, image: Image, filter: TextureFilter, wrap: TextureWrap, aniso: Int) =
             ImageTextureDeclaration(id, image as InternalImage, filter, wrap, aniso, currentRetentionPolicy)
+
+        override fun texture3D(id: String, image: Image3D, filter: TextureFilter, wrap: TextureWrap, aniso: Int): Texture3DDeclaration =
+            ImageTexture3DDeclaration(id, image as InternalImage3D, filter, wrap, aniso, currentRetentionPolicy)
 
         override fun textureProbe(frameProbeName: String): TextureDeclaration = ProbeTextureDeclaration(frameProbeName)
 
@@ -135,46 +153,77 @@ internal class Engine(
 
         override fun cubeTextureProbe(envProbeName: String): CubeTextureDeclaration = ProbeCubeTextureDeclaration(envProbeName)
 
-        override fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3, insideOut: Boolean, block: FrameContext.() -> Unit): CubeTextureImages {
+        override fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3, insideOut: Boolean, block: FrameContext.() -> Unit): Deferred<CubeTextureImages> {
             val sd = SceneDeclaration()
             block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f, 0)))
-            var images: CubeTextureImages? = null
-            inventory.go(0f, 0) {
-                val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
-                while(true) {
-                    val cubeTexture = scene.renderToEnvProbe(EnvCaptureContext(resolution, position, near, far, insideOut, sd), "#immediate")
-                    if (cubeTexture != null) {
-                        images = cubeTexture.fetch()
-                        println("Fetch done " + inventory.pending())
-                        break
+            val images = CompletableDeferred<CubeTextureImages>()
+            val startNano = Platform.nanoTime()
+
+            val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
+            fun tryRender(): Boolean {
+                scene.renderToEnvProbe(EnvCaptureContext(resolution, position, near, far, insideOut, sd), "#immediate")
+                    ?.fetch()
+                    ?.let {
+                        images.complete(it)
+                        println("Capture env done in ${(Platform.nanoTime() - startNano) * 1e-9}s")
+                        return true
                     }
-                    println("Resources pending, retrying env capture... " + inventory.pending())
-                }
-                true
+                println("Capturing env not complete, retrying...")
+                return false
             }
-            return images!!
+
+            fun cycle() {
+                inventory.onWaitUpdate {
+                    preFrames.addLast {
+                        if (!tryRender()) {
+                            cycle()
+                        }
+                    }
+                }
+            }
+            if (!tryRender()) {
+                cycle()
+            }
+            return images
         }
 
-        override fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameContext.() -> Unit): Image {
+        override fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameContext.() -> Unit): Deferred<Image> {
             val sd = SceneDeclaration()
             block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f, 0)))
-            var image: Image? = null
-            inventory.go(0f, 0) {
-                val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
-                while(true) {
-                    val texture = scene.renderToFrameProbe(FrameCaptureContext(width, height, camera as Camera, projection as Projection, sd), "#immediate")
-                    if (texture != null) {
-                        image = texture.fetch()
-                        break
+            val image = CompletableDeferred<Image>()
+            val startNano = Platform.nanoTime()
+
+            val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
+            fun tryRender(): Boolean {
+                scene.renderToFrameProbe(FrameCaptureContext(width, height, camera as Camera, projection as Projection, sd), "#immediate")
+                    ?.fetch()
+                    ?.let {
+                        image.complete(it)
+                        println("Capture frame done in ${(Platform.nanoTime() - startNano) * 1e-9}s")
+                        return true
                     }
-                    println("Resources pending, retrying frame capture... " + inventory.pending())
-                }
-                true
+                println("Capturing frame not complete, retrying...")
+                return false
             }
-            return image!!
+
+            fun cycle() {
+                inventory.onWaitUpdate {
+                    preFrames.addLast {
+                        if (!tryRender()) {
+                            cycle()
+                        }
+                    }
+                }
+            }
+            if (!tryRender()) {
+                cycle()
+            }
+            return image
         }
 
         override fun quad(halfSideX: Float, halfSideY: Float) = Quad(halfSideX, halfSideY, currentRetentionPolicy)
+
+        override fun biQuad(halfSideX: Float, halfSideY: Float) = BiQuad(halfSideX, halfSideY, currentRetentionPolicy)
 
         override fun cube(halfSide: Float) = Cube(halfSide, currentRetentionPolicy)
 
@@ -195,7 +244,10 @@ internal class Engine(
             HeightField(id, cellsX, cellsZ, cellWidth, height, currentRetentionPolicy)
 
         override fun mesh(id: String, mesh: Mesh) =
-            CustomCpuMesh(id, mesh as CMesh, currentRetentionPolicy)
+            CustomCpuMesh(id, mesh, currentRetentionPolicy)
+
+        override fun pipeMesh(id: String, segments: Int, dynamic: Boolean, block: PipeMeshContext.() -> Unit) =
+            createPipeMesh(id, segments, dynamic, currentRetentionPolicy, block)
 
         override fun vertex(vertShaderFile: String): InternalMaterialModifier =
             InternalMaterialModifier { it.vertShaderFile = vertShaderFile }
@@ -210,11 +262,12 @@ internal class Engine(
             it.plugins[name] = shaderFile
         }
 
-        override fun base(color: ColorRGBA, colorTexture: TextureDeclaration?, metallicFactor: Float, roughnessFactor: Float) = InternalMaterialModifier {
+        override fun base(color: ColorRGBA, colorTexture: TextureDeclaration?, metallicFactor: Float, roughnessFactor: Float, alphaCutoff: Float) = InternalMaterialModifier {
             it.uniforms["baseColor"] = color
             it.uniforms["baseColorTexture"] = colorTexture
             it.uniforms["metallicFactor"] = metallicFactor
             it.uniforms["roughnessFactor"] = roughnessFactor
+            it.uniforms["alphaCutoff"] = alphaCutoff
             if (colorTexture != null) {
                 it.shaderDefs += "BASE_COLOR_MAP";
             }
@@ -257,11 +310,10 @@ internal class Engine(
             it.uniforms["rotation"] = rotation
         }
 
-        override fun terrain(heightTexture: TextureDeclaration, heightTextureSize: Int, heightScale: Float, outsideHeight: Float, terrainCenter: Vec3) = InternalMaterialModifier {
+        override fun terrain(heightTexture: TextureDeclaration, heightScale: Float, outsideHeight: Float, terrainCenter: Vec3) = InternalMaterialModifier {
             it.plugins["normal"] = "!shader/plugin/normal.terrain.frag"
             it.plugins["terrain"] = "!shader/plugin/terrain.texture.frag"
             it.uniforms["heightTexture"] = heightTexture
-            it.uniforms["heightTextureSize"] = heightTextureSize
             it.uniforms["heightScale"] = heightScale
             it.uniforms["outsideHeight"] = outsideHeight
             it.uniforms["terrainCenter"] = terrainCenter
@@ -276,6 +328,13 @@ internal class Engine(
             it.uniforms["radiantNormalTexture"] = radiantNormalTexture
             it.uniforms["colorCubeTexture"] = colorTexture
             it.uniforms["normalCubeTexture"] = normalTexture
+        }
+
+        override fun pipe() = InternalMaterialModifier {
+            it.vertShaderFile = "!shader/pipe.vert"
+            it.plugins["position"] = "!shader/plugin/position.pipe.frag"
+            it.plugins["normal"] = "!shader/plugin/normal.pipe.frag"
+            it.plugins["depth"] = "!shader/plugin/depth.pipe.frag"
         }
 
         override fun radiantCapture(radiantMax: Float) = InternalMaterialModifier {
@@ -302,6 +361,31 @@ internal class Engine(
             it.fragShaderFile = "!shader/effect/blurv.frag"
             it.uniforms["radius"] = radius
         }
+
+        override fun blur(radius: Float): PostProcessingEffect = InternalFilterDeclaration(
+            listOf(
+                InternalPassDeclaration(
+                    mapOf(
+                        "colorInputTexture" to "colorTexture",
+                        "depthInputTexture" to "depthTexture"
+                    ),
+                    modifiers = listOf(blurVert(radius)),
+                    retentionPolicy = currentRetentionPolicy,
+                    sceneDeclaration = SceneDeclaration(),
+                    target = renderContext.defaultTarget()
+                ),
+                InternalPassDeclaration(
+                    mapOf(
+                        "colorInputTexture" to "colorTexture",
+                        "depthInputTexture" to "depthTexture"
+                    ),
+                    modifiers = listOf(blurHorz(radius)),
+                    retentionPolicy = currentRetentionPolicy,
+                    sceneDeclaration = SceneDeclaration(),
+                    target = renderContext.defaultTarget()
+                )
+            )
+        )
 
         override fun adjust(brightness: Float, contrast: Float, saturation: Float) = InternalMaterialModifier {
             it.fragShaderFile = "!shader/effect/adjust.frag"
@@ -384,121 +468,111 @@ internal class Engine(
 
         override fun ibl(env: MaterialModifier) = env
 
-        override fun roiTextures(block: RoiTexturesContext.() -> Unit) = InternalMaterialModifier {
-            it.shaderDefs += "ROI"
-            InternalRoiTexturesContext().apply(block).collect(it)
-        }
-
-        override fun ssr(width: Int?, height: Int?, fxaa: Boolean, maxRayTravel: Float, linearSteps: Int, binarySteps: Int, envTexture: CubeTextureDeclaration?): PostShadingEffect {
-            val w = width ?: renderContext.width
-            val h = height ?: renderContext.height
+        override fun ssr(downsample: Int, maxReflectionDistance: Float, linearSteps: Int, binarySteps: Int, lastStepRatio: Float, envTexture: CubeTextureDeclaration?): PostShadingEffect {
             return InternalPostShadingEffect(
-                "ssr", w, h,
-                effectPassMaterialModifiers =
-                    listOf(
-                        InternalMaterialModifier {
+                effectPasses = listOf(
+                    InternalPassDeclaration(
+                        mapOf("colorInputTexture" to "colorTexture"),
+                        listOf(InternalMaterialModifier {
                             it.fragShaderFile = "!shader/effect/ssr.frag"
                             it.uniforms["linearSteps"] = linearSteps
                             it.uniforms["binarySteps"] = binarySteps
-                            it.uniforms["maxRayTravel"] = maxRayTravel
-                            envTexture?.let { et ->
-                                it.uniforms["envTexture"] = et
-                                it.shaderDefs += "SSR_ENV"
-                            }
-                        }
-                    ),
-                "ssrTexture",
-                "ssrDepthTexture",
+                            it.uniforms["maxReflectionDistance"] = maxReflectionDistance
+                            val nextStepRatio = lastStepRatio.pow(1f / (linearSteps + 1f))
+                            it.uniforms["nextStepRatio"] = nextStepRatio
+                            it.uniforms["startStep"] = maxReflectionDistance * (1f - nextStepRatio) / (1f - nextStepRatio.pow(linearSteps))
+
+                        }),
+                        null,
+                        FrameTarget(renderContext.width / downsample, renderContext.height / downsample, "ssrTexture", "ssrDepth"),
+                        currentRetentionPolicy
+                    )
+                ),
+                keepTextures = setOf("ssrTexture"),
                 compositionMaterialModifier = {
                     it.shaderDefs += "SSR"
-                    if (fxaa) {
-                        it.shaderDefs += "SSR_FXAA"
-                        it.uniforms["ssrWidth"] = w.toFloat()
-                        it.uniforms["ssrHeight"] = h.toFloat()
+                    envTexture?.let { et ->
+                        it.uniforms["envTexture"] = et
+                        it.shaderDefs += "SSR_ENV"
                     }
                 }, currentRetentionPolicy
             )
         }
 
-        override fun bloom(width: Int?, height: Int?) = InternalPostShadingEffect(
-            "bloom",
-            width ?: renderContext.width,
-            height ?: renderContext.height,
-            effectPassMaterialModifiers = listOf(
-                InternalMaterialModifier {
-                    it.fragShaderFile = "!shader/effect/bloom.frag"
-                },
-                InternalMaterialModifier {
-                    it.fragShaderFile = "!shader/effect/blurv.frag"
-                    it.uniforms["screenHeight"] = (width ?: renderContext.height).toFloat()
-                    it.uniforms["radius"] = 2.2f
-                },
-                InternalMaterialModifier {
-                    it.fragShaderFile = "!shader/effect/blurh.frag"
-                    it.uniforms["screenWidth"] = (height ?: renderContext.width).toFloat()
-                    it.uniforms["radius"] = 2.2f
-                }
-            ),
-            "bloomTexture",
-            "bloomDepthTexture",
-            compositionMaterialModifier = {
-                it.shaderDefs += "BLOOM"
-            }, currentRetentionPolicy
-        )
+        override fun bloom(threshold: Float, amount: Float, radius: Float, downsample: Int) =
+            bloomSimpleEffect(renderContext, currentRetentionPolicy, threshold, amount, radius, downsample)
 
-        override fun frustum(width: Float, height: Float, near: Float, far: Float): FrustumProjectionDeclaration =
-            FrustumProjection(width, height, near, far)
+        override fun bloomWide(threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float) =
+            bloomMipEffect(renderContext, currentRetentionPolicy, threshold, amount, downsample, mips, offset, highResolutionRatio)
 
-        override fun ortho(width: Float, height: Float, near: Float, far: Float): OrthoProjectionDeclaration =
-            OrthoProjection(width, height, near, far)
+        override fun projection(width: Float, height: Float, near: Float, far: Float, mode: ProjectionMode) =
+            Projection(width, height, near, far, mode)
+
+        override fun frustum() = FrustumProjectionMode
+
+        override fun ortho() = OrthoProjectionMode
+
+        override fun log(c: Float) = LogProjectionMode(c)
 
         override fun camera(position: Vec3, direction: Vec3, up: Vec3): CameraDeclaration =
             DefaultCamera(position, direction.normalize(), up.normalize())
 
-        override var retentionPolicy: RetentionPolicy
+        override
+        var retentionPolicy: RetentionPolicy
             get() = currentRetentionPolicy
             set(value) {
                 currentRetentionPolicy = value
             }
 
-        override var retentionGeneration: Int
+        override
+        var retentionGeneration: Int
             get() = currentRetentionGeneration
             set(value) {
                 currentRetentionGeneration = value
             }
 
-        override var camera: CameraDeclaration
+        override
+        var camera: CameraDeclaration
             get() = renderContext.camera
             set(value) {
                 renderContext.camera = value as Camera
             }
 
-        override var projection: ProjectionDeclaration
+        override
+        var projection: ProjectionDeclaration
             get() = renderContext.projection
             set(value) {
                 renderContext.projection = value as Projection
             }
 
-        override var background: ColorRGBA
+        override
+        var background: ColorRGBA
             get() = renderContext.backgroundColor
             set(value) {
                 renderContext.backgroundColor = value
             }
 
-        override val width: Int
+        override
+        val width: Int
             get() = renderContext.width
 
-        override val height: Int
+        override
+        val height: Int
             get() = renderContext.height
 
-        override fun createImage(width: Int, height: Int, format: Image.Format): Image =
+        override fun createImage(width: Int, height: Int, format: PixelFormat): Image =
             Platform.createImage(width, height, format)
 
-        override fun loadImage(imageResource: String): Deferred<Image> =
-            asyncContext.call {
-                val bytes = resourceBytes(asyncContext.appResourceLoader, imageResource)
-                Platform.loadImage(bytes, imageResource.split(".").last()).await()
-            }
+        override fun createImage3D(width: Int, height: Int, depth: Int, format: PixelFormat): Image3D =
+            InternalImage3D(width, height, depth, NativeByteBuffer(width * height * depth * format.bytes), format)
+
+        override fun loadImage(imageResource: String): Deferred<Image> = CoroutineScope(Dispatchers.Default).async {
+            val bytes = resourceBytes(appResourceLoader, imageResource)
+            Platform.loadImage(bytes, imageResource.split(".").last()).await()
+        }
+
+        override fun loadImage(bytes: ByteArray, type: String): Deferred<Image> =
+            Platform.loadImage(bytes, type)
 
         override fun vsm(blurRadius: Float?): ShadowAlgorithmDeclaration =
             InternalVsmShadow(blurRadius)
@@ -506,8 +580,8 @@ internal class Engine(
         override fun hard(): ShadowAlgorithmDeclaration =
             InternalHardShadow()
 
-        override fun softwarePcf(samples: Int, blurRadius: Float): ShadowAlgorithmDeclaration =
-            InternalSoftwarePcfShadow(samples, blurRadius)
+        override fun softwarePcf(samples: Int, blurRadius: Float, bias: Float): ShadowAlgorithmDeclaration =
+            InternalSoftwarePcfShadow(samples, blurRadius, bias)
 
         override fun hardwarePcf(bias: Float): ShadowAlgorithmDeclaration =
             InternalHardwarePcfShadow(bias)
@@ -538,6 +612,11 @@ internal class Engine(
                 block.invoke(context)
                 instances
             }
+
+        override fun immediatelyFree() = ImmediatelyFreeRetentionPolicy
+        override fun keepForever() = KeepForeverRetentionPolicy
+        override fun untilGeneration(generation: Int) = UntilGenerationRetentionPolicy(generation)
+        override fun time(seconds: Float) = TimeRetentionPolicy(seconds)
     }
 
     init {
@@ -549,6 +628,7 @@ internal class Engine(
     }
 
     fun frame() {
+        preFrames.removeFirstOrNull()?.let { it() }
         val frameInfo = renderContext.frameInfoManager.frame(inventory.pending())
         processTouches()
         processKeys()
@@ -557,7 +637,7 @@ internal class Engine(
             DefaultFrameContext(kc, sd, frameInfo).apply(it)
         }
         inventory.go(frameInfo.time, kc.currentRetentionGeneration) {
-            val loader = sd.loaderSceneDeclaration?.let {Scene(it, inventory, renderContext, kc.currentRetentionPolicy)}
+            val loader = sd.loaderSceneDeclaration?.let { Scene(it, inventory, renderContext, kc.currentRetentionPolicy) }
             if (loader != null && !loaderLoaded) {
                 loaderLoaded = loader.render() || inventory.pending() > 0
                 loaderLoaded

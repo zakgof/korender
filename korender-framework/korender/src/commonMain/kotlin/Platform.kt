@@ -9,7 +9,7 @@ internal expect object Platform {
 
     val target: KorenderContext.TargetPlatform
 
-    internal fun createImage(width: Int, height: Int, format: Image.Format): InternalImage
+    internal fun createImage(width: Int, height: Int, format: PixelFormat): InternalImage
 
     internal fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage>
 
@@ -18,9 +18,3 @@ internal expect object Platform {
     fun nanoTime(): Long
 
 }
-
-internal interface AsyncContext {
-    val appResourceLoader: ResourceLoader
-    fun <R> call(function: suspend () -> R): Deferred<R>
-}
-

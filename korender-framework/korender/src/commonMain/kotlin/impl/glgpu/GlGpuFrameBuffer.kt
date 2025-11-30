@@ -33,32 +33,18 @@ internal class GlGpuFrameBuffer(
 
     init {
 
-        println("Creating GPU Framebuffer $this")
+        println("Creating GPU Framebuffer [$this]")
 
         glBindFramebuffer(GL_FRAMEBUFFER, fbHandle)
 
         colorTextures = colorTexturePresets.mapIndexed { index, preset ->
-            val tex = GlGpuTexture(width, height, preset)
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_COLOR_ATTACHMENT0 + index,
-                GL_TEXTURE_2D,
-                tex.glHandle,
-                0
-            )
-            tex
+            attachColorTexture(index, preset)
         }
         println(" - FB color textures [${colorTextures.map { it.glHandle }}]")
 
         if (useDepthBuffer) {
             depthTexture = GlGpuTexture(width, height, GlGpuTexture.Preset.Depth)
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_DEPTH_ATTACHMENT,
-                GL_TEXTURE_2D,
-                depthTexture.glHandle,
-                0
-            )
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D,depthTexture.glHandle,0)
             println(" - FB depth textures [${depthTexture.glHandle}]")
         } else {
             depthTexture = null
@@ -67,10 +53,24 @@ internal class GlGpuFrameBuffer(
 
         val error: Int = glCheckFramebufferStatus(GL_FRAMEBUFFER)
         if (error != GL_FRAMEBUFFER_COMPLETE) {
-            throw KorenderException("Error creating framebuffer $name: ${error.toHexString()}")
+            throw KorenderException("Error creating framebuffer [$name]: ${error.toHexString()}")
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, null)
+    }
+
+    private fun attachColorTexture(index: Int, preset: GlGpuTexture.Preset): GlGpuTexture {
+        repeat(preset.formats.size) {
+            val tex = GlGpuTexture(width, height, preset, it)
+            glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0 + index,GL_TEXTURE_2D,tex.glHandle,0)
+            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+                println("Framebuffer [$this] did not accept color target texture with internal format [${preset.formats[it].internal.toHexString()}]")
+                tex.close()
+            } else {
+                return tex
+            }
+        }
+        throw KorenderException("Framebuffer [$this] did not accept any of formats in preset [$preset] as a color target")
     }
 
     override fun close() {

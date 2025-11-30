@@ -9,39 +9,43 @@ import com.zakgof.korender.impl.glgpu.UniformBlock
 
 internal class UniformBufferHolder {
 
-    private val frameUbo = GlGpuUniformBuffer(4608)
+    private val frameUbo = GlGpuUniformBuffer(4650)
 
     private val frameOffsets = mapOf(
         "cameraPos" to 0,
         "cameraDir" to 16,
         "view" to 32,
-        "projection" to 96,
-        "screenWidth" to 160,
-        "screenHeight" to 164,
-        "time" to 168,
-        "ambientColor" to 176,
-        "numDirectionalLights" to 188,
-        "directionalLightDir[0]" to 192,
-        "directionalLightColor[0]" to 704,
-        "directionalLightShadowTextureIndex[0]" to 1216,
-        "directionalLightShadowTextureCount[0]" to 1728,
-        "numPointLights" to 2240,
-        "pointLightPos[0]" to 2256,
-        "pointLightColor[0]" to 2768,
-        "pointLightAttenuation[0]" to 3280,
-        "numShadows" to 3792,
-        "bsps[0]" to 3808,
-        "cascade[0]" to 4128,
-        "yMin[0]" to 4208,
-        "yMax[0]" to 4288,
-        "shadowMode[0]" to 4368,
-        "f1[0]" to 4448,
-        "i1[0]" to 4528
+        "projectionWidth" to 96,
+        "projectionHeight" to 100,
+        "projectionNear" to 104,
+        "projectionFar" to 108,
+        "screenWidth" to 112,
+        "screenHeight" to 116,
+        "time" to 120,
+        "ambientColor" to 128,
+        "numDirectionalLights" to 140,
+        "directionalLightDir[0]" to 144,
+        "directionalLightColor[0]" to 656,
+        "directionalLightShadowTextureIndex[0]" to 1168,
+        "directionalLightShadowTextureCount[0]" to 1680,
+        "numPointLights" to 2192,
+        "pointLightPos[0]" to 2208,
+        "pointLightColor[0]" to 2720,
+        "pointLightAttenuation[0]" to 3232,
+        "numShadows" to 3744,
+        "bsps[0]" to 3760,
+        "cascade[0]" to 4080,
+        "yMin[0]" to 4160,
+        "yMax[0]" to 4240,
+        "shadowMode[0]" to 4320,
+        "f1[0]" to 4400,
+        "f2[0]" to 4480,
+        "i1[0]" to 4560
     )
 
     private val bufferOffsetAlignment = glGetInteger(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT)
     private val maxBindings = glGetInteger(GL_MAX_UNIFORM_BUFFER_BINDINGS)
-    private val shaderUboSize = glGetInteger(GL_MAX_UNIFORM_BLOCK_SIZE)
+    private val shaderUboSize = glGetInteger(GL_MAX_UNIFORM_BLOCK_SIZE).coerceIn(0, 65536)
 
     private val shaderUbo = GlGpuUniformBuffer(shaderUboSize)
 
@@ -55,7 +59,7 @@ internal class UniformBufferHolder {
 
     fun populateFrame(uniforms: (String) -> Any?, ignoreMissing: Boolean = false) {
         frameUbo.populate(uniforms, 0, frameOffsets, "FrameContext", ignoreMissing)
-        frameUbo.upload(4608)
+        frameUbo.upload(4650)
     }
 
     fun populate(

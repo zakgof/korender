@@ -25,4 +25,12 @@ void main() {
     #endif
 
     fragColor = vec4(color, 1.);
+
+    vec4 v = vec4(0.0, 0.0, -2.0 , 1.0);
+
+    vec3 w = (inverse(view) * v).xyz;
+
+//
+//    if (look.z < -0.9)
+//        fragColor = vec4(1.0, 0.0, 0.0, 0.999);
 }

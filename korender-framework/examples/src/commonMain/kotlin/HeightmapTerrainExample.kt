@@ -17,7 +17,7 @@ fun HeightmapTerrainExample() =
         val terrain = clipmapTerrainPrefab("terrain", 2.0f, 10, 6)
         Frame {
 
-            projection = frustum(5f, 5f * height / width, 2f, 9000f)
+            projection = projection(5f, 5f * height / width, 2f, 9000f)
             camera = camera(Vec3(0f, 240f, -500f - 800f * cos(frameInfo.time * 0.1f)), 1.y + 2.z, 2.y + 1.z)
 
             AmbientLight(ColorRGB.white(0.4f))
@@ -30,7 +30,6 @@ fun HeightmapTerrainExample() =
                 ),
                 terrain(
                     heightTexture = texture("terrain/terrain-height.png"),
-                    heightTextureSize = 1024,
                     heightScale = 200.0f,
                     outsideHeight = -100.0f,
                     terrainCenter = Vec3(0f, -14f, 0f)

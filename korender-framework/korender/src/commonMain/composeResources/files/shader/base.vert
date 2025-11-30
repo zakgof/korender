@@ -15,13 +15,10 @@ out vec3 vpos;
 out vec3 vnormal;
 out vec2 vtex;
 
-#ifdef INSTANCING
-    out mat4 model;
-#else
-    #uniform mat4 model;
-#endif
-
+#uniform mat4 model;
 #uniforms
+
+mat4 totalModel;
 
 #ifdef PLUGIN_VPOSITION
 #import "$vposition"
@@ -31,34 +28,31 @@ out vec2 vtex;
 #import "$vnormal"
 #endif
 
-#ifdef PLUGIN_VOUTPUT
-#import "$voutput"
-#endif
+#import "$vprojection"
 
 void main() {
 
+    totalModel = model;
+
     #ifdef INSTANCING
-        model = mat4(instanceModel0, instanceModel1, instanceModel2, instanceModel3);
+        totalModel = model * mat4(instanceModel0, instanceModel1, instanceModel2, instanceModel3);
     #endif
 
     #ifdef PLUGIN_VPOSITION
         vec4 worldPos = pluginVPosition();
     #else
-        vec4 worldPos = model * vec4(pos, 1.0);
+        vec4 worldPos = totalModel * vec4(pos, 1.0);
     #endif
 
     #ifdef PLUGIN_VNORMAL
         vnormal = pluginVNormal();
     #else
-        vnormal = mat3(transpose(inverse(model))) * normal;
+        vnormal = mat3(transpose(inverse(totalModel))) * normal;
     #endif
 
     vpos = worldPos.xyz;
     vtex = tex;
 
-    #ifdef PLUGIN_VOUTPUT
-        gl_Position = pluginVOutput(worldPos);
-    #else
-        gl_Position = projection * (view * worldPos);
-    #endif
+    vec3 viewPos = (view * worldPos).xyz;
+    gl_Position = pluginVProjection(viewPos);
 }

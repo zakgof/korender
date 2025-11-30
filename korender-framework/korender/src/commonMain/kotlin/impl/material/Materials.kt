@@ -23,7 +23,7 @@ internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean, pri
     var vertShaderFile: String = when (base) {
         BaseMaterial.Renderable -> "!shader/base.vert"
         BaseMaterial.Billboard -> "!shader/billboard.vert"
-        BaseMaterial.Screen, BaseMaterial.Shading, BaseMaterial.Composition -> "!shader/screen.vert"
+        BaseMaterial.Screen, BaseMaterial.Shading, BaseMaterial.Composition, BaseMaterial.DecalBlend -> "!shader/screen.vert"
         BaseMaterial.Font -> "!shader/gui/font.vert"
         BaseMaterial.Image -> "!shader/gui/image.vert"
         BaseMaterial.Sky -> "!shader/sky/sky.vert"
@@ -38,6 +38,7 @@ internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean, pri
         BaseMaterial.Shading -> "!shader/deferred/shading.frag"
         BaseMaterial.Composition -> "!shader/deferred/composition.frag"
         BaseMaterial.Decal -> "!shader/deferred/decal.frag"
+        BaseMaterial.DecalBlend -> "!shader/deferred/decalblend.frag"
     }
 
     val shaderDefs: MutableSet<String> = mutableSetOf()

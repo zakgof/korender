@@ -894,7 +894,7 @@ object GLConstants {
     const val GL_FUNC_SUBTRACT: Int = 0x800A
     const val GL_FUNC_REVERSE_SUBTRACT: Int = 0x800B
 
-    /** Accepted by the `internalFormat` parameter of TexImage1D, TexImage2D, CopyTexImage1D and CopyTexImage2D.  */
+    /** Accepted by the `internalformat` parameter of TexImage1D, TexImage2D, CopyTexImage1D and CopyTexImage2D.  */
     const val GL_DEPTH_COMPONENT16: Int = 0x81A5
     const val GL_DEPTH_COMPONENT24: Int = 0x81A6
     const val GL_DEPTH_COMPONENT32: Int = 0x81A7
@@ -1292,7 +1292,7 @@ object GLConstants {
     /** Returned by the `params` parameter of GetTexLevelParameter.  */
     const val GL_UNSIGNED_NORMALIZED: Int = 0x8C17
 
-    /** Accepted by the `internalFormat` parameter of TexImage1D, TexImage2D, and TexImage3D.  */
+    /** Accepted by the `internalformat` parameter of TexImage1D, TexImage2D, and TexImage3D.  */
     const val GL_RGBA32F: Int = 0x8814
     const val GL_RGB32F: Int = 0x8815
     const val GL_RGBA16F: Int = 0x881A
@@ -1466,7 +1466,7 @@ object GLConstants {
      */
     const val GL_HALF_FLOAT: Int = 0x140B
 
-    /** Accepted by the `internalFormat` parameter of TexImage1D, TexImage2D, and TexImage3D.  */
+    /** Accepted by the `internalformat` parameter of TexImage1D, TexImage2D, and TexImage3D.  */
     const val GL_RGBA32UI: Int = 0x8D70
     const val GL_RGB32UI: Int = 0x8D71
     const val GL_RGBA16UI: Int = 0x8D76
@@ -1517,7 +1517,7 @@ object GLConstants {
     const val GL_COMPRESSED_RG_RGTC2: Int = 0x8DBD
     const val GL_COMPRESSED_SIGNED_RG_RGTC2: Int = 0x8DBE
 
-    /** Accepted by the `internalFormat` parameter of TexImage1D, TexImage2D, TexImage3D, CopyTexImage1D, and CopyTexImage2D.  */
+    /** Accepted by the `internalformat` parameter of TexImage1D, TexImage2D, TexImage3D, CopyTexImage1D, and CopyTexImage2D.  */
     const val GL_R8: Int = 0x8229
     const val GL_R16: Int = 0x822A
     const val GL_RG8: Int = 0x822B

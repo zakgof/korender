@@ -4,6 +4,7 @@
 in vec3 vpos;
 in vec3 vnormal;
 in vec2 vtex;
+
 #ifdef VERTEX_COLOR
     in vec4 vcolor;
 #endif
@@ -18,6 +19,7 @@ in vec2 vtex;
 
 #uniform float metallicFactor;
 #uniform float roughnessFactor;
+#uniform float alphaCutoff;
 
 uniform sampler2D shadowTextures[5];
 uniform sampler2DShadow pcfTextures[5];
@@ -34,8 +36,6 @@ vec3 normal;
 vec3 emission;
 float metallic;
 float roughness;
-vec3 diffuse;
-vec3 f0;
 vec3 color;
 vec3 look;
 
@@ -47,16 +47,20 @@ vec3 look;
 #import "$texturing"
 #endif
 
+#ifdef PLUGIN_NORMAL
+#import "$normal"
+#endif
+
 #ifdef PLUGIN_ALBEDO
 #import "$albedo"
 #endif
 
-#ifdef PLUGIN_EMISSION
-#import "$emission"
+#ifdef PLUGIN_DISCARD
+#import "$discard"
 #endif
 
-#ifdef PLUGIN_NORMAL
-#import "$normal"
+#ifdef PLUGIN_EMISSION
+#import "$emission"
 #endif
 
 #ifdef PLUGIN_METALLIC_ROUGHNESS
@@ -75,15 +79,16 @@ vec3 look;
 #import "$depth"
 #endif
 
+#import "!shader/lib/shadow.glsl"
+#import "!shader/lib/pbr.glsl"
+#import "!shader/lib/light.glsl"
+
 #ifdef PLUGIN_SKY
 #import "!shader/lib/space.glsl"
 #import "!shader/lib/sky.glsl"
 #import "$sky"
+#import "!shader/lib/skyibl.glsl"
 #endif
-
-#import "!shader/lib/shadow.glsl"
-#import "!shader/lib/pbr.glsl"
-#import "!shader/lib/light.glsl"
 
 void main() {
 
@@ -117,8 +122,13 @@ void main() {
         albedo = pluginAlbedo();
     #endif
 
-    if (albedo.a < 0.001)
-        discard;
+    #ifdef PLUGIN_DISCARD
+        if (pluginDiscard())
+            discard;
+    #else
+        if (albedo.a < alphaCutoff)
+            discard;
+    #endif
 
     emission = vec3(0.);
     #ifdef PLUGIN_EMISSION
@@ -134,21 +144,19 @@ void main() {
         roughness = mr.y;
     #endif
 
-    diffuse = mix(albedo.rgb, vec3(0.), metallic);
-    f0 = mix(vec3(0.04), albedo.rgb, metallic);
-
     #ifdef PLUGIN_SPECULAR_GLOSSINESS
         vec4 sg = pluginSpecularGlossiness();
-        diffuse = albedo.rgb * (1. - max(max(sg.r, sg.g), sg.b));
-        f0 = sg.rgb;
+        float maxSpec = max(max(sg.r, sg.g), sg.b);
+        metallic = clamp((maxSpec - 0.04) / (1.0 - 0.04), 0.0, 1.0);
+        if (metallic > 0.01) {
+            albedo.rgb = sg.rgb;
+        }
         roughness = 1. - sg.a;
     #endif
 
     ///////////////////////
 
     look = normalize(cameraPos - position);
-    color = diffuse * ambientColor + emission;
-
     float plane = dot((position - cameraPos), cameraDir);
 
     float occlusion = 1.0;
@@ -158,17 +166,24 @@ void main() {
 
     populateShadowRatios(plane, position);
 
+    color = ambientColor * albedo.rgb * (1.0 - metallic) + emission;
+
     for (int l=0; l<numDirectionalLights; l++) {
-        color += dirLight(l, normal, look, diffuse, f0, roughness, occlusion);
+        color += dirLight(l, normal, look, albedo.rgb, metallic, roughness, occlusion);
     }
     for (int l=0; l<numPointLights; l++) {
-        color += pointLight(vpos, l, normal, look, diffuse, f0, roughness, occlusion);
+        color += pointLight(vpos, l, normal, look, albedo.rgb, metallic, roughness, occlusion);
     }
+
+    #ifdef PLUGIN_SKY
+        float roughnessAA = antiAliasRoughness(roughness, normal, look);
+        color += skyibl(normal, look, albedo.rgb, metallic, roughnessAA);
+    #endif
 
     #ifdef PLUGIN_OUTPUT
         fragColor = pluginOutput();
     #else
-        fragColor = vec4(color, albedo.a);
+        fragColor = vec4(color * albedo.a, albedo.a);
     #endif
 
     #ifdef PLUGIN_DEPTH

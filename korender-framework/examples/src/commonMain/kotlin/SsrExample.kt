@@ -5,6 +5,7 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
+import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
@@ -13,24 +14,16 @@ import com.zakgof.korender.math.z
 
 @Composable
 fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
-    val orbitCamera = OrbitCamera(this, 20.z, 1.y)
+    val orbitCamera = OrbitCamera(20.z + 4.y, 1.y)
     OnTouch { orbitCamera.touch(it) }
     val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })
     Frame {
-        camera = orbitCamera.camera(projection, width, height)
-        val phase = 1 //frameInfo.time.toInt() % 3
+        camera = orbitCamera.run { camera() }
+        val phase = frameInfo.time.toInt() % 3
         DeferredShading {
             if (phase == 1) {
                 PostShading(
-                    ssr(
-                        width = width / 4,
-                        height = height / 4,
-                        fxaa = true,
-                        maxRayTravel = 12f,
-                        linearSteps = 120,
-                        binarySteps = 4,
-                        envTexture = env
-                    )
+                    ssr(downsample = 2, envTexture = env)
                 )
             }
             if (phase == 2) {
@@ -38,6 +31,7 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             }
         }
 
+        AmbientLight(white(if (phase == 0) 0.6f else 0f))
         DirectionalLight(Vec3(1f, -1f, 0f))
         Sky(cubeSky(env))
         Renderable(
@@ -60,8 +54,8 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         Gui {
             val mode = when (phase) {
                 1 -> "SSR"
-                2 -> "IBL"
-                else -> ""
+                2 -> "ENV"
+                else -> "NO ENV"
             }
             Column {
                 Filler()

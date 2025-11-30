@@ -2,6 +2,8 @@ package com.zakgof.korender
 
 interface TextureDeclaration
 
+interface Texture3DDeclaration
+
 interface CubeTextureDeclaration
 
 enum class TextureFilter {

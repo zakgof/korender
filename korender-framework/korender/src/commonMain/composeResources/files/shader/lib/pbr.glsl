@@ -1,5 +1,8 @@
-// Constants
 const float PI = 3.14159265359;
+
+vec3 fresnelSchlick(float cosTheta, vec3 F0) {
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
 
 float distributionGGX(float NdotH, float roughness) {
     float a = roughness * roughness;
@@ -25,36 +28,29 @@ float geometrySmith(float NdotV, float NdotL, float roughness) {
     return ggx1 * ggx2;
 }
 
-vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 cdiff, vec3 F0, float roughness, vec3 lightColor) {
+vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 albedo, float metallic, float roughness, vec3 lightColor) {
 
     vec3 H = normalize(V + L);
 
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
-    float NdotH = max(dot(N, H), 0.0);
-    float VdotH = max(dot(V, H), 0.0);
+    float NdotV = max(dot(N, V), 0.);
+    float NdotL = max(dot(N, L), 0.);
+    float NdotH = max(dot(N, H), 0.);
+    float VdotH = max(dot(V, H), 0.);
 
-    vec3 F = F0 + (1. - F0) * pow(1. - VdotH, 5.);
-    vec3 f_diffuse = (1. - F) * (1. / PI) * cdiff;
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
-#ifdef BLINN_PHONG
-    float shininess = mix(2.0, 256.0, 1.0 - roughness);
-    vec3 f_specular = F * pow(NdotH, shininess);
-#else
     float D = distributionGGX(NdotH, roughness);
     float G = geometrySmith(NdotV, NdotL, roughness);
-    vec3 f_specular = F * D * G / max(4.0 * NdotV * NdotL, 0.001);
-#endif
-    
-#ifdef PLUGIN_SKY
-    vec3 R = reflect(-V, N);
-    float maxBias = 8.; // TODO ! Get from da sky
-    vec3 env = sky(R, roughness * maxBias);
-    vec3 FR = F0 + (1. - F0) * pow(1. - NdotV, 5.);
-    vec3 indirect = env * FR;
-#else
-    vec3 indirect = vec3(0.);
-#endif
+    vec3 F = fresnelSchlick(VdotH, F0);
 
-    return (f_diffuse + f_specular) * NdotL * lightColor + indirect;
+    vec3 specular = D * G * F / (4.0 * NdotV * NdotL + 0.001);
+    vec3 diffuse = (1.0 - F) * (1.0 - metallic) * albedo / PI;
+    return (diffuse + specular) * lightColor * NdotL;
+}
+
+float antiAliasRoughness(float roughness, vec3 N, vec3 V) {
+    vec3 dndx = dFdx(N);
+    vec3 dndy = dFdy(N);
+    float varianceD = dot(dndx, dndx) + dot(dndy, dndy);
+    return clamp(sqrt(roughness * roughness + varianceD * 4.0), 0., 1.);
 }

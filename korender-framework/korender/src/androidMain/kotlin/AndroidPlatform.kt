@@ -32,7 +32,6 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -56,7 +55,7 @@ internal actual object Platform {
         bitmap.copyPixelsToBuffer(byteBuffer)
         val format = bitmap.config
         val gpuFormat = when (format) {
-            Bitmap.Config.ARGB_8888 -> Image.Format.RGBA
+            Bitmap.Config.ARGB_8888 -> PixelFormat.RGBA
             else -> throw KorenderException("Unsupported image format $format")
         }
         val gpuBytes = when (format) {
@@ -109,7 +108,7 @@ internal actual object Platform {
     }
 
     actual fun nanoTime() = System.nanoTime()
-    internal actual fun createImage(width: Int, height: Int, format: Image.Format): InternalImage {
+    internal actual fun createImage(width: Int, height: Int, format: PixelFormat): InternalImage {
         // TODO image types support!
         val bitmap = createBitmap(width, height)
         return bitmapToImage(bitmap)
@@ -125,12 +124,7 @@ actual fun Korender(appResourceLoader: ResourceLoader, block: KorenderContext.()
     class KorenderGLRenderer(private val view: View) : GLSurfaceView.Renderer {
 
         override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
-            val async = object : AsyncContext {
-                override val appResourceLoader = appResourceLoader
-                override fun <R> call(function: suspend () -> R): Deferred<R> =
-                    CompletableDeferred(runBlocking { function() })
-            }
-            engine = Engine(view.width, view.height, async, block)
+            engine = Engine(view.width, view.height, appResourceLoader, block)
         }
 
         override fun onDrawFrame(unused: GL10) {

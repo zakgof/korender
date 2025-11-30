@@ -1,5 +1,5 @@
-# ![Korender](doc/korender32.png) korender
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.zakgof/korender/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.zakgof/korender)
+# ![Korender](readme/korender32.png) korender
+[![Maven Central](https://img.shields.io/badge/Maven_Central-0.5.1-8e27c7.svg?logo=mavenCentral)](https://central.sonatype.com/artifact/com.github.zakgof/korender/0.5.1)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.2.0-278ec7.svg?logo=kotlin)](http://kotlinlang.org)
 
 ![wasm](https://img.shields.io/badge/wasm-624FE8)
@@ -12,7 +12,7 @@ Kotlin Multiplatform 3D graphics rendering engine based on OpenGL / OpenGL ES / 
 Korender uses declarative approach that seamlessly integrates 3D viewport into Compose Multiplatform UI. 
 Same Korender code runs on all supported platforms.
 
-![Mobile](doc/mobile.jpg)![Web](doc/web.jpg)![Desktop](doc/desktop.jpg)
+![Mobile](readme/mobile.jpg)![Web](readme/web.jpg)![Desktop](readme/desktop.jpg)
 
 Live web demo: https://zakgof.github.io/projects/korender/wasm/
 
@@ -57,7 +57,7 @@ Korender is BETA - APIs may change without notice.
 - Desktop: `./gradlew :examples:run`
 - Android: `./gradlew :examples:installRelease`
 
-![Showcase](doc/collage1.jpg)!
+![Showcase](readme/collage1.jpg)!
 
 ### Quick start 
 
@@ -85,10 +85,10 @@ Korender {
 #### From scratch
 
 - Generate a new KMP application using [Kotlin Multiplatform Wizard](https://kmp.jetbrains.com/). Select Android, Desktop and WASM platforms.
-- Add Korender dependency `com.github.zakgof:korender:0.5.0`
+- Add Korender dependency `com.github.zakgof:korender:0.5.1`
 - Add the above code to commonMain
 - Run on desktop: `./gradlew composeApp:run`
 
 
 ### Further reading
-Explore the [Korender Wiki](https://github.com/zakgof/korender/wiki)
+Explore the [Korender Wiki](https://zakgof.github.io/projects/korender/wiki)

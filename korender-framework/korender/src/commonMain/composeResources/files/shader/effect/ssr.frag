@@ -1,52 +1,57 @@
 #import "!shader/lib/header.glsl"
+#import "!shader/lib/ubo.glsl"
+#import "!shader/lib/pbr.glsl"
 
 in vec2 vtex;
 
-uniform sampler2D colorTexture;
-
+uniform sampler2D colorInputTexture;
+uniform sampler2D albedoGeometryTexture;
 uniform sampler2D normalGeometryTexture;
-uniform sampler2D materialGeometryTexture;
 uniform sampler2D depthGeometryTexture;
 
-#uniform float maxRayTravel;
+uniform sampler2D noiseTexture;
+
+#uniform float startStep;
+#uniform float nextStepRatio;
+#uniform float maxReflectionDistance;
 #uniform int linearSteps;
 #uniform int binarySteps;
 
 #uniforms
-
-#ifdef SSR_ENV
-    uniform samplerCube envTexture;
-#endif
 
 out vec4 fragColor;
 
 #import "!shader/lib/space.glsl"
 
 vec3 wToS(vec3 r) {
-    vec4 p = projection * (view * vec4(r, 1.0));
+    vec4 p = pluginVProjection((view * vec4(r, 1.0)).xyz);
     return (vec3(1.) + p.xyz / p.w) * 0.5;
 }
 
-vec3 ssr(vec3 vpos, vec3 N, vec3 V) {
+vec4 ssr(vec3 vpos, vec3 N, vec3 V, float roughness) {
 
     vec3 rayDir = normalize(reflect(-V, N));
 
-#ifdef SSR_ENV
-    vec3 dflt = texture(envTexture, rayDir).rgb;
-#else
-    vec3 dflt =  vec3(0.);
-#endif
-
+    float step = startStep;
     float w = 1.;
-
-
-
     float peel = 0.01;
 
-    float travel = 0.;
-    float step = maxRayTravel / float(linearSteps);
-    vec3 rayPoint = vpos;
+    // Bent normals
+    float bendAmount = 0.1;             // tweak 0.1 – 0.6
+    float f = (1.0 - roughness);        // 1=mirror, 0=diffuse
+    vec3 bentNormal = normalize(mix(N, V, f * bendAmount));
+
+    // Adaptive bias
+    float angle = abs(dot(N, V));
+    float bias = mix(startStep * 0.2, startStep, 1.0 - angle);  // more bias for grazing
+    bias = mix(bias, bias * 0.5, roughness);  // glossy reduces bias slightly
+
+    vec3 rayPoint = vpos + bentNormal * bias;
     vec3 rayStep = rayDir * step;
+    float travel = 0.;
+
+    float startOffset = textureLod(noiseTexture, vtex * 1.0, 0.0).r * 0.5;
+    rayPoint -= rayStep * startOffset;
 
     for (int i = 0; i < linearSteps; i++) {
 
@@ -55,8 +60,9 @@ vec3 ssr(vec3 vpos, vec3 N, vec3 V) {
         travel += step;
 
         vec3 uv = wToS(rayPoint);
-        if (uv.x < 0. || uv.x > 1. || uv.y < 0. || uv.y > 1. || uv.z < 0. || uv.z > 1.)
+        if (uv.x < 0. || uv.x > 1. || uv.y < 0. || uv.y > 1. || uv.z < 0. || uv.z > 1.) {
             break;
+        }
 
         float deepen = uv.z - texture(depthGeometryTexture, uv.xy).r;
 
@@ -79,35 +85,37 @@ vec3 ssr(vec3 vpos, vec3 N, vec3 V) {
             }
             uv = wToS(rayPoint);
             w *= smoothstep (peel, 0.0, abs(deepen));
-            w *= smoothstep(maxRayTravel * maxRayTravel, 0., travel * travel);
-            return mix(dflt, texture(colorTexture, uv.xy).rgb, w);
+            w *= smoothstep(maxReflectionDistance, 0., travel);
+            return vec4(texture(colorInputTexture, uv.xy /*, 8. * roughness*/).rgb, w);
         }
+
+        step *= nextStepRatio;
+        rayStep *= nextStepRatio;
     }
-    return dflt;
+    return vec4(0.);
 }
 
 void main() {
 
     float depth = texture(depthGeometryTexture, vtex).r;
-    vec3 vpos = screenToWorldSpace(vtex, depth);
-
-    vec4 materialTexel = texture(materialGeometryTexture, vtex);
-    vec4 normalTexel = texture(normalGeometryTexture, vtex);
-
-    vec3 F0 = materialTexel.rgb;
-    float rough = materialTexel.a;
-
-    vec3 V = normalize(cameraPos - vpos);
-    vec3 N = normalize(normalTexel.rgb * 2.0 - 1.0);
-
-    vec3 reflection = vec3(0.);
+    vec4 reflection = vec4(0.);
     if (depth < 1.0) {
-        reflection = ssr(vpos, N, V);
-        float NdotV = clamp(dot(N, V), 0.0, 1.0);
-        vec3 FR = F0 + (1. - F0) * pow(1. - NdotV, 5.);
-        reflection *= FR * (1. - rough);
-    }
+        vec3 vpos = screenToWorldSpace(vtex, depth);
 
-    fragColor = vec4(reflection, 1.0);
-    gl_FragDepth = depth;
+        vec4 albedoTexel = texture(albedoGeometryTexture, vtex);
+        vec4 normalTexel = texture(normalGeometryTexture, vtex);
+
+        vec3 albedo = albedoTexel.rgb;
+        float metallic = albedoTexel.a;
+        vec3 F0 = mix(vec3(0.04), albedo, metallic);
+        float rough = normalTexel.a;
+
+        vec3 V = normalize(cameraPos - vpos);
+        vec3 N = normalize(normalTexel.rgb * 2.0 - 1.0);
+        reflection = ssr(vpos, N, V, rough);
+        float NdotV = clamp(dot(N, V), 0.0, 1.0);
+        vec3 FR = fresnelSchlick(NdotV, F0);
+        reflection.rgb *= FR;
+    }
+    fragColor = reflection;
 }

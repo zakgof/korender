@@ -7,6 +7,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 internal class Loader(private val appResourceLoader: ResourceLoader) {
 
@@ -14,19 +15,23 @@ internal class Loader(private val appResourceLoader: ResourceLoader) {
     private val waitingMap = mutableMapOf<String, Deferred<*>>()
     private val syncyMap = mutableMapOf<Any, Deferred<*>>()
 
+    private val updaters = mutableSetOf<() -> Unit>()
+
     fun <R> safeBytes(resource: String, block: (ByteArray) -> R?): R? {
         val deferred = loadingMap.getOrPut(resource) {
             CoroutineScope(Dispatchers.Default).async {
-                resourceBytes(appResourceLoader, resource)
+                resourceBytes(appResourceLoader, resource).also { fireUpdaters() }
             }
         }
-        return deferred.resultOrNull()?.let { block(it) }?.also { loadingMap.remove(resource) }
+        return deferred.resultOrNull()?.let { block(it) }?.also {
+            loadingMap.remove(resource)
+        }
     }
 
     fun unsafeBytes(resource: String): ByteArray? {
         val deferred = loadingMap.getOrPut(resource) {
             CoroutineScope(Dispatchers.Default).async {
-                resourceBytes(appResourceLoader, resource)
+                resourceBytes(appResourceLoader, resource).also { fireUpdaters() }
             }
         }
         return deferred.resultOrNull()
@@ -46,7 +51,7 @@ internal class Loader(private val appResourceLoader: ResourceLoader) {
     @Suppress("UNCHECKED_CAST")
     fun <R> unsafeWait(resource: String, function: () -> Deferred<R>): R? {
         val deferred = waitingMap.getOrPut(resource) {
-            function()
+            function().also { fireUpdaters() }
         }
         return deferred.resultOrNull() as R?
     }
@@ -55,7 +60,7 @@ internal class Loader(private val appResourceLoader: ResourceLoader) {
     fun <R> syncy(id: Any, function: suspend (ResourceLoader) -> R): R? {
         val deferred = syncyMap.getOrPut(id) {
             CoroutineScope(Dispatchers.Default).async {
-                function(appResourceLoader)
+                function(appResourceLoader).also { fireUpdaters() }
             }
         }
         return deferred.resultOrNull()?.also {
@@ -64,4 +69,14 @@ internal class Loader(private val appResourceLoader: ResourceLoader) {
     }
 
     fun pending(): Int = loadingMap.size + waitingMap.size + syncyMap.size
+
+    fun onWaitUpdate(block: () -> Unit) {
+        updaters += block
+    }
+
+    private fun fireUpdaters() {
+        val fire = updaters.toList()
+        updaters.clear()
+        fire.forEach { CoroutineScope(Dispatchers.Default).launch { it() } }
+    }
 }

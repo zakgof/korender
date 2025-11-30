@@ -22,6 +22,8 @@ out vec3 vpos;
 
 #uniforms
 
+#import "$vprojection"
+
 void main() {
 
     #ifdef INSTANCING
@@ -29,5 +31,7 @@ void main() {
     #endif
 
     vec4 worldPos = model * vec4(pos, 1.0);
-    gl_Position = projection * (view * worldPos);
+
+    vec3 viewPos = (view * worldPos).xyz;
+    gl_Position = pluginVProjection(viewPos);
 }

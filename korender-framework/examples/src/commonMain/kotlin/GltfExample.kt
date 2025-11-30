@@ -12,10 +12,10 @@ import com.zakgof.korender.math.z
 
 @Composable
 fun GltfExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
-    val orbitCamera = OrbitCamera(this, 20.z, 3.y)
+    val orbitCamera = OrbitCamera(20.z, 3.y)
     OnTouch { orbitCamera.touch(it) }
     Frame {
-        camera = orbitCamera.camera(projection, width, height)
+        camera = orbitCamera.run { camera() }
         DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(3f))
         AmbientLight(white(0.6f))
         Gltf(resource = "gltf/ai/swat.glb", transform = scale(0.03f).rotate(1.y, frameInfo.time))

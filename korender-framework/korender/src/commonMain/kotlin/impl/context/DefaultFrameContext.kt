@@ -4,6 +4,7 @@ import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.context.BillboardInstancingDeclaration
@@ -22,11 +23,13 @@ import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.engine.EnvCaptureContext
 import com.zakgof.korender.impl.engine.FrameCaptureContext
+import com.zakgof.korender.impl.engine.FrameTarget
 import com.zakgof.korender.impl.engine.GltfDeclaration
 import com.zakgof.korender.impl.engine.InternalBillboardInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalFilterDeclaration
 import com.zakgof.korender.impl.engine.InternalGltfInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalInstancingDeclaration
+import com.zakgof.korender.impl.engine.InternalPassDeclaration
 import com.zakgof.korender.impl.engine.PointLightDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.SceneDeclaration
@@ -34,6 +37,7 @@ import com.zakgof.korender.impl.engine.ShadowDeclaration
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.ScreenQuad
+import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.prefab.InternalPrefab
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGB
@@ -60,8 +64,8 @@ internal class DefaultFrameContext(
         val meshDeclaration = (instancing as? InternalInstancingDeclaration)?.let {
             InstancedMesh(instancing.id, instancing.count, mesh, !instancing.dynamic, transparent, korenderContext.currentRetentionPolicy, instancing.instancer)
         } ?: mesh
-        val rd = RenderableDeclaration(BaseMaterial.Renderable, materialModifiers.asList(), meshDeclaration, transform, korenderContext.currentRetentionPolicy)
-        addToScene(transparent, rd)
+        val rd = RenderableDeclaration(BaseMaterial.Renderable, materialModifiers.asList(), meshDeclaration, transform, transparent, korenderContext.currentRetentionPolicy)
+        sceneDeclaration.append(rd)
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, prefab: Prefab) {
@@ -81,26 +85,20 @@ internal class DefaultFrameContext(
             materialModifiers.asList(),
             meshDeclaration,
             IDENTITY,
+            transparent,
             korenderContext.currentRetentionPolicy
         )
-        addToScene(transparent, rd)
+        sceneDeclaration.append(rd)
     }
 
     override fun Sky(vararg materialModifiers: MaterialModifier) {
-        sceneDeclaration.skies += RenderableDeclaration(BaseMaterial.Sky, materialModifiers.asList(), ScreenQuad(korenderContext.currentRetentionPolicy), Transform.IDENTITY, korenderContext.currentRetentionPolicy)
+        sceneDeclaration.skies += RenderableDeclaration(BaseMaterial.Sky, materialModifiers.asList(), ScreenQuad(korenderContext.currentRetentionPolicy), Transform.IDENTITY, false, korenderContext.currentRetentionPolicy)
     }
 
     override fun Gui(block: GuiContainerContext.() -> Unit) {
         val root = ElementDeclaration.Container(Direction.Vertical)
         DefaultContainerContext(this, root).apply(block)
         sceneDeclaration.guis += root
-    }
-
-    private fun addToScene(transparent: Boolean, rd: RenderableDeclaration) {
-        if (transparent)
-            sceneDeclaration.transparents += rd
-        else
-            sceneDeclaration.opaques += rd
     }
 
     override fun DirectionalLight(direction: Vec3, color: ColorRGB, block: ShadowContext.() -> Unit) {
@@ -117,11 +115,28 @@ internal class DefaultFrameContext(
         sceneDeclaration.ambientLightColor = color
     }
 
+    override fun PostProcess(postProcessingEffect: PostProcessingEffect, block: FrameContext.() -> Unit) {
+        val sd = SceneDeclaration()
+        val fc = DefaultFrameContext(korenderContext, sd, frameInfo)
+        fc.apply(block)
+        sceneDeclaration.filters += postProcessingEffect as InternalFilterDeclaration
+    }
+
     override fun PostProcess(vararg materialModifiers: MaterialModifier, block: FrameContext.() -> Unit) {
         val sd = SceneDeclaration()
         val fc = DefaultFrameContext(korenderContext, sd, frameInfo)
         fc.apply(block)
-        sceneDeclaration.filters += InternalFilterDeclaration(materialModifiers.asList(), sd, korenderContext.currentRetentionPolicy)
+        sceneDeclaration.filters += InternalFilterDeclaration(
+            listOf(
+                InternalPassDeclaration(
+                    mapping = mapOf(),
+                    modifiers = materialModifiers.asList().map { it as InternalMaterialModifier },
+                    sceneDeclaration = sd,
+                    target = FrameTarget(fc.width, fc.height, "colorTexture", "depthTexture"),
+                    retentionPolicy = korenderContext.currentRetentionPolicy
+                )
+            )
+        )
     }
 
     override fun CaptureEnv(envProbeName: String, resolution: Int, position: Vec3, near: Float, far: Float, insideOut: Boolean, block: FrameContext.() -> Unit) {

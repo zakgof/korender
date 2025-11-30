@@ -2,21 +2,14 @@ package com.zakgof.korender
 
 import com.zakgof.korender.math.Vec3
 
-interface ProjectionDeclaration
-
-interface FrustumProjectionDeclaration : ProjectionDeclaration {
+interface ProjectionDeclaration  {
     val width: Float
     val height: Float
     val near: Float
     val far: Float
 }
 
-interface OrthoProjectionDeclaration : ProjectionDeclaration {
-    val width: Float
-    val height: Float
-    val near: Float
-    val far: Float
-}
+interface ProjectionMode
 
 interface CameraDeclaration {
     val position: Vec3

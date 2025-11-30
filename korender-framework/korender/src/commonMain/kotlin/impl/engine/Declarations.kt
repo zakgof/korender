@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
@@ -11,6 +12,7 @@ import com.zakgof.korender.context.GltfInstancingDeclaration
 import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
+import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
@@ -35,6 +37,12 @@ internal class SceneDeclaration {
     val envCaptures = mutableMapOf<String, EnvCaptureContext>()
     val frameCaptures = mutableMapOf<String, FrameCaptureContext>()
     var loaderSceneDeclaration: SceneDeclaration? = null
+
+    fun append(renderableDeclaration: RenderableDeclaration) =
+        if (renderableDeclaration.transparent)
+            transparents += renderableDeclaration
+        else
+            opaques += renderableDeclaration
 }
 
 internal class DeferredShadingDeclaration() {
@@ -65,6 +73,7 @@ internal class RenderableDeclaration(
     val materialModifiers: List<MaterialModifier>,
     val mesh: MeshDeclaration,
     val transform: Transform = Transform.IDENTITY,
+    val transparent: Boolean,
     override val retentionPolicy: RetentionPolicy
 ) : Retentionable
 
@@ -77,7 +86,8 @@ internal enum class BaseMaterial {
     Sky,
     Shading,
     Composition,
-    Decal
+    Decal,
+    DecalBlend
 }
 
 internal class MaterialDeclaration(
@@ -178,4 +188,10 @@ internal class InternalGltfInstancingDeclaration(val id: String, val count: Int,
 
 internal class InternalBillboardInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<BillboardInstance>) : BillboardInstancingDeclaration
 
-internal class InternalFilterDeclaration(val modifiers: List<MaterialModifier>, val sceneDeclaration: SceneDeclaration, override val retentionPolicy: RetentionPolicy) : Retentionable
+internal class InternalFilterDeclaration(val passes: List<InternalPassDeclaration>) : PostProcessingEffect
+
+internal class InternalPassDeclaration(val mapping: Map<String, String>, val modifiers: List<InternalMaterialModifier>, val sceneDeclaration: SceneDeclaration?, val target: FrameTarget, override val retentionPolicy: RetentionPolicy) : Retentionable
+
+internal data class ReusableFrameBufferDefinition(val pingPong: Int, val width: Int, val height: Int)
+
+internal data class FrameTarget(val width: Int, val height: Int, val colorOutput: String, val depthOutput: String)

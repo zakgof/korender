@@ -11,6 +11,7 @@ import com.zakgof.korender.Attributes.MODEL2
 import com.zakgof.korender.Attributes.MODEL3
 import com.zakgof.korender.Attributes.WEIGHTS
 import com.zakgof.korender.IndexType
+import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
@@ -49,6 +50,7 @@ internal data class Billboard(override val retentionPolicy: RetentionPolicy) : I
 internal data class ImageQuad(override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class ScreenQuad(override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class Quad(val halfSideX: Float, val halfSideY: Float, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
+internal data class BiQuad(val halfSideX: Float, val halfSideY: Float, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class CylinderSide(val height: Float, val radius: Float, val sectors: Int, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class ConeTop(val height: Float, val radius: Float, val sectors: Int, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
 internal data class Disk(val radius: Float, val sectors: Int, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
@@ -157,7 +159,7 @@ internal data class CustomMesh(
     override fun instancing(meshLink: MeshLink, reverseZ: Boolean, camera: Camera?, inventory: Inventory, addUniforms: MutableMap<String, Any?>, addDefs: MutableSet<String>) {
         if (dynamic) {
             meshLink.cpuMesh.updateMesh(block)
-            meshLink.updateGpu(0, false)
+            meshLink.updateGpu(-1, false)
         }
     }
 }
@@ -205,7 +207,7 @@ internal class FontMesh(
 
 internal data class CustomCpuMesh(
     val id: String,
-    val mesh: CMesh,
+    val mesh: Mesh,
     override val retentionPolicy: RetentionPolicy
 ) : InternalMeshDeclaration {
     override fun equals(other: Any?): Boolean = (other is CustomCpuMesh && other.id == id)

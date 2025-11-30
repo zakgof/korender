@@ -17,6 +17,8 @@ out vec2 vtex;
 
 #import "$terrain"
 
+#import "$vprojection"
+
 void main() {
 
     vec2 intpos = tileOffsetAndScale.xy + vec2(float(b1), float(b2)) * tileOffsetAndScale.z;
@@ -53,5 +55,7 @@ void main() {
         vpos.y = mix((hL + hR) * 0.5, h, w);
     }
     vnormal = vec3(0. ,1., 0.);
-    gl_Position = projection * (view * vec4(vpos, 1.));
+
+    vec3 viewPos = (view * vec4(vpos, 1.0)).xyz;
+    gl_Position = pluginVProjection(viewPos);
 }

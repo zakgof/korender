@@ -35,5 +35,5 @@ vec4 pluginVPosition() {
             weights.z * jntMatrices[joints.z] +
             weights.w * jntMatrices[joints.w];
     #endif
-    return model * (skinningMatrix * vec4(pos, 1.0));
+    return totalModel * (skinningMatrix * vec4(pos, 1.0));
 }

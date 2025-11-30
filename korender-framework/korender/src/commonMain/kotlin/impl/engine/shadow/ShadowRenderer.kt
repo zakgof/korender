@@ -1,6 +1,5 @@
 package com.zakgof.korender.impl.engine.shadow
 
-import com.zakgof.korender.FrustumProjectionDeclaration
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
@@ -24,8 +23,7 @@ import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.impl.material.InternalMaterialModifier
-import com.zakgof.korender.impl.projection.FrustumProjection
-import com.zakgof.korender.impl.projection.OrthoProjection
+import com.zakgof.korender.impl.projection.OrthoProjectionMode
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
@@ -66,7 +64,10 @@ internal object ShadowRenderer {
         scene.renderContext.frameUniforms(casterUniforms)
 
         casterUniforms["view"] = shadowCamera.mat4
-        casterUniforms["projection"] = shadowProjection.mat4
+        casterUniforms["projectionWidth"] = shadowProjection.width
+        casterUniforms["projectionHeight"] = shadowProjection.height
+        casterUniforms["projectionNear"] = shadowProjection.near
+        casterUniforms["projectionFar"] = shadowProjection.far
         casterUniforms["cameraPos"] = shadowCamera.position
         casterUniforms["cameraDir"] = shadowCamera.direction
 
@@ -85,11 +86,12 @@ internal object ShadowRenderer {
 
                 val shadowMaterialModifier = InternalMaterialModifier {
 
-                    it.vertShaderFile = if (renderableDeclaration.base == BaseMaterial.Billboard) "!shader/billboard.vert" else "!shader/base.vert"
+                    // it.vertShaderFile = if (renderableDeclaration.base == BaseMaterial.Billboard) "!shader/billboard.vert" else "!shader/base.vert"
                     it.fragShaderFile = "!shader/caster.frag"
+                    it.plugins["vprojection"] = "!shader/plugin/vprojection.ortho.vert"
 
                     if (declaration.fixedYRange != null) {
-                        it.plugins["voutput"] = "!shader/plugin/voutput.fixedyrange.vert"
+                        it.plugins["vprojection"] = "!shader/plugin/vprojection.fixedyrange.vert"
                         it.uniforms["fixedYMin"] = declaration.fixedYRange.first
                         it.uniforms["fixedYMax"] = declaration.fixedYRange.second
                     }
@@ -106,10 +108,10 @@ internal object ShadowRenderer {
                     renderableDeclaration.materialModifiers + shadowMaterialModifier,
                     renderableDeclaration.mesh,
                     renderableDeclaration.transform,
+                    renderableDeclaration.transparent,
                     renderableDeclaration.retentionPolicy
                 )
-
-                scene.renderRenderable(casterRenderableDeclaration, shadowCamera, casterUniforms)
+                scene.renderRenderable(casterRenderableDeclaration, shadowCamera, isShadow = true)
             }
             scene.inventory.uniformBufferHolder.flush()
         }
@@ -133,12 +135,12 @@ internal object ShadowRenderer {
         return ShadowerData(
             outputShadowTexture(frameBuffer, declaration),
             outputPcfTexture(frameBuffer, declaration),
-            SHADOW_SHIFTER * shadowProjection.mat4 * shadowCamera.mat4,
+            SHADOW_SHIFTER * orthoMatrix(shadowProjection) * shadowCamera.mat4,
             listOf(
                 if (index == 0) 0f else declaration.near,
                 if (index == 0) 0f else declarations[index - 1].far,
-                if (index == declarations.size - 1) 1e10f else declarations[index + 1].near,
-                if (index == declarations.size - 1) 1e10f else declaration.far
+                if (index == declarations.size - 1) declaration.far - (declaration.far - declaration.near) * 0.1f else declarations[index + 1].near,
+                declaration.far
             ),
             declaration.fixedYRange?.first ?: 0f,
             declaration.fixedYRange?.second ?: 0f,
@@ -148,9 +150,20 @@ internal object ShadowRenderer {
                 is InternalSoftwarePcfShadow -> declaration.algorithm.blurRadius / shadowProjection.width
                 is InternalHardwarePcfShadow -> declaration.algorithm.bias
                 else -> 0f
+            },
+            when (declaration.algorithm) {
+                is InternalSoftwarePcfShadow -> declaration.algorithm.bias
+                else -> 0f
             }
         )
     }
+
+    private fun orthoMatrix(projection: Projection) = Mat4(
+        2f / projection.width, 0f, 0f, 0f,
+        0f, 2f / projection.height, 0f, 0f,
+        0f, 0f, -2f / (projection.far - projection.near), -(projection.far + projection.near) / (projection.far - projection.near),
+        0f, 0f, 0f, 1f
+    )
 
     private fun outputShadowTexture(frameBuffer: GlGpuFrameBuffer, declaration: CascadeDeclaration): GlGpuTexture? =
         when (declaration.algorithm) {
@@ -195,7 +208,7 @@ internal object ShadowRenderer {
         blurFrameBuffer.exec {
             scene.renderContext.state.set { }
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-            scene.renderRenderable(blurVQuadRenderableDeclaration, null, uniforms)
+            scene.renderRenderable(blurVQuadRenderableDeclaration, null)
             scene.inventory.uniformBufferHolder.flush()
         }
 
@@ -207,7 +220,7 @@ internal object ShadowRenderer {
         frameBuffer.exec {
             scene.renderContext.state.set { }
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-            scene.renderRenderable(blurHQuadRenderableDeclaration, null, uniforms)
+            scene.renderRenderable(blurHQuadRenderableDeclaration, null)
             scene.inventory.uniformBufferHolder.flush()
         }
     }
@@ -221,6 +234,7 @@ internal object ShadowRenderer {
         }),
         ScreenQuad(ImmediatelyFreeRetentionPolicy),
         Transform.IDENTITY,
+        false,
         ImmediatelyFreeRetentionPolicy
     )
 
@@ -229,9 +243,7 @@ internal object ShadowRenderer {
         camera: Camera,
         light: Vec3,
         declaration: CascadeDeclaration
-    ): Pair<DefaultCamera, OrthoProjection> {
-
-        projection as FrustumProjection
+    ): Pair<DefaultCamera, Projection> {
 
         val right = (light % 1.y).normalize()
         val up = (right % light).normalize()
@@ -265,14 +277,14 @@ internal object ShadowRenderer {
         val far = near + volume
         val cameraPos = centerBottom - light * far
 
-        val shadowProjection = OrthoProjection(dim, dim, near, far)
+        val shadowProjection = Projection(dim, dim, near, far, OrthoProjectionMode)
         val shadowCamera = DefaultCamera(cameraPos, light, up)
 
         return shadowCamera to shadowProjection
     }
 
     private fun frustumCorners(
-        projection: FrustumProjectionDeclaration,
+        projection: Projection,
         camera: Camera,
         near: Float,
         far: Float
@@ -308,7 +320,8 @@ internal class ShadowerData(
     val yMax: Float,
     val mode: Int,
     val i1: Int,
-    val f1: Float
+    val f1: Float,
+    val f2: Float
 )
 
 internal fun List<ShadowerData>.uniforms(m: MutableMap<String, Any?>, u: MutableMap<String, Any?>) {
@@ -320,6 +333,7 @@ internal fun List<ShadowerData>.uniforms(m: MutableMap<String, Any?>, u: Mutable
     m["shadowMode[0]"] = IntList(this.map { it.mode })
     m["i1[0]"] = IntList(this.map { it.i1 })
     m["f1[0]"] = FloatList(this.map { it.f1 })
+    m["f2[0]"] = FloatList(this.map { it.f2 })
 
     u["shadowTextures[0]"] = GlGpuTextureList(this.map { it.texture }, 5)
     u["pcfTextures[0]"] = GlGpuShadowTextureList(this.map { it.pcfTexture }, 5)

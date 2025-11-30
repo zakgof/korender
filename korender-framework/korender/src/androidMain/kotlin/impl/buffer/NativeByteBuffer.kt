@@ -64,6 +64,17 @@ actual class NativeByteBuffer(override val byteBuffer: ByteBuffer) : NativeBuffe
         return this
     }
 
+    actual fun slice(): NativeByteBuffer =
+        if (byteBuffer.position() == byteBuffer.limit()) {
+            rewind()
+        } else {
+            val originalPosition = byteBuffer.position()
+            byteBuffer.position(0)
+            val copy = byteBuffer.slice()
+            copy.limit(originalPosition)
+            NativeByteBuffer(copy)
+        }
+
     actual override fun size() = byteBuffer.limit()
 
     actual override fun position() = byteBuffer.position()

@@ -1,0 +1,28 @@
+site_name: Korender Wiki
+theme:
+  name: readthedocs
+nav:
+  - Home: index.md
+  - User Guide:
+    - Contexts: context.md
+    - Asset management: assets.md
+    - Renderables: renderables.md
+    - Materials: materials.md
+    - Meshes: meshes.md
+    - Projection and camera: projection.md
+    - Lights and shadows: light.md
+    - Sky rendering: sky.md
+    - Environment mapping: env.md
+    - Post-process filters: filters.md
+    - Effects: effects.md
+    - GTLF support: gltf.md
+    - Terrain: terrain.md
+    - GUI: gui.md
+    - Billboards: billboards.md
+    - Instancing: instancing.md
+
+    - Deferred renderer: deferred.md
+   # - Offscreen rendering: offscreen.md
+  #- Extending Korender:
+   # - Plugins: plugins.md
+   #- Custom shaders: custom.md

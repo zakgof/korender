@@ -91,6 +91,8 @@ actual fun Korender(
         }
     }
 
+    fun awtKeyCodeToKorender(awtKeyCode: Int): String = KEY_MAPPING.getOrDefault(awtKeyCode, "UNKNOWN")
+
     SwingPanel(
         modifier = Modifier.fillMaxSize(),
         update = {
@@ -114,6 +116,7 @@ actual fun Korender(
             data.profile = GLData.Profile.COMPATIBILITY
             // TODO
             data.samples = 1
+            data.depthSize = 24
 
             val canvas = object : AWTGLCanvas(data) {
 
@@ -126,16 +129,10 @@ actual fun Korender(
                     createCapabilities()
                     println("OpenGL Vendor:[${glGetString(GL_VENDOR)}] Renderer:[${glGetString(GL_RENDERER)}] Version:[${glGetString(GL_VERSION)}] Effective context version: [${effective.majorVersion}.${effective.minorVersion} (Profile: ${effective.profile})]")
 
-                    val async = object : AsyncContext {
-                        override val appResourceLoader = appResourceLoader
-                        override fun <R> call(function: suspend () -> R): Deferred<R> =
-                            asyncInContext(function)
-                    }
-
                     engine = Engine(
                         (this.size.width * pixelRatio[0]).toInt(),
                         (this.size.height * pixelRatio[1]).toInt(),
-                        async,
+                        appResourceLoader,
                         block
                     )
 
@@ -173,11 +170,11 @@ actual fun Korender(
             })
             canvas.addKeyListener(object : KeyAdapter() {
                 override fun keyPressed(e: KeyEvent) {
-                    sendKey(com.zakgof.korender.KeyEvent.Type.DOWN, e.keyChar.toString()) // TODO all keycodes
+                    sendKey(com.zakgof.korender.KeyEvent.Type.DOWN, awtKeyCodeToKorender(e.keyCode)) // TODO all keycodes
                 }
 
                 override fun keyReleased(e: KeyEvent) {
-                    sendKey(com.zakgof.korender.KeyEvent.Type.UP, e.keyChar.toString()) // TODO all keycodes
+                    sendKey(com.zakgof.korender.KeyEvent.Type.UP, awtKeyCodeToKorender(e.keyCode)) // TODO all keycodes
                 }
             })
 
@@ -202,7 +199,7 @@ internal actual object Platform {
 
     actual fun nanoTime() = System.nanoTime()
 
-    internal actual fun createImage(width: Int, height: Int, format: Image.Format) =
+    internal actual fun createImage(width: Int, height: Int, format: PixelFormat) =
         image(BufferedImage(width, height, format.toBufferedImageType()))
 
     internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage> =
@@ -288,10 +285,10 @@ internal actual object Platform {
             else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
         }
         val format = when (bufferedImage.type) {
-            BufferedImage.TYPE_3BYTE_BGR -> Image.Format.RGB
-            BufferedImage.TYPE_4BYTE_ABGR -> Image.Format.RGBA
-            BufferedImage.TYPE_BYTE_GRAY -> Image.Format.Gray
-            BufferedImage.TYPE_USHORT_GRAY -> Image.Format.Gray16
+            BufferedImage.TYPE_3BYTE_BGR -> PixelFormat.RGB
+            BufferedImage.TYPE_4BYTE_ABGR -> PixelFormat.RGBA
+            BufferedImage.TYPE_BYTE_GRAY -> PixelFormat.Gray
+            BufferedImage.TYPE_USHORT_GRAY -> PixelFormat.Gray16
             else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
         }
         return InternalImage(
@@ -303,10 +300,10 @@ internal actual object Platform {
     }
 }
 
-fun Image.Format.toBufferedImageType() = when (this) {
-    Image.Format.RGB -> BufferedImage.TYPE_3BYTE_BGR
-    Image.Format.RGBA -> BufferedImage.TYPE_4BYTE_ABGR
-    Image.Format.Gray -> BufferedImage.TYPE_BYTE_GRAY
-    Image.Format.Gray16 -> BufferedImage.TYPE_USHORT_GRAY
+fun PixelFormat.toBufferedImageType() = when (this) {
+    PixelFormat.RGB -> BufferedImage.TYPE_3BYTE_BGR
+    PixelFormat.RGBA -> BufferedImage.TYPE_4BYTE_ABGR
+    PixelFormat.Gray -> BufferedImage.TYPE_BYTE_GRAY
+    PixelFormat.Gray16 -> BufferedImage.TYPE_USHORT_GRAY
 }
 
