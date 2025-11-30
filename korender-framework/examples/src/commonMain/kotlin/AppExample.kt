@@ -9,8 +9,13 @@ import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
@@ -85,7 +90,11 @@ fun AppExample() {
         }
     )
 
-    Row(modifier = Modifier.background(backgroundColor)) {
+    Row(
+        modifier = Modifier.background(backgroundColor)
+            .fillMaxHeight()
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+    ) {
         Column(
             modifier = Modifier
                 .verticalScroll(scrollState)
@@ -138,5 +147,5 @@ fun AppExample() {
 
 private data class Demo(
     val title: String,
-    val composable: @Composable () -> Unit
+    val composable: @Composable () -> Unit,
 )
