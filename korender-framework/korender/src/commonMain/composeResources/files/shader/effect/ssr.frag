@@ -43,7 +43,7 @@ vec4 ssr(vec3 vpos, vec3 N, vec3 V, float roughness) {
 
     // Adaptive bias
     float angle = abs(dot(N, V));
-    float bias = mix(0.5 * 0.2, 0.5, 1.0 - angle);  // more bias for grazing
+    float bias = mix(startStep * 0.2, startStep, 1.0 - angle);  // more bias for grazing
     bias = mix(bias, bias * 0.5, roughness);  // glossy reduces bias slightly
 
     vec3 rayPoint = vpos + bentNormal * bias;
