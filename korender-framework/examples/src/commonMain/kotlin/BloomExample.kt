@@ -12,18 +12,16 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import kotlin.math.sin
 
 @Composable
 fun BloomExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         Frame {
-            camera = camera(20.z + 1.5f.x * sin(frameInfo.time * 0.4f * 0f), -1.z, 1.y)
+            camera = camera(20.z, -1.z, 1.y)
             DirectionalLight(Vec3(1f, -1f, -1f), ColorRGB.white(3f))
             DeferredShading {
                 PostShading(bloomWide(amount = 2.0f, downsample = 2, highResolutionRatio = 0.1f))
-                // PostShading(bloom(amount = 5f, radius = 32f))
             }
             Renderable(
                 base(color = white(0.1f)),
