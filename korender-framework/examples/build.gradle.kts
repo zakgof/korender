@@ -119,5 +119,8 @@ compose.desktop {
                 iconFile.set(project.file("korender32.png"))
             }
         }
+        buildTypes.release.proguard {
+            isEnabled = false
+        }
     }
 }
