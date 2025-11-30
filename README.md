@@ -1,6 +1,6 @@
 # ![Korender](readme/korender32.png) korender
-[![Maven Central](https://img.shields.io/badge/Maven_Central-0.5.1-8e27c7.svg?logo=mavenCentral)](https://central.sonatype.com/artifact/com.github.zakgof/korender/0.5.1)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.2.0-278ec7.svg?logo=kotlin)](http://kotlinlang.org)
+[![Maven Central](https://img.shields.io/badge/Maven_Central-0.6.0-8e27c7.svg?logo=mavenCentral)](https://central.sonatype.com/artifact/com.github.zakgof/korender/0.6.0)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.2.21-278ec7.svg?logo=kotlin)](http://kotlinlang.org)
 
 ![wasm](https://img.shields.io/badge/wasm-624FE8)
 ![android](https://img.shields.io/badge/android-136F63)
@@ -47,8 +47,8 @@ Korender is BETA - APIs may change without notice.
 
 #### Precompiled:
 - [Web live demo](https://zakgof.github.io/projects/korender/wasm/)
-- [JVM Desktop Windows](https://github.com/zakgof/korender/releases/download/0.5.0/korender-demo-0.5.0.zip)
-- [Android APK](https://github.com/zakgof/korender/releases/download/0.5.0/korender-demo-0.5.0.apk)
+- [JVM Desktop Windows](https://github.com/zakgof/korender/releases/download/0.6.0/korender-demo-0.6.0.zip)
+- [Android APK](https://github.com/zakgof/korender/releases/download/0.6.0/korender-demo-0.6.0.apk)
 
 [Examples source code](https://github.com/zakgof/korender/tree/main/korender-framework/examples/src/commonMain/kotlin)
 
@@ -85,7 +85,7 @@ Korender {
 #### From scratch
 
 - Generate a new KMP application using [Kotlin Multiplatform Wizard](https://kmp.jetbrains.com/). Select Android, Desktop and WASM platforms.
-- Add Korender dependency `com.github.zakgof:korender:0.5.1`
+- Add Korender dependency `com.github.zakgof:korender:0.6.0`
 - Add the above code to commonMain
 - Run on desktop: `./gradlew composeApp:run`
 
