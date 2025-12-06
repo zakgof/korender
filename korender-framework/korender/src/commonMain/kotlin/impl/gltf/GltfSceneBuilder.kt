@@ -106,7 +106,7 @@ internal class GltfSceneBuilder(
         }
     }
 
-    private fun getSamplerValue(sampler: Gltf.Animation.AnimationSampler, currentTime: Float): List<Float> {
+    private fun getSamplerValue(sampler: InternalGltfModel.Animation.AnimationSampler, currentTime: Float): List<Float> {
 
         // TODO validate float input and output
         val inputFloats = gltfLoaded.loadedAccessors.floats[sampler.input]!!
@@ -133,7 +133,7 @@ internal class GltfSceneBuilder(
         }
     }
 
-    private fun processNode(instanceData: InstanceData, parentTransform: Transform, nodeIndex: Int, node: Gltf.Node) {
+    private fun processNode(instanceData: InstanceData, parentTransform: Transform, nodeIndex: Int, node: InternalGltfModel.Node) {
 
         var transform = parentTransform
 
@@ -155,7 +155,7 @@ internal class GltfSceneBuilder(
         }
     }
 
-    private fun createRenderables(mesh: Gltf.Mesh, meshIndex: Int, skinIndex: Int?): List<RenderableDeclaration> =
+    private fun createRenderables(mesh: InternalGltfModel.Mesh, meshIndex: Int, skinIndex: Int?): List<RenderableDeclaration> =
         mesh.primitives.mapIndexed { primitiveIndex, primitive ->
             val meshDeclaration = createMeshDeclaration(primitive, meshIndex, primitiveIndex, skinIndex)
             val jointMatrices = skinIndex?.let {
@@ -174,7 +174,7 @@ internal class GltfSceneBuilder(
 
 
     private fun createMaterialModifiers(
-        primitive: Gltf.Mesh.Primitive,
+        primitive: InternalGltfModel.Mesh.Primitive,
         skinIndex: Int?,
         jointMatrices: List<Mat4>?
     ): Pair<Boolean, MaterialModifier> {
@@ -183,7 +183,7 @@ internal class GltfSceneBuilder(
         val material = primitive.material?.let { gltfLoaded.model.materials!![it] }
         val matPbr = material?.pbrMetallicRoughness
         val matSpecularGlossiness = material?.extensions?.get("KHR_materials_pbrSpecularGlossiness")
-                as? Gltf.KHRMaterialsPbrSpecularGlossiness
+                as? InternalGltfModel.KHRMaterialsPbrSpecularGlossiness
 
         // TODO: Precreate all except jointMatrices
         val imm = InternalMaterialModifier { mb ->
@@ -236,7 +236,7 @@ internal class GltfSceneBuilder(
         return (material?.alphaMode == "BLEND") to imm
     }
 
-    private fun createMeshDeclaration(primitive: Gltf.Mesh.Primitive, meshIndex: Int, primitiveIndex: Int, skinIndex: Int?): InternalMeshDeclaration {
+    private fun createMeshDeclaration(primitive: InternalGltfModel.Mesh.Primitive, meshIndex: Int, primitiveIndex: Int, skinIndex: Int?): InternalMeshDeclaration {
         // TODO: optimize accessor stuff
         val indicesAccessor = primitive.indices?.let { gltfLoaded.model.accessors!![it] }
         val verticesAttributeAccessors = primitive.attributes
@@ -275,7 +275,7 @@ internal class GltfSceneBuilder(
         }
     }
 
-    private fun attributeForAccessor(key: String, accessor: Gltf.Accessor): MeshAttribute<*>? {
+    private fun attributeForAccessor(key: String, accessor: InternalGltfModel.Accessor): MeshAttribute<*>? {
         val candidates = when (key) {
             "POSITION" -> listOf(Attributes.POS)
             "NORMAL" -> listOf(Attributes.NORMAL)
@@ -300,11 +300,11 @@ internal class GltfSceneBuilder(
         }
 
     // TODO: redesign; uri is to big for key
-    private fun getBufferBytes(buffer: Gltf.Buffer): ByteArray {
+    private fun getBufferBytes(buffer: InternalGltfModel.Buffer): ByteArray {
         return gltfLoaded.loadedUris[buffer.uri ?: ""]!!
     }
 
-    private fun getBufferViewBytes(bufferView: Gltf.BufferView): ByteArray {
+    private fun getBufferViewBytes(bufferView: InternalGltfModel.BufferView): ByteArray {
         val buffer = gltfLoaded.model.buffers!![bufferView.buffer]
         val bufferBytes = getBufferBytes(buffer)
         return bufferBytes.copyOfRange(
@@ -313,7 +313,7 @@ internal class GltfSceneBuilder(
         )
     }
 
-    private fun getTexture(ti: Gltf.TextureIndexProvider): TextureDeclaration? {
+    private fun getTexture(ti: InternalGltfModel.TextureIndexProvider): TextureDeclaration? {
         val image = gltfLoaded.model.textures?.get(ti.index)?.source
             ?.let { src -> gltfLoaded.model.images!![src] }
 
@@ -330,7 +330,7 @@ internal class GltfSceneBuilder(
         }
     }
 
-    private fun getImageBytes(image: Gltf.Image): ByteArray {
+    private fun getImageBytes(image: InternalGltfModel.Image): ByteArray {
         if (image.uri != null)
             return gltfLoaded.loadedUris[image.uri]!!
         if (image.bufferView != null) {

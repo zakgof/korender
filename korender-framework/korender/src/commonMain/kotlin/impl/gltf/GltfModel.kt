@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.gltf
 
+import com.zakgof.korender.GltfModel
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -18,252 +19,251 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 
 @Serializable
-class Gltf(
-    val scene: Int,
-    val asset: Asset,
-    val accessors: List<Accessor>? = null,
-    val animations: List<Animation>? = null,
-    val buffers: List<Buffer>? = null,
-    val bufferViews: List<BufferView>? = null,
-    val cameras: List<Camera>? = null,
-    val images: List<Image>? = null,
-    val materials: List<Material>? = null,
-    val meshes: List<Mesh>? = null,
-    val nodes: List<Node>? = null,
-    val samplers: List<Sampler>? = null,
-    val scenes: List<Scene>? = null,
-    val skins: List<Skin>? = null,
-    val textures: List<Texture>? = null
-) {
+internal class InternalGltfModel(
+    override val scene: Int,
+    override val asset: Asset,
+    override val accessors: List<Accessor>? = null,
+    override val animations: List<Animation>? = null,
+    override val buffers: List<Buffer>? = null,
+    override val bufferViews: List<BufferView>? = null,
+    override val cameras: List<Camera>? = null,
+    override val images: List<Image>? = null,
+    override val materials: List<Material>? = null,
+    override val meshes: List<Mesh>? = null,
+    override val nodes: List<Node>? = null,
+    override val samplers: List<Sampler>? = null,
+    override val scenes: List<Scene>? = null,
+    override val skins: List<Skin>? = null,
+    override val textures: List<Texture>? = null,
+) : GltfModel {
 
     @Serializable
-    class Asset(
-        val copyright: String? = null,
-        val generator: String? = null,
-        val version: String,
-        val minVersion: String? = null
-    )
+    data class Asset(
+        override val copyright: String? = null,
+        override val generator: String? = null,
+        override val version: String,
+        override val minVersion: String? = null,
+    ) : GltfModel.Asset
 
     @Serializable
     data class Animation(
-        val channels: List<AnimationChannel>,
-        val samplers: List<AnimationSampler>,
-        val name: String? = null
-    ) {
+        override val channels: List<AnimationChannel>,
+        override val samplers: List<AnimationSampler>,
+        override val name: String? = null,
+    ) : GltfModel.Animation {
+
         @Serializable
         data class AnimationChannel(
-            val sampler: Int,
-            val target: AnimationChannelTarget
-        )
+            override val sampler: Int,
+            override val target: AnimationChannelTarget,
+        ) : GltfModel.Animation.AnimationChannel
 
         @Serializable
         data class AnimationSampler(
-            val input: Int,
-            val interpolation: String? = null,
-            val output: Int
-        )
+            override val input: Int,
+            override val interpolation: String? = null,
+            override val output: Int,
+        ) : GltfModel.Animation.AnimationSampler
 
         @Serializable
         data class AnimationChannelTarget(
-            val node: Int? = null,
-            val path: String
-        )
+            override val node: Int? = null,
+            override val path: String,
+        ) : GltfModel.Animation.AnimationChannelTarget
     }
 
     @Serializable
     data class Accessor(
-        val bufferView: Int? = null,
-        val byteOffset: Int? = 0,
-        val componentType: Int,
-        val normalized: Boolean = false,
-        val count: Int,
-        val type: String,
-        val max: List<Double>? = null,
-        val min: List<Double>? = null,
-        val sparse: Sparse? = null,
-        val name: String? = null,
-    ) {
+        override val bufferView: Int? = null,
+        override val byteOffset: Int? = 0,
+        override val componentType: Int,
+        override val normalized: Boolean = false,
+        override val count: Int,
+        override val type: String,
+        override val max: List<Double>? = null,
+        override val min: List<Double>? = null,
+        override val sparse: Sparse? = null,
+        override val name: String? = null,
+    ) : GltfModel.Accessor {
+
         @Serializable
         data class Sparse(
-            val count: Int,
-            val indices: SparseIndices,
-            val values: SparseValues
-        )
+            override val count: Int,
+            override val indices: SparseIndices,
+            override val values: SparseValues,
+        ) : GltfModel.Accessor.Sparse
 
         @Serializable
         data class SparseIndices(
-            val bufferView: Int,
-            val byteOffset: Int = 0,
-            val componentType: Int
-        )
+            override val bufferView: Int,
+            override val byteOffset: Int = 0,
+            override val componentType: Int,
+        ) : GltfModel.Accessor.SparseIndices
 
         @Serializable
         data class SparseValues(
-            val bufferView: Int,
-            val byteOffset: Int = 0
-        )
+            override val bufferView: Int,
+            override val byteOffset: Int = 0,
+        ) : GltfModel.Accessor.SparseValues
     }
 
     @Serializable
     data class Buffer(
-        val uri: String? = null,
-        val byteLength: Int,
-        val name: String? = null,
-    )
+        override val uri: String? = null,
+        override val byteLength: Int,
+        override val name: String? = null,
+    ) : GltfModel.Buffer
 
     @Serializable
     data class BufferView(
-        val buffer: Int,
-        val byteOffset: Int = 0,
-        val byteLength: Int,
-        val byteStride: Int? = null,
-        val target: Int? = null,
-        val name: String? = null,
-    )
+        override val buffer: Int,
+        override val byteOffset: Int = 0,
+        override val byteLength: Int,
+        override val byteStride: Int? = null,
+        override val target: Int? = null,
+        override val name: String? = null,
+    ) : GltfModel.BufferView
 
     @Serializable
     data class Camera(
-        val orthographic: Orthographic? = null,
-        val perspective: Perspective? = null,
-        val type: String,
-        val name: String? = null,
-    ) {
+        override val orthographic: Orthographic? = null,
+        override val perspective: Perspective? = null,
+        override val type: String,
+        override val name: String? = null,
+    ) : GltfModel.Camera {
 
         @Serializable
         data class Orthographic(
-            val xMag: Float,
-            val yMag: Float,
-            val zNear: Float,
-            val zFar: Float
-        )
+            override val xMag: Float,
+            override val yMag: Float,
+            override val zNear: Float,
+            override val zFar: Float,
+        ) : GltfModel.Camera.Orthographic
 
         @Serializable
         data class Perspective(
-            val aspectRatio: Float? = null,
-            val yfov: Float,
-            val zNear: Float,
-            val zFar: Float? = null
-        )
+            override val aspectRatio: Float? = null,
+            override val yfov: Float,
+            override val zNear: Float,
+            override val zFar: Float? = null,
+        ) : GltfModel.Camera.Perspective
     }
 
     @Serializable
     data class Image(
-        val uri: String? = null,
-        val mimeType: String? = null,
-        val bufferView: Int? = null,
-        val name: String? = null
-    )
+        override val uri: String? = null,
+        override val mimeType: String? = null,
+        override val bufferView: Int? = null,
+        override val name: String? = null,
+    ) : GltfModel.Image
 
     @Serializable
     data class Material(
-        val name: String? = null,
-        val pbrMetallicRoughness: PbrMetallicRoughness? = null,
-        val normalTexture: NormalTextureInfo? = null,
-        val occlusionTexture: OcclusionTextureInfo? = null,
-        val emissiveTexture: TextureInfo? = null,
-        val emissiveFactor: List<Float>? = listOf(0.0f, 0.0f, 0.0f),
-        val alphaMode: String? = "OPAQUE",
-        val alphaCutoff: Float? = 0.5f,
-        val doubleSided: Boolean? = false,
-
+        override val name: String? = null,
+        override val pbrMetallicRoughness: PbrMetallicRoughness? = null,
+        override val normalTexture: NormalTextureInfo? = null,
+        override val occlusionTexture: OcclusionTextureInfo? = null,
+        override val emissiveTexture: TextureInfo? = null,
+        override val emissiveFactor: List<Float>? = listOf(0.0f, 0.0f, 0.0f),
+        override val alphaMode: String? = "OPAQUE",
+        override val alphaCutoff: Float? = 0.5f,
+        override val doubleSided: Boolean? = false,
         @Serializable(with = ExtensionsDeserializer::class)
-        val extensions: Map<String, @Contextual Any>? = null,
-    ) {
+        override val extensions: Map<String, @Contextual Any>? = null,
+    ) : GltfModel.Material {
+
         @Serializable
         data class PbrMetallicRoughness(
-            val baseColorFactor: List<Float> = listOf(1.0f, 1.0f, 1.0f, 1.0f),
-            val baseColorTexture: TextureInfo? = null,
-            val metallicFactor: Float = 1.0f,
-            val roughnessFactor: Float = 1.0f,
-            val metallicRoughnessTexture: TextureInfo? = null
-        )
+            override val baseColorFactor: List<Float> = listOf(1.0f, 1.0f, 1.0f, 1.0f),
+            override val baseColorTexture: TextureInfo? = null,
+            override val metallicFactor: Float = 1.0f,
+            override val roughnessFactor: Float = 1.0f,
+            override val metallicRoughnessTexture: TextureInfo? = null,
+        ) : GltfModel.Material.PbrMetallicRoughness
 
         @Serializable
         data class NormalTextureInfo(
             override val index: Int,
-            val texCoord: Int? = null,
-            val scale: Float = 1.0f
-        ) : TextureIndexProvider
+            override val texCoord: Int? = null,
+            override val scale: Float = 1.0f,
+        ) : GltfModel.Material.NormalTextureInfo
 
         @Serializable
         data class OcclusionTextureInfo(
             override val index: Int,
-            val texCoord: Int? = null,
-            val strength: Float = 1.0f,
-        ) : TextureIndexProvider
+            override val texCoord: Int? = null,
+            override val strength: Float = 1.0f,
+        ) : GltfModel.Material.OcclusionTextureInfo
     }
 
     @Serializable
     data class Mesh(
-        val name: String? = null,
-        val primitives: List<Primitive>,
-        val weights: List<Float>? = null
-    ) {
+        override val name: String? = null,
+        override val primitives: List<Primitive>,
+        override val weights: List<Float>? = null,
+    ) : GltfModel.Mesh {
 
         @Serializable
         data class Primitive(
-            val attributes: LinkedHashMap<String, Int>,
-            val indices: Int? = null,
-            val material: Int? = null,
-            val mode: Int = 4,
-            val targets: List<Map<String, Int>>? = null,
-        )
-
+            override val attributes: LinkedHashMap<String, Int>,
+            override val indices: Int? = null,
+            override val material: Int? = null,
+            override val mode: Int = 4,
+            override val targets: List<Map<String, Int>>? = null,
+        ) : GltfModel.Mesh.Primitive
     }
 
     @Serializable
     data class Node(
-        val camera: Int? = null,
-        val children: List<Int>? = null,
-        val skin: Int? = null,
-        val matrix: List<Float>? = null,
-        val mesh: Int? = null,
-        val rotation: List<Float>? = null,
-        val scale: List<Float>? = null,
-        val translation: List<Float>? = null,
-        val weights: List<Float>? = null,
-        val name: String? = null
-    )
+        override val camera: Int? = null,
+        override val children: List<Int>? = null,
+        override val skin: Int? = null,
+        override val matrix: List<Float>? = null,
+        override val mesh: Int? = null,
+        override val rotation: List<Float>? = null,
+        override val scale: List<Float>? = null,
+        override val translation: List<Float>? = null,
+        override val weights: List<Float>? = null,
+        override val name: String? = null,
+    ) : GltfModel.Node
 
     @Serializable
     data class Sampler(
-        val magFilter: Int? = null,
-        val minFilter: Int? = null,
-        val wrapS: Int? = 10497,
-        val wrapT: Int? = 10497,
-        val name: String? = null
-    )
+        override val magFilter: Int? = null,
+        override val minFilter: Int? = null,
+        override val wrapS: Int? = 10497,
+        override val wrapT: Int? = 10497,
+        override val name: String? = null,
+    ) : GltfModel.Sampler
 
     @Serializable
     data class Scene(
-        val nodes: List<Int>,
-        val name: String? = null
-    )
+        override val nodes: List<Int>,
+        override val name: String? = null,
+    ) : GltfModel.Scene
 
     @Serializable
     data class Skin(
-        val inverseBindMatrices: Int? = null,
-        val skeleton: Int? = null,
-        val joints: List<Int>,
-        val name: String? = null
-    )
+        override val inverseBindMatrices: Int? = null,
+        override val skeleton: Int? = null,
+        override val joints: List<Int>,
+        override val name: String? = null,
+    ) : GltfModel.Skin
 
     @Serializable
     data class Texture(
-        val sampler: Int? = null,
-        val source: Int? = null,
-        val name: String? = null
-    )
+        override val sampler: Int? = null,
+        override val source: Int? = null,
+        override val name: String? = null,
+    ) : GltfModel.Texture
 
     @Serializable
     data class TextureInfo(
         override val index: Int,
-        val texCoord: Int = 0
-    ) : TextureIndexProvider
+        override val texCoord: Int = 0,
+    ) : GltfModel.TextureInfo, GltfModel.TextureIndexProvider
 
-    interface TextureIndexProvider {
-        val index: Int
-    }
+    interface TextureIndexProvider : GltfModel.TextureIndexProvider
 
     @Serializable
     data class KHRMaterialsPbrSpecularGlossiness(
@@ -273,12 +273,14 @@ class Gltf(
         val glossinessFactor: Float = 1.0f,
         val specularGlossinessTexture: TextureInfo? = null,
     )
-
 }
 
 object ExtensionsDeserializer : KSerializer<Map<String, Any>> {
     @OptIn(ExperimentalSerializationApi::class)
-    override val descriptor: SerialDescriptor = mapSerialDescriptor(PrimitiveSerialDescriptor("key", PrimitiveKind.STRING), JsonElement.serializer().descriptor)
+    override val descriptor: SerialDescriptor = mapSerialDescriptor(
+        PrimitiveSerialDescriptor("key", PrimitiveKind.STRING),
+        JsonElement.serializer().descriptor
+    )
 
     override fun deserialize(decoder: Decoder): Map<String, Any> {
         val jsonDecoder = decoder as JsonDecoder
@@ -289,7 +291,8 @@ object ExtensionsDeserializer : KSerializer<Map<String, Any>> {
         jsonObject.forEach { (key, value) ->
             result[key] = when (key) {
                 "KHR_materials_pbrSpecularGlossiness" ->
-                    Json.decodeFromJsonElement<Gltf.KHRMaterialsPbrSpecularGlossiness>(value)
+                    Json.decodeFromJsonElement<InternalGltfModel.KHRMaterialsPbrSpecularGlossiness>(value)
+
                 else -> value
             }
         }

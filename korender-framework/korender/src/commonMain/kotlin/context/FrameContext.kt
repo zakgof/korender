@@ -2,6 +2,7 @@ package com.zakgof.korender.context
 
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.FrameInfo
+import com.zakgof.korender.GltfModel
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostProcessingEffect
@@ -46,9 +47,9 @@ interface FrameContext : KorenderContext {
      * @param animation index of animation to apply
      * @param instancing instancing declaration to render multiple objects in a batch
      */
-    fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, time: Float? = null, animation:Int? = null, instancing: GltfInstancingDeclaration? = null)
+    fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, time: Float? = null, animation: Int? = null, instancing: GltfInstancingDeclaration? = null)
 
-    fun Gltf(id: String, bytes: ByteArray, transform: Transform = Transform.IDENTITY, time: Float? = null, animation:Int? = null, instancing: GltfInstancingDeclaration? = null)
+    fun Gltf(id: String, bytes: ByteArray, transform: Transform = Transform.IDENTITY, time: Float? = null, animation: Int? = null, instancing: GltfInstancingDeclaration? = null, onLoaded: (GltfModel) -> Unit = {})
 
     /**
      * Renders a billboard - camera facing quad.

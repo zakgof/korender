@@ -20,7 +20,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 import com.zakgof.app.resources.Res
+import com.zakgof.korender.CameraDeclaration
+import com.zakgof.korender.GltfModel
 import com.zakgof.korender.Korender
+import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.Transform.Companion.scale
@@ -107,7 +110,8 @@ fun GltfExample() = Row {
             )
     ) {
         models.forEach { model ->
-            Text(model.label,
+            Text(
+                model.label,
                 fontSize = 8.sp,
                 modifier = Modifier.clickable {
                     coroutineScope.launch {
@@ -129,8 +133,15 @@ fun GltfExample() = Row {
             DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(3f))
             AmbientLight(white(0.6f))
             gltfModelName?.let {
-                Gltf(id = it, bytes = gltfBytes, transform = scale(100f).rotate(1.y, frameInfo.time))
+                Gltf(id = it, bytes = gltfBytes, onLoaded = { gltf ->
+                    gltf.cameras?.let { gc ->
+                        camera = toBB(gc.first())
+                    }
+                }, transform = scale(100f).rotate(1.y, frameInfo.time))
             }
         }
     }
 }
+
+private fun FrameContext.toCamera(gltfCamera: GltfModel.Camera): CameraDeclaration =
+    gltfCamera.orthographic?.let { camera(it.) }

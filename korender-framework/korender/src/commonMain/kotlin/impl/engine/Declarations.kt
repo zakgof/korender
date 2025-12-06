@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.GltfModel
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostProcessingEffect
@@ -167,6 +168,7 @@ internal data class CascadeDeclaration(val mapSize: Int, val near: Float, val fa
 internal class GltfDeclaration(
     val id: String,
     val loader: suspend () -> ByteArray,
+    val onLoaded: (GltfModel) -> Unit,
     val transform: Transform,
     val time: Float,
     val animation: Int,

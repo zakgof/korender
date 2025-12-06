@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.context
 
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.FrameInfo
+import com.zakgof.korender.GltfModel
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostProcessingEffect
@@ -61,6 +62,7 @@ internal class DefaultFrameContext(
         sceneDeclaration.gltfs += GltfDeclaration(
             resource,
             { resourceBytes(korenderContext.appResourceLoader, resource) },
+            {},
             transform,
             time ?: frameInfo.time,
             animation ?: 0,
@@ -69,8 +71,8 @@ internal class DefaultFrameContext(
         )
     }
 
-    override fun Gltf(id: String, bytes: ByteArray, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?) {
-        sceneDeclaration.gltfs += GltfDeclaration(id, { bytes }, transform, time ?: frameInfo.time, animation ?: 0, instancing as InternalGltfInstancingDeclaration?, korenderContext.currentRetentionPolicy)
+    override fun Gltf(id: String, bytes: ByteArray, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?, onLoaded: (GltfModel) -> Unit) {
+        sceneDeclaration.gltfs += GltfDeclaration(id, { bytes }, onLoaded, transform, time ?: frameInfo.time, animation ?: 0, instancing as InternalGltfInstancingDeclaration?, korenderContext.currentRetentionPolicy)
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean, instancing: InstancingDeclaration?) {
