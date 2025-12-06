@@ -48,6 +48,8 @@ interface FrameContext : KorenderContext {
      */
     fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, time: Float? = null, animation:Int? = null, instancing: GltfInstancingDeclaration? = null)
 
+    fun Gltf(id: String, bytes: ByteArray, transform: Transform = Transform.IDENTITY, time: Float? = null, animation:Int? = null, instancing: GltfInstancingDeclaration? = null)
+
     /**
      * Renders a billboard - camera facing quad.
      *

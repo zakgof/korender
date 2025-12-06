@@ -115,6 +115,7 @@ internal class Engine(
 
     inner class KorenderContextImpl : KorenderContext {
 
+        val appResourceLoader: ResourceLoader = this@Engine.appResourceLoader
         var currentRetentionPolicy: RetentionPolicy = TimeRetentionPolicy(10f)
         var currentRetentionGeneration: Int = 0
         override val target: KorenderContext.TargetPlatform = Platform.target

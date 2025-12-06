@@ -40,6 +40,7 @@ import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.prefab.InternalPrefab
 import com.zakgof.korender.impl.projection.Projection
+import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.IDENTITY
@@ -57,7 +58,19 @@ internal class DefaultFrameContext(
     }
 
     override fun Gltf(resource: String, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?) {
-        sceneDeclaration.gltfs += GltfDeclaration(resource, transform, time ?: frameInfo.time, animation ?: 0, instancing as InternalGltfInstancingDeclaration?, korenderContext.currentRetentionPolicy)
+        sceneDeclaration.gltfs += GltfDeclaration(
+            resource,
+            { resourceBytes(korenderContext.appResourceLoader, resource) },
+            transform,
+            time ?: frameInfo.time,
+            animation ?: 0,
+            instancing as InternalGltfInstancingDeclaration?,
+            korenderContext.currentRetentionPolicy
+        )
+    }
+
+    override fun Gltf(id: String, bytes: ByteArray, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?) {
+        sceneDeclaration.gltfs += GltfDeclaration(id, { bytes }, transform, time ?: frameInfo.time, animation ?: 0, instancing as InternalGltfInstancingDeclaration?, korenderContext.currentRetentionPolicy)
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean, instancing: InstancingDeclaration?) {

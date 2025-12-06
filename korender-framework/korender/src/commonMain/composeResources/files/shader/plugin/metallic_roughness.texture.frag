@@ -1,5 +1,5 @@
 uniform sampler2D metallicRoughnessTexture;
 
-vec3 pluginMetallicRoughness() {
+vec2 pluginMetallicRoughness() {
     return texture(metallicRoughnessTexture, vtex).bg;
 }

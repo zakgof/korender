@@ -165,15 +165,16 @@ internal class ShadowDeclaration {
 internal data class CascadeDeclaration(val mapSize: Int, val near: Float, val far: Float, val fixedYRange: Pair<Float, Float>?, val algorithm: ShadowAlgorithmDeclaration)
 
 internal class GltfDeclaration(
-    val gltfResource: String,
+    val id: String,
+    val loader: suspend () -> ByteArray,
     val transform: Transform,
     val time: Float,
     val animation: Int,
     val instancingDeclaration: InternalGltfInstancingDeclaration?,
     override val retentionPolicy: RetentionPolicy
 ) : Retentionable {
-    override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.gltfResource == gltfResource)
-    override fun hashCode(): Int = gltfResource.hashCode()
+    override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.id == id)
+    override fun hashCode(): Int = id.hashCode()
 }
 
 internal class GltfInstance(val transform: Transform, val time: Float?, val animation: Int?)

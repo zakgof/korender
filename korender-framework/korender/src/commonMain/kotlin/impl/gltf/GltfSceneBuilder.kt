@@ -249,7 +249,7 @@ internal class GltfSceneBuilder(
             attributes += listOf(MODEL0, MODEL1, MODEL2, MODEL3)
 
         val meshDeclaration = CustomMesh(
-            "${declaration.gltfResource}:$meshIndex:$primitiveIndex",
+            "${declaration.id}:$meshIndex:$primitiveIndex",
             gltfLoaded.model.accessors!![verticesAttributeAccessors.first().second].count,
             indicesAccessor?.count ?: 0,
             attributes,
@@ -266,7 +266,7 @@ internal class GltfSceneBuilder(
         if (declaration.instancingDeclaration == null)
             return meshDeclaration
 
-        return InstancedMesh(declaration.gltfResource, declaration.instancingDeclaration.count, meshDeclaration, !declaration.instancingDeclaration.dynamic, false, declaration.retentionPolicy) {
+        return InstancedMesh(declaration.id, declaration.instancingDeclaration.count, meshDeclaration, !declaration.instancingDeclaration.dynamic, false, declaration.retentionPolicy) {
             declaration.instancingDeclaration.instancer().mapIndexed { i, it ->
                 MeshInstance(it.transform, skinIndex?.let {
                     instanceData[i].jointMatrices[skinIndex].mapIndexed { ind, jm -> jm * gltfLoaded.loadedSkins[skinIndex]!![ind] }

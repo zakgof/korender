@@ -27,14 +27,17 @@ internal object GltfLoader {
     class GlbChunk(val type: ChunkType, val data: ByteArray)
 
     fun load(declaration: GltfDeclaration, loader: Loader): GltfLoaded? =
-        loader.syncy(declaration.gltfResource) { load(declaration, it) }
+        loader.syncy(declaration.id) { load(declaration, it) }
 
     suspend fun load(declaration: GltfDeclaration, appResourceLoader: ResourceLoader): GltfLoaded {
-        val extension = declaration.gltfResource.split(".").last().lowercase()
-        val resourceBytes = resourceBytes(appResourceLoader, declaration.gltfResource)
+        val extension = declaration.id.split(".").last().lowercase() // TODO: autodetect
+        val resourceBytes = declaration.loader()
         return when (extension) {
-            "gltf" -> loadGltf(resourceBytes, null, appResourceLoader, declaration.gltfResource)
-            "glb" -> loadGlb(resourceBytes, appResourceLoader, declaration.gltfResource)
+
+            // TODO: autodetect
+
+            "gltf" -> loadGltf(resourceBytes, null, appResourceLoader, declaration.id)
+            "glb" -> loadGlb(resourceBytes, appResourceLoader, declaration.id)
             else -> throw KorenderException("Unknown extension of gltf/glb resource: $extension")
         }
     }
