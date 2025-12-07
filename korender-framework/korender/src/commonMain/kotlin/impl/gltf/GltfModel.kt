@@ -1,6 +1,6 @@
 package com.zakgof.korender.impl.gltf
 
-import com.zakgof.korender.GltfModel
+import com.zakgof.korender.gltf.GltfModel
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -134,18 +134,18 @@ internal class InternalGltfModel(
 
         @Serializable
         data class Orthographic(
-            override val xMag: Float,
-            override val yMag: Float,
-            override val zNear: Float,
-            override val zFar: Float,
+            override val xmag: Float,
+            override val ymag: Float,
+            override val znear: Float,
+            override val zfar: Float,
         ) : GltfModel.Camera.Orthographic
 
         @Serializable
         data class Perspective(
             override val aspectRatio: Float? = null,
             override val yfov: Float,
-            override val zNear: Float,
-            override val zFar: Float? = null,
+            override val znear: Float,
+            override val zfar: Float? = null,
         ) : GltfModel.Camera.Perspective
     }
 

@@ -1,5 +1,9 @@
 package com.zakgof.korender.impl.gltf
 
+import com.zakgof.korender.CameraDeclaration
+import com.zakgof.korender.Mesh
+import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.math.Mat4
 
 internal class GltfLoaded(
@@ -18,3 +22,10 @@ internal class AccessorCache(
     val floatArrays: MutableMap<Int, Array<List<Float>>>
 )
 
+internal class InternalUpdateData(override val cameras: List<InternalGltfCamera>, override val meshes: List<Mesh>) : GltfUpdate {
+    class InternalGltfCamera(
+        override val name: String?,
+        override val camera: CameraDeclaration,
+        override val projection: ProjectionDeclaration
+    ) : GltfUpdate.Camera
+}

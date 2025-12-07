@@ -1,16 +1,18 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.GltfModel
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostShadingEffect
+import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.context.BillboardInstancingDeclaration
 import com.zakgof.korender.context.GltfInstancingDeclaration
 import com.zakgof.korender.context.InstancingDeclaration
+import com.zakgof.korender.gltf.GltfModel
+import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.material.InternalMaterialModifier
@@ -166,17 +168,17 @@ internal class ShadowDeclaration {
 internal data class CascadeDeclaration(val mapSize: Int, val near: Float, val far: Float, val fixedYRange: Pair<Float, Float>?, val algorithm: ShadowAlgorithmDeclaration)
 
 internal class GltfDeclaration(
-    val id: String,
-    val loader: suspend () -> ByteArray,
-    val onLoaded: (GltfModel) -> Unit,
+    val resource: String,
+    val loader: ResourceLoader,
+    val onUpdate: (GltfUpdate) -> Unit,
     val transform: Transform,
     val time: Float,
     val animation: Int,
     val instancingDeclaration: InternalGltfInstancingDeclaration?,
     override val retentionPolicy: RetentionPolicy
 ) : Retentionable {
-    override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.id == id)
-    override fun hashCode(): Int = id.hashCode()
+    override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.resource == resource)
+    override fun hashCode(): Int = resource.hashCode()
 }
 
 internal class GltfInstance(val transform: Transform, val time: Float?, val animation: Int?)

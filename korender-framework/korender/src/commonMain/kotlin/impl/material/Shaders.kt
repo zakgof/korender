@@ -9,7 +9,6 @@ import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gl.GL.shaderEnv
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.resourceBytes
 
 internal fun <T> MutableList<T>.peek(): T = this.last()
 internal fun <T> MutableList<T>.pop(): T = this.removeAt(this.size - 1)
@@ -101,7 +100,7 @@ internal object Shaders {
             private val includedFnames = mutableSetOf<String>()
 
             suspend fun preprocessFile(fname: String): MutableList<Line> {
-                val content = resourceBytes(appResourceLoader, fname).decodeToString()
+                val content = appResourceLoader(fname).decodeToString()
                 return preprocess(content, fname)
             }
 

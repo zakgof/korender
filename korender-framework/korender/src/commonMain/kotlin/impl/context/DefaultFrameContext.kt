@@ -2,12 +2,12 @@ package com.zakgof.korender.impl.context
 
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.FrameInfo
-import com.zakgof.korender.GltfModel
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.context.BillboardInstancingDeclaration
 import com.zakgof.korender.context.DeferredShadingContext
 import com.zakgof.korender.context.FrameContext
@@ -16,6 +16,8 @@ import com.zakgof.korender.context.GuiContainerContext
 import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.context.ShadowContext
+import com.zakgof.korender.gltf.GltfModel
+import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.DeferredShadingDeclaration
@@ -41,7 +43,6 @@ import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.prefab.InternalPrefab
 import com.zakgof.korender.impl.projection.Projection
-import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.IDENTITY
@@ -57,22 +58,17 @@ internal class DefaultFrameContext(
         sceneDeclaration.deferredShadingDeclaration = DeferredShadingDeclaration()
         DefaultDeferredShadingContext(sceneDeclaration.deferredShadingDeclaration!!).apply(block)
     }
-
-    override fun Gltf(resource: String, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?) {
+    override fun Gltf(resource: String, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?, resourceLoader: ResourceLoader?, onUpdate: (GltfUpdate) -> Unit) {
         sceneDeclaration.gltfs += GltfDeclaration(
             resource,
-            { resourceBytes(korenderContext.appResourceLoader, resource) },
-            {},
+            resourceLoader ?: korenderContext.appResourceLoader,
+            onUpdate,
             transform,
             time ?: frameInfo.time,
             animation ?: 0,
             instancing as InternalGltfInstancingDeclaration?,
             korenderContext.currentRetentionPolicy
         )
-    }
-
-    override fun Gltf(id: String, bytes: ByteArray, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?, onLoaded: (GltfModel) -> Unit) {
-        sceneDeclaration.gltfs += GltfDeclaration(id, { bytes }, onLoaded, transform, time ?: frameInfo.time, animation ?: 0, instancing as InternalGltfInstancingDeclaration?, korenderContext.currentRetentionPolicy)
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean, instancing: InstancingDeclaration?) {

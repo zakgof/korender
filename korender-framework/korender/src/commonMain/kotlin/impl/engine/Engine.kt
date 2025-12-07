@@ -95,10 +95,11 @@ import kotlin.math.pow
 internal class Engine(
     width: Int,
     height: Int,
-    private val appResourceLoader: ResourceLoader,
+    kmpResourceLoader: ResourceLoader,
     block: KorenderContext.() -> Unit,
 ) {
 
+    private val appResourceLoader: ResourceLoader = { resourceBytes(kmpResourceLoader, it) }
     private val touchQueue = Channel<TouchEvent>(Channel.UNLIMITED)
     private val keyQueue = Channel<KeyEvent>(Channel.UNLIMITED)
     private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
@@ -568,7 +569,7 @@ internal class Engine(
             InternalImage3D(width, height, depth, NativeByteBuffer(width * height * depth * format.bytes), format)
 
         override fun loadImage(imageResource: String): Deferred<Image> = CoroutineScope(Dispatchers.Default).async {
-            val bytes = resourceBytes(appResourceLoader, imageResource)
+            val bytes = appResourceLoader(imageResource)
             Platform.loadImage(bytes, imageResource.split(".").last()).await()
         }
 

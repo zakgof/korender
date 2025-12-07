@@ -9,9 +9,12 @@ import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshAttribute
+import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
+import com.zakgof.korender.gltf.GltfModel
+import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.GltfDeclaration
 import com.zakgof.korender.impl.engine.GltfInstance
@@ -25,6 +28,9 @@ import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.impl.glgpu.toGL
 import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
 import com.zakgof.korender.impl.material.InternalMaterialModifier
+import com.zakgof.korender.impl.projection.FrustumProjectionMode
+import com.zakgof.korender.impl.projection.OrthoProjectionMode
+import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
@@ -35,19 +41,20 @@ import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import kotlin.math.floor
+import kotlin.math.tan
 
 internal class InstanceData(nodes: Int) {
-    val nodeMatrices = Array(nodes){Transform()}
-    val nodeAnimations = Array(nodes){NodeAnimation(null, null, null)}
+    val nodeMatrices = Array(nodes) { Transform() }
+    val nodeAnimations = Array(nodes) { NodeAnimation(null, null, null) }
     val jointMatrices = mutableListOf<List<Mat4>>()
 }
 
-internal class NodeAnimation (
+internal class NodeAnimation(
     var translation: List<Float>?,
     var rotation: List<Float>?,
-    var scale: List<Float>?
+    var scale: List<Float>?,
 ) {
-    fun populate(path: String, floats: List<Float>) = when(path) {
+    fun populate(path: String, floats: List<Float>) = when (path) {
         "translation" -> translation = floats
         "rotation" -> rotation = floats
         "scale" -> scale = floats
@@ -57,8 +64,9 @@ internal class NodeAnimation (
 
 internal class GltfSceneBuilder(
     private val declaration: GltfDeclaration,
-    private val gltfLoaded: GltfLoaded
+    private val gltfLoaded: GltfLoaded,
 ) {
+    private val cameraTransforms = MutableList(gltfLoaded.model.cameras?.size ?: 0) { Transform() }
     private val meshNodes = mutableListOf<Pair<Int, Int>>()
     private val instances = declaration.instancingDeclaration?.instancer?.invoke() ?: listOf(GltfInstance(Transform.IDENTITY, declaration.time, declaration.animation))
     private val instanceData: Array<InstanceData> = Array(instances.size) { InstanceData(gltfLoaded.model.nodes?.size ?: 0) }
@@ -85,13 +93,21 @@ internal class GltfSceneBuilder(
                 skin.joints.map { instanceData.nodeMatrices[it].mat4 }
             } ?: listOf() // TODO optimize
         }
-        return meshNodes.flatMap {
+        val renderables = meshNodes.flatMap {
             createRenderables(
                 gltfLoaded.model.meshes!![it.first],
                 it.first,
                 gltfLoaded.model.nodes!![it.second].skin,
             )
         }
+        declaration.onUpdate(InternalUpdateData(gltfLoaded.model.cameras?.mapIndexed { index, cam ->
+            InternalUpdateData.InternalGltfCamera(
+                cam.name,
+                DefaultCamera(cameraTransforms[index].mat4),
+                cam.toProjection()
+            )
+        } ?: listOf(), listOf()))
+        return renderables
     }
 
     private fun calculateInstanceData(instanceIndex: Int, instanceData: InstanceData) {
@@ -139,14 +155,18 @@ internal class GltfSceneBuilder(
 
         val na = instanceData.nodeAnimations[nodeIndex]
 
-        val translation = na?.translation ?: node.translation
-        val rotation = na?.rotation ?: node.rotation
-        val scale = na?.scale ?: node.scale
+        val translation = na.translation ?: node.translation
+        val rotation = na.rotation ?: node.rotation
+        val scale = na.scale ?: node.scale
 
         translation?.let { transform *= translate(Vec3(it[0], it[1], it[2])) }
         rotation?.let { transform *= rotate(Quaternion(it[3], Vec3(it[0], it[1], it[2]))) }
         scale?.let { transform *= scale(it[0], it[1], it[2]) }
         node.matrix?.let { transform *= Transform(Mat4(it.toFloatArray())) }
+
+        node.camera?.let {
+            cameraTransforms[it] = transform
+        }
 
         instanceData.nodeMatrices[nodeIndex] = transform
 
@@ -176,7 +196,7 @@ internal class GltfSceneBuilder(
     private fun createMaterialModifiers(
         primitive: InternalGltfModel.Mesh.Primitive,
         skinIndex: Int?,
-        jointMatrices: List<Mat4>?
+        jointMatrices: List<Mat4>?,
     ): Pair<Boolean, MaterialModifier> {
 
         // TODO: split into 2 parts, precompute textures modifier, calc only skin modifier
@@ -248,8 +268,21 @@ internal class GltfSceneBuilder(
         if (declaration.instancingDeclaration != null)
             attributes += listOf(MODEL0, MODEL1, MODEL2, MODEL3)
 
+//        val cpuMesh = CMesh(
+//            gltfLoaded.model.accessors!![verticesAttributeAccessors.first().second].count,
+//            indicesAccessor?.count ?: 0,
+//            declaration.instancingDeclaration?.count ?: -1,
+//            *attributes.toTypedArray(),
+//            indexType = accessorComponentTypeToIndexType(indicesAccessor?.componentType)
+//        ) {
+//            indicesAccessor?.let { indexBytes(gltfLoaded.loadedAccessors.all[primitive.indices]!!) }
+//            verticesAttributeAccessors.forEach {
+//                attrBytes(it.first, gltfLoaded.loadedAccessors.all[it.second]!!)
+//            }
+//        }
+
         val meshDeclaration = CustomMesh(
-            "${declaration.id}:$meshIndex:$primitiveIndex",
+            "${declaration.resource}:$meshIndex:$primitiveIndex",
             gltfLoaded.model.accessors!![verticesAttributeAccessors.first().second].count,
             indicesAccessor?.count ?: 0,
             attributes,
@@ -266,7 +299,7 @@ internal class GltfSceneBuilder(
         if (declaration.instancingDeclaration == null)
             return meshDeclaration
 
-        return InstancedMesh(declaration.id, declaration.instancingDeclaration.count, meshDeclaration, !declaration.instancingDeclaration.dynamic, false, declaration.retentionPolicy) {
+        return InstancedMesh(declaration.resource, declaration.instancingDeclaration.count, meshDeclaration, !declaration.instancingDeclaration.dynamic, false, declaration.retentionPolicy) {
             declaration.instancingDeclaration.instancer().mapIndexed { i, it ->
                 MeshInstance(it.transform, skinIndex?.let {
                     instanceData[i].jointMatrices[skinIndex].mapIndexed { ind, jm -> jm * gltfLoaded.loadedSkins[skinIndex]!![ind] }
@@ -313,7 +346,7 @@ internal class GltfSceneBuilder(
         )
     }
 
-    private fun getTexture(ti: InternalGltfModel.TextureIndexProvider): TextureDeclaration? {
+    private fun getTexture(ti: GltfModel.TextureIndexProvider): TextureDeclaration? {
         val image = gltfLoaded.model.textures?.get(ti.index)?.source
             ?.let { src -> gltfLoaded.model.images!![src] }
 
@@ -340,3 +373,21 @@ internal class GltfSceneBuilder(
         throw KorenderException("GLTF: image without uri or bufferView")
     }
 }
+
+private fun InternalGltfModel.Camera.toProjection(): ProjectionDeclaration =
+    when (type) {
+        "perspective" -> {
+            val near = perspective!!.znear
+            val aspect = perspective.aspectRatio ?: 1f // TODO: viewport aspect
+            val top = near * tan(perspective.yfov * 0.5f)
+            val height = 2f * top
+            val width = height * aspect
+            Projection(width, height, near, perspective.zfar ?: 10000f, FrustumProjectionMode) // TODO: logmode ??
+        }
+
+        "orthographic" -> {
+            Projection(orthographic!!.xmag * 2f, orthographic.ymag * 2f, orthographic.znear, orthographic.zfar, OrthoProjectionMode) // TODO: logmode ??
+        }
+
+        else -> throw KorenderException("Unknown Gltf camera type")
+    }

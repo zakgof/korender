@@ -1,4 +1,4 @@
-package com.zakgof.korender
+package com.zakgof.korender.gltf
 
 interface GltfModel {
     val scene: Int
@@ -98,17 +98,17 @@ interface GltfModel {
         val name: String?
 
         interface Orthographic {
-            val xMag: Float
-            val yMag: Float
-            val zNear: Float
-            val zFar: Float
+            val xmag: Float
+            val ymag: Float
+            val znear: Float
+            val zfar: Float
         }
 
         interface Perspective {
             val aspectRatio: Float?
             val yfov: Float
-            val zNear: Float
-            val zFar: Float?
+            val znear: Float
+            val zfar: Float?
         }
     }
 

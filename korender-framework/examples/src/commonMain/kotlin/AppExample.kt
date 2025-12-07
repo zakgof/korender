@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.zakgof.app.resources.Res
 import com.zakgof.app.resources.korender32
 import com.zakgof.app.resources.menu
+import com.zakgof.korender.examples.gltfviewer.GltfExample
 import com.zakgof.korender.examples.infcity.InfiniteCity
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource

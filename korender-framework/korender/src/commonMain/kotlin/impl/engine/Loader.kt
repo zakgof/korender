@@ -1,7 +1,6 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.impl.resultOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -20,7 +19,7 @@ internal class Loader(private val appResourceLoader: ResourceLoader) {
     fun <R> safeBytes(resource: String, block: (ByteArray) -> R?): R? {
         val deferred = loadingMap.getOrPut(resource) {
             CoroutineScope(Dispatchers.Default).async {
-                resourceBytes(appResourceLoader, resource).also { fireUpdaters() }
+                appResourceLoader(resource).also { fireUpdaters() }
             }
         }
         return deferred.resultOrNull()?.let { block(it) }?.also {
@@ -31,7 +30,7 @@ internal class Loader(private val appResourceLoader: ResourceLoader) {
     fun unsafeBytes(resource: String): ByteArray? {
         val deferred = loadingMap.getOrPut(resource) {
             CoroutineScope(Dispatchers.Default).async {
-                resourceBytes(appResourceLoader, resource).also { fireUpdaters() }
+                appResourceLoader(resource).also { fireUpdaters() }
             }
         }
         return deferred.resultOrNull()

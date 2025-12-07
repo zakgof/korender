@@ -6,7 +6,6 @@ import com.zakgof.korender.impl.absolutizeResource
 import com.zakgof.korender.impl.engine.GltfDeclaration
 import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.gl.GLConstants
-import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.Mat4
 import kotlinx.serialization.json.Json
 import kotlin.io.encoding.Base64
@@ -27,19 +26,18 @@ internal object GltfLoader {
     class GlbChunk(val type: ChunkType, val data: ByteArray)
 
     fun load(declaration: GltfDeclaration, loader: Loader): GltfLoaded? =
-        loader.syncy(declaration.id) { load(declaration, it) }
+        loader.syncy(declaration.resource) { load(declaration, declaration.loader) }
 
     suspend fun load(declaration: GltfDeclaration, appResourceLoader: ResourceLoader): GltfLoaded {
-        val extension = declaration.id.split(".").last().lowercase() // TODO: autodetect
-        val resourceBytes = declaration.loader()
+        val extension = declaration.resource.split(".").last().lowercase() // TODO: autodetect
+        val resourceBytes = declaration.loader(declaration.resource)
         val loaded = when (extension) {
 
             // TODO: autodetect
-            "gltf" -> loadGltf(resourceBytes, null, appResourceLoader, declaration.id)
-            "glb" -> loadGlb(resourceBytes, appResourceLoader, declaration.id)
+            "gltf" -> loadGltf(resourceBytes, null, appResourceLoader, declaration.resource)
+            "glb" -> loadGlb(resourceBytes, appResourceLoader, declaration.resource)
             else -> throw KorenderException("Unknown extension of gltf/glb resource: $extension")
         }
-        declaration.onLoaded(loaded.model)
         return loaded
     }
 
@@ -181,7 +179,7 @@ internal object GltfLoader {
             val bytes = if (isBase64) Base64.decode(data) else data.encodeToByteArray()
             return bytes
         }
-        return resourceBytes(appResourceLoader, resourceUri)
+        return appResourceLoader(resourceUri)
     }
 }
 
