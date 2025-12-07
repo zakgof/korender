@@ -20,7 +20,8 @@ import com.zakgof.korender.impl.engine.GltfDeclaration
 import com.zakgof.korender.impl.engine.GltfInstance
 import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.engine.RenderableDeclaration
-import com.zakgof.korender.impl.geometry.CustomMesh
+import com.zakgof.korender.impl.geometry.CMesh
+import com.zakgof.korender.impl.geometry.CustomCpuMesh
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
 import com.zakgof.korender.impl.gl.GLConstants
@@ -77,21 +78,15 @@ internal class GltfSceneBuilder(
 
         scene.nodes.forEach { collectMeshesFromNode(it) }
 
-        instanceData.forEachIndexed { index, instanceData ->
-
+        val instancesUpdateDate = instanceData.mapIndexed { index, instanceData ->
             calculateInstanceData(index, instanceData)
-
-            scene.nodes.forEach { nodeIndex ->
-                processNode(
-                    instanceData,
-                    Transform.IDENTITY,
-                    nodeIndex,
-                    model.nodes!![nodeIndex]
-                )
+            val nodeUpdateData = scene.nodes.map { nodeIndex ->
+                processNode(instanceData, Transform.IDENTITY, nodeIndex, model.nodes!![nodeIndex])
             }
             instanceData.jointMatrices += model.skins?.map { skin ->
                 skin.joints.map { instanceData.nodeMatrices[it].mat4 }
             } ?: listOf() // TODO optimize
+            InternalUpdateData.Instance(InternalUpdateData.Node(Transform.IDENTITY, null, nodeUpdateData))
         }
         val renderables = meshNodes.flatMap {
             createRenderables(
@@ -106,7 +101,7 @@ internal class GltfSceneBuilder(
                 DefaultCamera(cameraTransforms[index].mat4),
                 cam.toProjection()
             )
-        } ?: listOf(), listOf()))
+        } ?: listOf(), listOf(), instancesUpdateDate))
         return renderables
     }
 
@@ -149,7 +144,7 @@ internal class GltfSceneBuilder(
         }
     }
 
-    private fun processNode(instanceData: InstanceData, parentTransform: Transform, nodeIndex: Int, node: InternalGltfModel.Node) {
+    private fun processNode(instanceData: InstanceData, parentTransform: Transform, nodeIndex: Int, node: InternalGltfModel.Node): InternalUpdateData.Node {
 
         var transform = parentTransform
 
@@ -170,9 +165,11 @@ internal class GltfSceneBuilder(
 
         instanceData.nodeMatrices[nodeIndex] = transform
 
-        node.children?.forEach { childNodeIndex ->
+        val children = node.children?.map { childNodeIndex ->
             processNode(instanceData, transform, childNodeIndex, gltfLoaded.model.nodes!![childNodeIndex])
-        }
+        } ?: listOf()
+
+        return InternalUpdateData.Node(transform, node.mesh?.let { gltfLoaded.loadedMeshes[node.mesh] }, children)
     }
 
     private fun createRenderables(mesh: InternalGltfModel.Mesh, meshIndex: Int, skinIndex: Int?): List<RenderableDeclaration> =
@@ -268,33 +265,26 @@ internal class GltfSceneBuilder(
         if (declaration.instancingDeclaration != null)
             attributes += listOf(MODEL0, MODEL1, MODEL2, MODEL3)
 
-//        val cpuMesh = CMesh(
-//            gltfLoaded.model.accessors!![verticesAttributeAccessors.first().second].count,
-//            indicesAccessor?.count ?: 0,
-//            declaration.instancingDeclaration?.count ?: -1,
-//            *attributes.toTypedArray(),
-//            indexType = accessorComponentTypeToIndexType(indicesAccessor?.componentType)
-//        ) {
-//            indicesAccessor?.let { indexBytes(gltfLoaded.loadedAccessors.all[primitive.indices]!!) }
-//            verticesAttributeAccessors.forEach {
-//                attrBytes(it.first, gltfLoaded.loadedAccessors.all[it.second]!!)
-//            }
-//        }
-
-        val meshDeclaration = CustomMesh(
-            "${declaration.resource}:$meshIndex:$primitiveIndex",
-            gltfLoaded.model.accessors!![verticesAttributeAccessors.first().second].count,
-            indicesAccessor?.count ?: 0,
-            attributes,
-            false,
-            accessorComponentTypeToIndexType(indicesAccessor?.componentType),
-            declaration.retentionPolicy
-        ) {
-            indicesAccessor?.let { indexBytes(gltfLoaded.loadedAccessors.all[primitive.indices]!!) }
-            verticesAttributeAccessors.forEach {
-                attrBytes(it.first, gltfLoaded.loadedAccessors.all[it.second]!!)
+        val cpuMesh = gltfLoaded.loadedMeshes.getOrPut(meshIndex) {
+            CMesh(
+                gltfLoaded.model.accessors!![verticesAttributeAccessors.first().second].count,
+                indicesAccessor?.count ?: 0,
+                declaration.instancingDeclaration?.count ?: -1,
+                *attributes.toTypedArray(),
+                indexType = accessorComponentTypeToIndexType(indicesAccessor?.componentType)
+            ) {
+                indicesAccessor?.let { indexBytes(gltfLoaded.loadedAccessors.all[primitive.indices]!!) }
+                verticesAttributeAccessors.forEach {
+                    attrBytes(it.first, gltfLoaded.loadedAccessors.all[it.second]!!)
+                }
             }
         }
+
+        val meshDeclaration = CustomCpuMesh(
+            "${declaration.resource}:$meshIndex:$primitiveIndex",
+            cpuMesh,
+            declaration.retentionPolicy
+        )
 
         if (declaration.instancingDeclaration == null)
             return meshDeclaration

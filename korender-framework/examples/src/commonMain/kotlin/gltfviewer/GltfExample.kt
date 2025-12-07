@@ -20,6 +20,7 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.math.ColorRGB.Companion.white
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -58,9 +59,8 @@ fun GltfExample() = Row {
     Korender(appResourceLoader = { Res.readBytes(it) }) {
         val orbitCamera = OrbitCamera(20.z, 0.y)
         OnTouch { orbitCamera.touch(it) }
+        var currentGltf: String = ""
         Frame {
-//            camera = cam?.camera ?: orbitCamera.run { camera() }
-//            projection = cam?.projection ?: projection(1f, 1f, 1f, 1000f)
             DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(3f))
             AmbientLight(white(0.6f))
             selectedModel?.let { model ->
@@ -77,12 +77,19 @@ fun GltfExample() = Row {
                             camera = c.camera
                             projection = c.projection
                         } else {
-                            camera = camera(10.z, 1.y, -1.z)
-                            projection = projection(1f, 1f, 1f, 1000f)
+                            val bs = boundingSphere(update.instances.first().rootNode)
+                            camera = cameraFor(bs)
+                            projection = projectionFor(bs, width.toFloat() / height)
+                            currentGltf = model.file
                         }
                     }
                 )
-
+            }
+            Gui {
+                Column {
+                    Filler()
+                    Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40, color = ColorRGBA(0x66FF55A0))
+                }
             }
         }
     }

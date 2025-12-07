@@ -29,7 +29,7 @@ class MeshAttribute<T>(
     val primitiveType: AttributeType,
     val location: Int,
     val bufferAccessor: BufferAccessor<T>,
-    val instance: Boolean = false
+    val instance: Boolean = false,
 )
 
 interface BufferAccessor<T> {
@@ -158,13 +158,8 @@ interface MeshInitializer {
 
 interface Mesh {
 
-    val vertices: Vertices
-    val indices: Indices?
-
-    interface Vertices {
-        val size: Int
-        operator fun get(index: Int): Vertex
-    }
+    val vertices: List<Vertex>
+    val indices: List<Int>?
 
     interface Vertex {
         val pos: Vec3?
@@ -172,28 +167,12 @@ interface Mesh {
         val tex: Vec2?
         fun <T> value(attribute: MeshAttribute<T>): T?
     }
-
-    interface Indices {
-        val size: Int
-        operator fun get(index: Int): Int
-    }
 }
 
 class MutableMesh : Mesh {
 
-    override val vertices = MutableVertices()
-    override val indices = MutableIndices()
-
-    class MutableVertices : Mesh.Vertices {
-        private val list = mutableListOf<Mesh.Vertex>()
-        override val size
-            get() = list.size
-
-        override fun get(index: Int) = list[index]
-        operator fun plusAssign(vertex: Mesh.Vertex) {
-            list += vertex
-        }
-    }
+    override val vertices = mutableListOf<MutableVertex>()
+    override val indices = mutableListOf<Int>()
 
     class MutableVertex : Mesh.Vertex {
 
@@ -213,15 +192,4 @@ class MutableMesh : Mesh {
             else -> null
         } as T?
     }
-
-    class MutableIndices : Mesh.Indices {
-        private val list = mutableListOf<Int>()
-        override val size
-            get() = list.size
-
-        override fun get(index: Int) = list[index]
-
-        fun index(vararg i: Int) = apply { list += i.toList() }
-    }
-
 }

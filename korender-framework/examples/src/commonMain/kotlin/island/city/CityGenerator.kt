@@ -234,7 +234,7 @@ class CityGenerator {
         vertices += MutableMesh.MutableVertex().pos(pos2).normal(normal).tex(Vec2(0f, vcells.toFloat()))
         vertices += MutableMesh.MutableVertex().pos(pos3).normal(normal).tex(Vec2(ucells.toFloat(), vcells.toFloat()))
         vertices += MutableMesh.MutableVertex().pos(pos4).normal(normal).tex(Vec2(ucells.toFloat(), 0f))
-        indices.index(base + 0, base + 2, base + 1, base + 0, base + 3, base + 2)
+        indices += listOf(base + 0, base + 2, base + 1, base + 0, base + 3, base + 2)
     }
 
     private class Level(override val level: Int, val cubes: MutableSet<Int>) : Context {

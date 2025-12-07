@@ -16,7 +16,7 @@ internal open class CMesh(
     val indexCount: Int,
     val instanceCount: Int = -1,
     attrs: List<MeshAttribute<*>>,
-    indexType: IndexType? = null
+    indexType: IndexType? = null,
 ) : Mesh, MeshInitializer {
 
     var instancesInitialized: Boolean = false
@@ -33,7 +33,7 @@ internal open class CMesh(
     val actualIndexType: IndexType = convertIndexType(indexType, indexCount)
     val indexBuffer: NativeByteBuffer? = if (indexCount > 0) NativeByteBuffer(indexCount * actualIndexType.size()) else null
 
-    override val vertices: Mesh.Vertices = object : Mesh.Vertices {
+    override val vertices = object : AbstractList<Mesh.Vertex>() {
 
         override val size = vertexCount
 
@@ -51,7 +51,7 @@ internal open class CMesh(
         }
 
     }
-    override val indices: Mesh.Indices? = if (indexCount > 0) object : Mesh.Indices {
+    override val indices = if (indexCount > 0) object : AbstractList<Int>() {
         override val size = indexCount
         override fun get(index: Int): Int = when (actualIndexType) {
             IndexType.Byte -> indexBuffer!!.byte(index).toInt()
@@ -66,7 +66,7 @@ internal open class CMesh(
         instanceCount: Int = -1,
         vararg attributes: MeshAttribute<*>,
         indexType: IndexType? = null,
-        block: MeshInitializer.() -> Unit
+        block: MeshInitializer.() -> Unit,
     ) : this(vertexCount, indexCount, instanceCount, attributes.toList(), indexType = indexType) {
         apply(block)
     }
@@ -150,7 +150,5 @@ internal open class CMesh(
         return verticesEstimates.first()
     }
 
-    fun determineIndexCount(): Int {
-        return (indexBuffer?.position() ?: 0) / (actualIndexType.size())
-    }
+    fun determineIndexCount() = (indexBuffer?.position() ?: 0) / actualIndexType.size()
 }

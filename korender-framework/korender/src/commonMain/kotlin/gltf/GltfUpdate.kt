@@ -9,7 +9,7 @@ interface GltfUpdate {
 
     val meshes: List<Mesh>
     val cameras: List<Camera>
-    // val root: Node
+    val instances: List<Instance>
 
     interface Camera {
         val name: String?
@@ -17,9 +17,13 @@ interface GltfUpdate {
         val projection: ProjectionDeclaration
     }
 
+    interface Instance {
+        val rootNode: Node
+    }
+
     interface Node {
         val transform: Transform
-        val mesh: com.zakgof.korender.Mesh?
+        val mesh: Mesh?
         val children: List<Node>
     }
 }
