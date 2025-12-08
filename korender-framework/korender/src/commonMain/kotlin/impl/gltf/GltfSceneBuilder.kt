@@ -90,7 +90,6 @@ internal class GltfSceneBuilder(
         }
         val renderables = meshNodes.flatMap {
             createRenderables(
-                gltfLoaded.model.meshes!![it.first],
                 it.first,
                 gltfLoaded.model.nodes!![it.second].skin,
             )
@@ -172,8 +171,8 @@ internal class GltfSceneBuilder(
         return InternalUpdateData.Node(transform, node.mesh?.let { gltfLoaded.loadedMeshes[node.mesh] }, children)
     }
 
-    private fun createRenderables(mesh: InternalGltfModel.Mesh, meshIndex: Int, skinIndex: Int?): List<RenderableDeclaration> =
-        mesh.primitives.mapIndexed { primitiveIndex, primitive ->
+    private fun createRenderables(meshIndex: Int, skinIndex: Int?): List<RenderableDeclaration> =
+        gltfLoaded.model.meshes!![meshIndex].primitives.mapIndexed { primitiveIndex, primitive ->
             val meshDeclaration = createMeshDeclaration(primitive, meshIndex, primitiveIndex, skinIndex)
             val jointMatrices = skinIndex?.let {
                 if (declaration.instancingDeclaration == null) instanceData[0].jointMatrices[it] else null
