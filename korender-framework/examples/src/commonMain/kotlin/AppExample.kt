@@ -41,8 +41,7 @@ import org.jetbrains.compose.resources.painterResource
 fun AppExample() {
     val options = listOf(
 
-        Demo("GLTF crowd") { GltfCrowdExample() },
-        Demo("Gltf Library") { GltfExample() },
+        Demo("GLTF Library") { GltfExample() },
 
         Demo("Heightmap Terrain") { HeightmapTerrainExample() },
         Demo("Procedural Terrain") { ProcTerrainExample() },

@@ -21,10 +21,14 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import kotlinx.coroutines.launch
+
+private const val USER_CAMERA = "User Camera"
 
 @Composable
 fun GltfExample() = Row {
@@ -32,8 +36,8 @@ fun GltfExample() = Row {
     val scrollState = rememberScrollState()
     var models by remember { mutableStateOf(listOf<Model>()) }
     var selectedModel by remember { mutableStateOf<Model?>(null) }
-    var cameras by remember { mutableStateOf(listOf<String>("User Camera")) }
-    var selectedCamera by remember { mutableStateOf<String>("User Camera") }
+    var cameras by remember { mutableStateOf(listOf<String>(USER_CAMERA)) }
+    var selectedCamera by remember { mutableStateOf<String>(USER_CAMERA) }
 
     LaunchedEffect(null) {
         models = GltfDownloader.list()
@@ -67,8 +71,9 @@ fun GltfExample() = Row {
                 Gltf(
                     resource = model.file,
                     resourceLoader = { GltfDownloader.load(model.folder, model.format, it) },
+                    transform = if (selectedCamera == USER_CAMERA) rotate(1.y, frameInfo.time) else Transform.IDENTITY,
                     onUpdate = { update ->
-                        cameras = listOf("User Camera") + update.cameras.mapIndexed { index, cam -> cam.name ?: "Gltf camera $index" }
+                        cameras = listOf(USER_CAMERA) + update.cameras.mapIndexed { index, cam -> cam.name ?: "Gltf camera $index" }
                         if (!cameras.contains(selectedCamera)) {
                             selectedCamera = cameras.first()
                         }
@@ -77,14 +82,13 @@ fun GltfExample() = Row {
                             camera = c.camera
                             projection = c.projection
                         } else {
-                            val bs = boundingSphere(update.instances.first().rootNode)
-                            camera = cameraFor(bs)
-                            projection = projectionFor(bs, width.toFloat() / height)
-                            currentGltf = model.file
+                            if (currentGltf != model.file) {
+                                val bs = boundingSphere(update.instances.first().rootNode)
+                                camera = cameraFor(bs)
+                                projection = projectionFor(bs, width.toFloat() / height)
+                                currentGltf = model.file
+                            }
                         }
-
-                        camera = camera(5.y, -1.y, 1.z)
-                        projection = projection(1f, height.toFloat()/width,1f, 100f)
                     }
                 )
             }
