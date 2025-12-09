@@ -13,7 +13,7 @@ import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture3D
-import com.zakgof.korender.impl.gltf.GltfLoaded
+import com.zakgof.korender.impl.gltf.GltfCache
 import com.zakgof.korender.impl.gltf.GltfLoader
 import com.zakgof.korender.impl.material.GpuTextureLink
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
@@ -45,7 +45,7 @@ internal class Inventory(appResourceLoader: ResourceLoader) {
     private val fonts = Registry<InternalFontDeclaration, Font> { Fonts.load(it.resource, loader) }
     private val frameBuffers = Registry<FrameBufferDeclaration, GlGpuFrameBuffer> { GlGpuFrameBuffer(it.id, it.width, it.height, it.colorTexturePresets, it.withDepth) }
     private val cubeFrameBuffers = Registry<CubeFrameBufferDeclaration, GlGpuCubeFrameBuffer> { GlGpuCubeFrameBuffer(it.id, it.width, it.height, it.withDepth) }
-    private val gltfs = Registry<GltfDeclaration, GltfLoaded> { GltfLoader.load(it, loader) }
+    private val gltfs = Registry<GltfDeclaration, GltfCache> { GltfLoader.load(it, loader) }
 
     private val registries = listOf(meshes, shaders, textures, textures3D, textureLinks, resourceCubeTextures, imageCubeTextures, fonts, frameBuffers, cubeFrameBuffers, gltfs)
 
@@ -69,7 +69,7 @@ internal class Inventory(appResourceLoader: ResourceLoader) {
     fun font(decl: InternalFontDeclaration): Font? = fonts[decl]
     fun frameBuffer(decl: FrameBufferDeclaration): GlGpuFrameBuffer? = frameBuffers[decl]
     fun cubeFrameBuffer(decl: CubeFrameBufferDeclaration): GlGpuCubeFrameBuffer? = cubeFrameBuffers[decl]
-    fun gltf(decl: GltfDeclaration): GltfLoaded? = gltfs[decl]
+    fun gltf(decl: GltfDeclaration): GltfCache? = gltfs[decl]
 
     fun onWaitUpdate(block: () -> Unit) = loader.onWaitUpdate(block)
 }

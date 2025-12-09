@@ -1,21 +1,20 @@
 package com.zakgof.korender.impl.gltf
 
 import com.zakgof.korender.CameraDeclaration
-import com.zakgof.korender.Mesh
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.geometry.CMesh
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform
 
-internal class GltfLoaded(
+internal class GltfCache(
     val model: InternalGltfModel,
     val id: String,
     val loadedUris: MutableMap<String, ByteArray>,
     val loadedAccessors: AccessorCache,
     val loadedSkins: Map<Int, List<Mat4>>,
+    val loadedMeshes: Map<Pair<Int, Int>, CMesh>
 ) : AutoCloseable {
-    val loadedMeshes = mutableMapOf<Int, CMesh>()
     override fun close() {}
 }
 
@@ -35,4 +34,6 @@ internal class InternalUpdateData(override val cameras: List<InternalGltfCamera>
     class Instance(override val rootNode: Node): GltfUpdate.Instance
 
     class Node(override val transform: Transform, override val mesh: Mesh?, override val children: List<Node>) : GltfUpdate.Node
+
+    class Mesh(override val primitives: List<com.zakgof.korender.Mesh>) : GltfUpdate.Mesh
 }

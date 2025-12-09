@@ -13,7 +13,6 @@ import kotlin.math.tan
 
 class BoundingSphere(val center: Vec3, val radius: Float) {
 
-
     companion object {
         fun fromPoints(points: List<Vec3>): BoundingSphere {
             if (points.isEmpty()) {
@@ -76,12 +75,13 @@ class BoundingSphere(val center: Vec3, val radius: Float) {
     )
 }
 
-fun boundingSphere(node: GltfUpdate.Node): BoundingSphere =
-    BoundingSphere.merge(
-        (listOf(node.mesh?.let { boundingSphere(it).transform(node.transform.mat4) }) +
-                node.children.map { boundingSphere(it) })
-            .filterNotNull()
-    )
+fun boundingSphere(node: GltfUpdate.Node): BoundingSphere {
+    val meshSpheres = node.mesh?.let { mesh ->
+        mesh.primitives.map { boundingSphere(it).transform(node.transform.mat4) }
+    } ?: listOf()
+    val childrenSpheres = node.children.map { boundingSphere(it) }
+    return BoundingSphere.merge(meshSpheres + childrenSpheres)
+}
 
 fun boundingSphere(mesh: Mesh) = BoundingSphere.fromPoints(mesh.vertices.map { it.pos!! })
 

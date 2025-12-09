@@ -1,14 +1,7 @@
 package com.zakgof.korender.impl.gltf
 
-import com.zakgof.korender.Attributes
-import com.zakgof.korender.Attributes.MODEL0
-import com.zakgof.korender.Attributes.MODEL1
-import com.zakgof.korender.Attributes.MODEL2
-import com.zakgof.korender.Attributes.MODEL3
-import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MaterialModifier
-import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
@@ -20,13 +13,10 @@ import com.zakgof.korender.impl.engine.GltfDeclaration
 import com.zakgof.korender.impl.engine.GltfInstance
 import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.engine.RenderableDeclaration
-import com.zakgof.korender.impl.geometry.CMesh
 import com.zakgof.korender.impl.geometry.CustomCpuMesh
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
-import com.zakgof.korender.impl.gl.GLConstants
 import com.zakgof.korender.impl.glgpu.Mat4List
-import com.zakgof.korender.impl.glgpu.toGL
 import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
@@ -65,15 +55,15 @@ internal class NodeAnimation(
 
 internal class GltfSceneBuilder(
     private val declaration: GltfDeclaration,
-    private val gltfLoaded: GltfLoaded,
+    private val cache: GltfCache,
 ) {
-    private val cameraTransforms = MutableList(gltfLoaded.model.cameras?.size ?: 0) { Transform() }
+    private val cameraTransforms = MutableList(cache.model.cameras?.size ?: 0) { Transform() }
     private val meshNodes = mutableListOf<Pair<Int, Int>>()
     private val instances = declaration.instancingDeclaration?.instancer?.invoke() ?: listOf(GltfInstance(Transform.IDENTITY, declaration.time, declaration.animation))
-    private val instanceData: Array<InstanceData> = Array(instances.size) { InstanceData(gltfLoaded.model.nodes?.size ?: 0) }
+    private val instanceData: Array<InstanceData> = Array(instances.size) { InstanceData(cache.model.nodes?.size ?: 0) }
 
     fun build(): List<RenderableDeclaration> {
-        val model = gltfLoaded.model
+        val model = cache.model
         val scene = model.scenes!![model.scene]
 
         scene.nodes.forEach { collectMeshesFromNode(it) }
@@ -89,12 +79,9 @@ internal class GltfSceneBuilder(
             InternalUpdateData.Instance(InternalUpdateData.Node(Transform.IDENTITY, null, nodeUpdateData))
         }
         val renderables = meshNodes.flatMap {
-            createRenderables(
-                it.first,
-                gltfLoaded.model.nodes!![it.second].skin,
-            )
+            createRenderables(it.first,cache.model.nodes!![it.second].skin, it.second)
         }
-        declaration.onUpdate(InternalUpdateData(gltfLoaded.model.cameras?.mapIndexed { index, cam ->
+        declaration.onUpdate(InternalUpdateData(cache.model.cameras?.mapIndexed { index, cam ->
             InternalUpdateData.InternalGltfCamera(
                 cam.name,
                 DefaultCamera(cameraTransforms[index].mat4),
@@ -107,8 +94,8 @@ internal class GltfSceneBuilder(
     private fun calculateInstanceData(instanceIndex: Int, instanceData: InstanceData) {
         val instanceDeclaration = instances[instanceIndex]
         val animationIndex = instanceDeclaration.animation ?: declaration.animation
-        if (animationIndex < (gltfLoaded.model.animations?.size ?: 0)) {
-            val animation = gltfLoaded.model.animations!![animationIndex]
+        if (animationIndex < (cache.model.animations?.size ?: 0)) {
+            val animation = cache.model.animations!![animationIndex]
             animation.channels.forEach { channel ->
                 val samplerValue = getSamplerValue(animation.samplers[channel.sampler], instanceDeclaration.time ?: declaration.time)
                 instanceData.nodeAnimations[channel.target.node!!].populate(channel.target.path, samplerValue)
@@ -119,8 +106,8 @@ internal class GltfSceneBuilder(
     private fun getSamplerValue(sampler: InternalGltfModel.Animation.AnimationSampler, currentTime: Float): List<Float> {
 
         // TODO validate float input and output
-        val inputFloats = gltfLoaded.loadedAccessors.floats[sampler.input]!!
-        val outputValues = gltfLoaded.loadedAccessors.floatArrays[sampler.output]!!
+        val inputFloats = cache.loadedAccessors.floats[sampler.input]!!
+        val outputValues = cache.loadedAccessors.floatArrays[sampler.output]!!
 
         // TODO validate same lengths
         val max = inputFloats.last()
@@ -136,7 +123,7 @@ internal class GltfSceneBuilder(
     }
 
     private fun collectMeshesFromNode(nodeIndex: Int) {
-        val node = gltfLoaded.model.nodes!![nodeIndex]
+        val node = cache.model.nodes!![nodeIndex]
         node.mesh?.let { meshNodes.add(it to nodeIndex) }
         node.children?.forEach { childNodeIndex ->
             collectMeshesFromNode(childNodeIndex)
@@ -165,29 +152,39 @@ internal class GltfSceneBuilder(
         instanceData.nodeMatrices[nodeIndex] = transform
 
         val children = node.children?.map { childNodeIndex ->
-            processNode(instanceData, transform, childNodeIndex, gltfLoaded.model.nodes!![childNodeIndex])
+            processNode(instanceData, transform, childNodeIndex, cache.model.nodes!![childNodeIndex])
         } ?: listOf()
 
-        return InternalUpdateData.Node(transform, node.mesh?.let { gltfLoaded.loadedMeshes[node.mesh] }, children)
+        val meshData: InternalUpdateData.Mesh? = node.mesh?.let { meshIndex ->
+            val primitivesData = cache.model.meshes!![meshIndex].primitives.indices.map { primitiveIndex ->
+                cache.loadedMeshes[meshIndex to primitiveIndex]!!
+            }
+            InternalUpdateData.Mesh(primitivesData)
+        }
+
+        return InternalUpdateData.Node(transform, meshData, children)
     }
 
-    private fun createRenderables(meshIndex: Int, skinIndex: Int?): List<RenderableDeclaration> =
-        gltfLoaded.model.meshes!![meshIndex].primitives.mapIndexed { primitiveIndex, primitive ->
-            val meshDeclaration = createMeshDeclaration(primitive, meshIndex, primitiveIndex, skinIndex)
+    private fun createRenderables(meshIndex: Int, skinIndex: Int?, nodeIndex: Int): List<RenderableDeclaration> =
+        cache.model.meshes!![meshIndex].primitives.mapIndexed { primitiveIndex, primitive ->
+            val meshDeclaration = createMeshDeclaration(meshIndex, primitiveIndex, skinIndex)
             val jointMatrices = skinIndex?.let {
                 if (declaration.instancingDeclaration == null) instanceData[0].jointMatrices[it] else null
             }
             val materialModifier = createMaterialModifiers(primitive, skinIndex, jointMatrices)
+
+            // TODO why this works
+            val meshTransform = if (skinIndex == null) instanceData[0].nodeMatrices[nodeIndex].mat4 else Mat4.IDENTITY
+            val transform = declaration.transform * Transform(meshTransform)
             RenderableDeclaration(
                 BaseMaterial.Renderable,
                 listOf(materialModifier.second),
                 mesh = meshDeclaration,
-                transform = if (declaration.instancingDeclaration == null) declaration.transform * instances[0].transform else declaration.transform,
+                transform = transform,
                 materialModifier.first,
                 declaration.retentionPolicy,
             )
         }
-
 
     private fun createMaterialModifiers(
         primitive: InternalGltfModel.Mesh.Primitive,
@@ -196,7 +193,7 @@ internal class GltfSceneBuilder(
     ): Pair<Boolean, MaterialModifier> {
 
         // TODO: split into 2 parts, precompute textures modifier, calc only skin modifier
-        val material = primitive.material?.let { gltfLoaded.model.materials!![it] }
+        val material = primitive.material?.let { cache.model.materials!![it] }
         val matPbr = material?.pbrMetallicRoughness
         val matSpecularGlossiness = material?.extensions?.get("KHR_materials_pbrSpecularGlossiness")
                 as? InternalGltfModel.KHRMaterialsPbrSpecularGlossiness
@@ -209,7 +206,7 @@ internal class GltfSceneBuilder(
                 mb.plugins["vnormal"] = "!shader/plugin/vnormal.skinning.vert"
                 if (declaration.instancingDeclaration == null && jointMatrices != null) {
                     val jointMatrixList = jointMatrices.mapIndexed { ind, jm ->
-                        jm * gltfLoaded.loadedSkins[skinIndex]!![ind]
+                        jm * cache.loadedSkins[skinIndex]!![ind]
                     }
                     mb.uniforms["jntMatrices[0]"] = Mat4List(jointMatrixList)
                 }
@@ -252,32 +249,9 @@ internal class GltfSceneBuilder(
         return (material?.alphaMode == "BLEND") to imm
     }
 
-    private fun createMeshDeclaration(primitive: InternalGltfModel.Mesh.Primitive, meshIndex: Int, primitiveIndex: Int, skinIndex: Int?): InternalMeshDeclaration {
-        // TODO: optimize accessor stuff
-        val indicesAccessor = primitive.indices?.let { gltfLoaded.model.accessors!![it] }
-        val verticesAttributeAccessors = primitive.attributes
-            .mapNotNull { p ->
-                val accessor = gltfLoaded.model.accessors!![p.value]
-                attributeForAccessor(p.key, accessor)?.let { it to p.value }
-            }
-        val attributes = verticesAttributeAccessors.map { it.first }.toMutableList()
-        if (declaration.instancingDeclaration != null)
-            attributes += listOf(MODEL0, MODEL1, MODEL2, MODEL3)
+    private fun createMeshDeclaration(meshIndex: Int, primitiveIndex: Int, skinIndex: Int?): InternalMeshDeclaration {
 
-        val cpuMesh = gltfLoaded.loadedMeshes.getOrPut(meshIndex) {
-            CMesh(
-                gltfLoaded.model.accessors!![verticesAttributeAccessors.first().second].count,
-                indicesAccessor?.count ?: 0,
-                declaration.instancingDeclaration?.count ?: -1,
-                *attributes.toTypedArray(),
-                indexType = accessorComponentTypeToIndexType(indicesAccessor?.componentType)
-            ) {
-                indicesAccessor?.let { indexBytes(gltfLoaded.loadedAccessors.all[primitive.indices]!!) }
-                verticesAttributeAccessors.forEach {
-                    attrBytes(it.first, gltfLoaded.loadedAccessors.all[it.second]!!)
-                }
-            }
-        }
+        val cpuMesh = cache.loadedMeshes[meshIndex to primitiveIndex]!!
 
         val meshDeclaration = CustomCpuMesh(
             "${declaration.resource}:$meshIndex:$primitiveIndex",
@@ -291,43 +265,19 @@ internal class GltfSceneBuilder(
         return InstancedMesh(declaration.resource, declaration.instancingDeclaration.count, meshDeclaration, !declaration.instancingDeclaration.dynamic, false, declaration.retentionPolicy) {
             declaration.instancingDeclaration.instancer().mapIndexed { i, it ->
                 MeshInstance(it.transform, skinIndex?.let {
-                    instanceData[i].jointMatrices[skinIndex].mapIndexed { ind, jm -> jm * gltfLoaded.loadedSkins[skinIndex]!![ind] }
+                    instanceData[i].jointMatrices[skinIndex].mapIndexed { ind, jm -> jm * cache.loadedSkins[skinIndex]!![ind] }
                 })
             }
         }
     }
 
-    private fun attributeForAccessor(key: String, accessor: InternalGltfModel.Accessor): MeshAttribute<*>? {
-        val candidates = when (key) {
-            "POSITION" -> listOf(Attributes.POS)
-            "NORMAL" -> listOf(Attributes.NORMAL)
-            "TEXCOORD_0" -> listOf(Attributes.TEX)
-            "JOINTS_0" -> listOf(Attributes.JOINTS_BYTE, Attributes.JOINTS_SHORT, Attributes.JOINTS_INT)
-            "WEIGHTS_0" -> listOf(Attributes.WEIGHTS)
-            else -> null
-        }
-        return candidates?.firstOrNull {
-            it.structSize == accessor.elementComponentSize()
-                    && it.primitiveType.toGL() == accessor.componentType
-        }
-    }
-
-    private fun accessorComponentTypeToIndexType(componentType: Int?) =
-        when (componentType) {
-            null -> null
-            GLConstants.GL_UNSIGNED_BYTE -> IndexType.Byte
-            GLConstants.GL_UNSIGNED_SHORT -> IndexType.Short
-            GLConstants.GL_UNSIGNED_INT -> IndexType.Int
-            else -> throw KorenderException("GLTF: Unsupported componentType for index: $componentType")
-        }
-
     // TODO: redesign; uri is to big for key
     private fun getBufferBytes(buffer: InternalGltfModel.Buffer): ByteArray {
-        return gltfLoaded.loadedUris[buffer.uri ?: ""]!!
+        return cache.loadedUris[buffer.uri ?: ""]!!
     }
 
     private fun getBufferViewBytes(bufferView: InternalGltfModel.BufferView): ByteArray {
-        val buffer = gltfLoaded.model.buffers!![bufferView.buffer]
+        val buffer = cache.model.buffers!![bufferView.buffer]
         val bufferBytes = getBufferBytes(buffer)
         return bufferBytes.copyOfRange(
             bufferView.byteOffset,
@@ -336,12 +286,12 @@ internal class GltfSceneBuilder(
     }
 
     private fun getTexture(ti: GltfModel.TextureIndexProvider): TextureDeclaration? {
-        val image = gltfLoaded.model.textures?.get(ti.index)?.source
-            ?.let { src -> gltfLoaded.model.images!![src] }
+        val image = cache.model.textures?.get(ti.index)?.source
+            ?.let { src -> cache.model.images!![src] }
 
         return image?.let { img ->
             ByteArrayTextureDeclaration(
-                img.uri ?: "${gltfLoaded.id} ${ti.index}", // TODO !!!
+                img.uri ?: "${cache.id} ${ti.index}", // TODO !!!
                 TextureFilter.MipMap,
                 TextureWrap.Repeat,
                 1024,
@@ -354,9 +304,9 @@ internal class GltfSceneBuilder(
 
     private fun getImageBytes(image: InternalGltfModel.Image): ByteArray {
         if (image.uri != null)
-            return gltfLoaded.loadedUris[image.uri]!!
+            return cache.loadedUris[image.uri]!!
         if (image.bufferView != null) {
-            val bufferView = gltfLoaded.model.bufferViews!![image.bufferView]
+            val bufferView = cache.model.bufferViews!![image.bufferView]
             return getBufferViewBytes(bufferView)
         }
         throw KorenderException("GLTF: image without uri or bufferView")

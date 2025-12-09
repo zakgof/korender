@@ -82,6 +82,9 @@ fun GltfExample() = Row {
                             projection = projectionFor(bs, width.toFloat() / height)
                             currentGltf = model.file
                         }
+
+                        camera = camera(5.y, -1.y, 1.z)
+                        projection = projection(1f, height.toFloat()/width,1f, 100f)
                     }
                 )
             }
