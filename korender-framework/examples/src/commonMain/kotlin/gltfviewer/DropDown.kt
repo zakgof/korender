@@ -1,16 +1,21 @@
 package com.zakgof.korender.examples.gltfviewer
 
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ExposedDropdownMenuBox
 import androidx.compose.material.ExposedDropdownMenuDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -25,6 +30,7 @@ fun <T> FixedItemsDropdown(
 
     selected?.let {
         ExposedDropdownMenuBox(
+            modifier = Modifier.width(200.dp),
             expanded = expanded,
             onExpandedChange = { expanded = !expanded },
         ) {
@@ -35,7 +41,11 @@ fun <T> FixedItemsDropdown(
                 label = { Text(title) },
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded)
-                }
+                },
+                colors = TextFieldDefaults.textFieldColors(
+                    textColor = Color.Black,
+                    backgroundColor = Color.DarkGray
+                )
             )
 
             ExposedDropdownMenu(

@@ -6,6 +6,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.statement.readRawBytes
 import io.ktor.http.ContentType.Text.Plain
+import io.ktor.http.encodeURLPath
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -62,7 +63,7 @@ object GltfDownloader {
     suspend fun load(folder: String, format: String, file: String): ByteArray {
         val fileFix = if (file.startsWith("/")) file.substring(1) else file
         val url = "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/refs/heads/main/Models/${folder}/${format}/${fileFix}"
-        val bytes = HttpClient().get(url).readRawBytes()
+        val bytes = HttpClient().get(url.encodeURLPath()).readRawBytes()
         println("Loaded ${bytes.size} bytes from model $url")
         return bytes
     }

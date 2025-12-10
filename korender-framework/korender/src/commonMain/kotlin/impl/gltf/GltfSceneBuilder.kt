@@ -97,8 +97,10 @@ internal class GltfSceneBuilder(
         if (animationIndex < (cache.model.animations?.size ?: 0)) {
             val animation = cache.model.animations!![animationIndex]
             animation.channels.forEach { channel ->
-                val samplerValue = getSamplerValue(animation.samplers[channel.sampler], instanceDeclaration.time ?: declaration.time)
-                instanceData.nodeAnimations[channel.target.node!!].populate(channel.target.path, samplerValue)
+                channel.target.node?.let {
+                    val samplerValue = getSamplerValue(animation.samplers[channel.sampler], instanceDeclaration.time ?: declaration.time)
+                    instanceData.nodeAnimations[channel.target.node].populate(channel.target.path, samplerValue)
+                }
             }
         }
     }
@@ -106,8 +108,10 @@ internal class GltfSceneBuilder(
     private fun getSamplerValue(sampler: InternalGltfModel.Animation.AnimationSampler, currentTime: Float): List<Float> {
 
         // TODO validate float input and output
+        // TODO support other types of samplers
         val inputFloats = cache.loadedAccessors.floats[sampler.input]!!
-        val outputValues = cache.loadedAccessors.floatArrays[sampler.output]!!
+        val outputValues = cache.loadedAccessors.floatArrays[sampler.output] ?:
+            return listOf(0f) // TODO this is ugly fallback
 
         // TODO validate same lengths
         val max = inputFloats.last()
@@ -296,7 +300,7 @@ internal class GltfSceneBuilder(
                 TextureWrap.Repeat,
                 1024,
                 { getImageBytes(img) },
-                img.mimeType!!.split("/").last(),
+                img.mimeType?.split("/")?.last() ?: img.uri?.split(".")?.last() ?: "unknown",
                 declaration.retentionPolicy
             )
         }
