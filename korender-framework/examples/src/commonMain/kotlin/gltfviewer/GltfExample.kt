@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.zakgof.app.resources.Res
+import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.Korender
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.gltf.GltfUpdate
@@ -58,6 +59,7 @@ fun GltfExample() = Row {
 
     Box(modifier = Modifier.weight(1f)) {
         Korender(appResourceLoader = { Res.readBytes(it) }) {
+            val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })
             Frame {
                 OnLoading {
                     Gui {
@@ -71,12 +73,14 @@ fun GltfExample() = Row {
                 AmbientLight(white(0.4f))
                 selectedModel?.let { model ->
                     Gltf(
+                        ibl(env),
                         resource = model.file,
                         resourceLoader = { GltfDownloader.load(model.folder, model.format, it) },
                         transform = if (selectedCamera == USER_CAMERA) rotate(bs.center, 1.y, frameInfo.time * 0.3f) else Transform.IDENTITY,
                         onUpdate = { update -> updateCamera(update) }
                     )
                 }
+                Sky(ibl(env))
 //                Renderable(
 //                    base(color = ColorRGBA(0.5f, 0.0f, 0.0f, 0.3f)),
 //                    mesh = sphere(),

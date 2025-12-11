@@ -43,7 +43,7 @@ fun <T> FixedItemsDropdown(
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded)
                 },
                 colors = TextFieldDefaults.textFieldColors(
-                    textColor = Color.Black,
+                    textColor = Color.White,
                     backgroundColor = Color.DarkGray
                 )
             )

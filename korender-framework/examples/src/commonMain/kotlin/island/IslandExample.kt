@@ -49,8 +49,8 @@ private fun FrameContext.gameFrame(game: Game, loader: Loader, terrain: Prefab) 
 
 
 private fun FrameContext.plane(position: Vec3, look: Vec3, up: Vec3) = Gltf(
-    "island/models/plane.glb",
-    rotate(look, up)
+    resource = "island/models/plane.glb",
+    transform = rotate(look, up)
         .scale(100.0f)
         .translate(position + 16.y)
 )

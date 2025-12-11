@@ -182,7 +182,7 @@ internal class GltfSceneBuilder(
             val transform = declaration.transform * Transform(meshTransform)
             RenderableDeclaration(
                 BaseMaterial.Renderable,
-                listOf(materialModifier.second),
+                listOf(materialModifier.second) + declaration.materialModifiers,
                 mesh = meshDeclaration,
                 transform = transform,
                 materialModifier.first,

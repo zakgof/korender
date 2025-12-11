@@ -92,8 +92,7 @@ fun KorenderContext.cameraFor(bs: BoundingSphere): CameraDeclaration {
 fun KorenderContext.projectionFor(bs: BoundingSphere, whr: Float): ProjectionDeclaration {
     val near = 2f * bs.radius
     val far = 4f * bs.radius
-    val base = atan(1f / 3f)
-    val fovY2 = if (whr >= 1f) base else atan(tan(base) / whr)
+    val fovY2 = if (whr >= 1f) atan(0.33f) else atan(0.33f / whr)
     val halfHeight = near * tan(fovY2)
     val halfWidth = halfHeight * whr
     return projection(

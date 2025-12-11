@@ -11,7 +11,6 @@ import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.context.BillboardInstancingDeclaration
 import com.zakgof.korender.context.GltfInstancingDeclaration
 import com.zakgof.korender.context.InstancingDeclaration
-import com.zakgof.korender.gltf.GltfModel
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
@@ -169,6 +168,7 @@ internal data class CascadeDeclaration(val mapSize: Int, val near: Float, val fa
 
 internal class GltfDeclaration(
     val resource: String,
+    val materialModifiers: List<MaterialModifier>,
     val loader: ResourceLoader,
     val onUpdate: (GltfUpdate) -> Unit,
     val transform: Transform,
