@@ -12,50 +12,49 @@ import kotlin.math.tan
 
 class BoundingSphere(val center: Vec3, val radius: Float) {
 
+    fun contains(p: Vec3) = (center - p).lengthSquared() <= radius + 1e-6f
+
     companion object {
         fun fromPoints(points: List<Vec3>): BoundingSphere {
-            if (points.isEmpty()) {
-                return BoundingSphere(Vec3.ZERO, 0f)
-            }
-            val p0 = points[0]
-            val p1 = points.maxBy { (it - p0) * (it - p0) }
-            val p2 = points.maxBy { (it - p1) * (it - p1) }
-            var center = (p1 + p2) * 0.5f
-            var radius = ((p2 - center).length())
+            if (points.isEmpty()) return BoundingSphere(Vec3.ZERO, 0f)
+            fun far(from: Vec3) = points.maxBy { (it - from).lengthSquared() }
+            val a = far(points[0])
+            val b = far(a)
+            var c = (a + b) * 0.5f
+            var r = c distanceTo a
             for (p in points) {
-                val diff = p - center
-                val dist = diff.length()
-                if (dist > radius) {
-                    val newRadius = (radius + dist) * 0.5f
-                    val k = (newRadius - radius) / dist
-                    center += diff * k
-                    radius = newRadius
+                val d = c distanceTo p
+                if (d > r) {
+                    val nr = (r + d) * 0.5f
+                    c += (p - c) * ((nr - r) / d)
+                    r = nr
+                }
+            }
+            return BoundingSphere(c, r)
+        }
+
+        fun merge(spheres: List<BoundingSphere>): BoundingSphere {
+            if (spheres.isEmpty()) return BoundingSphere(Vec3.ZERO, 0f)
+
+            fun far(s: BoundingSphere) =
+                spheres.maxBy { (it.center - s.center).lengthSquared() + (it.radius - s.radius) * (it.radius - s.radius) }
+
+            val a = far(spheres[0])
+            val b = far(a)
+
+            var center = a.center + (b.center - a.center) * 0.5f
+            var radius = (a.center.distanceTo(b.center) + a.radius + b.radius) * 0.5f
+
+            for (s in spheres) {
+                val d = center.distanceTo(s.center)
+                if (d + s.radius > radius) {
+                    val newR = (radius + d + s.radius) * 0.5f
+                    val k = (newR - radius) / d
+                    center += (s.center - center) * k
+                    radius = newR
                 }
             }
             return BoundingSphere(center, radius)
-        }
-
-        fun merge(mergeables: List<BoundingSphere>): BoundingSphere {
-            if (mergeables.isEmpty()) {
-                return BoundingSphere(Vec3.ZERO, 0f)
-            }
-            var c = mergeables[0].center
-            var r = mergeables[0].radius
-            for (s in mergeables.drop(1)) {
-                val diff = s.center - c
-                val dist = diff.length()
-                if (dist + s.radius <= r) continue
-                if (dist + r <= s.radius) {
-                    c = s.center
-                    r = s.radius
-                    continue
-                }
-                val newRadius = (r + dist + s.radius) * 0.5f
-                val k = (newRadius - r) / dist
-                c += diff * k
-                r = newRadius
-            }
-            return BoundingSphere(c, r)
         }
     }
 
@@ -98,8 +97,8 @@ fun KorenderContext.projectionFor(bs: BoundingSphere, whr: Float): ProjectionDec
     val halfHeight = near * tan(fovY2)
     val halfWidth = halfHeight * whr
     return projection(
-        width = 2f * halfWidth,
-        height = 2f * halfHeight,
+        width = 2.2f * halfWidth,
+        height = 2.2f * halfHeight,
         near = near,
         far = far
     )

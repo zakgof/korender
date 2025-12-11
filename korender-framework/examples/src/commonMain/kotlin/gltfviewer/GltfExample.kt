@@ -30,6 +30,7 @@ fun GltfExample() = Row {
     var cameras by remember { mutableStateOf(listOf<String>(USER_CAMERA)) }
     var selectedCamera by remember { mutableStateOf<String>(USER_CAMERA) }
     var currentGltf by remember { mutableStateOf("") }
+    var bs by remember { mutableStateOf(BoundingSphere(Vec3.ZERO, 1f)) }
 
     LaunchedEffect(null) {
         models = GltfDownloader.list()
@@ -47,11 +48,11 @@ fun GltfExample() = Row {
             projection = c.projection
         } else {
             if (currentGltf != selectedModel?.file) {
-                val bs = boundingSphere(update.instances.first().rootNode)
-                camera = cameraFor(bs)
-                projection = projectionFor(bs, width.toFloat() / height)
+                bs = boundingSphere(update.instances.first().rootNode)
                 currentGltf = selectedModel!!.file
             }
+            camera = cameraFor(bs)
+            projection = projectionFor(bs, width.toFloat() / height)
         }
     }
 
@@ -67,15 +68,21 @@ fun GltfExample() = Row {
                     }
                 }
                 DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(3f))
-                AmbientLight(white(0.2f))
+                AmbientLight(white(0.4f))
                 selectedModel?.let { model ->
                     Gltf(
                         resource = model.file,
                         resourceLoader = { GltfDownloader.load(model.folder, model.format, it) },
-                        transform = if (selectedCamera == USER_CAMERA) rotate(1.y, frameInfo.time * 0.3f) else Transform.IDENTITY,
+                        transform = if (selectedCamera == USER_CAMERA) rotate(bs.center, 1.y, frameInfo.time * 0.3f) else Transform.IDENTITY,
                         onUpdate = { update -> updateCamera(update) }
                     )
                 }
+//                Renderable(
+//                    base(color = ColorRGBA(0.5f, 0.0f, 0.0f, 0.3f)),
+//                    mesh = sphere(),
+//                    transform = scale(bs.radius).translate(bs.center),
+//                    transparent = true
+//                )
                 Gui {
                     Column {
                         Filler()

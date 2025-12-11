@@ -12,8 +12,8 @@ class Transform(val mat4: Mat4 = Mat4.IDENTITY) {
         fun scale(xs: Float, ys: Float, zs: Float): Transform = IDENTITY.scale(xs, ys, zs)
         fun rotate(q: Quaternion): Transform = IDENTITY.rotate(q)
         fun rotate(axis: Vec3, angle: Float): Transform = IDENTITY.rotate(axis, angle)
-        fun rotate(direction: Vec3, uptrend: Vec3): Transform =
-            IDENTITY.rotate(direction, uptrend)
+        fun rotate(point: Vec3, axis: Vec3, angle: Float): Transform = IDENTITY.rotate(point, axis, angle)
+        fun rotate(direction: Vec3, uptrend: Vec3): Transform = IDENTITY.rotate(direction, uptrend)
         val IDENTITY = Transform()
     }
 
@@ -46,8 +46,42 @@ class Transform(val mat4: Mat4 = Mat4.IDENTITY) {
         ) * mat4
     )
 
-    fun rotate(q: Quaternion): Transform =
-        Transform(q.mat4 * mat4)
+    fun rotate(q: Quaternion): Transform = Transform(q.mat4 * mat4)
+
+    fun rotate(point: Vec3, axis: Vec3, angle: Float): Transform {
+        val ux = axis.x;
+        val uy = axis.y;
+        val uz = axis.z
+        val c = cos(angle)
+        val s = sin(angle)
+        val v = 1f - c
+
+        val r00 = ux * ux * v + c
+        val r01 = ux * uy * v - uz * s
+        val r02 = ux * uz * v + uy * s
+        val r10 = uy * ux * v + uz * s
+        val r11 = uy * uy * v + c
+        val r12 = uy * uz * v - ux * s
+        val r20 = uz * ux * v - uy * s
+        val r21 = uz * uy * v + ux * s
+        val r22 = uz * uz * v + c
+
+        val px = point.x;
+        val py = point.y;
+        val pz = point.z
+        val tx = px - (r00 * px + r01 * py + r02 * pz)
+        val ty = py - (r10 * px + r11 * py + r12 * pz)
+        val tz = pz - (r20 * px + r21 * py + r22 * pz)
+
+        return Transform(
+            Mat4(
+                r00, r01, r02, tx,
+                r10, r11, r12, ty,
+                r20, r21, r22, tz,
+                0f, 0f, 0f, 1f
+            )
+        )
+    }
 
     fun rotate(axis: Vec3, angle: Float): Transform {
         val cos = cos(angle)
