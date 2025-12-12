@@ -59,7 +59,7 @@ fun GltfExample() = Row {
 
     Box(modifier = Modifier.weight(1f)) {
         Korender(appResourceLoader = { Res.readBytes(it) }) {
-            val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })
+            val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/sea/${it.toString().lowercase()}.jpg" })
             Frame {
                 OnLoading {
                     Gui {
@@ -69,8 +69,8 @@ fun GltfExample() = Row {
                         }
                     }
                 }
-                DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(3f))
-                AmbientLight(white(0.4f))
+                DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(1f))
+                AmbientLight(white(0.1f))
                 selectedModel?.let { model ->
                     Gltf(
                         ibl(env),
@@ -81,16 +81,10 @@ fun GltfExample() = Row {
                     )
                 }
                 Sky(ibl(env))
-//                Renderable(
-//                    base(color = ColorRGBA(0.5f, 0.0f, 0.0f, 0.3f)),
-//                    mesh = sphere(),
-//                    transform = scale(bs.radius).translate(bs.center),
-//                    transparent = true
-//                )
                 Gui {
                     Column {
                         Filler()
-                        Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40, color = ColorRGBA(0x66FF55A0))
+                        Text(id = "fps", text = "${selectedModel?.folder ?: ""}: FPS ${frameInfo.avgFps.toInt()}", height = 40, color = ColorRGBA(0x66FF55A0))
                     }
                 }
             }
