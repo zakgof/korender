@@ -22,14 +22,14 @@ import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 
-private const val USER_CAMERA = "User Camera"
+private const val AUTO_CAMERA = "Auto Camera"
 
 @Composable
-fun GltfExample() = Row {
+fun GltfLibraryExample() = Row {
     var models by remember { mutableStateOf(listOf<Model>()) }
     var selectedModel by remember { mutableStateOf<Model?>(null) }
-    var cameras by remember { mutableStateOf(listOf<String>(USER_CAMERA)) }
-    var selectedCamera by remember { mutableStateOf<String>(USER_CAMERA) }
+    var cameras by remember { mutableStateOf(listOf<String>(AUTO_CAMERA)) }
+    var selectedCamera by remember { mutableStateOf<String>(AUTO_CAMERA) }
     var currentGltf by remember { mutableStateOf("") }
     var bs by remember { mutableStateOf(BoundingSphere(Vec3.ZERO, 1f)) }
 
@@ -39,7 +39,7 @@ fun GltfExample() = Row {
     }
 
     fun KorenderContext.updateCamera(update: GltfUpdate) {
-        cameras = listOf(USER_CAMERA) + update.cameras.mapIndexed { index, cam -> cam.name ?: "Gltf camera $index" }
+        cameras = listOf(AUTO_CAMERA) + update.cameras.mapIndexed { index, cam -> cam.name ?: "Gltf camera $index" }
         if (!cameras.contains(selectedCamera)) {
             selectedCamera = cameras.first()
         }
@@ -79,7 +79,7 @@ fun GltfExample() = Row {
                         ibl(env),
                         resource = model.file,
                         resourceLoader = { GltfDownloader.load(model.folder, model.format, it) },
-                        transform = if (selectedCamera == USER_CAMERA) rotate(bs.center, 1.y, frameInfo.time * 0.3f) else Transform.IDENTITY,
+                        transform = if (selectedCamera == AUTO_CAMERA) rotate(bs.center, 1.y, frameInfo.time * 0.3f) else Transform.IDENTITY,
                         onUpdate = { update -> updateCamera(update) }
                     )
                 }
