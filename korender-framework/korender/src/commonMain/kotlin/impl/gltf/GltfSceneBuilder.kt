@@ -87,7 +87,7 @@ internal class GltfSceneBuilder(
                 DefaultCamera(cameraTransforms[index].mat4),
                 cam.toProjection()
             )
-        } ?: listOf(), listOf(), instancesUpdateDate))
+        } ?: listOf(), instancesUpdateDate))
         return renderables
     }
 

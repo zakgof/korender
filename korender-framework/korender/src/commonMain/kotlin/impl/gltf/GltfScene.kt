@@ -24,7 +24,7 @@ internal class AccessorCache(
     val floatArrays: MutableMap<Int, Array<List<Float>>>,
 )
 
-internal class InternalUpdateData(override val cameras: List<InternalGltfCamera>, override val meshes: List<Mesh>, override val instances: List<GltfUpdate.Instance>) : GltfUpdate {
+internal class InternalUpdateData(override val cameras: List<InternalGltfCamera>, override val instances: List<GltfUpdate.Instance>) : GltfUpdate {
     class InternalGltfCamera(
         override val name: String?,
         override val camera: CameraDeclaration,

@@ -6,7 +6,6 @@ import com.zakgof.korender.math.Transform
 
 interface GltfUpdate {
 
-    val meshes: List<Mesh>
     val cameras: List<Camera>
     val instances: List<Instance>
 
