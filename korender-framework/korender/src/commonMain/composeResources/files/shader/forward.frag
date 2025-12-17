@@ -28,7 +28,7 @@ uniform sampler2DShadow pcfTextures[5];
 
 out vec4 fragColor;
 
-float shadowRatios[5];
+float shadowRatios[5] = float[5](0., 0., 0., 0., 0.);
 
 vec3 position;
 vec4 albedo;
