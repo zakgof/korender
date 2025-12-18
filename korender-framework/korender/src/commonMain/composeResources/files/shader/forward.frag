@@ -63,6 +63,10 @@ vec3 look;
 #import "$emission"
 #endif
 
+#ifdef PLUGIN_OCCLUSION
+#import "$occlusion"
+#endif
+
 #ifdef PLUGIN_METALLIC_ROUGHNESS
 #import "$metallic_roughness"
 #endif
@@ -160,6 +164,10 @@ void main() {
     float plane = dot((position - cameraPos), cameraDir);
 
     float occlusion = 1.0;
+    #ifdef PLUGIN_OCCLUSION
+        occlusion *= pluginOcclusion();
+    #endif
+
     #ifdef VERTEX_OCCLUSION
         occlusion *= vocclusion;
     #endif

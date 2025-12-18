@@ -56,8 +56,8 @@ internal class DefaultFrameContext(
         DefaultDeferredShadingContext(sceneDeclaration.deferredShadingDeclaration!!).apply(block)
     }
 
-    override fun Gltf(resource: String, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?) {
-        sceneDeclaration.gltfs += GltfDeclaration(resource, transform, time ?: frameInfo.time, animation ?: 0, instancing as InternalGltfInstancingDeclaration?, korenderContext.currentRetentionPolicy)
+    override fun Gltf(resource: String, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?, materialOverrides: Map<String, MaterialModifier>) {
+        sceneDeclaration.gltfs += GltfDeclaration(resource, transform, time ?: frameInfo.time, animation ?: 0, instancing as InternalGltfInstancingDeclaration?, materialOverrides, korenderContext.currentRetentionPolicy)
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean, instancing: InstancingDeclaration?) {

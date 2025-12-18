@@ -170,10 +170,24 @@ internal class GltfDeclaration(
     val time: Float,
     val animation: Int,
     val instancingDeclaration: InternalGltfInstancingDeclaration?,
+    val materialOverrides: Map<String, MaterialModifier> = emptyMap(),
     override val retentionPolicy: RetentionPolicy
 ) : Retentionable {
-    override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.gltfResource == gltfResource)
-    override fun hashCode(): Int = gltfResource.hashCode()
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is GltfDeclaration) return false
+
+        if (gltfResource != other.gltfResource) return false
+        if (materialOverrides != other.materialOverrides) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = gltfResource.hashCode()
+        result = 31 * result + materialOverrides.hashCode()
+        return result
+    }
 }
 
 internal class GltfInstance(val transform: Transform, val time: Float?, val animation: Int?)

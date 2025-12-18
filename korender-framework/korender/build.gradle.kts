@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import java.net.URI
 
 plugins {
     alias(libs.plugins.composeCompiler)
@@ -76,13 +77,32 @@ kotlin {
     }
 }
 
+val korenderVersion: String by project
+val korenderVersionSuffix: String by project
+
+version = korenderVersion + korenderVersionSuffix
+
 mavenPublishing {
-    val korenderVersion: String by project
-    val korenderVersionSuffix: String by project
 
     publishToMavenCentral()
+    publishing {
+        repositories {
+            maven {
+                name = "WorldMandia"
+                url = URI.create(
+                    (version.toString().endsWith("SNAPSHOT")
+                        .let { if (it) "https://repo.worldmandia.cc/snapshots" else "https://repo.worldmandia.cc/releases" })
+                )
+
+                credentials {
+                    password = System.getenv("password")
+                    username = System.getenv("username")
+                }
+            }
+        }
+    }
     signAllPublications()
-    coordinates("com.github.zakgof", "korender", korenderVersion + korenderVersionSuffix)
+    coordinates("com.github.zakgof", "korender", version.toString())
 
     pom {
         name = "korender"
@@ -92,8 +112,8 @@ mavenPublishing {
         licenses {
             license {
                 name = "The Apache License, Version 2.0"
-                url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
-                distribution = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+                distribution = "https://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         }
         developers {
