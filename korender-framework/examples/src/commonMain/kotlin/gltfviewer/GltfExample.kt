@@ -47,6 +47,7 @@ fun GltfLibraryExample() = Row {
         }
         if (currentGltf != selectedModel?.file) {
             bs = boundingSphere(update.instances.first().rootNode)
+            currentGltf = selectedModel!!.file
         }
         cameras = listOf(AUTO_CAMERA) + update.cameras.mapIndexed { index, cam -> cam.name ?: "Gltf camera $index" }
         if (!cameras.contains(selectedCamera)) {
