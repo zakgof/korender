@@ -13,7 +13,7 @@ internal class GltfCache(
     val loadedUris: MutableMap<String, ByteArray>,
     val loadedAccessors: AccessorCache,
     val loadedSkins: Map<Int, List<Mat4>>,
-    val loadedMeshes: Map<Pair<Int, Int>, CMesh>
+    val loadedMeshes: Map<Pair<Int, Int>, CMesh>,
 ) : AutoCloseable {
     override fun close() {}
 }
@@ -24,16 +24,30 @@ internal class AccessorCache(
     val floatArrays: MutableMap<Int, Array<List<Float>>>,
 )
 
-internal class InternalUpdateData(override val cameras: List<InternalGltfCamera>, override val instances: List<GltfUpdate.Instance>) : GltfUpdate {
-    class InternalGltfCamera(
+internal class InternalGltfUpdate(
+    override val animations: List<Animation>,
+    override val cameras: List<Camera>,
+    override val instances: List<GltfUpdate.Instance>,
+) : GltfUpdate {
+
+    class Animation(override val name: String?) : GltfUpdate.Animation
+
+    class Camera(
         override val name: String?,
         override val camera: CameraDeclaration,
         override val projection: ProjectionDeclaration,
     ) : GltfUpdate.Camera
 
-    class Instance(override val rootNode: Node): GltfUpdate.Instance
+    class Instance(override val rootNode: Node) : GltfUpdate.Instance
 
-    class Node(override val transform: Transform, override val mesh: Mesh?, override val children: List<Node>) : GltfUpdate.Node
+    class Node(
+        override val transform: Transform,
+        override val mesh: Mesh?,
+        override val children: List<Node>,
+    ) : GltfUpdate.Node
 
-    class Mesh(override val primitives: List<com.zakgof.korender.Mesh>) : GltfUpdate.Mesh
+    class Mesh(
+        override val name: String?,
+        override val primitives: List<com.zakgof.korender.Mesh>,
+    ) : GltfUpdate.Mesh
 }

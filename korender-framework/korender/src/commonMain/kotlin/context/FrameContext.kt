@@ -42,11 +42,14 @@ interface FrameContext : KorenderContext {
     /**
      * Renders a GLTF model from a resource file.
      *
+     * @param materialModifiers material modifiers
      * @param resource resource file
      * @param transform model space transform
      * @param time overridden time for animation
      * @param animation index of animation to apply
      * @param instancing instancing declaration to render multiple objects in a batch
+     * @param resourceLoader overridden file resource loader
+     * @param onUpdate callback with runtime Gltf details
      */
     fun Gltf(vararg materialModifiers: MaterialModifier, resource: String, transform: Transform = Transform.IDENTITY, time: Float? = null, animation: Int? = null, instancing: GltfInstancingDeclaration? = null, resourceLoader: ResourceLoader? = null, onUpdate: (GltfUpdate) -> Unit = {})
 

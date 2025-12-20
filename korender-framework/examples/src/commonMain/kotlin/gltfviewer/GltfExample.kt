@@ -28,8 +28,10 @@ private const val AUTO_CAMERA = "Auto Camera"
 fun GltfLibraryExample() = Row {
     var models by remember { mutableStateOf(listOf<Model>()) }
     var selectedModel by remember { mutableStateOf<Model?>(null) }
-    var cameras by remember { mutableStateOf(listOf<String>(AUTO_CAMERA)) }
-    var selectedCamera by remember { mutableStateOf<String>(AUTO_CAMERA) }
+    var cameras by remember { mutableStateOf(listOf(AUTO_CAMERA)) }
+    var selectedCamera by remember { mutableStateOf(AUTO_CAMERA) }
+    var animations by remember { mutableStateOf(listOf<String>()) }
+    var selectedAnimation by remember { mutableStateOf("") }
     var currentGltf by remember { mutableStateOf("") }
     var bs by remember { mutableStateOf(BoundingSphere(Vec3.ZERO, 1f)) }
 
@@ -38,7 +40,14 @@ fun GltfLibraryExample() = Row {
         selectedModel = models.find { it.folder == "Avocado" }
     }
 
-    fun KorenderContext.updateCamera(update: GltfUpdate) {
+    fun KorenderContext.updateCameraAndAnimations(update: GltfUpdate) {
+        animations = update.animations.mapIndexed { i, v -> v.name ?: "Animation $i" }
+        if (animations.isNotEmpty() && !animations.contains(selectedAnimation)) {
+            selectedAnimation = animations.first()
+        }
+        if (currentGltf != selectedModel?.file) {
+            bs = boundingSphere(update.instances.first().rootNode)
+        }
         cameras = listOf(AUTO_CAMERA) + update.cameras.mapIndexed { index, cam -> cam.name ?: "Gltf camera $index" }
         if (!cameras.contains(selectedCamera)) {
             selectedCamera = cameras.first()
@@ -48,10 +57,6 @@ fun GltfLibraryExample() = Row {
             camera = c.camera
             projection = c.projection
         } else {
-            if (currentGltf != selectedModel?.file) {
-                bs = boundingSphere(update.instances.first().rootNode)
-                currentGltf = selectedModel!!.file
-            }
             camera = cameraFor(bs)
             projection = projectionFor(bs, width.toFloat() / height)
         }
@@ -80,7 +85,8 @@ fun GltfLibraryExample() = Row {
                         resource = model.file,
                         resourceLoader = { GltfDownloader.load(model.folder, model.format, it) },
                         transform = if (selectedCamera == AUTO_CAMERA) rotate(bs.center, 1.y, frameInfo.time * 0.3f) else Transform.IDENTITY,
-                        onUpdate = { update -> updateCamera(update) }
+                        animation = animations.indexOf(selectedAnimation),
+                        onUpdate = { update -> updateCameraAndAnimations(update) }
                     )
                 }
                 Sky(ibl(env))
@@ -95,8 +101,11 @@ fun GltfLibraryExample() = Row {
     }
 
     Column {
-        FixedItemsDropdown("Model", models, { it.label }, selectedModel, { selectedModel = it })
+        FixedItemsDropdown("Model", models, { it.label }, selectedModel, { selectedModel = it; animations = listOf() })
         FixedItemsDropdown("Camera", cameras, { it }, selectedCamera, { selectedCamera = it })
+        if (animations.isNotEmpty()) {
+            FixedItemsDropdown("Animations", animations, { selectedAnimation}, selectedAnimation, { selectedAnimation = it })
+        }
     }
 }
 

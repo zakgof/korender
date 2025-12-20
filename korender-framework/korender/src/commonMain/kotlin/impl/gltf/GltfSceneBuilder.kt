@@ -76,26 +76,31 @@ internal class GltfSceneBuilder(
             instanceData.jointMatrices += model.skins?.map { skin ->
                 skin.joints.map { instanceData.nodeMatrices[it].mat4 }
             } ?: listOf() // TODO optimize
-            InternalUpdateData.Instance(InternalUpdateData.Node(Transform.IDENTITY, null, nodeUpdateData))
+            InternalGltfUpdate.Instance(InternalGltfUpdate.Node(Transform.IDENTITY, null, nodeUpdateData))
         }
         val renderables = meshNodes.flatMap {
-            createRenderables(it.first,cache.model.nodes!![it.second].skin, it.second)
+            createRenderables(it.first, cache.model.nodes!![it.second].skin, it.second)
         }
-        declaration.onUpdate(InternalUpdateData(cache.model.cameras?.mapIndexed { index, cam ->
-            InternalUpdateData.InternalGltfCamera(
+        declaration.onUpdate(calculateUpdate(instancesUpdateDate))
+        return renderables
+    }
+
+    private fun calculateUpdate(instancesUpdateDate: List<InternalGltfUpdate.Instance>) = InternalGltfUpdate(
+        cache.model.animations?.map { InternalGltfUpdate.Animation(it.name) } ?: listOf(),
+        cache.model.cameras?.mapIndexed { index, cam ->
+            InternalGltfUpdate.Camera(
                 cam.name,
                 DefaultCamera(cameraTransforms[index].mat4),
                 cam.toProjection()
             )
-        } ?: listOf(), instancesUpdateDate))
-        return renderables
-    }
+        } ?: listOf(),
+        instancesUpdateDate)
 
     private fun calculateInstanceData(instanceIndex: Int, instanceData: InstanceData) {
-        val instanceDeclaration = instances[instanceIndex]
-        val animationIndex = instanceDeclaration.animation ?: declaration.animation
-        if (animationIndex < (cache.model.animations?.size ?: 0)) {
-            val animation = cache.model.animations!![animationIndex]
+        if (cache.model.animations?.isNotEmpty() == true) {
+            val instanceDeclaration = instances[instanceIndex]
+            val animationIndex = (instanceDeclaration.animation ?: declaration.animation).coerceIn(0, cache.model.animations.size - 1)
+            val animation = cache.model.animations[animationIndex]
             animation.channels.forEach { channel ->
                 channel.target.node?.let {
                     val samplerValue = getSamplerValue(animation.samplers[channel.sampler], instanceDeclaration.time ?: declaration.time)
@@ -110,8 +115,7 @@ internal class GltfSceneBuilder(
         // TODO validate float input and output
         // TODO support other types of samplers
         val inputFloats = cache.loadedAccessors.floats[sampler.input]!!
-        val outputValues = cache.loadedAccessors.floatArrays[sampler.output] ?:
-            return listOf(0f) // TODO this is ugly fallback
+        val outputValues = cache.loadedAccessors.floatArrays[sampler.output] ?: return listOf(0f) // TODO this is ugly fallback
 
         // TODO validate same lengths
         val max = inputFloats.last()
@@ -134,7 +138,7 @@ internal class GltfSceneBuilder(
         }
     }
 
-    private fun processNode(instanceData: InstanceData, parentTransform: Transform, nodeIndex: Int, node: InternalGltfModel.Node): InternalUpdateData.Node {
+    private fun processNode(instanceData: InstanceData, parentTransform: Transform, nodeIndex: Int, node: InternalGltfModel.Node): InternalGltfUpdate.Node {
 
         var transform = parentTransform
 
@@ -159,14 +163,15 @@ internal class GltfSceneBuilder(
             processNode(instanceData, transform, childNodeIndex, cache.model.nodes!![childNodeIndex])
         } ?: listOf()
 
-        val meshData: InternalUpdateData.Mesh? = node.mesh?.let { meshIndex ->
-            val primitivesData = cache.model.meshes!![meshIndex].primitives.indices.map { primitiveIndex ->
+        val meshData: InternalGltfUpdate.Mesh? = node.mesh?.let { meshIndex ->
+            val mesh = cache.model.meshes!![meshIndex]
+            val primitivesData = mesh.primitives.indices.map { primitiveIndex ->
                 cache.loadedMeshes[meshIndex to primitiveIndex]!!
             }
-            InternalUpdateData.Mesh(primitivesData)
+            InternalGltfUpdate.Mesh(mesh.name, primitivesData)
         }
 
-        return InternalUpdateData.Node(transform, meshData, children)
+        return InternalGltfUpdate.Node(transform, meshData, children)
     }
 
     private fun createRenderables(meshIndex: Int, skinIndex: Int?, nodeIndex: Int): List<RenderableDeclaration> =

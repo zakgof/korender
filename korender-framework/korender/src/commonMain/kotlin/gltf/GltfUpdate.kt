@@ -6,8 +6,13 @@ import com.zakgof.korender.math.Transform
 
 interface GltfUpdate {
 
+    val animations: List<Animation>
     val cameras: List<Camera>
     val instances: List<Instance>
+
+    interface Animation {
+        val name: String?
+    }
 
     interface Camera {
         val name: String?
@@ -26,6 +31,7 @@ interface GltfUpdate {
     }
 
     interface Mesh {
+        val name: String?
         val primitives: List<com.zakgof.korender.Mesh>
     }
 }
