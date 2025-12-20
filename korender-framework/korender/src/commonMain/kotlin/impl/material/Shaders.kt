@@ -92,7 +92,7 @@ internal object Shaders {
                     }
                     val entry = lines[row - offset]
                     val info = "[${entry.originFile}:${entry.originLine}]  ${entry.text}"
-                    return info
+                    info
                 } ?: error
 
         private class ShaderLoader(private val appResourceLoader: ResourceLoader, private val defs: Set<String>, private val plugins: Map<String, String>, private val uniforms: MutableList<String>) {

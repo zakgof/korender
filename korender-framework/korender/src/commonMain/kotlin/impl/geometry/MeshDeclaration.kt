@@ -186,7 +186,7 @@ internal class FontMesh(
         if (!declaration.static || !mesh.instancesInitialized) {
             mesh.updateMesh {
                 val h = declaration.height.toFloat() / height
-                val aspect = height.toFloat() / width.toFloat()
+                val aspect = height / width
                 val x = xoffset / width
                 val y = 1.0f - yoffset / height
                 var xx = x
