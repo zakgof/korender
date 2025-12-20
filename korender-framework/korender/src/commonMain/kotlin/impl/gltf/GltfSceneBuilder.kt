@@ -245,9 +245,15 @@ internal class GltfSceneBuilder(
                 mb.uniforms["metallicRoughnessTexture"] = it
             }
 
-            // TODO
-            val occlusionTexture = material?.occlusionTexture?.let { getTexture(it) }
-            val emissiveTexture = material?.emissiveTexture?.let { getTexture(it) }
+            material?.occlusionTexture?.let { getTexture(it) }?.let {
+                mb.plugins["occlusion"] = "!shader/plugin/occlusion.texture.frag"
+                mb.uniforms["occlusionTexture"] = it
+            }
+
+            material?.emissiveTexture?.let { getTexture(it) }?.let {
+                mb.plugins["emission"] = "!shader/plugin/emission.texture.frag"
+                mb.uniforms["emissionTexture"] = it
+            }
 
             matSpecularGlossiness?.let { sg ->
                 mb.plugins["specular_glossiness"] = "!shader/plugin/specular_glossiness.factor.frag"

@@ -230,7 +230,7 @@ internal class Scene(
                 listOf(
                     GlGpuTexture.Preset.RGBAFilter, // TODO review
                     GlGpuTexture.Preset.Normal,
-                    GlGpuTexture.Preset.RGBFilter,
+                    GlGpuTexture.Preset.RGBAFilter,
                 ),
                 true, TransientProperty(currentRetentionPolicy)
             )

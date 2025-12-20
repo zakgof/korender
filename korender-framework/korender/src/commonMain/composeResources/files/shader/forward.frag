@@ -79,6 +79,10 @@ vec3 look;
 #import "$depth"
 #endif
 
+#ifdef PLUGIN_OCCLUSION
+#import "$occlusion"
+#endif
+
 #import "!shader/lib/shadow.glsl"
 #import "!shader/lib/pbr.glsl"
 #import "!shader/lib/light.glsl"
@@ -162,6 +166,9 @@ void main() {
     float occlusion = 1.0;
     #ifdef VERTEX_OCCLUSION
         occlusion *= vocclusion;
+    #endif
+    #ifdef PLUGIN_OCCLUSION
+        occlusion *= pluginOcclusion();
     #endif
 
     populateShadowRatios(plane, position);

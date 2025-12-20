@@ -66,9 +66,6 @@ fun GltfLibraryExample() = Row {
         Korender(appResourceLoader = { Res.readBytes(it) }) {
             val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/sea/${it.toString().lowercase()}.jpg" })
             Frame {
-                DeferredShading {
-                    Shading(ibl(env))
-                }
                 OnLoading {
                     Gui {
                         Column {

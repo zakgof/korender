@@ -24,12 +24,13 @@ in vec2 vtex;
 
 layout(location = 0) out vec4 albedoChannel;
 layout(location = 1) out vec4 normalChannel;
-layout(location = 2) out vec3 emissionChannel;
+layout(location = 2) out vec4 emissionChannel;
 
 vec3 position;
 vec4 albedo;
 vec3 normal;
 vec3 emission;
+float occlusion;
 float metallic;
 float roughness;
 vec3 color;
@@ -52,6 +53,10 @@ vec3 color;
 
 #ifdef PLUGIN_EMISSION
 #import "$emission"
+#endif
+
+#ifdef PLUGIN_OCCLUSION
+#import "$occlusion"
 #endif
 
 #ifdef PLUGIN_NORMAL
@@ -134,11 +139,19 @@ void main() {
         roughness = 1. - sg.a;
     #endif
 
+    occlusion = 1.;
+    #ifdef VERTEX_OCCLUSION
+        occlusion = vocclusion;
+    #endif
+    #ifdef PLUGIN_OCCLUSION
+        occlusion *= pluginOcclusion();
+    #endif
+
     ///////////////////////
 
     albedoChannel = vec4(albedo.rgb, metallic);
     normalChannel = vec4(normal * 0.5 + 0.5, roughness);
-    emissionChannel = emission;
+    emissionChannel = vec4(emission, occlusion);
 
     #ifdef PLUGIN_DEPTH
         gl_FragDepth = pluginDepth();

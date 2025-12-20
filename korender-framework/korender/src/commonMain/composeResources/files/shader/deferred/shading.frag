@@ -49,15 +49,16 @@ void main() {
     vec3 N = normalize(normalTexel.rgb * 2.0 - 1.0);
 
     vec3 color = emissionTexel.rgb;
+    float occlusion = emissionTexel.a;
 
     float plane = dot((vpos - cameraPos), cameraDir);
     populateShadowRatios(plane, vpos);
 
     for (int l=0; l<numDirectionalLights; l++)
-        color += dirLight(l, N, V, albedo, metallic, roughness, 1.0);
+        color += dirLight(l, N, V, albedo, metallic, roughness, occlusion);
 
     for (int l=0; l<numPointLights; l++)
-        color += pointLight(vpos, l, N, V, albedo, metallic, roughness, 1.0);
+        color += pointLight(vpos, l, N, V, albedo, metallic, roughness, occlusion);
 
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
     vec3 diffFactor = albedo * (1.0 - metallic);

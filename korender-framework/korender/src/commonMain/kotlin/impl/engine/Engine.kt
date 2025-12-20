@@ -306,6 +306,16 @@ internal class Engine(
             it.uniforms["specularGlossinessTexture"] = texture
         }
 
+        override fun occlusionTexture(texture: TextureDeclaration) = InternalMaterialModifier {
+            it.plugins["occlusion"] = "!shader/plugin/occlusion.texture.frag"
+            it.uniforms["occlusionTexture"] = texture
+        }
+
+        override fun emissionTexture(texture: TextureDeclaration) = InternalMaterialModifier {
+            it.plugins["emission"] = "!shader/plugin/emission.texture.frag"
+            it.uniforms["emissionTexture"] = texture
+        }
+
         override fun billboard(position: Vec3, scale: Vec2, rotation: Float) = InternalMaterialModifier {
             it.uniforms["pos"] = position
             it.uniforms["scale"] = scale
