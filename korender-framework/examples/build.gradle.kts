@@ -118,7 +118,10 @@ compose.desktop {
             targetFormats(TargetFormat.Msi)
             packageName = "com.zakgof.korender"
             packageVersion = korenderVersion
-            modules("jdk.unsupported")
+            modules(
+                "java.net.http",
+                "jdk.unsupported"
+            )
             windows {
                 iconFile.set(project.file("korender32.ico"))
             }
