@@ -23,6 +23,6 @@ nav:
 
     - Deferred renderer: deferred.md
     - Offscreen rendering: offscreen.md
-  #- Extending Korender:
-   # - Plugins: plugins.md
-   #- Custom shaders: custom.md
+  - Extending Korender:
+    - Plugins: plugins.md
+    #- Custom shaders: custom.md
