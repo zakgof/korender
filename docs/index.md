@@ -2,7 +2,7 @@
 
 **Korender** is a Kotlin Multiplatform 3D graphics rendering engine based on OpenGL / OpenGL ES / WebGL.
 
-Latest version: **0.6.0**    
+Latest version: **0.6.1**    
 Github: [https://github.com/zakgof/korender](https://github.com/zakgof/korender)    
 License: [Apache-2.0](https://github.com/zakgof/korender?tab=Apache-2.0-1-ov-file#)    
 Web demo: [https://zakgof.github.io/projects/korender/wasm](https://zakgof.github.io/projects/korender/wasm)    
