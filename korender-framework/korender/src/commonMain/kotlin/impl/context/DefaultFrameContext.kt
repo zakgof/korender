@@ -7,6 +7,7 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.context.BillboardInstancingDeclaration
 import com.zakgof.korender.context.DeferredShadingContext
 import com.zakgof.korender.context.FrameContext
@@ -15,6 +16,7 @@ import com.zakgof.korender.context.GuiContainerContext
 import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.context.ShadowContext
+import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.DeferredShadingDeclaration
@@ -55,9 +57,18 @@ internal class DefaultFrameContext(
         sceneDeclaration.deferredShadingDeclaration = DeferredShadingDeclaration()
         DefaultDeferredShadingContext(sceneDeclaration.deferredShadingDeclaration!!).apply(block)
     }
-
-    override fun Gltf(resource: String, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?) {
-        sceneDeclaration.gltfs += GltfDeclaration(resource, transform, time ?: frameInfo.time, animation ?: 0, instancing as InternalGltfInstancingDeclaration?, korenderContext.currentRetentionPolicy)
+    override fun Gltf(vararg materialModifiers: MaterialModifier, resource: String, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?, resourceLoader: ResourceLoader?, onUpdate: (GltfUpdate) -> Unit) {
+        sceneDeclaration.gltfs += GltfDeclaration(
+            resource,
+            materialModifiers.toList(),
+            resourceLoader ?: korenderContext.appResourceLoader,
+            onUpdate,
+            transform,
+            time ?: frameInfo.time,
+            animation ?: 0,
+            instancing as InternalGltfInstancingDeclaration?,
+            korenderContext.currentRetentionPolicy
+        )
     }
 
     override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean, instancing: InstancingDeclaration?) {

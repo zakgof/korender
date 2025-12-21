@@ -9,7 +9,6 @@ import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gl.GL.shaderEnv
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.resourceBytes
 
 internal fun <T> MutableList<T>.peek(): T = this.last()
 internal fun <T> MutableList<T>.pop(): T = this.removeAt(this.size - 1)
@@ -93,7 +92,7 @@ internal object Shaders {
                     }
                     val entry = lines[row - offset]
                     val info = "[${entry.originFile}:${entry.originLine}]  ${entry.text}"
-                    return info
+                    info
                 } ?: error
 
         private class ShaderLoader(private val appResourceLoader: ResourceLoader, private val defs: Set<String>, private val plugins: Map<String, String>, private val uniforms: MutableList<String>) {
@@ -101,7 +100,7 @@ internal object Shaders {
             private val includedFnames = mutableSetOf<String>()
 
             suspend fun preprocessFile(fname: String): MutableList<Line> {
-                val content = resourceBytes(appResourceLoader, fname).decodeToString()
+                val content = appResourceLoader(fname).decodeToString()
                 return preprocess(content, fname)
             }
 

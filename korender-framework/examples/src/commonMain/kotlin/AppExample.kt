@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -33,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.zakgof.app.resources.Res
 import com.zakgof.app.resources.korender32
 import com.zakgof.app.resources.menu
+import com.zakgof.korender.examples.gltfviewer.GltfLibraryExample
 import com.zakgof.korender.examples.infcity.InfiniteCity
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -41,12 +41,13 @@ import org.jetbrains.compose.resources.painterResource
 fun AppExample() {
     val options = listOf(
 
-        Demo("Heightmap Terrain") { HeightmapTerrainExample() },
-        Demo("Procedural Terrain") { ProcTerrainExample() },
+        Demo("Heightmap terrain") { HeightmapTerrainExample() },
+        Demo("Procedural terrain") { ProcTerrainExample() },
         Demo("City demo") { InfiniteCity() },
         Demo("PBR materials") { MetallicRoughnessExample() },
         Demo("OBJ mesh") { ObjFileExample() },
         Demo("GLTF crowd") { GltfCrowdExample() },
+        Demo("GLTF library") { GltfLibraryExample() },
         Demo("Shadows") { ShadowExample() },
         Demo("Render to texture") { RenderToTextureExample() },
         Demo("Point lights") { LightsExample() },

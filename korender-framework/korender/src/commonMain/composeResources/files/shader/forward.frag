@@ -28,7 +28,7 @@ uniform sampler2DShadow pcfTextures[5];
 
 out vec4 fragColor;
 
-float shadowRatios[5];
+float shadowRatios[5] = float[5](0., 0., 0., 0., 0.);
 
 vec3 position;
 vec4 albedo;
@@ -77,6 +77,10 @@ vec3 look;
 
 #ifdef PLUGIN_DEPTH
 #import "$depth"
+#endif
+
+#ifdef PLUGIN_OCCLUSION
+#import "$occlusion"
 #endif
 
 #import "!shader/lib/shadow.glsl"
@@ -163,10 +167,13 @@ void main() {
     #ifdef VERTEX_OCCLUSION
         occlusion *= vocclusion;
     #endif
+    #ifdef PLUGIN_OCCLUSION
+        occlusion *= pluginOcclusion();
+    #endif
 
     populateShadowRatios(plane, position);
 
-    color = ambientColor * albedo.rgb * (1.0 - metallic) + emission;
+    color = emission;
 
     for (int l=0; l<numDirectionalLights; l++) {
         color += dirLight(l, normal, look, albedo.rgb, metallic, roughness, occlusion);
@@ -175,9 +182,12 @@ void main() {
         color += pointLight(vpos, l, normal, look, albedo.rgb, metallic, roughness, occlusion);
     }
 
+    vec3 F0 = mix(vec3(0.04), albedo.rgb, metallic);
+    vec3 diffFactor = albedo.rgb * (1.0 - metallic);
+    vec3 specFactor = fresnelSchlick(max(dot(look, normal), 0.1), F0);
+    color += ambientColor * (diffFactor + specFactor * 0.3);
     #ifdef PLUGIN_SKY
-        float roughnessAA = antiAliasRoughness(roughness, normal, look);
-        color += skyibl(normal, look, albedo.rgb, metallic, roughnessAA);
+        color += skyibl(normal, look, roughness, diffFactor, specFactor);
     #endif
 
     #ifdef PLUGIN_OUTPUT

@@ -67,6 +67,12 @@ internal class GlGpuShader(
 
         println("Creating GPU Shader [$name] : $programHandle")
 
+//        println("----  Vertex shader  ----")
+//        println(vertexShaderText)
+//        println("---- Fragment shader ----")
+//        println(fragmentShaderText)
+//        println("-------------------------")
+
         glShaderSource(vertexShaderHandle, vertexShaderText)
         glCompileShader(vertexShaderHandle)
 

@@ -42,6 +42,7 @@ import java.awt.event.MouseMotionAdapter
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferByte
 import java.awt.image.DataBufferUShort
+import java.awt.image.IndexColorModel
 import java.io.ByteArrayInputStream
 import javax.imageio.ImageIO
 import javax.swing.SwingUtilities
@@ -282,6 +283,7 @@ internal actual object Platform {
             BufferedImage.TYPE_4BYTE_ABGR -> loadAbgr((raster.dataBuffer as DataBufferByte).data)
             BufferedImage.TYPE_BYTE_GRAY -> loadGray((raster.dataBuffer as DataBufferByte).data)
             BufferedImage.TYPE_USHORT_GRAY -> loadGray16((raster.dataBuffer as DataBufferUShort).data)
+            BufferedImage.TYPE_BYTE_INDEXED -> loadIndexed(bufferedImage)
             else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
         }
         val format = when (bufferedImage.type) {
@@ -289,6 +291,8 @@ internal actual object Platform {
             BufferedImage.TYPE_4BYTE_ABGR -> PixelFormat.RGBA
             BufferedImage.TYPE_BYTE_GRAY -> PixelFormat.Gray
             BufferedImage.TYPE_USHORT_GRAY -> PixelFormat.Gray16
+            // TODO support TYPE_BYTE_BINARY
+            BufferedImage.TYPE_BYTE_INDEXED -> if ((bufferedImage.colorModel as IndexColorModel).numComponents == 3) PixelFormat.RGB else PixelFormat.RGBA
             else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
         }
         return InternalImage(
@@ -297,6 +301,26 @@ internal actual object Platform {
             bytes,
             format
         )
+    }
+
+    private fun loadIndexed(image: BufferedImage): NativeByteBuffer {
+        val cm = image.colorModel as IndexColorModel
+        val hasA = cm.numComponents == 4
+        if (cm.numComponents == 3 || hasA) {
+            val buffer = NativeByteBuffer(image.width * image.height * cm.numComponents)
+            val mapSize = cm.mapSize
+            val r = ByteArray(mapSize).also { cm.getReds(it) }
+            val g = ByteArray(mapSize).also { cm.getGreens(it) }
+            val b = ByteArray(mapSize).also { cm.getBlues(it) }
+            val a = if (hasA) ByteArray(mapSize).also { cm.getAlphas(it) } else null
+            repeat(mapSize) {
+                buffer.byteBuffer.put(r[it]).put(g[it]).put(b[it])
+                if (hasA)
+                    buffer.byteBuffer.put(a!![it])
+            }
+            return buffer.rewind()
+        }
+        throw KorenderException("Unsupported number of component in indexed image: ${cm.numComponents}")
     }
 }
 

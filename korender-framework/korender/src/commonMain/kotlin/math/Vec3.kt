@@ -38,9 +38,11 @@ class Vec3(val x: Float, val y: Float, val z: Float) {
     operator fun minus(s: Vec3) = Vec3(x - s.x, y - s.y, z - s.z)
     fun lengthSquared() = x * x + y * y + z * z
     fun length() = sqrt(lengthSquared())
+    infix fun distanceTo(a: Vec3) = (this - a).length()
     fun normalize(): Vec3 = this * (1f / length())
 
     override fun toString(): String = "($x, $y, $z)"
+
 }
 
 val Int.x: Vec3

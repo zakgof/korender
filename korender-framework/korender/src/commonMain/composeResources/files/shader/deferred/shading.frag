@@ -17,7 +17,7 @@ uniform sampler2DShadow pcfTextures[5];
 
 out vec4 fragColor;
 
-float shadowRatios[5];
+float shadowRatios[5] = float[5](0., 0., 0., 0., 0.);
 
 #import "!shader/lib/space.glsl"
 
@@ -48,20 +48,24 @@ void main() {
     vec3 V = normalize(cameraPos - vpos);
     vec3 N = normalize(normalTexel.rgb * 2.0 - 1.0);
 
-    vec3 color = ambientColor * albedo.rgb * (1.0 - metallic) + emissionTexel.rgb;
+    vec3 color = emissionTexel.rgb;
+    float occlusion = emissionTexel.a;
 
     float plane = dot((vpos - cameraPos), cameraDir);
     populateShadowRatios(plane, vpos);
 
     for (int l=0; l<numDirectionalLights; l++)
-        color += dirLight(l, N, V, albedo, metallic, roughness, 1.0);
+        color += dirLight(l, N, V, albedo, metallic, roughness, occlusion);
 
     for (int l=0; l<numPointLights; l++)
-        color += pointLight(vpos, l, N, V, albedo, metallic, roughness, 1.0);
+        color += pointLight(vpos, l, N, V, albedo, metallic, roughness, occlusion);
 
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+    vec3 diffFactor = albedo * (1.0 - metallic);
+    vec3 specFactor = fresnelSchlick(max(dot(V, N), 0.1), F0);
+    color += ambientColor * (diffFactor + specFactor * 0.3);
     #ifdef PLUGIN_SKY
-        float roughnessAA = antiAliasRoughness(roughness, N, V);
-        color += skyibl(N, V, albedo, metallic, roughnessAA);
+        color += skyibl(N, V, roughness, diffFactor, specFactor);
     #endif
 
     fragColor = vec4(color, 1.);

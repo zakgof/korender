@@ -1,13 +1,19 @@
 package com.zakgof.korender.impl.gltf
 
+import com.zakgof.korender.CameraDeclaration
+import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.gltf.GltfUpdate
+import com.zakgof.korender.impl.geometry.CMesh
 import com.zakgof.korender.math.Mat4
+import com.zakgof.korender.math.Transform
 
-internal class GltfLoaded(
-    val model: Gltf,
+internal class GltfCache(
+    val model: InternalGltfModel,
     val id: String,
     val loadedUris: MutableMap<String, ByteArray>,
     val loadedAccessors: AccessorCache,
-    val loadedSkins: Map<Int, List<Mat4>>
+    val loadedSkins: Map<Int, List<Mat4>>,
+    val loadedMeshes: Map<Pair<Int, Int>, CMesh>,
 ) : AutoCloseable {
     override fun close() {}
 }
@@ -15,6 +21,33 @@ internal class GltfLoaded(
 internal class AccessorCache(
     val all: Map<Int, ByteArray>,
     val floats: Map<Int, FloatArray>,
-    val floatArrays: MutableMap<Int, Array<List<Float>>>
+    val floatArrays: MutableMap<Int, Array<List<Float>>>,
 )
 
+internal class InternalGltfUpdate(
+    override val animations: List<Animation>,
+    override val cameras: List<Camera>,
+    override val instances: List<GltfUpdate.Instance>,
+) : GltfUpdate {
+
+    class Animation(override val name: String?) : GltfUpdate.Animation
+
+    class Camera(
+        override val name: String?,
+        override val camera: CameraDeclaration,
+        override val projection: ProjectionDeclaration,
+    ) : GltfUpdate.Camera
+
+    class Instance(override val rootNode: Node) : GltfUpdate.Instance
+
+    class Node(
+        override val transform: Transform,
+        override val mesh: Mesh?,
+        override val children: List<Node>,
+    ) : GltfUpdate.Node
+
+    class Mesh(
+        override val name: String?,
+        override val primitives: List<com.zakgof.korender.Mesh>,
+    ) : GltfUpdate.Mesh
+}

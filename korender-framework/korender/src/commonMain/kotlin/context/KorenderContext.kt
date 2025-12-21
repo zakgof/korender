@@ -408,6 +408,24 @@ interface KorenderContext {
     fun specularGlossinessTexture(texture: TextureDeclaration): MaterialModifier
 
     /**
+     * Creates a material modifier that applies emission texture.
+     * Used with the base material.
+     *
+     * @param texture emission texture
+     * @return material modifier
+     */
+    fun emissionTexture(texture: TextureDeclaration): MaterialModifier
+
+    /**
+     * Creates a material modifier that applies a pre-calculated occlusion texture.
+     * Used with the base material.
+     *
+     * @param texture occlusion texture
+     * @return material modifier
+     */
+    fun occlusionTexture(texture: TextureDeclaration): MaterialModifier
+
+    /**
      * Creates a material modifier for billboards.
      * Used with the base material.
      *

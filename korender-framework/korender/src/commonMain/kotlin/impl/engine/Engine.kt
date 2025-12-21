@@ -95,10 +95,11 @@ import kotlin.math.pow
 internal class Engine(
     width: Int,
     height: Int,
-    private val appResourceLoader: ResourceLoader,
+    kmpResourceLoader: ResourceLoader,
     block: KorenderContext.() -> Unit,
 ) {
 
+    private val appResourceLoader: ResourceLoader = { resourceBytes(kmpResourceLoader, it) }
     private val touchQueue = Channel<TouchEvent>(Channel.UNLIMITED)
     private val keyQueue = Channel<KeyEvent>(Channel.UNLIMITED)
     private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
@@ -115,6 +116,7 @@ internal class Engine(
 
     inner class KorenderContextImpl : KorenderContext {
 
+        val appResourceLoader: ResourceLoader = this@Engine.appResourceLoader
         var currentRetentionPolicy: RetentionPolicy = TimeRetentionPolicy(10f)
         var currentRetentionGeneration: Int = 0
         override val target: KorenderContext.TargetPlatform = Platform.target
@@ -302,6 +304,16 @@ internal class Engine(
         override fun specularGlossinessTexture(texture: TextureDeclaration) = InternalMaterialModifier {
             it.plugins["specular_glossiness"] = "!shader/plugin/specular_glossiness.texture.frag"
             it.uniforms["specularGlossinessTexture"] = texture
+        }
+
+        override fun occlusionTexture(texture: TextureDeclaration) = InternalMaterialModifier {
+            it.plugins["occlusion"] = "!shader/plugin/occlusion.texture.frag"
+            it.uniforms["occlusionTexture"] = texture
+        }
+
+        override fun emissionTexture(texture: TextureDeclaration) = InternalMaterialModifier {
+            it.plugins["emission"] = "!shader/plugin/emission.texture.frag"
+            it.uniforms["emissionTexture"] = texture
         }
 
         override fun billboard(position: Vec3, scale: Vec2, rotation: Float) = InternalMaterialModifier {
@@ -567,7 +579,7 @@ internal class Engine(
             InternalImage3D(width, height, depth, NativeByteBuffer(width * height * depth * format.bytes), format)
 
         override fun loadImage(imageResource: String): Deferred<Image> = CoroutineScope(Dispatchers.Default).async {
-            val bytes = resourceBytes(appResourceLoader, imageResource)
+            val bytes = appResourceLoader(imageResource)
             Platform.loadImage(bytes, imageResource.split(".").last()).await()
         }
 
