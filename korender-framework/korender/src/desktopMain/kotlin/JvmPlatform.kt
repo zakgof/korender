@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
+import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
@@ -32,6 +33,7 @@ import java.awt.Font
 import java.awt.GraphicsEnvironment
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
+import java.awt.event.InputEvent
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
@@ -67,7 +69,8 @@ private fun detectDevicePixelRatio(): List<Float> {
 @Composable
 actual fun Korender(
     appResourceLoader: ResourceLoader,
-    block: KorenderContext.() -> Unit
+    vSync: Boolean,
+    block: KorenderContext.() -> Unit,
 ) {
     var engine: Engine? by remember { mutableStateOf(null) }
     val pixelRatio by remember { mutableStateOf(detectDevicePixelRatio()) }
@@ -76,23 +79,29 @@ actual fun Korender(
         type: TouchEvent.Type,
         button: TouchEvent.Button,
         ex: Int,
-        ey: Int
+        ey: Int,
+        keyboardModifiers: KeyboardModifiers,
     ) {
         GlobalScope.launch {
-            engine?.pushTouch(TouchEvent(type, button, ex * pixelRatio[0], ey * pixelRatio[1]))
+            engine?.pushTouch(
+                TouchEvent(
+                    type, button, ex * pixelRatio[0], ey * pixelRatio[1], keyboardModifiers
+                )
+            )
         }
     }
 
     fun sendKey(
         type: com.zakgof.korender.KeyEvent.Type,
-        c: String
+        mapping: KeyMapping,
+        keyboardModifiers: KeyboardModifiers,
     ) {
         GlobalScope.launch {
-            engine?.pushKey(KeyEvent(type, c))
+            engine?.pushKey(KeyEvent(type, mapping.key, mapping.composeKey, keyboardModifiers))
         }
     }
 
-    fun awtKeyCodeToKorender(awtKeyCode: Int): String = KEY_MAPPING.getOrDefault(awtKeyCode, "UNKNOWN")
+    fun awtKeyCodeToKorender(awtKeyCode: Int): KeyMapping = KEY_MAPPING.getOrDefault(awtKeyCode, KeyMapping("UNKNOWN", Key.Unknown))
 
     SwingPanel(
         modifier = Modifier.fillMaxSize(),
@@ -111,7 +120,7 @@ actual fun Korender(
         },
         factory = {
             val data = GLData()
-            data.swapInterval = 0
+            data.swapInterval = if (vSync) 1 else 0
             data.majorVersion = 3
             data.minorVersion = 3
             data.profile = GLData.Profile.COMPATIBILITY
@@ -155,27 +164,32 @@ actual fun Korender(
                 else -> TouchEvent.Button.NONE
             }
 
+            fun keyboardModifiers(e: InputEvent) =
+                KeyboardModifiers(e.isShiftDown, e.isControlDown, e.isAltDown, e.isMetaDown)
+
             canvas.addMouseMotionListener(object : MouseMotionAdapter() {
                 override fun mouseMoved(e: MouseEvent) =
-                    sendTouch(TouchEvent.Type.MOVE, e.button.toButton(), e.x, e.y)
+                    sendTouch(TouchEvent.Type.MOVE, e.button.toButton(), e.x, e.y, keyboardModifiers(e))
 
                 override fun mouseDragged(e: MouseEvent) =
-                    sendTouch(TouchEvent.Type.MOVE, e.button.toButton(), e.x, e.y)
+                    sendTouch(TouchEvent.Type.MOVE, e.button.toButton(), e.x, e.y, keyboardModifiers(e))
             })
             canvas.addMouseListener(object : MouseAdapter() {
                 override fun mousePressed(e: MouseEvent) =
-                    sendTouch(TouchEvent.Type.DOWN, e.button.toButton(), e.x, e.y)
+                    sendTouch(TouchEvent.Type.DOWN, e.button.toButton(), e.x, e.y, keyboardModifiers(e))
 
                 override fun mouseReleased(e: MouseEvent) =
-                    sendTouch(TouchEvent.Type.UP, e.button.toButton(), e.x, e.y)
+                    sendTouch(TouchEvent.Type.UP, e.button.toButton(), e.x, e.y, keyboardModifiers(e))
             })
             canvas.addKeyListener(object : KeyAdapter() {
                 override fun keyPressed(e: KeyEvent) {
-                    sendKey(com.zakgof.korender.KeyEvent.Type.DOWN, awtKeyCodeToKorender(e.keyCode)) // TODO all keycodes
+                    val mapping = awtKeyCodeToKorender(e.keyCode)
+                    sendKey(com.zakgof.korender.KeyEvent.Type.DOWN, mapping, keyboardModifiers(e)) // TODO all keycodes
                 }
 
                 override fun keyReleased(e: KeyEvent) {
-                    sendKey(com.zakgof.korender.KeyEvent.Type.UP, awtKeyCodeToKorender(e.keyCode)) // TODO all keycodes
+                    val mapping = awtKeyCodeToKorender(e.keyCode)
+                    sendKey(com.zakgof.korender.KeyEvent.Type.UP, mapping, keyboardModifiers(e)) // TODO all keycodes
                 }
             })
 

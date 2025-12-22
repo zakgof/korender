@@ -838,6 +838,9 @@ interface KorenderContext {
      */
     fun clipmapTerrainPrefab(id: String, cellSize: Float, hg: Int, rings: Int): Prefab
 
+    // TODO: javadoc
+    fun scene(resource: String): Prefab
+
     /**
      * Creates mesh instancing declaration.
      *

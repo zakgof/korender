@@ -10,12 +10,24 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 @OptIn(ExperimentalCoroutinesApi::class)
 internal fun <T> Deferred<T>.resultOrNull(): T? = if (this.isCompleted) this.getCompleted() else null
 
-internal suspend fun resourceBytes(appResourceLoader: ResourceLoader, resource: String): ByteArray {
-    println("Loading resource [$resource]")
-    if (resource.startsWith("!")) {
-        return Res.readBytes("files/" + resource.substring(1))
+internal class AppResourceLoader(val kmpResourceLoader: ResourceLoader) : ResourceLoader {
+
+    private val prefixLoaders = mutableMapOf<String, ResourceLoader>()
+
+    override suspend fun invoke(resource: String): ByteArray {
+        println("Loading resource [$resource]")
+        if (resource.startsWith("!")) {
+            return Res.readBytes("files/" + resource.substring(1))
+        }
+        val prefixLoader = prefixLoaders.entries
+            .firstOrNull { resource.startsWith(it.key) }
+        return prefixLoader?.value?.let { it(resource.substring(prefixLoader.key.length)) }
+            ?: kmpResourceLoader.invoke("files/$resource")
     }
-    return appResourceLoader.invoke("files/$resource")
+
+    fun setPrefixLoader(prefix: String, loader: ResourceLoader) {
+        prefixLoaders[prefix] = loader
+    }
 }
 
 internal fun absolutizeResource(resource: String, referrer: String): String {

@@ -6,6 +6,7 @@ import com.zakgof.korender.context.KorenderContext
 @Composable
 expect fun Korender(
     appResourceLoader: ResourceLoader = { throw KorenderException("No application resource provided") },
+    vSync: Boolean = false,
     block: KorenderContext.() -> Unit
 )
 

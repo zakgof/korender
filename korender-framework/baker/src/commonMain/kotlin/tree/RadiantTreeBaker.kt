@@ -1,13 +1,6 @@
 package com.zakgof.korender.baker.tree
 
 import androidx.compose.runtime.Composable
-import com.zakgof.korender.Attributes.MODEL0
-import com.zakgof.korender.Attributes.MODEL1
-import com.zakgof.korender.Attributes.MODEL2
-import com.zakgof.korender.Attributes.MODEL3
-import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.Korender
 import com.zakgof.korender.MaterialModifier
@@ -50,10 +43,10 @@ fun RadiantTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         hull.indexes.forEach { index(it) }
     }
     val leaf = customMesh("leaf", 4, 6, POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3) {
-        pos(Vec3(-0.5f, -0.5f, 0f)).normal(1.z).tex(0f, 0f)
-        pos(Vec3(0.5f, -0.5f, 0f)).normal(1.z).tex(1f, 0f)
-        pos(Vec3(0.5f, 0.5f, 0f)).normal(1.z).tex(1f, 1f)
-        pos(Vec3(-0.5f, 0.5f, 0f)).normal(1.z).tex(0f, 1f)
+        pos(Vec3(-0.5f, -0.5f, 0f)).normal(1.z).tex(Vec2(0f, 0f))
+        pos(Vec3(0.5f, -0.5f, 0f)).normal(1.z).tex(Vec2(1f, 0f))
+        pos(Vec3(0.5f, 0.5f, 0f)).normal(1.z).tex(Vec2(1f, 1f))
+        pos(Vec3(-0.5f, 0.5f, 0f)).normal(1.z).tex(Vec2(0f, 1f))
 
         index(0, 1, 2, 0, 2, 3)
     }
@@ -159,4 +152,5 @@ private fun FrameContext.renderTree(leaf: MeshDeclaration, leafInstances: List<T
             leafInstances.forEach { Instance(it) }
         })
 }
+
 

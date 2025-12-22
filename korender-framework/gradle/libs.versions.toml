@@ -3,22 +3,26 @@ agp = "8.13.2"
 android-compileSdk = "36"
 android-minSdk = "29"
 android-targetSdk = "36"
-androidx-activityCompose = "1.12.2"
+androidx-activityCompose = "1.12.4"
 commonsMath3 = "3.6.1"
-compose = "1.9.3"
-kotlin = "2.3.0"
+compose = "1.10.1"
+kotlin = "2.3.10"
+kotlinxCollectionsImmutable = "0.4.0"
 kotlinxCoroutinesCore = "1.10.2"
 kotlinxBrowser = "0.5.0"
-kotlinxSerializationJson = "1.9.0"
-ktorClientCore = "3.3.3"
+kotlinxSerializationJson = "1.10.0"
+ktorClientCore = "3.4.0"
 lwjgl3-awt = "0.2.3"
 lwjgl = "3.3.6"
-vanniktechMavenPublish = "0.35.0"
+vanniktechMavenPublish = "0.36.0"
 
 [libraries]
 commons-math3 = { module = "org.apache.commons:commons-math3", version.ref = "commonsMath3" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
+kotlinx-serialization-protobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "kotlinxSerializationJson" }
+kotlinx-serialization-cbor = { module = "org.jetbrains.kotlinx:kotlinx-serialization-cbor", version.ref = "kotlinxSerializationJson" }
+kotlinxcollections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
 kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version.ref = "kotlinxBrowser" }
 

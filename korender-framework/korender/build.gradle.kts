@@ -32,7 +32,7 @@ kotlin {
     jvmToolchain(17)
 
     compilerOptions {
-        freeCompilerArgs.add("-Xexpect-actual-classes")
+        freeCompilerArgs.addAll("-Xexpect-actual-classes", "-Xcontext-parameters")
     }
 
     @OptIn(ExperimentalWasmDsl::class)
@@ -53,6 +53,7 @@ kotlin {
             implementation(compose.components.resources)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.serialization.cbor)
         }
         desktopMain.dependencies {
             implementation(libs.kotlinx.coroutines.swing)

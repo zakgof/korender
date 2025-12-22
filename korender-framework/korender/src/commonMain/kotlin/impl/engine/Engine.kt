@@ -12,11 +12,11 @@ import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.KeyHandler
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MaterialModifier
-import com.zakgof.korender.MutableMesh
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
+import com.zakgof.korender.MutableMesh
 import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.Platform
 import com.zakgof.korender.PostProcessingEffect
@@ -41,6 +41,7 @@ import com.zakgof.korender.context.InstancedGltfContext
 import com.zakgof.korender.context.InstancedRenderablesContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.context.PipeMeshContext
+import com.zakgof.korender.impl.AppResourceLoader
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
@@ -82,12 +83,12 @@ import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureArrayDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
+import com.zakgof.korender.impl.prefab.scene.ScenePrefab
 import com.zakgof.korender.impl.prefab.terrain.Clipmaps
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
 import com.zakgof.korender.impl.projection.LogProjectionMode
 import com.zakgof.korender.impl.projection.OrthoProjectionMode
 import com.zakgof.korender.impl.projection.Projection
-import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec2
@@ -107,7 +108,7 @@ internal class Engine(
     block: KorenderContext.() -> Unit,
 ) {
 
-    private val appResourceLoader: ResourceLoader = { resourceBytes(kmpResourceLoader, it) }
+    private val appResourceLoader = AppResourceLoader(kmpResourceLoader)
     private val touchQueue = Channel<TouchEvent>(Channel.UNLIMITED)
     private val keyQueue = Channel<KeyEvent>(Channel.UNLIMITED)
     private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
@@ -125,7 +126,7 @@ internal class Engine(
 
     inner class KorenderContextImpl : KorenderContext {
 
-        val appResourceLoader: ResourceLoader = this@Engine.appResourceLoader
+        val appResourceLoader = this@Engine.appResourceLoader
         var currentRetentionPolicy: RetentionPolicy = TimeRetentionPolicy(10f)
         var currentRetentionGeneration: Int = 0
         override val target: KorenderContext.TargetPlatform = Platform.target
@@ -157,7 +158,6 @@ internal class Engine(
             ImageTexture3DDeclaration(id, image as InternalImage3D, filter, wrap, aniso, currentRetentionPolicy)
 
         override fun textureProbe(frameProbeName: String): TextureDeclaration = ProbeTextureDeclaration(frameProbeName)
-
         override fun textureArray(vararg textureResources: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureArrayDeclaration =
             ResourceTextureArrayDeclaration(textureResources.toList(), filter, wrap, aniso, currentRetentionPolicy)
 
@@ -259,13 +259,11 @@ internal class Engine(
 
         override fun heightField(id: String, cellsX: Int, cellsZ: Int, cellWidth: Float, height: (Int, Int) -> Float): MeshDeclaration =
             HeightField(id, cellsX, cellsZ, cellWidth, height, currentRetentionPolicy)
-
-
         override fun mutableMesh(): MutableMesh =
             InternalMutableMesh()
+
         override fun mesh(id: String, mesh: Mesh) =
             CustomCpuMesh(id, mesh, currentRetentionPolicy)
-
         override fun loadMesh(meshDeclaration: MeshDeclaration): Deferred<Mesh> =
             Geometry.loadCpuMesh(meshDeclaration, appResourceLoader)
 
@@ -292,19 +290,18 @@ internal class Engine(
             it.uniforms["roughnessFactor"] = roughnessFactor
             it.uniforms["alphaCutoff"] = alphaCutoff
             if (colorTexture != null) {
-                it.shaderDefs += "BASE_COLOR_MAP";
+                it.shaderDefs += "BASE_COLOR_MAP"
             }
-        }
-
-        override fun colorTextures(textureArray: TextureArrayDeclaration) = InternalMaterialModifier {
-            it.shaderDefs += "TEXTURE_ARRAY"
-            it.plugins["texturing"] = "!shader/plugin/texturing.array.frag"
-            it.uniforms["colorTextures"] = textureArray
         }
 
         override fun triplanar(scale: Float): MaterialModifier = InternalMaterialModifier {
             it.plugins["texturing"] = "!shader/plugin/texturing.triplanar.frag"
             it.uniforms["triplanarScale"] = scale
+        }
+        override fun colorTextures(textureArray: TextureArrayDeclaration) = InternalMaterialModifier {
+            it.shaderDefs += "TEXTURE_ARRAY"
+            it.plugins["texturing"] = "!shader/plugin/texturing.array.frag"
+            it.uniforms["colorTextures"] = textureArray
         }
 
         override fun normalTexture(normalTexture: TextureDeclaration) = InternalMaterialModifier {
@@ -628,6 +625,9 @@ internal class Engine(
         override fun clipmapTerrainPrefab(id: String, cellSize: Float, hg: Int, rings: Int): Prefab =
             Clipmaps(this, id, cellSize, hg, rings)
 
+        override fun scene(resource: String): Prefab =
+            ScenePrefab(this, resource)
+
         override fun instancing(id: String, count: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit) =
             InternalInstancingDeclaration(id, count, dynamic) {
                 val instances = mutableListOf<MeshInstance>()
@@ -656,7 +656,6 @@ internal class Engine(
         override fun keepForever() = KeepForeverRetentionPolicy
         override fun untilGeneration(generation: Int) = UntilGenerationRetentionPolicy(generation)
         override fun time(seconds: Float) = TimeRetentionPolicy(seconds)
-
         override val POS = MeshAttributes.POS
         override val NORMAL = MeshAttributes.NORMAL
         override val TEX = MeshAttributes.TEX
@@ -678,6 +677,10 @@ internal class Engine(
         override val INSTROT = MeshAttributes.INSTROT
         override val INSTTEX = MeshAttributes.INSTTEX
         override val INSTSCREEN = MeshAttributes.INSTSCREEN
+
+        fun setPrefixLoader(prefix: String, loader: ResourceLoader) {
+            appResourceLoader.setPrefixLoader(prefix, loader)
+        }
     }
 
     init {
@@ -772,6 +775,4 @@ internal class Engine(
         renderContext.height = h
     }
 }
-
-
 

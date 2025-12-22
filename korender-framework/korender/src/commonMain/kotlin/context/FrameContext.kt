@@ -139,7 +139,7 @@ interface FrameContext : KorenderContext {
     fun CaptureEnv(envProbeName: String, resolution: Int, position: Vec3 = Vec3.ZERO, near: Float = 10f, far: Float = 1000f, insideOut: Boolean = false, block: FrameContext.() -> Unit)
 
     /**
-     * Renders a scene into an frame probe.
+     * Renders a scene into a frame probe.
      *
      * @param frameProbeName output frame probe name
      * @param width probe texture width
@@ -157,3 +157,4 @@ interface FrameContext : KorenderContext {
      */
     fun OnLoading(block: FrameContext.() -> Unit)
 }
+
