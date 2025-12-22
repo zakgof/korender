@@ -1,5 +1,6 @@
 package com.zakgof.korender.math
 
+import com.zakgof.korender.KorenderException
 import kotlin.math.sqrt
 import kotlin.random.Random
 
@@ -26,6 +27,13 @@ class Vec3(val x: Float, val y: Float, val z: Float) {
             Random.nextFloat() - 0.5f,
             Random.nextFloat() - 0.5f,
         ).normalize()
+
+        fun unit(axis: Int) = when (axis) {
+            0 -> X
+            1 -> Y
+            2 -> Z
+            else -> throw KorenderException("Unknown axis index {axis}")
+        }
 
     }
 
