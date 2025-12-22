@@ -1,5 +1,6 @@
 package com.zakgof.korender.math
 
+import com.zakgof.korender.KorenderException
 import kotlin.math.sqrt
 import kotlin.random.Random
 
@@ -27,13 +28,24 @@ class Vec3(val x: Float, val y: Float, val z: Float) {
             Random.nextFloat() - 0.5f,
         ).normalize()
 
+        fun unit(axis: Int) = when (axis) {
+            0 -> X
+            1 -> Y
+            2 -> Z
+            else -> throw KorenderException("Unknown axis index {axis}")
+        }
+
     }
 
     operator fun unaryMinus(): Vec3 = Vec3(-x, -y, -z)
+    infix fun dot(s: Vec3) = x * s.x + y * s.y + z * s.z
     operator fun times(s: Vec3) = x * s.x + y * s.y + z * s.z
+    infix fun cross(s: Vec3) = Vec3(y * s.z - z * s.y, z * s.x - x * s.z, x * s.y - y * s.x)
     operator fun rem(s: Vec3) = Vec3(y * s.z - z * s.y, z * s.x - x * s.z, x * s.y - y * s.x)
     operator fun times(a: Float) = Vec3(a * x, a * y, a * z)
-    fun multpercomp(s: Vec3) = Vec3(x * s.x, y * s.y, z * s.z)
+    operator fun div(a: Float) = Vec3(x / a, y / a, z / a)
+    infix fun multpercomp(s: Vec3) = Vec3(x * s.x, y * s.y, z * s.z)
+    infix fun divpercomp(s: Vec3) = Vec3(x / s.x, y / s.y, z / s.z)
     operator fun plus(s: Vec3) = Vec3(x + s.x, y + s.y, z + s.z)
     operator fun minus(s: Vec3) = Vec3(x - s.x, y - s.y, z - s.z)
     fun lengthSquared() = x * x + y * y + z * z

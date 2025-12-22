@@ -43,10 +43,10 @@ fun RadiantTreeBaker() = Korender(resourceLoader = { Res.readBytes("files/$it") 
         hull.indexes.forEach { index(it) }
     }
     val leaf = customMesh("leaf", 4, 6, POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3) {
-        pos(Vec3(-0.5f, -0.5f, 0f)).normal(1.z).tex(0f, 0f)
-        pos(Vec3(0.5f, -0.5f, 0f)).normal(1.z).tex(1f, 0f)
-        pos(Vec3(0.5f, 0.5f, 0f)).normal(1.z).tex(1f, 1f)
-        pos(Vec3(-0.5f, 0.5f, 0f)).normal(1.z).tex(0f, 1f)
+        pos(Vec3(-0.5f, -0.5f, 0f)).normal(1.z).tex(Vec2(0f, 0f))
+        pos(Vec3(0.5f, -0.5f, 0f)).normal(1.z).tex(Vec2(1f, 0f))
+        pos(Vec3(0.5f, 0.5f, 0f)).normal(1.z).tex(Vec2(1f, 1f))
+        pos(Vec3(-0.5f, 0.5f, 0f)).normal(1.z).tex(Vec2(0f, 1f))
 
         index(0, 1, 2, 0, 2, 3)
     }
@@ -152,4 +152,5 @@ private fun FrameScope.renderTree(leaf: MeshDeclaration, leafInstances: List<Tra
             leafInstances.forEach { Instance(it) }
         })
 }
+
 

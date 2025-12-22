@@ -6,7 +6,8 @@ import com.zakgof.korender.context.KorenderScope
 @Composable
 expect fun Korender(
     resourceLoader: ResourceLoader = { throw KorenderException("No application resource provided") },
-    block: KorenderScope.() -> Unit,
+    vSync: Boolean = false,
+    block: KorenderScope.() -> Unit
 )
 
 typealias ResourceLoader = suspend (String) -> ByteArray

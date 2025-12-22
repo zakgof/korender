@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.jetbrainsCompose)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 compose.resources {
@@ -14,6 +15,10 @@ kotlin {
 
     jvm("desktop")
 
+    compilerOptions {
+        freeCompilerArgs.addAll("-Xcontext-parameters")
+    }
+
     sourceSets {
         val desktopMain by getting
 
@@ -21,11 +26,13 @@ kotlin {
             implementation(project(":korender"))
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(compose.material)
+            implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(libs.commons.math3)
             implementation("com.github.haifengl:smile-core:4.4.0")
+            implementation(libs.kotlinxcollections.immutable)
+            implementation(libs.kotlinx.serialization.cbor)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

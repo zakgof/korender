@@ -189,14 +189,14 @@ private fun FrameScope.renderCardForest2(cards: List<Card>, atlas: Image) {
                     for (zz in 0..40) {
                         val seed = (xx * 16f).x + (zz * 16f).z
 
-                        pos(seed + p1).normal(card.normal).tex(texX, texY)
-                        pos(seed + p2).normal(card.normal).tex(texX + 0.25f, texY)
-                        pos(seed + p3).normal(card.normal).tex(texX + 0.25f, texY + 0.25f)
-                        pos(seed + p4).normal(card.normal).tex(texX, texY + 0.25f)
-                        pos(seed + p1).normal(-card.normal).tex(texX, texY)
-                        pos(seed + p2).normal(-card.normal).tex(texX + 0.25f, texY)
-                        pos(seed + p3).normal(-card.normal).tex(texX + 0.25f, texY + 0.25f)
-                        pos(seed + p4).normal(-card.normal).tex(texX, texY + 0.25f)
+                        pos(seed + p1).normal(card.normal).tex(Vec2(texX, texY))
+                        pos(seed + p2).normal(card.normal).tex(Vec2(texX + 0.25f, texY))
+                        pos(seed + p3).normal(card.normal).tex(Vec2(texX + 0.25f, texY + 0.25f))
+                        pos(seed + p4).normal(card.normal).tex(Vec2(texX, texY + 0.25f))
+                        pos(seed + p1).normal(-card.normal).tex(Vec2(texX, texY))
+                        pos(seed + p2).normal(-card.normal).tex(Vec2(texX + 0.25f, texY))
+                        pos(seed + p3).normal(-card.normal).tex(Vec2(texX + 0.25f, texY + 0.25f))
+                        pos(seed + p4).normal(-card.normal).tex(Vec2(texX, texY + 0.25f))
                         index(indexBase + 0, indexBase + 1, indexBase + 2, indexBase + 0, indexBase + 2, indexBase + 3)
                         index(indexBase + 4, indexBase + 6, indexBase + 5, indexBase + 4, indexBase + 7, indexBase + 6)
                         indexBase += 8
@@ -260,14 +260,14 @@ private fun FrameScope.renderCardFoliage(cards: List<Card>, atlas: Image, positi
                 val p4 = card.center + (card.up - right) * (card.size)
                 val texX = 0.25f * (index % 4)
                 val texY = 0.25f * (index / 4)
-                pos(p1).normal(card.normal).tex(texX, texY)
-                pos(p2).normal(card.normal).tex(texX + 0.25f, texY)
-                pos(p3).normal(card.normal).tex(texX + 0.25f, texY + 0.25f)
-                pos(p4).normal(card.normal).tex(texX, texY + 0.25f)
-                pos(p1).normal(-card.normal).tex(texX, texY)
-                pos(p2).normal(-card.normal).tex(texX + 0.25f, texY)
-                pos(p3).normal(-card.normal).tex(texX + 0.25f, texY + 0.25f)
-                pos(p4).normal(-card.normal).tex(texX, texY + 0.25f)
+                pos(p1).normal(card.normal).tex(Vec2(texX, texY))
+                pos(p2).normal(card.normal).tex(Vec2(texX + 0.25f, texY))
+                pos(p3).normal(card.normal).tex(Vec2(texX + 0.25f, texY + 0.25f))
+                pos(p4).normal(card.normal).tex(Vec2(texX, texY + 0.25f))
+                pos(p1).normal(-card.normal).tex(Vec2(texX, texY))
+                pos(p2).normal(-card.normal).tex(Vec2(texX + 0.25f, texY))
+                pos(p3).normal(-card.normal).tex(Vec2(texX + 0.25f, texY + 0.25f))
+                pos(p4).normal(-card.normal).tex(Vec2(texX, texY + 0.25f))
                 index(indexBase + 0, indexBase + 1, indexBase + 2, indexBase + 0, indexBase + 2, indexBase + 3)
                 index(indexBase + 4, indexBase + 6, indexBase + 5, indexBase + 4, indexBase + 7, indexBase + 6)
                 indexBase += 8
@@ -290,3 +290,4 @@ private fun FrameScope.renderVolume(albedo3d: Texture3DDeclaration, normal3d: Te
     )
 
 }
+

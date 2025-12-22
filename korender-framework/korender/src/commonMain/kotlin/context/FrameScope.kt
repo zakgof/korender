@@ -169,3 +169,4 @@ interface FrameScope : KorenderScope {
         block: FrameScope.() -> Unit
     )
 }
+

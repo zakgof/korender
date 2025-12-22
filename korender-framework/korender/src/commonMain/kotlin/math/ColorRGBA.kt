@@ -1,5 +1,7 @@
 package com.zakgof.korender.math
 
+import kotlin.math.roundToInt
+
 data class ColorRGBA(val r: Float, val g: Float, val b: Float, val a: Float) {
 
     constructor(rgba: Long) : this(
@@ -10,6 +12,13 @@ data class ColorRGBA(val r: Float, val g: Float, val b: Float, val a: Float) {
     )
 
     fun toRGB() = ColorRGB(r, g, b)
+
+    fun toLong(): Long {
+        fun pack(channel: Float): Long =
+            (channel.coerceIn(0f, 1f) * 255f).roundToInt().toLong() and 0xFFL
+
+        return (pack(r) shl 24) or (pack(g) shl 16) or (pack(b) shl 8) or pack(a)
+    }
 
     companion object {
         val Transparent = ColorRGBA(0f, 0f, 0f, 0f)
