@@ -4,45 +4,74 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import com.zakgof.korender.math.Vec3
-import editor.model.StateModel
+import editor.state.State
+import editor.state.StateHolder
+import kotlin.math.ceil
+import kotlin.math.floor
 
 @Composable
-fun ProjectionView(axis: Int, stateModel: StateModel) {
+fun ProjectionView(axis: Int, holder: StateHolder) {
     val density = LocalDensity.current
+    val state by holder.state.collectAsState()
+
     Canvas(Modifier.background(Color.Black).fillMaxSize()) {
 
         val horzAxis = (axis + 1) % 3
         val vertAxis = (axis + 2) % 3
 
-        val centerX = stateModel.state.viewCenter * Vec3.unit(horzAxis)
-        val centerY = stateModel.state.viewCenter * Vec3.unit(vertAxis)
+        val centerX = state.viewCenter * Vec3.unit(horzAxis)
+        val centerY = state.viewCenter * Vec3.unit(vertAxis)
 
-        val cols = (size.width * stateModel.state.gridScale / stateModel.state.projectionScale).toInt()
-        val rows = (size.height * stateModel.state.gridScale / stateModel.state.projectionScale).toInt()
+        fun xVtoW(viewX: Float) = centerX + (viewX - size.width * 0.5f) / state.projectionScale
+        fun yVtoW(viewY: Float) = centerY - (viewY - size.height * 0.5f) / state.projectionScale
+        fun xWtoV(worldX: Float) = size.width * 0.5f + (worldX - centerX) * state.projectionScale
+        fun yWtoV(worldY: Float) = size.height * 0.5f - (worldY - centerY) * state.projectionScale
+        fun xWtoV(v: Vec3) = xWtoV(Vec3.unit(horzAxis) * v)
+        fun yWtoV(v: Vec3) = yWtoV(Vec3.unit(vertAxis) * v)
 
-        repeat(cols) { c ->
-            val world = centerX + (c - cols * 0.5f) * stateModel.state.gridScale
-            val x = size.width * 0.5f + (world - centerX) * stateModel.state.projectionScale
+        var gridX = xWtoV(ceil(xVtoW(0f) / state.gridScale) * state.gridScale)
+        while (gridX < size.width) {
             drawLine(
                 color = Color.DarkGray,
-                start = Offset(x, 0f),
-                end = Offset(x, size.height),
+                start = Offset(gridX, 0f),
+                end = Offset(gridX, size.height),
                 strokeWidth = 1f
             )
+            gridX += state.gridScale * state.projectionScale
         }
-        repeat(rows) { r ->
-            val world = centerY - (r - rows * 0.5f) * stateModel.state.gridScale
-            val y = size.height * 0.5f - (world - centerY) * stateModel.state.projectionScale
+        var gridY = yWtoV(floor(yVtoW(size.height) / state.gridScale) * state.gridScale)
+        while (gridY > 0) {
             drawLine(
                 color = Color.DarkGray,
-                start = Offset(0f, y),
-                end = Offset(size.width, y),
+                start = Offset(0f, gridY),
+                end = Offset(size.width, gridY),
                 strokeWidth = 1f
+            )
+            gridY -= state.gridScale * state.projectionScale
+        }
+
+        if (state.mouseMode === State.MouseMode.NEW) {
+            drawRect(
+                color = Color.Red,
+                topLeft = Offset(xWtoV(state.creatorBrush.min), yWtoV(state.creatorBrush.min)),
+                size = Size(
+                    xWtoV(state.creatorBrush.max) - xWtoV(state.creatorBrush.min),
+                    yWtoV(state.creatorBrush.max) - yWtoV(state.creatorBrush.min)
+                ),
+                style = Stroke(
+                    width = 3f,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 4f))
+                )
             )
         }
     }

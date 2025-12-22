@@ -3,10 +3,10 @@ package editor.ui
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Korender
 import com.zakgof.korender.baker.resources.Res
-import editor.model.StateModel
+import editor.state.StateHolder
 
 @Composable
-fun KorenderView(stateModel: StateModel) {
+fun KorenderView(holder: StateHolder) {
     Korender({ Res.readBytes(it) }) {
 
     }

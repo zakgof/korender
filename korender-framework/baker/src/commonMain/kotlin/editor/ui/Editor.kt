@@ -10,37 +10,37 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Divider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import editor.model.Model
-import editor.model.State
-import editor.model.StateModel
+import editor.state.StateHolder
 
 @Composable
 fun BrushEditor() {
-    val stateModel by remember { mutableStateOf(StateModel(State(), Model())) }
-    Column {
-        Row(Modifier.weight(1f)) {
+    val holder = remember { StateHolder() }
+    Row {
+        Column (Modifier.weight(1f)) {
             Box(Modifier.weight(1f).fillMaxSize()) {
-                ProjectionView(0, stateModel)
+                ProjectionView(0, holder)
             }
-            Divider(Modifier.fillMaxHeight().width(4.dp))
+            Divider(Modifier.fillMaxWidth().height(4.dp))
             Box(Modifier.weight(1f).fillMaxSize()) {
-                ProjectionView(1, stateModel)
+                ProjectionView(1, holder)
             }
         }
-        Divider(Modifier.fillMaxWidth().height(4.dp))
-        Row(Modifier.weight(1f)) {
+        Divider(Modifier.fillMaxHeight().width(4.dp))
+        Column(Modifier.weight(1f)) {
             Box(Modifier.weight(1f).fillMaxSize()) {
-                ProjectionView(2, stateModel)
+                ProjectionView(2, holder)
             }
-            Divider(Modifier.fillMaxHeight().width(4.dp))
+            Divider(Modifier.fillMaxWidth().height(4.dp))
             Box(Modifier.weight(1f).fillMaxSize()) {
-                KorenderView(stateModel)
+                KorenderView(holder)
             }
+        }
+        Divider(Modifier.fillMaxHeight().width(4.dp))
+        Box(Modifier.fillMaxHeight()) {
+            Sidebar(holder)
         }
     }
 }
