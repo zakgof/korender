@@ -4,7 +4,7 @@ import com.zakgof.korender.math.Vec3
 import editor.model.Brush
 
 data class State(
-    val mouseMode: MouseMode = MouseMode.NEW,
+    val mouseMode: MouseMode = MouseMode.CREATOR,
     val viewCenter: Vec3 = Vec3.ZERO,
     val projectionScale: Float = 1f,        // pixel per world unit
     val gridScale: Float = 16f,             // world units
@@ -12,7 +12,7 @@ data class State(
     val creatorBrush: Brush = Brush(Vec3(-128f, -128f, -64f), Vec3(128f, 128f, 64f))
 ) {
     enum class MouseMode {
-        NEW,
+        CREATOR,
         SELECT,
         DRAG
     }

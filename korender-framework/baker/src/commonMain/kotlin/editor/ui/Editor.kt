@@ -1,5 +1,6 @@
 package editor.ui
 
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,15 +11,35 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Divider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
+import editor.state.State
 import editor.state.StateHolder
 
 @Composable
 fun BrushEditor() {
     val holder = remember { StateHolder() }
-    Row {
+    val state by holder.state.collectAsState()
+    val focusRequester = remember { FocusRequester() }
+    Row (modifier = Modifier.focusable()
+        .focusRequester(focusRequester)
+        .onPreviewKeyEvent {
+            if (it.type == KeyEventType.KeyUp && it.key == Key.Enter && state.mouseMode == State.MouseMode.CREATOR) {
+                holder.create()
+            }
+            true
+        }) {
         Column (Modifier.weight(1f)) {
             Box(Modifier.weight(1f).fillMaxSize()) {
                 ProjectionView(0, holder)
@@ -42,5 +63,9 @@ fun BrushEditor() {
         Box(Modifier.fillMaxHeight()) {
             Sidebar(holder)
         }
+    }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
     }
 }

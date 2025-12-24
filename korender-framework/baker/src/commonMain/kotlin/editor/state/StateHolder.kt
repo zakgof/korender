@@ -17,4 +17,11 @@ class StateHolder {
     fun setGridScale(newScale: Float) = _state.update { it.copy(gridScale = newScale) }
     fun setProjectionScale(newScale: Float) = _state.update { it.copy(projectionScale = newScale) }
     fun setCreator(min: Vec3, max: Vec3) = _state.update { it.copy(creatorBrush = Brush(min, max)) }
+    fun create() {
+        _model.update { it.copy(brushes = it.brushes + state.value.creatorBrush) }
+        _state.update { it.copy(
+            creatorBrush = Brush(Vec3(-128f, -128f, -64f), Vec3(128f, 128f, 64f)),
+            mouseMode = State.MouseMode.SELECT
+        ) }
+    }
 }

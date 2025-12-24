@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import editor.model.Model
 import editor.state.State
 import editor.state.StateHolder
 import kotlin.math.ceil
@@ -42,6 +43,7 @@ object NoOpMouseHandler : MouseHandler {
 fun ProjectionView(axis: Int, holder: StateHolder) {
     val density = LocalDensity.current
     val state by holder.state.collectAsState()
+    val model by holder.model.collectAsState()
     var mouseHandler: MouseHandler by remember { mutableStateOf(NoOpMouseHandler) }
 
     Canvas(
@@ -62,10 +64,10 @@ fun ProjectionView(axis: Int, holder: StateHolder) {
         val mapper = ProjectionMapper(axis, state, size)
         mouseHandler = mouseHandler(mapper, state, holder)
         drawGrid(mapper, state)
-        if (state.mouseMode === State.MouseMode.NEW) {
+        if (state.mouseMode === State.MouseMode.CREATOR) {
             drawCreator(mapper, state)
         }
-
+        drawBrushes(mapper, model)
     }
 }
 
@@ -83,6 +85,22 @@ private fun DrawScope.drawCreator(mapper: ProjectionMapper, state: State) {
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 4f))
         )
     )
+}
+
+private fun DrawScope.drawBrushes(mapper: ProjectionMapper, model: Model) {
+    model.brushes.forEach { brush ->
+        drawRect(
+            color = Color.Green,
+            topLeft = Offset(mapper.xWtoV(brush.min), mapper.yWtoV(brush.min)),
+            size = Size(
+                mapper.xWtoV(brush.max) - mapper.xWtoV(brush.min),
+                mapper.yWtoV(brush.max) - mapper.yWtoV(brush.min)
+            ),
+            style = Stroke(
+                width = 4f
+            )
+        )
+    }
 }
 
 private fun DrawScope.drawGrid(mapper: ProjectionMapper, state: State) {
@@ -109,6 +127,6 @@ private fun DrawScope.drawGrid(mapper: ProjectionMapper, state: State) {
 }
 
 private fun mouseHandler(mapper: ProjectionMapper, state: State, holder: StateHolder): MouseHandler = when (state.mouseMode) {
-    State.MouseMode.NEW -> CreatorMouseHandler(mapper, state, holder)
+    State.MouseMode.CREATOR -> CreatorMouseHandler(mapper, state, holder)
     else -> NoOpMouseHandler
 }

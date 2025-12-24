@@ -1,4 +1,5 @@
 package editor.model
 
-class Model {
-}
+data class Model(
+    val brushes: List<Brush> = listOf()
+)
