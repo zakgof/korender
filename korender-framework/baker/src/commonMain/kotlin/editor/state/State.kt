@@ -9,7 +9,9 @@ data class State(
     val projectionScale: Float = 1f,        // pixel per world unit
     val gridScale: Float = 16f,             // world units
 
-    val creatorBrush: Brush = Brush(Vec3(-128f, -128f, -64f), Vec3(128f, 128f, 64f))
+    val selectedBrush: Brush? = null,
+    val creatorBrush: Brush,
+
 ) {
     enum class MouseMode {
         CREATOR,

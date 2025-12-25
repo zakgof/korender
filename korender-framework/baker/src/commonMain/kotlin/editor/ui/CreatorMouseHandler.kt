@@ -1,13 +1,13 @@
 package editor.ui
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import com.zakgof.korender.math.Vec3
 import editor.state.State
 import editor.state.StateHolder
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.round
 
 internal class CreatorMouseHandler(
     private val mapper: ProjectionMapper,
@@ -19,22 +19,22 @@ internal class CreatorMouseHandler(
         var frozen: Offset? = null
     }
 
-    private fun snapH(x: Float): Float = mapper.xWtoV(round(mapper.xVtoW(x) / state.gridScale) * state.gridScale)
-
-    private fun snapV(y: Float): Float = mapper.yWtoV(round(mapper.yVtoW(y) / state.gridScale) * state.gridScale)
+    override fun onClick(current: Offset) {
+        val rect = rect()
+        if (rect.contains(current)) {
+            holder.create()
+        }
+    }
 
     override fun onDragStart(start: Offset) {
-        val xmin = mapper.xWtoV(state.creatorBrush.min)
-        val xmax = mapper.xWtoV(state.creatorBrush.max)
-        val ymin = mapper.yWtoV(state.creatorBrush.min)
-        val ymax = mapper.yWtoV(state.creatorBrush.max)
+        val rect = rect()
         val gridSnap = state.gridScale * state.projectionScale * 0.3f
-        val oppositeX = if (abs(start.x - xmin) < gridSnap) xmax else if (abs(start.x - xmax) < gridSnap) xmin else null
-        val oppositeY = if (abs(start.y - ymin) < gridSnap) ymax else if (abs(start.y - ymax) < gridSnap) ymin else null
+        val oppositeX = if (abs(start.x - rect.left) < gridSnap) rect.right else if (abs(start.x - rect.right) < gridSnap) rect.left else null
+        val oppositeY = if (abs(start.y - rect.top) < gridSnap) rect.bottom else if (abs(start.y - rect.bottom) < gridSnap) rect.top else null
         frozen = if (oppositeX != null && oppositeY != null) {
             Offset(oppositeX, oppositeY)
         } else {
-            Offset(snapH(start.x), snapV(start.y))
+            Offset(mapper.snapH(start.x), mapper.snapV(start.y))
         }
     }
 
@@ -48,12 +48,23 @@ internal class CreatorMouseHandler(
 
     override fun onDrag(current: Offset) {
         val h1 = mapper.xVtoW(frozen!!.x)
-        val h2 = mapper.xVtoW(snapH(current.x))
+        val h2 = mapper.xVtoW(mapper.snapH(current.x))
         val v1 = mapper.yVtoW(frozen!!.y)
-        val v2 = mapper.yVtoW(snapV(current.y))
+        val v2 = mapper.yVtoW(mapper.snapV(current.y))
         val min = Vec3.unit(mapper.horzAxis) * min(h1, h2) + Vec3.unit(mapper.vertAxis) * min(v1, v2) + Vec3.unit(mapper.axis) * (state.creatorBrush.min * Vec3.unit(mapper.axis))
         val max = Vec3.unit(mapper.horzAxis) * max(h1, h2) + Vec3.unit(mapper.vertAxis) * max(v1, v2) + Vec3.unit(mapper.axis) * (state.creatorBrush.max * Vec3.unit(mapper.axis))
         holder.setCreator(min, max)
+    }
+
+    private fun rect(): Rect {
+        val xmin = mapper.xWtoV(state.creatorBrush.min)
+        val xmax = mapper.xWtoV(state.creatorBrush.max)
+        val ymin = mapper.yWtoV(state.creatorBrush.min)
+        val ymax = mapper.yWtoV(state.creatorBrush.max)
+        return Rect(
+            Offset(min(xmin, xmax), min(ymin, ymax)),
+            Offset(max(xmin, xmax), max(ymin, ymax))
+        )
     }
 
 }
