@@ -33,16 +33,12 @@ import kotlin.math.floor
 internal interface MouseHandler {
     fun onClick(current: Offset)
     fun onDragStart(start: Offset)
-    fun onDragEnd()
-    fun onDragCancel()
     fun onDrag(current: Offset)
 }
 
 object NoOpMouseHandler : MouseHandler {
     override fun onClick(current: Offset) {}
     override fun onDragStart(start: Offset) {}
-    override fun onDragEnd() {}
-    override fun onDragCancel() {}
     override fun onDrag(current: Offset) {}
 }
 
