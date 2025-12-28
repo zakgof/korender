@@ -7,11 +7,18 @@ import editor.model.Model
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import java.util.UUID
 import kotlin.random.Random
 
 class StateHolder {
 
-    private val defaultCreator = Brush(Vec3(-128f, -128f, -64f), Vec3(128f, 128f, 64f), Color.Red)
+    private val defaultCreator = Brush(
+        Vec3(-128f, -128f, -64f),
+        Vec3(128f, 128f, 64f),
+        Color.Red,
+        "creator",
+        "creator"
+    )
 
     private val _state = MutableStateFlow(State(creatorBrush = defaultCreator))
     private val _model = MutableStateFlow(Model())
@@ -22,7 +29,17 @@ class StateHolder {
     fun setMouseMode(newNode: State.MouseMode) = _state.update { it.copy(mouseMode = newNode) }
     fun setGridScale(newScale: Float) = _state.update { it.copy(gridScale = newScale) }
     fun setProjectionScale(newScale: Float) = _state.update { it.copy(projectionScale = newScale) }
-    fun setCreator(min: Vec3, max: Vec3) = _state.update { it.copy(creatorBrush = Brush(min, max, Color.Red)) }
+    fun setCreator(min: Vec3, max: Vec3) = _state.update {
+        it.copy(
+            creatorBrush = Brush(
+                min,
+                max,
+                Color.Red,
+                "creator",
+                "creator"
+            )
+        )
+    }
 
     private fun randomBrushColor(seed: Int): Color {
         val r = Random(seed)
@@ -33,7 +50,9 @@ class StateHolder {
         val newBrush = Brush(
             state.value.creatorBrush.min,
             state.value.creatorBrush.max,
-            randomBrushColor(model.value.brushes.size)
+            randomBrushColor(model.value.brushes.size),
+            "Brush ${_model.value.brushes.size}",
+            UUID.randomUUID().toString()
         )
         _model.update {
             it.copy(brushes = it.brushes + newBrush)
