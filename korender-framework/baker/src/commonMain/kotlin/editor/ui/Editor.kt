@@ -26,6 +26,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import editor.state.State
 import editor.state.StateHolder
+import editor.ui.projection.ProjectionView
 
 @Composable
 fun BrushEditor() {

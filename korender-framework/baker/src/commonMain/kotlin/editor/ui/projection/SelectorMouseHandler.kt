@@ -1,4 +1,4 @@
-package editor.ui
+package editor.ui.projection
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect

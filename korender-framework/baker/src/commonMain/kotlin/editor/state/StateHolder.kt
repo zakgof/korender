@@ -65,4 +65,8 @@ class StateHolder {
     fun selectBrush(newSelection: Brush?) {
         _state.update { it.copy(selectedBrush = newSelection) }
     }
+
+    fun setViewCenter(newCenter: Vec3) {
+        _state.update { it.copy(viewCenter = newCenter) }
+    }
 }

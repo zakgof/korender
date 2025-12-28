@@ -1,15 +1,16 @@
-package editor.ui
+package editor.ui.projection
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import com.zakgof.korender.math.Vec3
 import editor.model.Brush
+import editor.state.State
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.round
 
-class ProjectionMapper(val axis: Int, val state: editor.state.State, val size: Size) {
+class ProjectionMapper(val axis: Int, val state: State, val size: Size) {
 
     val horzAxis = (axis + 1) % 3
     val vertAxis = (axis + 2) % 3
