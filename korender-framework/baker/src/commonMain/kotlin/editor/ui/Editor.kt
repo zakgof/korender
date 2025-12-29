@@ -1,6 +1,7 @@
 package editor.ui
 
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +24,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import editor.state.State
 import editor.state.StateHolder
@@ -33,11 +35,18 @@ fun BrushEditor() {
     val holder = remember { StateHolder() }
     val state by holder.state.collectAsState()
     val focusRequester = remember { FocusRequester() }
-    Row (modifier = Modifier.focusable()
+    Row (modifier = Modifier
+        .focusable()
         .focusRequester(focusRequester)
         .onPreviewKeyEvent {
             if (it.type == KeyEventType.KeyUp && it.key == Key.Enter && state.mouseMode == State.MouseMode.CREATOR) {
                 holder.create()
+            }
+            if (it.type == KeyEventType.KeyDown && State.STATE_KEYS.contains(it.key)) {
+                holder.keyDown(it.key)
+            }
+            if (it.type == KeyEventType.KeyUp && State.STATE_KEYS.contains(it.key)) {
+                holder.keyUp(it.key)
             }
             true
         }) {
