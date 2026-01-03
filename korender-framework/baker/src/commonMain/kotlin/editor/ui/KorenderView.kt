@@ -3,6 +3,7 @@ package editor.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.Korender
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.math.ColorRGB.Companion.white
@@ -16,12 +17,12 @@ import com.zakgof.korender.math.y
 import editor.state.StateHolder
 
 @Composable
-fun KorenderView(holder: StateHolder) {
+fun KorenderView(holder: StateHolder, keyHandler: (KeyEvent) -> Unit) {
     val state by holder.state.collectAsState()
     val model by holder.model.collectAsState()
     Korender({ Res.readBytes(it) }) {
 
-
+        OnKey { keyHandler(it) }
         Frame {
             AmbientLight(white(0.2f))
             DirectionalLight(Vec3(1f, -1f, 1f), white(0.5f))

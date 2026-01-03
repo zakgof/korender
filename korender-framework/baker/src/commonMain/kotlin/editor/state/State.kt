@@ -1,6 +1,5 @@
 package editor.state
 
-import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -18,12 +17,12 @@ data class State(
 
     val camera: Camera = Camera(-200.z + 2.y, 1.z, 1.y),
 
-    val pressedKeys: Set<Key> = setOf(),
+    val pressedKeys: Set<String> = setOf(),
 
     ) {
 
     companion object {
-        val STATE_KEYS = setOf(Key.W, Key.A, Key.S, Key.D)
+        val STATE_KEYS = setOf("W", "A", "S", "D")
     }
 
     enum class MouseMode {
@@ -37,7 +36,7 @@ data class State(
         val direction: Vec3,
         val up: Vec3,
     ) {
-        fun forward(dt: Float): Camera = copy(position = position + direction * 100f * dt)
-        fun right(dt: Float): Camera = copy(direction = (Quaternion.fromAxisAngle(up, 100f * dt) * direction).normalize())
+        fun forward(dt: Float): Camera = copy(position = position + direction * 10f * dt)
+        fun right(dt: Float): Camera = copy(direction = (Quaternion.fromAxisAngle(up, 10f * dt) * direction).normalize())
     }
 }

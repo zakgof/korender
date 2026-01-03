@@ -1,7 +1,6 @@
 package editor.state
 
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.math.Vec3
 import editor.model.Brush
 import editor.model.Model
@@ -90,27 +89,26 @@ class StateHolder {
         _state.update { it.copy(viewCenter = newCenter) }
     }
 
-    fun keyDown(key: Key) {
+    fun keyDown(key: String) {
         _state.update { it.copy(pressedKeys = it.pressedKeys + key) }
     }
 
-    fun keyUp(key: Key) {
+    fun keyUp(key: String) {
         _state.update { it.copy(pressedKeys = it.pressedKeys - key) }
     }
 
     fun frame(dt: Float) {
-        if (_state.value.pressedKeys.contains(Key.W)) {
+        if (_state.value.pressedKeys.contains("W")) {
             _state.update { it.copy(camera = it.camera.forward(dt)) }
         }
-        if (_state.value.pressedKeys.contains(Key.S)) {
+        if (_state.value.pressedKeys.contains("S")) {
             _state.update { it.copy(camera = it.camera.forward(-dt)) }
         }
-        if (_state.value.pressedKeys.contains(Key.A)) {
+        if (_state.value.pressedKeys.contains("A")) {
             _state.update { it.copy(camera = it.camera.right(-dt)) }
         }
-        if (_state.value.pressedKeys.contains(Key.D)) {
+        if (_state.value.pressedKeys.contains("D")) {
             _state.update { it.copy(camera = it.camera.right(dt)) }
         }
-        println("Pressed : ${_state.value.pressedKeys}")
     }
 }

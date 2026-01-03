@@ -1,67 +1,92 @@
 package editor.ui
 
+import GroupBox
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.zakgof.korender.baker.resources.Res
+import com.zakgof.korender.baker.resources.drag
+import com.zakgof.korender.baker.resources.minus
+import com.zakgof.korender.baker.resources.pen
+import com.zakgof.korender.baker.resources.plus
+import com.zakgof.korender.baker.resources.pointer
 import editor.model.Model
 import editor.state.State
 import editor.state.StateHolder
+import editor.ui.widget.IconButton
+import org.jetbrains.compose.resources.DrawableResource
 
 @Composable
 fun Sidebar(holder: StateHolder) {
     val state by holder.state.collectAsState()
     val model by holder.model.collectAsState()
     Column(
-        Modifier.background(Color.DarkGray)
+        Modifier.background(Theme.background)
             .fillMaxHeight()
             .padding(2.dp)
     ) {
         GroupBox("Mode") {
             RadioButtonRow(
-                listOf("N", "S", "D"),
+                listOf(Res.drawable.pen, Res.drawable.pointer, Res.drawable.drag),
                 state.mouseMode.ordinal,
                 {
                     holder.setMouseMode(State.MouseMode.entries.toTypedArray()[it])
                 }
             )
         }
-        Row {
-            Button(onClick = { holder.setGridScale(state.gridScale / 2f) }) {
-                Text("-")
-            }
-            Text("Grid ${state.gridScale}")
-            Button(onClick = { holder.setGridScale(state.gridScale * 2f) }) {
-                Text("+")
+        GroupBox("Grid") {
+            Row {
+                IconButton(Res.drawable.minus) { holder.setGridScale(state.gridScale / 2f) }
+                Text(
+                    text = "" + state.gridScale,
+                    fontSize = 12.sp,
+                    color = Theme.light,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.width(64.dp).align(Alignment.CenterVertically)
+                )
+                IconButton(Res.drawable.plus) { holder.setGridScale(state.gridScale * 2f) }
             }
         }
-        Row {
-            Button(onClick = { holder.setProjectionScale(state.projectionScale / 2f) }) {
-                Text("-")
+        GroupBox("Scale") {
+            Row {
+                IconButton(Res.drawable.minus) { holder.setProjectionScale(state.projectionScale / 2f) }
+                Text(
+                    text = "" + state.projectionScale,
+                    fontSize = 12.sp,
+                    color = Theme.light,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.width(64.dp).align(Alignment.CenterVertically)
+                )
+                IconButton(Res.drawable.plus) { holder.setProjectionScale(state.projectionScale * 2f) }
             }
-            Text("Scale ${state.projectionScale}")
-            Button(onClick = { holder.setProjectionScale(state.projectionScale * 2f) }) {
-                Text("+")
+        }
+        state.selectedBrush?.let { selection ->
+            GroupBox("Selection") {
+                Column {
+                    Text(
+                        text = "${selection.max.x - selection.min.x} x ${selection.max.y - selection.min.y} x ${selection.max.z - selection.min.z}",
+                        fontSize = 12.sp,
+                        color = Theme.light,
+                        textAlign = TextAlign.Left,
+                        modifier = Modifier
+                    )
+                }
             }
         }
         ObjectListView(model, state, holder)
@@ -88,55 +113,17 @@ fun ObjectListView(model: Model, state: State, holder: StateHolder) {
 
 @Composable
 fun RadioButtonRow(
-    options: List<String>,
+    options: List<DrawableResource>,
     selectedIndex: Int,
     onSelected: (Int) -> Unit,
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         options.forEachIndexed { index, text ->
-            Button(
-                onClick = { onSelected(index) },
-                colors =
-                    ButtonDefaults.buttonColors(
-                        backgroundColor = if (index == selectedIndex) Color.LightGray else Color.Black
-                    )
-            ) {
-                Text(
-                    text = text,
-                    color = if (index == selectedIndex) Color.Black else Color.White
-                )
-            }
+            IconButton(
+                icon = options[index],
+                background = if (index == selectedIndex) Theme.light else Theme.dark
+            ) { onSelected(index) }
         }
     }
 }
 
-@Composable
-fun GroupBox(
-    title: String,
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    Box(modifier) {
-        Column(
-            modifier = Modifier
-                .padding(top = 8.dp)
-                .border(1.dp, Color.Gray)
-                .padding(12.dp)
-        ) {
-            Spacer(Modifier.height(4.dp))
-            content()
-        }
-
-        Row(
-            modifier = Modifier
-                .padding(start = 12.dp)
-                .background(MaterialTheme.colors.background)
-        ) {
-            Text(
-                title,
-                style = MaterialTheme.typography.subtitle1,
-                color = Color.Gray
-            )
-        }
-    }
-}
