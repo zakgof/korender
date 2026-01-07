@@ -1,5 +1,7 @@
 package com.zakgof.korender
 
+import androidx.compose.ui.input.key.Key
+
 class TouchEvent(val type: Type, val button: Button, val x: Float, val y: Float) {
 
     enum class Type {
@@ -15,7 +17,15 @@ class TouchEvent(val type: Type, val button: Button, val x: Float, val y: Float)
     }
 }
 
-class KeyEvent(val type: Type, val key: String) {
+class KeyEvent(
+    val type: Type,
+    val key: String,
+    val composeKey: Key,
+    val shiftPressed: Boolean = false,
+    val ctrlPressed: Boolean = false,
+    val altPressed: Boolean = false,
+    val metaPressed: Boolean = false
+) {
     enum class Type {
         UP,
         DOWN

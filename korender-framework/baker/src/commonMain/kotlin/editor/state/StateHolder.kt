@@ -1,6 +1,7 @@
 package editor.state
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.math.Vec3
 import editor.model.Brush
 import editor.model.Model
@@ -75,7 +76,7 @@ class StateHolder {
         }
         if (brush === state.value.selectedBrush) {
             _state.update {
-                it.copy(selectedBrush = newBrush)
+                it.copy(selectedBrush = newBrush, clipboard = null)
             }
         }
         return newBrush
@@ -89,26 +90,50 @@ class StateHolder {
         _state.update { it.copy(viewCenter = newCenter) }
     }
 
-    fun keyDown(key: String) {
+    fun keyDown(key: Key) {
         _state.update { it.copy(pressedKeys = it.pressedKeys + key) }
     }
 
-    fun keyUp(key: String) {
+    fun keyUp(key: Key) {
         _state.update { it.copy(pressedKeys = it.pressedKeys - key) }
     }
 
     fun frame(dt: Float) {
-        if (_state.value.pressedKeys.contains("W")) {
+        if (_state.value.pressedKeys.contains(Key.W)) {
             _state.update { it.copy(camera = it.camera.forward(dt)) }
         }
-        if (_state.value.pressedKeys.contains("S")) {
+        if (_state.value.pressedKeys.contains(Key.S)) {
             _state.update { it.copy(camera = it.camera.forward(-dt)) }
         }
-        if (_state.value.pressedKeys.contains("A")) {
+        if (_state.value.pressedKeys.contains(Key.A)) {
             _state.update { it.copy(camera = it.camera.right(-dt)) }
         }
-        if (_state.value.pressedKeys.contains("D")) {
+        if (_state.value.pressedKeys.contains(Key.D)) {
             _state.update { it.copy(camera = it.camera.right(dt)) }
+        }
+    }
+
+    fun copy() {
+        _state.value.selectedBrush?.let { selection -> _state.update { it.copy(clipboard = selection) } }
+    }
+
+    fun paste() {
+        _state.value.clipboard?.let { clipboard ->
+            val newBrush = Brush(
+                clipboard.min + _state.value.viewCenter - clipboard.center,
+                clipboard.max + _state.value.viewCenter - clipboard.center,
+                randomBrushColor(model.value.brushes.size),
+                "Brush ${_model.value.brushes.size}",
+                UUID.randomUUID().toString()
+            )
+            _model.update {
+                it.copy(brushes = it.brushes + newBrush)
+            }
+            _state.update {
+                it.copy(
+                    selectedBrush = newBrush
+                )
+            }
         }
     }
 }

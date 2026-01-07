@@ -1,5 +1,6 @@
 package editor.state
 
+import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -13,16 +14,17 @@ data class State(
     val gridScale: Float = 16f,             // world units
 
     val selectedBrush: Brush? = null,
+    val clipboard: Brush? = null,
     val creatorBrush: Brush,
 
     val camera: Camera = Camera(400.z, -1.z, 1.y),
 
-    val pressedKeys: Set<String> = setOf(),
+    val pressedKeys: Set<Key> = setOf(),
 
     ) {
 
     companion object {
-        val STATE_KEYS = setOf("W", "A", "S", "D")
+        val STATE_KEYS = setOf(Key.W, Key.A, Key.S, Key.D)
     }
 
     enum class MouseMode {

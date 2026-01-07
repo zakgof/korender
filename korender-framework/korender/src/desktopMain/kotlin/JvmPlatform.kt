@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
+import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
@@ -85,14 +86,18 @@ actual fun Korender(
 
     fun sendKey(
         type: com.zakgof.korender.KeyEvent.Type,
-        c: String
+        mapping: KeyMapping,
+        shiftDown: Boolean,
+        controlDown: Boolean,
+        altDown: Boolean,
+        metaDown: Boolean
     ) {
         GlobalScope.launch {
-            engine?.pushKey(KeyEvent(type, c))
+            engine?.pushKey(KeyEvent(type, mapping.key, mapping.composeKey, shiftDown, controlDown, altDown, metaDown))
         }
     }
 
-    fun awtKeyCodeToKorender(awtKeyCode: Int): String = KEY_MAPPING.getOrDefault(awtKeyCode, "UNKNOWN")
+    fun awtKeyCodeToKorender(awtKeyCode: Int): KeyMapping = KEY_MAPPING.getOrDefault(awtKeyCode, KeyMapping("UNKNOWN", Key.Unknown))
 
     SwingPanel(
         modifier = Modifier.fillMaxSize(),
@@ -171,11 +176,13 @@ actual fun Korender(
             })
             canvas.addKeyListener(object : KeyAdapter() {
                 override fun keyPressed(e: KeyEvent) {
-                    sendKey(com.zakgof.korender.KeyEvent.Type.DOWN, awtKeyCodeToKorender(e.keyCode)) // TODO all keycodes
+                    val mapping = awtKeyCodeToKorender(e.keyCode)
+                    sendKey(com.zakgof.korender.KeyEvent.Type.DOWN, mapping, e.isShiftDown, e.isControlDown, e.isAltDown, e.isMetaDown) // TODO all keycodes
                 }
 
                 override fun keyReleased(e: KeyEvent) {
-                    sendKey(com.zakgof.korender.KeyEvent.Type.UP, awtKeyCodeToKorender(e.keyCode)) // TODO all keycodes
+                    val mapping = awtKeyCodeToKorender(e.keyCode)
+                    sendKey(com.zakgof.korender.KeyEvent.Type.UP, mapping, e.isShiftDown, e.isControlDown, e.isAltDown, e.isMetaDown) // TODO all keycodes
                 }
             })
 

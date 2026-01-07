@@ -11,17 +11,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
@@ -34,52 +43,81 @@ import editor.ui.projection.Axes.Companion.Front
 import editor.ui.projection.Axes.Companion.Left
 import editor.ui.projection.Axes.Companion.Top
 import editor.ui.projection.ProjectionView
-import java.awt.event.KeyEvent.VK_A
-import java.awt.event.KeyEvent.VK_ENTER
-import java.awt.event.KeyEvent.VK_Z
 
 @Composable
 fun BrushEditor() {
     val holder = remember { StateHolder() }
     val state by holder.state.collectAsState()
     val focusRequester = remember { FocusRequester() }
+    var deleteAlert by remember { mutableStateOf<String?>(null) }
 
     fun onKey(keyEvent: KeyEvent) {
-        if (keyEvent.type == KeyEvent.Type.UP && keyEvent.key == "ENTER" && state.mouseMode == State.MouseMode.CREATOR) {
+        println("KEY EVENT : ${keyEvent.key}")
+        if (keyEvent.type == KeyEvent.Type.DOWN && keyEvent.composeKey == Key.C && keyEvent.ctrlPressed) {
+            holder.copy()
+        }
+        if (keyEvent.type == KeyEvent.Type.DOWN &&keyEvent.composeKey == Key.V && keyEvent.ctrlPressed) {
+            holder.paste()
+        }
+        if (keyEvent.type == KeyEvent.Type.DOWN && keyEvent.composeKey == Key.Enter && state.mouseMode == State.MouseMode.CREATOR) {
             holder.create()
         }
-        if (keyEvent.type == KeyEvent.Type.DOWN && State.STATE_KEYS.contains(keyEvent.key)) {
-            holder.keyDown(keyEvent.key)
+        if (keyEvent.type == KeyEvent.Type.DOWN && keyEvent.composeKey == Key.Delete && state.selectedBrush != null) {
+            deleteAlert = "Delete ${state.selectedBrush!!.name}"
         }
-        if (keyEvent.type == KeyEvent.Type.UP && State.STATE_KEYS.contains(keyEvent.key)) {
-            holder.keyUp(keyEvent.key)
+        if (keyEvent.type == KeyEvent.Type.DOWN && State.STATE_KEYS.contains(keyEvent.composeKey)) {
+            holder.keyDown(keyEvent.composeKey)
+        }
+        if (keyEvent.type == KeyEvent.Type.UP && State.STATE_KEYS.contains(keyEvent.composeKey)) {
+            holder.keyUp(keyEvent.composeKey)
         }
     }
 
-    Row(
-        modifier = Modifier
-            .focusable()
-            .focusRequester(focusRequester)
-            .onPreviewKeyEvent {
-                onKey(it.toKorender())
-                true
-            }) {
-        Column(Modifier.weight(1f)) {
-            ProjectionBox(Top, holder, "top")
-            Divider(Modifier.fillMaxWidth().height(4.dp))
-            ProjectionBox(Left, holder, "left")
-        }
-        Divider(Modifier.fillMaxHeight().width(4.dp))
-        Column(Modifier.weight(1f)) {
-            ProjectionBox(Front, holder, "front")
-            Divider(Modifier.fillMaxWidth().height(4.dp))
-            Box(Modifier.weight(1f).fillMaxSize()) {
-                KorenderView(holder, { onKey(it) })
+    Column {
+        Row(
+            modifier = Modifier
+                .focusable()
+                .focusRequester(focusRequester)
+                .onPreviewKeyEvent {
+                    onKey(it.toKorender())
+                    true
+                }) {
+            Column(Modifier.weight(1f)) {
+                ProjectionBox(Top, holder, "top")
+                Divider(Modifier.fillMaxWidth().height(4.dp))
+                ProjectionBox(Left, holder, "left")
+            }
+            Divider(Modifier.fillMaxHeight().width(4.dp))
+            Column(Modifier.weight(1f)) {
+                ProjectionBox(Front, holder, "front")
+                Divider(Modifier.fillMaxWidth().height(4.dp))
+                Box(Modifier.weight(1f).fillMaxSize()) {
+                    KorenderView(holder, { onKey(it) })
+                }
+            }
+            Divider(Modifier.fillMaxHeight().width(4.dp))
+            Box(Modifier.fillMaxHeight()) {
+                Sidebar(holder)
             }
         }
-        Divider(Modifier.fillMaxHeight().width(4.dp))
-        Box(Modifier.fillMaxHeight()) {
-            Sidebar(holder)
+        deleteAlert?.let { deleteText ->
+            AlertDialog(
+                onDismissRequest = { deleteAlert = null },
+                title = { Text("Delete") },
+                text = { Text(deleteText) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        deleteAlert = null
+                    }) {
+                        Text("Yes")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { deleteAlert = null }) {
+                        Text("No")
+                    }
+                }
+            )
         }
     }
 
@@ -93,11 +131,12 @@ private fun androidx.compose.ui.input.key.KeyEvent.toKorender(): KeyEvent = KeyE
         KeyEventType.KeyUp -> KeyEvent.Type.UP
         else -> KeyEvent.Type.DOWN
     },
-    when (key.keyCode.toInt()) {
-        in VK_A..VK_Z -> String(CharArray(1) { key.keyCode.toInt().toChar() })
-        VK_ENTER -> "ENTER"
-        else -> "UNKNOWN"
-    }
+    "",
+    this.key,
+    this.isShiftPressed,
+    this.isCtrlPressed,
+    this.isAltPressed,
+    this.isMetaPressed
 )
 
 @Composable
