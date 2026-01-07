@@ -136,4 +136,17 @@ class StateHolder {
             }
         }
     }
+
+    fun deleteSelected() {
+        _state.value.selectedBrush?.let { selection ->
+            _model.update {
+                it.copy(brushes = it.brushes - selection)
+            }
+            _state.update {
+                it.copy(
+                    selectedBrush = null
+                )
+            }
+        }
+    }
 }
