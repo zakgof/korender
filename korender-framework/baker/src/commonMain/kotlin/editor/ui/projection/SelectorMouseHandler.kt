@@ -30,7 +30,7 @@ internal class SelectorMouseHandler(
     override fun onClick(current: Offset) {
         val hit = model.brushes
             .filter { brush -> mapper.rect(brush).contains(current) }
-            .sortedBy { brush -> brush.center * Vec3.unit(mapper.axis) }
+            .sortedBy { brush -> brush.center * Vec3.unit(mapper.axes.lookAxis) }
         val index = hit.indexOf(state.selectedBrush)
         if (hit.isNotEmpty()) {
             val newSelection = hit[(index + 1) % hit.size]

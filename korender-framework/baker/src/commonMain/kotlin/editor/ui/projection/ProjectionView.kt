@@ -39,8 +39,16 @@ object NoOpMouseHandler : MouseHandler {
     override fun onDrag(current: Offset) {}
 }
 
+class Axes(val xAxis: Int, val yAxis: Int, val lookAxis: Int) {
+    companion object {
+        val Left = Axes(2,1,0)
+        val Top = Axes(0,2,1)
+        val Front = Axes(0,1,2)
+    }
+}
+
 @Composable
-fun ProjectionView(axis: Int, holder: StateHolder) {
+fun ProjectionView(axes: Axes, holder: StateHolder) {
     val state by holder.state.collectAsState()
     val model by holder.model.collectAsState()
     var mouseHandler: MouseHandler by remember { mutableStateOf(NoOpMouseHandler) }
@@ -69,7 +77,7 @@ fun ProjectionView(axis: Int, holder: StateHolder) {
                 }
             }
     ) {
-        val mapper = ProjectionMapper(axis, state, size)
+        val mapper = ProjectionMapper(axes, state, size)
         mouseHandler = mouseHandler(mapper, state, model, holder)
         drawGrid(mapper, state)
         if (state.mouseMode === State.MouseMode.CREATOR) {

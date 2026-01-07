@@ -1,8 +1,10 @@
 package editor.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Divider
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,6 +29,10 @@ import androidx.compose.ui.unit.dp
 import com.zakgof.korender.KeyEvent
 import editor.state.State
 import editor.state.StateHolder
+import editor.ui.projection.Axes
+import editor.ui.projection.Axes.Companion.Front
+import editor.ui.projection.Axes.Companion.Left
+import editor.ui.projection.Axes.Companion.Top
 import editor.ui.projection.ProjectionView
 import java.awt.event.KeyEvent.VK_A
 import java.awt.event.KeyEvent.VK_ENTER
@@ -58,19 +65,13 @@ fun BrushEditor() {
                 true
             }) {
         Column(Modifier.weight(1f)) {
-            Box(Modifier.weight(1f).fillMaxSize()) {
-                ProjectionView(0, holder)
-            }
+            ProjectionBox(Top, holder, "top")
             Divider(Modifier.fillMaxWidth().height(4.dp))
-            Box(Modifier.weight(1f).fillMaxSize()) {
-                ProjectionView(1, holder)
-            }
+            ProjectionBox(Left, holder, "left")
         }
         Divider(Modifier.fillMaxHeight().width(4.dp))
         Column(Modifier.weight(1f)) {
-            Box(Modifier.weight(1f).fillMaxSize()) {
-                ProjectionView(2, holder)
-            }
+            ProjectionBox(Front, holder, "front")
             Divider(Modifier.fillMaxWidth().height(4.dp))
             Box(Modifier.weight(1f).fillMaxSize()) {
                 KorenderView(holder, { onKey(it) })
@@ -98,3 +99,17 @@ private fun androidx.compose.ui.input.key.KeyEvent.toKorender(): KeyEvent = KeyE
         else -> "UNKNOWN"
     }
 )
+
+@Composable
+fun ColumnScope.ProjectionBox(axes: Axes, holder: StateHolder, label: String) {
+    Column(Modifier.weight(1f).fillMaxSize().background(Theme.background)) {
+        Text(
+            text = label,
+            color = Theme.medium,
+            modifier = Modifier.background(Theme.background)
+        )
+        Box(Modifier.weight(1f).fillMaxSize()) {
+            ProjectionView(axes, holder)
+        }
+    }
+}

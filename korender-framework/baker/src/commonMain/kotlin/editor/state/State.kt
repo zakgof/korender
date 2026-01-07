@@ -15,7 +15,7 @@ data class State(
     val selectedBrush: Brush? = null,
     val creatorBrush: Brush,
 
-    val camera: Camera = Camera(-200.z + 2.y, 1.z, 1.y),
+    val camera: Camera = Camera(400.z, -1.z, 1.y),
 
     val pressedKeys: Set<String> = setOf(),
 

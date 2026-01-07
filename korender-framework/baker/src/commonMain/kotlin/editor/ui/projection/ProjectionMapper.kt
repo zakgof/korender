@@ -10,10 +10,10 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.round
 
-class ProjectionMapper(val axis: Int, val state: State, val size: Size) {
+class ProjectionMapper(val axes: Axes, val state: State, val size: Size) {
 
-    val horzAxis = (axis + 1) % 3
-    val vertAxis = (axis + 2) % 3
+    val horzAxis = axes.xAxis
+    val vertAxis = axes.yAxis
 
     val centerX = state.viewCenter * Vec3.unit(horzAxis)
     val centerY = state.viewCenter * Vec3.unit(vertAxis)
@@ -33,8 +33,8 @@ class ProjectionMapper(val axis: Int, val state: State, val size: Size) {
         val h2 = xVtoW(rect.right)
         val v1 = yVtoW(rect.top)
         val v2 = yVtoW(rect.bottom)
-        val min = Vec3.unit(horzAxis) * min(h1, h2) + Vec3.unit(vertAxis) * min(v1, v2) + Vec3.unit(axis) * (brush.min * Vec3.unit(axis))
-        val max = Vec3.unit(horzAxis) * max(h1, h2) + Vec3.unit(vertAxis) * max(v1, v2) + Vec3.unit(axis) * (brush.max * Vec3.unit(axis))
+        val min = Vec3.unit(horzAxis) * min(h1, h2) + Vec3.unit(vertAxis) * min(v1, v2) + Vec3.unit(axes.lookAxis) * (brush.min * Vec3.unit(axes.lookAxis))
+        val max = Vec3.unit(horzAxis) * max(h1, h2) + Vec3.unit(vertAxis) * max(v1, v2) + Vec3.unit(axes.lookAxis) * (brush.max * Vec3.unit(axes.lookAxis))
         return arrayOf(min, max)
     }
     fun rect(brush: Brush): Rect {
