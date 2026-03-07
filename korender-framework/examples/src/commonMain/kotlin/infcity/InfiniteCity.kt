@@ -2,9 +2,6 @@ package com.zakgof.korender.examples.infcity
 
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
-import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Korender
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext

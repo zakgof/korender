@@ -57,6 +57,7 @@ import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.geometry.CylinderSide
 import com.zakgof.korender.impl.geometry.Disk
 import com.zakgof.korender.impl.geometry.HeightField
+import com.zakgof.korender.impl.geometry.MeshAttributes
 import com.zakgof.korender.impl.geometry.ObjMesh
 import com.zakgof.korender.impl.geometry.Quad
 import com.zakgof.korender.impl.geometry.Sphere
@@ -629,6 +630,27 @@ internal class Engine(
         override fun keepForever() = KeepForeverRetentionPolicy
         override fun untilGeneration(generation: Int) = UntilGenerationRetentionPolicy(generation)
         override fun time(seconds: Float) = TimeRetentionPolicy(seconds)
+
+        override val POS = MeshAttributes.POS
+        override val NORMAL = MeshAttributes.NORMAL
+        override val TEX = MeshAttributes.TEX
+        override val JOINTS_BYTE = MeshAttributes.JOINTS_BYTE
+        override val JOINTS_SHORT = MeshAttributes.JOINTS_SHORT
+        override val JOINTS_INT = MeshAttributes.JOINTS_INT
+        override val WEIGHTS = MeshAttributes.WEIGHTS
+        override val SCALE = MeshAttributes.SCALE
+        override val B1 = MeshAttributes.B1
+        override val B2 = MeshAttributes.B2
+        override val B3 = MeshAttributes.B3
+        override val MODEL0 = MeshAttributes.MODEL0
+        override val MODEL1 = MeshAttributes.MODEL1
+        override val MODEL2 = MeshAttributes.MODEL2
+        override val MODEL3 = MeshAttributes.MODEL3
+        override val INSTPOS = MeshAttributes.INSTPOS
+        override val INSTSCALE = MeshAttributes.INSTSCALE
+        override val INSTROT = MeshAttributes.INSTROT
+        override val INSTTEX = MeshAttributes.INSTTEX
+        override val INSTSCREEN = MeshAttributes.INSTSCREEN
     }
 
     init {
@@ -723,3 +745,4 @@ internal class Engine(
         renderContext.height = h
     }
 }
+

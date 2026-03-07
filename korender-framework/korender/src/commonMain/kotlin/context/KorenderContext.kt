@@ -586,7 +586,7 @@ interface KorenderContext {
         zenithColor: ColorRGB = ColorRGB(0x3F6FC3),
         horizonColor: ColorRGB = ColorRGB(0xB8CAE9),
         cloudLight: Float = 1.0f,
-        cloudDark: Float = 0.7f
+        cloudDark: Float = 0.7f,
     ): MaterialModifier
 
     /**
@@ -865,4 +865,25 @@ interface KorenderContext {
         Android,
         Web
     }
+
+    val POS: MeshAttribute<Vec3>
+    val NORMAL: MeshAttribute<Vec3>
+    val TEX: MeshAttribute<Vec2>
+    val JOINTS_BYTE: MeshAttribute<ByteArray>
+    val JOINTS_SHORT: MeshAttribute<ShortArray>
+    val JOINTS_INT: MeshAttribute<IntArray>
+    val WEIGHTS: MeshAttribute<FloatArray>
+    val SCALE: MeshAttribute<Vec2>
+    val B1: MeshAttribute<Byte>
+    val B2: MeshAttribute<Byte>
+    val B3: MeshAttribute<Byte>
+    val MODEL0: MeshAttribute<FloatArray>
+    val MODEL1: MeshAttribute<FloatArray>
+    val MODEL2: MeshAttribute<FloatArray>
+    val MODEL3: MeshAttribute<FloatArray>
+    val INSTPOS: MeshAttribute<Vec3>
+    val INSTSCALE: MeshAttribute<Vec2>
+    val INSTROT: MeshAttribute<Float>
+    val INSTTEX: MeshAttribute<FloatArray>
+    val INSTSCREEN: MeshAttribute<FloatArray>
 }

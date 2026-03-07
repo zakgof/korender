@@ -1,19 +1,19 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.Attributes.MODEL0
-import com.zakgof.korender.Attributes.MODEL1
-import com.zakgof.korender.Attributes.MODEL2
-import com.zakgof.korender.Attributes.MODEL3
-import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.SCALE
-import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.context.PipeMeshContext
 import com.zakgof.korender.impl.context.DefaultPipeMeshContext
 import com.zakgof.korender.impl.context.PipeNode
 import com.zakgof.korender.impl.geometry.CustomMesh
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL0
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL1
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL2
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL3
+import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
+import com.zakgof.korender.impl.geometry.MeshAttributes.POS
+import com.zakgof.korender.impl.geometry.MeshAttributes.SCALE
+import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
 import com.zakgof.korender.math.Vec3
 import kotlin.math.sqrt
 

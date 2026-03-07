@@ -1,10 +1,5 @@
 package com.zakgof.korender.impl.gltf
 
-import com.zakgof.korender.Attributes
-import com.zakgof.korender.Attributes.MODEL0
-import com.zakgof.korender.Attributes.MODEL1
-import com.zakgof.korender.Attributes.MODEL2
-import com.zakgof.korender.Attributes.MODEL3
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MeshAttribute
@@ -13,6 +8,17 @@ import com.zakgof.korender.impl.absolutizeResource
 import com.zakgof.korender.impl.engine.GltfDeclaration
 import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.geometry.CMesh
+import com.zakgof.korender.impl.geometry.MeshAttributes.JOINTS_BYTE
+import com.zakgof.korender.impl.geometry.MeshAttributes.JOINTS_INT
+import com.zakgof.korender.impl.geometry.MeshAttributes.JOINTS_SHORT
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL0
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL1
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL2
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL3
+import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
+import com.zakgof.korender.impl.geometry.MeshAttributes.POS
+import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
+import com.zakgof.korender.impl.geometry.MeshAttributes.WEIGHTS
 import com.zakgof.korender.impl.gl.GLConstants
 import com.zakgof.korender.impl.glgpu.toGL
 import com.zakgof.korender.math.Mat4
@@ -53,7 +59,7 @@ internal object GltfLoader {
     private suspend fun loadGlb(
         resourceBytes: ByteArray,
         appResourceLoader: ResourceLoader,
-        declaration: GltfDeclaration
+        declaration: GltfDeclaration,
     ): GltfCache {
         val reader = ByteArrayReader(resourceBytes)
 
@@ -222,11 +228,11 @@ internal object GltfLoader {
 
     private fun attributeForAccessor(key: String, accessor: InternalGltfModel.Accessor): MeshAttribute<*>? {
         val candidates = when (key) {
-            "POSITION" -> listOf(Attributes.POS)
-            "NORMAL" -> listOf(Attributes.NORMAL)
-            "TEXCOORD_0" -> listOf(Attributes.TEX)
-            "JOINTS_0" -> listOf(Attributes.JOINTS_BYTE, Attributes.JOINTS_SHORT, Attributes.JOINTS_INT)
-            "WEIGHTS_0" -> listOf(Attributes.WEIGHTS)
+            "POSITION" -> listOf(POS)
+            "NORMAL" -> listOf(NORMAL)
+            "TEXCOORD_0" -> listOf(TEX)
+            "JOINTS_0" -> listOf(JOINTS_BYTE, JOINTS_SHORT, JOINTS_INT)
+            "WEIGHTS_0" -> listOf(WEIGHTS)
             else -> null
         }
         return candidates?.firstOrNull {

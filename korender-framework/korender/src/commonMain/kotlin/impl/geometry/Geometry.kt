@@ -1,23 +1,22 @@
 package com.zakgof.korender.impl.geometry
 
-import com.zakgof.korender.AttributeType
-import com.zakgof.korender.Attributes.INSTPOS
-import com.zakgof.korender.Attributes.INSTROT
-import com.zakgof.korender.Attributes.INSTSCALE
-import com.zakgof.korender.Attributes.INSTSCREEN
-import com.zakgof.korender.Attributes.INSTTEX
-import com.zakgof.korender.Attributes.MODEL0
-import com.zakgof.korender.Attributes.MODEL1
-import com.zakgof.korender.Attributes.MODEL2
-import com.zakgof.korender.Attributes.MODEL3
-import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.impl.engine.Loader
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTPOS
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTROT
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTSCALE
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTSCREEN
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTTEX
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL0
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL1
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL2
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL3
+import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
+import com.zakgof.korender.impl.geometry.MeshAttributes.POS
+import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
 import com.zakgof.korender.impl.glgpu.GlGpuMesh
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Vec2
@@ -222,7 +221,7 @@ internal object Geometry {
         xsize: Int,
         ysize: Int,
         cell: Float,
-        height: (Int, Int) -> Float
+        height: (Int, Int) -> Float,
     ): Vec3 {
         val h = height(x, y)
         val dhx = (max(x - 1, 0)..min(x + 1, xsize) step 2)
@@ -376,7 +375,7 @@ internal object Geometry {
                 val vertex = mesh.vertices[it]
                 pos(vertex.pos!!).normal(vertex.normal!!).tex(vertex.tex!!)
             }
-            mesh.indices?.let {indices ->
+            mesh.indices?.let { indices ->
                 (0 until indices.size).forEach {
                     index(indices[it])
                 }
@@ -392,7 +391,7 @@ fun IndexType.size() = when (this) {
     IndexType.Int -> 4
 }
 
-fun AttributeType.size() = when (this) {
+internal fun AttributeType.size() = when (this) {
     AttributeType.Byte, AttributeType.SignedByte -> 1
     AttributeType.Short, AttributeType.SignedShort -> 2
     AttributeType.Int, AttributeType.SignedInt -> 4

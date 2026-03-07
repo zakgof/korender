@@ -1,15 +1,5 @@
 package com.zakgof.korender.impl.geometry
 
-import com.zakgof.korender.Attributes.INSTPOS
-import com.zakgof.korender.Attributes.INSTROT
-import com.zakgof.korender.Attributes.INSTSCALE
-import com.zakgof.korender.Attributes.INSTSCREEN
-import com.zakgof.korender.Attributes.INSTTEX
-import com.zakgof.korender.Attributes.MODEL0
-import com.zakgof.korender.Attributes.MODEL1
-import com.zakgof.korender.Attributes.MODEL2
-import com.zakgof.korender.Attributes.MODEL3
-import com.zakgof.korender.Attributes.WEIGHTS
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
@@ -24,6 +14,16 @@ import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.engine.Retentionable
 import com.zakgof.korender.impl.font.Font
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTPOS
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTROT
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTSCALE
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTSCREEN
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTTEX
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL0
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL1
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL2
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL3
+import com.zakgof.korender.impl.geometry.MeshAttributes.WEIGHTS
 import com.zakgof.korender.impl.material.TextureLinkDeclaration
 
 internal interface InternalMeshDeclaration : MeshDeclaration, Retentionable
@@ -38,7 +38,7 @@ internal interface Instanceable {
         camera: Camera?,
         inventory: Inventory,
         addUniforms: MutableMap<String, Any?>,
-        addDefs: MutableSet<String>
+        addDefs: MutableSet<String>,
     )
 }
 
@@ -62,7 +62,7 @@ internal data class InstancedMesh(
     val static: Boolean,
     val transparent: Boolean,
     override val retentionPolicy: RetentionPolicy,
-    val instancer: () -> List<MeshInstance>
+    val instancer: () -> List<MeshInstance>,
 ) : InternalMeshDeclaration, Instanceable {
 
     override fun equals(other: Any?): Boolean = (other is InstancedMesh && other.id == id)
@@ -114,7 +114,7 @@ internal data class InstancedBillboard(
     val static: Boolean,
     val transparent: Boolean,
     override val retentionPolicy: RetentionPolicy,
-    val instancer: () -> List<BillboardInstance>
+    val instancer: () -> List<BillboardInstance>,
 ) : InternalMeshDeclaration, Instanceable {
     override fun equals(other: Any?): Boolean = (other is InstancedBillboard && other.id == id)
     override fun hashCode(): Int = id.hashCode()
@@ -149,7 +149,7 @@ internal data class CustomMesh(
     val dynamic: Boolean,
     val indexType: IndexType?,
     override val retentionPolicy: RetentionPolicy,
-    val block: MeshInitializer.() -> Unit
+    val block: MeshInitializer.() -> Unit,
 ) : InternalMeshDeclaration, Instanceable {
     override fun equals(other: Any?): Boolean = (other is CustomMesh && other.id == id)
     override fun hashCode(): Int = id.hashCode()
@@ -172,7 +172,7 @@ internal class FontMesh(
     val height: Float,
     val xoffset: Float,
     val yoffset: Float,
-    val font: Font
+    val font: Font,
 ) : InternalMeshDeclaration, Instanceable {
     override fun equals(other: Any?): Boolean =
         (other is FontMesh && other.id == id)
@@ -208,7 +208,7 @@ internal class FontMesh(
 internal data class CustomCpuMesh(
     val id: String,
     val mesh: Mesh,
-    override val retentionPolicy: RetentionPolicy
+    override val retentionPolicy: RetentionPolicy,
 ) : InternalMeshDeclaration {
     override fun equals(other: Any?): Boolean = (other is CustomCpuMesh && other.id == id)
     override fun hashCode(): Int = id.hashCode()
@@ -220,7 +220,7 @@ internal data class HeightField(
     val cellsZ: Int,
     val cellWidth: Float,
     val height: (Int, Int) -> Float,
-    override val retentionPolicy: RetentionPolicy
+    override val retentionPolicy: RetentionPolicy,
 ) : InternalMeshDeclaration {
     override fun equals(other: Any?): Boolean = (other is HeightField && other.id == id)
     override fun hashCode(): Int = id.hashCode()

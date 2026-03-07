@@ -1,12 +1,12 @@
 package com.zakgof.korender.impl.prefab.terrain
 
-import com.zakgof.korender.Attributes.B1
-import com.zakgof.korender.Attributes.B2
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.impl.geometry.MeshAttributes.B1
+import com.zakgof.korender.impl.geometry.MeshAttributes.B2
 import com.zakgof.korender.impl.prefab.InternalPrefab
 import com.zakgof.korender.math.Vec3
 import kotlin.math.floor

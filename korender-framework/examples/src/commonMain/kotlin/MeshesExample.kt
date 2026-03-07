@@ -3,9 +3,6 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
-import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.math.ColorRGB.Companion.White
@@ -29,9 +26,7 @@ fun MeshesExample() {
                     id = "static",
                     vertexCount = 3,
                     indexCount = 3,
-                    POS,
-                    NORMAL,
-                    TEX,
+                    POS, NORMAL, TEX,
                 ) {
                     pos(-5f, 0f, 0f).normal(1.z).tex(0f, 0f)
                     pos(0f, 0f, 0f).normal(1.z).tex(1f, 0f)
