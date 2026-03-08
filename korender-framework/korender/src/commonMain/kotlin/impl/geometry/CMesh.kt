@@ -43,13 +43,13 @@ internal open class CMesh(
         override fun get(index: Int): Mesh.Vertex = object : Mesh.Vertex {
 
             override val pos
-                get() = value(POS)
+                get() = this[POS]
             override val normal
-                get() = value(NORMAL)
+                get() = this[NORMAL]
             override val tex
-                get() = value(TEX)
+                get() = this[TEX]
 
-            override fun <T> value(attribute: MeshAttribute<T>) =
+            override operator fun <T> get(attribute: MeshAttribute<T>) =
                 attrMap[attribute as InternalMeshAttribute<T>]?.let { attribute.bufferAccessor.get(it, index) }
         }
 
@@ -127,7 +127,7 @@ internal open class CMesh(
         }
         val firstVertex = prototype.vertices.firstOrNull() ?: return false
         @Suppress("UNCHECKED_CAST")
-        return firstVertex.value(attr as MeshAttribute<Any?>) != null
+        return firstVertex[attr as MeshAttribute<Any?>] != null
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -136,7 +136,7 @@ internal open class CMesh(
             POS -> vertex.pos?.let { attr(POS, transform * it) }
             NORMAL -> vertex.normal?.let { attr(NORMAL, transform.applyToDirection(it).normalize()) }
             else -> {
-                val value = vertex.value(attr as MeshAttribute<Any?>) ?: return
+                val value = vertex[attr as MeshAttribute<Any?>] ?: return
                 attr(attr, value)
             }
         }
@@ -195,3 +195,4 @@ internal open class CMesh(
 
     fun determineIndexCount() = (indexBuffer?.position() ?: 0) / actualIndexType.size()
 }
+

@@ -9,6 +9,7 @@ import com.zakgof.korender.Image3D
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KeyHandler
 import com.zakgof.korender.MaterialModifier
+import com.zakgof.korender.MutableMesh
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
@@ -307,6 +308,13 @@ interface KorenderContext {
      * @param mesh Mesh object
      */
     fun mesh(id: String, mesh: Mesh): MeshDeclaration
+
+    /**
+     * Creates an empty mutable mesh object.
+     *
+     * @return mutable mesh
+     */
+    fun mutableMesh(): MutableMesh
 
     /**
      * Loads a Mesh from a MeshDeclaration
@@ -927,4 +935,6 @@ interface KorenderContext {
     val INSTTEX: MeshAttribute<FloatArray>
     val INSTSCREEN: MeshAttribute<FloatArray>
 }
+
+
 

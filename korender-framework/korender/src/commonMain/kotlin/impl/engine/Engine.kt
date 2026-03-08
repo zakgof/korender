@@ -12,6 +12,7 @@ import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.KeyHandler
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MaterialModifier
+import com.zakgof.korender.MutableMesh
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
@@ -60,6 +61,7 @@ import com.zakgof.korender.impl.geometry.CylinderSide
 import com.zakgof.korender.impl.geometry.Disk
 import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.HeightField
+import com.zakgof.korender.impl.geometry.InternalMutableMesh
 import com.zakgof.korender.impl.geometry.MeshAttributes
 import com.zakgof.korender.impl.geometry.ObjMesh
 import com.zakgof.korender.impl.geometry.Quad
@@ -258,6 +260,9 @@ internal class Engine(
         override fun heightField(id: String, cellsX: Int, cellsZ: Int, cellWidth: Float, height: (Int, Int) -> Float): MeshDeclaration =
             HeightField(id, cellsX, cellsZ, cellWidth, height, currentRetentionPolicy)
 
+
+        override fun mutableMesh(): MutableMesh =
+            InternalMutableMesh()
         override fun mesh(id: String, mesh: Mesh) =
             CustomCpuMesh(id, mesh, currentRetentionPolicy)
 
@@ -767,4 +772,6 @@ internal class Engine(
         renderContext.height = h
     }
 }
+
+
 

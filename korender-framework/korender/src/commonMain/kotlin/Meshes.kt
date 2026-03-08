@@ -36,32 +36,30 @@ interface Mesh {
         val pos: Vec3?
         val normal: Vec3?
         val tex: Vec2?
-        fun <T> value(attribute: MeshAttribute<T>): T?
+        operator fun <T> get(attribute: MeshAttribute<T>): T?
     }
 }
 
-class MutableMesh : Mesh {
+interface MutableMesh : Mesh {
 
-    override val vertices = mutableListOf<MutableVertex>()
-    override val indices = mutableListOf<Int>()
+    override val vertices: MutableList<MutableVertex>
+    override val indices: MutableList<Int>
 
-    class MutableVertex : Mesh.Vertex {
+    fun createVertex(): MutableVertex
+    fun appendVertex(): MutableVertex
 
-        override var pos: Vec3? = null
-        override var normal: Vec3? = null
-        override var tex: Vec2? = null
+    interface MutableVertex : Mesh.Vertex {
 
-        fun pos(p: Vec3) = apply { pos = p }
-        fun normal(n: Vec3) = apply { normal = n }
-        fun tex(t: Vec2) = apply { tex = t }
+        override var pos: Vec3?
+        override var normal: Vec3?
+        override var tex: Vec2?
 
-        @Suppress("UNCHECKED_CAST")
-        override fun <T> value(attribute: MeshAttribute<T>): T? = when (attribute) {
-//            POS -> pos
-//            NORMAL -> normal
-//            TEX -> tex
-            else -> null
-        } as T?
+        operator fun <T> set(attribute: MeshAttribute<T>, value: T)
+
+        fun pos(pos: Vec3): MutableVertex = apply { this.pos = pos }
+        fun normal(normal: Vec3): MutableVertex = apply { this.normal = normal }
+        fun tex(tex: Vec2): MutableVertex = apply { this.tex = tex }
     }
 }
+
 
