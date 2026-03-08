@@ -61,6 +61,7 @@ fun AppExample() {
         Demo("SSR") { SsrExample() },
 
         /*
+        Demo("Texture arrays") { TextureArrayExample() },
         Demo("Multiple viewports") { MultipleViewportsExample() },
         Demo("Sky") { SkyExample() },
         Demo("Transparency") { TransparencyExample() },

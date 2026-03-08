@@ -14,3 +14,4 @@ local.properties
 /examples/src/commonMain/composeResources/files/island/tree/cards.bin
 /examples/src/commonMain/composeResources/files/island/tree/branches.bin
 /examples/src/commonMain/composeResources/files/island/tree/atlas.png
+/.gradle-user

@@ -4,6 +4,10 @@
 layout(location = 0) in vec3 pos;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 tex;
+#ifdef TEXTURE_ARRAY
+    layout(location = 8) in int colortexindex;
+    flat out int vcolortexindex;
+#endif
 #ifdef INSTANCING
     layout(location = 11) in vec4 instanceModel0;
     layout(location = 12) in vec4 instanceModel1;
@@ -48,6 +52,10 @@ void main() {
         vnormal = pluginVNormal();
     #else
         vnormal = mat3(transpose(inverse(totalModel))) * normal;
+    #endif
+
+    #ifdef TEXTURE_ARRAY
+        vcolortexindex = colortexindex;
     #endif
 
     vpos = worldPos.xyz;

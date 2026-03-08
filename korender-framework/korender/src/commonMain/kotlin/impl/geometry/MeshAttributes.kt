@@ -12,6 +12,7 @@ internal object MeshAttributes {
     val JOINTS_INT = InternalMeshAttribute<IntArray>("joints", 4, AttributeType.Int, 3, Int4BufferAccessor)
     val WEIGHTS = InternalMeshAttribute<FloatArray>("weights", 4, AttributeType.Float, 4, Float4BufferAccessor)
     val SCALE = InternalMeshAttribute<Vec2>("scale", 2, AttributeType.Float, 5, Vec2BufferAccessor)
+    val COLORTEXINDEX = InternalMeshAttribute<Byte>("colortexindex", 1, AttributeType.SignedByte, 8, ByteBufferAccessor)
     val B1 = InternalMeshAttribute<Byte>("b1", 1, AttributeType.SignedByte, 8, ByteBufferAccessor)
     val B2 = InternalMeshAttribute<Byte>("b2", 1, AttributeType.SignedByte, 9, ByteBufferAccessor)
     val B3 = InternalMeshAttribute<Byte>("b3", 1, AttributeType.SignedByte, 10, ByteBufferAccessor)

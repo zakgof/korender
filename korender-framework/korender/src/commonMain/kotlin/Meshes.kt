@@ -1,5 +1,6 @@
 package com.zakgof.korender
 
+import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
@@ -15,18 +16,15 @@ interface MeshAttribute<T>
 interface MeshDeclaration
 
 interface MeshInitializer {
-    fun attr(attr: MeshAttribute<*>, vararg v: Float): MeshInitializer
-    fun attr(attr: MeshAttribute<*>, vararg b: Byte): MeshInitializer
+    fun <T> attr(attr: MeshAttribute<T>, vararg value: T): MeshInitializer
     fun pos(vararg position: Vec3): MeshInitializer
-    fun pos(vararg v: Float): MeshInitializer
     fun normal(vararg normal: Vec3): MeshInitializer
-    fun normal(vararg v: Float): MeshInitializer
     fun tex(vararg tex: Vec2): MeshInitializer
-    fun tex(vararg v: Float): MeshInitializer
     fun index(vararg indices: Int): MeshInitializer
     fun indexBytes(rawBytes: ByteArray): MeshInitializer
-    fun attrBytes(attr: MeshAttribute<*>, rawBytes: ByteArray): MeshInitializer
+    fun <T> attrBytes(attr: MeshAttribute<T>, rawBytes: ByteArray): MeshInitializer
     fun <T> attrSet(attr: MeshAttribute<T>, index: Int, value: T): MeshInitializer
+    fun embed(prototype: Mesh, transform: Transform = Transform.IDENTITY, indexOffset: Long = 0)
 }
 
 interface Mesh {

@@ -4,6 +4,7 @@ import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTPOS
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTROT
@@ -23,6 +24,11 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
@@ -62,26 +68,43 @@ internal object Geometry {
         }
     }
 
+    fun loadCpuMesh(meshDeclaration: MeshDeclaration, appResourceLoader: ResourceLoader): Deferred<CMesh> {
+        return when (meshDeclaration) {
+            is ObjMesh -> CoroutineScope(Dispatchers.Default).async {
+                obj(appResourceLoader(meshDeclaration.objFile), -1)
+            }
+            else -> CompletableDeferred(createMeshSync(meshDeclaration, -1))
+        }
+    }
+
     fun createCpuMesh(meshDeclaration: MeshDeclaration, loader: Loader): CMesh? {
         val simpleMeshDeclaration = (meshDeclaration as? InstancedMesh)?.mesh ?: (meshDeclaration as? InstancedBillboard)?.let { Billboard(it.retentionPolicy) } ?: meshDeclaration
         val count = (meshDeclaration as? Instanceable)?.count ?: -1
-
         return when (simpleMeshDeclaration) {
-            is Sphere -> sphere(simpleMeshDeclaration.radius, simpleMeshDeclaration.slices, simpleMeshDeclaration.sectors, count)
-            is Cube -> cube(simpleMeshDeclaration.halfSide, count)
-            is DecalCube -> decalCube(simpleMeshDeclaration.halfSide, count)
-            is ScreenQuad -> screenQuad()
-            is Billboard -> billboard(count)
-            is ImageQuad -> imageQuad()
-            is Quad -> quad(simpleMeshDeclaration.halfSideX, simpleMeshDeclaration.halfSideY, count)
-            is BiQuad -> biquad(simpleMeshDeclaration.halfSideX, simpleMeshDeclaration.halfSideY, count)
-            is Disk -> disk(simpleMeshDeclaration.radius, simpleMeshDeclaration.sectors, count)
-            is CylinderSide -> cylinderSide(simpleMeshDeclaration.radius, simpleMeshDeclaration.height, simpleMeshDeclaration.sectors, count)
-            is ConeTop -> coneTop(simpleMeshDeclaration.radius, simpleMeshDeclaration.height, simpleMeshDeclaration.sectors, count)
-            is HeightField -> heightField(simpleMeshDeclaration.cellsX, simpleMeshDeclaration.cellsZ, simpleMeshDeclaration.cellWidth, simpleMeshDeclaration.height, count)
             is ObjMesh -> loader.safeBytes(simpleMeshDeclaration.objFile) { obj(it, count) }
             is CustomCpuMesh -> toCMesh(simpleMeshDeclaration.mesh, count)
             is CustomMesh -> CMesh(simpleMeshDeclaration.vertexCount, simpleMeshDeclaration.indexCount, count, attributes = simpleMeshDeclaration.attributes.toTypedArray(), simpleMeshDeclaration.indexType, simpleMeshDeclaration.block)
+            is FontMesh -> font(count)
+            else -> createMeshSync(simpleMeshDeclaration, count)
+        }
+    }
+
+    private fun createMeshSync(meshDeclaration: MeshDeclaration, count: Int): CMesh {
+        return when (meshDeclaration) {
+            is Sphere -> sphere(meshDeclaration.radius, meshDeclaration.slices, meshDeclaration.sectors, count)
+            is Cube -> cube(meshDeclaration.halfSide, count)
+            is DecalCube -> decalCube(meshDeclaration.halfSide, count)
+            is ScreenQuad -> screenQuad()
+            is Billboard -> billboard(count)
+            is ImageQuad -> imageQuad()
+            is Quad -> quad(meshDeclaration.halfSideX, meshDeclaration.halfSideY, count)
+            is BiQuad -> biquad(meshDeclaration.halfSideX, meshDeclaration.halfSideY, count)
+            is Disk -> disk(meshDeclaration.radius, meshDeclaration.sectors, count)
+            is CylinderSide -> cylinderSide(meshDeclaration.radius, meshDeclaration.height, meshDeclaration.sectors, count)
+            is ConeTop -> coneTop(meshDeclaration.radius, meshDeclaration.height, meshDeclaration.sectors, count)
+            is HeightField -> heightField(meshDeclaration.cellsX, meshDeclaration.cellsZ, meshDeclaration.cellWidth, meshDeclaration.height, count)
+            is CustomCpuMesh -> toCMesh(meshDeclaration.mesh, count)
+            is CustomMesh -> CMesh(meshDeclaration.vertexCount, meshDeclaration.indexCount, count, attributes = meshDeclaration.attributes.toTypedArray(), meshDeclaration.indexType, meshDeclaration.block)
             is FontMesh -> font(count)
             else -> throw KorenderException("Unknown mesh type $meshDeclaration")
         }
@@ -93,10 +116,10 @@ internal object Geometry {
         count,
         POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
     ) {
-        pos(Vec3(-halfSideX, -halfSideY, 0f)).tex(0f, 0f).normal(1.z)
-        pos(Vec3(halfSideX, -halfSideY, 0f)).tex(1f, 0f).normal(1.z)
-        pos(Vec3(halfSideX, halfSideY, 0f)).tex(1f, 1f).normal(1.z)
-        pos(Vec3(-halfSideX, halfSideY, 0f)).tex(0f, 1f).normal(1.z)
+        pos(Vec3(-halfSideX, -halfSideY, 0f)).tex(Vec2(0f, 0f)).normal(1.z)
+        pos(Vec3(halfSideX, -halfSideY, 0f)).tex(Vec2(1f, 0f)).normal(1.z)
+        pos(Vec3(halfSideX, halfSideY, 0f)).tex(Vec2(1f, 1f)).normal(1.z)
+        pos(Vec3(-halfSideX, halfSideY, 0f)).tex(Vec2(0f, 1f)).normal(1.z)
         index(0, 1, 2, 0, 2, 3)
     }
 
@@ -106,15 +129,15 @@ internal object Geometry {
         count,
         POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
     ) {
-        pos(Vec3(-halfSideX, -halfSideY, 0f)).tex(0f, 0f).normal(1.z)
-        pos(Vec3(halfSideX, -halfSideY, 0f)).tex(1f, 0f).normal(1.z)
-        pos(Vec3(halfSideX, halfSideY, 0f)).tex(1f, 1f).normal(1.z)
-        pos(Vec3(-halfSideX, halfSideY, 0f)).tex(0f, 1f).normal(1.z)
+        pos(Vec3(-halfSideX, -halfSideY, 0f)).tex(Vec2(0f, 0f)).normal(1.z)
+        pos(Vec3(halfSideX, -halfSideY, 0f)).tex(Vec2(1f, 0f)).normal(1.z)
+        pos(Vec3(halfSideX, halfSideY, 0f)).tex(Vec2(1f, 1f)).normal(1.z)
+        pos(Vec3(-halfSideX, halfSideY, 0f)).tex(Vec2(0f, 1f)).normal(1.z)
 
-        pos(Vec3(-halfSideX, -halfSideY, 0f)).tex(0f, 0f).normal(-1.z)
-        pos(Vec3(halfSideX, -halfSideY, 0f)).tex(1f, 0f).normal(-1.z)
-        pos(Vec3(halfSideX, halfSideY, 0f)).tex(1f, 1f).normal(-1.z)
-        pos(Vec3(-halfSideX, halfSideY, 0f)).tex(0f, 1f).normal(-1.z)
+        pos(Vec3(-halfSideX, -halfSideY, 0f)).tex(Vec2(0f, 0f)).normal(-1.z)
+        pos(Vec3(halfSideX, -halfSideY, 0f)).tex(Vec2(1f, 0f)).normal(-1.z)
+        pos(Vec3(halfSideX, halfSideY, 0f)).tex(Vec2(1f, 1f)).normal(-1.z)
+        pos(Vec3(-halfSideX, halfSideY, 0f)).tex(Vec2(0f, 1f)).normal(-1.z)
 
         index(0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6)
     }
@@ -129,11 +152,11 @@ internal object Geometry {
             val phi = PI * 2f * sector / sectors
             pos(Vec3(radius * cos(phi), radius * sin(phi), 0f))
                 .normal(1.z)
-                .tex(0.5f + 0.5f * cos(phi), 0.5f + 0.5f * sin(phi))
+                .tex(Vec2(0.5f + 0.5f * cos(phi), 0.5f + 0.5f * sin(phi)))
         }
         pos(Vec3.ZERO)
             .normal(1.z)
-            .tex(0.5f, 0.5f)
+            .tex(Vec2(0.5f, 0.5f))
         for (sector in 0 until sectors) {
             index(sector, (sector + 1) % sectors, sectors)
         }
@@ -153,10 +176,10 @@ internal object Geometry {
             val normal = Vec3(xSlope * cos(phi), ySlope, xSlope * sin(phi))
             pos(Vec3(radius * cos(phi), 0f, radius * sin(phi)))
                 .normal(normal)
-                .tex(sector.toFloat() / sectors, 0f)
+                .tex(Vec2(sector.toFloat() / sectors, 0f))
             pos(height.y)
                 .normal(normal)
-                .tex(sector.toFloat() / sectors, 1f)
+                .tex(Vec2(sector.toFloat() / sectors, 1f))
         }
         val d = 2 * sectors
         for (sector in 0 until sectors) {
@@ -177,10 +200,10 @@ internal object Geometry {
             val normal = Vec3(cosPhi, 0f, sinPhi)
             pos(Vec3(radius * cosPhi, 0f, radius * sinPhi))
                 .normal(normal)
-                .tex(sector.toFloat() / sectors, 0f)
+                .tex(Vec2(sector.toFloat() / sectors, 0f))
             pos(Vec3(radius * cosPhi, height, radius * sinPhi))
                 .normal(normal)
-                .tex(sector.toFloat() / sectors, 1f)
+                .tex(Vec2(sector.toFloat() / sectors, 1f))
         }
         val d = 2 * sectors
         for (sector in 0 until sectors) {
@@ -197,14 +220,14 @@ internal object Geometry {
     ) {
         for (x in 0..xsize) {
             for (z in 0..zsize) {
-                pos(
+                pos(Vec3(
                     x * cell - 0.5f * cell * xsize,
                     height(x, z),
                     z * cell - 0.5f * cell * zsize
-                )
+                ))
                 val n = normal(x, z, xsize, zsize, cell, height)
                 normal(n)
-                tex(x.toFloat() / xsize, z.toFloat() / zsize)
+                tex(Vec2(x.toFloat() / xsize, z.toFloat() / zsize))
             }
         }
         for (x in 0..<xsize) {
@@ -237,7 +260,7 @@ internal object Geometry {
         val model: ObjModel = ObjLoader.load(objFileBytes)
         return CMesh(model.vertices.size, model.indices.size, count, POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3) {
             model.vertices.forEach {
-                pos(it.pos).normal(it.normal).tex(it.tex.x, it.tex.y)
+                pos(it.pos).normal(it.normal).tex(Vec2(it.tex.x, it.tex.y))
             }
             model.indices.forEach {
                 index(it)
@@ -252,7 +275,7 @@ internal object Geometry {
             count,
             POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
         ) {
-            pos(0f, -radius, 0f).normal(0f, -1f, 0f).tex(0f, 0f)
+            pos(Vec3(0f, -radius, 0f)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(0f, 0f))
             for (slice in 1..<slices) {
                 for (sector in 0..<sectors) {
                     val theta = PI - PI * slice / slices
@@ -260,11 +283,11 @@ internal object Geometry {
                     val normal = Vec3(sin(theta) * cos(phi), cos(theta), sin(theta) * sin(phi))
                     pos(normal * radius)
                         .normal(normal)
-                        .tex(sector.toFloat() / sectors, slice.toFloat() / slices)
+                        .tex(Vec2(sector.toFloat() / sectors, slice.toFloat() / slices))
 
                 }
             }
-            pos(0f, radius, 0f).normal(0f, 1f, 0f).tex(0f, 1f)
+            pos(Vec3(0f, radius, 0f)).normal(Vec3(0f, 1f, 0f)).tex(Vec2(0f, 1f))
 
             for (sector in 0 until sectors) {
                 index(0, sector + 1, ((sector + 1) % sectors) + 1)
@@ -286,37 +309,37 @@ internal object Geometry {
 
     private fun screenQuad() =
         CMesh(4, 6, -1, TEX) {
-            tex(0f, 0f).tex(0f, 1f)
-            tex(1f, 1f).tex(1f, 0f)
+            tex(Vec2(0f, 0f)).tex(Vec2(0f, 1f))
+            tex(Vec2(1f, 1f)).tex(Vec2(1f, 0f))
             index(0, 2, 1, 0, 3, 2)
         }
 
     private fun cube(halfSide: Float, count: Int) =
         CMesh(24, 36, count, POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3) {
-            pos(-halfSide, -halfSide, -halfSide).normal(-1f, 0f, 0f).tex(0f, 0f)
-            pos(-halfSide, halfSide, -halfSide).normal(-1f, 0f, 0f).tex(0f, 1f)
-            pos(-halfSide, halfSide, halfSide).normal(-1f, 0f, 0f).tex(1f, 1f)
-            pos(-halfSide, -halfSide, halfSide).normal(-1f, 0f, 0f).tex(1f, 0f)
-            pos(-halfSide, -halfSide, halfSide).normal(0f, 0f, 1f).tex(0f, 0f)
-            pos(-halfSide, halfSide, halfSide).normal(0f, 0f, 1f).tex(0f, 1f)
-            pos(halfSide, halfSide, halfSide).normal(0f, 0f, 1f).tex(1f, 1f)
-            pos(halfSide, -halfSide, halfSide).normal(0f, 0f, 1f).tex(1f, 0f)
-            pos(halfSide, -halfSide, halfSide).normal(1f, 0f, 0f).tex(0f, 0f)
-            pos(halfSide, halfSide, halfSide).normal(1f, 0f, 0f).tex(0f, 1f)
-            pos(halfSide, halfSide, -halfSide).normal(1f, 0f, 0f).tex(1f, 1f)
-            pos(halfSide, -halfSide, -halfSide).normal(1f, 0f, 0f).tex(1f, 0f)
-            pos(halfSide, -halfSide, -halfSide).normal(0f, 0f, -1f).tex(0f, 0f)
-            pos(halfSide, halfSide, -halfSide).normal(0f, 0f, -1f).tex(0f, 1f)
-            pos(-halfSide, halfSide, -halfSide).normal(0f, 0f, -1f).tex(1f, 1f)
-            pos(-halfSide, -halfSide, -halfSide).normal(0f, 0f, -1f).tex(1f, 0f)
-            pos(-halfSide, halfSide, halfSide).normal(0f, 1f, 0f).tex(0f, 0f)
-            pos(-halfSide, halfSide, -halfSide).normal(0f, 1f, 0f).tex(0f, 1f)
-            pos(halfSide, halfSide, -halfSide).normal(0f, 1f, 0f).tex(1f, 1f)
-            pos(halfSide, halfSide, halfSide).normal(0f, 1f, 0f).tex(1f, 0f)
-            pos(halfSide, -halfSide, halfSide).normal(0f, -1f, 0f).tex(0f, 0f)
-            pos(halfSide, -halfSide, -halfSide).normal(0f, -1f, 0f).tex(0f, 1f)
-            pos(-halfSide, -halfSide, -halfSide).normal(0f, -1f, 0f).tex(1f, 1f)
-            pos(-halfSide, -halfSide, halfSide).normal(0f, -1f, 0f).tex(1f, 0f)
+            pos(Vec3(-halfSide, -halfSide, -halfSide)).normal(Vec3(-1f, 0f, 0f)).tex(Vec2(0f, 0f))
+            pos(Vec3(-halfSide, halfSide, -halfSide)).normal(Vec3(-1f, 0f, 0f)).tex(Vec2(0f, 1f))
+            pos(Vec3(-halfSide, halfSide, halfSide)).normal(Vec3(-1f, 0f, 0f)).tex(Vec2(1f, 1f))
+            pos(Vec3(-halfSide, -halfSide, halfSide)).normal(Vec3(-1f, 0f, 0f)).tex(Vec2(1f, 0f))
+            pos(Vec3(-halfSide, -halfSide, halfSide)).normal(Vec3(0f, 0f, 1f)).tex(Vec2(0f, 0f))
+            pos(Vec3(-halfSide, halfSide, halfSide)).normal(Vec3(0f, 0f, 1f)).tex(Vec2(0f, 1f))
+            pos(Vec3(halfSide, halfSide, halfSide)).normal(Vec3(0f, 0f, 1f)).tex(Vec2(1f, 1f))
+            pos(Vec3(halfSide, -halfSide, halfSide)).normal(Vec3(0f, 0f, 1f)).tex(Vec2(1f, 0f))
+            pos(Vec3(halfSide, -halfSide, halfSide)).normal(Vec3(1f, 0f, 0f)).tex(Vec2(0f, 0f))
+            pos(Vec3(halfSide, halfSide, halfSide)).normal(Vec3(1f, 0f, 0f)).tex(Vec2(0f, 1f))
+            pos(Vec3(halfSide, halfSide, -halfSide)).normal(Vec3(1f, 0f, 0f)).tex(Vec2(1f, 1f))
+            pos(Vec3(halfSide, -halfSide, -halfSide)).normal(Vec3(1f, 0f, 0f)).tex(Vec2(1f, 0f))
+            pos(Vec3(halfSide, -halfSide, -halfSide)).normal(Vec3(0f, 0f, -1f)).tex(Vec2(0f, 0f))
+            pos(Vec3(halfSide, halfSide, -halfSide)).normal(Vec3(0f, 0f, -1f)).tex(Vec2(0f, 1f))
+            pos(Vec3(-halfSide, halfSide, -halfSide)).normal(Vec3(0f, 0f, -1f)).tex(Vec2(1f, 1f))
+            pos(Vec3(-halfSide, -halfSide, -halfSide)).normal(Vec3(0f, 0f, -1f)).tex(Vec2(1f, 0f))
+            pos(Vec3(-halfSide, halfSide, halfSide)).normal(Vec3(0f, 1f, 0f)).tex(Vec2(0f, 0f))
+            pos(Vec3(-halfSide, halfSide, -halfSide)).normal(Vec3(0f, 1f, 0f)).tex(Vec2(0f, 1f))
+            pos(Vec3(halfSide, halfSide, -halfSide)).normal(Vec3(0f, 1f, 0f)).tex(Vec2(1f, 1f))
+            pos(Vec3(halfSide, halfSide, halfSide)).normal(Vec3(0f, 1f, 0f)).tex(Vec2(1f, 0f))
+            pos(Vec3(halfSide, -halfSide, halfSide)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(0f, 0f))
+            pos(Vec3(halfSide, -halfSide, -halfSide)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(0f, 1f))
+            pos(Vec3(-halfSide, -halfSide, -halfSide)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(1f, 1f))
+            pos(Vec3(-halfSide, -halfSide, halfSide)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(1f, 0f))
 
             index(0, 2, 1, 0, 3, 2)
             index(4, 6, 5, 4, 7, 6)
@@ -328,14 +351,14 @@ internal object Geometry {
 
     private fun decalCube(halfSide: Float, count: Int) =
         CMesh(8, 36, count, POS, MODEL0, MODEL1, MODEL2, MODEL3) {
-            pos(-halfSide, -halfSide, -halfSide)
-            pos(halfSide, -halfSide, -halfSide)
-            pos(-halfSide, halfSide, -halfSide)
-            pos(halfSide, halfSide, -halfSide)
-            pos(-halfSide, -halfSide, halfSide)
-            pos(halfSide, -halfSide, halfSide)
-            pos(-halfSide, halfSide, halfSide)
-            pos(halfSide, halfSide, halfSide)
+            pos(Vec3(-halfSide, -halfSide, -halfSide))
+            pos(Vec3(halfSide, -halfSide, -halfSide))
+            pos(Vec3(-halfSide, halfSide, -halfSide))
+            pos(Vec3(halfSide, halfSide, -halfSide))
+            pos(Vec3(-halfSide, -halfSide, halfSide))
+            pos(Vec3(halfSide, -halfSide, halfSide))
+            pos(Vec3(-halfSide, halfSide, halfSide))
+            pos(Vec3(halfSide, halfSide, halfSide))
 
             index(0, 1, 2, 1, 3, 2)
             index(5, 4, 7, 4, 6, 7)
@@ -347,26 +370,26 @@ internal object Geometry {
 
     private fun billboard(count: Int) =
         CMesh(4, 6, count, TEX, INSTPOS, INSTSCALE, INSTROT) {
-            tex(0f, 0f).tex(0f, 1f).tex(1f, 1f).tex(1f, 0f)
+            tex(Vec2(0f, 0f)).tex(Vec2(0f, 1f)).tex(Vec2(1f, 1f)).tex(Vec2(1f, 0f))
                 .index(0, 2, 1, 0, 3, 2)
         }
 
     private fun imageQuad() =
         CMesh(4, 6, -1, TEX) {
-            tex(0f, 0f)
-            tex(0f, 1f)
-            tex(1f, 1f)
-            tex(1f, 0f)
+            tex(Vec2(0f, 0f))
+            tex(Vec2(0f, 1f))
+            tex(Vec2(1f, 1f))
+            tex(Vec2(1f, 0f))
             index(0, 2, 1, 0, 3, 2)
         }
 
     private fun font(count: Int) =
         CMesh(4, 6, count, TEX, INSTTEX, INSTSCREEN) {
-            tex(0f, 0f).tex(0f, 1f).tex(1f, 1f).tex(1f, 0f)
+            tex(Vec2(0f, 0f)).tex(Vec2(0f, 1f)).tex(Vec2(1f, 1f)).tex(Vec2(1f, 0f))
             index(0, 1, 2, 0, 2, 3)
         }
 
-    private fun toCMesh(mesh: Mesh, count: Int): CMesh? {
+    private fun toCMesh(mesh: Mesh, count: Int): CMesh {
         if (mesh is CMesh) {
             return mesh
         }
@@ -397,3 +420,6 @@ internal fun AttributeType.size() = when (this) {
     AttributeType.Int, AttributeType.SignedInt -> 4
     AttributeType.Float -> 4
 }
+
+
+

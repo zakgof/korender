@@ -2,6 +2,8 @@ package com.zakgof.korender
 
 interface TextureDeclaration
 
+interface TextureArrayDeclaration
+
 interface Texture3DDeclaration
 
 interface CubeTextureDeclaration
@@ -21,6 +23,10 @@ enum class TextureWrap {
 enum class CubeTextureSide {
     NX, NY, NZ, PX, PY, PZ
 }
+
+typealias TextureArrayResources = List<String>
+
+typealias TextureArrayImages = List<Image>
 
 typealias CubeTextureResources = Map<CubeTextureSide, String>
 

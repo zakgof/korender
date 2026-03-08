@@ -7,6 +7,9 @@ import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.Platform
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.Texture3DDeclaration
+import com.zakgof.korender.TextureArrayDeclaration
+import com.zakgof.korender.TextureArrayImages
+import com.zakgof.korender.TextureArrayResources
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -16,9 +19,11 @@ import com.zakgof.korender.impl.engine.Retentionable
 import com.zakgof.korender.impl.gl.GLConstants.GL_FLOAT
 import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA
 import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA32F
+import com.zakgof.korender.impl.glgpu.GLBindableTexture
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture3D
+import com.zakgof.korender.impl.glgpu.GlGpuTextureArray
 import com.zakgof.korender.impl.image.InternalImage
 import com.zakgof.korender.impl.image.impl.image.InternalImage3D
 
@@ -52,7 +57,7 @@ internal object Texturing {
 }
 
 internal interface InternalTexture : Retentionable {
-    fun generateGpuTexture(loader: Loader): GlGpuTexture?
+    fun generateGpuTexture(loader: Loader): GLBindableTexture?
 }
 
 internal class ResourceTextureDeclaration(
@@ -88,6 +93,44 @@ internal class ImageTextureDeclaration(
 
     override fun generateGpuTexture(loader: Loader): GlGpuTexture =
         GlGpuTexture(image, filter, wrap, aniso)
+}
+
+internal class ResourceTextureArrayDeclaration(
+    val textureResources: TextureArrayResources,
+    val filter: TextureFilter = TextureFilter.MipMap,
+    private val wrap: TextureWrap = TextureWrap.Repeat,
+    private val aniso: Int = 1024,
+    override val retentionPolicy: RetentionPolicy
+) : TextureArrayDeclaration, InternalTexture {
+    override fun equals(other: Any?): Boolean =
+        (other is ResourceTextureArrayDeclaration && other.textureResources == textureResources)
+
+    override fun hashCode(): Int = textureResources.hashCode()
+
+    override fun generateGpuTexture(loader: Loader): GlGpuTextureArray? {
+        val images = textureResources.map { Texturing.toImage(loader, it) }
+        if (images.any { it == null }) {
+            return null
+        }
+        return GlGpuTextureArray(images.map { it!! }, filter, wrap, aniso)
+    }
+}
+
+internal class ImageTextureArrayDeclaration(
+    val id: String,
+    val images: TextureArrayImages,
+    val filter: TextureFilter,
+    private val wrap: TextureWrap,
+    private val aniso: Int,
+    override val retentionPolicy: RetentionPolicy
+) : TextureArrayDeclaration, InternalTexture {
+    override fun equals(other: Any?): Boolean =
+        (other is ImageTextureArrayDeclaration && other.id == id)
+
+    override fun hashCode(): Int = id.hashCode()
+
+    override fun generateGpuTexture(loader: Loader): GlGpuTextureArray =
+        GlGpuTextureArray(images.map { it as InternalImage }, filter, wrap, aniso)
 }
 
 internal class ImageTexture3DDeclaration(

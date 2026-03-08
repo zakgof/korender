@@ -12,6 +12,7 @@ import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
@@ -150,10 +151,10 @@ private fun FrameContext.road(startZ: Float) = Renderable(
 )
 
 private fun FrameContext.roadMesh() = customMesh("road", 4, 6, POS, NORMAL, TEX) {
-    pos(-0.5f, 0f, 0f).normal(1.y).tex(0f, 0f)
-    pos(-0.5f, 0f, 32f).normal(1.y).tex(0f, 32f)
-    pos(0.5f, 0f, 32f).normal(1.y).tex(1f, 32f)
-    pos(0.5f, 0f, 0f).normal(1.y).tex(1f, 0f)
+    pos(Vec3(-0.5f, 0f, 0f)).normal(1.y).tex(Vec2(0f, 0f))
+    pos(Vec3(-0.5f, 0f, 32f)).normal(1.y).tex(Vec2(0f, 32f))
+    pos(Vec3(0.5f, 0f, 32f)).normal(1.y).tex(Vec2(1f, 32f))
+    pos(Vec3(0.5f, 0f, 0f)).normal(1.y).tex(Vec2(1f, 0f))
     index(0, 1, 2, 0, 2, 3)
 }
 
@@ -165,10 +166,10 @@ private fun FrameContext.sidewalk(z: Float, x: Float) = Renderable(
 )
 
 private fun FrameContext.sidewalkMesh() = customMesh("sidewalk", 4, 6, POS, NORMAL, TEX) {
-    pos(0f, 0f, 0f).normal(1.y).tex(0f, 0f)
-    pos(0f, 0f, 32f).normal(1.y).tex(0f, 1f)
-    pos(32f, 0f, 32f).normal(1.y).tex(1f, 1f)
-    pos(32f, 0f, 0f).normal(1.y).tex(1f, 0f)
+    pos(Vec3(0f, 0f, 0f)).normal(1.y).tex(Vec2(0f, 0f))
+    pos(Vec3(0f, 0f, 32f)).normal(1.y).tex(Vec2(0f, 1f))
+    pos(Vec3(32f, 0f, 32f)).normal(1.y).tex(Vec2(1f, 1f))
+    pos(Vec3(32f, 0f, 0f)).normal(1.y).tex(Vec2(1f, 0f))
     index(0, 1, 2, 0, 2, 3)
 }
 
@@ -188,3 +189,4 @@ private fun FrameContext.atmosphere() =
             uniforms("moonTexture" to texture("infcity/moon.png"))
         )
     }
+

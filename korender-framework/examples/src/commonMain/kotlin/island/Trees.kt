@@ -5,6 +5,7 @@ import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Transform.Companion.scale
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import kotlin.random.Random
@@ -117,14 +118,14 @@ fun FrameContext.renderCards(cards: List<Card>, seeds: List<Vec3>) {
                     val transform =
                         rotate(1.y, r.nextFloat() * 2f * PI)
                             .translate(seed)
-                    pos(transform * p1).normal(-card.normal).tex(texX, texY)
-                    pos(transform * p2).normal(-card.normal).tex(texX + 0.25f, texY)
-                    pos(transform * p3).normal(-card.normal).tex(texX + 0.25f, texY + 0.25f)
-                    pos(transform * p4).normal(-card.normal).tex(texX, texY + 0.25f)
-                    pos(transform * p1).normal(card.normal).tex(texX, texY)
-                    pos(transform * p2).normal(card.normal).tex(texX + 0.25f, texY)
-                    pos(transform * p3).normal(card.normal).tex(texX + 0.25f, texY + 0.25f)
-                    pos(transform * p4).normal(card.normal).tex(texX, texY + 0.25f)
+                    pos(transform * p1).normal(-card.normal).tex(Vec2(texX, texY))
+                    pos(transform * p2).normal(-card.normal).tex(Vec2(texX + 0.25f, texY))
+                    pos(transform * p3).normal(-card.normal).tex(Vec2(texX + 0.25f, texY + 0.25f))
+                    pos(transform * p4).normal(-card.normal).tex(Vec2(texX, texY + 0.25f))
+                    pos(transform * p1).normal(card.normal).tex(Vec2(texX, texY))
+                    pos(transform * p2).normal(card.normal).tex(Vec2(texX + 0.25f, texY))
+                    pos(transform * p3).normal(card.normal).tex(Vec2(texX + 0.25f, texY + 0.25f))
+                    pos(transform * p4).normal(card.normal).tex(Vec2(texX, texY + 0.25f))
                     index(indexBase + 0, indexBase + 1, indexBase + 2, indexBase + 0, indexBase + 2, indexBase + 3)
                     index(indexBase + 4, indexBase + 6, indexBase + 5, indexBase + 4, indexBase + 7, indexBase + 6)
                     indexBase += 8

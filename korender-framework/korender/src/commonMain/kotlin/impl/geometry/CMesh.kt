@@ -8,6 +8,7 @@ import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
 import com.zakgof.korender.impl.geometry.MeshAttributes.POS
 import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
+import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
@@ -78,13 +79,10 @@ internal open class CMesh(
             IndexType.Short
         else IndexType.Int
 
-    override fun attr(attr: MeshAttribute<*>, vararg v: Float): MeshInitializer {
-        v.forEach { attrMap[attr]!!.put(it) }
-        return this
-    }
-
-    override fun attr(attr: MeshAttribute<*>, vararg b: Byte): MeshInitializer {
-        b.forEach { attrMap[attr]!!.put(it) }
+    override fun <T> attr(attr: MeshAttribute<T>, vararg value: T): MeshInitializer {
+        value.forEach {
+            (attr as InternalMeshAttribute<T>).bufferAccessor.put(attrMap[attr]!!, it)
+        }
         return this
     }
 
@@ -93,26 +91,57 @@ internal open class CMesh(
         return this
     }
 
-    override fun pos(vararg position: Vec3): MeshInitializer {
-        position.forEach { pos(it.x, it.y, it.z) }
-        return this
+    override fun embed(prototype: Mesh, transform: Transform, indexOffset: Long) {
+        val targetAttrs = attributes.filter { !it.instance }
+        val commonAttrs = targetAttrs.filter { hasPrototypeAttribute(prototype, it) }
+
+        prototype.vertices.forEach { vertex ->
+            commonAttrs.forEach { attr ->
+                copy(attr, vertex, transform)
+            }
+        }
+
+        val offset = indexOffset.toInt()
+        prototype.indices?.let {
+            index(*it.map { i -> i + offset }.toIntArray())
+        }
     }
 
-    override fun pos(vararg v: Float): MeshInitializer = attr(POS, *v)
+    private fun hasPrototypeAttribute(prototype: Mesh, attr: InternalMeshAttribute<*>): Boolean {
+        if (prototype is CMesh) {
+            return prototype.attributes.contains(attr)
+        }
+        val firstVertex = prototype.vertices.firstOrNull() ?: return false
+        @Suppress("UNCHECKED_CAST")
+        return firstVertex.value(attr as MeshAttribute<Any?>) != null
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun copy(attr: InternalMeshAttribute<*>, vertex: Mesh.Vertex, transform: Transform) {
+        when (attr) {
+            POS -> vertex.pos?.let { attr(POS, transform * it) }
+            NORMAL -> vertex.normal?.let { attr(NORMAL, transform.applyToDirection(it).normalize()) }
+            else -> {
+                val value = vertex.value(attr as MeshAttribute<Any?>) ?: return
+                attr(attr, value)
+            }
+        }
+    }
+
+    override fun pos(vararg position: Vec3): MeshInitializer {
+        attr(POS, *position)
+        return this
+    }
 
     override fun normal(vararg normal: Vec3): MeshInitializer {
-        normal.forEach { normal(it.x, it.y, it.z) }
+        attr(NORMAL, *normal)
         return this
     }
-
-    override fun normal(vararg v: Float): MeshInitializer = attr(NORMAL, *v)
 
     override fun tex(vararg tex: Vec2): MeshInitializer {
-        tex.forEach { tex(it.x, it.y) }
+        attr(TEX, *tex)
         return this
     }
-
-    override fun tex(vararg v: Float): MeshInitializer = attr(TEX, *v)
 
     override fun index(vararg indices: Int): MeshInitializer {
         for (value in indices) {
@@ -130,8 +159,8 @@ internal open class CMesh(
         return this
     }
 
-    override fun attrBytes(attr: MeshAttribute<*>, rawBytes: ByteArray): MeshInitializer {
-        attrMap[attr]!!.put(rawBytes)
+    override fun <T> attrBytes(attr: MeshAttribute<T>, rawBytes: ByteArray): MeshInitializer {
+        attrMap[attr as InternalMeshAttribute]!!.put(rawBytes)
         return this
     }
 

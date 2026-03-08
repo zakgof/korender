@@ -22,6 +22,8 @@ import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.Texture3DDeclaration
+import com.zakgof.korender.TextureArrayDeclaration
+import com.zakgof.korender.TextureArrayImages
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -101,6 +103,29 @@ interface KorenderContext {
      * @return texture declaration
      */
     fun textureProbe(frameProbeName: String): TextureDeclaration
+    /**
+     * Creates a texture array declaration from resource image files.
+     *
+     * @param textureResources resource file names (png, jpg)
+     * @param filter texture filtering mode
+     * @param wrap texture wrapping mode
+     * @param aniso anisotropy factor
+     * @return texture array declaration
+     */
+    fun textureArray(vararg textureResources: String, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): TextureArrayDeclaration
+
+    /**
+     * Creates a texture array declaration from Image objects.
+     *
+     * @param id unique declaration id
+     * @param images image list
+     * @param filter texture filtering mode
+     * @param wrap texture wrapping mode
+     * @param aniso anisotropy factor
+     * @return texture array declaration
+     */
+    fun textureArray(id: String, images: TextureArrayImages, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024)
+        : TextureArrayDeclaration
 
     /**
      * Creates a 3D texture from an Image3D object.
@@ -284,6 +309,12 @@ interface KorenderContext {
     fun mesh(id: String, mesh: Mesh): MeshDeclaration
 
     /**
+     * Loads a Mesh from a MeshDeclaration
+     * @param meshDeclaration mesh declaration
+     */
+    fun loadMesh(meshDeclaration: MeshDeclaration): Deferred<Mesh>
+
+    /**
      * Creates a mesh declaration from an indexed triangle list.
      *
      * @param id unique declaration id
@@ -360,6 +391,14 @@ interface KorenderContext {
      * @return material modifier
      */
     fun triplanar(scale: Float = 1.0f): MaterialModifier
+    /**
+     * Creates a material modifier that applies texture-array-based texturing.
+     * Used with the base material.
+     *
+     * @param textureArray texture array declaration
+     * @return material modifier
+     */
+    fun colorTextures(textureArray: TextureArrayDeclaration): MaterialModifier
 
     /**
      * Creates a material modifier that applies normal mapping.
@@ -874,6 +913,7 @@ interface KorenderContext {
     val JOINTS_INT: MeshAttribute<IntArray>
     val WEIGHTS: MeshAttribute<FloatArray>
     val SCALE: MeshAttribute<Vec2>
+    val COLORTEXINDEX: MeshAttribute<Byte>
     val B1: MeshAttribute<Byte>
     val B2: MeshAttribute<Byte>
     val B3: MeshAttribute<Byte>
@@ -887,3 +927,4 @@ interface KorenderContext {
     val INSTTEX: MeshAttribute<FloatArray>
     val INSTSCREEN: MeshAttribute<FloatArray>
 }
+

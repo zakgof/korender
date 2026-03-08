@@ -22,9 +22,9 @@ internal class Loader(private val appResourceLoader: ResourceLoader) {
                 appResourceLoader(resource).also { fireUpdaters() }
             }
         }
-        return deferred.resultOrNull()?.let { block(it) }?.also {
-            loadingMap.remove(resource)
-        }
+        return deferred.resultOrNull()
+            ?.let { block(it) }
+            ?.also { loadingMap.remove(resource) }
     }
 
     fun unsafeBytes(resource: String): ByteArray? {

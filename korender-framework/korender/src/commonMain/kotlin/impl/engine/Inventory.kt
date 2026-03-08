@@ -1,6 +1,5 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.impl.font.Font
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.font.InternalFontDeclaration
@@ -10,6 +9,7 @@ import com.zakgof.korender.impl.geometry.MeshLink
 import com.zakgof.korender.impl.glgpu.GlGpuCubeFrameBuffer
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
+import com.zakgof.korender.impl.glgpu.GLBindableTexture
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture3D
@@ -25,9 +25,7 @@ import com.zakgof.korender.impl.material.TextureLinkDeclaration
 import com.zakgof.korender.impl.material.Texturing
 import com.zakgof.korender.impl.material.UniformBufferHolder
 
-internal class Inventory(appResourceLoader: ResourceLoader) {
-
-    private val loader = Loader(appResourceLoader)
+internal class Inventory(private val loader: Loader) {
 
     private val zeroTex = GlGpuTexture.zeroTex()
     private val zeroShadowTex = GlGpuTexture.zeroShadowTex()
@@ -36,7 +34,7 @@ internal class Inventory(appResourceLoader: ResourceLoader) {
 
     private val meshes = Registry<InternalMeshDeclaration, MeshLink> { Geometry.create(it, loader) }
     private val shaders = Registry<ShaderDeclaration, GlGpuShader> { Shaders.create(it, loader, zeroTex, zeroShadowTex, uniformBufferHolder) }
-    private val textures = Registry<InternalTexture, GlGpuTexture> { it.generateGpuTexture(loader) }
+    private val textures = Registry<InternalTexture, GLBindableTexture> { it.generateGpuTexture(loader) }
     private val textures3D = Registry<ImageTexture3DDeclaration, GlGpuTexture3D> { it.generateGpuTexture3D(loader) }
 
     private val textureLinks = Registry<TextureLinkDeclaration, GpuTextureLink> { it.generateGpuTextureLink(loader) }
@@ -61,7 +59,7 @@ internal class Inventory(appResourceLoader: ResourceLoader) {
 
     fun mesh(decl: InternalMeshDeclaration): MeshLink? = meshes[decl]
     fun shader(decl: ShaderDeclaration): GlGpuShader? = shaders[decl]
-    fun texture(decl: InternalTexture): GlGpuTexture? = textures[decl]
+    fun texture(decl: InternalTexture): GLBindableTexture? = textures[decl]
     fun texture3D(decl: ImageTexture3DDeclaration): GlGpuTexture3D? = textures3D[decl]
     fun textureLink(decl: TextureLinkDeclaration): GpuTextureLink? = textureLinks[decl]
     fun cubeTexture(decl: ResourceCubeTextureDeclaration): GlGpuCubeTexture? = resourceCubeTextures[decl]
@@ -73,3 +71,4 @@ internal class Inventory(appResourceLoader: ResourceLoader) {
 
     fun onWaitUpdate(block: () -> Unit) = loader.onWaitUpdate(block)
 }
+

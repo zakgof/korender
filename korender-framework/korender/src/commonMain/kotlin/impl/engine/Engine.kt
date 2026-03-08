@@ -27,6 +27,8 @@ import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.Texture3DDeclaration
+import com.zakgof.korender.TextureArrayDeclaration
+import com.zakgof.korender.TextureArrayImages
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -56,6 +58,7 @@ import com.zakgof.korender.impl.geometry.CustomCpuMesh
 import com.zakgof.korender.impl.geometry.CustomMesh
 import com.zakgof.korender.impl.geometry.CylinderSide
 import com.zakgof.korender.impl.geometry.Disk
+import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.HeightField
 import com.zakgof.korender.impl.geometry.MeshAttributes
 import com.zakgof.korender.impl.geometry.ObjMesh
@@ -68,12 +71,14 @@ import com.zakgof.korender.impl.image.InternalImage
 import com.zakgof.korender.impl.image.impl.image.InternalImage3D
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
+import com.zakgof.korender.impl.material.ImageTextureArrayDeclaration
 import com.zakgof.korender.impl.material.ImageTextureDeclaration
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
+import com.zakgof.korender.impl.material.ResourceTextureArrayDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.prefab.terrain.Clipmaps
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
@@ -104,7 +109,8 @@ internal class Engine(
     private val touchQueue = Channel<TouchEvent>(Channel.UNLIMITED)
     private val keyQueue = Channel<KeyEvent>(Channel.UNLIMITED)
     private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
-    private val inventory = Inventory(appResourceLoader)
+    private val loader = Loader(appResourceLoader)
+    private val inventory = Inventory(loader)
     private val renderContext = RenderContext(width, height)
 
     private var touchBoxes: List<TouchBox> = listOf()
@@ -149,6 +155,12 @@ internal class Engine(
             ImageTexture3DDeclaration(id, image as InternalImage3D, filter, wrap, aniso, currentRetentionPolicy)
 
         override fun textureProbe(frameProbeName: String): TextureDeclaration = ProbeTextureDeclaration(frameProbeName)
+
+        override fun textureArray(vararg textureResources: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureArrayDeclaration =
+            ResourceTextureArrayDeclaration(textureResources.toList(), filter, wrap, aniso, currentRetentionPolicy)
+
+        override fun textureArray(id: String, images: TextureArrayImages, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureArrayDeclaration =
+            ImageTextureArrayDeclaration(id, images, filter, wrap, aniso, currentRetentionPolicy)
 
         override fun cubeTexture(resources: CubeTextureResources) = ResourceCubeTextureDeclaration(resources, currentRetentionPolicy)
 
@@ -249,6 +261,9 @@ internal class Engine(
         override fun mesh(id: String, mesh: Mesh) =
             CustomCpuMesh(id, mesh, currentRetentionPolicy)
 
+        override fun loadMesh(meshDeclaration: MeshDeclaration): Deferred<Mesh> =
+            Geometry.loadCpuMesh(meshDeclaration, appResourceLoader)
+
         override fun pipeMesh(id: String, segments: Int, dynamic: Boolean, block: PipeMeshContext.() -> Unit) =
             createPipeMesh(id, segments, dynamic, currentRetentionPolicy, block)
 
@@ -274,6 +289,12 @@ internal class Engine(
             if (colorTexture != null) {
                 it.shaderDefs += "BASE_COLOR_MAP";
             }
+        }
+
+        override fun colorTextures(textureArray: TextureArrayDeclaration) = InternalMaterialModifier {
+            it.shaderDefs += "TEXTURE_ARRAY"
+            it.plugins["texturing"] = "!shader/plugin/texturing.array.frag"
+            it.uniforms["colorTextures"] = textureArray
         }
 
         override fun triplanar(scale: Float): MaterialModifier = InternalMaterialModifier {
@@ -639,6 +660,7 @@ internal class Engine(
         override val JOINTS_INT = MeshAttributes.JOINTS_INT
         override val WEIGHTS = MeshAttributes.WEIGHTS
         override val SCALE = MeshAttributes.SCALE
+        override val COLORTEXINDEX = MeshAttributes.COLORTEXINDEX
         override val B1 = MeshAttributes.B1
         override val B2 = MeshAttributes.B2
         override val B3 = MeshAttributes.B3

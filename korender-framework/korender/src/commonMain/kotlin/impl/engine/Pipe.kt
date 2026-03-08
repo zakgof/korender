@@ -14,6 +14,7 @@ import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
 import com.zakgof.korender.impl.geometry.MeshAttributes.POS
 import com.zakgof.korender.impl.geometry.MeshAttributes.SCALE
 import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import kotlin.math.sqrt
 
@@ -46,10 +47,10 @@ private fun MeshInitializer.pipeSegment(prevNode: PipeNode?, node: PipeNode, nex
     val start = if (prevNode == null) node.position else jointPipes1(prevNode.position, node.position, nextNode.position, node.radius)
     val end = if (nextNextNode == null) nextNode.position else jointPipes2(node.position, nextNode.position, nextNextNode.position, nextNode.radius)
     val t = end - start
-    pos(start).normal(t).tex(0f, 0f).attr(SCALE, node.radius, nextNode.radius)
-    pos(start).normal(t).tex(1f, 0f).attr(SCALE, node.radius, nextNode.radius)
-    pos(start).normal(t).tex(1f, 1f).attr(SCALE, node.radius, nextNode.radius)
-    pos(start).normal(t).tex(0f, 1f).attr(SCALE, node.radius, nextNode.radius)
+    pos(start).normal(t).tex(Vec2(0f, 0f)).attr(SCALE, Vec2(node.radius, nextNode.radius))
+    pos(start).normal(t).tex(Vec2(1f, 0f)).attr(SCALE, Vec2(node.radius, nextNode.radius))
+    pos(start).normal(t).tex(Vec2(1f, 1f)).attr(SCALE, Vec2(node.radius, nextNode.radius))
+    pos(start).normal(t).tex(Vec2(0f, 1f)).attr(SCALE, Vec2(node.radius, nextNode.radius))
     index(segmentIndex * 4 + 0, segmentIndex * 4 + 1, segmentIndex * 4 + 2, segmentIndex * 4 + 0, segmentIndex * 4 + 2, segmentIndex * 4 + 3)
 }
 
