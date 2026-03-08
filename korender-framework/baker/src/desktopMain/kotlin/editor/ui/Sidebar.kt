@@ -44,7 +44,6 @@ import editor.model.TexId
 import editor.state.State
 import editor.state.StateHolder
 import editor.ui.dialog.MaterialsDialog
-import editor.ui.dialog.okDialog
 import editor.ui.dialog.textureDialog
 import editor.ui.widget.FancyClickToFloatInput
 import editor.ui.widget.FancyClickToTextInput
@@ -178,14 +177,6 @@ fun selection(holder: StateHolder, state: State, model: Model) {
                     val texturingDialog = texturingDialog(holder)
                     IconButton(Res.drawable.texsetup, "Texture adjustment") {
                         texturingDialog()
-                    }
-                    if (state.selection.size == 1) {
-                        val noCarveDialog = okDialog("Carve", "Intersection objects not found")
-                        IconButton(Res.drawable.minus, "Carve") { // TODO: icon
-                            if (!holder.carve()) {
-                                noCarveDialog()
-                            }
-                        }
                     }
                 }
                 if (state.selection.size > 1) {

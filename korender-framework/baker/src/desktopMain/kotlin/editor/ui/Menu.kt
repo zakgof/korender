@@ -34,6 +34,7 @@ import editor.state.State
 import editor.state.StateHolder
 import editor.ui.dialog.MaterialsDialog
 import editor.ui.dialog.confirmDialog
+import editor.ui.dialog.okDialog
 import editor.ui.dialog.textureDialog
 import org.jetbrains.compose.resources.painterResource
 import java.awt.FileDialog
@@ -46,6 +47,7 @@ fun FrameWindowScope.Menu(holder: StateHolder) =
         view(holder)
         edit(holder)
         material(holder)
+        tools(holder)
     }
 
 @Composable
@@ -164,3 +166,17 @@ private fun MenuBarScope.material(holder: StateHolder) {
         }
     }
 }
+
+@Composable
+private fun MenuBarScope.tools(holder: StateHolder) {
+    val state by holder.state.collectAsState()
+    Menu("Tools") {
+        val noCarveDialog = okDialog("Carve", "Intersection objects not found")
+        Item("Carve", icon = painterResource(Res.drawable.minus), enabled = (state.selection.size == 1)) {
+            if (!holder.carve()) {
+                noCarveDialog()
+            }
+        }
+    }
+}
+

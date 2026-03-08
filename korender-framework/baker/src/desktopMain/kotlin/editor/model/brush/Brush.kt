@@ -158,8 +158,16 @@ data class Brush(
                 }
 
                 PlaneSide.SPLIT -> {
-                    val front = copy(name = "$name*", id = Uuid.generateV7().toHexDashString(), faces = faces + Face(plane.invert(), materialId)).filterFaces()
-                    val back = copy(name = "$name*", id = Uuid.generateV7().toHexDashString(), faces = faces + Face(plane, materialId)).filterFaces()
+                    val front = currentPart.copy(
+                        name = "$name*",
+                        id = Uuid.generateV7().toHexDashString(),
+                        faces = currentPart.faces + Face(plane.invert(), materialId)
+                    ).filterFaces()
+                    val back = currentPart.copy(
+                        name = "$name*",
+                        id = Uuid.generateV7().toHexDashString(),
+                        faces = currentPart.faces + Face(plane, materialId)
+                    ).filterFaces()
                     results += front
                     currentPart = back
                 }
@@ -170,3 +178,4 @@ data class Brush(
 
 
 }
+
