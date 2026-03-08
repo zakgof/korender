@@ -123,6 +123,7 @@ private fun MenuBarScope.view(holder: StateHolder) {
 @Composable
 private fun MenuBarScope.edit(holder: StateHolder) {
     val state by holder.state.collectAsState()
+    val model by holder.model.collectAsState()
     Menu("Edit") {
         RadioButtonItem("Draw Objects", selected = (state.mouseMode == State.MouseMode.CREATOR)) {
             holder.setMouseMode(State.MouseMode.CREATOR)
@@ -142,6 +143,9 @@ private fun MenuBarScope.edit(holder: StateHolder) {
         }
         Item("Paste", painterResource(Res.drawable.paste), enabled = (state.selection.isNotEmpty()), shortcut = KeyShortcut(Key.V, ctrl = true)) {
             holder.paste()
+        }
+        Item("Select All", enabled = (model.brushes.isNotEmpty()), shortcut = KeyShortcut(Key.A, ctrl = true)) {
+            holder.selectAll()
         }
         val deleteDialog = confirmDialog("Delete", "Delete selected objects ?") { holder.deleteSelected() }
         Item("Delete", painterResource(Res.drawable.trash), shortcut = KeyShortcut(Key.Delete) ) {

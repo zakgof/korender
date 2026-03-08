@@ -372,6 +372,10 @@ class StateHolder {
         _state.update { it.copy(lastCompiledSceneModel = sceneModel) }
     }
 
+    fun selectAll() {
+        _state.update { it.copy(selection = model.value.brushes.keys) }
+    }
+
 
 }
 

@@ -25,12 +25,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.isCtrlPressed
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import editor.model.Model
@@ -95,18 +89,6 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
                         mouseHandler.onClick(down.position, event.keyboardModifiers.isCtrlPressed)
                     }
                 }
-            }
-            .onKeyEvent { keyEvent ->
-                if (keyEvent.type == KeyEventType.KeyDown) {
-                    when (keyEvent.key) {
-                        Key.Delete -> deleteDialog()
-                        Key.C -> if (keyEvent.isCtrlPressed) { holder.copy() }
-                        Key.X -> if (keyEvent.isCtrlPressed) { holder.cut() }
-                        Key.V -> if (keyEvent.isCtrlPressed) { holder.paste() }
-                        Key.E -> if (keyEvent.isCtrlPressed) { holder.zoomOnSelection() }
-                    }
-                }
-                true
             }
     ) {
         val mapper = ProjectionMapper(axes, state, size)
