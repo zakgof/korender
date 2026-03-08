@@ -24,7 +24,7 @@ interface MeshInitializer {
     fun indexBytes(rawBytes: ByteArray): MeshInitializer
     fun <T> attrBytes(attr: MeshAttribute<T>, rawBytes: ByteArray): MeshInitializer
     fun <T> attrSet(attr: MeshAttribute<T>, index: Int, value: T): MeshInitializer
-    fun embed(prototype: Mesh, transform: Transform = Transform.IDENTITY, indexOffset: Long = 0)
+    fun embed(prototype: Mesh, transform: Transform = Transform.IDENTITY, colorTexIndex: Int? = null)
 }
 
 interface Mesh {
@@ -64,3 +64,4 @@ class MutableMesh : Mesh {
         } as T?
     }
 }
+

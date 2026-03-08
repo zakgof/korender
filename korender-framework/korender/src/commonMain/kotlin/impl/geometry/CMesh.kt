@@ -5,6 +5,7 @@ import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.impl.geometry.MeshAttributes.COLORTEXINDEX
 import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
 import com.zakgof.korender.impl.geometry.MeshAttributes.POS
 import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
@@ -29,7 +30,8 @@ internal open class CMesh(
             val count = if (it.instance) instanceCount else vertexCount
             NativeByteBuffer(count * it.primitiveType.size() * it.structSize)
         }
-    val attrMap: Map<InternalMeshAttribute<*>, NativeByteBuffer> = attributeBuffers.indices.associate { attributes[it] to attributeBuffers[it] }
+    val attrMap: Map<InternalMeshAttribute<*>, NativeByteBuffer> =
+        attributeBuffers.indices.associate { attributes[it] to attributeBuffers[it] }
 
     val actualIndexType: IndexType = convertIndexType(indexType, indexCount)
     val indexBuffer: NativeByteBuffer? = if (indexCount > 0) NativeByteBuffer(indexCount * actualIndexType.size()) else null
@@ -91,9 +93,11 @@ internal open class CMesh(
         return this
     }
 
-    override fun embed(prototype: Mesh, transform: Transform, indexOffset: Long) {
+    override fun embed(prototype: Mesh, transform: Transform, colorTexIndex: Int?) {
         val targetAttrs = attributes.filter { !it.instance }
-        val commonAttrs = targetAttrs.filter { hasPrototypeAttribute(prototype, it) }
+        val commonAttrs = targetAttrs
+            .filter { hasPrototypeAttribute(prototype, it) }
+            .filterNot { colorTexIndex != null && it == COLORTEXINDEX }
 
         prototype.vertices.forEach { vertex ->
             commonAttrs.forEach { attr ->
@@ -101,7 +105,17 @@ internal open class CMesh(
             }
         }
 
-        val offset = indexOffset.toInt()
+        if (colorTexIndex != null && attrMap.containsKey(COLORTEXINDEX)) {
+            repeat(prototype.vertices.size) {
+                attr(COLORTEXINDEX, colorTexIndex.toByte())
+            }
+        }
+
+        val offset = attrMap[POS]
+            ?.position()
+            ?.div(POS.structSize * POS.primitiveType.size())
+            ?.minus(prototype.vertices.size)
+            ?: 0
         prototype.indices?.let {
             index(*it.map { i -> i + offset }.toIntArray())
         }

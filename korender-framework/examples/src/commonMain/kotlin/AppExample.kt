@@ -41,6 +41,8 @@ import org.jetbrains.compose.resources.painterResource
 fun AppExample() {
     val options = listOf(
 
+        Demo("Texture arrays") { TextureArrayExample() },
+
         Demo("Heightmap terrain") { HeightmapTerrainExample() },
         Demo("Procedural terrain") { ProcTerrainExample() },
         Demo("City demo") { InfiniteCity() },

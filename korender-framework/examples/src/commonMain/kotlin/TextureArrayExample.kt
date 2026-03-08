@@ -31,10 +31,8 @@ fun TextureArrayExample() {
                         POS, NORMAL, TEX, COLORTEXINDEX,
                         dynamic = false
                     ) {
-                        embed(objMesh, scale(2f).rotate(1.y, -PIdiv2).translate(-2.x), 0L)
-                        repeat(objMesh.vertices.size) { attr(COLORTEXINDEX, 0) }
-                        embed(cubeMesh, translate(2.x), objMesh.vertices.size.toLong())
-                        repeat(cubeMesh.vertices.size) { attr(COLORTEXINDEX, 1) }
+                        embed(objMesh, scale(2f).rotate(1.y, -PIdiv2).translate(-2.x), colorTexIndex = 0)
+                        embed(cubeMesh, translate(2.x), colorTexIndex = 1)
                     }
                 )
                 Gui {
@@ -47,3 +45,4 @@ fun TextureArrayExample() {
         }
     }
 }
+
