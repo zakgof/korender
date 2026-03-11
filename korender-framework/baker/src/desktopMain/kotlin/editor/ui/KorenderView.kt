@@ -23,9 +23,7 @@ import editor.util.TextureImageCache
 
 object TouchHandler {
 
-    class Down(val touch: TouchEvent, val look: Vec3)
-
-    private var down: Down? = null
+    private var down: Vec3? = null
 
     fun KorenderContext.screenToLook(e: TouchEvent): Vec3 {
         val right = camera.direction.cross(camera.up)
@@ -43,11 +41,11 @@ object TouchHandler {
         if (e.type == TouchEvent.Type.DOWN) {
             val look = screenToLook(e)
             holder.selectViaRay(look, e.keyboardModifiers.ctrlPressed)
-            down = Down(e, look)
+            down = look
         }
         if (e.type == TouchEvent.Type.MOVE && down != null) {
             val newLook = screenToLook(e)
-            val rot = Quaternion.shortestArc(newLook, down!!.look)
+            val rot = Quaternion.shortestArc(newLook, down!!)
             holder.setCamera(camera.position, (rot * camera.direction).normalize(), (rot * camera.up).normalize())
         }
         if (e.type == TouchEvent.Type.UP) {
@@ -57,7 +55,7 @@ object TouchHandler {
 }
 
 @Composable
-fun KorenderView(holder: StateHolder, focusHandler: () -> Unit) {
+fun KorenderView(holder: StateHolder) {
     val state by holder.state.collectAsState()
     val model by holder.model.collectAsState()
     Korender(appResourceLoader = Res::readBytes, vSync = true) {

@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import editor.model.Model
 import editor.model.brush.Brush
 import editor.state.State
@@ -46,11 +47,11 @@ internal interface MouseHandler {
 
 object NoOpMouseHandler : MouseHandler
 
-class Axes(val xAxis: Int, val yAxis: Int, val lookAxis: Int) {
+class Axes(val name: String, val xAxis: Int, val yAxis: Int, val lookAxis: Int) {
     companion object {
-        val Left = Axes(2, 1, 0)
-        val Top = Axes(0, 2, 1)
-        val Front = Axes(0, 1, 2)
+        val Left = Axes("left", 2, 1, 0)
+        val Top = Axes("top", 0, 2, 1)
+        val Front = Axes("front", 0, 1, 2)
     }
 }
 
@@ -63,6 +64,7 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
     val deleteDialog = confirmDialog("Delete", "Delete selected objects ?") { holder.deleteSelected() }
     Canvas(
         Modifier
+            .onSizeChanged { size -> holder.viewResized(axes.name, size.width, size.height) }
             .focusRequester(focusRequester)
             .focusable()
             .clipToBounds()
@@ -163,7 +165,7 @@ private fun DrawScope.drawGrid(mapper: ProjectionMapper, state: State) {
             color = Color.DarkGray,
             start = Offset(gridX, 0f),
             end = Offset(gridX, size.height),
-            strokeWidth = if (abs(mapper.xVtoW(gridX)) <  state.gridScale * 0.1f) 2f else 1f
+            strokeWidth = if (abs(mapper.xVtoW(gridX)) < state.gridScale * 0.1f) 2f else 1f
         )
         gridX += state.gridScale * state.projectionScale
     }
@@ -173,7 +175,7 @@ private fun DrawScope.drawGrid(mapper: ProjectionMapper, state: State) {
             color = Color.DarkGray,
             start = Offset(0f, gridY),
             end = Offset(size.width, gridY),
-            strokeWidth = if (abs(mapper.yVtoW(gridY)) <  state.gridScale * 0.1f) 2f else 1f
+            strokeWidth = if (abs(mapper.yVtoW(gridY)) < state.gridScale * 0.1f) 2f else 1f
         )
         gridY -= state.gridScale * state.projectionScale
     }
