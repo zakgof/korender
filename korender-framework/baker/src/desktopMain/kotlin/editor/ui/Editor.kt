@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.FrameWindowScope
 import editor.state.StateHolder
@@ -57,27 +58,21 @@ fun FrameWindowScope.BrushEditor(holder: StateHolder) {
     }
 }
 
-
-
 @Composable
 private fun ColumnScope.KorenderBox(holder: StateHolder) {
     var isFocused by remember { mutableStateOf(true) }
     val focusRequester = remember { FocusRequester() }
     Box(
         Modifier
+            .onSizeChanged {size -> holder.viewResized("korender", size.width, size.height)}
             .focusRequester(focusRequester)
             .onFocusChanged { focusState ->
                 isFocused = focusState.hasFocus
             }
             .focusable()
             .weight(1f)
-            .background(Theme.medium)
-            .border(2.dp, if (isFocused) Theme.medium else Theme.background)
-            .padding(2.dp)
     ) {
-        KorenderView(holder) {
-            focusRequester.requestFocus()
-        }
+        KorenderView(holder)
     }
 }
 

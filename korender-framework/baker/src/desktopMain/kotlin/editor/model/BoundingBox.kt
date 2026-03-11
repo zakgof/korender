@@ -5,7 +5,10 @@ import kotlin.math.max
 import kotlin.math.min
 
 class BoundingBox(val min: Vec3, val max: Vec3) {
+
     val center = (min + max) * 0.5f
+
+    val size = (max - min)
 
     fun merge(that: BoundingBox) = BoundingBox(
         Vec3(min(this.min.x, that.min.x), min(this.min.y, that.min.y), min(this.min.z, that.min.z)),

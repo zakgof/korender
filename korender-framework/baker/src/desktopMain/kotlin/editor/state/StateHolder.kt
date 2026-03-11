@@ -5,6 +5,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.baker.editor.util.ModelCompiler
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
 import editor.model.BoundingBox
 import editor.model.Material
 import editor.model.Model
@@ -21,6 +23,12 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import java.io.File
+import kotlin.math.atan
+import kotlin.math.floor
+import kotlin.math.log10
+import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.tan
 import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -58,8 +66,20 @@ class StateHolder {
         }
     }
 
-    fun setGridScale(newScale: Float) = _state.update { it.copy(gridScale = newScale) }
-    fun setProjectionScale(newScale: Float) = _state.update { it.copy(projectionScale = newScale) }
+    fun setGridScale(newScale: Float) = _state.update { it.copy(gridScale = newScale.coerceIn(0.1f, 10000f)) }
+
+    fun setProjectionScale(newScale: Float) {
+
+        _state.update { it.copy(projectionScale = newScale.coerceIn(0.1f, 10000f)) }
+
+        val width = min(state.value.viewSize["top"]!!.first, state.value.viewSize["top"]!!.second)
+        val cells = width / (state.value.gridScale * state.value.projectionScale)
+
+        if (cells !in 5f..50f) {
+            _state.update { it.copy(gridScale = (width / (30f * state.value.projectionScale)).floor2()) }
+        }
+    }
+
     fun setCreator(min: Vec3, max: Vec3) = _state.update {
         it.copy(creator = BoundingBox(min, max))
     }
@@ -260,6 +280,7 @@ class StateHolder {
         val modelDto: ModelDto = Cbor.decodeFromByteArray(bytes)
         _model.update { modelDto.toModel() }
         _state.update { defaultState() }
+        resetViews()
     }
 
     @OptIn(ExperimentalSerializationApi::class)
@@ -380,6 +401,69 @@ class StateHolder {
         _state.update { it.copy(camera = State.Camera(position, direction, up)) }
     }
 
+    fun resetViews() {
+
+        if (model.value.brushes.isEmpty()) {
+            _state.update {
+                it.copy(
+                    projectionScale = defaultState().projectionScale,
+                    viewCenter = Vec3.ZERO
+                )
+            }
+
+        } else {
+
+            val bb = model.value.brushes.values
+                .map { it.bb }
+                .reduce(BoundingBox::merge)
+
+
+            val widthX = min(state.value.viewSize["top"]!!.first, state.value.viewSize["front"]!!.first)
+            val widthY = min(state.value.viewSize["left"]!!.second, state.value.viewSize["front"]!!.second)
+            val widthZ = min(state.value.viewSize["left"]!!.first, state.value.viewSize["top"]!!.second)
+
+            val minX = widthX / bb.size.x
+            val minY = widthY / bb.size.y
+            val minZ = widthZ / bb.size.z
+
+            val scale = (minOf(minX, minY, minZ) * 0.9f).floorSig(2)
+            val grid = (minOf(widthX, widthY, widthZ) / (30f * scale)).floor2()
+
+            val aspect = state.value.viewSize["korender"]!!.first / state.value.viewSize["korender"]!!.second
+            val fovY = 2f * atan(5f * 0.5f / 10f)
+
+            val dY = (bb.size.y * 0.5f) / tan(fovY * 0.5f)
+            val dX = (bb.size.x * 0.5f) / (tan(fovY * 0.5f) * aspect)
+            val distance = maxOf(dX, dY, bb.max.z - bb.center.z + 10f)
+
+            val cameraPos = bb.center + distance.z
+
+            _state.update {
+                it.copy(
+                    projectionScale = scale,
+                    gridScale = grid,
+                    viewCenter = bb.center,
+                    camera = State.Camera(cameraPos, -1.z, 1.y)
+                )
+            }
+        }
+
+    }
+
+    fun Float.floorSig(digits: Int): Float {
+        val s = 10f.pow(floor(log10(this)).toInt() - (digits - 1))
+        return floor(this / s) * s
+    }
+
+    fun Float.floor2(): Float {
+        val bits = toBits()
+        val exp = (bits ushr 23) and 0xff
+        return Float.fromBits(exp shl 23)
+    }
+
+    fun viewResized(name: String, width: Int, height: Int) {
+        _state.update { it.copy(viewSize = it.viewSize.put(name, width to height)) }
+    }
 
 }
 

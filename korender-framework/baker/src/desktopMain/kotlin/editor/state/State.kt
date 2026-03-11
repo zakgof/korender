@@ -9,6 +9,8 @@ import com.zakgof.korender.math.z
 import editor.model.BoundingBox
 import editor.model.Material
 import editor.model.brush.Brush
+import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.persistentMapOf
 
 data class State(
     val mouseMode: MouseMode = MouseMode.CREATOR,
@@ -29,7 +31,9 @@ data class State(
 
     val savePath: String? = null,
     val lastTextureDir: String? = null,
-    val lastCompiledSceneModel: SceneModel? = null
+    val lastCompiledSceneModel: SceneModel? = null,
+
+    val viewSize: PersistentMap<String, Pair<Int, Int>> = persistentMapOf()
 ) {
 
     companion object {

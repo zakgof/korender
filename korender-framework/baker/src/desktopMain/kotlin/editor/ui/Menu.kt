@@ -114,8 +114,11 @@ private fun MenuBarScope.view(holder: StateHolder) {
             holder.setProjectionScale(state.projectionScale / 2f)
         }
         Separator()
-        Item("Center selection", painterResource(Res.drawable.eye), shortcut = KeyShortcut(Key.E, ctrl = true)) {
+        Item("Center on selection", painterResource(Res.drawable.eye), shortcut = KeyShortcut(Key.E, ctrl = true)) {
             holder.zoomOnSelection()
+        }
+        Item("Reset Views", painterResource(Res.drawable.eye), shortcut = KeyShortcut(Key.E, ctrl = true)) { // TODO icon
+            holder.resetViews()
         }
     }
 }
