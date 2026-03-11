@@ -3,6 +3,7 @@ package editor.state
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.key.Key
+import com.zakgof.korender.baker.editor.model.Group
 import com.zakgof.korender.baker.editor.util.ModelCompiler
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -119,12 +120,6 @@ class StateHolder {
         }
     }
 
-    fun setSelection(brushIds: Set<String>) {
-        _state.update {
-            it.copy(selection = brushIds)
-        }
-    }
-
     fun setViewCenter(newCenter: Vec3) {
         _state.update { it.copy(viewCenter = newCenter) }
     }
@@ -196,8 +191,13 @@ class StateHolder {
     }
 
     fun deleteSelected() {
+        val groupIds = state.value.selection.mapNotNull { model.value.brushGroups[it] }
         _model.update {
-            it.copy(brushes = it.brushes.removeAll(state.value.selection))
+            it.copy(
+                brushes = it.brushes.removeAll(state.value.selection),
+                brushGroups = it.brushGroups.removeAll(state.value.selection),
+                groups = it.groups.removeAll(groupIds)
+            )
         }
         _state.update {
             it.copy(selection = setOf())
@@ -211,23 +211,39 @@ class StateHolder {
         }
     }
 
-    fun selectBrush(brushId: String, flip: Boolean) {
-        _state.update { state ->
-            val newSelection = if (flip) {
-                if (brushId in state.selection)
-                    state.selection - brushId
-                else
-                    state.selection + brushId
-            } else {
-                setOf(brushId)
-            }
-            state.copy(selection = newSelection)
-        }
+    fun clearSelection() {
+        _state.update { it.copy(selection = setOf()) }
     }
 
-    fun selectBrushes(brushes: Set<Brush>) {
-        val ids = brushes.map { b -> b.id }.toSet()
-        _state.update { it.copy(selection = ids) }
+    fun selectBrushes(brushIds: Set<String>, flip: Boolean, allGroup: Boolean) {
+        _state.update { state ->
+            val newSelection = if (flip) {
+                val s = LinkedHashSet(state.selection)
+                for (brushId in brushIds) {
+                    if (brushId in state.selection)
+                        s -= brushId
+                    else
+                        s += brushId
+                }
+                s
+            } else {
+                brushIds
+            }
+            val result = if (allGroup) {
+                newSelection +
+                        newSelection.mapNotNull { model.value.brushGroups[it] }
+                            .flatMap { model.value.groups[it]!!.brushIds }
+                            .toSet()
+            } else {
+                newSelection -
+                        newSelection.mapNotNull { model.value.brushGroups[it] }
+                            .map { model.value.groups[it]!!.brushIds }
+                            .filter { !newSelection.containsAll(it) }
+                            .flatten()
+                            .toSet()
+            }
+            state.copy(selection = result)
+        }
     }
 
     fun selectMaterial(material: Material) {
@@ -330,21 +346,40 @@ class StateHolder {
             brush.intersectRayBrush(state.value.camera.position, look) != null
         }
         brush?.let {
-            selectBrush(brush.id, flip)
-        }
+            selectBrushes(setOf(brush.id), flip, true)
+        } ?: clearSelection()
     }
 
     fun carve(): Boolean {
         val by = selectedBrushes()
         val target = model.value.brushes.values - by
         val carving = Brush.carve(target, by.first(), state.value.materialId)
-        val removeIds = carving.first.map { it.id }
-        if (removeIds.isEmpty()) {
-            return false
+
+        var brushes = model.value.brushes
+        var groups = model.value.groups
+        var brushGroups = model.value.brushGroups
+
+        carving.forEach { (old, new) ->
+            val newBrushIds = new.map { it.id }.toSet()
+            brushes = brushes.putAll(new.associateBy { it.id }).remove(old.id)
+            val oldGroupId = brushGroups[old.id]
+            if (oldGroupId != null) {
+                val oldGroup = groups[oldGroupId]!!
+                groups = groups.put(oldGroupId, oldGroup.copy(brushIds = oldGroup.brushIds + newBrushIds - old.id))
+                brushGroups = brushGroups.putAll(newBrushIds.associateWith { oldGroupId }).remove(old.id)
+            } else {
+                val newGroup = Group(old.name, newBrushIds)
+                groups = groups.put(newGroup.id, newGroup)
+                brushGroups = brushGroups.putAll(newBrushIds.associateWith { newGroup.id })
+            }
         }
-        val additionMap = carving.second.associateBy { it.id }
+
         _model.update {
-            it.copy(brushes = it.brushes.removeAll(removeIds).putAll(additionMap))
+            it.copy(
+                brushes = brushes,
+                groups = groups,
+                brushGroups = brushGroups
+            )
         }
         return true
     }
@@ -465,6 +500,33 @@ class StateHolder {
         _state.update { it.copy(viewSize = it.viewSize.put(name, width to height)) }
     }
 
+    fun groupSelection() {
+        val brushIds = state.value.selection
+        val existingGroupsIds = brushIds.mapNotNull { model.value.brushGroups[it] }
+            .toSet()
+        val existingGroupBrushIds = existingGroupsIds.mapNotNull { model.value.groups[it] }
+            .flatMap { it.brushIds }
+            .toSet()
+        val newGroup = Group("Group", brushIds)
+        val newBrushGroupMappings = brushIds.associateWith { newGroup.id }
+        _model.update {
+            it.copy(
+                groups = it.groups.removeAll(existingGroupsIds).put(newGroup.id, newGroup),
+                brushGroups = it.brushGroups.removeAll(existingGroupBrushIds).putAll(newBrushGroupMappings)
+            )
+        }
+    }
+
+    fun ungroupSelection() {
+        val brushIds = state.value.selection
+        val groupsIds = brushIds.mapNotNull { model.value.brushGroups[it] }
+        _model.update {
+            it.copy(
+                groups = it.groups.removeAll(groupsIds),
+                brushGroups = it.brushGroups.removeAll(brushIds)
+            )
+        }
+    }
 }
 
 fun <K, V> PersistentMap<K, V>.removeAll(keys: Collection<K>): PersistentMap<K, V> {

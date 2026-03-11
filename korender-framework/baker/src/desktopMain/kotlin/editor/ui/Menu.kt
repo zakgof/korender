@@ -43,11 +43,14 @@ import java.awt.Frame
 @Composable
 fun FrameWindowScope.Menu(holder: StateHolder) =
     MenuBar {
+        val state by holder.state.collectAsState()
         file(holder)
         view(holder)
         edit(holder)
         material(holder)
-        tools(holder)
+        if (state.selection.isNotEmpty()) {
+            selection(holder)
+        }
     }
 
 @Composable
@@ -151,7 +154,7 @@ private fun MenuBarScope.edit(holder: StateHolder) {
             holder.selectAll()
         }
         val deleteDialog = confirmDialog("Delete", "Delete selected objects ?") { holder.deleteSelected() }
-        Item("Delete", painterResource(Res.drawable.trash), shortcut = KeyShortcut(Key.Delete) ) {
+        Item("Delete", painterResource(Res.drawable.trash), shortcut = KeyShortcut(Key.Delete)) {
             deleteDialog()
         }
     }
@@ -175,10 +178,23 @@ private fun MenuBarScope.material(holder: StateHolder) {
 }
 
 @Composable
-private fun MenuBarScope.tools(holder: StateHolder) {
+private fun MenuBarScope.selection(holder: StateHolder) {
     val state by holder.state.collectAsState()
-    Menu("Tools") {
+    val model by holder.model.collectAsState()
+    Menu("Selection") {
+        // TODO icon
+        val groupable = state.selection.size > 1 &&
+                (state.selection.any { model.brushGroups[it] == null } ||
+                        state.selection.mapNotNull { model.brushGroups[it] }.toSet().size > 1)
+        Item("Group", icon = painterResource(Res.drawable.minus), enabled = groupable) {
+            holder.groupSelection()
+        }
+        val anyGroups = state.selection.any { model.brushGroups[it] != null }
+        Item("Ungroup", icon = painterResource(Res.drawable.plus), enabled = anyGroups) {
+            holder.ungroupSelection()
+        }
         val noCarveDialog = okDialog("Carve", "Intersection objects not found")
+        // TODO icon
         Item("Carve", icon = painterResource(Res.drawable.minus), enabled = (state.selection.size == 1)) {
             if (!holder.carve()) {
                 noCarveDialog()
