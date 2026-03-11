@@ -376,6 +376,10 @@ class StateHolder {
         _state.update { it.copy(selection = model.value.brushes.keys) }
     }
 
+    fun setCamera(position: Vec3, direction: Vec3, up: Vec3) {
+        _state.update { it.copy(camera = State.Camera(position, direction, up)) }
+    }
+
 
 }
 
