@@ -211,18 +211,46 @@ fun selection(holder: StateHolder, state: State, model: Model) {
 fun tree(model: Model, state: State, holder: StateHolder) {
     GroupBox("Objects") {
         Column {
-            model.brushes.values.forEach { brush ->
-                Text(
-                    text = brush.name,
-                    style = Theme.label,
-                    modifier = Modifier
-                        .padding(2.dp)
-                        .clickable {
-                            holder.setSelection(setOf(brush.id))
-                        },
-                    fontWeight = if (state.selection.contains(brush.id)) FontWeight.Bold else FontWeight.Normal
-                )
-            }
+            model.groups.values
+                .forEach { group ->
+                    Text(
+                        text = group.name,
+                        style = Theme.label,
+                        modifier = Modifier
+                            .padding(2.dp)
+                            .clickable {
+                                holder.selectBrushes(group.brushIds, false, true)
+                            },
+                        fontWeight = if (state.selection.containsAll(group.brushIds)) FontWeight.Bold else FontWeight.Normal
+                    )
+                    group.brushIds.forEach { brushId ->
+                        val brush = model.brushes[brushId]!!
+                        Text(
+                            text = brush.name,
+                            style = Theme.label,
+                            modifier = Modifier
+                                .padding(start = 12.dp, top = 2.dp, bottom = 2.dp, end = 2.dp)
+                                .clickable {
+                                    holder.selectBrushes(group.brushIds, false, true)
+                                },
+                            fontWeight = if (state.selection.contains(brush.id)) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
+            model.brushes.values
+                .filter { brush -> model.brushGroups[brush.id] == null }
+                .forEach { brush ->
+                    Text(
+                        text = brush.name,
+                        style = Theme.label,
+                        modifier = Modifier
+                            .padding(2.dp)
+                            .clickable {
+                                holder.selectBrushes(setOf(brush.id), false, true)
+                            },
+                        fontWeight = if (state.selection.contains(brush.id)) FontWeight.Bold else FontWeight.Normal
+                    )
+                }
         }
     }
 }

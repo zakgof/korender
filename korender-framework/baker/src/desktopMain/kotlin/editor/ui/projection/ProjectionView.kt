@@ -32,7 +32,6 @@ import editor.model.Model
 import editor.model.brush.Brush
 import editor.state.State
 import editor.state.StateHolder
-import editor.ui.dialog.confirmDialog
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -61,7 +60,6 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
     val model by holder.model.collectAsState()
     var mouseHandler: MouseHandler by remember { mutableStateOf(NoOpMouseHandler) }
     val focusRequester = remember { FocusRequester() }
-    val deleteDialog = confirmDialog("Delete", "Delete selected objects ?") { holder.deleteSelected() }
     Canvas(
         Modifier
             .onSizeChanged { size -> holder.viewResized(axes.name, size.width, size.height) }
@@ -100,6 +98,7 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
             drawCreator(mapper, state)
         }
         drawBrushes(mapper, state, model)
+        drawGroups(mapper, state, model)
         drawSelection(mapper, state, model)
         mouseHandler.draw(this)
     }
@@ -183,6 +182,22 @@ private fun DrawScope.drawGrid(mapper: ProjectionMapper, state: State) {
 
 private fun DrawScope.drawBrushes(mapper: ProjectionMapper, state: State, model: Model) {
     model.brushes.values.forEach { brush -> drawBrush(brush, mapper, state) }
+}
+
+private fun DrawScope.drawGroups(mapper: ProjectionMapper, state: State, model: Model) {
+    model.groups.values.forEach { group ->
+        val brushes = group.brushIds.map { model.brushes[it]!! }
+        val rect = mapper.rect(brushes)!!
+        drawRect(
+            color = Color.Yellow,
+            topLeft = rect.topLeft,
+            size = rect.size,
+            style = Stroke(
+                width = 3f,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(2f, 2f))
+            )
+        )
+    }
 }
 
 private fun DrawScope.drawBrush(brush: Brush, mapper: ProjectionMapper, state: State) {
