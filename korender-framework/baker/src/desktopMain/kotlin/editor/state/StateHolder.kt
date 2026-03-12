@@ -14,6 +14,7 @@ import editor.model.Model
 import editor.model.ModelDto
 import editor.model.brush.Brush
 import editor.model.snap
+import editor.state.State.MouseMode
 import editor.util.TextureImageCache
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,10 +38,12 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalSerializationApi::class)
 class StateHolder {
 
-    private fun defaultState() = State(
+    private fun defaultState(mouseMode: MouseMode = MouseMode.CREATOR, modelHash: Int) = State(
         projectionScale = 32f,
         gridScale = 0.5f,
-        creator = defaultCreator(grid = 0.5f)
+        creator = defaultCreator(grid = 0.5f),
+        mouseMode = mouseMode,
+        lastSavedModelHash = modelHash
     )
 
     private fun defaultCreator(center: Vec3 = Vec3.ZERO, grid: Float = state.value.gridScale): BoundingBox {
@@ -52,8 +55,8 @@ class StateHolder {
         )
     }
 
-    private val _state = MutableStateFlow(defaultState())
     private val _model = MutableStateFlow(Model())
+    private val _state = MutableStateFlow(defaultState(MouseMode.CREATOR, System.identityHashCode(_model.value)))
 
     val state: StateFlow<State> = _state
     val model: StateFlow<Model> = _model
@@ -73,7 +76,7 @@ class StateHolder {
 
         _state.update { it.copy(projectionScale = newScale.coerceIn(0.1f, 10000f)) }
 
-        val width = min(state.value.viewSize["top"]!!.first, state.value.viewSize["top"]!!.second)
+        val width = min(UiState.viewSize["top"]!!.first, UiState.viewSize["top"]!!.second)
         val cells = width / (state.value.gridScale * state.value.projectionScale)
 
         if (cells !in 5f..50f) {
@@ -287,7 +290,7 @@ class StateHolder {
 
     fun newProject() {
         _model.update { Model() }
-        _state.update { defaultState() }
+        _state.update { defaultState(State.MouseMode.CREATOR, System.identityHashCode(_model.value)) }
     }
 
     @OptIn(ExperimentalSerializationApi::class)
@@ -295,7 +298,7 @@ class StateHolder {
         val bytes = File(path).readBytes()
         val modelDto: ModelDto = Cbor.decodeFromByteArray(bytes)
         _model.update { modelDto.toModel() }
-        _state.update { defaultState() }
+        _state.update { defaultState(MouseMode.SELECT, System.identityHashCode(_model.value)) }
         resetViews()
     }
 
@@ -303,7 +306,10 @@ class StateHolder {
     fun saveProject(path: String) {
         val bytes = Cbor.encodeToByteArray(ModelDto(model.value))
         File(path).writeBytes(bytes)
-        _state.update { it.copy(savePath = path) }
+        _state.update { it.copy(
+            savePath = path,
+            lastSavedModelHash = System.identityHashCode(model.value)
+        ) }
     }
 
     fun applyTexturingUScaleToSelection(uScale: Float) {
@@ -444,7 +450,7 @@ class StateHolder {
         if (model.value.brushes.isEmpty()) {
             _state.update {
                 it.copy(
-                    projectionScale = defaultState().projectionScale,
+                    projectionScale = defaultState(State.MouseMode.SELECT, System.identityHashCode(_model.value)).projectionScale,
                     viewCenter = Vec3.ZERO
                 )
             }
@@ -456,9 +462,9 @@ class StateHolder {
                 .reduce(BoundingBox::merge)
 
 
-            val widthX = min(state.value.viewSize["top"]!!.first, state.value.viewSize["front"]!!.first)
-            val widthY = min(state.value.viewSize["left"]!!.second, state.value.viewSize["front"]!!.second)
-            val widthZ = min(state.value.viewSize["left"]!!.first, state.value.viewSize["top"]!!.second)
+            val widthX = min(UiState.viewSize["top"]!!.first, UiState.viewSize["front"]!!.first)
+            val widthY = min(UiState.viewSize["left"]!!.second, UiState.viewSize["front"]!!.second)
+            val widthZ = min(UiState.viewSize["left"]!!.first, UiState.viewSize["top"]!!.second)
 
             val minX = widthX / bb.size.x
             val minY = widthY / bb.size.y
@@ -467,7 +473,7 @@ class StateHolder {
             val scale = (minOf(minX, minY, minZ) * 0.9f).floorSig(2)
             val grid = (minOf(widthX, widthY, widthZ) / (30f * scale)).floor2()
 
-            val aspect = state.value.viewSize["korender"]!!.first / state.value.viewSize["korender"]!!.second
+            val aspect = UiState.viewSize["korender"]!!.first / UiState.viewSize["korender"]!!.second
             val fovY = 2f * atan(5f * 0.5f / 10f)
 
             val dY = (bb.size.y * 0.5f) / tan(fovY * 0.5f)
@@ -500,7 +506,7 @@ class StateHolder {
     }
 
     fun viewResized(name: String, width: Int, height: Int) {
-        _state.update { it.copy(viewSize = it.viewSize.put(name, width to height)) }
+        UiState.viewSize[name] = width to height
     }
 
     fun groupSelection() {
@@ -529,6 +535,10 @@ class StateHolder {
                 brushGroups = it.brushGroups.removeAll(brushIds)
             )
         }
+    }
+
+    fun renameGroup(groupId: String, newName: String) {
+        _model.update { it.copy(groups = it.groups.put(groupId, it.groups[groupId]!!.copy(name = newName))) }
     }
 }
 

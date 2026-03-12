@@ -64,6 +64,7 @@ private fun ColumnScope.KorenderBox(holder: StateHolder) {
     val focusRequester = remember { FocusRequester() }
     Box(
         Modifier
+            .background(Theme.background)
             .onSizeChanged {size -> holder.viewResized("korender", size.width, size.height)}
             .focusRequester(focusRequester)
             .onFocusChanged { focusState ->

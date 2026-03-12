@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Text
+import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -14,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -70,6 +72,21 @@ fun texturingDialog(holder: StateHolder): () -> Unit {
                     FancyFloatInput(value = voffset, modifier = Modifier.width(36.dp)) {
                         holder.applyTexturingVOffsetToSelection(it)
                     }
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val texturings = state.selection.map { model.brushes[it]!! }.flatMap { it.faces }.map { it.texturing }
+                    val worldScale = texturings.map { it.worldScale }.sameOrNull()
+                    Text("World scale", style = Theme.label, modifier = Modifier.weight(1f))
+                    TriStateCheckbox(
+                        state = when (worldScale) {
+                            null -> ToggleableState.Indeterminate
+                            true -> ToggleableState.On
+                            false -> ToggleableState.Off
+                        }, onClick = {
+                            holder.applyTexturingWorldScaleToSelection(worldScale?.not() ?: true)
+                        })
                 }
             }
 

@@ -56,15 +56,18 @@ fun FrameWindowScope.Menu(holder: StateHolder) =
 @Composable
 private fun MenuBarScope.file(holder: StateHolder) {
     val state by holder.state.collectAsState()
+    val model by holder.model.collectAsState()
+    val modified = state.lastSavedModelHash != System.identityHashCode(model)
     Menu("File") {
-        val newProjectConfirmDialog = confirmDialog("New project", "Discard everything and start a new project ?") {
+        val newProjectConfirmDialog = confirmDialog("New project", "Discard changes and start a new project ?") {
             holder.newProject()
         }
         Item("New", icon = painterResource(Res.drawable.file)) {
-            newProjectConfirmDialog()
+            if (modified) newProjectConfirmDialog() else holder.newProject()
         }
         var lastDir by remember { mutableStateOf("") }
-        val loadProjectConfirmDialog = confirmDialog("Load Project", "Discard everything and load a project ?") {
+
+        fun load() {
             val dialog = FileDialog(Frame(), "Load Project", FileDialog.LOAD)
             dialog.directory = lastDir
             dialog.isVisible = true
@@ -74,7 +77,13 @@ private fun MenuBarScope.file(holder: StateHolder) {
                 holder.loadProject(file.path)
             }
         }
-        Item("Open Project", painterResource(Res.drawable.load)) { loadProjectConfirmDialog() }
+
+        val loadProjectConfirmDialog = confirmDialog("Load Project", "Discard changes and load a project ?") {
+            load()
+        }
+        Item("Open Project", painterResource(Res.drawable.load)) {
+            if (modified) loadProjectConfirmDialog() else load()
+        }
 
         Item("Save Project", painterResource(Res.drawable.save)) {
             if (state.savePath == null) {
