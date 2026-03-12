@@ -9,48 +9,57 @@ import editor.model.brush.Brush
 import editor.state.State
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.round
+import kotlin.math.roundToInt
 
 class ProjectionMapper(val axes: Axes, val state: State, val size: Size) {
 
-    val horzAxis = axes.xAxis
-    val vertAxis = axes.yAxis
+    val centerX = state.viewCenter * axes.xAxis
+    val centerY = state.viewCenter * axes.yAxis
 
-    val centerX = state.viewCenter * Vec3.unit(horzAxis)
-    val centerY = state.viewCenter * Vec3.unit(vertAxis)
+//    fun xVtoW(viewX: Float) = centerX + (viewX - size.width * 0.5f) / state.projectionScale
+//    fun yVtoW(viewY: Float) = centerY - (viewY - size.height * 0.5f) / state.projectionScale
+    // fun xWtoV(worldX: Float) = size.width * 0.5f + (worldX - centerX) * state.projectionScale
+    // fun yWtoV(worldY: Float) = size.height * 0.5f - (worldY - centerY) * state.projectionScale
+//    fun xWtoV(v: Vec3) = xWtoV(axes.xAxis * v)
+//    fun yWtoV(v: Vec3) = yWtoV(axes.yAxis * v)
 
-    fun xVtoW(viewX: Float) = centerX + (viewX - size.width * 0.5f) / state.projectionScale
-    fun yVtoW(viewY: Float) = centerY - (viewY - size.height * 0.5f) / state.projectionScale
-    fun xWtoV(worldX: Float) = size.width * 0.5f + (worldX - centerX) * state.projectionScale
-    fun yWtoV(worldY: Float) = size.height * 0.5f - (worldY - centerY) * state.projectionScale
-    fun xWtoV(v: Vec3) = xWtoV(Vec3.unit(horzAxis) * v)
-    fun yWtoV(v: Vec3) = yWtoV(Vec3.unit(vertAxis) * v)
-    fun wToV(v: Vec3) = Offset(xWtoV(v), yWtoV(v))
+    fun wToVx(v: Vec3) = size.width * 0.5f + (axes.xAxis * v - centerX) * state.projectionScale
+    fun wToVy(v: Vec3) = size.height * 0.5f + (axes.yAxis * v - centerY) * state.projectionScale
+    fun wToV(v: Vec3) = Offset(wToVx(v), wToVy(v))
 
-    fun snapH(x: Float): Float = xWtoV(round(xVtoW(x) / state.gridScale) * state.gridScale)
-    fun snapV(y: Float): Float = yWtoV(round(yVtoW(y) / state.gridScale) * state.gridScale)
+
+    private fun snapH(x: Float): Float = size.width * .5f - centerX * state.projectionScale +
+            ((x - (size.width * .5f - centerX * state.projectionScale)) /
+                    (state.gridScale * state.projectionScale)).roundToInt() * (state.gridScale * state.projectionScale)
+
+    fun snapV(y: Float): Float = size.height * .5f - centerY * state.projectionScale +
+            ((y - (size.height * .5f - centerY * state.projectionScale)) /
+                    (state.gridScale * state.projectionScale)).roundToInt() * (state.gridScale * state.projectionScale)
+
     fun snap(start: Offset): Offset = Offset(snapH(start.x), snapV(start.y))
-    fun toW(rect: Rect, min: Vec3, max: Vec3): BoundingBox {
-        val h1 = xVtoW(rect.left)
-        val h2 = xVtoW(rect.right)
-        val v1 = yVtoW(rect.top)
-        val v2 = yVtoW(rect.bottom)
-        val min = Vec3.unit(horzAxis) * min(h1, h2) + Vec3.unit(vertAxis) * min(v1, v2) + Vec3.unit(axes.lookAxis) * (min * Vec3.unit(axes.lookAxis))
-        val max = Vec3.unit(horzAxis) * max(h1, h2) + Vec3.unit(vertAxis) * max(v1, v2) + Vec3.unit(axes.lookAxis) * (max * Vec3.unit(axes.lookAxis))
-        return BoundingBox(min, max)
+
+
+    fun toW(rect: Rect, bb: BoundingBox): BoundingBox {
+        val c1 = vToW(rect.topLeft) + axes.lookAxis * (bb.min * axes.lookAxis)
+        val c2 = vToW(rect.bottomRight) + axes.lookAxis * (bb.max * axes.lookAxis)
+        return BoundingBox.from(c1, c2)
     }
 
-    fun toW(offset: Offset): Vec3 =
-        Vec3.unit(horzAxis) * (offset.x / state.projectionScale) - Vec3.unit(vertAxis) * (offset.y / state.projectionScale)
+    fun deltaToW(o: Offset) = (axes.xAxis * o.x + axes.yAxis * o.y) / state.projectionScale
 
+    private fun vToW(o: Offset): Vec3 =
+        axes.xAxis * ((o.x - size.width * .5f) / state.projectionScale + centerX) +
+                axes.yAxis * ((o.y - size.height * .5f) / state.projectionScale + centerY)
 
     fun rect(bb: BoundingBox): Rect {
-        val xmin = xWtoV(bb.min)
-        val xmax = xWtoV(bb.max)
-        val ymin = yWtoV(bb.min)
-        val ymax = yWtoV(bb.max)
+        val xmin = wToVx(bb.min)
+        val xmax = wToVx(bb.max)
+        val ymin = wToVy(bb.min)
+        val ymax = wToVy(bb.max)
         return Rect(
             Offset(min(xmin, xmax), min(ymin, ymax)),
             Offset(max(xmin, xmax), max(ymin, ymax))
@@ -73,20 +82,35 @@ class ProjectionMapper(val axes: Axes, val state: State, val size: Size) {
         return Offset(dx, dy)
     }
 
-    fun gridDirs(): List<Vec3> = listOf(
-        Vec3.unit(axes.xAxis),
-        -Vec3.unit(axes.xAxis),
-        Vec3.unit(axes.yAxis),
-        -Vec3.unit(axes.yAxis)
-    )
+    fun gridDirs(): List<Vec3> = listOf(axes.xAxis, -axes.xAxis, axes.yAxis, -axes.yAxis)
 
     fun projAngle(a: Vec3, b: Vec3): Float {
-        val n = Vec3.unit(axes.lookAxis)
+        val n = axes.lookAxis
         val cross = a.cross(b)
         val sin = n.dot(cross)
         val cos = a.dot(b) - (a.dot(n) * b.dot(n))
         return atan2(sin, cos)
     }
+
+    fun gridXs(): List<Float> {
+        val step = state.gridScale * state.projectionScale
+        val origin = size.width * .5f - centerX * state.projectionScale
+        val k0 = ceil((0f - origin) / step).toInt()
+        val k1 = floor((size.width - origin) / step).toInt()
+        return (k0..k1).map { origin + it * step }
+    }
+
+    fun gridYs(): List<Float> {
+        val step = state.gridScale * state.projectionScale
+        val origin = size.height * .5f - centerY * state.projectionScale
+        val k0 = kotlin.math.ceil((0f - origin) / step).toInt()
+        val k1 = kotlin.math.floor((size.height - origin) / step).toInt()
+        return (k0..k1).map { origin + it * step }
+    }
+
+    fun zeroGridX() = size.width * .5f - centerX * state.projectionScale
+
+    fun zeroGridY() = size.height * .5f - centerY * state.projectionScale
 
 
 }

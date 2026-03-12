@@ -56,7 +56,7 @@ internal class CreatorMouseHandler(
             )
         }
         rect?.let {
-            val bb = mapper.toW(it, state.creator.min, state.creator.max)
+            val bb = mapper.toW(it, state.creator)
             holder.setCreator(bb.min, bb.max)
         }
     }

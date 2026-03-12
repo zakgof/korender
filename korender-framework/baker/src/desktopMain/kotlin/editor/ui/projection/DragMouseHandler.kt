@@ -25,8 +25,8 @@ internal class DragMouseHandler(
         originalOffset?.let { oo ->
             val shift = current - oo
             holder.setViewCenter(originalCenter!! -
-                    Vec3.unit(mapper.horzAxis) * (shift.x / state.projectionScale) +
-                    Vec3.unit(mapper.vertAxis) * (shift.y / state.projectionScale))
+                    mapper.axes.xAxis * (shift.x / state.projectionScale) -
+                    mapper.axes.yAxis * (shift.y / state.projectionScale))
         }
     }
 
