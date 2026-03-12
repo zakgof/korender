@@ -1,28 +1,30 @@
 package editor.model
 
+import com.zakgof.korender.baker.editor.model.Group
 import com.zakgof.korender.math.Vec3
 import editor.model.brush.Brush
 import editor.model.brush.Face
 import editor.model.brush.Plane
-import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.serialization.Serializable
 
 @Serializable
 class ModelDto(
     val brushes: List<BrushDto>,
+    val groups: List<GroupDto>,
     val materials: List<MaterialDto>,
     val version: Int = 1,
 ) {
     constructor(model: Model) : this(
         model.brushes.values.map { BrushDto(it) },
+        model.groups.values.map { GroupDto(it) },
         model.materials.values.map { MaterialDto(it) }
     )
 
     fun toModel() = Model(
         brushes.map { it.toBrush() }.associateBy { it.id }.toPersistentMap(),
-        persistentMapOf(), // TODO
-        persistentMapOf(),
+        groups.map { it.toGroup() }.associateBy { it.id }.toPersistentMap(),
+        groups.flatMap { group -> group.brushIds.map { it to group.id } }.toMap().toPersistentMap(),
         materials.map { it.toMaterial() }.associateBy { it.id }.toPersistentMap(),
     )
 }
@@ -71,11 +73,27 @@ data class FaceDto(
 }
 
 @Serializable
+data class GroupDto(
+    val id: String,
+    val name: String,
+    val brushIds: Set<String>,
+) {
+    constructor(group: Group) : this(
+        id = group.id,
+        name = group.name,
+        brushIds = group.brushIds,
+    )
+
+    fun toGroup() = Group(name, brushIds, id)
+}
+
+
+@Serializable
 data class BrushDto(
+    val id: String,
     val name: String,
     val projectionColor: Int,
     val planes: List<FaceDto>,
-    val id: String,
 ) {
     constructor(brush: Brush) : this(
         name = brush.name,

@@ -355,6 +355,9 @@ class StateHolder {
         val target = model.value.brushes.values - by
         val carving = Brush.carve(target, by.first(), state.value.materialId)
 
+        if (carving.isEmpty())
+            return false
+
         var brushes = model.value.brushes
         var groups = model.value.groups
         var brushGroups = model.value.brushGroups
