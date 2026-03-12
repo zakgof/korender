@@ -66,9 +66,9 @@ internal class SelectorMouseHandler(
         } else {
             val brushId = model.brushes.values
                 .filter { brush -> mapper.rect(brush).contains(current) }
-                .minByOrNull { brush -> brush.bb.center * mapper.axes.lookAxis }?.id
-            brushId?.let { holder.selectBrush(it, isCtrlDown) }
-            if (brushId == null && !isCtrlDown) holder.setSelection(setOf())
+                .minByOrNull { brush -> brush.bb.center * Vec3.unit(mapper.axes.lookAxis) }?.id
+            brushId?.let { holder.selectBrushes(setOf(it), isCtrlDown, true) }
+            if (brushId == null && !isCtrlDown) holder.clearSelection()
         }
     }
 
@@ -179,7 +179,7 @@ internal class SelectorMouseHandler(
                         selection = selection + it.id
                 }
 
-                holder.setSelection(selection)
+                holder.selectBrushes(selection, false, false)
             }
         }
     }

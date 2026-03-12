@@ -128,17 +128,11 @@ data class Brush(
     }
 
     companion object {
-        fun carve(target: Collection<Brush>, by: Brush, materialId: String): Pair<Collection<Brush>, Collection<Brush>> {
-            val splitSources = mutableListOf<Brush>()
-            val splitResults = mutableListOf<Brush>()
+        fun carve(target: Collection<Brush>, by: Brush, materialId: String): Set<Pair<Brush, Collection<Brush>>> {
             val planes = by.faces.map { it.plane }
-            for (brush in target) {
-                brush.carveBy(planes, materialId)?.let {
-                    splitSources += brush
-                    splitResults += it
-                }
-            }
-            return splitSources to splitResults
+            return target.mapNotNull { brush ->
+                brush.carveBy(planes, materialId)?.let { brush to it }
+            }.toSet()
         }
     }
 

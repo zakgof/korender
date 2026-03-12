@@ -4,6 +4,7 @@ import com.zakgof.korender.math.Vec3
 import editor.model.brush.Brush
 import editor.model.brush.Face
 import editor.model.brush.Plane
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.serialization.Serializable
 
@@ -20,7 +21,9 @@ class ModelDto(
 
     fun toModel() = Model(
         brushes.map { it.toBrush() }.associateBy { it.id }.toPersistentMap(),
-        materials.map { it.toMaterial() }.associateBy { it.id }.toPersistentMap()
+        persistentMapOf(), // TODO
+        persistentMapOf(),
+        materials.map { it.toMaterial() }.associateBy { it.id }.toPersistentMap(),
     )
 }
 
