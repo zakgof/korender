@@ -38,6 +38,7 @@ import com.zakgof.korender.baker.resources.pointer
 import com.zakgof.korender.baker.resources.texsetup
 import com.zakgof.korender.baker.resources.zoomin
 import com.zakgof.korender.baker.resources.zoomout
+import editor.model.BoundingBox
 import editor.model.Material
 import editor.model.Model
 import editor.model.TexId
@@ -186,6 +187,17 @@ fun selection(holder: StateHolder, state: State, model: Model) {
                     FancyClickToTextInput(brush.name) {
                         holder.brushChanged(brush.copy(name = it))
                     }
+                }
+                val bb = state.selection.map {model.brushes[it]!!.bb}
+                    .reduce(BoundingBox::merge)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("x: ${bb.center.x}", style = Theme.label)
+                    Text("y: ${bb.center.y}", style = Theme.label)
+                    Text("z: ${bb.center.z}", style = Theme.label)
                 }
                 Row(
                     verticalAlignment = Alignment.CenterVertically

@@ -7,7 +7,6 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import com.zakgof.korender.math.Quaternion
-import com.zakgof.korender.math.Vec3
 import editor.model.BoundingBox
 import editor.model.Model
 import editor.model.brush.Brush
@@ -67,7 +66,7 @@ internal class SelectorMouseHandler(
         } else {
             val brushId = model.brushes.values
                 .filter { brush -> mapper.rect(brush).contains(current) }
-                .minByOrNull { brush -> brush.bb.center * Vec3.unit(mapper.axes.lookAxis) }?.id
+                .minByOrNull { brush -> brush.bb.center * mapper.axes.lookAxis }?.id
             brushId?.let { holder.selectBrush(it, isCtrlDown) }
             if (brushId == null && !isCtrlDown) holder.setSelection(setOf())
         }
@@ -123,7 +122,7 @@ internal class SelectorMouseHandler(
                 val rect = mapper.rect(d.originalBrushes.values)!!
                 val snapPoints = listOf(rect.topLeft + shift, rect.bottomRight + shift)
                 val snapDelta = mapper.snapClosest(snapPoints)
-                val offset = mapper.toW(shift + snapDelta)
+                val offset = mapper.deltaToW(shift + snapDelta)
                 state.selection.forEach {
                     holder.brushChanged(d.originalBrushes[it]!!.translate(offset))
                 }
@@ -135,7 +134,7 @@ internal class SelectorMouseHandler(
                     .reduce(BoundingBox::merge)
                 val rect = safeRect(d.frozenCorner, current, d.corner)
 
-                val newBB = mapper.toW(rect, oldBB.min, oldBB.max)
+                val newBB = mapper.toW(rect, oldBB)
                 state.selection.forEach {
                     val origBrush = d.originalBrushes[it]!!
                     holder.brushChanged(origBrush.scale(oldBB, newBB))
@@ -148,9 +147,9 @@ internal class SelectorMouseHandler(
                     .reduce(BoundingBox::merge)
                 val center = oldBB.center
                 val screenCenter = mapper.wToV(center)
-                val angle = (current - screenCenter) angleTo (d.start - screenCenter)
+                val angle = - ((current - screenCenter) angleTo (d.start - screenCenter))
                 val origBrushes = state.selection.map { d.originalBrushes[it]!! }
-                val lookAxis = Vec3.unit(mapper.axes.lookAxis)
+                val lookAxis = mapper.axes.lookAxis
 
                 val rotation = Quaternion.fromAxisAngle(lookAxis, angle)
                 val dAngle = origBrushes.flatMap { it.faces }

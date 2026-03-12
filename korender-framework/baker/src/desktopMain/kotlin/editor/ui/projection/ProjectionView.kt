@@ -28,6 +28,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.x
+import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
 import editor.model.Model
 import editor.model.brush.Brush
 import editor.state.State
@@ -35,7 +39,6 @@ import editor.state.StateHolder
 import editor.ui.dialog.confirmDialog
 import kotlin.math.abs
 import kotlin.math.ceil
-import kotlin.math.floor
 
 internal interface MouseHandler {
     fun onClick(current: Offset, isCtrlDown: Boolean) {}
@@ -47,11 +50,11 @@ internal interface MouseHandler {
 
 object NoOpMouseHandler : MouseHandler
 
-class Axes(val name: String, val xAxis: Int, val yAxis: Int, val lookAxis: Int) {
+class Axes(val name: String, val xAxis: Vec3, val yAxis: Vec3, val lookAxis: Vec3) {
     companion object {
-        val Left = Axes("left", 2, 1, 0)
-        val Top = Axes("top", 0, 2, 1)
-        val Front = Axes("front", 0, 1, 2)
+        val Left = Axes("left", 1.z, -1.y, 1.x)
+        val Top = Axes("top", 1.x, 1.z, -1.y)
+        val Front = Axes("front", 1.x, -1.y, -1.z)
     }
 }
 
@@ -106,7 +109,7 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
 }
 
 private fun DrawScope.drawSelection(mapper: ProjectionMapper, state: State, model: Model) {
-    mapper.rect(model.brushes.values.filter { state.selection.contains(it.id) })?.let { rect ->
+    mapper.rect(state.selection.map { model.brushes[it]!! })?.let { rect ->
         drawRect(
             color = Color.Green,
             topLeft = rect.topLeft,
@@ -158,26 +161,25 @@ private fun DrawScope.drawCreator(mapper: ProjectionMapper, state: State) {
     )
 }
 
+
 private fun DrawScope.drawGrid(mapper: ProjectionMapper, state: State) {
-    var gridX = mapper.xWtoV(ceil(mapper.xVtoW(0f) / state.gridScale) * state.gridScale)
-    while (gridX < size.width) {
+    val zeroX: Float = mapper.zeroGridX()
+    mapper.gridXs().forEach {  gridX ->
         drawLine(
             color = Color.DarkGray,
             start = Offset(gridX, 0f),
             end = Offset(gridX, size.height),
-            strokeWidth = if (abs(mapper.xVtoW(gridX)) < state.gridScale * 0.1f) 2f else 1f
+            strokeWidth = if (abs(zeroX - gridX) < state.gridScale * 0.1f) 2f else 1f
         )
-        gridX += state.gridScale * state.projectionScale
     }
-    var gridY = mapper.yWtoV(floor(mapper.yVtoW(size.height) / state.gridScale) * state.gridScale)
-    while (gridY > 0) {
+    val zeroY: Float = mapper.zeroGridY()
+    mapper.gridYs().forEach {  gridY ->
         drawLine(
             color = Color.DarkGray,
             start = Offset(0f, gridY),
             end = Offset(size.width, gridY),
-            strokeWidth = if (abs(mapper.yVtoW(gridY)) < state.gridScale * 0.1f) 2f else 1f
+            strokeWidth = if (abs(zeroY - gridY) < state.gridScale * 0.1f) 2f else 1f
         )
-        gridY -= state.gridScale * state.projectionScale
     }
 }
 
