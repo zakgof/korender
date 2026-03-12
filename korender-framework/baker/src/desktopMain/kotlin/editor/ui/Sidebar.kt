@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Text
-import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -21,12 +20,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
-import com.zakgof.korender.baker.editor.util.sameOrNull
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
 import com.zakgof.korender.baker.resources.drag
@@ -180,15 +177,22 @@ fun selection(holder: StateHolder, state: State, model: Model) {
                         texturingDialog()
                     }
                 }
-                if (state.selection.size > 1) {
-                    Text("${state.selection.size} objects", style = Theme.label)
-                } else if (state.selection.size == 1) {
+                val groups = state.selection.mapNotNull { model.brushGroups[it] }.distinct().count()
+                val independents = state.selection.count { model.brushGroups[it] == null }
+                if (state.selection.size == 1) {
                     val brush = model.brushes[state.selection.first()]!!
                     FancyClickToTextInput(brush.name) {
                         holder.brushChanged(brush.copy(name = it))
                     }
+                } else if (groups == 1 && independents == 0) {
+                    val group = model.groups[model.brushGroups[state.selection.first()]!!]!!
+                    FancyClickToTextInput(group.name) {
+                        holder.renameGroup(group.id, it)
+                    }
+                } else if (state.selection.size > 1) {
+                    Text("${state.selection.size} objects, ", style = Theme.label)
                 }
-                val bb = state.selection.map {model.brushes[it]!!.bb}
+                val bb = state.selection.map { model.brushes[it]!!.bb }
                     .reduce(BoundingBox::merge)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -198,21 +202,6 @@ fun selection(holder: StateHolder, state: State, model: Model) {
                     Text("x: ${bb.center.x}", style = Theme.label)
                     Text("y: ${bb.center.y}", style = Theme.label)
                     Text("z: ${bb.center.z}", style = Theme.label)
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val texturings = state.selection.map { model.brushes[it]!! }.flatMap { it.faces }.map { it.texturing }
-                    val worldScale = texturings.map { it.worldScale }.sameOrNull()
-                    Text("World scale", style = Theme.label, modifier = Modifier.weight(1f))
-                    TriStateCheckbox(
-                        state = when (worldScale) {
-                            null -> ToggleableState.Indeterminate
-                            true -> ToggleableState.On
-                            false -> ToggleableState.Off
-                        }, onClick = {
-                            holder.applyTexturingWorldScaleToSelection(worldScale?.not() ?: true)
-                        })
                 }
             }
         }
@@ -226,7 +215,7 @@ fun tree(model: Model, state: State, holder: StateHolder) {
             model.groups.values
                 .forEach { group ->
                     Text(
-                        text = group.name,
+                        text = "${group.name} (${group.brushIds.size})",
                         style = Theme.label,
                         modifier = Modifier
                             .padding(2.dp)
@@ -235,19 +224,6 @@ fun tree(model: Model, state: State, holder: StateHolder) {
                             },
                         fontWeight = if (state.selection.containsAll(group.brushIds)) FontWeight.Bold else FontWeight.Normal
                     )
-                    group.brushIds.forEach { brushId ->
-                        val brush = model.brushes[brushId]!!
-                        Text(
-                            text = brush.name,
-                            style = Theme.label,
-                            modifier = Modifier
-                                .padding(start = 12.dp, top = 2.dp, bottom = 2.dp, end = 2.dp)
-                                .clickable {
-                                    holder.selectBrushes(group.brushIds, false, true)
-                                },
-                            fontWeight = if (state.selection.contains(brush.id)) FontWeight.Bold else FontWeight.Normal
-                        )
-                    }
                 }
             model.brushes.values
                 .filter { brush -> model.brushGroups[brush.id] == null }
