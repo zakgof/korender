@@ -18,7 +18,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isCtrlPressed
+import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -208,6 +212,7 @@ fun selection(holder: StateHolder, state: State, model: Model) {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun tree(model: Model, state: State, holder: StateHolder) {
     GroupBox("Objects") {
@@ -219,8 +224,8 @@ fun tree(model: Model, state: State, holder: StateHolder) {
                         style = Theme.label,
                         modifier = Modifier
                             .padding(2.dp)
-                            .clickable {
-                                holder.selectBrushes(group.brushIds, false, true)
+                            .onPointerEvent(PointerEventType.Press) { event ->
+                                holder.selectBrushes(group.brushIds, event.keyboardModifiers.isCtrlPressed, true)
                             },
                         fontWeight = if (state.selection.containsAll(group.brushIds)) FontWeight.Bold else FontWeight.Normal
                     )
@@ -233,8 +238,8 @@ fun tree(model: Model, state: State, holder: StateHolder) {
                         style = Theme.label,
                         modifier = Modifier
                             .padding(2.dp)
-                            .clickable {
-                                holder.selectBrushes(setOf(brush.id), false, true)
+                            .onPointerEvent(PointerEventType.Press) { event ->
+                                holder.selectBrushes(setOf(brush.id), event.keyboardModifiers.isCtrlPressed, true)
                             },
                         fontWeight = if (state.selection.contains(brush.id)) FontWeight.Bold else FontWeight.Normal
                     )
