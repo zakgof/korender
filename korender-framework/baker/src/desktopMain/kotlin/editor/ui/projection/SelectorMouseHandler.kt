@@ -66,7 +66,7 @@ internal class SelectorMouseHandler(
         } else {
             val brushId = model.brushes.values
                 .filter { brush -> mapper.rect(brush).contains(current) }
-                .minByOrNull { brush -> brush.bb.center * Vec3.unit(mapper.axes.lookAxis) }?.id
+                .minByOrNull { brush -> brush.bb.center * mapper.axes.lookAxis }?.id
             brushId?.let { holder.selectBrushes(setOf(it), isCtrlDown, true) }
             if (brushId == null && !isCtrlDown) holder.clearSelection()
         }
