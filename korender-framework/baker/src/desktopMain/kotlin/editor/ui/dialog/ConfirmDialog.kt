@@ -33,11 +33,13 @@ fun confirmDialog(title: String, text: String, onConfirm: () -> Unit): () -> Uni
             onCloseRequest = { show = false },
             state = rememberDialogState(size = DpSize(Dp.Unspecified, Dp.Unspecified))
         ) {
-            FancyColumn(modifier = Modifier.background(Theme.background).padding(8.dp)) {
+            FancyColumn(modifier = Modifier.background(Theme.background)
+                .padding(8.dp)
+            ) {
                 Text(text, style = Theme.label, modifier = Modifier.padding(24.dp))
                 Row(
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(32.dp),
+                    modifier = Modifier.fillMaxWidth().padding(16.dp)
                 ) {
                     FancyButton("OK") {
                         show = false

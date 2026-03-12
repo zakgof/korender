@@ -1,7 +1,6 @@
 package com.zakgof.korender.baker.editor.ui.dialog
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -21,6 +20,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
+import com.zakgof.korender.baker.editor.ui.widget.FancyColumn
 import com.zakgof.korender.baker.editor.util.sameOrNull
 import editor.state.StateHolder
 import editor.ui.Theme
@@ -45,10 +45,25 @@ fun texturingDialog(holder: StateHolder): () -> Unit {
             val vscale = texturings.map { it.v.scale }.sameOrNull()
             val uoffset = texturings.map { it.u.offset }.sameOrNull()
             val voffset = texturings.map { it.v.offset }.sameOrNull()
-            Column(modifier = Modifier
-                .padding(8.dp)
+            FancyColumn(modifier = Modifier
                 .background(Theme.background)
+                .padding(8.dp)
             ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val texturings = state.selection.map { model.brushes[it]!! }.flatMap { it.faces }.map { it.texturing }
+                    val worldScale = texturings.map { it.worldScale }.sameOrNull()
+                    Text("World scale", style = Theme.label, modifier = Modifier.weight(1f))
+                    TriStateCheckbox(
+                        state = when (worldScale) {
+                            null -> ToggleableState.Indeterminate
+                            true -> ToggleableState.On
+                            false -> ToggleableState.Off
+                        }, onClick = {
+                            holder.applyTexturingWorldScaleToSelection(worldScale?.not() ?: true)
+                        })
+                }
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -72,21 +87,6 @@ fun texturingDialog(holder: StateHolder): () -> Unit {
                     FancyFloatInput(value = voffset, modifier = Modifier.width(36.dp)) {
                         holder.applyTexturingVOffsetToSelection(it)
                     }
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val texturings = state.selection.map { model.brushes[it]!! }.flatMap { it.faces }.map { it.texturing }
-                    val worldScale = texturings.map { it.worldScale }.sameOrNull()
-                    Text("World scale", style = Theme.label, modifier = Modifier.weight(1f))
-                    TriStateCheckbox(
-                        state = when (worldScale) {
-                            null -> ToggleableState.Indeterminate
-                            true -> ToggleableState.On
-                            false -> ToggleableState.Off
-                        }, onClick = {
-                            holder.applyTexturingWorldScaleToSelection(worldScale?.not() ?: true)
-                        })
                 }
             }
 
