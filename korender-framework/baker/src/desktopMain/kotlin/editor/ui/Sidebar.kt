@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
+import com.zakgof.korender.baker.editor.util.sanity
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
 import com.zakgof.korender.baker.resources.drag
@@ -165,7 +166,7 @@ private fun materials(holder: StateHolder, state: State, model: Model) {
 fun selection(holder: StateHolder, state: State, model: Model) {
 
     GroupBox("Selection") {
-        Column(modifier = Modifier.height(80.dp)) {
+        Column(modifier = Modifier.height(96.dp)) {
             if (state.selection.isEmpty()) {
                 Text("No selection", style = Theme.label)
             } else {
@@ -200,12 +201,19 @@ fun selection(holder: StateHolder, state: State, model: Model) {
                     .reduce(BoundingBox::merge)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("x: ${bb.center.x}", style = Theme.label)
-                    Text("y: ${bb.center.y}", style = Theme.label)
-                    Text("z: ${bb.center.z}", style = Theme.label)
+                    Text("x: ${bb.center.x.sanity()}", style = Theme.label)
+                    Text("y: ${bb.center.y.sanity()}", style = Theme.label)
+                    Text("z: ${bb.center.z.sanity()}", style = Theme.label)
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("w: ${bb.size.x.sanity()}", style = Theme.label)
+                    Text("h: ${bb.size.y.sanity()}", style = Theme.label)
+                    Text("d: ${bb.size.z.sanity()}", style = Theme.label)
                 }
             }
         }

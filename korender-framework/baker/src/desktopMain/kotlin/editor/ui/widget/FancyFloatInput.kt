@@ -24,6 +24,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.zakgof.korender.baker.editor.util.sanity
 import editor.ui.Theme
 
 @Composable
@@ -34,7 +35,7 @@ fun FancyFloatInput(value: Float?, modifier: Modifier = Modifier, validator: (Fl
         return float == null || !validator(float)
     }
 
-    var text by remember { mutableStateOf(value?.toString() ?: "") }
+    var text by remember { mutableStateOf(value?.sanity() ?: "") }
     val invalid by remember { derivedStateOf { isInvalid(text) } }
     FancyTextInput(
         value = text,
