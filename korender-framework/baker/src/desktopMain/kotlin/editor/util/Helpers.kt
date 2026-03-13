@@ -13,7 +13,7 @@ fun <T> List<T>.sameOrNull(): T? =
 fun Float.sanity(): String {
     val v = this.toDouble()
     val a = abs(v)
-    if (a < 1e-4) return "0"
+    if (a < 1e-3) return "0"
 
     val p = floor(log10(a)).toInt()
     val scale = 10.0.pow(3 - p)              // ~0.1% precision
