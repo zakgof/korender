@@ -65,6 +65,7 @@ internal class SelectorMouseHandler(
             holder.rotateSelectionModes()
         } else {
             val brushId = model.brushes.values
+                .filter { brush -> !model.invisibleBrushes.contains(brush.id) }
                 .filter { brush -> mapper.rect(brush).contains(current) }
                 .minByOrNull { brush -> brush.bb.center * mapper.axes.lookAxis }?.id
             brushId?.let { holder.selectBrushes(setOf(it), isCtrlDown, true) }
@@ -147,7 +148,7 @@ internal class SelectorMouseHandler(
                     .reduce(BoundingBox::merge)
                 val center = oldBB.center
                 val screenCenter = mapper.wToV(center)
-                val angle = - ((current - screenCenter) angleTo (d.start - screenCenter))
+                val angle = -((current - screenCenter) angleTo (d.start - screenCenter))
                 val origBrushes = state.selection.map { d.originalBrushes[it]!! }
                 val lookAxis = mapper.axes.lookAxis
 
@@ -169,15 +170,17 @@ internal class SelectorMouseHandler(
             is SelectorDrag -> {
                 val rect = unirect(d.start, current)
                 var selection = d.originalSelection
-                model.brushes.values.filter {
-                    val brushRect = mapper.rect(it)
-                    rect.contains(brushRect.topLeft) && rect.contains(brushRect.bottomRight) && rect.contains(brushRect.topRight) && rect.contains(brushRect.bottomLeft)
-                }.forEach {
-                    if (isCtrlDown)
-                        selection = if (selection.contains(it.id)) selection - it.id else selection + it.id
-                    else
-                        selection = selection + it.id
-                }
+                model.brushes.values
+                    .filter { !model.invisibleBrushes.contains(it.id) }
+                    .filter {
+                        val brushRect = mapper.rect(it)
+                        rect.contains(brushRect.topLeft) && rect.contains(brushRect.bottomRight) && rect.contains(brushRect.topRight) && rect.contains(brushRect.bottomLeft)
+                    }.forEach {
+                        if (isCtrlDown)
+                            selection = if (selection.contains(it.id)) selection - it.id else selection + it.id
+                        else
+                            selection = selection + it.id
+                    }
 
                 holder.selectBrushes(selection, false, false)
             }

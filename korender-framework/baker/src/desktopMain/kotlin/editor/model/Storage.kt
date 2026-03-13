@@ -11,18 +11,21 @@ import kotlinx.serialization.Serializable
 @Serializable
 class ModelDto(
     val brushes: List<BrushDto>,
+    val invisibleBrushes: Set<String>,
     val groups: List<GroupDto>,
     val materials: List<MaterialDto>,
     val version: Int = 1,
 ) {
     constructor(model: Model) : this(
         model.brushes.values.map { BrushDto(it) },
+        model.invisibleBrushes,
         model.groups.values.map { GroupDto(it) },
         model.materials.values.map { MaterialDto(it) }
     )
 
     fun toModel() = Model(
         brushes.map { it.toBrush() }.associateBy { it.id }.toPersistentMap(),
+        invisibleBrushes,
         groups.map { it.toGroup() }.associateBy { it.id }.toPersistentMap(),
         groups.flatMap { group -> group.brushIds.map { it to group.id } }.toMap().toPersistentMap(),
         materials.map { it.toMaterial() }.associateBy { it.id }.toPersistentMap(),

@@ -38,14 +38,14 @@ fun confirmDialog(title: String, text: String, onConfirm: () -> Unit): () -> Uni
             ) {
                 Text(text, style = Theme.label, modifier = Modifier.padding(24.dp))
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(32.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
                     modifier = Modifier.fillMaxWidth().padding(16.dp)
                 ) {
-                    FancyButton("OK") {
+                    FancyButton("OK", modifier = Modifier.padding(end = 24.dp)) {
                         show = false
                         onConfirm()
                     }
-                    FancyButton("Cancel") {
+                    FancyButton("Cancel", modifier = Modifier.padding(start = 24.dp)) {
                         show = false
                     }
                 }

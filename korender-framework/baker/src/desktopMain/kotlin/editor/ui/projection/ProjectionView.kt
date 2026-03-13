@@ -37,7 +37,6 @@ import editor.model.brush.Brush
 import editor.state.State
 import editor.state.StateHolder
 import kotlin.math.abs
-import kotlin.math.ceil
 
 internal interface MouseHandler {
     fun onClick(current: Offset, isCtrlDown: Boolean) {}
@@ -183,15 +182,16 @@ private fun DrawScope.drawGrid(mapper: ProjectionMapper, state: State) {
 }
 
 private fun DrawScope.drawBrushes(mapper: ProjectionMapper, state: State, model: Model) {
-    model.brushes.values.forEach { brush -> drawBrush(brush, mapper, state) }
+    model.brushes.values.forEach { brush -> drawBrush(brush, mapper, state, model) }
 }
 
 private fun DrawScope.drawGroups(mapper: ProjectionMapper, state: State, model: Model) {
     model.groups.values.forEach { group ->
+        val hidden = model.invisibleBrushes.containsAll(group.brushIds)
         val brushes = group.brushIds.map { model.brushes[it]!! }
         val rect = mapper.rect(brushes)!!
         drawRect(
-            color = Color.Yellow,
+            color = if (hidden) Color.DarkGray else Color.Yellow,
             topLeft = rect.topLeft,
             size = rect.size,
             style = Stroke(
@@ -202,10 +202,11 @@ private fun DrawScope.drawGroups(mapper: ProjectionMapper, state: State, model: 
     }
 }
 
-private fun DrawScope.drawBrush(brush: Brush, mapper: ProjectionMapper, state: State) {
+private fun DrawScope.drawBrush(brush: Brush, mapper: ProjectionMapper, state: State, model: Model) {
+    val hidden = model.invisibleBrushes.contains(brush.id)
     brush.mesh.edges.forEach { edge ->
         drawLine(
-            color = Color(brush.projectionColor),
+            color = if (hidden) Color.DarkGray else Color(brush.projectionColor),
             start = mapper.wToV(brush.mesh.points[edge.first]),
             end = mapper.wToV(brush.mesh.points[edge.second]),
             strokeWidth = if (state.selection.contains(brush.id)) 3f else 2f
