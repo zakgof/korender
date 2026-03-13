@@ -1,6 +1,9 @@
 package editor.ui.dialog
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
@@ -47,6 +51,7 @@ import editor.state.StateHolder
 import editor.ui.Theme
 import editor.ui.toBaseMM
 import editor.ui.widget.ColorPicker
+import editor.ui.widget.FancyClickToTextInput
 import editor.ui.widget.FancyTextInput
 import editor.ui.widget.GroupBox
 import editor.ui.widget.IconButton
@@ -71,7 +76,16 @@ fun MaterialsDialog(holder: StateHolder): () -> Unit {
         ) {
             val state by holder.state.collectAsState()
             val model by holder.model.collectAsState()
-            Row(Modifier.background(Theme.background)) {
+            val focusManager = LocalFocusManager.current
+            Row(
+                Modifier.background(Theme.background)
+                    .focusable()
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        focusManager.clearFocus()
+                    }) {
                 Column(modifier = Modifier.weight(1f).padding(8.dp)) {
                     MaterialSelector(model, state, holder)
                 }
@@ -142,8 +156,9 @@ fun RowScope.MaterialEditor(holder: StateHolder) {
                 .disabled(disabled)
         ) {
             GroupBox("Name") {
-                FancyTextInput(
-                    modifier = Modifier.fillMaxWidth(),
+                FancyClickToTextInput(
+                    textModifier = Modifier.fillMaxWidth(),
+                    editorModifier = Modifier.fillMaxWidth(),
                     value = model.materials[state.materialId]!!.name,
                     onValueChange = {
                         holder.updateMaterial(material.copy(name = it))

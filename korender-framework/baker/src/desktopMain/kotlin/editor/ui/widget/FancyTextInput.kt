@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
@@ -33,16 +35,30 @@ import androidx.compose.ui.unit.sp
 import editor.ui.Theme
 
 @Composable
-fun FancyTextInput(value: String, modifier: Modifier = Modifier, invalid: Boolean = false, onValueChange: (String) -> Unit) {
-    val medium = if (invalid) Color.Red else Theme.medium
+fun FancyTextInput(value: String, modifier: Modifier = Modifier, validator: (String) -> Boolean = { true }, onValueChange: (String) -> Unit) {
+
+    var text by remember(value) { mutableStateOf(value) }
+    val invalid by remember { derivedStateOf { !validator(text) } }
+
+    val border = if (invalid) Color.Red else Theme.medium
     BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        cursorBrush = SolidColor(medium),
+        value = text,
+        cursorBrush = SolidColor(border),
         modifier = modifier
             .padding(2.dp)
-            .border(1.dp, medium, RoundedCornerShape(4.dp))
-            .padding(4.dp),
+            .border(1.dp, border, RoundedCornerShape(4.dp))
+            .padding(4.dp)
+            .onFocusEvent {
+                if (!it.isFocused) {
+                    text = value
+                }
+            },
+        onValueChange = {
+            text = it
+            if (validator(it)) {
+                onValueChange(it)
+            }
+        },
         textStyle = TextStyle(
             fontSize = 12.sp,
             color = Theme.light
@@ -79,7 +95,7 @@ fun FancyClickToTextInput(value: String, textModifier: Modifier = Modifier, edit
                             editorWasActive = false
                             editing = false
                         }
-                    }, !validator(value), onValueChange
+                    }, validator, onValueChange
             )
             LaunchedEffect(Unit) {
                 focusRequester.requestFocus()

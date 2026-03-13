@@ -77,8 +77,7 @@ fun ColorRGBA.toHSL(): HSL {
 
 fun ColorRGBA.toHexArgb(): String {
     fun Float.to255() = (this.coerceIn(0f, 1f) * 255f).roundToInt()
-
-    return "#%02X%02X%02X%02X".format(
+    return "%02X%02X%02X%02X".format(
         a.to255(),
         r.to255(),
         g.to255(),
@@ -86,6 +85,16 @@ fun ColorRGBA.toHexArgb(): String {
     )
 }
 
+fun String.toKorenderColorOrNull(): ColorRGBA? {
+    if (length != 8) return null
+    val v = toLongOrNull(16) ?: return null
+    return ColorRGBA(
+        ((v shr 16) and 0xFF) / 255f, // R
+        ((v shr 8) and 0xFF) / 255f,  // G
+        (v and 0xFF) / 255f,          // B
+        ((v shr 24) and 0xFF) / 255f  // A
+    )
+}
 
 @Composable
 fun ColorPicker(
@@ -104,7 +113,9 @@ fun ColorPicker(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(color.toHexArgb(), style = Theme.label)
+            FancyClickToTextInput(color.toHexArgb(), validator = { it.toKorenderColorOrNull() != null }) { newText ->
+                newText.toKorenderColorOrNull()?.let { onColorChanged(it) }
+            }
             Box(Modifier.background(color.toCompose()).size(48.dp, 24.dp))
         }
         if (!disabled) {

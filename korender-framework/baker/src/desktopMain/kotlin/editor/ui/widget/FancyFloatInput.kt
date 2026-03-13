@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,7 +35,6 @@ fun FancyFloatInput(value: Float?, modifier: Modifier = Modifier, validator: (Fl
     }
 
     var text by remember { mutableStateOf(value?.sanity() ?: "") }
-    val invalid by remember { derivedStateOf { isInvalid(text) } }
     FancyTextInput(
         value = text,
         modifier = modifier.onFocusEvent {
@@ -50,7 +48,7 @@ fun FancyFloatInput(value: Float?, modifier: Modifier = Modifier, validator: (Fl
                 onValueChange(it.toFloat())
             }
         },
-        invalid = invalid
+        validator = { !isInvalid(it) }
     )
 }
 
