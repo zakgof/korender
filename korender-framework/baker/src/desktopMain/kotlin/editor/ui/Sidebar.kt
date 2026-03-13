@@ -219,9 +219,10 @@ fun tree(model: Model, state: State, holder: StateHolder) {
         Column {
             model.groups.values
                 .forEach { group ->
+                    val hidden = model.invisibleBrushes.containsAll(group.brushIds)
                     Text(
                         text = "${group.name} (${group.brushIds.size})",
-                        style = Theme.label,
+                        style = if (hidden) Theme.darkLabel else Theme.label,
                         modifier = Modifier
                             .padding(2.dp)
                             .onPointerEvent(PointerEventType.Press) { event ->
@@ -233,9 +234,10 @@ fun tree(model: Model, state: State, holder: StateHolder) {
             model.brushes.values
                 .filter { brush -> model.brushGroups[brush.id] == null }
                 .forEach { brush ->
+                    val hidden = model.invisibleBrushes.contains(brush.id)
                     Text(
                         text = brush.name,
-                        style = Theme.label,
+                        style = if (hidden) Theme.darkLabel else Theme.label,
                         modifier = Modifier
                             .padding(2.dp)
                             .onPointerEvent(PointerEventType.Press) { event ->

@@ -540,6 +540,15 @@ class StateHolder {
     fun renameGroup(groupId: String, newName: String) {
         _model.update { it.copy(groups = it.groups.put(groupId, it.groups[groupId]!!.copy(name = newName))) }
     }
+
+    fun hideSelection() {
+        _model.update { it.copy(invisibleBrushes = it.invisibleBrushes + state.value.selection) }
+        clearSelection()
+    }
+
+    fun unhideSelection() {
+        _model.update { it.copy(invisibleBrushes = it.invisibleBrushes - state.value.selection) }
+    }
 }
 
 fun <K, V> PersistentMap<K, V>.removeAll(keys: Collection<K>): PersistentMap<K, V> {

@@ -76,6 +76,7 @@ fun KorenderView(holder: StateHolder) {
             holder.frame(frameInfo.dt)
 
             model.brushes.values
+                .filter { brush -> !model.invisibleBrushes.contains(brush.id) }
                 .forEach { brush ->
                     brush.faces
                         .forEachIndexed { i, matPlane ->

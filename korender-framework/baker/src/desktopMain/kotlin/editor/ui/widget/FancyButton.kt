@@ -18,12 +18,12 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
-fun FancyButton(text: String? = null, icon: DrawableResource? = null, background: Color = Theme.light, onClick: () -> Unit) = Button(
+fun FancyButton(text: String? = null, modifier: Modifier = Modifier, icon: DrawableResource? = null, background: Color = Theme.light, onClick: () -> Unit) = Button(
     onClick = { onClick() },
     colors = ButtonDefaults.buttonColors(
         backgroundColor = background
     ),
-    modifier = Modifier.height(24.dp),
+    modifier = modifier.height(24.dp),
     contentPadding = PaddingValues(4.dp)
 ) {
     icon?.let {

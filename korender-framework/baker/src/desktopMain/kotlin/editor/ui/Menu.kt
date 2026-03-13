@@ -202,11 +202,15 @@ private fun MenuBarScope.selection(holder: StateHolder) {
         Item("Ungroup", icon = painterResource(Res.drawable.plus), enabled = anyGroups) {
             holder.ungroupSelection()
         }
-        val noCarveDialog = okDialog("Carve", "Intersection objects not found")
-        // TODO icon
-        Item("Carve", icon = painterResource(Res.drawable.minus), enabled = (state.selection.size == 1)) {
+        Separator()
+        val hidable = !model.invisibleBrushes.containsAll(state.selection)
+        Item("Hide", icon = painterResource(Res.drawable.minus), enabled = hidable) {
+            holder.hideSelection()
+        }
+        val showable = state.selection.any { model.invisibleBrushes.contains(it) }
+        Item("Unhide", icon = painterResource(Res.drawable.minus), enabled = showable) {
             if (!holder.carve()) {
-                noCarveDialog()
+                holder.unhideSelection()
             }
         }
     }

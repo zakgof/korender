@@ -7,6 +7,7 @@ import kotlinx.collections.immutable.persistentMapOf
 
 data class Model(
     val brushes: PersistentMap<String, Brush> = persistentMapOf(),
+    val invisibleBrushes: Set<String> = setOf(),
     val groups: PersistentMap<String, Group> = persistentMapOf(),
     val brushGroups: PersistentMap<String, String> = persistentMapOf(),
     val materials: PersistentMap<String, Material> = persistentMapOf(Material.generic.id to Material.generic)

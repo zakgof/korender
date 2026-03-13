@@ -12,4 +12,5 @@ object Theme {
     val light = Color(0xFFDDDDDD)
 
     val label = TextStyle(color = light, fontSize = 12.sp)
+    val darkLabel = TextStyle(color = dark, fontSize = 12.sp)
 }
