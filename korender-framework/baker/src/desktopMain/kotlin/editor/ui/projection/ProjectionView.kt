@@ -4,7 +4,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitTouchSlopOrCancellation
 import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +24,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.PointerButtons
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -39,9 +41,9 @@ import editor.state.StateHolder
 import kotlin.math.abs
 
 internal interface MouseHandler {
-    fun onClick(current: Offset, isCtrlDown: Boolean) {}
-    fun onDragStart(start: Offset) {}
-    fun onDrag(current: Offset, isCtrlDown: Boolean) {}
+    fun onClick(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) {}
+    fun onDragStart(start: Offset, buttons: PointerButtons) {}
+    fun onDrag(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) {}
     fun onDragEnd() {}
     fun draw(drawScope: DrawScope) {}
 }
@@ -72,23 +74,41 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
             .fillMaxSize()
             .pointerInput(Unit) {
                 awaitEachGesture {
-                    val down = awaitFirstDown()
-                    val event = awaitPointerEvent()
-                    focusRequester.requestFocus()
-                    var isDrag = false
-                    val dragStart = awaitTouchSlopOrCancellation(down.id) { change, _ ->
-                        isDrag = true
-                        change.consume()
-                        mouseHandler.onDragStart(down.position)
-                    }
-                    if (isDrag && dragStart != null) {
-                        drag(dragStart.id) { change ->
+                    // 1. Wait for ANY pointer press (Left, Right, Middle)
+                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                    val down = event.changes.first()
+
+                    // Check if it's a press event
+                    if (event.type == PointerEventType.Press) {
+                        focusRequester.requestFocus()
+
+                        var isDrag = false
+                        // 2. Check for drag slop
+                        val dragStart = awaitTouchSlopOrCancellation(down.id) { change, _ ->
+                            isDrag = true
                             change.consume()
-                            mouseHandler.onDrag(change.position, event.keyboardModifiers.isCtrlPressed)
+                            mouseHandler.onDragStart(down.position, event.buttons)
                         }
-                        mouseHandler.onDragEnd()
-                    } else {
-                        mouseHandler.onClick(down.position, event.keyboardModifiers.isCtrlPressed)
+
+                        if (isDrag && dragStart != null) {
+                            drag(dragStart.id) { change ->
+                                change.consume()
+                                // Use currentEvent to get the latest button/modifier state
+                                mouseHandler.onDrag(
+                                    change.position,
+                                    currentEvent.buttons,
+                                    currentEvent.keyboardModifiers.isCtrlPressed
+                                )
+                            }
+                            mouseHandler.onDragEnd()
+                        } else {
+                            // 3. It was a click (no drag occurred)
+                            mouseHandler.onClick(
+                                down.position,
+                                event.buttons,
+                                event.keyboardModifiers.isCtrlPressed
+                            )
+                        }
                     }
                 }
             }

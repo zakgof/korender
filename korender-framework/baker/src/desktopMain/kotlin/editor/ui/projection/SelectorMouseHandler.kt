@@ -6,7 +6,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.PointerButtons
+import androidx.compose.ui.input.pointer.isPrimaryPressed
+import androidx.compose.ui.input.pointer.isSecondaryPressed
 import com.zakgof.korender.math.Quaternion
+import com.zakgof.korender.math.Vec3
 import editor.model.BoundingBox
 import editor.model.Model
 import editor.model.brush.Brush
@@ -54,22 +58,29 @@ internal class SelectorMouseHandler(
         val start: Offset,
     )
 
+    private class GridDrag(
+        val originalOffset: Offset,
+        val originalCenter: Vec3
+    )
+
     companion object {
         var drag: Any? = null
         var now: Offset? = null
     }
 
-    override fun onClick(current: Offset, isCtrlDown: Boolean) {
-        val selectionRect = mapper.rect(model.brushes.values.filter { state.selection.contains(it.id) })
-        if (selectionRect != null && selectionRect.contains(current) && !isCtrlDown) {
-            holder.rotateSelectionModes()
-        } else {
-            val brushId = model.brushes.values
-                .filter { brush -> !model.invisibleBrushes.contains(brush.id) }
-                .filter { brush -> mapper.rect(brush).contains(current) }
-                .minByOrNull { brush -> brush.bb.center * mapper.axes.lookAxis }?.id
-            brushId?.let { holder.selectBrushes(setOf(it), isCtrlDown, true) }
-            if (brushId == null && !isCtrlDown) holder.clearSelection()
+    override fun onClick(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) {
+        if (buttons.isPrimaryPressed) {
+            val selectionRect = mapper.rect(model.brushes.values.filter { state.selection.contains(it.id) })
+            if (selectionRect != null && selectionRect.contains(current) && !isCtrlDown) {
+                holder.rotateSelectionModes()
+            } else {
+                val brushId = model.brushes.values
+                    .filter { brush -> !model.invisibleBrushes.contains(brush.id) }
+                    .filter { brush -> mapper.rect(brush).contains(current) }
+                    .minByOrNull { brush -> brush.bb.center * mapper.axes.lookAxis }?.id
+                brushId?.let { holder.selectBrushes(setOf(it), isCtrlDown, true) }
+                if (brushId == null && !isCtrlDown) holder.clearSelection()
+            }
         }
     }
 
@@ -87,11 +98,15 @@ internal class SelectorMouseHandler(
         Corner(Rect::bottomRight, Rect::topLeft, -1, -1)
     )
 
-    override fun onDragStart(start: Offset) {
-        val selectionRect = mapper.rect(model.brushes.values.filter { state.selection.contains(it.id) })
-        drag = selectionRect?.let {
-            getDragStruct(it, start)
-        } ?: SelectorDrag(start, state.selection)
+    override fun onDragStart(start: Offset, buttons: PointerButtons) {
+        if (buttons.isPrimaryPressed) {
+            val selectionRect = mapper.rect(model.brushes.values.filter { state.selection.contains(it.id) })
+            drag = selectionRect?.let {
+                getDragStruct(it, start)
+            } ?: SelectorDrag(start, state.selection)
+        } else if (buttons.isSecondaryPressed) {
+            drag = GridDrag(start, state.viewCenter)
+        }
     }
 
     private fun getDragStruct(selectionRect: Rect, start: Offset): Any? {
@@ -115,74 +130,86 @@ internal class SelectorMouseHandler(
 
     private fun pick(handleHalfSize: Int, a: Offset, b: Offset) = abs(a.x - b.x) < handleHalfSize && abs(a.y - b.y) < handleHalfSize
 
-    override fun onDrag(current: Offset, isCtrlDown: Boolean) {
-        now = current
-        when (val d = drag) {
-            is MoveDrag -> {
-                val shift = current - d.start
-                val rect = mapper.rect(d.originalBrushes.values)!!
-                val snapPoints = listOf(rect.topLeft + shift, rect.bottomRight + shift)
-                val snapDelta = mapper.snapClosest(snapPoints)
-                val offset = mapper.deltaToW(shift + snapDelta)
-                state.selection.forEach {
-                    holder.brushChanged(d.originalBrushes[it]!!.translate(offset))
-                }
-            }
-
-            is ResizeDrag -> {
-                val oldBB = d.originalBrushes.values
-                    .map { it.bb }
-                    .reduce(BoundingBox::merge)
-                val rect = safeRect(d.frozenCorner, current, d.corner)
-
-                val newBB = mapper.toW(rect, oldBB)
-                state.selection.forEach {
-                    val origBrush = d.originalBrushes[it]!!
-                    holder.brushChanged(origBrush.scale(oldBB, newBB))
-                }
-            }
-
-            is RotateDrag -> {
-                val oldBB = d.originalBrushes.values
-                    .map { it.bb }
-                    .reduce(BoundingBox::merge)
-                val center = oldBB.center
-                val screenCenter = mapper.wToV(center)
-                val angle = -((current - screenCenter) angleTo (d.start - screenCenter))
-                val origBrushes = state.selection.map { d.originalBrushes[it]!! }
-                val lookAxis = mapper.axes.lookAxis
-
-                val rotation = Quaternion.fromAxisAngle(lookAxis, angle)
-                val dAngle = origBrushes.flatMap { it.faces }
-                    .map { rotation * it.plane.normal }
-                    .filter { it.dot(lookAxis) < 0.95f }
-                    .filter { it.dot(lookAxis) > -0.95f }
-                    .flatMap { n -> mapper.gridDirs().map { n to it } }
-                    .map { mapper.projAngle(it.first, it.second) }
-                    .minBy { abs(it) }
-                val da = if (abs(dAngle) < 0.15) dAngle else 0f
-
-                origBrushes.forEach {
-                    holder.brushChanged(it.rotate(center, lookAxis, angle + da))
-                }
-            }
-
-            is SelectorDrag -> {
-                val rect = unirect(d.start, current)
-                var selection = d.originalSelection
-                model.brushes.values
-                    .filter { !model.invisibleBrushes.contains(it.id) }
-                    .filter {
-                        val brushRect = mapper.rect(it)
-                        rect.contains(brushRect.topLeft) && rect.contains(brushRect.bottomRight) && rect.contains(brushRect.topRight) && rect.contains(brushRect.bottomLeft)
-                    }.forEach {
-                        if (isCtrlDown)
-                            selection = if (selection.contains(it.id)) selection - it.id else selection + it.id
-                        else
-                            selection = selection + it.id
+    override fun onDrag(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) {
+        val d = drag
+        if (buttons.isPrimaryPressed) {
+            now = current
+            when (d) {
+                is MoveDrag -> {
+                    val shift = current - d.start
+                    val rect = mapper.rect(d.originalBrushes.values)!!
+                    val snapPoints = listOf(rect.topLeft + shift, rect.bottomRight + shift)
+                    val snapDelta = mapper.snapClosest(snapPoints)
+                    val offset = mapper.deltaToW(shift + snapDelta)
+                    state.selection.forEach {
+                        holder.brushChanged(d.originalBrushes[it]!!.translate(offset))
                     }
+                }
 
-                holder.selectBrushes(selection, false, false)
+                is ResizeDrag -> {
+                    val oldBB = d.originalBrushes.values
+                        .map { it.bb }
+                        .reduce(BoundingBox::merge)
+                    val rect = safeRect(d.frozenCorner, current, d.corner)
+
+                    val newBB = mapper.toW(rect, oldBB)
+                    state.selection.forEach {
+                        val origBrush = d.originalBrushes[it]!!
+                        holder.brushChanged(origBrush.scale(oldBB, newBB))
+                    }
+                }
+
+                is RotateDrag -> {
+                    val oldBB = d.originalBrushes.values
+                        .map { it.bb }
+                        .reduce(BoundingBox::merge)
+                    val center = oldBB.center
+                    val screenCenter = mapper.wToV(center)
+                    val angle = -((current - screenCenter) angleTo (d.start - screenCenter))
+                    val origBrushes = state.selection.map { d.originalBrushes[it]!! }
+                    val lookAxis = mapper.axes.lookAxis
+
+                    val rotation = Quaternion.fromAxisAngle(lookAxis, angle)
+                    val dAngle = origBrushes.flatMap { it.faces }
+                        .map { rotation * it.plane.normal }
+                        .filter { it.dot(lookAxis) < 0.95f }
+                        .filter { it.dot(lookAxis) > -0.95f }
+                        .flatMap { n -> mapper.gridDirs().map { n to it } }
+                        .map { mapper.projAngle(it.first, it.second) }
+                        .minBy { abs(it) }
+                    val da = if (abs(dAngle) < 0.15) dAngle else 0f
+
+                    origBrushes.forEach {
+                        holder.brushChanged(it.rotate(center, lookAxis, angle + da))
+                    }
+                }
+
+                is SelectorDrag -> {
+                    val rect = unirect(d.start, current)
+                    var selection = d.originalSelection
+                    model.brushes.values
+                        .filter { !model.invisibleBrushes.contains(it.id) }
+                        .filter {
+                            val brushRect = mapper.rect(it)
+                            rect.contains(brushRect.topLeft) && rect.contains(brushRect.bottomRight) && rect.contains(brushRect.topRight) && rect.contains(brushRect.bottomLeft)
+                        }.forEach {
+                            if (isCtrlDown)
+                                selection = if (selection.contains(it.id)) selection - it.id else selection + it.id
+                            else
+                                selection = selection + it.id
+                        }
+
+                    holder.selectBrushes(selection, false, false)
+                }
+            }
+        } else if (buttons.isSecondaryPressed) {
+            if (d is GridDrag) {
+                val shift = current - d.originalOffset
+                holder.setViewCenter(
+                    d.originalCenter -
+                            mapper.axes.xAxis * (shift.x / state.projectionScale) -
+                            mapper.axes.yAxis * (shift.y / state.projectionScale)
+                )
             }
         }
     }
