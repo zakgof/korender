@@ -1,6 +1,7 @@
 package editor.ui.projection
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerButtons
 import com.zakgof.korender.math.Vec3
 import editor.state.State
 import editor.state.StateHolder
@@ -16,12 +17,12 @@ internal class DragMouseHandler(
         var originalCenter: Vec3? = null
     }
 
-    override fun onDragStart(start: Offset) {
+    override fun onDragStart(start: Offset, buttons: PointerButtons) {
         originalOffset = start
         originalCenter = state.viewCenter
     }
 
-    override fun onDrag(current: Offset, isCtrlDown: Boolean) {
+    override fun onDrag(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) {
         originalOffset?.let { oo ->
             val shift = current - oo
             holder.setViewCenter(originalCenter!! -
