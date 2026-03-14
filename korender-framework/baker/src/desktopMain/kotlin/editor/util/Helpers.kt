@@ -1,5 +1,7 @@
 package com.zakgof.korender.baker.editor.util
 
+import androidx.compose.ui.graphics.Color
+import com.zakgof.korender.math.ColorRGBA
 import java.math.BigDecimal
 import kotlin.math.abs
 import kotlin.math.floor
@@ -22,3 +24,7 @@ fun Float.sanity(): String {
     val out = if (abs(r - v) <= a * 0.001) r else v
     return BigDecimal.valueOf(out).stripTrailingZeros().toPlainString()
 }
+
+fun Color.toKorender() = ColorRGBA(red, green, blue, alpha)
+
+fun ColorRGBA.toCompose() = Color(r, g, b, a)

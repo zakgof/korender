@@ -1,10 +1,14 @@
 package editor.model
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import com.zakgof.korender.baker.editor.model.Group
 import com.zakgof.korender.math.Vec3
 import editor.model.brush.Brush
 import editor.model.brush.Face
 import editor.model.brush.Plane
+import editor.model.brush.Texturing
+import editor.model.brush.Texturing.Axis
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.serialization.Serializable
 
@@ -66,12 +70,32 @@ data class PlaneDto(
 data class FaceDto(
     val plane: PlaneDto,
     val materialId: String,
+    val texturing: TexturingDto,
 ) {
-    constructor(face: Face) : this(PlaneDto(face.plane), face.materialId)
+    constructor(face: Face) : this(PlaneDto(face.plane), face.materialId, TexturingDto(face.texturing))
 
     fun toFace() = Face(
         plane = plane.toPlane(),
-        materialId = materialId
+        materialId = materialId,
+        texturing = texturing.toTexturing()
+    )
+}
+
+@Serializable
+data class TexturingDto(
+    val uScale: Float,
+    val uOffset: Float,
+    val vScale: Float,
+    val vOffset: Float,
+    val fitToFace: Boolean,
+) {
+    constructor(texturing: Texturing)
+            : this(texturing.u.scale, texturing.u.offset, texturing.v.scale, texturing.v.offset, texturing.fitToFace)
+
+    fun toTexturing() = Texturing(
+        Axis(uScale, uOffset),
+        Axis(vScale, vOffset),
+        fitToFace
     )
 }
 
@@ -117,20 +141,20 @@ data class BrushDto(
 data class MaterialDto(
     val name: String,
     val colorTexture: TexId? = null,
-    val baseColor: Long,
+    val baseColor: Int,
     val id: String,
 ) {
     constructor(material: Material) : this(
         name = material.name,
         colorTexture = material.colorTexture,
-        baseColor = material.baseColor,
+        baseColor = material.baseColor.toArgb(),
         id = material.id
     )
 
     fun toMaterial() = Material(
         name = name,
         colorTexture = colorTexture,
-        baseColor = baseColor,
+        baseColor = Color(baseColor),
         id = id
     )
 }

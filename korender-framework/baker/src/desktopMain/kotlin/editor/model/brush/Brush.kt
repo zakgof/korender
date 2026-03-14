@@ -11,19 +11,23 @@ import kotlin.uuid.Uuid
 data class Face(
     val plane: Plane,
     val materialId: String,
-    val texturing: Texturing = Texturing()
-)
+    val texturing: Texturing,
+) {
+    constructor(plane: Plane, materialId: String, fitToFace: Boolean) :
+            this(plane, materialId, Texturing(fitToFace = fitToFace))
+}
+
 
 @OptIn(ExperimentalUuidApi::class)
 data class Brush(
     val name: String,
     val projectionColor: Int,
     val faces: List<Face>,
-    val id: String = Uuid.generateV7().toHexDashString()
+    val id: String = Uuid.generateV7().toHexDashString(),
 ) {
 
-    constructor(name: String, projectionColor: Color, bb: BoundingBox, materialId: String) :
-            this(name, projectionColor.toArgb(), Plane.cube(bb).map { Face(it, materialId) })
+    constructor(name: String, projectionColor: Color, bb: BoundingBox, materialId: String, fitToFace: Boolean) :
+            this(name, projectionColor.toArgb(), Plane.cube(bb).map { Face(it, materialId, fitToFace) })
 
     val mesh by lazy { BrushMesher.buildBrushMesh(this) }
 
@@ -128,15 +132,15 @@ data class Brush(
     }
 
     companion object {
-        fun carve(target: Collection<Brush>, by: Brush, materialId: String): Set<Pair<Brush, Collection<Brush>>> {
+        fun carve(target: Collection<Brush>, by: Brush, materialId: String, fitToFace: Boolean): Set<Pair<Brush, Collection<Brush>>> {
             val planes = by.faces.map { it.plane }
             return target.mapNotNull { brush ->
-                brush.carveBy(planes, materialId)?.let { brush to it }
+                brush.carveBy(planes, materialId, fitToFace)?.let { brush to it }
             }.toSet()
         }
     }
 
-    private fun carveBy(by: List<Plane>, materialId: String): List<Brush>? {
+    private fun carveBy(by: List<Plane>, materialId: String, fitToFace: Boolean): List<Brush>? {
 
         val results = mutableListOf<Brush>()
         var currentPart = this
@@ -155,12 +159,12 @@ data class Brush(
                     val front = currentPart.copy(
                         name = "$name*",
                         id = Uuid.generateV7().toHexDashString(),
-                        faces = currentPart.faces + Face(plane.invert(), materialId)
+                        faces = currentPart.faces + Face(plane.invert(), materialId, fitToFace)
                     ).filterFaces()
                     val back = currentPart.copy(
                         name = "$name*",
                         id = Uuid.generateV7().toHexDashString(),
-                        faces = currentPart.faces + Face(plane, materialId)
+                        faces = currentPart.faces + Face(plane, materialId, fitToFace)
                     ).filterFaces()
                     results += front
                     currentPart = back

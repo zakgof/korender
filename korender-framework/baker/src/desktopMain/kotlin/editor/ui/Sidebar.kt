@@ -1,17 +1,23 @@
 package editor.ui
 
+import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -224,36 +230,46 @@ fun selection(holder: StateHolder, state: State, model: Model) {
 @Composable
 fun tree(model: Model, state: State, holder: StateHolder) {
     GroupBox("Objects") {
-        Column {
-            model.groups.values
-                .forEach { group ->
-                    val hidden = model.invisibleBrushes.containsAll(group.brushIds)
-                    Text(
-                        text = "${group.name} (${group.brushIds.size})",
-                        style = if (hidden) Theme.darkLabel else Theme.label,
-                        modifier = Modifier
-                            .padding(2.dp)
-                            .onPointerEvent(PointerEventType.Press) { event ->
-                                holder.selectBrushes(group.brushIds, event.keyboardModifiers.isCtrlPressed, true)
-                            },
-                        fontWeight = if (state.selection.containsAll(group.brushIds)) FontWeight.Bold else FontWeight.Normal
-                    )
-                }
-            model.brushes.values
-                .filter { brush -> model.brushGroups[brush.id] == null }
-                .forEach { brush ->
-                    val hidden = model.invisibleBrushes.contains(brush.id)
-                    Text(
-                        text = brush.name,
-                        style = if (hidden) Theme.darkLabel else Theme.label,
-                        modifier = Modifier
-                            .padding(2.dp)
-                            .onPointerEvent(PointerEventType.Press) { event ->
-                                holder.selectBrushes(setOf(brush.id), event.keyboardModifiers.isCtrlPressed, true)
-                            },
-                        fontWeight = if (state.selection.contains(brush.id)) FontWeight.Bold else FontWeight.Normal
-                    )
-                }
+        val scrollState = rememberScrollState()
+        Box {
+            Column(
+                modifier = Modifier.fillMaxSize()
+                    .verticalScroll(scrollState)
+            ) {
+                model.groups.values
+                    .forEach { group ->
+                        val hidden = model.invisibleBrushes.containsAll(group.brushIds)
+                        Text(
+                            text = "${group.name} (${group.brushIds.size})",
+                            style = if (hidden) Theme.darkLabel else Theme.label,
+                            modifier = Modifier
+                                .padding(2.dp)
+                                .onPointerEvent(PointerEventType.Press) { event ->
+                                    holder.selectBrushes(group.brushIds, event.keyboardModifiers.isCtrlPressed, true)
+                                },
+                            fontWeight = if (state.selection.containsAll(group.brushIds)) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                model.brushes.values
+                    .filter { brush -> model.brushGroups[brush.id] == null }
+                    .forEach { brush ->
+                        val hidden = model.invisibleBrushes.contains(brush.id)
+                        Text(
+                            text = brush.name,
+                            style = if (hidden) Theme.darkLabel else Theme.label,
+                            modifier = Modifier
+                                .padding(2.dp)
+                                .onPointerEvent(PointerEventType.Press) { event ->
+                                    holder.selectBrushes(setOf(brush.id), event.keyboardModifiers.isCtrlPressed, true)
+                                },
+                            fontWeight = if (state.selection.contains(brush.id)) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+            }
+            VerticalScrollbar(
+                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().width(6.dp),
+                adapter = rememberScrollbarAdapter(scrollState)
+            )
         }
     }
 }

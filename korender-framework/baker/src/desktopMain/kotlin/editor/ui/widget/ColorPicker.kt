@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.zakgof.korender.baker.editor.util.toCompose
 import com.zakgof.korender.math.ColorRGBA
 import editor.ui.Theme
 import kotlin.math.abs
@@ -47,9 +48,6 @@ data class HSL(
         return ColorRGBA(r1 + m, g1 + m, b1 + m, a)
     }
 }
-
-fun ColorRGBA.toCompose(): Color =
-    Color(r, g, b, a)
 
 fun ColorRGBA.toHSL(): HSL {
     val max = maxOf(r, g, b)
