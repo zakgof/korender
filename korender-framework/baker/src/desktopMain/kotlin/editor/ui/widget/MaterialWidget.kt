@@ -17,10 +17,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.zakgof.korender.math.ColorRGBA
 import editor.model.Material
 import editor.ui.Theme
-import editor.ui.widget.toCompose
 import editor.util.TextureImageCache
 
 @Composable
@@ -48,14 +46,14 @@ fun MaterialWidget(material: Material, selected: Boolean, onClick: () -> Unit) {
                 bitmap = TextureImageCache.compose(material.colorTexture.path),
                 contentDescription = null,
                 colorFilter = ColorFilter.tint(
-                    color = ColorRGBA(material.baseColor).toCompose(),
+                    color = material.baseColor,
                     blendMode = BlendMode.Modulate
                 ),
                 modifier = Modifier.size(36.dp, 36.dp)
             )
         } ?: Box(
             modifier = Modifier.size(36.dp, 36.dp)
-                .background(ColorRGBA(material.baseColor).toCompose())
+                .background(material.baseColor)
         )
 
     }

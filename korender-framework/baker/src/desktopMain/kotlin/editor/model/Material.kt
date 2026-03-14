@@ -1,7 +1,8 @@
 package editor.model
 
-import com.zakgof.korender.math.ColorRGBA.Companion.Blue
-import com.zakgof.korender.math.ColorRGBA.Companion.White
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Blue
+import androidx.compose.ui.graphics.Color.Companion.White
 import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -10,17 +11,16 @@ import kotlin.uuid.Uuid
 data class Material(
     val name: String,
     val colorTexture: TexId? = null,
-    val baseColor: Long = White.toLong(),
+    val baseColor: Color = White,
     val id: String = Uuid.generateV7().toHexDashString(),
+    val fitToFace: Boolean = false
 ) {
-
-
     companion object {
-        val generic: Material = Material("Generic", null, Blue.toLong(), "generic")
+        val generic: Material = Material("Generic", null, Blue, "generic")
     }
 }
 
 @Serializable
 data class TexId(
-    val path: String
+    val path: String,
 )

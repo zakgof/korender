@@ -22,7 +22,7 @@ object ModelCompiler {
             materials = model.materials.values.map { material ->
                 SceneModel.Material(
                     material.id,
-                    material.baseColor,
+                    material.baseColor.toKorender().toLong(),
                     material.colorTexture?.let { material.id }
                 )
             }.associateBy { it.id },

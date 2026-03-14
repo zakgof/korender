@@ -103,7 +103,8 @@ class StateHolder {
             "Brush ${_model.value.brushes.size}",
             randomBrushColor(model.value.brushes.size),
             bb,
-            state.value.materialId
+            state.value.materialId,
+            model.value.materials[state.value.materialId]!!.fitToFace
         )
         _model.update {
             it.copy(brushes = it.brushes.put(newBrush.id, newBrush))
@@ -328,8 +329,8 @@ class StateHolder {
         modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(texturing = it.texturing.copy(v = it.texturing.v.copy(offset = vOffset))) }) }
     }
 
-    fun applyTexturingWorldScaleToSelection(newValue: Boolean) {
-        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(texturing = it.texturing.copy(worldScale = newValue)) }) }
+    fun applyTexturingFitToFaceToSelection(newValue: Boolean) {
+        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(texturing = it.texturing.copy(fitToFace = newValue)) }) }
     }
 
     fun setLastTextureDir(directory: String) {
@@ -359,7 +360,7 @@ class StateHolder {
     fun carve(): Boolean {
         val by = selectedBrushes()
         val target = model.value.brushes.values - by
-        val carving = Brush.carve(target, by.first(), state.value.materialId)
+        val carving = Brush.carve(target, by.first(), state.value.materialId, model.value.materials[state.value.materialId]!!.fitToFace)
 
         if (carving.isEmpty())
             return false

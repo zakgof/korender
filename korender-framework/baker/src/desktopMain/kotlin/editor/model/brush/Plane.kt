@@ -59,7 +59,7 @@ data class Plane(
         )
     }
 
-    fun tex(pos: Vec3, worldScale: Boolean): Vec2 {
+    fun tex(pos: Vec3, fitToFace: Boolean): Vec2 {
         val u = pu - p0
         val v = pv - p0
         val d = pos - p0
@@ -75,7 +75,7 @@ data class Plane(
         val tu = (du * vv - dv * uv) * invDet
         val tv = (du * uv - dv * uu) * invDet + 1f
 
-        return if (worldScale) {
+        return if (!fitToFace) {
             Vec2(
                 tu * sqrt(uu),
                 tv * sqrt(vv)

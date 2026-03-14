@@ -88,7 +88,7 @@ object BrushMesher {
 
             for (i in 1 until sorted.size - 1) {
                 val pos = listOf(points[sorted[0]], points[sorted[i]], points[sorted[i + 1]])
-                val tex = pos.map { plane.tex(it, face.texturing.worldScale) }
+                val tex = pos.map { plane.tex(it, face.texturing.fitToFace) }
                     .map {
                         Vec2(
                             it.x * face.texturing.u.scale + face.texturing.u.offset,

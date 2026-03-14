@@ -53,15 +53,15 @@ fun texturingDialog(holder: StateHolder): () -> Unit {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val texturings = state.selection.map { model.brushes[it]!! }.flatMap { it.faces }.map { it.texturing }
-                    val worldScale = texturings.map { it.worldScale }.sameOrNull()
-                    Text("World scale", style = Theme.label, modifier = Modifier.weight(1f))
+                    val fitToFace = texturings.map { it.fitToFace }.sameOrNull()
+                    Text("Fit to face", style = Theme.label, modifier = Modifier.weight(1f))
                     TriStateCheckbox(
-                        state = when (worldScale) {
+                        state = when (fitToFace) {
                             null -> ToggleableState.Indeterminate
                             true -> ToggleableState.On
                             false -> ToggleableState.Off
                         }, onClick = {
-                            holder.applyTexturingWorldScaleToSelection(worldScale?.not() ?: true)
+                            holder.applyTexturingFitToFaceToSelection(fitToFace?.not() ?: true)
                         })
                 }
                 Row(
