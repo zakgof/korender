@@ -38,12 +38,15 @@ import com.zakgof.korender.baker.editor.util.sanity
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
 import com.zakgof.korender.baker.resources.drag
+import com.zakgof.korender.baker.resources.group
+import com.zakgof.korender.baker.resources.material
 import com.zakgof.korender.baker.resources.minus
 import com.zakgof.korender.baker.resources.newmaterial
 import com.zakgof.korender.baker.resources.pen
 import com.zakgof.korender.baker.resources.plus
 import com.zakgof.korender.baker.resources.pointer
 import com.zakgof.korender.baker.resources.texsetup
+import com.zakgof.korender.baker.resources.ungroup
 import com.zakgof.korender.baker.resources.zoomin
 import com.zakgof.korender.baker.resources.zoomout
 import editor.model.BoundingBox
@@ -153,7 +156,7 @@ private fun materials(holder: StateHolder, state: State, model: Model) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            IconButton(Res.drawable.pen, "Edit Materials") { materialDialog() }
+            IconButton(Res.drawable.material, "Edit Materials") { materialDialog() }
             IconButton(Res.drawable.newmaterial, "New textured Material") {
                 textureDialog(state, holder)?.let { file ->
                     val material = Material(file.name, TexId(file.path))
@@ -190,18 +193,41 @@ fun selection(holder: StateHolder, state: State, model: Model) {
                 }
                 val groups = state.selection.mapNotNull { model.brushGroups[it] }.distinct().count()
                 val independents = state.selection.count { model.brushGroups[it] == null }
-                if (state.selection.size == 1) {
-                    val brush = model.brushes[state.selection.first()]!!
-                    FancyClickToTextInput(brush.name) {
-                        holder.brushChanged(brush.copy(name = it))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        if (state.selection.size == 1) {
+                            val brush = model.brushes[state.selection.first()]!!
+                            FancyClickToTextInput(brush.name) {
+                                holder.brushChanged(brush.copy(name = it))
+                            }
+                        } else if (groups == 1 && independents == 0) {
+                            val group = model.groups[model.brushGroups[state.selection.first()]!!]!!
+                            FancyClickToTextInput(group.name) {
+                                holder.renameGroup(group.id, it)
+                            }
+                        } else if (state.selection.size > 1) {
+                            Box(
+                                modifier = Modifier.height(32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("${state.selection.size} objects", style = Theme.label)
+                            }
+                        }
                     }
-                } else if (groups == 1 && independents == 0) {
-                    val group = model.groups[model.brushGroups[state.selection.first()]!!]!!
-                    FancyClickToTextInput(group.name) {
-                        holder.renameGroup(group.id, it)
+
+                    if (groups > 0) {
+                        IconButton(Res.drawable.ungroup, "Ungroup") {
+                            holder.ungroupSelection()
+                        }
                     }
-                } else if (state.selection.size > 1) {
-                    Text("${state.selection.size} objects, ", style = Theme.label)
+                    if (independents + groups > 1) {
+                        IconButton(Res.drawable.group, "Group") {
+                            holder.groupSelection()
+                        }
+                    }
                 }
                 val bb = state.selection.map { model.brushes[it]!!.bb }
                     .reduce(BoundingBox::merge)
@@ -225,6 +251,7 @@ fun selection(holder: StateHolder, state: State, model: Model) {
         }
     }
 }
+
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
