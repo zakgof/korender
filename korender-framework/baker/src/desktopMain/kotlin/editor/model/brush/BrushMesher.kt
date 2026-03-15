@@ -8,7 +8,7 @@ import kotlin.math.atan2
 class BrushMesh(
     val points: List<Vec3>,
     val edges: List<Pair<Int, Int>>,
-    val faces: Map<Plane, List<Tri>>
+    val faces: Map<Plane, List<Tri>>,
 ) {
     class Tri(
         val points: List<Vec3>,
@@ -86,18 +86,25 @@ object BrushMesher {
                 )
             }
 
+            val texes1 = sorted.map { plane.tex(points[it], false) }
+            val texes2 = if (face.texturing.fitToFace) {
+                val minU = texes1.minOf { it.x }
+                val minV = texes1.minOf { it.y }
+                val maxU = texes1.maxOf { it.x }
+                val maxV = texes1.maxOf { it.y }
+                texes1.map { Vec2((it.x - minU) / (maxU - minU), (it.y - minV) / (maxV - minV)) }
+            } else texes1
+            val texes = texes2.map {
+                Vec2(
+                    it.x * face.texturing.u.scale + face.texturing.u.offset,
+                    it.y * face.texturing.v.scale + face.texturing.v.offset,
+                )
+            }
             for (i in 1 until sorted.size - 1) {
                 val pos = listOf(points[sorted[0]], points[sorted[i]], points[sorted[i + 1]])
-                val tex = pos.map { plane.tex(it, face.texturing.fitToFace) }
-                    .map {
-                        Vec2(
-                            it.x * face.texturing.u.scale + face.texturing.u.offset,
-                            it.y * face.texturing.v.scale + face.texturing.v.offset,
-                        )
-                    }
+                val tex = listOf(texes[0], texes[i], texes[i + 1])
                 triangles += BrushMesh.Tri(pos, tex, n)
             }
-
             faces[plane] = triangles
         }
 
