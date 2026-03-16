@@ -28,10 +28,8 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import editor.ui.Theme
 
 @Composable
@@ -59,10 +57,7 @@ fun FancyTextInput(value: String, modifier: Modifier = Modifier, validator: (Str
                 onValueChange(it)
             }
         },
-        textStyle = TextStyle(
-            fontSize = 12.sp,
-            color = Theme.light
-        )
+        textStyle = Theme.label
     )
 }
 

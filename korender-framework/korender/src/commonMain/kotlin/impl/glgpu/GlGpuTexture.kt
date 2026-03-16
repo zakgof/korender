@@ -22,6 +22,7 @@ import com.zakgof.korender.impl.gl.GL.glGetError
 import com.zakgof.korender.impl.gl.GL.glGetFloatv
 import com.zakgof.korender.impl.gl.GL.glGetMaxTextureMaxAnisotropyConstant
 import com.zakgof.korender.impl.gl.GL.glGetTextureMaxAnisotropyConstant
+import com.zakgof.korender.impl.gl.GL.glPixelStorei
 import com.zakgof.korender.impl.gl.GL.glReadPixels
 import com.zakgof.korender.impl.gl.GL.glTexImage2D
 import com.zakgof.korender.impl.gl.GL.glTexParameteri
@@ -59,6 +60,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MAG_FILTER
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MIN_FILTER
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_S
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_T
+import com.zakgof.korender.impl.gl.GLConstants.GL_UNPACK_ALIGNMENT
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_BYTE
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_INT
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_SHORT
@@ -163,10 +165,11 @@ internal class GlGpuTexture(private val width: Int, private val height: Int, fil
     private fun upload(width: Int, height: Int, buffer: NativeBuffer?, format: GlFormat): Boolean {
 
         if (this.format != null && buffer != null) {
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, format.format, format.type, buffer.rewind())
             return true
         }
-
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
         glTexImage2D(GL_TEXTURE_2D, 0, format.internal, width, height, 0, format.format, format.type, buffer?.rewind())
         val error = glGetError()
         if (error != 0) {

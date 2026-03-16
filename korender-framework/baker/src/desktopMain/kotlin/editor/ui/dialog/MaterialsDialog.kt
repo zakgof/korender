@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Text
+import androidx.compose.material3.Checkbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -31,13 +32,14 @@ import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import com.zakgof.korender.Korender
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
+import com.zakgof.korender.baker.editor.util.toCompose
+import com.zakgof.korender.baker.editor.util.toKorender
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.file
 import com.zakgof.korender.baker.resources.material
 import com.zakgof.korender.baker.resources.pen
 import com.zakgof.korender.baker.resources.trash
 import com.zakgof.korender.math.ColorRGB.Companion.white
-import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec3
@@ -166,8 +168,8 @@ fun RowScope.MaterialEditor(holder: StateHolder) {
                 )
             }
             GroupBox("Base color") {
-                ColorPicker(color = ColorRGBA(material.baseColor), disabled = disabled) {
-                    holder.updateMaterial(material.copy(baseColor = it.toLong()))
+                ColorPicker(color = material.baseColor.toKorender(), disabled = disabled) {
+                    holder.updateMaterial(material.copy(baseColor = it.toCompose()))
                 }
             }
             if (!disabled) {
@@ -193,6 +195,18 @@ fun RowScope.MaterialEditor(holder: StateHolder) {
                             IconButton(icon = Res.drawable.trash, "Delete texture") {
                                 holder.updateMaterial(material.copy(colorTexture = null))
                             }
+                        }
+                    }
+                    material.colorTexture?.let {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Fit to face", style = Theme.label, modifier = Modifier.weight(1f))
+                            Checkbox(
+                                checked = material.fitToFace,
+                                onCheckedChange = {
+                                    holder.updateMaterial(material.copy(fitToFace = it))
+                                })
                         }
                     }
                 }

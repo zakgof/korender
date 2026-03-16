@@ -7,6 +7,7 @@ import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.Korender
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.TouchEvent
+import com.zakgof.korender.baker.editor.util.toKorender
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
@@ -117,6 +118,6 @@ fun KorenderView(holder: StateHolder) {
 context (context: FrameContext)
 fun Material.toBaseMM(selected: Boolean): MaterialModifier =
     context.base(
-        color = if (selected) ColorRGBA.Red else ColorRGBA(baseColor),
+        color = if (selected) ColorRGBA.Red else baseColor.toKorender(),
         colorTexture = colorTexture?.let { context.texture(name, TextureImageCache.korender(it.path)) }
     )

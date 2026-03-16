@@ -17,6 +17,7 @@ import com.zakgof.korender.impl.gl.GL.glGenTextures
 import com.zakgof.korender.impl.gl.GL.glGenerateMipmap
 import com.zakgof.korender.impl.gl.GL.glGetError
 import com.zakgof.korender.impl.gl.GL.glGetFloatv
+import com.zakgof.korender.impl.gl.GL.glPixelStorei
 import com.zakgof.korender.impl.gl.GL.glReadPixels
 import com.zakgof.korender.impl.gl.GL.glTexImage2D
 import com.zakgof.korender.impl.gl.GL.glTexParameteri
@@ -39,6 +40,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MIN_FILTER
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_R
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_S
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_T
+import com.zakgof.korender.impl.gl.GLConstants.GL_UNPACK_ALIGNMENT
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_BYTE
 import com.zakgof.korender.impl.gl.GLTexture
 import com.zakgof.korender.impl.ignoringGlError
@@ -116,12 +118,14 @@ internal class GlGpuCubeTexture : GLBindableTexture, AutoCloseable {
 
     private fun loadSide(glSide: Int, image: InternalImage) {
         val glFormat = formatMap[image.format]!!
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
         glTexImage2D(glSide, 0, glFormat.internal, image.width, image.height, 0, glFormat.format, glFormat.type, image.bytes)
     }
 
     @OptIn(ExperimentalStdlibApi::class)
     private fun initSide(glSide: Int, width: Int, height: Int, preset: GlGpuTexture.Preset) {
         for (glFormat in preset.formats) {
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
             glTexImage2D(glSide, 0, glFormat.internal, width, height, 0, glFormat.format, glFormat.type, null)
             val errcode = glGetError()
             if (errcode != 0) {

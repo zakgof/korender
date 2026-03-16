@@ -3,7 +3,7 @@ package editor.model.brush
 data class Texturing(
     val u: Axis = Axis(),
     val v: Axis = Axis(),
-    val worldScale: Boolean = false
+    val fitToFace: Boolean
 ) {
     data class Axis(
         val scale: Float = 1f,

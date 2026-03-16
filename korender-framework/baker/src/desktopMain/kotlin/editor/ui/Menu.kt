@@ -12,20 +12,27 @@ import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.MenuBarScope
 import com.zakgof.korender.baker.editor.ui.dialog.dryRunDialog
+import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.resources.Res
+import com.zakgof.korender.baker.resources.applymat
+import com.zakgof.korender.baker.resources.center
 import com.zakgof.korender.baker.resources.copy
 import com.zakgof.korender.baker.resources.cut
 import com.zakgof.korender.baker.resources.eye
 import com.zakgof.korender.baker.resources.file
+import com.zakgof.korender.baker.resources.group
 import com.zakgof.korender.baker.resources.load
 import com.zakgof.korender.baker.resources.material
 import com.zakgof.korender.baker.resources.minus
 import com.zakgof.korender.baker.resources.newmaterial
+import com.zakgof.korender.baker.resources.noeye
 import com.zakgof.korender.baker.resources.paste
 import com.zakgof.korender.baker.resources.play
 import com.zakgof.korender.baker.resources.plus
 import com.zakgof.korender.baker.resources.save
+import com.zakgof.korender.baker.resources.texsetup
 import com.zakgof.korender.baker.resources.trash
+import com.zakgof.korender.baker.resources.ungroup
 import com.zakgof.korender.baker.resources.zoomin
 import com.zakgof.korender.baker.resources.zoomout
 import editor.model.Material
@@ -34,7 +41,6 @@ import editor.state.State
 import editor.state.StateHolder
 import editor.ui.dialog.MaterialsDialog
 import editor.ui.dialog.confirmDialog
-import editor.ui.dialog.okDialog
 import editor.ui.dialog.textureDialog
 import org.jetbrains.compose.resources.painterResource
 import java.awt.FileDialog
@@ -126,7 +132,7 @@ private fun MenuBarScope.view(holder: StateHolder) {
             holder.setProjectionScale(state.projectionScale / 2f)
         }
         Separator()
-        Item("Center on selection", painterResource(Res.drawable.eye), shortcut = KeyShortcut(Key.E, ctrl = true)) {
+        Item("Center on selection", painterResource(Res.drawable.center), shortcut = KeyShortcut(Key.E, ctrl = true)) {
             holder.zoomOnSelection()
         }
         Item("Reset Views", painterResource(Res.drawable.eye), shortcut = KeyShortcut(Key.E, ctrl = true)) { // TODO icon
@@ -191,24 +197,31 @@ private fun MenuBarScope.selection(holder: StateHolder) {
     val state by holder.state.collectAsState()
     val model by holder.model.collectAsState()
     Menu("Selection") {
-        // TODO icon
+        Item("Apply current material", icon = painterResource(Res.drawable.applymat)) {
+            holder.applyMaterialToSelection()
+        }
+        val texturingDialog = texturingDialog(holder)
+        Item("Texture positioning", icon = painterResource(Res.drawable.texsetup)) {
+            texturingDialog()
+        }
+        Separator()
         val groupable = state.selection.size > 1 &&
                 (state.selection.any { model.brushGroups[it] == null } ||
                         state.selection.mapNotNull { model.brushGroups[it] }.toSet().size > 1)
-        Item("Group", icon = painterResource(Res.drawable.minus), enabled = groupable) {
+        Item("Group", icon = painterResource(Res.drawable.group), enabled = groupable) {
             holder.groupSelection()
         }
         val anyGroups = state.selection.any { model.brushGroups[it] != null }
-        Item("Ungroup", icon = painterResource(Res.drawable.plus), enabled = anyGroups) {
+        Item("Ungroup", icon = painterResource(Res.drawable.ungroup), enabled = anyGroups) {
             holder.ungroupSelection()
         }
         Separator()
         val hidable = !model.invisibleBrushes.containsAll(state.selection)
-        Item("Hide", icon = painterResource(Res.drawable.minus), enabled = hidable) {
+        Item("Hide", icon = painterResource(Res.drawable.noeye), enabled = hidable) {
             holder.hideSelection()
         }
         val showable = state.selection.any { model.invisibleBrushes.contains(it) }
-        Item("Unhide", icon = painterResource(Res.drawable.minus), enabled = showable) {
+        Item("Unhide", icon = painterResource(Res.drawable.eye), enabled = showable) {
             if (!holder.carve()) {
                 holder.unhideSelection()
             }
