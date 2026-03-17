@@ -42,7 +42,9 @@ import com.zakgof.korender.baker.resources.trash
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform.Companion.rotate
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import editor.model.Material
@@ -221,14 +223,84 @@ fun RowScope.MaterialPreview(holder: StateHolder) {
     val model by holder.model.collectAsState()
     Box(Modifier.weight(1.6f).fillMaxSize()) {
         Korender({ Res.readBytes(it) }, vSync = true) {
+            val fitToFaceMesh = customMesh("world", 24, 36, POS, NORMAL, TEX) {
+                pos(Vec3(-3f, -2f, 1f)).normal(1.z).tex(Vec2(0f, 1f))
+                pos(Vec3(3f, -2f, 1f)).normal(1.z).tex(Vec2(1f, 1f))
+                pos(Vec3(3f, 2f, 1f)).normal(1.z).tex(Vec2(1f, 0f))
+                pos(Vec3(-3f, 2f, 1f)).normal(1.z).tex(Vec2(0f, 0f))
+                pos(Vec3(3f, -2f, -1f)).normal((-1).z).tex(Vec2(0f, 1f))
+                pos(Vec3(-3f, -2f, -1f)).normal((-1).z).tex(Vec2(1f, 1f))
+                pos(Vec3(-3f, 2f, -1f)).normal((-1).z).tex(Vec2(1f, 0f))
+                pos(Vec3(3f, 2f, -1f)).normal((-1).z).tex(Vec2(0f, 0f))
+                pos(Vec3(-3f, -2f, -1f)).normal((-1).x).tex(Vec2(0f, 1f))
+                pos(Vec3(-3f, -2f, 1f)).normal((-1).x).tex(Vec2(1f, 1f))
+                pos(Vec3(-3f, 2f, 1f)).normal((-1).x).tex(Vec2(1f, 0f))
+                pos(Vec3(-3f, 2f, -1f)).normal((-1).x).tex(Vec2(0f, 0f))
+                pos(Vec3(3f, -2f, 1f)).normal(1.x).tex(Vec2(0f, 1f))
+                pos(Vec3(3f, -2f, -1f)).normal(1.x).tex(Vec2(1f, 1f))
+                pos(Vec3(3f, 2f, -1f)).normal(1.x).tex(Vec2(1f, 0f))
+                pos(Vec3(3f, 2f, 1f)).normal(1.x).tex(Vec2(0f, 0f))
+                pos(Vec3(-3f, 2f, 1f)).normal(1.y).tex(Vec2(0f, 0f))
+                pos(Vec3(3f, 2f, 1f)).normal(1.y).tex(Vec2(1f, 0f))
+                pos(Vec3(3f, 2f, -1f)).normal(1.y).tex(Vec2(1f, 1f))
+                pos(Vec3(-3f, 2f, -1f)).normal(1.y).tex(Vec2(0f, 1f))
+                pos(Vec3(-3f, -2f, -1f)).normal((-1).y).tex(Vec2(0f, 0f))
+                pos(Vec3(3f, -2f, -1f)).normal((-1).y).tex(Vec2(1f, 0f))
+                pos(Vec3(3f, -2f, 1f)).normal((-1).y).tex(Vec2(1f, 1f))
+                pos(Vec3(-3f, -2f, 1f)).normal((-1).y).tex(Vec2(0f, 1f))
+                index(
+                    0, 1, 2, 0, 2, 3,
+                    4, 5, 6, 4, 6, 7,
+                    8, 9, 10, 8, 10, 11,
+                    12, 13, 14, 12, 14, 15,
+                    16, 17, 18, 16, 18, 19,
+                    20, 21, 22, 20, 22, 23
+                )
+            }
+            val worldTexMesh = customMesh("fit", 24, 36, POS, NORMAL, TEX) {
+                val s = 1f
+                pos(Vec3(-3f, -2f,  1f)).normal(1.z).tex(Vec2(-3f*s,  2f*s))
+                pos(Vec3( 3f, -2f,  1f)).normal(1.z).tex(Vec2( 3f*s,  2f*s))
+                pos(Vec3( 3f,  2f,  1f)).normal(1.z).tex(Vec2( 3f*s, -2f*s))
+                pos(Vec3(-3f,  2f,  1f)).normal(1.z).tex(Vec2(-3f*s, -2f*s))
+                pos(Vec3( 3f, -2f, -1f)).normal((-1).z).tex(Vec2(-3f*s,  2f*s))
+                pos(Vec3(-3f, -2f, -1f)).normal((-1).z).tex(Vec2( 3f*s,  2f*s))
+                pos(Vec3(-3f,  2f, -1f)).normal((-1).z).tex(Vec2( 3f*s, -2f*s))
+                pos(Vec3( 3f,  2f, -1f)).normal((-1).z).tex(Vec2(-3f*s, -2f*s))
+                pos(Vec3(-3f, -2f, -1f)).normal((-1).x).tex(Vec2(-1f*s,  2f*s))
+                pos(Vec3(-3f, -2f,  1f)).normal((-1).x).tex(Vec2( 1f*s,  2f*s))
+                pos(Vec3(-3f,  2f,  1f)).normal((-1).x).tex(Vec2( 1f*s, -2f*s))
+                pos(Vec3(-3f,  2f, -1f)).normal((-1).x).tex(Vec2(-1f*s, -2f*s))
+                pos(Vec3( 3f, -2f,  1f)).normal(1.x).tex(Vec2(-1f*s,  2f*s))
+                pos(Vec3( 3f, -2f, -1f)).normal(1.x).tex(Vec2( 1f*s,  2f*s))
+                pos(Vec3( 3f,  2f, -1f)).normal(1.x).tex(Vec2( 1f*s, -2f*s))
+                pos(Vec3( 3f,  2f,  1f)).normal(1.x).tex(Vec2(-1f*s, -2f*s))
+                pos(Vec3(-3f,  2f,  1f)).normal(1.y).tex(Vec2(-3f*s,  1f*s))
+                pos(Vec3( 3f,  2f,  1f)).normal(1.y).tex(Vec2( 3f*s,  1f*s))
+                pos(Vec3( 3f,  2f, -1f)).normal(1.y).tex(Vec2( 3f*s, -1f*s))
+                pos(Vec3(-3f,  2f, -1f)).normal(1.y).tex(Vec2(-3f*s, -1f*s))
+                pos(Vec3(-3f, -2f, -1f)).normal((-1).y).tex(Vec2(-3f*s,  1f*s))
+                pos(Vec3( 3f, -2f, -1f)).normal((-1).y).tex(Vec2( 3f*s,  1f*s))
+                pos(Vec3( 3f, -2f,  1f)).normal((-1).y).tex(Vec2( 3f*s, -1f*s))
+                pos(Vec3(-3f, -2f,  1f)).normal((-1).y).tex(Vec2(-3f*s, -1f*s))
+                index(
+                    0, 1, 2, 0, 2, 3,
+                    4, 5, 6, 4, 6, 7,
+                    8, 9, 10, 8, 10, 11,
+                    12, 13, 14, 12, 14, 15,
+                    16, 17, 18, 16, 18, 19,
+                    20, 21, 22, 20, 22, 23
+                )
+            }
             Frame {
-                camera = camera(3.z, -1.z, 1.y)
+                val mat = model.materials[state.materialId]!!
+                camera = camera(10.z, -1.z, 1.y)
                 projection = projection(width.toFloat() / height.toFloat(), 1f, 1f, 100f)
                 AmbientLight(white(0.5f))
                 DirectionalLight(Vec3(1f, -1f, -1f), white(0.5f))
                 Renderable(
-                    model.materials[state.materialId]!!.toBaseMM(false),
-                    mesh = cube(),
+                    mat.toBaseMM(false),
+                    mesh = if (mat.fitToFace) fitToFaceMesh else worldTexMesh,
                     transform = rotate(Quaternion.fromAxisAngle(1.y, frameInfo.time)),
                     transparent = true
                 )
