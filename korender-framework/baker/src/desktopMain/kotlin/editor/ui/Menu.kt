@@ -41,6 +41,7 @@ import editor.state.State
 import editor.state.StateHolder
 import editor.ui.dialog.MaterialsDialog
 import editor.ui.dialog.confirmDialog
+import editor.ui.dialog.okDialog
 import editor.ui.dialog.textureDialog
 import org.jetbrains.compose.resources.painterResource
 import java.awt.FileDialog
@@ -222,8 +223,14 @@ private fun MenuBarScope.selection(holder: StateHolder) {
         }
         val showable = state.selection.any { model.invisibleBrushes.contains(it) }
         Item("Unhide", icon = painterResource(Res.drawable.eye), enabled = showable) {
+            holder.unhideSelection()
+        }
+        Separator()
+        val noCarveDialog = okDialog("Carve", "Intersection objects not found")
+        // TODO icon
+        Item("Carve", icon = painterResource(Res.drawable.minus), enabled = (state.selection.size == 1)) {
             if (!holder.carve()) {
-                holder.unhideSelection()
+                noCarveDialog()
             }
         }
     }
