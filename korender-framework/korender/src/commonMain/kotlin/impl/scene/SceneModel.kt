@@ -21,7 +21,8 @@ class SceneModel(
     class Material(
         val id: String,
         val baseColor: Long,
-        val textureId: String?
+        val colorTextureId: String?,
+        val colorTextureIds: List<String>?
     )
 
     @Serializable
@@ -35,7 +36,7 @@ class SceneModel(
 
     @Serializable
     enum class Attribute {
-        POS, NORMAL, TEX
+        POS, NORMAL, TEX, COLORTEXINDEX
     }
     @Serializable
     class Renderable(

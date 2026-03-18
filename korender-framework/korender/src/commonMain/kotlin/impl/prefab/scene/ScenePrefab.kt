@@ -37,7 +37,7 @@ internal class ScenePrefab(korenderContext: Engine.KorenderContextImpl, resource
             val sceneModel = sceneModelDeferred.getCompleted()
             sceneModel.renderables.forEach { re ->
                 Renderable(
-                    materialModifiers = materialModifiers(sceneModel.materials[re.value.materialId]!!),
+                    materialModifiers = materialModifiers(sceneModel.materials[re.value.materialId]!!).toTypedArray(),
                     mesh = mesh(re.value.meshId, sceneModel.meshes[re.value.meshId]!!),
                     transform = Transform(Mat4(re.value.transform))
                 )
@@ -45,12 +45,18 @@ internal class ScenePrefab(korenderContext: Engine.KorenderContextImpl, resource
         }
     }
 
-    private fun FrameContext.materialModifiers(material: SceneModel.Material) = arrayOf(
-        base(
-            color = ColorRGBA(material.baseColor),
-            colorTexture = material.textureId?.let { texture(texturePrefix + material.textureId) }
+    private fun FrameContext.materialModifiers(material: SceneModel.Material) =
+        listOfNotNull(
+            base(
+                color = ColorRGBA(material.baseColor),
+                colorTexture = material.colorTextureId?.let {
+                    texture(texturePrefix + it)
+                }
+            ),
+            material.colorTextureIds?.let {
+                colorTextures(textureArray(*it.map { t -> texturePrefix + t }.toTypedArray()))
+            }
         )
-    )
 
     private fun FrameContext.mesh(id: String, mesh: SceneModel.Mesh) =
         customMesh(
@@ -75,6 +81,7 @@ internal class ScenePrefab(korenderContext: Engine.KorenderContextImpl, resource
         SceneModel.Attribute.POS -> MeshAttributes.POS
         SceneModel.Attribute.NORMAL -> MeshAttributes.NORMAL
         SceneModel.Attribute.TEX -> MeshAttributes.TEX
+        SceneModel.Attribute.COLORTEXINDEX -> MeshAttributes.COLORTEXINDEX
     }
 }
 
