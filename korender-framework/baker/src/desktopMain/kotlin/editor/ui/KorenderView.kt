@@ -15,6 +15,7 @@ import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.y
 import editor.model.Material
 import editor.state.State
 import editor.state.StateHolder
@@ -71,6 +72,7 @@ fun KorenderView(holder: StateHolder) {
         Frame {
             AmbientLight(white(0.6f))
             DirectionalLight(Vec3(1f, -1f, -1f), white(1.5f))
+            PointLight(20.y, white(4.5f))
             camera = camera(state.camera.position, state.camera.direction, state.camera.up)
             projection = projection(0.1f * width / height, 0.1f, 0.1f, 1e4f)
 
