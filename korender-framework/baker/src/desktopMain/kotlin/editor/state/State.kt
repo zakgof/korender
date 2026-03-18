@@ -34,7 +34,7 @@ data class State(
 ) {
 
     companion object {
-        val STATE_KEYS = setOf(Key.W, Key.A, Key.S, Key.D)
+        val STATE_KEYS = setOf(Key.W, Key.A, Key.S, Key.D, Key.DirectionLeft, Key.DirectionRight, Key.DirectionDown, Key.DirectionUp)
     }
 
     enum class MouseMode {
@@ -54,7 +54,15 @@ data class State(
         val direction: Vec3,
         val up: Vec3,
     ) {
-        fun forward(dt: Float): Camera = copy(position = position + direction * 10f * dt)
-        fun right(dt: Float): Camera = copy(direction = (Quaternion.fromAxisAngle(up, 10f * dt) * direction).normalize())
+        fun forward(dt: Float): Camera = copy(position = position + direction * dt)
+        fun strafeRight(dt: Float): Camera = copy(position = position + direction.cross(up) * dt)
+        fun right(dt: Float): Camera = copy(direction = (Quaternion.fromAxisAngle(up, -5f * dt) * direction).normalize())
+        fun up(dt: Float): Camera {
+            val q = Quaternion.fromAxisAngle(direction.cross(up), 5f * dt)
+            return copy(
+                direction = (q * direction).normalize(),
+                up = (q * up).normalize()
+            )
+        }
     }
 }
