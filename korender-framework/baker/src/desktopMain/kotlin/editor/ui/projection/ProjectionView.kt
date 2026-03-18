@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
@@ -28,8 +29,10 @@ import androidx.compose.ui.input.pointer.PointerButtons
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isCtrlPressed
+import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import com.zakgof.korender.baker.editor.util.advanceSig
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
@@ -58,6 +61,7 @@ class Axes(val name: String, val xAxis: Vec3, val yAxis: Vec3, val lookAxis: Vec
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ProjectionView(axes: Axes, holder: StateHolder) {
     val state by holder.state.collectAsState()
@@ -72,28 +76,26 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
             .clipToBounds()
             .background(Color.Black)
             .fillMaxSize()
+            .onPointerEvent(PointerEventType.Scroll) { event ->
+                val delta = event.changes.first().scrollDelta.y
+                val zoom = state.projectionScale.advanceSig(2, delta)
+                holder.setProjectionScale(zoom)
+            }
             .pointerInput(Unit) {
                 awaitEachGesture {
-                    // 1. Wait for ANY pointer press (Left, Right, Middle)
                     val event = awaitPointerEvent(PointerEventPass.Initial)
                     val down = event.changes.first()
-
-                    // Check if it's a press event
                     if (event.type == PointerEventType.Press) {
                         focusRequester.requestFocus()
-
                         var isDrag = false
-                        // 2. Check for drag slop
                         val dragStart = awaitTouchSlopOrCancellation(down.id) { change, _ ->
                             isDrag = true
                             change.consume()
                             mouseHandler.onDragStart(down.position, event.buttons)
                         }
-
                         if (isDrag && dragStart != null) {
                             drag(dragStart.id) { change ->
                                 change.consume()
-                                // Use currentEvent to get the latest button/modifier state
                                 mouseHandler.onDrag(
                                     change.position,
                                     currentEvent.buttons,
@@ -102,7 +104,6 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
                             }
                             mouseHandler.onDragEnd()
                         } else {
-                            // 3. It was a click (no drag occurred)
                             mouseHandler.onClick(
                                 down.position,
                                 event.buttons,

@@ -5,6 +5,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.baker.editor.model.Group
 import com.zakgof.korender.baker.editor.util.ModelCompiler
+import com.zakgof.korender.baker.editor.util.floor2
+import com.zakgof.korender.baker.editor.util.floorSig
+import com.zakgof.korender.baker.editor.util.roundSane
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -26,10 +29,7 @@ import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import java.io.File
 import kotlin.math.atan
-import kotlin.math.floor
-import kotlin.math.log10
 import kotlin.math.min
-import kotlin.math.pow
 import kotlin.math.tan
 import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
@@ -79,8 +79,10 @@ class StateHolder {
         val width = min(UiState.viewSize["top"]!!.first, UiState.viewSize["top"]!!.second)
         val cells = width / (state.value.gridScale * state.value.projectionScale)
 
-        if (cells !in 5f..50f) {
-            _state.update { it.copy(gridScale = (width / (30f * state.value.projectionScale)).floor2()) }
+        if (cells < 5f) {
+            _state.update { it.copy(gridScale = (width / (5f * state.value.projectionScale)).roundSane()) }
+        } else if (cells > 50f) {
+            _state.update { it.copy(gridScale = (width / (50f * state.value.projectionScale)).roundSane()) }
         }
     }
 
@@ -138,16 +140,28 @@ class StateHolder {
 
     fun frame(dt: Float) {
         if (_state.value.pressedKeys.contains(Key.W)) {
-            _state.update { it.copy(camera = it.camera.forward(dt)) }
+            _state.update { it.copy(camera = it.camera.forward(dt * state.value.projectionScale)) }
         }
         if (_state.value.pressedKeys.contains(Key.S)) {
-            _state.update { it.copy(camera = it.camera.forward(-dt)) }
+            _state.update { it.copy(camera = it.camera.forward(-dt * state.value.projectionScale)) }
         }
         if (_state.value.pressedKeys.contains(Key.A)) {
-            _state.update { it.copy(camera = it.camera.right(-dt)) }
+            _state.update { it.copy(camera = it.camera.strafeRight(-dt * state.value.projectionScale)) }
         }
         if (_state.value.pressedKeys.contains(Key.D)) {
+            _state.update { it.copy(camera = it.camera.strafeRight(dt * state.value.projectionScale)) }
+        }
+        if (_state.value.pressedKeys.contains(Key.DirectionLeft)) {
+            _state.update { it.copy(camera = it.camera.right(-dt)) }
+        }
+        if (_state.value.pressedKeys.contains(Key.DirectionRight)) {
             _state.update { it.copy(camera = it.camera.right(dt)) }
+        }
+        if (_state.value.pressedKeys.contains(Key.DirectionUp)) {
+            _state.update { it.copy(camera = it.camera.up(dt)) }
+        }
+        if (_state.value.pressedKeys.contains(Key.DirectionDown)) {
+            _state.update { it.copy(camera = it.camera.up(-dt)) }
         }
     }
 
@@ -493,17 +507,6 @@ class StateHolder {
             }
         }
 
-    }
-
-    fun Float.floorSig(digits: Int): Float {
-        val s = 10f.pow(floor(log10(this)).toInt() - (digits - 1))
-        return floor(this / s) * s
-    }
-
-    fun Float.floor2(): Float {
-        val bits = toBits()
-        val exp = (bits ushr 23) and 0xff
-        return Float.fromBits(exp shl 23)
     }
 
     fun viewResized(name: String, width: Int, height: Int) {
