@@ -38,12 +38,13 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalSerializationApi::class)
 class StateHolder {
 
-    private fun defaultState(mouseMode: MouseMode = MouseMode.CREATOR, modelHash: Int) = State(
+    private fun defaultState(mouseMode: MouseMode = MouseMode.CREATOR, modelHash: Int, savePath: String? = null) = State(
         projectionScale = 32f,
         gridScale = 0.5f,
         creator = defaultCreator(grid = 0.5f),
         mouseMode = mouseMode,
-        lastSavedModelHash = modelHash
+        lastSavedModelHash = modelHash,
+        savePath = savePath
     )
 
     private fun defaultCreator(center: Vec3 = Vec3.ZERO, grid: Float = state.value.gridScale): BoundingBox {
@@ -313,7 +314,7 @@ class StateHolder {
         val bytes = File(path).readBytes()
         val modelDto: ModelDto = Cbor.decodeFromByteArray(bytes)
         _model.update { modelDto.toModel() }
-        _state.update { defaultState(MouseMode.SELECT, System.identityHashCode(_model.value)) }
+        _state.update { defaultState(MouseMode.SELECT, System.identityHashCode(_model.value), savePath = path) }
         resetViews()
     }
 
@@ -321,10 +322,12 @@ class StateHolder {
     fun saveProject(path: String) {
         val bytes = Cbor.encodeToByteArray(ModelDto(model.value))
         File(path).writeBytes(bytes)
-        _state.update { it.copy(
-            savePath = path,
-            lastSavedModelHash = System.identityHashCode(model.value)
-        ) }
+        _state.update {
+            it.copy(
+                savePath = path,
+                lastSavedModelHash = System.identityHashCode(model.value)
+            )
+        }
     }
 
     fun applyTexturingUScaleToSelection(uScale: Float) {
@@ -363,9 +366,10 @@ class StateHolder {
     }
 
     fun selectViaRay(look: Vec3, flip: Boolean) {
-        val brush = model.value.brushes.values.firstOrNull { brush ->
-            brush.intersectRayBrush(state.value.camera.position, look) != null
-        }
+        val brush = model.value.brushes.values
+            .mapNotNull { brush -> brush.intersectRayBrush(state.value.camera.position, look)?.let { brush to it.second } }
+            .minByOrNull { it.second.distanceTo(state.value.camera.position) }
+            ?.first
         brush?.let {
             selectBrushes(setOf(brush.id), flip, true)
         } ?: clearSelection()

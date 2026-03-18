@@ -7,11 +7,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -28,20 +36,39 @@ fun confirmDialog(title: String, text: String, onConfirm: () -> Unit): () -> Uni
     val openDialog = { show = true }
 
     if (show) {
+
         DialogWindow(
             title = title,
             onCloseRequest = { show = false },
             state = rememberDialogState(size = DpSize(Dp.Unspecified, Dp.Unspecified))
         ) {
-            FancyColumn(modifier = Modifier.background(Theme.background)
-                .padding(8.dp)
+            val focusRequester = remember { FocusRequester() }
+            LaunchedEffect(Unit) {
+                focusRequester.requestFocus()
+            }
+            FancyColumn(
+                modifier = Modifier.background(Theme.background)
+                    .padding(8.dp)
             ) {
                 Text(text, style = Theme.label, modifier = Modifier.padding(24.dp))
                 Row(
                     horizontalArrangement = Arrangement.SpaceEvenly,
-                    modifier = Modifier.fillMaxWidth().padding(16.dp)
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(16.dp)
+                        .onPreviewKeyEvent {
+                            if (it.key == Key.Enter && it.type == KeyEventType.KeyUp) {
+                                onConfirm()
+                                true
+                            } else {
+                                false
+                            }
+                        }
                 ) {
-                    FancyButton("OK", modifier = Modifier.padding(end = 24.dp)) {
+                    FancyButton(
+                        "OK",
+                        modifier = Modifier.padding(end = 24.dp)
+                            .focusRequester(focusRequester)
+                    ) {
                         show = false
                         onConfirm()
                     }

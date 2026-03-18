@@ -14,7 +14,6 @@ import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Quaternion
-import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import editor.model.Material
 import editor.state.State
@@ -95,16 +94,6 @@ fun KorenderView(holder: StateHolder) {
                                 }
                             )
                         }
-
-                    if (state.selection.contains(brush.id)) {
-                        brush.mesh.points.forEach { point ->
-                            Renderable(
-                                base(color = ColorRGBA.Green),
-                                mesh = sphere(state.gridScale * 0.1f),
-                                transform = translate(point)
-                            )
-                        }
-                    }
                 }
             Gui {
                 Column {

@@ -88,22 +88,23 @@ private fun MenuBarScope.file(holder: StateHolder) {
         val loadProjectConfirmDialog = confirmDialog("Load Project", "Discard changes and load a project ?") {
             load()
         }
-        Item("Open Project", painterResource(Res.drawable.load)) {
+        Item("Open Project", painterResource(Res.drawable.load), shortcut = KeyShortcut(Key.O, ctrl = true)) {
             if (modified) loadProjectConfirmDialog() else load()
         }
 
-        Item("Save Project", painterResource(Res.drawable.save)) {
-            if (state.savePath == null) {
-                val dialog = FileDialog(Frame(), "Save Project", FileDialog.SAVE)
-                dialog.directory = lastDir
-                dialog.isVisible = true
-                val file = dialog.files.firstOrNull()
-                file?.let {
-                    lastDir = file.parent
-                    holder.saveProject(file.path)
-                }
-            } else {
+        state.savePath?.let {
+            Item("Save Project", painterResource(Res.drawable.save), shortcut = KeyShortcut(Key.S, ctrl = true)) {
                 holder.saveProject(state.savePath!!)
+            }
+        }
+        Item("Save Project as...", painterResource(Res.drawable.save)) {
+            val dialog = FileDialog(Frame(), "Save Project", FileDialog.SAVE)
+            dialog.directory = lastDir
+            dialog.isVisible = true
+            val file = dialog.files.firstOrNull()
+            file?.let {
+                lastDir = file.parent
+                holder.saveProject(file.path)
             }
         }
         Separator()
@@ -136,7 +137,7 @@ private fun MenuBarScope.view(holder: StateHolder) {
         Item("Center on selection", painterResource(Res.drawable.center), shortcut = KeyShortcut(Key.E, ctrl = true)) {
             holder.zoomOnSelection()
         }
-        Item("Reset Views", painterResource(Res.drawable.eye), shortcut = KeyShortcut(Key.E, ctrl = true)) { // TODO icon
+        Item("Reset Views", painterResource(Res.drawable.eye)) { // TODO icon
             holder.resetViews()
         }
     }

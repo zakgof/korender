@@ -77,7 +77,7 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
             .background(Color.Black)
             .fillMaxSize()
             .onPointerEvent(PointerEventType.Scroll) { event ->
-                val delta = event.changes.first().scrollDelta.y
+                val delta = -event.changes.first().scrollDelta.y
                 val zoom = state.projectionScale.advanceSig(2, delta)
                 holder.setProjectionScale(zoom)
             }

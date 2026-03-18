@@ -59,7 +59,7 @@ data class Brush(
     fun rotate(center: Vec3, axis: Vec3, angle: Float) =
         copy(faces = faces.map { face -> face.copy(plane = face.plane.rotate(center, axis, angle)) })
 
-    fun intersectRayBrush(r0: Vec3, look: Vec3): Face? {
+    fun intersectRayBrush(r0: Vec3, look: Vec3): Pair<Face, Vec3>? {
 
         var tEnter = Float.NEGATIVE_INFINITY
         var tExit = Float.POSITIVE_INFINITY
@@ -87,7 +87,7 @@ data class Brush(
         }
         if (tExit < 0f) return null
 
-        return enterFace
+        return enterFace?.let { it to (r0 + look * tEnter) }
     }
 
     enum class PlaneSide {
