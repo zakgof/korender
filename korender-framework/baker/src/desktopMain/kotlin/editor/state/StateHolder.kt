@@ -4,7 +4,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.baker.editor.model.Group
-import editor.util.ModelCompiler
 import com.zakgof.korender.baker.editor.util.floor2
 import com.zakgof.korender.baker.editor.util.floorSig
 import com.zakgof.korender.baker.editor.util.roundSane
@@ -18,6 +17,7 @@ import editor.model.ModelDto
 import editor.model.brush.Brush
 import editor.model.snap
 import editor.state.State.MouseMode
+import editor.util.ModelCompiler
 import editor.util.TextureImageCache
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -556,6 +556,12 @@ class StateHolder {
 
     fun unhideSelection() {
         _model.update { it.copy(invisibleBrushes = it.invisibleBrushes - state.value.selection) }
+    }
+
+    fun compileToFile(path: String) {
+        val sceneModel = ModelCompiler.compile(model.value)
+        val bytes = Cbor.encodeToByteArray(sceneModel)
+        File(path).writeBytes(bytes)
     }
 }
 

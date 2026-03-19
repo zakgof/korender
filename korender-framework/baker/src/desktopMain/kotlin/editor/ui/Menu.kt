@@ -12,6 +12,7 @@ import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.MenuBarScope
 import com.zakgof.korender.baker.editor.ui.dialog.dryRunDialog
+import com.zakgof.korender.baker.editor.ui.dialog.fileDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.util.nextSane
 import com.zakgof.korender.baker.editor.util.prevSane
@@ -100,13 +101,9 @@ private fun MenuBarScope.file(holder: StateHolder) {
             }
         }
         Item("Save Project as...", painterResource(Res.drawable.save)) {
-            val dialog = FileDialog(Frame(), "Save Project", FileDialog.SAVE)
-            dialog.directory = lastDir
-            dialog.isVisible = true
-            val file = dialog.files.firstOrNull()
-            file?.let {
-                lastDir = file.parent
-                holder.saveProject(file.path)
+            fileDialog("Save Project", true, lastDir, "Korender maps", "map.korender") {
+                lastDir = it.parent
+                holder.saveProject(it.absolutePath)
             }
         }
         Separator()
@@ -114,6 +111,12 @@ private fun MenuBarScope.file(holder: StateHolder) {
         Item("Dry-Run", painterResource(Res.drawable.play)) {
             holder.dryRun()
             dryRunDialog()
+        }
+        // TODO icon
+        Item("Export Scene", painterResource(Res.drawable.save)) {
+            fileDialog("Export Scene", true, lastDir,"Korender scene files", "scene.korender") {
+                holder.compileToFile(it.path)
+            }
         }
     }
 }
