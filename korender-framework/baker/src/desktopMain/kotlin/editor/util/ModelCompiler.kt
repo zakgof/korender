@@ -106,7 +106,6 @@ object ModelCompiler {
         )
     }
 
-
     private fun texture(path: String): SceneModel.Texture {
         val file = File(path)
         val image = file.readBytes()
