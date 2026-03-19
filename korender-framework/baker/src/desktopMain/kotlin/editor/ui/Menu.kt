@@ -11,11 +11,11 @@ import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.MenuBarScope
-import com.zakgof.korender.baker.editor.ui.dialog.dryRunDialog
 import com.zakgof.korender.baker.editor.ui.dialog.fileDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.util.nextSane
 import com.zakgof.korender.baker.editor.util.prevSane
+import com.zakgof.korender.baker.editor.walk.dryRunDialog
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
 import com.zakgof.korender.baker.resources.center
@@ -107,10 +107,10 @@ private fun MenuBarScope.file(holder: StateHolder) {
             }
         }
         Separator()
-        val dryRunDialog = dryRunDialog(holder)
+        val walkDialog = dryRunDialog()
         Item("Dry-Run", painterResource(Res.drawable.play)) {
-            holder.dryRun()
-            dryRunDialog()
+            val sceneModel = holder.dryRun()
+            walkDialog(sceneModel)
         }
         // TODO icon
         Item("Export Scene", painterResource(Res.drawable.save)) {

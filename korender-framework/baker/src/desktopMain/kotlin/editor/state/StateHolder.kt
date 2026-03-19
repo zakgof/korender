@@ -7,6 +7,7 @@ import com.zakgof.korender.baker.editor.model.Group
 import com.zakgof.korender.baker.editor.util.floor2
 import com.zakgof.korender.baker.editor.util.floorSig
 import com.zakgof.korender.baker.editor.util.roundSane
+import com.zakgof.korender.impl.scene.SceneModel
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -451,9 +452,9 @@ class StateHolder {
         return "$base $i"
     }
 
-    fun dryRun() {
-        val sceneModel = ModelCompiler.compile(model.value)
-        _state.update { it.copy(lastCompiledSceneModel = sceneModel) }
+    fun dryRun(): SceneModel {
+        return ModelCompiler.compile(model.value)
+        // _state.update { it.copy(lastCompiledSceneModel = sceneModel) }
     }
 
     fun selectAll() {
