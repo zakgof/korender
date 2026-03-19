@@ -13,6 +13,8 @@ import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.MenuBarScope
 import com.zakgof.korender.baker.editor.ui.dialog.dryRunDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
+import com.zakgof.korender.baker.editor.util.nextSane
+import com.zakgof.korender.baker.editor.util.prevSane
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
 import com.zakgof.korender.baker.resources.center
@@ -121,17 +123,17 @@ private fun MenuBarScope.view(holder: StateHolder) {
     val state by holder.state.collectAsState()
     Menu("View") {
         Item("Coarser grid", painterResource(Res.drawable.plus), shortcut = KeyShortcut(Key.LeftBracket, ctrl = true)) {
-            holder.setGridScale(state.gridScale * 2f)
+            holder.setGridScale(state.gridScale.nextSane())
         }
         Item("Finer grid", painterResource(Res.drawable.minus), shortcut = KeyShortcut(Key.RightBracket, ctrl = true)) {
-            holder.setGridScale(state.gridScale / 2f)
+            holder.setGridScale(state.gridScale.prevSane())
         }
         Separator()
         Item("Zoom in", painterResource(Res.drawable.zoomin), shortcut = KeyShortcut(Key.Plus, ctrl = true)) {
-            holder.setProjectionScale(state.projectionScale * 2f)
+            holder.setProjectionScale(state.projectionScale.nextSane())
         }
         Item("Zoom out", painterResource(Res.drawable.zoomout), shortcut = KeyShortcut(Key.Minus, ctrl = true)) {
-            holder.setProjectionScale(state.projectionScale / 2f)
+            holder.setProjectionScale(state.projectionScale.prevSane())
         }
         Separator()
         Item("Center on selection", painterResource(Res.drawable.center), shortcut = KeyShortcut(Key.E, ctrl = true)) {

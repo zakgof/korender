@@ -37,6 +37,31 @@ fun Float.roundSane(): Float {
     return rounded * base
 }
 
+fun Float.nextSane(): Float {
+    val order = floor(log10(this)).toInt()
+    val base = 10f.pow(order)
+    val normalized = this / base
+    val rounded = when {
+        normalized < 1.9f -> 2f
+        normalized < 4.9f -> 5f
+        else -> 10f
+    }
+    return rounded * base
+}
+
+fun Float.prevSane(): Float {
+    val order = floor(log10(this)).toInt()
+    val base = 10f.pow(order)
+    val normalized = this / base
+    val rounded = when {
+        normalized < 1.1f -> 0.5f
+        normalized < 2.1f -> 1f
+        normalized < 5.1f -> 2f
+        else -> 5f
+    }
+    return rounded * base
+}
+
 fun Float.floor2(): Float {
     val bits = toBits()
     val exp = (bits ushr 23) and 0xff

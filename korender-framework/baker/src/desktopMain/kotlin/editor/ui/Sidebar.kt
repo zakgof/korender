@@ -34,6 +34,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
+import com.zakgof.korender.baker.editor.util.nextSane
+import com.zakgof.korender.baker.editor.util.prevSane
 import com.zakgof.korender.baker.editor.util.sanity
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
@@ -98,7 +100,7 @@ private fun scale(holder: StateHolder, state: State) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            IconButton(Res.drawable.zoomout, "-") { holder.setProjectionScale(state.projectionScale / 2f) }
+            IconButton(Res.drawable.zoomout, "Zoom out") { holder.setProjectionScale(state.projectionScale.prevSane()) }
             FancyClickToFloatInput(
                 value = state.projectionScale,
                 editorModifier = Modifier.width(64.dp),
@@ -106,7 +108,7 @@ private fun scale(holder: StateHolder, state: State) {
             ) {
                 holder.setProjectionScale(it)
             }
-            IconButton(Res.drawable.zoomin, "+") { holder.setProjectionScale(state.projectionScale * 2f) }
+            IconButton(Res.drawable.zoomin, "Zoom in") { holder.setProjectionScale(state.projectionScale.nextSane()) }
         }
     }
 }
@@ -119,7 +121,7 @@ private fun grid(holder: StateHolder, state: State) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            IconButton(Res.drawable.minus, "-") { holder.setGridScale(state.gridScale / 2f) }
+            IconButton(Res.drawable.minus, "Finer grid") { holder.setGridScale(state.gridScale.prevSane()) }
             FancyClickToFloatInput(
                 value = state.gridScale,
                 editorModifier = Modifier.width(64.dp),
@@ -127,7 +129,7 @@ private fun grid(holder: StateHolder, state: State) {
             ) {
                 holder.setGridScale(it)
             }
-            IconButton(Res.drawable.plus, "+") { holder.setGridScale(state.gridScale * 2f) }
+            IconButton(Res.drawable.plus, "Coarser grid") { holder.setGridScale(state.gridScale.nextSane()) }
         }
     }
 }
