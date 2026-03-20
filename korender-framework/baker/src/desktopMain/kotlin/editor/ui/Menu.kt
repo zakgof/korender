@@ -109,8 +109,7 @@ private fun MenuBarScope.file(holder: StateHolder) {
         Separator()
         val walkDialog = dryRunDialog()
         Item("Dry-Run", painterResource(Res.drawable.play)) {
-            val sceneModel = holder.dryRun()
-            walkDialog(sceneModel)
+            walkDialog(holder.dryRun())
         }
         // TODO icon
         Item("Export Scene", painterResource(Res.drawable.save)) {
