@@ -45,7 +45,7 @@ fun dryRunDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
                 Frame {
                     AmbientLight(white(0.3f))
                     DirectionalLight(Vec3(1f, -2f, 0f), white(3f)) {
-                        Cascade(1024, 0.1f, 5f, -0.2f to 4f, hardwarePcf(0.01f))
+                        Cascade(1024, 0.1f, 20f, -0.2f to 6f, hardwarePcf(0.03f))
                     }
                     controller.update(frameInfo.dt, frameInfo.time)
                     projection = projection(0.2f * width / height, 0.2f, 0.2f, 1000f)

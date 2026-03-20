@@ -30,7 +30,7 @@ class Controller(bvhBytes: ByteArray) {
 
     context(kc: KorenderContext)
     fun camera(): CameraDeclaration {
-        return kc.camera(player - look * 3f, look, 1.y)
+        return kc.camera(player - look * 2f + 1.y, (look - 0.2f.y).normalize(), (look * 0.2f + 1.y).normalize())
     }
 
     fun player(): Transform {
