@@ -13,12 +13,12 @@ class Collider(bvhBytes: ByteArray) {
     val bvh: WalkBvhNode = Cbor.decodeFromByteArray<WalkSerialModel.BvhNode>(bvhBytes).inflate()
 
     fun test(start: Vec3, delta: Vec3, extents: Vec3): Hit? {
-        val sweptAABB = computeSweptAABB(start, delta, extents * 0.5f)
+        val sweptAABB = computeSweptAABB(start, delta, extents)
         val candidates = mutableListOf<WalkBrush>()
         query(bvh, sweptAABB, candidates)
         var bestHit: Hit? = null
         for (brush in candidates) {
-            val expanded = brush.planes.map { expandPlane(it, extents) }
+            val expanded = brush.planes.map { expandPlane(it, extents * 0.5f) }
             val hit = sweepPointVsBrush(start, delta, brush.copy(planes = expanded))
             if (hit != null && (bestHit == null || hit.t < bestHit.t)) bestHit = hit
         }
@@ -53,7 +53,9 @@ class Collider(bvhBytes: ByteArray) {
             }
             if (tEnter > tExit) return null
         }
-        return if (tEnter in 0f..1f && hitNormal != null) Hit(tEnter, hitNormal) else null
+        return if (tEnter in 0f..1f && hitNormal != null)
+            Hit(tEnter, hitNormal)
+        else null
     }
 
     private fun expandPlane(plane: WalkPlane, extents: Vec3): WalkPlane {
