@@ -21,13 +21,13 @@ import kotlinx.serialization.encodeToByteArray
 
 @OptIn(ExperimentalSerializationApi::class)
 @Composable
-fun dryRunDialog(): (SceneModel) -> Unit {
+fun dryRunDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
 
     var show by remember { mutableStateOf(false) }
-    var scene by remember { mutableStateOf<SceneModel?>(null) }
-    val openDialog = { it: SceneModel ->
+    var data by remember { mutableStateOf<Pair<SceneModel, ByteArray>?>(null) }
+    val openDialog = { data1: Pair<SceneModel, ByteArray> ->
         show = true
-        scene = it
+        data = data1
     }
 
     if (show) {
@@ -37,9 +37,9 @@ fun dryRunDialog(): (SceneModel) -> Unit {
             state = rememberDialogState(size = DpSize(800.dp, 600.dp))
         ) {
             Korender({
-                if (it.startsWith("files/scene/")) Cbor.encodeToByteArray(scene!!) else Res.readBytes(it)
+                if (it.startsWith("files/scene/")) Cbor.encodeToByteArray(data!!.first) else Res.readBytes(it)
             }) {
-                val controller = Controller()
+                val controller = Controller(data!!.second)
                 val prefab: Prefab = scene("scene/foobar")
                 OnKey { controller.key(it) }
                 Frame {

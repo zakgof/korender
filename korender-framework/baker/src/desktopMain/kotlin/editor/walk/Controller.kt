@@ -11,7 +11,9 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
-class Controller {
+class Controller(bvhBytes: ByteArray) {
+
+    private val collider = Collider(bvhBytes)
 
     private var player: Vec3 = Vec3(0f, 1.0f, 0f)
     private var look: Vec3 = 1.z
@@ -42,12 +44,22 @@ class Controller {
         val v = 3.0f
         val omega = 4.0f
         when {
-            keys.contains(Key.W) -> player += look * dt * v
-            keys.contains(Key.S) -> player -= look * dt * v
-            keys.contains(Key.D) -> player += (look cross 1.y) * dt * v
-            keys.contains(Key.A) -> player -= (look cross 1.y) * dt * v
             keys.contains(Key.DirectionLeft) -> look = (Quaternion.fromAxisAngle(1.y, dt * omega) * look).normalize()
             keys.contains(Key.DirectionRight) -> look = (Quaternion.fromAxisAngle(1.y, -dt * omega) * look).normalize()
         }
+
+        val delta = when {
+            keys.contains(Key.W) -> look * dt * v
+            keys.contains(Key.S) -> -look * dt * v
+            keys.contains(Key.D) -> (look cross 1.y) * dt * v
+            keys.contains(Key.A) -> -(look cross 1.y) * dt * v
+            else -> null
+        }
+
+        delta?.let {
+            val hit = collider.test(player, delta, Vec3(0.3f, 1.75f, 0.3f))
+            player += (hit?.let { delta * it.t - delta.normalize() * 0.1f } ?: delta)
+        }
+
     }
 }

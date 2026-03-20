@@ -22,6 +22,15 @@ class BoundingBox(val min: Vec3, val max: Vec3) {
             else -> Vec3.Z
         }
 
+    fun intersects(other: BoundingBox): Boolean {
+        return max.x >= other.min.x &&
+            min.x <= other.max.x &&
+            max.y >= other.min.y &&
+            min.y <= other.max.y &&
+            max.z >= other.min.z &&
+            min.z <= other.max.z
+    }
+
     companion object {
         fun from(c1: Vec3, c2: Vec3): BoundingBox =
             BoundingBox(

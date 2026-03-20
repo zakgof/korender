@@ -3,6 +3,8 @@ package editor.state
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.key.Key
+import com.zakgof.korender.baker.editor.collision.BvhCompiler
+import com.zakgof.korender.baker.editor.collision.CollisionSerialModel
 import com.zakgof.korender.baker.editor.model.Group
 import com.zakgof.korender.baker.editor.util.floor2
 import com.zakgof.korender.baker.editor.util.floorSig
@@ -452,8 +454,8 @@ class StateHolder {
         return "$base $i"
     }
 
-    fun dryRun(): SceneModel {
-        return ModelCompiler.compile(model.value)
+    fun dryRun(): Pair<SceneModel, ByteArray> {
+        return ModelCompiler.compile(model.value) to Cbor.encodeToByteArray(CollisionSerialModel.BvhNode(BvhCompiler.compile(model.value.brushes.values)))
         // _state.update { it.copy(lastCompiledSceneModel = sceneModel) }
     }
 
