@@ -12,7 +12,7 @@ import editor.ui.dialog.fileDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.util.nextSane
 import com.zakgof.korender.baker.editor.util.prevSane
-import com.zakgof.korender.baker.editor.walk.dryRunDialog
+import editor.walk.walkerDialog
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
 import com.zakgof.korender.baker.resources.center
@@ -97,7 +97,7 @@ private fun MenuBarScope.file(holder: StateHolder) {
             }
         }
         Separator()
-        val walkDialog = dryRunDialog()
+        val walkDialog = walkerDialog()
         Item("Dry-Run", painterResource(Res.drawable.play)) {
             walkDialog(holder.dryRun())
         }

@@ -1,4 +1,4 @@
-package com.zakgof.korender.baker.editor.walk
+package editor.walk
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -11,6 +11,7 @@ import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import com.zakgof.korender.Korender
 import com.zakgof.korender.Prefab
+import com.zakgof.korender.baker.editor.walk.Controller
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.impl.scene.SceneModel
 import com.zakgof.korender.math.ColorRGB.Companion.white
@@ -21,7 +22,7 @@ import kotlinx.serialization.encodeToByteArray
 
 @OptIn(ExperimentalSerializationApi::class)
 @Composable
-fun dryRunDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
+fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
 
     var show by remember { mutableStateOf(false) }
     var data by remember { mutableStateOf<Pair<SceneModel, ByteArray>?>(null) }
@@ -42,6 +43,7 @@ fun dryRunDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
                 val controller = Controller(data!!.second)
                 val prefab: Prefab = scene("scene/foobar")
                 OnKey { controller.key(it) }
+                OnTouch { controller.touch(it) }
                 Frame {
                     AmbientLight(white(0.3f))
                     DirectionalLight(Vec3(1f, -2f, 0f), white(3f)) {
