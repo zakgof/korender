@@ -311,8 +311,8 @@ fun RowScope.MaterialPreview(holder: StateHolder) {
 
 fun textureDialog(state: State, holder: StateHolder): File? {
     val dialog = FileDialog(Frame(), "Select texture image", FileDialog.LOAD)
-    dialog.directory = state.lastTextureDir
+    dialog.directory = state.persistentState.lastDir
     dialog.isVisible = true
-    dialog.files.firstOrNull()?.let { holder.setLastTextureDir(it.parent) }
+    dialog.files.firstOrNull()?.let { holder.setLastTextureDir(it.parentFile) }
     return dialog.files.firstOrNull()
 }

@@ -28,9 +28,10 @@ data class State(
     val pressedKeys: Set<Key> = setOf(),
 
     val savePath: String? = null,
-    val lastTextureDir: String? = null,
     val lastCompiledSceneModel: SceneModel? = null,
-    val lastSavedModelHash: Int = 0
+    val lastSavedModelHash: Int = 0,
+
+    val persistentState: PersistentState
 ) {
 
     companion object {

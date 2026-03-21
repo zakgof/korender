@@ -3,15 +3,12 @@ package editor.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.MenuBarScope
-import com.zakgof.korender.baker.editor.ui.dialog.fileDialog
+import editor.ui.dialog.fileDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.util.nextSane
 import com.zakgof.korender.baker.editor.util.prevSane
@@ -48,6 +45,7 @@ import editor.ui.dialog.confirmDialog
 import editor.ui.dialog.okDialog
 import editor.ui.dialog.textureDialog
 import org.jetbrains.compose.resources.painterResource
+import java.io.File
 
 @Composable
 fun FrameWindowScope.Menu(holder: StateHolder) =
@@ -74,12 +72,10 @@ private fun MenuBarScope.file(holder: StateHolder) {
         Item("New", icon = painterResource(Res.drawable.file)) {
             if (modified) newProjectConfirmDialog() else holder.newProject()
         }
-        var lastDir by remember { mutableStateOf("") }
 
         fun load() {
-            fileDialog("Open Project", false, lastDir, "Korender maps", "krmap") {
-                lastDir = it.parent
-                holder.loadProject(it.path)
+            fileDialog("Open Project", false, state.persistentState.lastDir, "Korender maps", "krmap") {
+                holder.loadProject(it)
             }
         }
 
@@ -92,13 +88,12 @@ private fun MenuBarScope.file(holder: StateHolder) {
 
         state.savePath?.let {
             Item("Save Project", painterResource(Res.drawable.save), shortcut = KeyShortcut(Key.S, ctrl = true)) {
-                holder.saveProject(state.savePath!!)
+                holder.saveProject(File(state.savePath!!))
             }
         }
         Item("Save Project as...", painterResource(Res.drawable.save)) {
-            fileDialog("Save Project", true, lastDir, "Korender maps", "krmap") {
-                lastDir = it.parent
-                holder.saveProject(it.absolutePath)
+            fileDialog("Save Project", true, state.persistentState.lastDir, "Korender maps", "krmap") {
+                holder.saveProject(it)
             }
         }
         Separator()
@@ -107,7 +102,7 @@ private fun MenuBarScope.file(holder: StateHolder) {
             walkDialog(holder.dryRun())
         }
         Item("Export Scene", painterResource(Res.drawable.export)) {
-            fileDialog("Export Scene", true, lastDir,"Korender scene files", "krscene") {
+            fileDialog("Export Scene", true, state.persistentState.lastDir,"Korender scene files", "krscene") {
                 holder.compileToFile(it.path)
             }
         }
