@@ -21,6 +21,7 @@ import com.zakgof.korender.baker.resources.applymat
 import com.zakgof.korender.baker.resources.center
 import com.zakgof.korender.baker.resources.copy
 import com.zakgof.korender.baker.resources.cut
+import com.zakgof.korender.baker.resources.export
 import com.zakgof.korender.baker.resources.eye
 import com.zakgof.korender.baker.resources.file
 import com.zakgof.korender.baker.resources.group
@@ -47,8 +48,6 @@ import editor.ui.dialog.confirmDialog
 import editor.ui.dialog.okDialog
 import editor.ui.dialog.textureDialog
 import org.jetbrains.compose.resources.painterResource
-import java.awt.FileDialog
-import java.awt.Frame
 
 @Composable
 fun FrameWindowScope.Menu(holder: StateHolder) =
@@ -78,13 +77,9 @@ private fun MenuBarScope.file(holder: StateHolder) {
         var lastDir by remember { mutableStateOf("") }
 
         fun load() {
-            val dialog = FileDialog(Frame(), "Load Project", FileDialog.LOAD)
-            dialog.directory = lastDir
-            dialog.isVisible = true
-            val file = dialog.files.firstOrNull()
-            file?.let {
-                lastDir = file.parent
-                holder.loadProject(file.path)
+            fileDialog("Open Project", false, lastDir, "Korender maps", "krmap") {
+                lastDir = it.parent
+                holder.loadProject(it.path)
             }
         }
 
@@ -101,7 +96,7 @@ private fun MenuBarScope.file(holder: StateHolder) {
             }
         }
         Item("Save Project as...", painterResource(Res.drawable.save)) {
-            fileDialog("Save Project", true, lastDir, "Korender maps", "map.korender") {
+            fileDialog("Save Project", true, lastDir, "Korender maps", "krmap") {
                 lastDir = it.parent
                 holder.saveProject(it.absolutePath)
             }
@@ -111,9 +106,8 @@ private fun MenuBarScope.file(holder: StateHolder) {
         Item("Dry-Run", painterResource(Res.drawable.play)) {
             walkDialog(holder.dryRun())
         }
-        // TODO icon
-        Item("Export Scene", painterResource(Res.drawable.save)) {
-            fileDialog("Export Scene", true, lastDir,"Korender scene files", "scene.korender") {
+        Item("Export Scene", painterResource(Res.drawable.export)) {
+            fileDialog("Export Scene", true, lastDir,"Korender scene files", "krscene") {
                 holder.compileToFile(it.path)
             }
         }

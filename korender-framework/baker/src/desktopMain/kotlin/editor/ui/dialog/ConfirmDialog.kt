@@ -57,6 +57,7 @@ fun confirmDialog(title: String, text: String, onConfirm: () -> Unit): () -> Uni
                         .padding(16.dp)
                         .onPreviewKeyEvent {
                             if (it.key == Key.Enter && it.type == KeyEventType.KeyUp) {
+                                show = false
                                 onConfirm()
                                 true
                             } else {
