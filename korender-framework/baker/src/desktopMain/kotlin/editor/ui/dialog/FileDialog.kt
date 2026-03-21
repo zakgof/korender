@@ -12,7 +12,11 @@ fun fileDialog(title: String, save: Boolean, lastDir: String?, typeTitle: String
     chooser.fileFilter = FileNameExtensionFilter(
         "$typeTitle (*.$typeExtension)", typeExtension
     )
-    if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-        handler(chooser.selectedFile)
+    val res = if (save) chooser.showSaveDialog(null) else chooser.showOpenDialog(null)
+    if (res == JFileChooser.APPROVE_OPTION) {
+        var file = chooser.selectedFile
+        if (save && !file.endsWith(".$typeExtension"))
+            file = File(file.parentFile, file.name + "." + typeExtension)
+        handler(file)
     }
 }
