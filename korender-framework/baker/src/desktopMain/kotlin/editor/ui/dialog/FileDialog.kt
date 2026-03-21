@@ -1,4 +1,4 @@
-package com.zakgof.korender.baker.editor.ui.dialog
+package editor.ui.dialog
 
 import java.io.File
 import javax.swing.JFileChooser

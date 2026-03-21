@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
@@ -38,16 +39,23 @@ import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+@Serializable
+data class PersistentState (
+    val lastDir: String?
+)
+
+
 @OptIn(ExperimentalSerializationApi::class)
 class StateHolder {
 
-    private fun defaultState(mouseMode: MouseMode = MouseMode.CREATOR, modelHash: Int, savePath: String? = null) = State(
+    private fun defaultState(mouseMode: MouseMode = MouseMode.CREATOR, modelHash: Int, savePath: String? = null, persistentState: PersistentState?) = State(
         projectionScale = 32f,
         gridScale = 0.5f,
         creator = defaultCreator(grid = 0.5f),
         mouseMode = mouseMode,
         lastSavedModelHash = modelHash,
-        savePath = savePath
+        savePath = savePath,
+        persistentState = persistentState ?: PersistentState(null)
     )
 
     private fun defaultCreator(center: Vec3 = Vec3.ZERO, grid: Float = state.value.gridScale): BoundingBox {
@@ -60,7 +68,24 @@ class StateHolder {
     }
 
     private val _model = MutableStateFlow(Model())
-    private val _state = MutableStateFlow(defaultState(MouseMode.CREATOR, System.identityHashCode(_model.value)))
+    private val _state = MutableStateFlow(defaultState(MouseMode.CREATOR, System.identityHashCode(_model.value), persistentState = loadPersistentState()))
+
+    private fun loadPersistentState(): PersistentState? {
+        val userHome = System.getProperty("user.home")
+        val file = File("$userHome/.korender/baker.options")
+        if (file.exists()) {
+            return Cbor.decodeFromByteArray<PersistentState>(file.readBytes())
+        }
+        return null
+    }
+
+    private fun savePersistentState() {
+        val userHome = System.getProperty("user.home")
+        val file = File("$userHome/.korender/baker.options")
+        file.parentFile.mkdir()
+        val bytes = Cbor.encodeToByteArray<PersistentState>(state.value.persistentState)
+        file.writeBytes(bytes)
+    }
 
     val state: StateFlow<State> = _state
     val model: StateFlow<Model> = _model
@@ -309,28 +334,31 @@ class StateHolder {
 
     fun newProject() {
         _model.update { Model() }
-        _state.update { defaultState(State.MouseMode.CREATOR, System.identityHashCode(_model.value)) }
+        _state.update { defaultState(State.MouseMode.CREATOR, System.identityHashCode(_model.value), persistentState = state.value.persistentState) }
     }
 
     @OptIn(ExperimentalSerializationApi::class)
-    fun loadProject(path: String) {
-        val bytes = File(path).readBytes()
+    fun loadProject(file: File) {
+        val bytes = file.readBytes()
         val modelDto: ModelDto = Cbor.decodeFromByteArray(bytes)
         _model.update { modelDto.toModel() }
-        _state.update { defaultState(MouseMode.SELECT, System.identityHashCode(_model.value), savePath = path) }
+        _state.update { defaultState(MouseMode.SELECT, System.identityHashCode(_model.value), savePath = file.path, persistentState = state.value.persistentState.copy(lastDir = file.parentFile.path)) }
         resetViews()
+        savePersistentState()
     }
 
     @OptIn(ExperimentalSerializationApi::class)
-    fun saveProject(path: String) {
+    fun saveProject(file: File) {
         val bytes = Cbor.encodeToByteArray(ModelDto(model.value))
-        File(path).writeBytes(bytes)
+        file.writeBytes(bytes)
         _state.update {
             it.copy(
-                savePath = path,
-                lastSavedModelHash = System.identityHashCode(model.value)
+                savePath = file.path,
+                lastSavedModelHash = System.identityHashCode(model.value),
+                persistentState = it.persistentState.copy(lastDir = file.parentFile.path)
             )
         }
+        savePersistentState()
     }
 
     fun applyTexturingUScaleToSelection(uScale: Float) {
@@ -353,8 +381,9 @@ class StateHolder {
         modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(texturing = it.texturing.copy(fitToFace = newValue)) }) }
     }
 
-    fun setLastTextureDir(directory: String) {
-        _state.update { it.copy(lastTextureDir = directory) }
+    fun setLastTextureDir(dir: File) {
+        _state.update { it.copy(persistentState = it.persistentState.copy(lastDir = dir.path)) }
+        savePersistentState()
     }
 
     fun zoomOnSelection() {
@@ -472,7 +501,7 @@ class StateHolder {
         if (model.value.brushes.isEmpty()) {
             _state.update {
                 it.copy(
-                    projectionScale = defaultState(State.MouseMode.SELECT, System.identityHashCode(_model.value)).projectionScale,
+                    projectionScale = defaultState(State.MouseMode.SELECT, System.identityHashCode(_model.value), persistentState = state.value.persistentState).projectionScale,
                     viewCenter = Vec3.ZERO
                 )
             }

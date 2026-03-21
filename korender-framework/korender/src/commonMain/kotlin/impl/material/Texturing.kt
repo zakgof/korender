@@ -29,6 +29,10 @@ import com.zakgof.korender.impl.glgpu.GlGpuTexture3D
 import com.zakgof.korender.impl.glgpu.GlGpuTextureArray
 import com.zakgof.korender.impl.image.InternalImage
 import com.zakgof.korender.impl.image.impl.image.InternalImage3D
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 
 object NotYetLoadedTexture : GlBindableTexture {
     override val glHandle: GLTexture
@@ -63,8 +67,20 @@ internal object Texturing {
             loader.wait(resource) { Platform.loadImage(it, resource.split(".").last()) }
         }
 
+    // TODO: move to loader!
+    fun toImages(loader: Loader, textureResources: TextureArrayResources): List<InternalImage>? =
+        loader.wait(textureResources.joinToString("/")) {
+            CoroutineScope(Dispatchers.Default).async {
+                textureResources.map { resource ->
+                    Platform.loadImage(loader.appResourceLoader(resource), resource.split(".").last())
+                }.awaitAll()
+            }
+        }
+
+
     fun cube(decl: ImageCubeTextureDeclaration): GlGpuCubeTexture =
         GlGpuCubeTexture(decl.images)
+
 
 }
 
@@ -120,11 +136,9 @@ internal class ResourceTextureArrayDeclaration(
     override fun hashCode(): Int = textureResources.hashCode()
 
     override fun generateGpuTexture(loader: Loader): GlGpuTextureArray? {
-        val images = textureResources.map { Texturing.toImage(loader, it, nodeContext.resourceLoader) }
-        if (images.any { it == null }) {
-            return null
+        return Texturing.toImages(loader, textureResources)?.let { images ->
+            GlGpuTextureArray(images, filter, wrap, aniso)
         }
-        return GlGpuTextureArray(images.map { it!! }, filter, wrap, aniso)
     }
 }
 
@@ -231,10 +245,11 @@ internal data class ProbeCubeTextureDeclaration(val envProbeName: String) : Cube
 
 internal class GpuTextureLink(
     val texture: GlGpuTexture,
-    val buffer: NativeFloatBuffer
+    val buffer: NativeFloatBuffer,
 ) : AutoCloseable {
     override fun close() =
         texture.close()
+
     fun uploadData() =
         texture.uploadData(buffer.rewind(), GlGpuTexture.GlFormat(GL_RGBA32F, GL_RGBA, GL_FLOAT))
 }
