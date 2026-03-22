@@ -32,7 +32,7 @@ kotlin {
     jvmToolchain(17)
 
     compilerOptions {
-        freeCompilerArgs.add("-Xexpect-actual-classes")
+        freeCompilerArgs.addAll("-Xexpect-actual-classes", "-Xcontext-parameters")
     }
 
     @OptIn(ExperimentalWasmDsl::class)

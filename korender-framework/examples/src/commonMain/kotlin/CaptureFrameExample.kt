@@ -18,9 +18,11 @@ import kotlin.random.Random
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun CaptureFrameExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
-    val frame = captureFrame(256, 256,
+    val frame = captureFrame(
+        256, 256,
         camera(-40.z, 1.z, 1.y),
-        projection(5f, 5f, 5f, 100f)) {
+        projection(5f, 5f, 5f, 100f)
+    ) {
         frameScene()
     }
     val freeCamera = FreeCamera(this, -40.z, 1.z)
@@ -31,15 +33,13 @@ fun CaptureFrameExample() = Korender(appResourceLoader = { Res.readBytes(it) }) 
         if (fract(frameInfo.time * 0.2f) > 0.5f && frame.isCompleted) {
             AmbientLight(White)
             Billboard(
-                billboard(
-                    position = 30.z,
+                billboard {
+                    position = 30.z
                     scale = Vec2(10f, 10f)
-                ),
-                base (
-                    metallicFactor = 0.0f,
-                    roughnessFactor = 1.0f,
+                    metallicFactor = 0.0f
+                    roughnessFactor = 1.0f
                     colorTexture = texture("captured", frame.getCompleted())
-                )
+                }
             )
         } else {
             frameScene()
@@ -59,7 +59,7 @@ fun FrameContext.frameScene() {
     val rnd = Random(1)
     for (i in 0 until 1000) {
         Renderable(
-            base(color = ColorRGBA(rnd.nextFloat(), rnd.nextFloat(), rnd.nextFloat(), 1f)),
+            base { color = ColorRGBA(rnd.nextFloat(), rnd.nextFloat(), rnd.nextFloat(), 1f) },
             mesh = sphere(),
             transform = scale(1f * rnd.nextFloat()).translate(Vec3.random(i) * 10f)
         )

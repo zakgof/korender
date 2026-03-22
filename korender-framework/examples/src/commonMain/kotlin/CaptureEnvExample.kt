@@ -43,7 +43,7 @@ fun FrameContext.scene() {
     val rnd = Random(1)
     for (i in 0 until 1000) {
         Renderable(
-            base(color = ColorRGBA(rnd.nextFloat(), rnd.nextFloat(), rnd.nextFloat(), 1f)),
+            base { color = ColorRGBA(rnd.nextFloat(), rnd.nextFloat(), rnd.nextFloat(), 1f) },
             mesh = sphere(),
             transform = scale(5f + 5f * rnd.nextFloat()).translate(Vec3.random(i) * 100f)
         )

@@ -113,16 +113,19 @@ private fun FrameContext.building(buildingId: Int, z: Float, x: Float) {
 
     val building = buildings[buildingId]
 
-    val roof = arrayOf(
-        base(colorTexture = texture("infcity/roof.jpg"), metallicFactor = 0f, roughnessFactor = 1f),
-    )
-    val windows = arrayOf(
-        base(colorTexture = texture("infcity/dw.jpg"), metallicFactor = 0.5f, roughnessFactor = 0.1f),
-        emission(White),
-        uniforms(
-            "windowTexture" to texture("infcity/lw.jpg")
-        )
-    )
+    val roof = base {
+        colorTexture = texture("infcity/roof.jpg")
+        metallicFactor = 0f
+        roughnessFactor = 1f
+    }
+    val windows = base {
+        colorTexture = texture("infcity/dw.jpg")
+        metallicFactor = 0.5f
+        roughnessFactor = 0.1f
+        emission = White
+        plugin("emission", "infcity/window.emission.plugin.frag")
+        uniforms("windowTexture" to texture("infcity/lw.jpg"))
+    }
 
     fun Triangulation.toCustomMesh(id: String) = customMesh(id, this.points.size, this.indexes.size, POS, NORMAL, TEX) {
         pos(*points.toTypedArray())
@@ -132,20 +135,23 @@ private fun FrameContext.building(buildingId: Int, z: Float, x: Float) {
     }
 
     Renderable(
-        *roof,
+        roof,
         mesh = building.rf().toCustomMesh("roof-$buildingId"),
         transform = translate(x, 0f, z + 8f)
     )
     Renderable(
-        *windows,
-        plugin("emission", "infcity/window.emission.plugin.frag"),
+        windows,
         mesh = building.lw().toCustomMesh("wnd-$buildingId"),
         transform = translate(x, 0f, z + 8f)
     )
 }
 
 private fun FrameContext.road(startZ: Float) = Renderable(
-    base(colorTexture = texture("infcity/road.jpg"), metallicFactor = 0f, roughnessFactor = 1.0f),
+    base {
+        colorTexture = texture("infcity/road.jpg")
+        metallicFactor = 0f
+        roughnessFactor = 1.0f
+    },
     mesh = roadMesh(),
     transform = translate(startZ.z)
 )
@@ -159,8 +165,12 @@ private fun FrameContext.roadMesh() = customMesh("road", 4, 6, POS, NORMAL, TEX)
 }
 
 private fun FrameContext.sidewalk(z: Float, x: Float) = Renderable(
-    base(colorTexture = texture("infcity/roof.jpg"), metallicFactor = 0.1f, roughnessFactor = 0.2f),
-    triplanar(0.5f),
+    base {
+        colorTexture = texture("infcity/roof.jpg")
+        metallicFactor = 0.1f
+        roughnessFactor = 0.2f
+        triplanarScale = 0.5f
+    },
     mesh = sidewalkMesh(),
     transform = translate(x, 0f, z)
 )

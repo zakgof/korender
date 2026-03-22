@@ -1,5 +1,9 @@
 package com.zakgof.korender.context
 
+import com.zakgof.korender.BaseMaterialContext
+import com.zakgof.korender.BillboardEffect
+import com.zakgof.korender.BillboardMaterial
+import com.zakgof.korender.BillboardMaterialContext
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
@@ -8,20 +12,26 @@ import com.zakgof.korender.Image
 import com.zakgof.korender.Image3D
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KeyHandler
-import com.zakgof.korender.MaterialModifier
-import com.zakgof.korender.MutableMesh
+import com.zakgof.korender.Material
+import com.zakgof.korender.MaterialContext
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
+import com.zakgof.korender.MutableMesh
+import com.zakgof.korender.PipeMaterial
 import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.PostProcessingEffect
+import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
+import com.zakgof.korender.SkyMaterial
+import com.zakgof.korender.TerrainMaterial
+import com.zakgof.korender.TerrainMaterialContext
 import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureArrayDeclaration
 import com.zakgof.korender.TextureArrayImages
@@ -104,6 +114,7 @@ interface KorenderContext {
      * @return texture declaration
      */
     fun textureProbe(frameProbeName: String): TextureDeclaration
+
     /**
      * Creates a texture array declaration from resource image files.
      *
@@ -126,7 +137,7 @@ interface KorenderContext {
      * @return texture array declaration
      */
     fun textureArray(id: String, images: TextureArrayImages, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024)
-        : TextureArrayDeclaration
+            : TextureArrayDeclaration
 
     /**
      * Creates a 3D texture from an Image3D object.
@@ -337,194 +348,53 @@ interface KorenderContext {
     fun customMesh(id: String, vertexCount: Int, indexCount: Int, vararg attributes: MeshAttribute<*>, dynamic: Boolean = false, indexType: IndexType? = null, block: MeshInitializer.() -> Unit): MeshDeclaration
 
     /**
-     * Creates a material modifier that applies a custom vertex shader.
-     *
-     * @param vertShaderFile vertex shader resource file
-     * @return material modifier
+     * Creates a material that applies custom vertex and fragment shaders
      */
-    fun vertex(vertShaderFile: String): MaterialModifier
+    fun customMaterial(vertShaderFile: String, fragShaderFile: String, block: MaterialContext.() -> Unit): Material
 
     /**
-     * Creates a material modifier that applies a custom fragment shader.
-     *
-     * @param fragShaderFile fragment shader resource file
-     * @return material modifier
+     * Creates a material that applies a custom vertex shader and standard fragment shader
      */
-    fun fragment(fragShaderFile: String): MaterialModifier
+    fun customMaterial(vertShaderFile: String, block: BaseMaterialContext.() -> Unit): Material
 
-    /**
-     * Creates a material modifier that applies shader definitions.
-     *
-     * Definitions affect the #ifdef / #ifndef directives in shaders
-     *
-     * @param defs fragment shader defines
-     * @return material modifier
-     */
-    fun defs(vararg defs: String): MaterialModifier
+    fun base(block: BaseMaterialContext.() -> Unit): Material
 
-    /**
-     * Creates a material modifier that applies a shader plugin.
-     *
-     * @param name plugin mount point name
-     * @param shaderFile plugin shader code resource file
-     * @return material modifier
-     */
-    fun plugin(name: String, shaderFile: String): MaterialModifier
+    fun billboard(block: BillboardMaterialContext.() -> Unit): BillboardMaterial
 
-    /**
-     * Creates a material modifier that applies raw uniform parameters.
-     *
-     * @param pairs pairs uniform name to uniform value
-     * @return material modifier
-     */
-    fun uniforms(vararg pairs: Pair<String, Any?>): MaterialModifier
+    fun terrain(block: TerrainMaterialContext.() -> Unit): TerrainMaterial
 
-    /**
-     * Creates a material modifier for standard material.
-     *
-     * @param color albedo color
-     * @param colorTexture albedo texture (multiplied by color)
-     * @param metallicFactor metallic factor in PBR model
-     * @param roughnessFactor roughness factor in PBR model
-     * @param alphaCutoff alpha value threshold to discard fragments
-     * @return material modifier
-     */
-    fun base(color: ColorRGBA = ColorRGBA.White, colorTexture: TextureDeclaration? = null, metallicFactor: Float = 0.1f, roughnessFactor: Float = 0.5f, alphaCutoff: Float = 0.01f): MaterialModifier
-
-    /**
-     * Creates a material modifier that applies triplanar rendering.
-     * Used with the base material.
-     *
-     * @param scale scale for mapping world coordinates into texture coordinates.
-     * @return material modifier
-     */
-    fun triplanar(scale: Float = 1.0f): MaterialModifier
-    /**
-     * Creates a material modifier that applies texture-array-based texturing.
-     * Used with the base material.
-     *
-     * @param textureArray texture array declaration
-     * @return material modifier
-     */
-    fun colorTextures(textureArray: TextureArrayDeclaration): MaterialModifier
-
-    /**
-     * Creates a material modifier that applies normal mapping.
-     * Used with the base material.
-     *
-     * @param normalTexture normal mapping texture declaration
-     * @return material modifier
-     */
-    fun normalTexture(normalTexture: TextureDeclaration): MaterialModifier
-
-    /**
-     * Creates a material modifier that applies light emission.
-     * Used with the base material.
-     *
-     * @param factor emission factor (color)
-     * @return material modifier
-     */
-    fun emission(factor: ColorRGB): MaterialModifier
-
-    /**
-     * Creates a material modifier that applies metallic and roughness texture.
-     * Used with the base material.
-     *
-     * @param texture metallic-roughness texture (r channel for metallic, g for roughness)
-     * @return material modifier
-     */
-    fun metallicRoughnessTexture(texture: TextureDeclaration): MaterialModifier
-
-    /**
-     * Creates a material modifier that applies specular-glossiness PBR model flavor.
-     * Used with the base material.
-     *
-     * @param specularFactor specular factor
-     * @param glossinessFactor glossiness factor
-     * @return material modifier
-     */
-    fun specularGlossiness(specularFactor: ColorRGB, glossinessFactor: Float): MaterialModifier
-
-    /**
-     * Creates a material modifier that applies specular-glossiness PBR model flavor.
-     * Used with the base material.
-     *
-     * @param texture specular-glossiness texture (r channel for specular, g for glossiness)
-     * @return material modifier
-     */
-    fun specularGlossinessTexture(texture: TextureDeclaration): MaterialModifier
-
-    /**
-     * Creates a material modifier that applies emission texture.
-     * Used with the base material.
-     *
-     * @param texture emission texture
-     * @return material modifier
-     */
-    fun emissionTexture(texture: TextureDeclaration): MaterialModifier
-
-    /**
-     * Creates a material modifier that applies a pre-calculated occlusion texture.
-     * Used with the base material.
-     *
-     * @param texture occlusion texture
-     * @return material modifier
-     */
-    fun occlusionTexture(texture: TextureDeclaration): MaterialModifier
-
-    /**
-     * Creates a material modifier for billboards.
-     * Used with the base material.
-     *
-     * @param position billboard center position
-     * @param scale billboard quad size
-     * @param rotation rotation angle
-     * @return material modifier
-     */
-    fun billboard(position: Vec3 = ZERO, scale: Vec2 = Vec2(1f, 1f), rotation: Float = 0.0f): MaterialModifier
-
-    /**
-     * Creates a material modifier for clipmap terrains.
-     * Used with the base material.
-     *
-     * @param heightTexture texture declaration for the heightmap, must be square. Red channel is used for elevation value
-     * @param heightScale height scale: world space terrain elevation value for max texture sample value
-     * @param outsideHeight world space elevation valur for points outside the texture range
-     * @param terrainCenter world space point corresponding to terrain center
-     * @return material modifier
-     */
-    fun terrain(heightTexture: TextureDeclaration, heightScale: Float, outsideHeight: Float, terrainCenter: Vec3 = ZERO): MaterialModifier
 
     /**
      * Creates a material modifier for pipe shapes
      * Used with the base material.
      * @return material modifier
      */
-    fun pipe(): MaterialModifier
+    fun pipe(): PipeMaterial
 
-    /**
-     * Creates a material modifier for convex radiant mapping shapes
-     * Used with the base material.
-     * @param radiantTexture cube texture declaration representing distance from the object center to the surface at the given direction
-     * @param radiantNormalTexture cube texture declaration representing object convex shape normal at the surface point at the given direction from the object center
-     * @param radiantNormalTexture cube texture declaration representing albedo color of the surface point at the given direction to the object center
-     * @param radiantNormalTexture cube texture declaration for local normal at the surface point at the given direction to the object center
-     * @return material modifier
-     */
-    fun radiant(radiantTexture: CubeTextureDeclaration, radiantNormalTexture: CubeTextureDeclaration, colorTexture: CubeTextureDeclaration, normalTexture: CubeTextureDeclaration): MaterialModifier
-
-    /**
-     * Material modifier that outputs distance to origin when capturing environment probes
-     * @param radiantMax max distance to origin
-     * @return material modifier
-     */
-    fun radiantCapture(radiantMax: Float): MaterialModifier
+    // TODO
+//    /**
+//     * Creates a material modifier for convex radiant mapping shapes
+//     * Used with the base material.
+//     * @param radiantTexture cube texture declaration representing distance from the object center to the surface at the given direction
+//     * @param radiantNormalTexture cube texture declaration representing object convex shape normal at the surface point at the given direction from the object center
+//     * @param radiantNormalTexture cube texture declaration representing albedo color of the surface point at the given direction to the object center
+//     * @param radiantNormalTexture cube texture declaration for local normal at the surface point at the given direction to the object center
+//     * @return material modifier
+//     */
+//    fun radiant(radiantTexture: CubeTextureDeclaration, radiantNormalTexture: CubeTextureDeclaration, colorTexture: CubeTextureDeclaration, normalTexture: CubeTextureDeclaration): MaterialModifier
+//
+//    /**
+//     * Material modifier that outputs distance to origin when capturing environment probes
+//     * @param radiantMax max distance to origin
+//     * @return material modifier
+//     */
+//    fun radiantCapture(radiantMax: Float): MaterialModifier
 
     /**
      * Material modifier that outputs normal map when capturing environment probes.
      * @return material modifier
      */
-    fun normalCapture(): MaterialModifier
+    // fun normalCapture(): MaterialModifier
 
     /**
      * Creates gaussian blur post-processing effect.
@@ -538,14 +408,14 @@ interface KorenderContext {
      * @param radius blur radius in pixels
      * @return material modifier
      */
-    fun blurHorz(radius: Float): MaterialModifier
+    fun blurHorz(radius: Float): PostProcessingMaterial
 
     /**
      * Creates one-dimensional gaussian blur material modifier in vertical direction.
      * @param radius blur radius in pixels
      * @return material modifier
      */
-    fun blurVert(radius: Float): MaterialModifier
+    fun blurVert(radius: Float): PostProcessingMaterial
 
     /**
      * Creates material modifier to adjust scene's brighness/contract/saturation.
@@ -555,7 +425,7 @@ interface KorenderContext {
      * @param contrast saturation adjustment, 0..infinity (1 does not change)
      * @return material modifier
      */
-    fun adjust(brightness: Float = 0.0f, contrast: Float = 1.0f, saturation: Float = 1.0f): MaterialModifier
+    fun adjust(brightness: Float = 0.0f, contrast: Float = 1.0f, saturation: Float = 1.0f): PostProcessingMaterial
 
     /**
      * Creates a water surface with waves as a post process material modifier.
@@ -567,7 +437,7 @@ interface KorenderContext {
      * @param waveMagnitude vertical scale factor for waves
      * @return material modifier
      */
-    fun water(waterColor: ColorRGB = ColorRGB(0x00182A), transparency: Float = 0.1f, waveScale: Float = 25.0f, waveMagnitude: Float = 0.3f): MaterialModifier
+    fun water(waterColor: ColorRGB = ColorRGB(0x00182A), transparency: Float = 0.1f, waveScale: Float = 25.0f, waveMagnitude: Float = 0.3f, sky: SkyMaterial): PostProcessingMaterial
 
     /**
      * Creates fog as material modifier.
@@ -577,14 +447,14 @@ interface KorenderContext {
      * @param color fog color
      * @return material modifier
      */
-    fun fog(density: Float = 0.00003f, color: ColorRGB = ColorRGB(0xB8CAE9)): MaterialModifier
+    fun fog(density: Float = 0.00003f, color: ColorRGB = ColorRGB(0xB8CAE9)): PostProcessingMaterial
 
     /**
      * Creates an FXAA material modifier.
      * Used as a post processing effect.
      * @return material modifier
      */
-    fun fxaa(): MaterialModifier
+    fun fxaa(): PostProcessingMaterial
 
     /**
      * Creates a fire effect.
@@ -592,7 +462,7 @@ interface KorenderContext {
      * @param strength fire strength factor 1..5
      * @return material modifier
      */
-    fun fire(strength: Float = 3.0f): MaterialModifier
+    fun fire(strength: Float = 3.0f): BillboardEffect
 
     /**
      * Creates a fireball effect.
@@ -600,7 +470,7 @@ interface KorenderContext {
      * @param power power fireball explosion phase 0..1
      * @return material modifier
      */
-    fun fireball(power: Float = 0.5f): MaterialModifier
+    fun fireball(power: Float = 0.5f): BillboardEffect
 
     /**
      * Creates a single smoke ball effect.
@@ -609,7 +479,7 @@ interface KorenderContext {
      * @param seed seed for randomness (0..1)
      * @return material modifier
      */
-    fun smoke(density: Float = 0.5f, seed: Float = 0f): MaterialModifier
+    fun smoke(density: Float = 0.5f, seed: Float = 0f): BillboardEffect
 
     /**
      * Creates a cloudy sky material modifier.
@@ -634,7 +504,7 @@ interface KorenderContext {
         horizonColor: ColorRGB = ColorRGB(0xB8CAE9),
         cloudLight: Float = 1.0f,
         cloudDark: Float = 0.7f,
-    ): MaterialModifier
+    ): SkyMaterial
 
     /**
      * Creates a night sky with stars material modifier.
@@ -644,37 +514,22 @@ interface KorenderContext {
      * @param size star size factor
      * @return material modifier
      */
-    fun starrySky(colorness: Float = 0.8f, density: Float = 20.0f, speed: Float = 1.0f, size: Float = 15.0f): MaterialModifier
+    fun starrySky(colorness: Float = 0.8f, density: Float = 20.0f, speed: Float = 1.0f, size: Float = 15.0f): SkyMaterial
 
     /**
      * Creates a sky material modifier from a cube texture.
      * @param cubeTexture cube texture declaration
      * @return material modifier
      */
-    fun cubeSky(cubeTexture: CubeTextureDeclaration): MaterialModifier
+    fun cubeSky(cubeTexture: CubeTextureDeclaration): SkyMaterial
 
     /**
      * Creates a sky material modifier from a flat texture.
      * @param texture texture declaration
      * @return material modifier
      */
-    fun textureSky(texture: TextureDeclaration): MaterialModifier
+    fun textureSky(texture: TextureDeclaration): SkyMaterial
 
-    /**
-     * Creates a material modifier that applies environment lighting.
-     * Used with base material.
-     * @param env cube texture declaration
-     * @return material modifier
-     */
-    fun ibl(env: CubeTextureDeclaration): MaterialModifier
-
-    /**
-     * Creates a material modifier that applies environment lighting from a sky material modifier.
-     * Used with base material.
-     * @param env sky material modifier
-     * @return material modifier
-     */
-    fun ibl(env: MaterialModifier): MaterialModifier
 
     /**
      * Creates a screen space reflection post shading effect for deferred rendering pipeline.
@@ -836,7 +691,7 @@ interface KorenderContext {
      * @param rings number of visible rings
      * @return terrain geometry prefab
      */
-    fun clipmapTerrainPrefab(id: String, cellSize: Float, hg: Int, rings: Int): Prefab
+    fun clipmapTerrainPrefab(id: String, cellSize: Float, hg: Int, rings: Int): Prefab<TerrainMaterial>
 
     /**
      * Creates mesh instancing declaration.

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.Prefab
+import com.zakgof.korender.TerrainMaterial
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform.Companion.rotate
@@ -35,7 +36,7 @@ fun IslandExample() =
     }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-private fun FrameContext.gameFrame(game: Game, loader: Loader, terrain: Prefab) {
+private fun FrameContext.gameFrame(game: Game, loader: Loader, terrain: Prefab<TerrainMaterial>) {
     projection = projection(2f, 2f * height / width, 2f, 32000f, log())
     camera = camera(game.cameraPos, game.cameraDir, game.cameraUp)
 
@@ -61,7 +62,7 @@ private fun FrameContext.atmosphere() {
         Cascade(512, 2f, 5000f, 0f to 4000f, hardwarePcf())
         Cascade(512, 2500f, 12000f, 0f to 4000f, hardwarePcf(0.006f))
     }
-    PostProcess(water(waveScale = 3000.0f, transparency = 0.05f), fastCloudSky())
+    PostProcess(water(waveScale = 3000.0f, transparency = 0.05f, sky = fastCloudSky()))
     PostProcess(fog(color = ColorRGB(0xB8CAE9), density = 0.00003f)) {
         Sky(fastCloudSky())
     }

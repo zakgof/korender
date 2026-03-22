@@ -11,10 +11,11 @@ import kotlin.random.Random
 
 @Composable
 fun DecalExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
-    val materialModifiers = arrayOf(
-        base(colorTexture = texture("texture/asphalt-albedo.jpg"), metallicFactor = 0.2f),
-        normalTexture(normalTexture = texture("texture/asphalt-normal.jpg")),
-    )
+    val material = base {
+        colorTexture = texture("texture/asphalt-albedo.jpg")
+        metallicFactor = 0.2f
+        normalTexture = texture("texture/asphalt-normal.jpg")
+    }
     camera = camera(20.z, -1.z, 1.y)
     Frame {
         DirectionalLight(Vec3(1f, -1f, -1f), white(2.0f))
@@ -28,16 +29,16 @@ fun DecalExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                 val up = ((look % 1.y) % look).normalize()
                 val pos = -look * 4f
                 Decal(
-                    base(
-                        colorTexture = texture("texture/decal.png"),
+                    base {
+                        colorTexture = texture("texture/decal.png")
                         metallicFactor = 0.2f
-                    ),
+                    },
                     position = pos, look = look, up = up, size = 1.6f
                 )
             }
         }
         Renderable(
-            *materialModifiers,
+            material,
             mesh = sphere(4f)
         )
         Gui {

@@ -39,6 +39,10 @@ kotlin {
         binaries.executable()
     }
 
+    compilerOptions {
+        freeCompilerArgs.addAll("-Xcontext-parameters")
+    }
+
     sourceSets {
         val desktopMain by getting
 

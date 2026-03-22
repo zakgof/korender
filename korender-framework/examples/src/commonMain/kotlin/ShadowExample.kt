@@ -14,10 +14,11 @@ import kotlin.math.sin
 @Composable
 fun ShadowExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
-        val materialModifiers = arrayOf(
-            base(colorTexture = texture("texture/asphalt-albedo.jpg"), metallicFactor = 0.2f),
-            normalTexture(normalTexture = texture("texture/asphalt-normal.jpg")),
-        )
+        val material = base {
+            colorTexture = texture("texture/asphalt-albedo.jpg")
+            metallicFactor = 0.2f
+            normalTexture = texture("texture/asphalt-normal.jpg")
+        }
         camera = camera(Vec3(-2.0f, 5f, 30f), -1.z, 1.y)
         Frame {
             DirectionalLight(Vec3(1f, -1f, 2f), white(5.0f)) {
@@ -32,17 +33,17 @@ fun ShadowExample() =
             AmbientLight(white(0.05f))
 
             Renderable(
-                *materialModifiers,
+                material,
                 mesh = cube(1f),
                 transform = scale(10f, 1f, 10f)
             )
             Renderable(
-                *materialModifiers,
+                material,
                 mesh = cube(1.0f),
                 transform = translate(2.y).rotate(1.y, frameInfo.time * 0.1f),
             )
             Renderable(
-                *materialModifiers,
+                material,
                 mesh = sphere(1.5f),
                 transform = translate(Vec3(-5.0f, 3.5f + sin(frameInfo.time), 0.0f)),
             )

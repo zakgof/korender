@@ -60,7 +60,7 @@ fun AppExample() {
         Demo("Bloom") { BloomExample() },
         Demo("SSR") { SsrExample() },
 
-        /*
+
         Demo("Texture arrays") { TextureArrayExample() },
         Demo("Multiple viewports") { MultipleViewportsExample() },
         Demo("Sky") { SkyExample() },
@@ -71,7 +71,7 @@ fun AppExample() {
         Demo("Env") { CaptureEnvExample() },
         Demo("Capture frame") { CaptureFrameExample() },
         Demo("Shapes") { BasicShapesExample() }
-         */
+
     )
 
     var isExpanded by remember { mutableStateOf(false) }

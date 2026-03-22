@@ -165,11 +165,13 @@ internal class Scene(
     }
 
     private fun renderDeferredShading(reusable: Boolean) {
-        val modifiers = listOf(contextMaterialModifier) + sceneDeclaration.deferredShadingDeclaration!!.shadingModifiers
-        val shadingMaterial = materialDeclaration(BaseMaterial.Shading, true, currentRetentionPolicy, modifiers)
+        val shadingMaterialDeclaration = MaterialDeclaration(
+            ShaderDeclaration("!shader/screen.vert", "!shader/deferred/shading.frag", setOf(),  renderContext.contextPlugins(), currentRetentionPolicy),
+            contextAdditionalUniforms
+        )
         val target = if (reusable) renderContext.defaultTarget() else null
         renderToReusableFb(target) {
-            renderFullscreen(shadingMaterial)
+            renderFullscreen(shadingMaterialDeclaration)
             renderBucket(sceneDeclaration.skies)
         }
     }
@@ -180,8 +182,9 @@ internal class Scene(
                 pass.mapping.forEach {
                     contextAdditionalUniforms[it.key] = contextAdditionalUniforms[it.value]
                 }
-                val material = materialDeclaration(BaseMaterial.Screen, true, currentRetentionPolicy, listOf(contextMaterialModifier) + pass.modifiers)
-                renderFullscreen(material, pass.target.width, pass.target.height)
+                val materialDeclaration = pass.material.toDeclaration(true, currentRetentionPolicy,
+                    renderContext.contextPlugins(), contextAdditionalUniforms)
+                renderFullscreen(materialDeclaration, pass.target.width, pass.target.height)
             }
         }
         effect.effectPasses.flatMap { listOf(it.target.colorOutput, it.target.depthOutput) }
@@ -291,6 +294,8 @@ internal class Scene(
                         val materialModifiers = decalDeclaration.materialModifiers + InternalMaterialModifier {
                             it.uniforms["renderSize"] = Vec2(renderContext.width.toFloat(), renderContext.height.toFloat())
                         }
+
+                        decalDeclaration.material
                         val renderableDeclaration = RenderableDeclaration(BaseMaterial.Decal, materialModifiers, DecalCube(0.5f, currentRetentionPolicy), Transform(model), true, currentRetentionPolicy)
                         renderRenderable(renderableDeclaration, renderContext.camera)
                     }
@@ -549,7 +554,7 @@ internal class Scene(
         }
 
         val materialModifiers = listOf(contextMaterialModifier) + declaration.materialModifiers + InternalMaterialModifier { it.shaderDefs += addDefs }
-        val materialDeclaration = materialDeclaration(declaration.base, deferredShading, declaration.retentionPolicy, materialModifiers)
+        val materialDeclaration = declaration.material.materialDeclaration(declaration.base, deferredShading, declaration.retentionPolicy, materialModifiers)
 
         if (materialDeclaration.shader.defs.contains("NO_SHADOW_CAST") && isShadow)
             return true

@@ -20,12 +20,17 @@ fun LightsExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
         camera = camera(Vec3(0f, 3f, 20f), (-1).z, 1.y)
 
-        val mat = base(metallicFactor = 0.0f, roughnessFactor = 0.7f)
+        val mat = base {
+            metallicFactor = 0.0f
+            roughnessFactor = 0.7f
+        }
         Frame {
 
             fun LightMark(pos: Vec3, color: ColorRGB) = Renderable(
-                base(color = ColorRGBA.Black),
-                emission(factor = color),
+                base {
+                    color = ColorRGBA.Black
+                    emission = color
+                },
                 mesh = sphere(0.05f),
                 transform = translate(pos)
             )

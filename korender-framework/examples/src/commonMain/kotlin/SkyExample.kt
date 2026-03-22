@@ -21,9 +21,13 @@ fun SkyExample() {
             camera = freeCamera.camera(projection, width, height, 0f)
             Sky(starrySky())
             Renderable(
-                base(colorTexture = texture("texture/asphalt-albedo.jpg"), metallicFactor = 0.2f, roughnessFactor = 0.9f),
-                normalTexture(normalTexture = texture("texture/asphalt-normal.jpg")),
-                triplanar(0.1f),
+                base {
+                    colorTexture = texture("texture/asphalt-albedo.jpg")
+                    metallicFactor = 0.2f
+                    roughnessFactor = 0.9f
+                    normalTexture = texture("texture/asphalt-normal.jpg")
+                    triplanarScale = 0.1f
+                },
                 mesh = cube(1f),
                 transform = scale(2000f, 1f, 2000f)
             )

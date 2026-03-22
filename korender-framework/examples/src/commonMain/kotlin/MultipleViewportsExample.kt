@@ -20,7 +20,7 @@ fun MultipleViewportsExample() = Column(
             Frame {
                 DirectionalLight(Vec3(1f, -1f, 0f))
                 Renderable(
-                    base(color = ColorRGBA.Red),
+                    base { color = ColorRGBA.Red },
                     mesh = sphere(1f)
                 )
             }
@@ -31,7 +31,7 @@ fun MultipleViewportsExample() = Column(
             Frame {
                 DirectionalLight(Vec3(1f, -1f, 0f))
                 Renderable(
-                    base(color = ColorRGBA.Green),
+                    base { color = ColorRGBA.Green },
                     mesh = sphere(1f)
                 )
             }

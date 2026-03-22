@@ -21,6 +21,6 @@ class FrameInfo(
     val pending: Int
 )
 
-interface Prefab
+interface Prefab<M : Material>
 
 interface RetentionPolicy

@@ -1,6 +1,6 @@
 package com.zakgof.korender.context
 
-import com.zakgof.korender.MaterialModifier
+import com.zakgof.korender.Material
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.math.Vec3
 
@@ -11,7 +11,8 @@ interface DeferredShadingContext {
      *
      * @param shadingModifiers shading material modifiers
      */
-    fun Shading(vararg shadingModifiers: MaterialModifier)
+    // TODO
+    // fun Shading(vararg shadingModifiers: MaterialModifier)
 
     /**
      * Defines post shading effect modifiers.
@@ -29,5 +30,5 @@ interface DeferredShadingContext {
      * @param up up direction for decal application (corresponds to y axis of decal texture)
      * @param size decal quad size, in world space units
      */
-    fun Decal(vararg materialModifiers: MaterialModifier, position: Vec3, look: Vec3, up: Vec3, size: Float)
+    fun Decal(material: Material, position: Vec3, look: Vec3, up: Vec3, size: Float)
 }

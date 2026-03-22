@@ -34,9 +34,7 @@ fun RenderToTextureExample() = Korender(appResourceLoader = { Res.readBytes(it) 
         AmbientLight(ColorRGB.White)
         DirectionalLight(-1.z, ColorRGB.white(3f))
         Renderable(
-            base(
-                colorTexture = textureProbe("timer")
-            ),
+            base { colorTexture = textureProbe("timer") },
             mesh = cube(2f),
             transform = rotate(Quaternion.fromAxisAngle(Vec3(1f, 1f, 1f).normalize(), frameInfo.time))
         )

@@ -24,16 +24,14 @@ fun HeightmapTerrainExample() =
             DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(1.5f))
 
             Renderable(
-                base(
-                    colorTexture = texture("terrain/terrain-albedo.jpg", wrap = TextureWrap.ClampToEdge),
+                terrain {
+                    colorTexture = texture("terrain/terrain-albedo.jpg", wrap = TextureWrap.ClampToEdge)
                     metallicFactor = 0.0f
-                ),
-                terrain(
-                    heightTexture = texture("terrain/terrain-height.png"),
-                    heightScale = 200.0f,
-                    outsideHeight = -100.0f,
+                    heightTexture = texture("terrain/terrain-height.png")
+                    heightScale = 200.0f
+                    outsideHeight = -100.0f
                     terrainCenter = Vec3(0f, -14f, 0f)
-                ),
+                },
                 prefab = terrain
             )
 

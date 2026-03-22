@@ -1,5 +1,7 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.BaseMaterialContext
+import com.zakgof.korender.BillboardMaterialContext
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
@@ -11,12 +13,12 @@ import com.zakgof.korender.IndexType
 import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.KeyHandler
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.MaterialModifier
-import com.zakgof.korender.MutableMesh
+import com.zakgof.korender.MaterialContext
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
+import com.zakgof.korender.MutableMesh
 import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.Platform
 import com.zakgof.korender.PostProcessingEffect
@@ -27,6 +29,9 @@ import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
+import com.zakgof.korender.SkyMaterial
+import com.zakgof.korender.TerrainMaterial
+import com.zakgof.korender.TerrainMaterialContext
 import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureArrayDeclaration
 import com.zakgof.korender.TextureArrayImages
@@ -75,8 +80,16 @@ import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
 import com.zakgof.korender.impl.material.ImageTextureArrayDeclaration
 import com.zakgof.korender.impl.material.ImageTextureDeclaration
+import com.zakgof.korender.impl.material.InternalBaseMaterial
+import com.zakgof.korender.impl.material.InternalBillboardEffect
+import com.zakgof.korender.impl.material.InternalBillboardMaterial
+import com.zakgof.korender.impl.material.InternalCustomMaterial
 import com.zakgof.korender.impl.material.InternalMaterialModifier
+import com.zakgof.korender.impl.material.InternalPipeMaterial
+import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
+import com.zakgof.korender.impl.material.InternalSkyMaterial
+import com.zakgof.korender.impl.material.InternalTerrainMaterial
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
@@ -90,7 +103,6 @@ import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
-import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -263,6 +275,7 @@ internal class Engine(
 
         override fun mutableMesh(): MutableMesh =
             InternalMutableMesh()
+
         override fun mesh(id: String, mesh: Mesh) =
             CustomCpuMesh(id, mesh, currentRetentionPolicy)
 
@@ -272,134 +285,28 @@ internal class Engine(
         override fun pipeMesh(id: String, segments: Int, dynamic: Boolean, block: PipeMeshContext.() -> Unit) =
             createPipeMesh(id, segments, dynamic, currentRetentionPolicy, block)
 
-        override fun vertex(vertShaderFile: String): InternalMaterialModifier =
-            InternalMaterialModifier { it.vertShaderFile = vertShaderFile }
+        override fun customMaterial(vertShaderFile: String, fragShaderFile: String, block: MaterialContext.() -> Unit) =
+            InternalCustomMaterial(vertShaderFile, fragShaderFile).also { block.invoke(it) }
 
-        override fun fragment(fragShaderFile: String): InternalMaterialModifier =
-            InternalMaterialModifier { it.fragShaderFile = fragShaderFile }
+        override fun customMaterial(vertShaderFile: String, block: BaseMaterialContext.() -> Unit) =
+            InternalBaseMaterial(vertShaderFile).also { block.invoke(it) }.also { it.compile() }
 
-        override fun defs(vararg defs: String): InternalMaterialModifier =
-            InternalMaterialModifier { it.shaderDefs += setOf(*defs) }
+        override fun base(block: BaseMaterialContext.() -> Unit) =
+            InternalBaseMaterial().also { block.invoke(it) }.also { it.compile() }
 
-        override fun plugin(name: String, shaderFile: String) = InternalMaterialModifier {
-            it.plugins[name] = shaderFile
-        }
+        override fun billboard(block: BillboardMaterialContext.() -> Unit) =
+            InternalBillboardMaterial().also { block.invoke(it) }.also { it.compile() }
 
-        override fun base(color: ColorRGBA, colorTexture: TextureDeclaration?, metallicFactor: Float, roughnessFactor: Float, alphaCutoff: Float) = InternalMaterialModifier {
-            it.uniforms["baseColor"] = color
-            it.uniforms["baseColorTexture"] = colorTexture
-            it.uniforms["metallicFactor"] = metallicFactor
-            it.uniforms["roughnessFactor"] = roughnessFactor
-            it.uniforms["alphaCutoff"] = alphaCutoff
-            if (colorTexture != null) {
-                it.shaderDefs += "BASE_COLOR_MAP";
-            }
-        }
+        override fun terrain(block: TerrainMaterialContext.() -> Unit) =
+            InternalTerrainMaterial().also { block.invoke(it) }.also { it.compile() }
 
-        override fun colorTextures(textureArray: TextureArrayDeclaration) = InternalMaterialModifier {
-            it.shaderDefs += "TEXTURE_ARRAY"
-            it.plugins["texturing"] = "!shader/plugin/texturing.array.frag"
-            it.uniforms["colorTextures"] = textureArray
-        }
+        override fun pipe() = InternalPipeMaterial()
 
-        override fun triplanar(scale: Float): MaterialModifier = InternalMaterialModifier {
-            it.plugins["texturing"] = "!shader/plugin/texturing.triplanar.frag"
-            it.uniforms["triplanarScale"] = scale
-        }
+        override fun blurVert(radius: Float) =
+            InternalPostProcessingMaterial("!shader/effect/blurh.frag", "radius" to radius)
 
-        override fun normalTexture(normalTexture: TextureDeclaration) = InternalMaterialModifier {
-            it.plugins["normal"] = "!shader/plugin/normal.texture.frag"
-            it.uniforms["normalTexture"] = normalTexture
-        }
-
-        override fun emission(factor: ColorRGB): MaterialModifier = InternalMaterialModifier {
-            it.plugins["emission"] = "!shader/plugin/emission.factor.frag"
-            it.uniforms["emissionFactor"] = factor
-        }
-
-        override fun metallicRoughnessTexture(texture: TextureDeclaration) = InternalMaterialModifier {
-            it.plugins["metallic_roughness"] = "!shader/plugin/metallic_roughness.texture.frag"
-            it.uniforms["metallicRoughnessTexture"] = texture
-        }
-
-        override fun specularGlossiness(specularFactor: ColorRGB, glossinessFactor: Float) = InternalMaterialModifier {
-            it.plugins["specular_glossiness"] = "!shader/plugin/specular_glossiness.factor.frag"
-            it.uniforms["specularFactor"] = specularFactor
-            it.uniforms["glossinessFactor"] = glossinessFactor
-        }
-
-        override fun specularGlossinessTexture(texture: TextureDeclaration) = InternalMaterialModifier {
-            it.plugins["specular_glossiness"] = "!shader/plugin/specular_glossiness.texture.frag"
-            it.uniforms["specularGlossinessTexture"] = texture
-        }
-
-        override fun occlusionTexture(texture: TextureDeclaration) = InternalMaterialModifier {
-            it.plugins["occlusion"] = "!shader/plugin/occlusion.texture.frag"
-            it.uniforms["occlusionTexture"] = texture
-        }
-
-        override fun emissionTexture(texture: TextureDeclaration) = InternalMaterialModifier {
-            it.plugins["emission"] = "!shader/plugin/emission.texture.frag"
-            it.uniforms["emissionTexture"] = texture
-        }
-
-        override fun billboard(position: Vec3, scale: Vec2, rotation: Float) = InternalMaterialModifier {
-            it.uniforms["pos"] = position
-            it.uniforms["scale"] = scale
-            it.uniforms["rotation"] = rotation
-        }
-
-        override fun terrain(heightTexture: TextureDeclaration, heightScale: Float, outsideHeight: Float, terrainCenter: Vec3) = InternalMaterialModifier {
-            it.plugins["normal"] = "!shader/plugin/normal.terrain.frag"
-            it.plugins["terrain"] = "!shader/plugin/terrain.texture.frag"
-            it.uniforms["heightTexture"] = heightTexture
-            it.uniforms["heightScale"] = heightScale
-            it.uniforms["outsideHeight"] = outsideHeight
-            it.uniforms["terrainCenter"] = terrainCenter
-        }
-
-        override fun radiant(radiantTexture: CubeTextureDeclaration, radiantNormalTexture: CubeTextureDeclaration, colorTexture: CubeTextureDeclaration, normalTexture: CubeTextureDeclaration) = InternalMaterialModifier {
-            it.plugins["position"] = "!shader/plugin/position.radiant.frag"
-            it.plugins["normal"] = "!shader/plugin/normal.radiant.frag"
-            it.plugins["albedo"] = "!shader/plugin/albedo.radiant.frag"
-            it.plugins["depth"] = "!shader/plugin/depth.radiant.frag"
-            it.uniforms["radiantTexture"] = radiantTexture
-            it.uniforms["radiantNormalTexture"] = radiantNormalTexture
-            it.uniforms["colorCubeTexture"] = colorTexture
-            it.uniforms["normalCubeTexture"] = normalTexture
-        }
-
-        override fun pipe() = InternalMaterialModifier {
-            it.vertShaderFile = "!shader/pipe.vert"
-            it.plugins["position"] = "!shader/plugin/position.pipe.frag"
-            it.plugins["normal"] = "!shader/plugin/normal.pipe.frag"
-            it.plugins["depth"] = "!shader/plugin/depth.pipe.frag"
-        }
-
-        override fun radiantCapture(radiantMax: Float) = InternalMaterialModifier {
-            it.plugins["output"] = "!shader/plugin/output.radiant.frag"
-            it.uniforms["radiantMax"] = radiantMax
-        }
-
-        override fun normalCapture() = InternalMaterialModifier {
-            it.plugins["output"] = "!shader/plugin/output.normal.frag"
-        }
-
-        override fun uniforms(vararg pairs: Pair<String, Any?>) = InternalMaterialModifier { mb ->
-            pairs.forEach {
-                mb.uniforms[it.first] = it.second
-            }
-        }
-
-        override fun blurVert(radius: Float) = InternalMaterialModifier {
-            it.fragShaderFile = "!shader/effect/blurh.frag"
-            it.uniforms["radius"] = radius
-        }
-
-        override fun blurHorz(radius: Float) = InternalMaterialModifier {
-            it.fragShaderFile = "!shader/effect/blurv.frag"
-            it.uniforms["radius"] = radius
-        }
+        override fun blurHorz(radius: Float) =
+            InternalPostProcessingMaterial("!shader/effect/blurv.frag", "radius" to radius)
 
         override fun blur(radius: Float): PostProcessingEffect = InternalFilterDeclaration(
             listOf(
@@ -426,86 +333,90 @@ internal class Engine(
             )
         )
 
-        override fun adjust(brightness: Float, contrast: Float, saturation: Float) = InternalMaterialModifier {
-            it.fragShaderFile = "!shader/effect/adjust.frag"
-            it.uniforms["brightness"] = brightness
-            it.uniforms["contrast"] = contrast
-            it.uniforms["saturation"] = saturation
-        }
+        override fun adjust(brightness: Float, contrast: Float, saturation: Float) =
+            InternalPostProcessingMaterial(
+                "!shader/effect/adjust.frag",
+                "brightness" to brightness,
+                "contrast" to contrast,
+                "saturation" to saturation
+            )
 
-        override fun fire(strength: Float): MaterialModifier = InternalMaterialModifier {
-            it.vertShaderFile = "!shader/billboard.vert"
-            it.fragShaderFile = "!shader/effect/fire.frag"
-            it.uniforms["strength"] = strength
-        }
+        override fun fire(strength: Float) =
+            InternalBillboardEffect(
+                "!shader/effect/fire.frag",
+                "strength" to strength
+            )
 
-        override fun fireball(power: Float) = InternalMaterialModifier {
-            it.vertShaderFile = "!shader/billboard.vert"
-            it.fragShaderFile = "!shader/effect/fireball.frag"
-            it.uniforms["power"] = power
-        }
 
-        override fun smoke(density: Float, seed: Float) = InternalMaterialModifier {
-            it.vertShaderFile = "!shader/billboard.vert"
-            it.fragShaderFile = "!shader/effect/smoke.frag"
-            it.uniforms["density"] = density
-            it.uniforms["seed"] = seed
-        }
+        override fun fireball(power: Float) =
+            InternalBillboardEffect(
+                "!shader/effect/fireball.frag",
+                "power" to power
+            )
 
-        override fun water(waterColor: ColorRGB, transparency: Float, waveScale: Float, waveMagnitude: Float) = InternalMaterialModifier {
-            it.fragShaderFile = "!shader/effect/water.frag"
-            it.uniforms["waterColor"] = waterColor
-            it.uniforms["transparency"] = transparency
-            it.uniforms["waveScale"] = waveScale
-            it.uniforms["waveMagnitude"] = waveMagnitude
-        }
+        override fun smoke(density: Float, seed: Float) =
+            InternalBillboardEffect(
+                "!shader/effect/smoke.frag",
+                "density" to density,
+                "seed" to seed
+            )
 
-        override fun fxaa() = InternalMaterialModifier {
-            it.fragShaderFile = "!shader/effect/fxaa.frag"
-        }
+        override fun water(waterColor: ColorRGB, transparency: Float, waveScale: Float, waveMagnitude: Float, sky: SkyMaterial) =
+            InternalPostProcessingMaterial(
+                "!shader/effect/water.frag",
+                "waterColor" to waterColor,
+                "transparency" to transparency,
+                "waveScale" to waveScale,
+                "waveMagnitude" to waveMagnitude,
+            ) {
+                (sky as InternalSkyMaterial).compile()
+            }
 
-        override fun fastCloudSky(density: Float, thickness: Float, scale: Float, rippleAmount: Float, rippleScale: Float, zenithColor: ColorRGB, horizonColor: ColorRGB, cloudLight: Float, cloudDark: Float) = InternalMaterialModifier {
-            it.plugins["sky"] = "!shader/plugin/sky.fastcloud.frag"
-            it.uniforms["density"] = density
-            it.uniforms["thickness"] = thickness
-            it.uniforms["scale"] = scale
-            it.uniforms["zenithcolor"] = zenithColor
-            it.uniforms["horizoncolor"] = horizonColor
-            it.uniforms["rippleamount"] = rippleAmount
-            it.uniforms["ripplescale"] = rippleScale
-            it.uniforms["cloudlight"] = cloudLight
-            it.uniforms["clouddark"] = cloudDark
-        }
 
-        override fun starrySky(colorness: Float, density: Float, speed: Float, size: Float) = InternalMaterialModifier {
-            it.plugins["sky"] = "!shader/plugin/sky.starry.frag"
-            it.uniforms["colorness"] = colorness
-            it.uniforms["density"] = density
-            it.uniforms["speed"] = speed
-            it.uniforms["size"] = size
-        }
+        override fun fxaa() =
+            InternalPostProcessingMaterial("!shader/effect/fxaa.frag")
+
+        override fun fastCloudSky(density: Float, thickness: Float, scale: Float, rippleAmount: Float, rippleScale: Float, zenithColor: ColorRGB, horizonColor: ColorRGB, cloudLight: Float, cloudDark: Float) =
+            InternalSkyMaterial(
+                "!shader/plugin/sky.fastcloud.frag",
+                "density" to density,
+                "thickness" to thickness,
+                "scale" to scale,
+                "zenithcolor" to zenithColor,
+                "horizoncolor" to horizonColor,
+                "rippleamount" to rippleAmount,
+                "ripplescale" to rippleScale,
+                "cloudlight" to cloudLight,
+                "clouddark" to cloudDark
+            )
+
+        override fun starrySky(colorness: Float, density: Float, speed: Float, size: Float) =
+            InternalSkyMaterial(
+                "!shader/plugin/sky.starry.frag",
+                "colorness" to colorness,
+                "density" to density,
+                "speed" to speed,
+                "size" to size
+            )
 
         override fun cubeSky(cubeTexture: CubeTextureDeclaration) =
-            InternalMaterialModifier {
-                it.plugins["sky"] = "!shader/plugin/sky.cube.frag"
-                it.uniforms["cubeTexture"] = cubeTexture
-            }
+            InternalSkyMaterial(
+                "!shader/plugin/sky.cube.frag",
+                "cubeTexture" to cubeTexture
+            )
 
         override fun textureSky(texture: TextureDeclaration) =
-            InternalMaterialModifier {
-                it.plugins["sky"] = "!shader/plugin/sky.texture.frag"
-                it.uniforms["skyTexture"] = texture
-            }
+            InternalSkyMaterial(
+                "!shader/plugin/sky.texture.frag",
+                "skyTexture" to texture
+            )
 
-        override fun fog(density: Float, color: ColorRGB) = InternalMaterialModifier {
-            it.fragShaderFile = "!shader/effect/fog.frag"
-            it.uniforms["density"] = density
-            it.uniforms["fogColor"] = color
-        }
-
-        override fun ibl(env: CubeTextureDeclaration) = cubeSky(env)
-
-        override fun ibl(env: MaterialModifier) = env
+        override fun fog(density: Float, color: ColorRGB) =
+            InternalPostProcessingMaterial(
+                "!shader/effect/fog.frag",
+                "density" to density,
+                "fogColor" to color
+            )
 
         override fun ssr(downsample: Int, maxReflectionDistance: Float, linearSteps: Int, binarySteps: Int, lastStepRatio: Float, envTexture: CubeTextureDeclaration?): PostShadingEffect {
             return InternalPostShadingEffect(
@@ -625,7 +536,7 @@ internal class Engine(
         override fun hardwarePcf(bias: Float): ShadowAlgorithmDeclaration =
             InternalHardwarePcfShadow(bias)
 
-        override fun clipmapTerrainPrefab(id: String, cellSize: Float, hg: Int, rings: Int): Prefab =
+        override fun clipmapTerrainPrefab(id: String, cellSize: Float, hg: Int, rings: Int): Prefab<TerrainMaterial> =
             Clipmaps(this, id, cellSize, hg, rings)
 
         override fun instancing(id: String, count: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit) =
@@ -657,27 +568,72 @@ internal class Engine(
         override fun untilGeneration(generation: Int) = UntilGenerationRetentionPolicy(generation)
         override fun time(seconds: Float) = TimeRetentionPolicy(seconds)
 
-        override val POS = MeshAttributes.POS
-        override val NORMAL = MeshAttributes.NORMAL
-        override val TEX = MeshAttributes.TEX
-        override val JOINTS_BYTE = MeshAttributes.JOINTS_BYTE
-        override val JOINTS_SHORT = MeshAttributes.JOINTS_SHORT
-        override val JOINTS_INT = MeshAttributes.JOINTS_INT
-        override val WEIGHTS = MeshAttributes.WEIGHTS
-        override val SCALE = MeshAttributes.SCALE
-        override val COLORTEXINDEX = MeshAttributes.COLORTEXINDEX
-        override val B1 = MeshAttributes.B1
-        override val B2 = MeshAttributes.B2
-        override val B3 = MeshAttributes.B3
-        override val MODEL0 = MeshAttributes.MODEL0
-        override val MODEL1 = MeshAttributes.MODEL1
-        override val MODEL2 = MeshAttributes.MODEL2
-        override val MODEL3 = MeshAttributes.MODEL3
-        override val INSTPOS = MeshAttributes.INSTPOS
-        override val INSTSCALE = MeshAttributes.INSTSCALE
-        override val INSTROT = MeshAttributes.INSTROT
-        override val INSTTEX = MeshAttributes.INSTTEX
-        override val INSTSCREEN = MeshAttributes.INSTSCREEN
+        override
+        val POS = MeshAttributes.POS
+
+        override
+        val NORMAL = MeshAttributes.NORMAL
+
+        override
+        val TEX = MeshAttributes.TEX
+
+        override
+        val JOINTS_BYTE = MeshAttributes.JOINTS_BYTE
+
+        override
+        val JOINTS_SHORT = MeshAttributes.JOINTS_SHORT
+
+        override
+        val JOINTS_INT = MeshAttributes.JOINTS_INT
+
+        override
+        val WEIGHTS = MeshAttributes.WEIGHTS
+
+        override
+        val SCALE = MeshAttributes.SCALE
+
+        override
+        val COLORTEXINDEX = MeshAttributes.COLORTEXINDEX
+
+        override
+        val B1 = MeshAttributes.B1
+
+        override
+        val B2 = MeshAttributes.B2
+
+        override
+        val B3 = MeshAttributes.B3
+
+        override
+        val MODEL0 = MeshAttributes.MODEL0
+
+        override
+        val MODEL1 = MeshAttributes.MODEL1
+
+        override
+        val MODEL2 = MeshAttributes.MODEL2
+
+        override
+        val MODEL3 = MeshAttributes.MODEL3
+
+        override
+        val INSTPOS = MeshAttributes.INSTPOS
+
+        override
+        val INSTSCALE =
+            MeshAttributes.INSTSCALE
+
+        override
+        val INSTROT =
+            MeshAttributes.INSTROT
+
+        override
+        val INSTTEX =
+            MeshAttributes.INSTTEX
+
+        override
+        val INSTSCREEN =
+            MeshAttributes.INSTSCREEN
     }
 
     init {

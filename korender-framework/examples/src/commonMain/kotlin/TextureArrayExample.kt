@@ -22,8 +22,7 @@ fun TextureArrayExample() {
                 val objMesh = objMeshDeferred.getCompleted()
                 val cubeMesh = cubeMeshDeferred.getCompleted()
                 Renderable(
-                    base(),
-                    colorTextures(textureArray("model/head.jpg", "texture/asphalt-albedo.jpg")),
+                    base { colorTextures = textureArray("model/head.jpg", "texture/asphalt-albedo.jpg") },
                     mesh = customMesh(
                         "combined",
                         objMesh.vertices.size + cubeMesh.vertices.size,

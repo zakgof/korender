@@ -20,34 +20,48 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
         camera = orbitCamera.run { camera() }
         val phase = frameInfo.time.toInt() % 3
+        val sky = cubeSky(env)
+        val iblSky = if (phase == 2) sky else null
         DeferredShading {
             if (phase == 1) {
                 PostShading(
                     ssr(downsample = 2, envTexture = env)
                 )
             }
-            if (phase == 2) {
-                Shading(ibl(env))
-            }
         }
 
         AmbientLight(white(if (phase == 0) 0.6f else 0f))
         DirectionalLight(Vec3(1f, -1f, 0f))
-        Sky(cubeSky(env))
+        Sky(sky)
         Renderable(
-            base(color = ColorRGBA.Red, metallicFactor = 0f, roughnessFactor = 0.2f),
+            base {
+                color = ColorRGBA.Red
+                metallicFactor = 0f
+                roughnessFactor = 0.2f
+                ibl = iblSky
+            },
             mesh = sphere(),
             transform = translate(-2f, -1f, -4f),
             transparent = false
         )
         Renderable(
-            base(color = ColorRGBA.Green, metallicFactor = 0f, roughnessFactor = 0.2f),
+            base {
+                color = ColorRGBA.Green
+                metallicFactor = 0f
+                roughnessFactor = 0.2f
+                ibl = iblSky
+            },
             mesh = sphere(),
             transform = translate(2f, -1f, -4f)
         )
         Renderable(
-            base(colorTexture = texture("texture/asphalt-albedo.jpg"), metallicFactor = 0.3f, roughnessFactor = 0.2f),
-            triplanar(0.4f),
+            base {
+                colorTexture = texture("texture/asphalt-albedo.jpg")
+                metallicFactor = 0.3f
+                roughnessFactor = 0.2f
+                triplanarScale = 0.4f
+                ibl = iblSky
+            },
             mesh = cube(6f),
             transform = translate(-8.y)
         )

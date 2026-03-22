@@ -1,13 +1,17 @@
 package com.zakgof.korender.impl.context
 
+import com.zakgof.korender.BaseMaterialContext
+import com.zakgof.korender.BillboardMaterial
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.FrameInfo
-import com.zakgof.korender.MaterialModifier
+import com.zakgof.korender.Material
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostProcessingEffect
+import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ResourceLoader
+import com.zakgof.korender.SkyMaterial
 import com.zakgof.korender.context.BillboardInstancingDeclaration
 import com.zakgof.korender.context.DeferredShadingContext
 import com.zakgof.korender.context.FrameContext
@@ -18,7 +22,6 @@ import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.context.ShadowContext
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.camera.Camera
-import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.DeferredShadingDeclaration
 import com.zakgof.korender.impl.engine.DirectionalLightDeclaration
 import com.zakgof.korender.impl.engine.ElementDeclaration
@@ -39,7 +42,10 @@ import com.zakgof.korender.impl.engine.ShadowDeclaration
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.ScreenQuad
-import com.zakgof.korender.impl.material.InternalMaterialModifier
+import com.zakgof.korender.impl.material.InternalBillboardMaterial
+import com.zakgof.korender.impl.material.InternalMaterial
+import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
+import com.zakgof.korender.impl.material.InternalSkyMaterial
 import com.zakgof.korender.impl.prefab.InternalPrefab
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGB
@@ -57,33 +63,33 @@ internal class DefaultFrameContext(
         sceneDeclaration.deferredShadingDeclaration = DeferredShadingDeclaration()
         DefaultDeferredShadingContext(sceneDeclaration.deferredShadingDeclaration!!).apply(block)
     }
-    override fun Gltf(vararg materialModifiers: MaterialModifier, resource: String, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?, resourceLoader: ResourceLoader?, onUpdate: (GltfUpdate) -> Unit) {
+
+    override fun Gltf(resource: String, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?, resourceLoader: ResourceLoader?, onUpdate: (GltfUpdate) -> Unit, materialModifier: BaseMaterialContext.() -> Unit) {
         sceneDeclaration.gltfs += GltfDeclaration(
             resource,
-            materialModifiers.toList(),
-            resourceLoader ?: korenderContext.appResourceLoader,
             onUpdate,
             transform,
             time ?: frameInfo.time,
             animation ?: 0,
             instancing as InternalGltfInstancingDeclaration?,
+            materialModifier,
             korenderContext.currentRetentionPolicy
         )
     }
 
-    override fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform, transparent: Boolean, instancing: InstancingDeclaration?) {
+    override fun Renderable(material: Material, mesh: MeshDeclaration, transform: Transform, transparent: Boolean, instancing: InstancingDeclaration?) {
         val meshDeclaration = (instancing as? InternalInstancingDeclaration)?.let {
             InstancedMesh(instancing.id, instancing.count, mesh, !instancing.dynamic, transparent, korenderContext.currentRetentionPolicy, instancing.instancer)
         } ?: mesh
-        val rd = RenderableDeclaration(BaseMaterial.Renderable, materialModifiers.asList(), meshDeclaration, transform, transparent, korenderContext.currentRetentionPolicy)
+        val rd = RenderableDeclaration(material as InternalMaterial, meshDeclaration, transform, transparent, korenderContext.currentRetentionPolicy)
         sceneDeclaration.append(rd)
     }
 
-    override fun Renderable(vararg materialModifiers: MaterialModifier, prefab: Prefab) {
-        (prefab as InternalPrefab).render(this, *materialModifiers)
+    override fun <M : Material> Prefab(material: M, prefab: Prefab<M>) {
+        (prefab as InternalPrefab).render(this, material)
     }
 
-    override fun Billboard(vararg materialModifiers: MaterialModifier, transparent: Boolean, instancing: BillboardInstancingDeclaration?) {
+    override fun Billboard(material: BillboardMaterial, transparent: Boolean, instancing: BillboardInstancingDeclaration?) {
         val mesh = com.zakgof.korender.impl.geometry.Billboard(korenderContext.currentRetentionPolicy)
         val meshDeclaration = if (instancing != null) {
             instancing as InternalBillboardInstancingDeclaration
@@ -92,8 +98,7 @@ internal class DefaultFrameContext(
             mesh
         }
         val rd = RenderableDeclaration(
-            BaseMaterial.Billboard,
-            materialModifiers.asList(),
+            material as InternalBillboardMaterial,
             meshDeclaration,
             IDENTITY,
             transparent,
@@ -102,8 +107,8 @@ internal class DefaultFrameContext(
         sceneDeclaration.append(rd)
     }
 
-    override fun Sky(vararg materialModifiers: MaterialModifier) {
-        sceneDeclaration.skies += RenderableDeclaration(BaseMaterial.Sky, materialModifiers.asList(), ScreenQuad(korenderContext.currentRetentionPolicy), Transform.IDENTITY, false, korenderContext.currentRetentionPolicy)
+    override fun Sky(material: SkyMaterial) {
+        sceneDeclaration.skies += RenderableDeclaration(material as InternalSkyMaterial, ScreenQuad(korenderContext.currentRetentionPolicy), Transform.IDENTITY, false, korenderContext.currentRetentionPolicy)
     }
 
     override fun Gui(block: GuiContainerContext.() -> Unit) {
@@ -133,7 +138,7 @@ internal class DefaultFrameContext(
         sceneDeclaration.filters += postProcessingEffect as InternalFilterDeclaration
     }
 
-    override fun PostProcess(vararg materialModifiers: MaterialModifier, block: FrameContext.() -> Unit) {
+    override fun PostProcess(material: PostProcessingMaterial, block: FrameContext.() -> Unit) {
         val sd = SceneDeclaration()
         val fc = DefaultFrameContext(korenderContext, sd, frameInfo)
         fc.apply(block)
@@ -141,7 +146,7 @@ internal class DefaultFrameContext(
             listOf(
                 InternalPassDeclaration(
                     mapping = mapOf(),
-                    modifiers = materialModifiers.asList().map { it as InternalMaterialModifier },
+                    material = material as InternalPostProcessingMaterial,
                     sceneDeclaration = sd,
                     target = FrameTarget(fc.width, fc.height, "colorTexture", "depthTexture"),
                     retentionPolicy = korenderContext.currentRetentionPolicy

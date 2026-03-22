@@ -23,7 +23,7 @@ fun EffectsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         smokeDemo()
         fireballDemo()
 
-        PostProcess(water(), fastCloudSky())
+        PostProcess(water(sky = fastCloudSky()))
         Gui {
             Column {
                 Filler()
@@ -34,11 +34,11 @@ fun EffectsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
 }
 
 private fun FrameContext.fireDemo() = Billboard(
-    billboard(
-        position = (-5).x + 5.y,
+    billboard {
+        position = (-5).x + 5.y
         scale = Vec2(2f, 10f)
-    ),
-    fire(),
+        effect = fire()
+    },
     transparent = true
 )
 
@@ -47,11 +47,11 @@ private fun FrameContext.smokeDemo() {
     for (i in 1..n) {
         val phase = fract(frameInfo.time * 0.5f + n.toFloat() / i)
         Billboard(
-            billboard(
-                position = (6.0f + phase * phase * 8f + phase * 2f - 4f).y,
+            billboard {
+                position = (6.0f + phase * phase * 8f + phase * 2f - 4f).y
                 scale = Vec2(5f * phase + 0.5f, 5f * phase + 0.5f)
-            ),
-            smoke(seed = i / n.toFloat(), density = 1.0f - phase),
+                effect = smoke(seed = i / n.toFloat(), density = 1.0f - phase)
+            },
             transparent = true
         )
     }
@@ -60,11 +60,11 @@ private fun FrameContext.smokeDemo() {
 private fun FrameContext.fireballDemo() {
     val phase = fract(frameInfo.time)
     Billboard(
-        billboard(
-            position = 5.x + 3.y,
+        billboard {
+            position = 5.x + 3.y
             scale = Vec2(8f * phase, 8f * phase)
-        ),
-        fireball(power = phase),
+            effect = fireball(power = phase)
+        },
         transparent = true
     )
 }

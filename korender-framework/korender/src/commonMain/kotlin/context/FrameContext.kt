@@ -1,13 +1,17 @@
 package com.zakgof.korender.context
 
+import com.zakgof.korender.BaseMaterialContext
+import com.zakgof.korender.BillboardMaterial
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.FrameInfo
-import com.zakgof.korender.MaterialModifier
+import com.zakgof.korender.Material
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostProcessingEffect
+import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ResourceLoader
+import com.zakgof.korender.SkyMaterial
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
@@ -29,7 +33,7 @@ interface FrameContext : KorenderContext {
      * @param transparent true if the object has transparency
      * @param instancing instancing declaration to render multiple objects in a batch
      */
-    fun Renderable(vararg materialModifiers: MaterialModifier, mesh: MeshDeclaration, transform: Transform = Transform.IDENTITY, transparent: Boolean = false, instancing: InstancingDeclaration? = null)
+    fun Renderable(material: Material, mesh: MeshDeclaration, transform: Transform = Transform.IDENTITY, transparent: Boolean = false, instancing: InstancingDeclaration? = null)
 
     /**
      * Renders a geometry prefab.
@@ -37,7 +41,7 @@ interface FrameContext : KorenderContext {
      * @param materialModifiers object surface material modifiers
      * @param prefab geometry prefab
      */
-    fun Renderable(vararg materialModifiers: MaterialModifier, prefab: Prefab)
+    fun <M : Material> Prefab(material: M, prefab: Prefab<M>)
 
     /**
      * Renders a GLTF model from a resource file.
@@ -51,7 +55,7 @@ interface FrameContext : KorenderContext {
      * @param resourceLoader overridden file resource loader
      * @param onUpdate callback with runtime Gltf details
      */
-    fun Gltf(vararg materialModifiers: MaterialModifier, resource: String, transform: Transform = Transform.IDENTITY, time: Float? = null, animation: Int? = null, instancing: GltfInstancingDeclaration? = null, resourceLoader: ResourceLoader? = null, onUpdate: (GltfUpdate) -> Unit = {})
+    fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, time: Float? = null, animation: Int? = null, instancing: GltfInstancingDeclaration? = null, resourceLoader: ResourceLoader? = null, onUpdate: (GltfUpdate) -> Unit = {}, materialModifier: BaseMaterialContext.() -> Unit = {})
 
     /**
      * Renders a billboard - camera facing quad.
@@ -60,14 +64,14 @@ interface FrameContext : KorenderContext {
      * @param transparent true if object has transparency
      * @param instancing instancing declaration to render multiple objects in a batch
      */
-    fun Billboard(vararg materialModifiers: MaterialModifier, transparent: Boolean = false, instancing: BillboardInstancingDeclaration? = null)
+    fun Billboard(material: BillboardMaterial, transparent: Boolean = false, instancing: BillboardInstancingDeclaration? = null)
 
     /**
      * Renders a sky.
      *
      * @param materialModifiers material modifiers
      */
-    fun Sky(vararg materialModifiers: MaterialModifier)
+    fun Sky(material: SkyMaterial)
 
     /**
      * Renders GUI overlay.
@@ -90,7 +94,7 @@ interface FrameContext : KorenderContext {
      * @param materialModifiers post processing effect material modifiers
      * @param block geometry to be rendered after this effect
      */
-    fun PostProcess(vararg materialModifiers: MaterialModifier, block: FrameContext.() -> Unit = {})
+    fun PostProcess(material: PostProcessingMaterial, block: FrameContext.() -> Unit = {})
 
     /**
      * Adds a directional light to the frame.

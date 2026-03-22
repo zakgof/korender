@@ -16,7 +16,6 @@ fun PipeExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         projection = projection(3f * width / height, 3f, 3f, 100f)
         DirectionalLight(Vec3(1f, -1f, 0.1f))
         Renderable(
-            base(color = ColorRGBA.Blue),
             pipe(),
             mesh = pipeMesh("pipe", 7, false) {
                 sequence {
@@ -26,7 +25,7 @@ fun PipeExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             }
         )
         Renderable(
-            base(color = ColorRGBA.Red),
+            base { color = ColorRGBA.Red },
             mesh = cube(),
             transform = scale(7f, 1f, 7f).translate(-2.4f.y)
         )

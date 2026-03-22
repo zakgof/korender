@@ -1,10 +1,10 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.MaterialModifier
+import com.zakgof.korender.BaseMaterialContext
+import com.zakgof.korender.Material
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostShadingEffect
-import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TouchHandler
@@ -14,7 +14,8 @@ import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.material.InternalMaterialModifier
+import com.zakgof.korender.impl.material.InternalMaterial
+import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
@@ -49,11 +50,10 @@ internal class SceneDeclaration {
 
 internal class DeferredShadingDeclaration() {
     var postShadingEffects = mutableListOf<PostShadingEffect>()
-    var shadingModifiers = mutableListOf<MaterialModifier>()
     var decals = mutableListOf<InternalDecalDeclaration>()
 }
 
-internal class InternalDecalDeclaration(val position: Vec3, val look: Vec3, val up: Vec3, val size: Float, val materialModifiers: List<MaterialModifier>)
+internal class InternalDecalDeclaration(val position: Vec3, val look: Vec3, val up: Vec3, val size: Float, val material: InternalDecalMaterial)
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
 
@@ -71,8 +71,7 @@ internal data class ShaderDeclaration(
 ) : Retentionable
 
 internal class RenderableDeclaration(
-    val base: BaseMaterial,
-    val materialModifiers: List<MaterialModifier>,
+    val material: InternalMaterial,
     val mesh: MeshDeclaration,
     val transform: Transform = Transform.IDENTITY,
     val transparent: Boolean,
@@ -168,13 +167,12 @@ internal data class CascadeDeclaration(val mapSize: Int, val near: Float, val fa
 
 internal class GltfDeclaration(
     val resource: String,
-    val materialModifiers: List<MaterialModifier>,
-    val loader: ResourceLoader,
     val onUpdate: (GltfUpdate) -> Unit,
     val transform: Transform,
     val time: Float,
     val animation: Int,
     val instancingDeclaration: InternalGltfInstancingDeclaration?,
+    val materialModifier: BaseMaterialContext.() -> Unit,
     override val retentionPolicy: RetentionPolicy
 ) : Retentionable {
     override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.resource == resource)
@@ -195,7 +193,7 @@ internal class InternalBillboardInstancingDeclaration(val id: String, val count:
 
 internal class InternalFilterDeclaration(val passes: List<InternalPassDeclaration>) : PostProcessingEffect
 
-internal class InternalPassDeclaration(val mapping: Map<String, String>, val modifiers: List<InternalMaterialModifier>, val sceneDeclaration: SceneDeclaration?, val target: FrameTarget, override val retentionPolicy: RetentionPolicy) : Retentionable
+internal class InternalPassDeclaration(val mapping: Map<String, String>, val material: InternalPostProcessingMaterial, val sceneDeclaration: SceneDeclaration?, val target: FrameTarget, override val retentionPolicy: RetentionPolicy) : Retentionable
 
 internal data class ReusableFrameBufferDefinition(val pingPong: Int, val width: Int, val height: Int)
 

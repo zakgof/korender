@@ -19,12 +19,12 @@ fun MeshesExample() {
     Korender(appResourceLoader = { Res.readBytes(it) }) {
         val orbitCamera = OrbitCamera(20.z, 2.y)
         OnTouch { orbitCamera.touch(it) }
-        val materialModifier = base(color = ColorRGBA.Blue)
+        val material = base { color = ColorRGBA.Blue }
         Frame {
             AmbientLight(White)
             camera = orbitCamera.run { camera() }
             Renderable(
-                materialModifier,
+                material,
                 mesh = customMesh(
                     id = "static",
                     vertexCount = 3,
@@ -38,7 +38,7 @@ fun MeshesExample() {
                 }
             )
             Renderable(
-                materialModifier,
+                material,
                 mesh = customMesh(
                     id = "dynamic",
                     vertexCount = 3,

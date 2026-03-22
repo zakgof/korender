@@ -21,7 +21,10 @@ fun InstancedCubesExample() = Korender(appResourceLoader = { Res.readBytes(it) }
         camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
         Renderable(
-            base(colorTexture = texture("texture/asphalt-albedo.jpg"), metallicFactor = 0.1f),
+            base {
+                colorTexture = texture("texture/asphalt-albedo.jpg")
+                metallicFactor = 0.1f
+            },
             mesh = cube(0.3f),
             instancing = instancing(
                 id = "particles",
