@@ -27,10 +27,19 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_Z
 import com.zakgof.korender.impl.glgpu.Color3List
 import com.zakgof.korender.impl.glgpu.GLBindableTexture
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
+import com.zakgof.korender.impl.glgpu.GlGpuShadowTextureList
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
+import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.glgpu.IntList
+import com.zakgof.korender.impl.glgpu.Mat4Getter
+import com.zakgof.korender.impl.glgpu.ShadowTextureListGetter
+import com.zakgof.korender.impl.glgpu.TextureGetter
+import com.zakgof.korender.impl.glgpu.TextureListGetter
+import com.zakgof.korender.impl.glgpu.UniformGetter
 import com.zakgof.korender.impl.glgpu.Vec3List
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
+import com.zakgof.korender.impl.material.ConstMaterialModifier
+import com.zakgof.korender.impl.material.ConstantFieldMaterialModifier
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
 import com.zakgof.korender.impl.material.InternalMaterialModifier
@@ -41,6 +50,7 @@ import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
+import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGBA
@@ -51,6 +61,9 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+
+
+
 
 internal class Scene(
     private val sceneDeclaration: SceneDeclaration,
@@ -170,7 +183,7 @@ internal class Scene(
 
     private fun renderDeferredShading(reusable: Boolean) {
         val shadingMaterialDeclaration = MaterialDeclaration(
-            ShaderDeclaration("!shader/screen.vert", "!shader/deferred/shading.frag", setOf(),  renderContext.contextPlugins(), currentRetentionPolicy),
+            ShaderDeclaration("!shader/screen.vert", "!shader/deferred/shading.frag", setOf(), renderContext.contextPlugins(), currentRetentionPolicy),
             contextAdditionalUniforms
         )
         val target = if (reusable) renderContext.defaultTarget() else null
@@ -186,8 +199,10 @@ internal class Scene(
                 pass.mapping.forEach {
                     contextAdditionalUniforms[it.key] = contextAdditionalUniforms[it.value]
                 }
-                val materialDeclaration = pass.material.toDeclaration(true, currentRetentionPolicy,
-                    renderContext.contextPlugins(), contextAdditionalUniforms)
+                val materialDeclaration = pass.material.toDeclaration(
+                    true, currentRetentionPolicy,
+                    renderContext.contextPlugins(), contextAdditionalUniforms
+                )
                 renderFullscreen(materialDeclaration, pass.target.width, pass.target.height)
             }
         }
@@ -550,7 +565,11 @@ internal class Scene(
     ): Boolean {
         val meshLink = inventory.mesh(declaration.mesh as InternalMeshDeclaration) ?: return false
         val instancingMaterialModifier = (declaration.mesh as? Instanceable)?.instancing(meshLink, reverseZ, camera, inventory)
-        val materialModifiers = listOfNotNull(contextMaterialModifier, instancingMaterialModifier, ModelMaterialModifier(declaration.transform.mat4))
+        val materialModifiers = listOfNotNull(
+            contextMaterialModifier,
+            instancingMaterialModifier,
+            ConstMaterialModifier("model" to Mat4Getter { declaration.transform.mat4 })
+        )
         val materialDeclaration = declaration.material.toDeclaration(deferredShading, declaration.retentionPolicy, materialModifiers)
         if (materialDeclaration.shader.defs.contains("NO_SHADOW_CAST") && isShadow)
             return true

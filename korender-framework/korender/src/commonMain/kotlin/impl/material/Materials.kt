@@ -21,7 +21,6 @@ import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.glgpu.ColorRGBAGetter
 import com.zakgof.korender.impl.glgpu.ColorRGBGetter
 import com.zakgof.korender.impl.glgpu.FloatGetter
-import com.zakgof.korender.impl.glgpu.GLBindableTextureGetter
 import com.zakgof.korender.impl.glgpu.Mat4Getter
 import com.zakgof.korender.impl.glgpu.TextureGetter
 import com.zakgof.korender.impl.glgpu.UniformGetter
@@ -97,7 +96,7 @@ internal open class InternalMaterialModifier : MaterialContext, UniformSupplier 
         customUniforms += pairs
     }
 
-    override fun uniform(name: String): UniformGetter? {
+    override fun uniform(name: String): UniformGetter<*>? {
         return when (customUniforms[name]) {
             is Float -> FloatGetter<InternalMaterialModifier> { customUniforms[name] as Float }
             is Vec3 -> Vec3Getter<InternalMaterialModifier> { customUniforms[name] as Vec3 }
@@ -155,7 +154,7 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
     override var occlusionTexture: TextureDeclaration? = null
     override var ibl: SkyMaterial? = null
 
-    override fun uniform(name: String): UniformGetter? =
+    override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
             "baseColor" -> ColorRGBAGetter(InternalBaseMaterial::color)
             "baseColorTexture" -> TextureGetter(InternalBaseMaterial::colorTexture)
@@ -300,7 +299,7 @@ internal class InternalSkyMaterial(
     }
 }
 
-internal class ModelMaterialModifier(val model: Mat4) : InternalMaterialModifier() {
-    override fun uniform(name: String): UniformGetter? =
-        if (name == "model") Mat4Getter<ModelMaterialModifier> {it.model} else null
+internal class ConstMaterialModifier(vararg getters: Pair<String, UniformGetter<ConstMaterialModifier>>) : InternalMaterialModifier() {
+    private val map = getters.toMap()
+    override fun uniform(name: String): UniformGetter<ConstMaterialModifier>? = map[name]
 }

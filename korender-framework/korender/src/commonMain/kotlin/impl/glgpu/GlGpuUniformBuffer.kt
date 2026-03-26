@@ -21,14 +21,14 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
 internal interface UniformSupplier {
-    fun uniform(name: String): UniformGetter?
+    fun uniform(name: String): UniformGetter<*>?
 }
 
 internal class CompiledBlockBinding(
     val offset: Int,
     val name: String,
     val supplierIndex: Int,
-    val getter: UniformGetter
+    val getter: UniformGetter<*>
 ) {
     fun write(buffer: NativeByteBuffer, baseOffset: Int, suppliers: List<UniformSupplier>, materialName: String, ignoreMissing: Boolean) {
         val missingMessage = if (ignoreMissing) null else "Material $materialName does not provide blocked uniform $name"
@@ -38,7 +38,7 @@ internal class CompiledBlockBinding(
     }
 }
 
-internal class IntGetter<T>(private val f: (T) -> Int) : UniformGetter {
+internal class IntGetter<T>(private val f: (T) -> Int) : UniformGetter<T> {
     override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) {
         safe(f, obj, missingMessage) { v ->
             buffer.put(v)
@@ -46,14 +46,14 @@ internal class IntGetter<T>(private val f: (T) -> Int) : UniformGetter {
     }
 }
 
-internal class FloatGetter<T>(private val f: (T) -> Float) : UniformGetter {
+internal class FloatGetter<T>(private val f: (T) -> Float) : UniformGetter<T> {
     override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
         safe(f, obj, missingMessage) { v ->
             buffer.put(v)
         }
 }
 
-internal class Vec2Getter<T>(private val f: (T) -> Vec2) : UniformGetter {
+internal class Vec2Getter<T>(private val f: (T) -> Vec2) : UniformGetter<T> {
     override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
         safe(f, obj, missingMessage) { v ->
             buffer.put(v.x)
@@ -61,7 +61,7 @@ internal class Vec2Getter<T>(private val f: (T) -> Vec2) : UniformGetter {
         }
 }
 
-internal class Vec3Getter<T>(private val f: (T) -> Vec3) : UniformGetter {
+internal class Vec3Getter<T>(private val f: (T) -> Vec3) : UniformGetter<T> {
     override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
         safe(f, obj, missingMessage) { v ->
             buffer.put(v.x)
@@ -70,7 +70,7 @@ internal class Vec3Getter<T>(private val f: (T) -> Vec3) : UniformGetter {
         }
 }
 
-internal class ColorRGBGetter<T>(private val f: (T) -> ColorRGB) : UniformGetter {
+internal class ColorRGBGetter<T>(private val f: (T) -> ColorRGB) : UniformGetter<T> {
     override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
         safe(f, obj, missingMessage) { v ->
             buffer.put(v.r)
@@ -79,7 +79,7 @@ internal class ColorRGBGetter<T>(private val f: (T) -> ColorRGB) : UniformGetter
         }
 }
 
-internal class ColorRGBAGetter<T>(private val f: (T) -> ColorRGBA) : UniformGetter {
+internal class ColorRGBAGetter<T>(private val f: (T) -> ColorRGBA) : UniformGetter<T> {
     override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
         safe(f, obj, missingMessage) { v ->
             buffer.put(v.r)
@@ -89,14 +89,14 @@ internal class ColorRGBAGetter<T>(private val f: (T) -> ColorRGBA) : UniformGett
         }
 }
 
-internal class Mat4Getter<T>(private val f: (T) -> Mat4) : UniformGetter {
+internal class Mat4Getter<T>(private val f: (T) -> Mat4) : UniformGetter<T> {
     override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
         safe(f, obj, missingMessage) { v ->
             buffer.put(f(obj as T).asArray())
         }
 }
 
-internal class IntListGetter<T>(private val f: (T) -> IntList) : UniformGetter {
+internal class IntListGetter<T>(private val f: (T) -> IntList) : UniformGetter<T> {
     override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
         safe(f, obj, missingMessage) { v ->
             v.values.forEach {
@@ -108,7 +108,7 @@ internal class IntListGetter<T>(private val f: (T) -> IntList) : UniformGetter {
         }
 }
 
-internal class FloatListGetter<T>(private val f: (T) -> FloatList) : UniformGetter {
+internal class FloatListGetter<T>(private val f: (T) -> FloatList) : UniformGetter<T> {
     override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
         safe(f, obj, missingMessage) { v ->
             v.values.forEach {
@@ -120,7 +120,7 @@ internal class FloatListGetter<T>(private val f: (T) -> FloatList) : UniformGett
         }
 }
 
-internal class Vec3ListGetter<T>(private val f: (T) -> Vec3List) : UniformGetter {
+internal class Vec3ListGetter<T>(private val f: (T) -> Vec3List) : UniformGetter<T> {
     override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
         safe(f, obj, missingMessage) { v ->
             v.values.forEach {
@@ -132,7 +132,7 @@ internal class Vec3ListGetter<T>(private val f: (T) -> Vec3List) : UniformGetter
         }
 }
 
-internal class Color3ListGetter<T>(private val f: (T) -> Color3List) : UniformGetter {
+internal class Color3ListGetter<T>(private val f: (T) -> Color3List) : UniformGetter<T> {
     override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
         safe(f, obj, missingMessage) { v ->
             v.values.forEach {
@@ -144,7 +144,7 @@ internal class Color3ListGetter<T>(private val f: (T) -> Color3List) : UniformGe
         }
 }
 
-internal class Color4ListGetter<T>(private val f: (T) -> Color4List) : UniformGetter {
+internal class Color4ListGetter<T>(private val f: (T) -> Color4List) : UniformGetter<T> {
     override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
         safe(f, obj, missingMessage) { v ->
             v.values.forEach {
@@ -156,7 +156,7 @@ internal class Color4ListGetter<T>(private val f: (T) -> Color4List) : UniformGe
         }
 }
 
-internal class Mat4ListGetter<T>(private val f: (T) -> Mat4List) : UniformGetter {
+internal class Mat4ListGetter<T>(private val f: (T) -> Mat4List) : UniformGetter<T> {
     override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
         safe(f, obj, missingMessage) { v ->
             v.matrices.forEach {
