@@ -1,18 +1,21 @@
 package com.zakgof.korender.impl.material
 
+import com.zakgof.korender.KorenderException
 import com.zakgof.korender.impl.gl.GL.glGetInteger
 import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_UNIFORM_BLOCK_SIZE
 import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_UNIFORM_BUFFER_BINDINGS
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT
+import com.zakgof.korender.impl.glgpu.CompiledBlockBinding
 import com.zakgof.korender.impl.glgpu.GlGpuUniformBuffer
 import com.zakgof.korender.impl.glgpu.UniformBlock
 import com.zakgof.korender.impl.glgpu.UniformSupplier
 
 internal class UniformBufferHolder {
 
+
     private val frameUbo = GlGpuUniformBuffer(4650)
 
-    private val frameOffsets = mapOf(
+    private val frameBindings: List<Pair<String, Int>> = listOf(
         "cameraPos" to 0,
         "cameraDir" to 16,
         "view" to 32,
@@ -44,6 +47,8 @@ internal class UniformBufferHolder {
         "i1[0]" to 4560
     )
 
+    private val compiledUniformBindings = mutableListOf<CompiledBlockBinding>()
+
     private val bufferOffsetAlignment = glGetInteger(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT)
     private val maxBindings = glGetInteger(GL_MAX_UNIFORM_BUFFER_BINDINGS)
     private val shaderUboSize = glGetInteger(GL_MAX_UNIFORM_BLOCK_SIZE).coerceIn(0, 65536)
@@ -58,8 +63,16 @@ internal class UniformBufferHolder {
         frameUbo.bindBase(0)
     }
 
-    fun populateFrame(uniforms: (String) -> Any?, ignoreMissing: Boolean = false) {
-        frameUbo.populate(uniforms, 0, frameOffsets, "FrameContext", ignoreMissing)
+    fun populateFrame(uniforms: List<UniformSupplier>, ignoreMissing: Boolean = false) {
+        if (compiledUniformBindings.isEmpty()) {
+            compiledUniformBindings += frameBindings.map { pair ->
+                val name = pair.first
+                val index = uniforms.indices.firstOrNull { uniforms[it].uniform(name) != null }
+                val getter = uniforms[index!!].uniform(name) ?: throw KorenderException("Uniform $name not declared in materials for shader $this")
+                CompiledBlockBinding(pair.second, name, index, getter)
+            }
+        }
+        frameUbo.populate(uniforms, 0, compiledUniformBindings, "FrameContext", ignoreMissing)
         frameUbo.upload(4650)
     }
 

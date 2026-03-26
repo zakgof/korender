@@ -54,7 +54,7 @@ internal sealed interface UniformGetter<T> {
     fun writeTo(location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GLBindableTexture): Int? = 0
 
     @Suppress("UNCHECKED_CAST")
-    fun <V> safe(getter: (T) -> V, obj: Any, missingMessage: String?, consumer: (V) -> Unit) {
+    fun <V> safe(getter: (T) -> V?, obj: Any, missingMessage: String?, consumer: (V) -> Unit) {
         getter(obj as T)?.let { consumer(it) } ?: missingMessage?.let { throw KorenderException(it) }
     }
 
@@ -246,7 +246,7 @@ internal class GlGpuShader(
             val index = uniformSuppliers.indices.firstOrNull { uniformSuppliers[it].uniform(name) != null }
             if (index == null)
                 throw KorenderException("Uniform $name not declared in materials for shader $this")
-            CompiledBlockBinding(uniformOffsets[i], name, index, uniformSuppliers[index].uniform(name)!!)
+            CompiledBlockBinding(uniformOffsets[i], name, index)
         }
     }
 

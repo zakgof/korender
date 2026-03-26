@@ -1,25 +1,18 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.Platform
-import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.glgpu.FloatGetter
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
-import com.zakgof.korender.impl.glgpu.GlGpuShadowTextureList
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.glgpu.Mat4Getter
-import com.zakgof.korender.impl.glgpu.ShadowTextureListGetter
 import com.zakgof.korender.impl.glgpu.TextureGetter
-import com.zakgof.korender.impl.glgpu.TextureListGetter
 import com.zakgof.korender.impl.glgpu.UniformGetter
 import com.zakgof.korender.impl.glgpu.Vec3Getter
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
-import com.zakgof.korender.impl.projection.LogProjectionMode
-import com.zakgof.korender.impl.projection.OrthoProjectionMode
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.y
@@ -47,38 +40,7 @@ internal class RenderContext(var width: Int, var height: Int) {
     val envProbes = mutableMapOf<String, GlGpuCubeTexture>()
     val frameProbes = mutableMapOf<String, GlGpuTexture>()
 
-    val contextMaterialModifier = ContextMaterialModifier()
     val frameMaterialModifier = FrameMaterialModifier()
-
-    inner class ContextMaterialModifier : InternalMaterialModifier() {
-
-        var shadowTextures = GlGpuTextureList(List(5) { null }, 5)
-        var pcfTextures = GlGpuShadowTextureList(List(5) { null }, 5)
-
-        override fun uniform(name: String): UniformGetter<*>? =
-            when (name) {
-                "noiseTexture" -> TextureGetter<ContextMaterialModifier> { noiseTex }
-                "fbmTexture" -> TextureGetter<ContextMaterialModifier> { fbmTex }
-                "shadowTextures[0]" -> TextureListGetter<ContextMaterialModifier> { it.shadowTextures }
-                "pcfTextures[0]" -> ShadowTextureListGetter<ContextMaterialModifier> { it.pcfTextures }
-                else -> super.uniform(name)
-            }
-
-        override val plugins: List<Pair<String, String>>
-            get() = listOfNotNull(
-                "vprojection" to projection.mode.plugin(),
-                (projection.mode as? LogProjectionMode)?.let {
-                    "depth" to "!shader/plugin/depth.log.frag"
-                }
-            )
-
-        private fun ProjectionMode.plugin() = when (this) {
-            is FrustumProjectionMode -> "!shader/plugin/vprojection.frustum.vert"
-            is OrthoProjectionMode -> "!shader/plugin/vprojection.ortho.vert"
-            is LogProjectionMode -> "!shader/plugin/vprojection.log.vert"
-            else -> ""
-        }
-    }
 
     inner class FrameMaterialModifier : InternalMaterialModifier() {
 

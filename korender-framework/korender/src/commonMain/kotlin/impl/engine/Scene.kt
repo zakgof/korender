@@ -1,8 +1,8 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.RetentionPolicy
-import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.shadow.ShadowRenderer
@@ -24,34 +24,36 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_X
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_Y
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_Z
-import com.zakgof.korender.impl.glgpu.Color3List
+import com.zakgof.korender.impl.glgpu.Color3ListGetter
+import com.zakgof.korender.impl.glgpu.ColorRGBGetter
 import com.zakgof.korender.impl.glgpu.GLBindableTexture
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuShadowTextureList
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTextureList
-import com.zakgof.korender.impl.glgpu.IntList
+import com.zakgof.korender.impl.glgpu.IntGetter
+import com.zakgof.korender.impl.glgpu.IntListGetter
 import com.zakgof.korender.impl.glgpu.Mat4Getter
 import com.zakgof.korender.impl.glgpu.ShadowTextureListGetter
 import com.zakgof.korender.impl.glgpu.TextureGetter
 import com.zakgof.korender.impl.glgpu.TextureListGetter
 import com.zakgof.korender.impl.glgpu.UniformGetter
-import com.zakgof.korender.impl.glgpu.Vec3List
+import com.zakgof.korender.impl.glgpu.Vec3ListGetter
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
 import com.zakgof.korender.impl.material.ConstMaterialModifier
-import com.zakgof.korender.impl.material.ConstantFieldMaterialModifier
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
+import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalTexture
-import com.zakgof.korender.impl.material.ModelMaterialModifier
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
-import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
+import com.zakgof.korender.impl.projection.LogProjectionMode
+import com.zakgof.korender.impl.projection.OrthoProjectionMode
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
@@ -62,26 +64,73 @@ import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
-
-
-
 internal class Scene(
     private val sceneDeclaration: SceneDeclaration,
     val inventory: Inventory,
     val renderContext: RenderContext,
-    val currentRetentionPolicy: RetentionPolicy
+    val currentRetentionPolicy: RetentionPolicy,
 ) {
+
+    inner class LightMaterialModifier : InternalMaterialModifier() {
+
+        private val sc = sceneDeclaration
+        private val directionalLightsDirs = sc.directionalLights.map { it.direction }
+        private val directionalLightsColors = sc.directionalLights.map { it.color }
+        var dlsti = List(32) { 0 }
+        var dlstc = List(32) { 0 }
+
+        override fun uniform(name: String): UniformGetter<*>? =
+            when (name) {
+                // TODO move ALL composites to vals
+                "numDirectionalLights" -> IntGetter<LightMaterialModifier> { it.sc.directionalLights.size }
+                "directionalLightDir[0]" -> Vec3ListGetter<LightMaterialModifier> { it.directionalLightsDirs }
+                "directionalLightColor[0]" -> Color3ListGetter<LightMaterialModifier> { it.directionalLightsColors }
+                "directionalLightShadowTextureIndex[0]" -> IntListGetter<LightMaterialModifier> { it.dlsti }
+                "directionalLightShadowTextureCount[0]" -> IntListGetter<LightMaterialModifier> { it.dlstc }
+                "ambientColor" -> ColorRGBGetter<LightMaterialModifier> { it.sc.ambientLightColor }
+                "numPointLights" -> IntGetter<LightMaterialModifier> { it.sc.pointLights.size }
+                "pointLightPos[0]" -> Vec3ListGetter<LightMaterialModifier> { it.sc.pointLights.map { it.position } }
+                "pointLightColor[0]" -> Color3ListGetter<LightMaterialModifier> { it.sc.pointLights.map { it.color } }
+                "pointLightAttenuation[0]" -> Vec3ListGetter<LightMaterialModifier> { it.sc.pointLights.map { it.attenuation } }
+                else -> super.uniform(name)
+            }
+    }
+
+    inner class ContextMaterialModifier : InternalMaterialModifier() {
+
+        var shadowTextures = GlGpuTextureList(List(5) { null }, 5)
+        var pcfTextures = GlGpuShadowTextureList(List(5) { null }, 5)
+
+        override fun uniform(name: String): UniformGetter<*>? =
+            when (name) {
+                "noiseTexture" -> TextureGetter<ContextMaterialModifier> { noiseTex }
+                "fbmTexture" -> TextureGetter<ContextMaterialModifier> { fbmTex }
+                "shadowTextures[0]" -> TextureListGetter<ContextMaterialModifier> { it.shadowTextures }
+                "pcfTextures[0]" -> ShadowTextureListGetter<ContextMaterialModifier> { it.pcfTextures }
+                else -> super.uniform(name)
+            }
+
+        override val plugins: List<Pair<String, String>>
+            get() = listOfNotNull(
+                "vprojection" to renderContext.projection.mode.plugin(),
+                (renderContext.projection.mode as? LogProjectionMode)?.let {
+                    "depth" to "!shader/plugin/depth.log.frag"
+                }
+            )
+
+        private fun ProjectionMode.plugin() = when (this) {
+            is FrustumProjectionMode -> "!shader/plugin/vprojection.frustum.vert"
+            is OrthoProjectionMode -> "!shader/plugin/vprojection.ortho.vert"
+            is LogProjectionMode -> "!shader/plugin/vprojection.log.vert"
+            else -> ""
+        }
+    }
 
     private val deferredShading = sceneDeclaration.deferredShadingDeclaration != null
     private val reusableFrameBufferHolder = ReusableFrameBufferHolder()
 
-    private val contextAdditionalUniforms = mutableMapOf<String, Any?>()
-
-    private val contextMaterialModifier = InternalMaterialModifier {
-        renderContext.contextUniforms(it.uniforms)
-        it.plugins += renderContext.contextPlugins()
-        it.uniforms += contextAdditionalUniforms
-    }
+    private val lightMaterialModifier = LightMaterialModifier()
+    private val contextMaterialModifier = ContextMaterialModifier()
 
     val touchBoxes = mutableListOf<TouchBox>()
 
@@ -112,13 +161,10 @@ internal class Scene(
         renderEnvProbes()
         renderFrameProbes()
 
-        val frameUniforms = mutableMapOf<String, Any?>()
-        renderContext.frameUniforms(frameUniforms)
-        fillLightUniforms(frameUniforms)
+        inventory.uniformBufferHolder.populateFrame(listOf(renderContext.frameMaterialModifier, lightMaterialModifier), true)
 
         try {
-            renderShadows(frameUniforms, contextAdditionalUniforms)
-
+            renderShadows()
             if (deferredShading) {
                 renderSceneDeferred()
             } else {
@@ -182,10 +228,8 @@ internal class Scene(
     }
 
     private fun renderDeferredShading(reusable: Boolean) {
-        val shadingMaterialDeclaration = MaterialDeclaration(
-            ShaderDeclaration("!shader/screen.vert", "!shader/deferred/shading.frag", setOf(), renderContext.contextPlugins(), currentRetentionPolicy),
-            contextAdditionalUniforms
-        )
+        val shadingMaterial = InternalMaterial("!shader/screen.vert", "!shader/deferred/shading.frag")
+        val shadingMaterialDeclaration = shadingMaterial.toDeclaration(true, currentRetentionPolicy, listOf(contextMaterialModifier))
         val target = if (reusable) renderContext.defaultTarget() else null
         renderToReusableFb(target) {
             renderFullscreen(shadingMaterialDeclaration)
@@ -197,11 +241,11 @@ internal class Scene(
         effect.effectPasses.forEach { pass ->
             renderToReusableFb(pass.target) {
                 pass.mapping.forEach {
-                    contextAdditionalUniforms[it.key] = contextAdditionalUniforms[it.value]
+                    contextMaterialModifier.uniforms(it.key to it.value)
                 }
                 val materialDeclaration = pass.material.toDeclaration(
                     true, currentRetentionPolicy,
-                    renderContext.contextPlugins(), contextAdditionalUniforms
+                    listOf(contextMaterialModifier)
                 )
                 renderFullscreen(materialDeclaration, pass.target.width, pass.target.height)
             }
@@ -265,11 +309,13 @@ internal class Scene(
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             renderBucket(sceneDeclaration.opaques)
         }
-        contextAdditionalUniforms["albedoGeometryTexture"] = geometryBuffer.colorTextures[0]
-        contextAdditionalUniforms["normalGeometryTexture"] = geometryBuffer.colorTextures[1]
-        contextAdditionalUniforms["emissionGeometryTexture"] = geometryBuffer.colorTextures[2]
-        contextAdditionalUniforms["depthGeometryTexture"] = geometryBuffer.depthTexture!!
-
+        // TODO: vars !!!
+        contextMaterialModifier.uniforms(
+            "albedoGeometryTexture" to geometryBuffer.colorTextures[0],
+            "normalGeometryTexture" to geometryBuffer.colorTextures[1],
+            "emissionGeometryTexture" to geometryBuffer.colorTextures[2],
+            "depthGeometryTexture" to geometryBuffer.depthTexture!!
+        )
         renderDecals()
     }
 
@@ -349,7 +395,7 @@ internal class Scene(
     private fun prepareScene(
         w: Int = renderContext.width,
         h: Int = renderContext.height,
-        insideOut: Boolean = false
+        insideOut: Boolean = false,
     ) {
         renderContext.state.set {
             clearColor(renderContext.backgroundColor)
@@ -375,7 +421,7 @@ internal class Scene(
         camera: Camera,
         insideOut: Boolean = false,
         width: Int = renderContext.width,
-        height: Int = renderContext.height
+        height: Int = renderContext.height,
     ): Boolean {
         var success = true
         renderContext.state.set {
@@ -405,21 +451,7 @@ internal class Scene(
         return success
     }
 
-    private fun fillLightUniforms(m: MutableMap<String, Any?>) {
-        m["numDirectionalLights"] = sceneDeclaration.directionalLights.size
-        m["directionalLightDir[0]"] = Vec3List(sceneDeclaration.directionalLights.map { it.direction })
-        m["directionalLightColor[0]"] = Color3List(sceneDeclaration.directionalLights.map { it.color })
-        m["directionalLightShadowTextureIndex[0]"] = IntList(List(32) { -1 })
-        m["directionalLightShadowTextureCount[0]"] = IntList(List(32) { 0 })
-        m["ambientColor"] = sceneDeclaration.ambientLightColor
-        m["numPointLights"] = sceneDeclaration.pointLights.size
-        m["pointLightPos[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.position })
-        m["pointLightColor[0]"] = Color3List(sceneDeclaration.pointLights.map { it.color })
-        m["pointLightAttenuation[0]"] = Vec3List(sceneDeclaration.pointLights.map { it.attenuation })
-        inventory.uniformBufferHolder.populateFrame({ m[it] }, true)
-    }
-
-    private fun renderShadows(m: MutableMap<String, Any?>, u: MutableMap<String, Any?>) {
+    private fun renderShadows() {
         val shadowData = mutableListOf<ShadowerData>()
         val directionalShadowIndexes = mutableListOf<Int>()
         val directionalShadowCounts = mutableListOf<Int>()
@@ -441,9 +473,9 @@ internal class Scene(
             directionalShadowCounts += indexes.size
         }
         shadowData.uniforms(m, u)
-        m["directionalLightShadowTextureIndex[0]"] = IntList(directionalShadowIndexes)
-        m["directionalLightShadowTextureCount[0]"] = IntList(directionalShadowCounts)
-        inventory.uniformBufferHolder.populateFrame({ m[it] })
+        lightMaterialModifier.dlsti = directionalShadowIndexes
+        lightMaterialModifier.dlstc = directionalShadowCounts
+        inventory.uniformBufferHolder.populateFrame(listOf(renderContext.frameMaterialModifier, lightMaterialModifier), true)
     }
 
     private fun renderPostProcessPass(pass: InternalPassDeclaration) {
@@ -461,7 +493,7 @@ internal class Scene(
         quadMaterial: MaterialDeclaration,
         width: Int = renderContext.width,
         height: Int = renderContext.height,
-        state: GlState.StateContext.() -> Unit = {}
+        state: GlState.StateContext.() -> Unit = {},
     ) {
         val mesh = inventory.mesh(ScreenQuad(currentRetentionPolicy))
         val shader = inventory.shader(quadMaterial.shader)
@@ -561,12 +593,12 @@ internal class Scene(
         declaration: RenderableDeclaration,
         camera: Camera?,
         reverseZ: Boolean = false,
-        isShadow: Boolean = false
+        isShadow: Boolean = false,
     ): Boolean {
         val meshLink = inventory.mesh(declaration.mesh as InternalMeshDeclaration) ?: return false
         val instancingMaterialModifier = (declaration.mesh as? Instanceable)?.instancing(meshLink, reverseZ, camera, inventory)
         val materialModifiers = listOfNotNull(
-            contextMaterialModifier,
+            renderContext.contextMaterialModifier,
             instancingMaterialModifier,
             ConstMaterialModifier("model" to Mat4Getter { declaration.transform.mat4 })
         )
