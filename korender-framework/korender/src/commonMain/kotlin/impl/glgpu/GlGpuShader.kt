@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.gl.GL.glAttachShader
 import com.zakgof.korender.impl.gl.GL.glCompileShader
 import com.zakgof.korender.impl.gl.GL.glCreateProgram
@@ -43,8 +44,69 @@ import com.zakgof.korender.math.Vec3
 internal class UniformBlock(
     val shaderBlockIndex: Int,
     val size: Int,
-    val offsets: Map<String, Int>
+    val bindings: List<CompiledBlockBinding>
 )
+
+internal sealed interface UniformGetter {
+
+    fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) {}
+
+    fun writeTo(location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GLBindableTexture): Int? = 0
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T, V> safe(getter: (T) -> V, obj: Any, missingMessage: String?, consumer: (V) -> Unit) {
+        getter(obj as T)?.let { consumer(it) } ?: missingMessage?.let { throw KorenderException(it) }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T, V> safeInt(getter: (T) -> V, obj: Any, missingMessage: String?, consumer: (V) -> Int?): Int? {
+        return getter(obj as T)?.let { consumer(it) } ?: missingMessage?.let { throw KorenderException(it) } ?: 0
+    }
+}
+
+internal class TextureGetter<T>(private val f: (T) -> Any?) : UniformGetter {
+    override fun writeTo(location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GLBindableTexture) =
+        safeInt(f, obj, missingMessage) { v ->
+            val texture= loader(v)
+            if (v == NotYetLoadedTexture) {
+                null
+            } else {
+                texture.bind(currentTextureUnit)
+                glUniform1i(location, currentTextureUnit)
+                1
+            }
+        }
+}
+
+internal class TextureListGetter<T>(private val f: (T) -> GlGpuTextureList) : UniformGetter {
+    override fun writeTo(location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GLBindableTexture) =
+        safeInt(f, obj, missingMessage) { v ->
+            val units = (0 until v.totalNum)
+                .map {
+                    val ctu = currentTextureUnit + it
+                    val tex = if (it < v.textures.size) v.textures[it] else null
+                    (tex ?: zeroTex).bind(ctu)
+                    ctu
+                }
+            glUniform1iv(location, *units.toIntArray())
+            v.totalNum
+        }
+}
+
+internal class ShadowTextureListGetter<T>(private val f: (T) -> GlGpuShadowTextureList) : UniformGetter {
+    override fun writeTo(location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GLBindableTexture) =
+        safeInt(f, obj, missingMessage) { v ->
+            val units = (0 until v.totalNum)
+                .map {
+                    val ctu = currentTextureUnit + it
+                    val tex = if (it < v.textures.size) v.textures[it] else null
+                    (tex ?: zeroShadowTex).bind(ctu)
+                    ctu
+                }
+            glUniform1iv(location, *units.toIntArray())
+            v.totalNum
+        }
+}
 
 internal class GlGpuShader(
     private val name: String,
@@ -54,14 +116,29 @@ internal class GlGpuShader(
     fragDebugInfo: (String) -> String,
     private val zeroTex: GlGpuTexture,
     private val zeroShadowTex: GlGpuTexture,
-    private val uboHolder: UniformBufferHolder
+    private val uboHolder: UniformBufferHolder,
+    private val uniformSuppliers: List<UniformSupplier>
 ) : AutoCloseable {
 
     private val programHandle = glCreateProgram()
     private val vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER)
     private val fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER)
-    private val uniformLocations: Map<String, GLUniformLocation>
     private val shaderUniformBlock: UniformBlock?
+    private val uniformBindings: List<CompiledUniformBinding>
+
+
+    internal inner class CompiledUniformBinding(
+        val location: GLUniformLocation,
+        val name: String,
+        val supplierIndex: Int,
+        val getter: UniformGetter,
+    ) {
+        fun write(currentTextureUnit: Int, suppliers: List<UniformSupplier>, loader: (Any?) -> GLBindableTexture, materialName: String): Int? {
+            val missingMessage = "Material $materialName does not provide uniform $name"
+            val obj = suppliers[supplierIndex]
+            return getter.writeTo(location, currentTextureUnit, obj, missingMessage, zeroTex, zeroShadowTex, loader)
+        }
+    }
 
     init {
 
@@ -121,7 +198,7 @@ internal class GlGpuShader(
         }
 
         shaderUniformBlock = initShaderUniformBlock()
-        uniformLocations = fetchUniforms()
+        uniformBindings = fetchUniforms()
     }
 
     private fun dumpUboBlock(blockIndex: Int) {
@@ -151,10 +228,10 @@ internal class GlGpuShader(
             return null
         val blockSize = IntArray(1)
         glGetActiveUniformBlockiv(programHandle, blockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, blockSize)
-        return UniformBlock(blockIndex, blockSize[0], fetchUniformBlockOffsets(blockIndex))
+        return UniformBlock(blockIndex, blockSize[0], fetchUniformBlockBindings(blockIndex))
     }
 
-    private fun fetchUniformBlockOffsets(blockIndex: Int): Map<String, Int> {
+    private fun fetchUniformBlockBindings(blockIndex: Int): List<CompiledBlockBinding> {
         val uniformCount = IntArray(1)
         glGetActiveUniformBlockiv(programHandle, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, uniformCount)
 
@@ -164,20 +241,25 @@ internal class GlGpuShader(
         val uniformOffsets = IntArray(uniformCount[0])
         glGetActiveUniformsiv(programHandle, uniformIndices, GL_UNIFORM_OFFSET, uniformOffsets)
 
-        return (0 until uniformCount[0]).associate {
-            val name = glGetActiveUniformName(programHandle, uniformIndices[it])
-            name to uniformOffsets[it]
+        return (0 until uniformCount[0]).map { i ->
+            val name = glGetActiveUniformName(programHandle, uniformIndices[i])
+            val index = uniformSuppliers.indices.firstOrNull { uniformSuppliers[it].uniform(name) != null }
+            if (index == null)
+                throw KorenderException("Uniform $name not declared in materials for shader $this")
+            CompiledBlockBinding(uniformOffsets[i], name, index, uniformSuppliers[index].uniform(name)!!)
         }
     }
 
-    private fun fetchUniforms(): Map<String, GLUniformLocation> {
+    private fun fetchUniforms(): List<CompiledUniformBinding> {
         val numUniforms = glGetProgrami(programHandle, GL_ACTIVE_UNIFORMS)
-        return (0 until numUniforms).associate {
-            val name: String = glGetActiveUniform(programHandle, it)
+        return (0 until numUniforms).map { i ->
+            val name: String = glGetActiveUniform(programHandle, i)
             val location = glGetUniformLocation(programHandle, name)
-            name to location
-        }.filterValues { it != null }
-            .mapValues { it.value!! } // TODO ugly
+            val index = uniformSuppliers.indices.firstOrNull { uniformSuppliers[it].uniform(name) != null }
+            if (index == null)
+                throw KorenderException("Uniform $name not declared in materials for shader $this")
+            CompiledUniformBinding(location!!, name, index, uniformSuppliers[index].uniform(name)!!)
+        }
     }
 
     override fun close() {
@@ -187,11 +269,11 @@ internal class GlGpuShader(
         glDeleteProgram(programHandle)
     }
 
-    fun render(uniforms: (String) -> Any?, mesh: GlGpuMesh) {
-        uboHolder.populate(uniforms, shaderUniformBlock, this.toString()) { binding ->
+    fun render(uniformsSuppliers: List<UniformSupplier>, loader: (Any?) -> GLBindableTexture, mesh: GlGpuMesh) {
+        uboHolder.populate(uniformsSuppliers, shaderUniformBlock, this.toString()) { binding ->
             glUseProgram(programHandle)
             shaderUniformBlock?.let { glUniformBlockBinding(programHandle, it.shaderBlockIndex, binding) }
-            if (bindUniforms(uniforms)) {
+            if (bindUniforms(uniformsSuppliers, loader)) {
                 mesh.render()
                 true
             } else
@@ -200,64 +282,23 @@ internal class GlGpuShader(
 
     }
 
-    private fun bindUniforms(uniforms: (String) -> Any?): Boolean {
+    private fun bindUniforms(uniformSuppliers: List<UniformSupplier>, loader: (Any?) -> GLBindableTexture): Boolean {
         var currentTextureUnit = 1
-        uniformLocations.forEach {
-            val uniformValue = requireNotNull(uniforms(it.key)) { "Material ${toString()} does not provide value for the uniform ${it.key}" }
-            if (uniformValue == NotYetLoadedTexture) {
-                println("Skipping shader rendering because texture [${it.key}] not loaded")
+        uniformBindings.forEach { binding ->
+            val ret = binding.write(currentTextureUnit, uniformSuppliers, loader,toString())
+            if (ret == null) {
+                println("Skipping shader rendering because texture [${binding.name}] not loaded")
                 return false
             }
-            currentTextureUnit += bindUniform(it.key, uniformValue, it.value, currentTextureUnit)
+            currentTextureUnit += ret
         }
-//        glActiveTexture(GL_TEXTURE0)
-//        glBindTexture(GL_TEXTURE_2D, null)
         return true
-    }
-
-    private fun bindUniform(name: String, value: Any, location: GLUniformLocation, currentTextureUnit: Int): Int {
-        when (value) {
-
-            is GLBindableTexture -> {
-                value.bind(currentTextureUnit)
-                glUniform1i(location, currentTextureUnit)
-                return 1
-            }
-
-            is GlGpuTextureList -> {
-                val units = (0 until value.totalNum)
-                    .map {
-                        val ctu = currentTextureUnit + it
-                        val tex = if (it < value.textures.size) value.textures[it] else null
-                        (tex ?: zeroTex).bind(ctu)
-                        ctu
-                    }
-                glUniform1iv(location, *units.toIntArray())
-                return value.totalNum
-            }
-
-            is GlGpuShadowTextureList -> {
-                val units = (0 until value.totalNum)
-                    .map {
-                        val ctu = currentTextureUnit + it
-                        val tex = if (it < value.textures.size) value.textures[it] else null
-                        (tex ?: zeroShadowTex).bind(ctu)
-                        ctu
-                    }
-                glUniform1iv(location, *units.toIntArray())
-                return value.totalNum
-            }
-
-            else -> {
-                throw KorenderException("Unsupported uniform value $value of type ${value::class} for uniform $name")
-            }
-
-        }
     }
 
     override fun toString() = name
 }
 
+// Get rid of these
 internal data class IntList(val values: List<Int>)
 
 internal data class FloatList(val values: List<Float>)

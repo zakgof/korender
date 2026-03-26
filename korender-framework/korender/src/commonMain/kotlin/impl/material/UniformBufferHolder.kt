@@ -6,6 +6,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_UNIFORM_BUFFER_BINDINGS
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT
 import com.zakgof.korender.impl.glgpu.GlGpuUniformBuffer
 import com.zakgof.korender.impl.glgpu.UniformBlock
+import com.zakgof.korender.impl.glgpu.UniformSupplier
 
 internal class UniformBufferHolder {
 
@@ -63,7 +64,7 @@ internal class UniformBufferHolder {
     }
 
     fun populate(
-        uniforms: (String) -> Any?,
+        uniformSuppliers: List<UniformSupplier>,
         uniformBlock: UniformBlock?,
         materialName: String,
         render: (Int) -> Boolean
@@ -72,7 +73,7 @@ internal class UniformBufferHolder {
             if (shaderUboSize - bufferShift < uniformBlock.size || currentBinding >= maxBindings) {
                 flush()
             }
-            shaderUbo.populate(uniforms, bufferShift, uniformBlock.offsets, materialName)
+            shaderUbo.populate(uniformSuppliers, bufferShift, uniformBlock.bindings, materialName)
             val ri = RenderItem(render, bufferShift, uniformBlock.size, currentBinding)
             bufferShift = ((bufferShift + uniformBlock.size + bufferOffsetAlignment - 1) / bufferOffsetAlignment) * bufferOffsetAlignment
             currentBinding++

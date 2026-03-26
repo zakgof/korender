@@ -1,6 +1,8 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.KorenderException
 import com.zakgof.korender.RetentionPolicy
+import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.shadow.ShadowRenderer
@@ -23,6 +25,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_X
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_Y
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_Z
 import com.zakgof.korender.impl.glgpu.Color3List
+import com.zakgof.korender.impl.glgpu.GLBindableTexture
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.IntList
@@ -33,11 +36,11 @@ import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalTexture
+import com.zakgof.korender.impl.material.ModelMaterialModifier
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
-import com.zakgof.korender.impl.material.materialDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGBA
@@ -69,8 +72,8 @@ internal class Scene(
 
     val touchBoxes = mutableListOf<TouchBox>()
 
-    // TODO (backlog): ugly
-    private val fixer = { value: Any? ->
+    // TODO: introduce super-generic texture declaration interface
+    private val fixer: (Any?) -> GLBindableTexture = { value: Any? ->
         when (value) {
             is InternalTexture -> inventory.texture(value) ?: NotYetLoadedTexture
             is ProbeTextureDeclaration -> renderContext.frameProbes[value.frameProbeName] ?: NotYetLoadedTexture
@@ -78,8 +81,9 @@ internal class Scene(
             is ImageCubeTextureDeclaration -> inventory.cubeTexture(value) ?: NotYetLoadedTexture
             is ProbeCubeTextureDeclaration -> renderContext.envProbes[value.envProbeName] ?: NotYetLoadedTexture
             is ImageTexture3DDeclaration -> inventory.texture3D(value) ?: NotYetLoadedTexture
-            else -> value
-        }
+            null -> null
+            else -> throw KorenderException("")
+        } as GLBindableTexture
     }
 
     init {
@@ -544,29 +548,14 @@ internal class Scene(
         reverseZ: Boolean = false,
         isShadow: Boolean = false
     ): Boolean {
-        val addUniforms = mutableMapOf<String, Any?>()
-        val addDefs = mutableSetOf<String>()
-
         val meshLink = inventory.mesh(declaration.mesh as InternalMeshDeclaration) ?: return false
-
-        if (declaration.mesh is Instanceable) {
-            declaration.mesh.instancing(meshLink, reverseZ, camera, inventory, addUniforms, addDefs)
-        }
-
-        val materialModifiers = listOf(contextMaterialModifier) + declaration.materialModifiers + InternalMaterialModifier { it.shaderDefs += addDefs }
-        val materialDeclaration = declaration.material.materialDeclaration(declaration.base, deferredShading, declaration.retentionPolicy, materialModifiers)
-
+        val instancingMaterialModifier = (declaration.mesh as? Instanceable)?.instancing(meshLink, reverseZ, camera, inventory)
+        val materialModifiers = listOfNotNull(contextMaterialModifier, instancingMaterialModifier, ModelMaterialModifier(declaration.transform.mat4))
+        val materialDeclaration = declaration.material.toDeclaration(deferredShading, declaration.retentionPolicy, materialModifiers)
         if (materialDeclaration.shader.defs.contains("NO_SHADOW_CAST") && isShadow)
             return true
-
         val shader = inventory.shader(materialDeclaration.shader) ?: return false
-
-        // TODO move this to where it is supported
-        addUniforms["model"] = declaration.transform.mat4
-        shader.render(
-            { fixer(materialDeclaration.uniforms[it] ?: addUniforms[it]) },
-            meshLink.gpuMesh
-        )
+        shader.render(materialDeclaration.uniformSuppliers, fixer, meshLink.gpuMesh)
         return true
     }
 }

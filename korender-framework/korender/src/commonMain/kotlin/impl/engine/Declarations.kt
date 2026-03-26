@@ -14,6 +14,7 @@ import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
+import com.zakgof.korender.impl.glgpu.UniformSupplier
 import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
 import com.zakgof.korender.math.ColorRGB
@@ -93,7 +94,7 @@ internal enum class BaseMaterial {
 
 internal class MaterialDeclaration(
     val shader: ShaderDeclaration,
-    val uniforms: Map<String, Any?>
+    val uniformSuppliers: List<UniformSupplier>
 )
 
 internal sealed interface ElementDeclaration {

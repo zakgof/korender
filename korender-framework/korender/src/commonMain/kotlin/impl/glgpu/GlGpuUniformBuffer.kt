@@ -1,3 +1,5 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
@@ -18,6 +20,151 @@ import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
+internal interface UniformSupplier {
+    fun uniform(name: String): UniformGetter?
+}
+
+internal class CompiledBlockBinding(
+    val offset: Int,
+    val name: String,
+    val supplierIndex: Int,
+    val getter: UniformGetter
+) {
+    fun write(buffer: NativeByteBuffer, baseOffset: Int, suppliers: List<UniformSupplier>, materialName: String, ignoreMissing: Boolean) {
+        val missingMessage = if (ignoreMissing) null else "Material $materialName does not provide blocked uniform $name"
+        buffer.position(baseOffset + offset)
+        val obj = suppliers[supplierIndex]
+        getter.writeTo(buffer, obj, missingMessage)
+    }
+}
+
+internal class IntGetter<T>(private val f: (T) -> Int) : UniformGetter {
+    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) {
+        safe(f, obj, missingMessage) { v ->
+            buffer.put(v)
+        }
+    }
+}
+
+internal class FloatGetter<T>(private val f: (T) -> Float) : UniformGetter {
+    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
+        safe(f, obj, missingMessage) { v ->
+            buffer.put(v)
+        }
+}
+
+internal class Vec2Getter<T>(private val f: (T) -> Vec2) : UniformGetter {
+    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
+        safe(f, obj, missingMessage) { v ->
+            buffer.put(v.x)
+            buffer.put(v.y)
+        }
+}
+
+internal class Vec3Getter<T>(private val f: (T) -> Vec3) : UniformGetter {
+    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
+        safe(f, obj, missingMessage) { v ->
+            buffer.put(v.x)
+            buffer.put(v.y)
+            buffer.put(v.z)
+        }
+}
+
+internal class ColorRGBGetter<T>(private val f: (T) -> ColorRGB) : UniformGetter {
+    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
+        safe(f, obj, missingMessage) { v ->
+            buffer.put(v.r)
+            buffer.put(v.g)
+            buffer.put(v.b)
+        }
+}
+
+internal class ColorRGBAGetter<T>(private val f: (T) -> ColorRGBA) : UniformGetter {
+    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
+        safe(f, obj, missingMessage) { v ->
+            buffer.put(v.r)
+            buffer.put(v.g)
+            buffer.put(v.b)
+            buffer.put(v.a)
+        }
+}
+
+internal class Mat4Getter<T>(private val f: (T) -> Mat4) : UniformGetter {
+    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
+        safe(f, obj, missingMessage) { v ->
+            buffer.put(f(obj as T).asArray())
+        }
+}
+
+internal class IntListGetter<T>(private val f: (T) -> IntList) : UniformGetter {
+    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
+        safe(f, obj, missingMessage) { v ->
+            v.values.forEach {
+                buffer.put(it)
+                buffer.put(0)
+                buffer.put(0)
+                buffer.put(0)
+            }
+        }
+}
+
+internal class FloatListGetter<T>(private val f: (T) -> FloatList) : UniformGetter {
+    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
+        safe(f, obj, missingMessage) { v ->
+            v.values.forEach {
+                buffer.put(it)
+                buffer.put(0f)
+                buffer.put(0f)
+                buffer.put(0f)
+            }
+        }
+}
+
+internal class Vec3ListGetter<T>(private val f: (T) -> Vec3List) : UniformGetter {
+    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
+        safe(f, obj, missingMessage) { v ->
+            v.values.forEach {
+                buffer.put(it.x)
+                buffer.put(it.y)
+                buffer.put(it.z)
+                buffer.put(0f)
+            }
+        }
+}
+
+internal class Color3ListGetter<T>(private val f: (T) -> Color3List) : UniformGetter {
+    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
+        safe(f, obj, missingMessage) { v ->
+            v.values.forEach {
+                buffer.put(it.r)
+                buffer.put(it.g)
+                buffer.put(it.b)
+                buffer.put(0f)
+            }
+        }
+}
+
+internal class Color4ListGetter<T>(private val f: (T) -> Color4List) : UniformGetter {
+    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
+        safe(f, obj, missingMessage) { v ->
+            v.values.forEach {
+                buffer.put(it.r)
+                buffer.put(it.g)
+                buffer.put(it.b)
+                buffer.put(it.a)
+            }
+        }
+}
+
+internal class Mat4ListGetter<T>(private val f: (T) -> Mat4List) : UniformGetter {
+    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
+        safe(f, obj, missingMessage) { v ->
+            v.matrices.forEach {
+                buffer.put(it.asArray())
+            }
+        }
+}
+
 internal class GlGpuUniformBuffer(size: Int) : AutoCloseable {
 
     private val ubo = glGenBuffers()
@@ -35,20 +182,15 @@ internal class GlGpuUniformBuffer(size: Int) : AutoCloseable {
     fun bindRange(binding: Int, shift: Int, size: Int) =
         glBindBufferRange(GL_UNIFORM_BUFFER, binding, ubo, shift, size)
 
-    fun populate(uniforms: (String) -> Any?,
-                 bufferShift: Int,
-                 offsets: Map<String, Int>,
-                 materialName: String,
-                 ignoreMissing: Boolean = false) {
-        offsets.forEach {
-            val uniformValue = uniforms(it.key)
-            if (uniformValue == null) {
-                if (!ignoreMissing) {
-                    throw KorenderException ("$materialName does not provide value for the blocked uniform ${it.key}")
-                }
-            } else {
-                populateUboUniform(it.key, uniformValue, bufferShift + it.value)
-            }
+    fun populate(
+        uniformSuppliers: List<UniformSupplier>,
+        bufferShift: Int,
+        bindings: List<CompiledBlockBinding>,
+        materialName: String,
+        ignoreMissing: Boolean = false
+    ) {
+        bindings.forEach { binding ->
+            binding.write(uboBuffer, bufferShift, uniformSuppliers, materialName, ignoreMissing)
         }
     }
 
@@ -68,18 +210,21 @@ internal class GlGpuUniformBuffer(size: Int) : AutoCloseable {
                 uboBuffer.put(value.x)
                 uboBuffer.put(value.y)
             }
+
             is Vec3 -> uboBuffer.put(value)
             is ColorRGB -> {
                 uboBuffer.put(value.r)
                 uboBuffer.put(value.g)
                 uboBuffer.put(value.b)
             }
+
             is ColorRGBA -> {
                 uboBuffer.put(value.r)
                 uboBuffer.put(value.g)
                 uboBuffer.put(value.b)
                 uboBuffer.put(value.a)
             }
+
             is Mat4 -> uboBuffer.put(value.asArray())
             is IntList -> value.values.forEach {
                 uboBuffer.put(it)
@@ -87,33 +232,39 @@ internal class GlGpuUniformBuffer(size: Int) : AutoCloseable {
                 uboBuffer.put(0)
                 uboBuffer.put(0)
             }
+
             is FloatList -> value.values.forEach {
                 uboBuffer.put(it)
                 uboBuffer.put(0f)
                 uboBuffer.put(0f)
                 uboBuffer.put(0f)
             }
+
             is Vec3List -> value.values.forEach {
                 uboBuffer.put(it.x)
                 uboBuffer.put(it.y)
                 uboBuffer.put(it.z)
                 uboBuffer.put(0f)
             }
+
             is Color3List -> value.values.forEach {
                 uboBuffer.put(it.r)
                 uboBuffer.put(it.g)
                 uboBuffer.put(it.b)
                 uboBuffer.put(0f)
             }
+
             is Color4List -> value.values.forEach {
                 uboBuffer.put(it.r)
                 uboBuffer.put(it.g)
                 uboBuffer.put(it.b)
                 uboBuffer.put(it.a)
             }
+
             is Mat4List -> value.matrices.forEach {
                 uboBuffer.put(it.asArray())
             }
+
             else -> {
                 throw KorenderException("Unsupported uniform value $value of type ${value::class} for uniform $name")
             }

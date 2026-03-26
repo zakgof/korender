@@ -4,6 +4,7 @@ import com.zakgof.korender.BaseMaterialContext
 import com.zakgof.korender.BillboardEffect
 import com.zakgof.korender.BillboardMaterial
 import com.zakgof.korender.BillboardMaterialContext
+import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Material
 import com.zakgof.korender.MaterialContext
 import com.zakgof.korender.PipeMaterial
@@ -17,10 +18,21 @@ import com.zakgof.korender.TextureArrayDeclaration
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.ShaderDeclaration
+import com.zakgof.korender.impl.glgpu.ColorRGBAGetter
+import com.zakgof.korender.impl.glgpu.ColorRGBGetter
+import com.zakgof.korender.impl.glgpu.FloatGetter
+import com.zakgof.korender.impl.glgpu.GLBindableTextureGetter
+import com.zakgof.korender.impl.glgpu.Mat4Getter
+import com.zakgof.korender.impl.glgpu.TextureGetter
+import com.zakgof.korender.impl.glgpu.UniformGetter
+import com.zakgof.korender.impl.glgpu.UniformSupplier
+import com.zakgof.korender.impl.glgpu.Vec3Getter
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import kotlin.collections.plusAssign
 
 //internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean, private val retentionPolicy: RetentionPolicy) {
 //
@@ -46,56 +58,85 @@ import com.zakgof.korender.math.Vec3
 //    }
 
 
-internal abstract class InternalMaterial(val vertexShaderFile: String) : MaterialContext, Material {
+internal class InternalShader(
+    val vertexShaderFile: String,
+    val deferredFragmentShaderFile: String,
+    val forwardFragmentShaderFile: String,
+) {
+    constructor(vertexShaderFile: String, fragmentShaderFile: String)
+            : this(vertexShaderFile, fragmentShaderFile, fragmentShaderFile)
+}
 
-    private val defs = mutableSetOf<String>()
-    private val plugins = mutableMapOf<String, String>()
-    private val uniforms = mutableMapOf<String, Any?>()
+internal open class InternalMaterialModifier : MaterialContext, UniformSupplier {
 
-    abstract fun fragmentShaderFile(deferredShading: Boolean): String
+    private val customDefs = mutableSetOf<String>()
+    private val customPlugins = mutableListOf<Pair<String, String>>()
+    private val customUniforms = mutableMapOf<String, Any?>()
+
+    open val defs: Set<String>
+        get() = setOf()
+
+    open val plugins: List<Pair<String, String>>
+        get() = listOf()
+
+    val totalDefs: Set<String>
+        get() = defs + customDefs
+
+    val totalPlugins: List<Pair<String, String>>
+        get() = plugins + customPlugins
 
     override fun defs(vararg defs: String) {
-        this.defs += defs
+        this.customDefs += defs
     }
 
     override fun plugin(name: String, shaderFile: String) {
-        this.plugins += name to shaderFile
+        this.customPlugins += name to shaderFile
     }
 
     override fun uniforms(vararg pairs: Pair<String, Any?>) {
-        uniforms += pairs
+        customUniforms += pairs
     }
 
-    open fun compile() {
+    override fun uniform(name: String): UniformGetter? {
+        return when (customUniforms[name]) {
+            is Float -> FloatGetter<InternalMaterialModifier> { customUniforms[name] as Float }
+            is Vec3 -> Vec3Getter<InternalMaterialModifier> { customUniforms[name] as Vec3 }
+            else -> null
+        }
     }
+}
+
+internal abstract class InternalMaterial(
+    vertexShaderFile: String,
+    deferredFragmentShaderFile: String,
+    forwardFragmentShaderFile: String
+) : InternalMaterialModifier(), MaterialContext, Material {
+
+    constructor(vertexShaderFile: String, fragmentShaderFile: String) :
+            this(vertexShaderFile, fragmentShaderFile, fragmentShaderFile)
+
+    private val internalShader = InternalShader(vertexShaderFile, deferredFragmentShaderFile, forwardFragmentShaderFile)
 
     fun toDeclaration(
         deferredShading: Boolean,
         retentionPolicy: RetentionPolicy,
-        contextPlugins: Map<String, String>,
-        contextUniforms: Map<String, Any?>,
+        modifiers: List<InternalMaterialModifier>
     ) =
         MaterialDeclaration(
             ShaderDeclaration(
-                vertexShaderFile,
-                fragmentShaderFile(deferredShading),
-                defs,
-                contextPlugins + plugins,
+                internalShader.vertexShaderFile,
+                if (deferredShading) internalShader.deferredFragmentShaderFile else internalShader.forwardFragmentShaderFile,
+                totalDefs + modifiers.flatMap { it.totalDefs },
+                (totalPlugins + modifiers.flatMap { it.totalPlugins }).toMap(),
                 retentionPolicy
             ),
-            contextUniforms + uniforms
+            listOf(this) + modifiers
         )
 }
 
-// TODO support deferred shading
-internal open class InternalCustomMaterial(
-    vertexShaderFile: String,
-    val fragmentShaderFile: String,
-) : InternalMaterial(vertexShaderFile) {
-    override fun fragmentShaderFile(deferredShading: Boolean) = fragmentShaderFile
-}
-
-internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/base.vert") : InternalMaterial(vertexShaderFile), BaseMaterialContext {
+internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/base.vert") :
+    InternalMaterial(vertexShaderFile, "!shader/deferred/geometry.frag", "!shader/forward.frag"),
+    BaseMaterialContext, UniformSupplier {
 
     override var color: ColorRGBA = ColorRGBA.White
     override var colorTexture: TextureDeclaration? = null
@@ -114,70 +155,67 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
     override var occlusionTexture: TextureDeclaration? = null
     override var ibl: SkyMaterial? = null
 
-    override fun compile() {
-        uniforms(
-            "baseColor" to color,
-            "baseColorTexture" to colorTexture,
-            "metallicFactor" to metallicFactor,
-            "roughnessFactor" to roughnessFactor,
-            "alphaCutoff" to alphaCutoff
+    override fun uniform(name: String): UniformGetter? =
+        when (name) {
+            "baseColor" -> ColorRGBAGetter(InternalBaseMaterial::color)
+            "baseColorTexture" -> TextureGetter(InternalBaseMaterial::colorTexture)
+            "metallicFactor" -> FloatGetter(InternalBaseMaterial::metallicFactor)
+            "roughnessFactor" -> FloatGetter(InternalBaseMaterial::roughnessFactor)
+            "alphaCutoff" -> FloatGetter(InternalBaseMaterial::alphaCutoff)
+            "colorTextures" -> TextureGetter(InternalBaseMaterial::colorTextures)
+            "triplanarScale" -> TextureGetter(InternalBaseMaterial::triplanarScale)
+            "normalTexture" -> TextureGetter(InternalBaseMaterial::normalTexture)
+            "emissionFactor" -> ColorRGBGetter<InternalBaseMaterial> { it.emission!! }
+            "metallicRoughnessTexture" -> TextureGetter(InternalBaseMaterial::metallicRoughnessTexture)
+            else -> null
+        }
+
+    override val defs
+        get() = setOfNotNull(
+            colorTexture?.let { "BASE_COLOR_MAP" },
+            colorTextures?.let { "TEXTURE_ARRAY" }
         )
-        colorTexture?.let {
-            defs("BASE_COLOR_MAP")
-        }
-        colorTextures?.let {
-            defs("TEXTURE_ARRAY")
-            plugin("texturing", "!shader/plugin/texturing.array.frag")
-            uniforms("colorTextures" to it)
-        }
-        triplanarScale?.let {
-            plugin("texturing", "!shader/plugin/texturing.triplanar.frag")
-            uniforms("triplanarScale" to it)
-        }
 
-        normalTexture?.let {
-            plugin("normal", "!shader/plugin/normal.texture.frag")
-            uniforms("normalTexture" to it)
-        }
+    override val plugins
+        get() = listOfNotNull(
+            colorTextures?.let { "texturing" to "!shader/plugin/texturing.array.frag" },
+            triplanarScale?.let { "texturing" to "!shader/plugin/texturing.triplanar.frag" },
+            normalTexture?.let { "normal" to "!shader/plugin/normal.texture.frag" },
+            emission?.let { "emission" to "!shader/plugin/normal.texture.frag" },
+            metallicRoughnessTexture?.let { "metallic_roughness" to "!shader/plugin/metallic_roughness.texture.frag" },
 
-        emission?.let {
-            plugin("emission", "!shader/plugin/emission.factor.frag")
-            uniforms("emissionFactor" to it)
-        }
-
-        metallicRoughnessTexture?.let {
-            plugin("metallic_roughness", "!shader/plugin/metallic_roughness.texture.frag")
-            uniforms("metallicRoughnessTexture" to it)
-        }
-
-        specularGlossiness?.let {
-            plugin("specular_glossiness", "!shader/plugin/specular_glossiness.factor.frag")
-            uniforms(
-                "specularFactor" to it.specularFactor,
-                "glossinessFactor" to it.glossinessFactor
             )
-        }
 
-        specularGlossinessTexture?.let {
-            plugin("specular_glossiness", "!shader/plugin/specular_glossiness.texture.frag")
-            uniforms("specularGlossinessTexture" to it)
-        }
-
-        occlusionTexture?.let {
-            plugin("occlusion", "!shader/plugin/occlusion.texture.frag")
-            uniforms("occlusionTexture" to it)
-        }
-
-        emissionTexture?.let {
-            plugin("emission", "!shader/plugin/emission.texture.frag")
-            uniforms("emissionTexture" to it)
-        }
-
-
+    specularGlossiness?.let
+    {
+        plugin("specular_glossiness", "!shader/plugin/specular_glossiness.factor.frag")
+        uniforms(
+            "specularFactor" to it.specularFactor,
+            "glossinessFactor" to it.glossinessFactor
+        )
     }
 
-    override fun fragmentShaderFile(deferredShading: Boolean) =
-        if (deferredShading) "!shader/deferred/geometry.frag" else "!shader/forward.frag"
+    specularGlossinessTexture?.let
+    {
+        plugin("specular_glossiness", "!shader/plugin/specular_glossiness.texture.frag")
+        uniforms("specularGlossinessTexture" to it)
+    }
+
+    occlusionTexture?.let
+    {
+        plugin("occlusion", "!shader/plugin/occlusion.texture.frag")
+        uniforms("occlusionTexture" to it)
+    }
+
+    emissionTexture?.let
+    {
+        plugin("emission", "!shader/plugin/emission.texture.frag")
+        uniforms("emissionTexture" to it)
+    }
+
+
+}
+
 }
 
 internal class InternalBillboardMaterial : InternalBaseMaterial(), BillboardMaterial, BillboardMaterialContext {
@@ -260,4 +298,9 @@ internal class InternalSkyMaterial(
         plugin("sky", skyPlugin)
         uniforms(*uniforms)
     }
+}
+
+internal class ModelMaterialModifier(val model: Mat4) : InternalMaterialModifier() {
+    override fun uniform(name: String): UniformGetter? =
+        if (name == "model") Mat4Getter<ModelMaterialModifier> {it.model} else null
 }
