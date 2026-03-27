@@ -19,8 +19,11 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 
-internal val noiseTex = ResourceTextureDeclaration("!noise.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)
-internal val fbmTex = ResourceTextureDeclaration("!fbm.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)
+private val noiseTex = ResourceTextureDeclaration("!noise.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)
+private val fbmTex = ResourceTextureDeclaration("!fbm.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)
+
+internal val noiseTexGetter = TextureGetter<Any> { noiseTex }
+internal val fbmTexGetter = TextureGetter<Any> { fbmTex }
 
 internal class RenderContext(var width: Int, var height: Int) {
 
@@ -52,7 +55,7 @@ internal class RenderContext(var width: Int, var height: Int) {
                 "fbmTexture" -> TextureGetter<FrameMaterialModifier> { fbmTex }
                 "view" -> Mat4Getter<FrameMaterialModifier> { it.rc.camera.mat4 }
                 "projectionWidth" -> FloatGetter<FrameMaterialModifier> { it.rc.projection.width }
-                "projectionHeight" -> FloatGetter<FrameMaterialModifier> { it.rc.projection.width }
+                "projectionHeight" -> FloatGetter<FrameMaterialModifier> { it.rc.projection.height }
                 "projectionNear" -> FloatGetter<FrameMaterialModifier> { it.rc.projection.near }
                 "projectionFar" -> FloatGetter<FrameMaterialModifier> { it.rc.projection.far }
                 "cameraPos" -> Vec3Getter<FrameMaterialModifier> { it.rc.camera.position }

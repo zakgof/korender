@@ -1,27 +1,39 @@
 package com.zakgof.korender.impl.engine.shadow
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.Platform
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.FrameBufferDeclaration
 import com.zakgof.korender.impl.engine.ImmediatelyFreeRetentionPolicy
+import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.Scene
 import com.zakgof.korender.impl.engine.TransientProperty
+import com.zakgof.korender.impl.engine.fbmTex
+import com.zakgof.korender.impl.engine.fbmTexGetter
+import com.zakgof.korender.impl.engine.noiseTex
+import com.zakgof.korender.impl.engine.noiseTexGetter
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.glgpu.Color4List
+import com.zakgof.korender.impl.glgpu.FloatGetter
 import com.zakgof.korender.impl.glgpu.FloatList
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.glgpu.GlGpuShadowTextureList
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.glgpu.IntList
+import com.zakgof.korender.impl.glgpu.Mat4Getter
 import com.zakgof.korender.impl.glgpu.Mat4List
+import com.zakgof.korender.impl.glgpu.TextureGetter
+import com.zakgof.korender.impl.glgpu.UniformGetter
+import com.zakgof.korender.impl.glgpu.Vec3Getter
+import com.zakgof.korender.impl.material.InternalBaseMaterial
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.projection.OrthoProjectionMode
 import com.zakgof.korender.impl.projection.Projection
@@ -56,23 +68,8 @@ internal object ShadowRenderer {
             FrameBufferDeclaration("shadow-$id", declaration.mapSize, declaration.mapSize, fbPreset(declaration), true, TransientProperty(ImmediatelyFreeRetentionPolicy))
         ) ?: return null
 
-        val matrices = updateShadowCamera(scene.renderContext.projection, scene.renderContext.camera, lightDirection, declaration)
-        val shadowCamera = matrices.first
-        val shadowProjection = matrices.second
-
-        val casterUniforms = mutableMapOf<String, Any?>()
-        scene.renderContext.frameUniforms(casterUniforms)
-
-        casterUniforms["view"] = shadowCamera.mat4
-        casterUniforms["projectionWidth"] = shadowProjection.width
-        casterUniforms["projectionHeight"] = shadowProjection.height
-        casterUniforms["projectionNear"] = shadowProjection.near
-        casterUniforms["projectionFar"] = shadowProjection.far
-        casterUniforms["cameraPos"] = shadowCamera.position
-        casterUniforms["cameraDir"] = shadowCamera.direction
-
-        // TODO: UGLY!!!!
-        scene.inventory.uniformBufferHolder.populateFrame({ casterUniforms[it] }, true)
+        val shadowFrameMaterialModifier = updateShadowCamera(scene.renderContext, lightDirection, declaration)
+        scene.inventory.uniformBufferHolder.populateFrame(listOf(shadowFrameMaterialModifier), true)
 
         frameBuffer.exec {
             scene.renderContext.state.set {
@@ -81,7 +78,7 @@ internal object ShadowRenderer {
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             shadowCasterDeclarations.filter {
                 // TODO: renderable or material flag to disable shadow casting
-                it.base == BaseMaterial.Renderable || it.base == BaseMaterial.Billboard
+                it.material is InternalBaseMaterial
             }.forEach { renderableDeclaration ->
 
                 val shadowMaterialModifier = InternalMaterialModifier {
@@ -239,12 +236,13 @@ internal object ShadowRenderer {
     )
 
     private fun updateShadowCamera(
-        projection: Projection,
-        camera: Camera,
+        renderContext: RenderContext,
         light: Vec3,
         declaration: CascadeDeclaration
-    ): Pair<DefaultCamera, Projection> {
+    ): ShadowFrameMaterialModifier {
 
+        val projection = renderContext.projection
+        val camera = renderContext.camera
         val right = (light % 1.y).normalize()
         val up = (right % light).normalize()
         val corners = frustumCorners(projection, camera, declaration.near, declaration.far)
@@ -280,7 +278,7 @@ internal object ShadowRenderer {
         val shadowProjection = Projection(dim, dim, near, far, OrthoProjectionMode)
         val shadowCamera = DefaultCamera(cameraPos, light, up)
 
-        return shadowCamera to shadowProjection
+        return ShadowFrameMaterialModifier(shadowProjection, shadowCamera, renderContext)
     }
 
     private fun frustumCorners(
@@ -324,17 +322,26 @@ internal class ShadowerData(
     val f2: Float
 )
 
-internal fun List<ShadowerData>.uniforms(m: MutableMap<String, Any?>, u: MutableMap<String, Any?>) {
-    m["numShadows"] = size
-    m["bsps[0]"] = Mat4List(this.map { it.bsp })
-    m["cascade[0]"] = Color4List(this.map { ColorRGBA(it.cascade[0], it.cascade[1], it.cascade[2], it.cascade[3]) })
-    m["yMin[0]"] = FloatList(this.map { it.yMin })
-    m["yMax[0]"] = FloatList(this.map { it.yMax })
-    m["shadowMode[0]"] = IntList(this.map { it.mode })
-    m["i1[0]"] = IntList(this.map { it.i1 })
-    m["f1[0]"] = FloatList(this.map { it.f1 })
-    m["f2[0]"] = FloatList(this.map { it.f2 })
+internal class ShadowFrameMaterialModifier(
+    val shadowProjection: Projection,
+    val shadowCamera: Camera,
+    val renderContext: RenderContext
+) : InternalMaterialModifier() {
 
-    u["shadowTextures[0]"] = GlGpuTextureList(this.map { it.texture }, 5)
-    u["pcfTextures[0]"] = GlGpuShadowTextureList(this.map { it.pcfTexture }, 5)
+    override fun uniform(name: String): UniformGetter<*>? =
+        when (name) {
+            "noiseTexture" -> noiseTexGetter
+            "fbmTexture" -> fbmTexGetter
+            "view" -> Mat4Getter<ShadowFrameMaterialModifier> { it.shadowCamera.mat4 }
+            "projectionWidth" -> FloatGetter<ShadowFrameMaterialModifier> { it.shadowProjection.width }
+            "projectionHeight" -> FloatGetter<ShadowFrameMaterialModifier> { it.shadowProjection.height }
+            "projectionNear" -> FloatGetter<ShadowFrameMaterialModifier> { it.shadowProjection.near }
+            "projectionFar" -> FloatGetter<ShadowFrameMaterialModifier> { it.shadowProjection.far }
+            "cameraPos" -> Vec3Getter<ShadowFrameMaterialModifier> { it.shadowCamera.position }
+            "cameraDir" -> Vec3Getter<ShadowFrameMaterialModifier> { it.shadowCamera.direction }
+            "screenWidth" -> FloatGetter<ShadowFrameMaterialModifier> { it.renderContext.width.toFloat() }
+            "screenHeight" -> FloatGetter<ShadowFrameMaterialModifier> { it.renderContext.height.toFloat() }
+            "time" -> FloatGetter<ShadowFrameMaterialModifier> { (Platform.nanoTime() - renderContext.frameInfoManager.startNanos) * 1e-9f }
+            else -> super.uniform(name)
+        }
 }

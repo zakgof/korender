@@ -44,14 +44,10 @@ interface MaterialContext {
      */
     fun plugin(name: String, shaderFile: String)
 
-    /**
-     * Creates a material modifier that applies raw uniform parameters.
-     *
-     * @param pairs pairs uniform name to uniform value
-     * @return material modifier
-     */
-    fun uniforms(vararg pairs: Pair<String, Any?>)
-
+    fun float(key: String, value: Float)
+    fun int(key: String, value: Int)
+    fun vec3(key: String, value: Vec3)
+    fun texture(key: String, value: TextureDeclaration)
 }
 
 interface BaseMaterialContext : MaterialContext {

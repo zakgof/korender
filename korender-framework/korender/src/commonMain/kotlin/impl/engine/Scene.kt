@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.engine
 
+import androidx.collection.floatListOf
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.RetentionPolicy
@@ -25,15 +26,22 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_X
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_Y
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_Z
 import com.zakgof.korender.impl.glgpu.Color3ListGetter
+import com.zakgof.korender.impl.glgpu.Color4List
+import com.zakgof.korender.impl.glgpu.ColorRGBAGetter
 import com.zakgof.korender.impl.glgpu.ColorRGBGetter
+import com.zakgof.korender.impl.glgpu.FloatList
+import com.zakgof.korender.impl.glgpu.FloatListGetter
 import com.zakgof.korender.impl.glgpu.GLBindableTexture
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuShadowTextureList
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.glgpu.IntGetter
+import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.IntListGetter
 import com.zakgof.korender.impl.glgpu.Mat4Getter
+import com.zakgof.korender.impl.glgpu.Mat4List
+import com.zakgof.korender.impl.glgpu.Mat4ListGetter
 import com.zakgof.korender.impl.glgpu.ShadowTextureListGetter
 import com.zakgof.korender.impl.glgpu.TextureGetter
 import com.zakgof.korender.impl.glgpu.TextureListGetter
@@ -41,8 +49,10 @@ import com.zakgof.korender.impl.glgpu.UniformGetter
 import com.zakgof.korender.impl.glgpu.Vec3ListGetter
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
 import com.zakgof.korender.impl.material.ConstMaterialModifier
+import com.zakgof.korender.impl.material.DecalBlendMaterial
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
+import com.zakgof.korender.impl.material.InternalDecalMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
@@ -63,6 +73,7 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import kotlin.collections.set
 
 internal class Scene(
     private val sceneDeclaration: SceneDeclaration,
@@ -78,6 +89,15 @@ internal class Scene(
         private val directionalLightsColors = sc.directionalLights.map { it.color }
         var dlsti = List(32) { 0 }
         var dlstc = List(32) { 0 }
+        var numShadows = 0
+        var bsps = listOf<Mat4>()
+        var cascades = listOf<ColorRGBA>()
+        var yMins = listOf<Float>()
+        var yMaxs = listOf<Float>()
+        var shadowModes = listOf<Int>()
+        var i1 = listOf<Int>()
+        var f1 = listOf<Float>()
+        var f2 = listOf<Float>()
 
         override fun uniform(name: String): UniformGetter<*>? =
             when (name) {
@@ -92,6 +112,15 @@ internal class Scene(
                 "pointLightPos[0]" -> Vec3ListGetter<LightMaterialModifier> { it.sc.pointLights.map { it.position } }
                 "pointLightColor[0]" -> Color3ListGetter<LightMaterialModifier> { it.sc.pointLights.map { it.color } }
                 "pointLightAttenuation[0]" -> Vec3ListGetter<LightMaterialModifier> { it.sc.pointLights.map { it.attenuation } }
+                "numShadows" -> IntGetter<LightMaterialModifier> { it.numShadows }
+                "bsps[0]" -> Mat4ListGetter<LightMaterialModifier> { it.bsps }
+                "cascade[0]" -> ColorRGBAGetter<LightMaterialModifier> { it.cascades }
+                "yMin[0]" -> FloatListGetter<LightMaterialModifier> { it.yMins }
+                "yMax[0]" -> FloatListGetter<LightMaterialModifier> { it.yMaxs }
+                "shadowMode[0]" -> IntListGetter<LightMaterialModifier> { it.shadowModes }
+                "i1[0]" -> IntListGetter<LightMaterialModifier> { it.i1 }
+                "f1[0]" -> FloatListGetter<LightMaterialModifier> { it.f1 }
+                "f2[0]" -> FloatListGetter<LightMaterialModifier> { it.f2 }
                 else -> super.uniform(name)
             }
     }
@@ -100,6 +129,7 @@ internal class Scene(
 
         var shadowTextures = GlGpuTextureList(List(5) { null }, 5)
         var pcfTextures = GlGpuShadowTextureList(List(5) { null }, 5)
+        var colorInputTexture: GlGpuTexture? = null
 
         override fun uniform(name: String): UniformGetter<*>? =
             when (name) {
@@ -107,6 +137,7 @@ internal class Scene(
                 "fbmTexture" -> TextureGetter<ContextMaterialModifier> { fbmTex }
                 "shadowTextures[0]" -> TextureListGetter<ContextMaterialModifier> { it.shadowTextures }
                 "pcfTextures[0]" -> ShadowTextureListGetter<ContextMaterialModifier> { it.pcfTextures }
+                "colorInputTexture" -> TextureGetter<ContextMaterialModifier> { it.colorInputTexture }
                 else -> super.uniform(name)
             }
 
@@ -241,7 +272,7 @@ internal class Scene(
         effect.effectPasses.forEach { pass ->
             renderToReusableFb(pass.target) {
                 pass.mapping.forEach {
-                    contextMaterialModifier.uniforms(it.key to it.value)
+                    contextMaterialModifier.customTextureUniforms[it.key] = it.value
                 }
                 val materialDeclaration = pass.material.toDeclaration(
                     true, currentRetentionPolicy,
@@ -259,10 +290,12 @@ internal class Scene(
         val compositionModifiers = listOf(contextMaterialModifier) + sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects
             .map { it as InternalPostShadingEffect }
             .map { it.compositionMaterialModifier }
-        val shadingMaterial = materialDeclaration(BaseMaterial.Composition, true, currentRetentionPolicy, compositionModifiers)
+        val compositionMaterial = InternalMaterial("!shader/screen.vert", "!shader/deferred/composition.frag")
+
+        val compositionMaterialDeclaration = compositionMaterial.toDeclaration(true, currentRetentionPolicy, compositionModifiers)
         val target = if (reusable) renderContext.defaultTarget() else null
         renderToReusableFb(target) {
-            renderFullscreen(shadingMaterial)
+            renderFullscreen(compositionMaterialDeclaration)
         }
     }
 
@@ -310,12 +343,10 @@ internal class Scene(
             renderBucket(sceneDeclaration.opaques)
         }
         // TODO: vars !!!
-        contextMaterialModifier.uniforms(
-            "albedoGeometryTexture" to geometryBuffer.colorTextures[0],
-            "normalGeometryTexture" to geometryBuffer.colorTextures[1],
-            "emissionGeometryTexture" to geometryBuffer.colorTextures[2],
-            "depthGeometryTexture" to geometryBuffer.depthTexture!!
-        )
+        contextMaterialModifier.customTextureUniforms["albedoGeometryTexture"] = geometryBuffer.colorTextures[0]
+        contextMaterialModifier.customTextureUniforms["normalGeometryTexture"] = geometryBuffer.colorTextures[1]
+        contextMaterialModifier.customTextureUniforms["emissionGeometryTexture"] = geometryBuffer.colorTextures[2]
+        contextMaterialModifier.customTextureUniforms["depthGeometryTexture"] = geometryBuffer.colorTextures[3]
         renderDecals()
     }
 
@@ -356,30 +387,23 @@ internal class Scene(
                             0f, 0f, 0f, 1f
                         ) * scale(decalDeclaration.size).mat4
 
-                        val materialModifiers = decalDeclaration.materialModifiers + InternalMaterialModifier {
-                            it.uniforms["renderSize"] = Vec2(renderContext.width.toFloat(), renderContext.height.toFloat())
-                        }
-
-                        decalDeclaration.material
-                        val renderableDeclaration = RenderableDeclaration(BaseMaterial.Decal, materialModifiers, DecalCube(0.5f, currentRetentionPolicy), Transform(model), true, currentRetentionPolicy)
+                        val renderableDeclaration = RenderableDeclaration(InternalDecalMaterial(), DecalCube(0.5f, currentRetentionPolicy), Transform(model), true, currentRetentionPolicy)
                         renderRenderable(renderableDeclaration, renderContext.camera)
                     }
                     inventory.uniformBufferHolder.flush()
                 }
-                contextAdditionalUniforms["decalAlbedo"] = decalsFb.colorTextures[0]
-                contextAdditionalUniforms["decalNormal"] = decalsFb.colorTextures[1]
                 decalBlendFb.exec {
-
-                    val blendMaterialDeclaration = materialDeclaration(
-                        BaseMaterial.DecalBlend,
+                    val decalBlendMaterial = DecalBlendMaterial(decalsFb.colorTextures[0], decalsFb.colorTextures[1])
+                    val decalBlendMaterialDeclaration = decalBlendMaterial.toDeclaration(
                         true,
                         currentRetentionPolicy,
                         listOf(contextMaterialModifier)
                     )
-                    renderFullscreen(blendMaterialDeclaration) { blend(false) }
+                    renderFullscreen(decalBlendMaterialDeclaration) { blend(false) }
                 }
-                contextAdditionalUniforms["albedoGeometryTexture"] = decalBlendFb.colorTextures[0]
-                contextAdditionalUniforms["normalGeometryTexture"] = decalBlendFb.colorTextures[1]
+                // TODO: vars !!!
+                contextMaterialModifier.customTextureUniforms["albedoGeometryTexture"] = decalBlendFb.colorTextures[0]
+                contextMaterialModifier.customTextureUniforms["normalGeometryTexture"] = decalBlendFb.colorTextures[1]
             }
         }
     }
@@ -472,20 +496,30 @@ internal class Scene(
             directionalShadowIndexes += indexes.minOrNull() ?: -1
             directionalShadowCounts += indexes.size
         }
-        shadowData.uniforms(m, u)
+        lightMaterialModifier.numShadows = shadowData.size
+        lightMaterialModifier.bsps = shadowData.map { it.bsp }
+        lightMaterialModifier.cascades = shadowData.map { ColorRGBA(it.cascade[0], it.cascade[1], it.cascade[2], it.cascade[3]) }
+        lightMaterialModifier.yMins = shadowData.map { it.yMin }
+        lightMaterialModifier.yMaxs = shadowData.map { it.yMax }
+        lightMaterialModifier.shadowModes = shadowData.map { it.mode }
+        lightMaterialModifier.i1 = shadowData.map { it.i1 }
+        lightMaterialModifier.f1 = shadowData.map { it.f1 }
+        lightMaterialModifier.f2 = shadowData.map { it.f2 }
+        contextMaterialModifier.shadowTextures = GlGpuTextureList(shadowData.map { it.texture }, 5)
+        contextMaterialModifier.pcfTextures = GlGpuShadowTextureList(shadowData.map { it.pcfTexture }, 5)
         lightMaterialModifier.dlsti = directionalShadowIndexes
         lightMaterialModifier.dlstc = directionalShadowCounts
         inventory.uniformBufferHolder.populateFrame(listOf(renderContext.frameMaterialModifier, lightMaterialModifier), true)
     }
 
     private fun renderPostProcessPass(pass: InternalPassDeclaration) {
-        contextAdditionalUniforms["colorInputTexture"] = contextAdditionalUniforms["colorTexture"]
-        contextAdditionalUniforms["depthInputTexture"] = contextAdditionalUniforms["depthTexture"]
+        contextMaterialModifier.customTextureUniforms["colorInputTexture"] = contextMaterialModifier.customTextureUniforms["colorTexture"]!!
+        contextMaterialModifier.customTextureUniforms["depthInputTexture"] = contextMaterialModifier.customTextureUniforms["depthTexture"]!!
         pass.mapping.forEach {
-            contextAdditionalUniforms[it.key] = contextAdditionalUniforms[it.value]
+            contextMaterialModifier.customTextureUniforms[it.key] = contextMaterialModifier.customTextureUniforms[it.value]!!
         }
-        val filterMaterial = materialDeclaration(BaseMaterial.Screen, deferredShading, pass.retentionPolicy, listOf(contextMaterialModifier) + pass.modifiers)
-        renderFullscreen(filterMaterial, pass.target.width, pass.target.height)
+        val passMaterialDeclaration = pass.material.toDeclaration(deferredShading, pass.retentionPolicy, listOf(contextMaterialModifier))
+        renderFullscreen(passMaterialDeclaration, pass.target.width, pass.target.height)
         pass.sceneDeclaration?.let { renderForwardOpaques(it) }
     }
 
@@ -504,10 +538,7 @@ internal class Scene(
         glViewport(0, 0, width, height)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         if (mesh != null && shader != null) {
-            shader.render(
-                { fixer(quadMaterial.uniforms[it]) },
-                mesh.gpuMesh
-            )
+            shader.render(quadMaterial.uniformSuppliers, fixer, mesh.gpuMesh)
             inventory.uniformBufferHolder.flush()
         }
     }
@@ -520,8 +551,8 @@ internal class Scene(
             val fb = inventory.frameBuffer(fbDeclaration)
                 ?: throw SkipRender("Reusable FB '${fbDeclaration.id}'")
             fb.exec { block() }
-            contextAdditionalUniforms[target.colorOutput] = fb.colorTextures[0]
-            contextAdditionalUniforms[target.depthOutput] = fb.depthTexture
+            contextMaterialModifier.customTextureUniforms[target.colorOutput] = fb.colorTextures[0]
+            contextMaterialModifier.customTextureUniforms[target.depthOutput] = fb.depthTexture!!
         }
     }
 
@@ -598,9 +629,9 @@ internal class Scene(
         val meshLink = inventory.mesh(declaration.mesh as InternalMeshDeclaration) ?: return false
         val instancingMaterialModifier = (declaration.mesh as? Instanceable)?.instancing(meshLink, reverseZ, camera, inventory)
         val materialModifiers = listOfNotNull(
-            renderContext.contextMaterialModifier,
+            contextMaterialModifier,
             instancingMaterialModifier,
-            ConstMaterialModifier("model" to Mat4Getter { declaration.transform.mat4 })
+            InternalMaterialModifier("model" to Mat4Getter<InternalMaterialModifier> { declaration.transform.mat4 })
         )
         val materialDeclaration = declaration.material.toDeclaration(deferredShading, declaration.retentionPolicy, materialModifiers)
         if (materialDeclaration.shader.defs.contains("NO_SHADOW_CAST") && isShadow)

@@ -20,6 +20,8 @@ import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.glgpu.ColorRGBAGetter
 import com.zakgof.korender.impl.glgpu.ColorRGBGetter
 import com.zakgof.korender.impl.glgpu.FloatGetter
+import com.zakgof.korender.impl.glgpu.GlGpuTexture
+import com.zakgof.korender.impl.glgpu.IntGetter
 import com.zakgof.korender.impl.glgpu.TextureGetter
 import com.zakgof.korender.impl.glgpu.UniformGetter
 import com.zakgof.korender.impl.glgpu.UniformSupplier
@@ -35,11 +37,11 @@ import com.zakgof.korender.math.Vec3
 //    var vertShaderFile: String = when (base) {
 //        BaseMaterial.Renderable -> "!shader/base.vert"
 //        BaseMaterial.Billboard -> "!shader/billboard.vert"
-//        BaseMaterial.Screen, BaseMaterial.Shading, BaseMaterial.Composition, BaseMaterial.DecalBlend -> "!shader/screen.vert"
+//        BaseMaterial.Screen, BaseMaterial.Shading, BaseMaterial.Composition, BaseMaterial.DecalBlend ->
 //        BaseMaterial.Font -> "!shader/gui/font.vert"
 //        BaseMaterial.Image -> "!shader/gui/image.vert"
 //        BaseMaterial.Sky -> "!shader/sky/sky.vert"
-//        BaseMaterial.Decal -> "!shader/deferred/decal.vert"
+//        BaseMaterial.Decal ->
 //    }
 //    var fragShaderFile: String = when (base) {
 //        BaseMaterial.Renderable, BaseMaterial.Billboard -> if (deferredShading) "!shader/deferred/geometry.frag" else "!shader/forward.frag"
@@ -49,25 +51,19 @@ import com.zakgof.korender.math.Vec3
 //        BaseMaterial.Sky -> ""
 //        BaseMaterial.Shading ->
 //        BaseMaterial.Composition -> "!shader/deferred/composition.frag"
-//        BaseMaterial.Decal -> "!shader/deferred/decal.frag"
-//        BaseMaterial.DecalBlend -> "!shader/deferred/decalblend.frag"
+//        BaseMaterial.Decal ->
+//        BaseMaterial.DecalBlend ->
 //    }
 
-
-internal class InternalShader(
-    val vertexShaderFile: String,
-    val deferredFragmentShaderFile: String,
-    val forwardFragmentShaderFile: String,
-) {
-    constructor(vertexShaderFile: String, fragmentShaderFile: String)
-            : this(vertexShaderFile, fragmentShaderFile, fragmentShaderFile)
-}
 
 internal open class InternalMaterialModifier : MaterialContext, UniformSupplier {
 
     private val customDefs = mutableSetOf<String>()
     private val customPlugins = mutableListOf<Pair<String, String>>()
-    private val customUniforms = mutableMapOf<String, Any?>()
+    private val customFloatUniforms = mutableMapOf<String, Float>()
+    private val customIntUniforms = mutableMapOf<String, Int>()
+    private val customVec3Uniforms = mutableMapOf<String, Vec3>()
+    val customTextureUniforms = mutableMapOf<String, Any>()
 
     open val defs: Set<String>
         get() = setOf()
@@ -89,17 +85,25 @@ internal open class InternalMaterialModifier : MaterialContext, UniformSupplier 
         this.customPlugins += name to shaderFile
     }
 
-    override fun uniforms(vararg pairs: Pair<String, Any?>) {
-        customUniforms += pairs
+    override fun float(key: String, value: Float) {
+        customFloatUniforms[key] = value
     }
 
-    override fun uniform(name: String): UniformGetter<*>? {
-        return when (customUniforms[name]) {
-            is Float -> FloatGetter<InternalMaterialModifier> { customUniforms[name] as Float }
-            is Vec3 -> Vec3Getter<InternalMaterialModifier> { customUniforms[name] as Vec3 }
-            else -> null
-        }
+    override fun int(key: String, value: Int) {
+        customIntUniforms[key] = value
     }
+
+    override fun vec3(key: String, value: Vec3) {
+        customVec3Uniforms[key] = value
+    }
+
+    override fun texture(key: String, value: TextureDeclaration) {
+        customTextureUniforms[key] = value
+    }
+
+    override fun uniform(name: String): UniformGetter<*>? =
+        customFloatUniforms[name]?.let { FloatGetter<InternalMaterialModifier> { it.customFloatUniforms[name] } } ?: customIntUniforms[name]?.let { IntGetter<InternalMaterialModifier> { it.customIntUniforms[name] } }
+        ?: customVec3Uniforms[name]?.let { Vec3Getter<InternalMaterialModifier> { it.customVec3Uniforms[name] } } ?: customTextureUniforms[name]?.let { TextureGetter<InternalMaterialModifier> { it.customTextureUniforms[name] } }
 }
 
 internal open class InternalMaterial(
@@ -111,7 +115,9 @@ internal open class InternalMaterial(
     constructor(vertexShaderFile: String, fragmentShaderFile: String) :
             this(vertexShaderFile, fragmentShaderFile, fragmentShaderFile)
 
-    open val internalShader = InternalShader(vertexShaderFile, deferredFragmentShaderFile, forwardFragmentShaderFile)
+    open val vertexShaderFile: String = vertexShaderFile
+    open val deferredFragmentShaderFile: String = deferredFragmentShaderFile
+    open val forwardFragmentShaderFile: String = forwardFragmentShaderFile
 
     fun toDeclaration(
         deferredShading: Boolean,
@@ -120,8 +126,8 @@ internal open class InternalMaterial(
     ) =
         MaterialDeclaration(
             ShaderDeclaration(
-                internalShader.vertexShaderFile,
-                if (deferredShading) internalShader.deferredFragmentShaderFile else internalShader.forwardFragmentShaderFile,
+                vertexShaderFile,
+                if (deferredShading) deferredFragmentShaderFile else forwardFragmentShaderFile,
                 totalDefs + modifiers.flatMap { it.totalDefs },
                 (totalPlugins + modifiers.flatMap { it.totalPlugins }).toMap(),
                 retentionPolicy
@@ -198,12 +204,10 @@ internal class InternalBillboardMaterial : InternalBaseMaterial(), BillboardMate
     override var rotation: Float = 0f
     override var effect: BillboardEffect? = null
 
-    override val internalShader
-        get() = InternalShader(
-            super.internalShader.vertexShaderFile,
-            (effect as? InternalBillboardEffect)?.fragmentShaderFile ?: super.internalShader.deferredFragmentShaderFile,
-            (effect as? InternalBillboardEffect)?.fragmentShaderFile ?: super.internalShader.forwardFragmentShaderFile
-        )
+    override val deferredFragmentShaderFile
+        get() = (effect as? InternalBillboardEffect)?.fragmentShaderFile ?: super.deferredFragmentShaderFile
+    override val forwardFragmentShaderFile
+        get() = (effect as? InternalBillboardEffect)?.fragmentShaderFile ?: super.forwardFragmentShaderFile
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
@@ -212,6 +216,12 @@ internal class InternalBillboardMaterial : InternalBaseMaterial(), BillboardMate
             "rotation" -> FloatGetter(InternalBillboardMaterial::rotation)
             else -> super.uniform(name)
         }
+}
+
+internal class InternalDecalMaterial : InternalBaseMaterial() {
+
+    override val vertexShaderFile = "!shader/deferred/decal.vert"
+    override val deferredFragmentShaderFile = "!shader/deferred/decal.frag"
 }
 
 internal class InternalTerrainMaterial : InternalBaseMaterial("!shader/terrain.vert"), TerrainMaterial, TerrainMaterialContext {
@@ -251,24 +261,10 @@ internal class InternalPipeMaterial : InternalBaseMaterial("!shader/pipe.vert"),
         )
 }
 
-internal class InternalPostProcessingMaterial(
-    val fragmentShaderFile: String,
-    vararg val uniforms: Pair<String, Any?>,
-    val additionalCompile: () -> Unit = {},
-) : InternalMaterial("!shader/screen.vert"), PostProcessingMaterial {
+internal open class InternalPostProcessingMaterial(val fragmentShaderFile: String) :
+    InternalMaterial("!shader/screen.vert", fragmentShaderFile), PostProcessingMaterial
 
-    override fun fragmentShaderFile(deferredShading: Boolean) = fragmentShaderFile
-
-    override fun compile() {
-        uniforms(*uniforms)
-        additionalCompile()
-    }
-}
-
-internal class InternalBillboardEffect(
-    val fragmentShaderFile: String,
-    vararg val uniforms: Pair<String, Any?>, // TODO
-) : BillboardEffect
+internal abstract class InternalBillboardEffect(val fragmentShaderFile: String) : BillboardEffect, UniformSupplier
 
 internal class InternalSkyMaterial(
     val skyPlugin: String,
@@ -280,7 +276,16 @@ internal class InternalSkyMaterial(
     }
 }
 
-internal class ConstMaterialModifier(vararg getters: Pair<String, UniformGetter<ConstMaterialModifier>>) : InternalMaterialModifier() {
-    private val map = getters.toMap()
-    override fun uniform(name: String): UniformGetter<ConstMaterialModifier>? = map[name]
+internal class DecalBlendMaterial(
+    val decalAlbedo: GlGpuTexture,
+    val decalNormal: GlGpuTexture,
+) : InternalMaterial(
+    "!shader/screen.vert", "!shader/deferred/decalblend.frag",
+) {
+    override fun uniform(name: String): UniformGetter<*>? =
+        when (name) {
+            "decalAlbedo" -> TextureGetter<DecalBlendMaterial> { it.decalAlbedo }
+            "decalNormal" -> TextureGetter<DecalBlendMaterial> { it.decalNormal }
+            else -> super.uniform(name)
+        }
 }

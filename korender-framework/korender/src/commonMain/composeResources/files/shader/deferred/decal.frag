@@ -6,7 +6,8 @@ uniform sampler2D depthGeometryTexture;
 //////////
 
 #uniform mat4 model;
-#uniform vec2 renderSize;
+uniform float screenWidth;
+uniform float screenHeight;
 
 #uniform vec4 baseColor;
 #uniform float metallicFactor;
@@ -55,7 +56,7 @@ vec3 f0;
 
 void main() {
 
-    vec2 uv = gl_FragCoord.xy / renderSize;
+    vec2 uv = gl_FragCoord.xy / vec2(screenWidth, screenHeight);
     float depth = texture(depthGeometryTexture, uv).r;
     vpos = screenToWorldSpace(uv, depth);
 

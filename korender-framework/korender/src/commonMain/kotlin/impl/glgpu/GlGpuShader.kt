@@ -36,10 +36,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_VERTEX_SHADER
 import com.zakgof.korender.impl.gl.GLUniformLocation
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.UniformBufferHolder
-import com.zakgof.korender.math.ColorRGB
-import com.zakgof.korender.math.ColorRGBA
-import com.zakgof.korender.math.Mat4
-import com.zakgof.korender.math.Vec3
 
 internal class UniformBlock(
     val shaderBlockIndex: Int,
@@ -246,7 +242,8 @@ internal class GlGpuShader(
             val index = uniformSuppliers.indices.firstOrNull { uniformSuppliers[it].uniform(name) != null }
             if (index == null)
                 throw KorenderException("Uniform $name not declared in materials for shader $this")
-            CompiledBlockBinding(uniformOffsets[i], name, index)
+            val getter = uniformSuppliers[index].uniform(name)!!
+            CompiledBlockBinding(uniformOffsets[i], name, index, getter)
         }
     }
 
@@ -297,19 +294,6 @@ internal class GlGpuShader(
 
     override fun toString() = name
 }
-
-// Get rid of these
-internal data class IntList(val values: List<Int>)
-
-internal data class FloatList(val values: List<Float>)
-
-internal data class Mat4List(val matrices: List<Mat4>)
-
-internal data class Vec3List(val values: List<Vec3>)
-
-internal data class Color4List(val values: List<ColorRGBA>)
-
-internal data class Color3List(val values: List<ColorRGB>)
 
 internal data class GlGpuTextureList(val textures: List<GlGpuTexture?>, val totalNum: Int)
 
