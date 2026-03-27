@@ -1,8 +1,21 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.RetentionPolicy
+import com.zakgof.korender.impl.glgpu.FloatGetter
+import com.zakgof.korender.impl.glgpu.UniformGetter
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
+
+internal class BloomCompositionMaterialModifier(val bloomAmount: Float) : InternalMaterialModifier() {
+    override val defs: Set<String>
+        get() = setOf("BLOOM")
+
+    override fun uniform(name: String): UniformGetter<*>? =
+        if (name == "bloomAmount")
+            FloatGetter<BloomCompositionMaterialModifier> { it.bloomAmount }
+        else
+            super.uniform(name)
+}
 
 internal fun bloomMipEffect(
     renderContext: RenderContext, currentRetentionPolicy: RetentionPolicy,
@@ -12,10 +25,8 @@ internal fun bloomMipEffect(
             bloomDownsamplePasses(renderContext, currentRetentionPolicy, downsample, mips, offset) +
             bloomUpsamplePasses(renderContext, currentRetentionPolicy, downsample, mips, offset, highResolutionRatio),
     keepTextures = setOf("bloomTexture", "bloomDepth"),
-    compositionMaterialModifier = {
-        it.shaderDefs += "BLOOM"
-        it.uniforms["bloomAmount"] = amount
-    }, currentRetentionPolicy
+    compositionMaterialModifier = BloomCompositionMaterialModifier(amount),
+    currentRetentionPolicy
 )
 
 internal fun bloomSimpleEffect(
@@ -28,10 +39,8 @@ internal fun bloomSimpleEffect(
         bloomHorizontalBlur(renderContext, currentRetentionPolicy, downsample, radius)
     ),
     keepTextures = setOf("bloomTexture", "bloomDepth"),
-    compositionMaterialModifier = {
-        it.shaderDefs += "BLOOM"
-        it.uniforms["bloomAmount"] = amount
-    }, currentRetentionPolicy
+    compositionMaterialModifier = BloomCompositionMaterialModifier(amount),
+    currentRetentionPolicy
 )
 
 private fun bloomBrightnessPass(renderContext: RenderContext, currentRetentionPolicy: RetentionPolicy, brightnessDownsample: Int, threshold: Float) =

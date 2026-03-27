@@ -1,7 +1,6 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.BaseMaterialContext
-import com.zakgof.korender.Material
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostShadingEffect
@@ -15,6 +14,7 @@ import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.UniformSupplier
+import com.zakgof.korender.impl.material.InternalDecalMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
 import com.zakgof.korender.math.ColorRGB
@@ -54,7 +54,13 @@ internal class DeferredShadingDeclaration() {
     var decals = mutableListOf<InternalDecalDeclaration>()
 }
 
-internal class InternalDecalDeclaration(val position: Vec3, val look: Vec3, val up: Vec3, val size: Float, val material: InternalDecalMaterial)
+internal class InternalDecalDeclaration(
+    val position: Vec3,
+    val look: Vec3,
+    val up: Vec3,
+    val size: Float,
+    val material: InternalDecalMaterial
+)
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
 

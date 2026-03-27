@@ -56,13 +56,15 @@ import com.zakgof.korender.math.Vec3
 //    }
 
 
-internal open class InternalMaterialModifier : MaterialContext, UniformSupplier {
+internal open class InternalMaterialModifier(vararg getters: Pair<String, UniformGetter<*>>) :
+    MaterialContext, UniformSupplier {
 
     private val customDefs = mutableSetOf<String>()
     private val customPlugins = mutableListOf<Pair<String, String>>()
     private val customFloatUniforms = mutableMapOf<String, Float>()
     private val customIntUniforms = mutableMapOf<String, Int>()
     private val customVec3Uniforms = mutableMapOf<String, Vec3>()
+    private val gettersMap = getters.toMap()
     val customTextureUniforms = mutableMapOf<String, Any>()
 
     open val defs: Set<String>
@@ -104,16 +106,18 @@ internal open class InternalMaterialModifier : MaterialContext, UniformSupplier 
     override fun uniform(name: String): UniformGetter<*>? =
         customFloatUniforms[name]?.let { FloatGetter<InternalMaterialModifier> { it.customFloatUniforms[name] } } ?: customIntUniforms[name]?.let { IntGetter<InternalMaterialModifier> { it.customIntUniforms[name] } }
         ?: customVec3Uniforms[name]?.let { Vec3Getter<InternalMaterialModifier> { it.customVec3Uniforms[name] } } ?: customTextureUniforms[name]?.let { TextureGetter<InternalMaterialModifier> { it.customTextureUniforms[name] } }
+        ?: gettersMap[name]
 }
 
 internal open class InternalMaterial(
     vertexShaderFile: String,
     deferredFragmentShaderFile: String,
     forwardFragmentShaderFile: String,
-) : InternalMaterialModifier(), MaterialContext, Material {
+    vararg getters: Pair<String, UniformGetter<*>>
+) : InternalMaterialModifier(*getters), MaterialContext, Material {
 
-    constructor(vertexShaderFile: String, fragmentShaderFile: String) :
-            this(vertexShaderFile, fragmentShaderFile, fragmentShaderFile)
+    constructor(vertexShaderFile: String, fragmentShaderFile: String, vararg getters: Pair<String, UniformGetter<*>>) :
+            this(vertexShaderFile, fragmentShaderFile, fragmentShaderFile, *getters)
 
     open val vertexShaderFile: String = vertexShaderFile
     open val deferredFragmentShaderFile: String = deferredFragmentShaderFile
@@ -214,12 +218,11 @@ internal class InternalBillboardMaterial : InternalBaseMaterial(), BillboardMate
             "position" -> Vec3Getter(InternalBillboardMaterial::position)
             "scale" -> Vec2Getter(InternalBillboardMaterial::scale)
             "rotation" -> FloatGetter(InternalBillboardMaterial::rotation)
-            else -> super.uniform(name)
+            else -> (effect as? InternalBillboardEffect)?.uniform(name) ?: super.uniform(name)
         }
 }
 
 internal class InternalDecalMaterial : InternalBaseMaterial() {
-
     override val vertexShaderFile = "!shader/deferred/decal.vert"
     override val deferredFragmentShaderFile = "!shader/deferred/decal.frag"
 }
@@ -261,19 +264,21 @@ internal class InternalPipeMaterial : InternalBaseMaterial("!shader/pipe.vert"),
         )
 }
 
-internal open class InternalPostProcessingMaterial(val fragmentShaderFile: String) :
-    InternalMaterial("!shader/screen.vert", fragmentShaderFile), PostProcessingMaterial
+internal open class InternalPostProcessingMaterial(
+    fragmentShaderFile: String,
+    vararg getters: Pair<String, UniformGetter<*>>
+) : InternalMaterial("!shader/screen.vert", fragmentShaderFile, *getters), PostProcessingMaterial
 
-internal abstract class InternalBillboardEffect(val fragmentShaderFile: String) : BillboardEffect, UniformSupplier
+internal abstract class InternalBillboardEffect(val fragmentShaderFile: String, vararg getters: Pair<String, UniformGetter<*>>) : BillboardEffect, UniformSupplier {
+    private val getterMap = getters.toMap()
+    override fun uniform(name: String) = getterMap[name]
+}
 
-internal class InternalSkyMaterial(
-    val skyPlugin: String,
-    vararg val uniforms: Pair<String, Any?>,
-) : InternalCustomMaterial("!shader/sky/sky.vert", "!shader/sky/sky.frag"), SkyMaterial {
-    override fun compile() {
-        plugin("sky", skyPlugin)
-        uniforms(*uniforms)
-    }
+internal open class InternalSkyMaterial(val skyPlugin: String) :
+    InternalMaterial("!shader/sky/sky.vert", "!shader/sky/sky.frag"), SkyMaterial {
+
+    override val plugins: List<Pair<String, String>>
+        get() = listOf("sky" to skyPlugin)
 }
 
 internal class DecalBlendMaterial(

@@ -76,6 +76,9 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.image.InternalImage
 import com.zakgof.korender.impl.image.impl.image.InternalImage3D
+import com.zakgof.korender.impl.material.AdjustmentMaterial
+import com.zakgof.korender.impl.material.BlurMaterial
+import com.zakgof.korender.impl.material.FireEffect
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
 import com.zakgof.korender.impl.material.ImageTextureArrayDeclaration
@@ -83,7 +86,7 @@ import com.zakgof.korender.impl.material.ImageTextureDeclaration
 import com.zakgof.korender.impl.material.InternalBaseMaterial
 import com.zakgof.korender.impl.material.InternalBillboardEffect
 import com.zakgof.korender.impl.material.InternalBillboardMaterial
-import com.zakgof.korender.impl.material.InternalCustomMaterial
+import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPipeMaterial
 import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
@@ -95,6 +98,7 @@ import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureArrayDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
+import com.zakgof.korender.impl.material.simpleBlur
 import com.zakgof.korender.impl.prefab.terrain.Clipmaps
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
 import com.zakgof.korender.impl.projection.LogProjectionMode
@@ -286,67 +290,36 @@ internal class Engine(
             createPipeMesh(id, segments, dynamic, currentRetentionPolicy, block)
 
         override fun customMaterial(vertShaderFile: String, fragShaderFile: String, block: MaterialContext.() -> Unit) =
-            InternalCustomMaterial(vertShaderFile, fragShaderFile).also { block.invoke(it) }
+            InternalMaterial(vertShaderFile, fragShaderFile).also { block.invoke(it) }
 
         override fun customMaterial(vertShaderFile: String, block: BaseMaterialContext.() -> Unit) =
-            InternalBaseMaterial(vertShaderFile).also { block.invoke(it) }.also { it.compile() }
+            InternalBaseMaterial(vertShaderFile).also { block.invoke(it) }
 
         override fun base(block: BaseMaterialContext.() -> Unit) =
-            InternalBaseMaterial().also { block.invoke(it) }.also { it.compile() }
+            InternalBaseMaterial().also { block.invoke(it) }
 
         override fun billboard(block: BillboardMaterialContext.() -> Unit) =
-            InternalBillboardMaterial().also { block.invoke(it) }.also { it.compile() }
+            InternalBillboardMaterial().also { block.invoke(it) }
 
         override fun terrain(block: TerrainMaterialContext.() -> Unit) =
-            InternalTerrainMaterial().also { block.invoke(it) }.also { it.compile() }
+            InternalTerrainMaterial().also { block.invoke(it) }
 
         override fun pipe() = InternalPipeMaterial()
 
         override fun blurVert(radius: Float) =
-            InternalPostProcessingMaterial("!shader/effect/blurh.frag", "radius" to radius)
+            BlurMaterial(true, radius)
 
         override fun blurHorz(radius: Float) =
-            InternalPostProcessingMaterial("!shader/effect/blurv.frag", "radius" to radius)
+            BlurMaterial(false, radius)
 
-        override fun blur(radius: Float): PostProcessingEffect = InternalFilterDeclaration(
-            listOf(
-                InternalPassDeclaration(
-                    mapOf(
-                        "colorInputTexture" to "colorTexture",
-                        "depthInputTexture" to "depthTexture"
-                    ),
-                    modifiers = listOf(blurVert(radius)),
-                    retentionPolicy = currentRetentionPolicy,
-                    sceneDeclaration = SceneDeclaration(),
-                    target = renderContext.defaultTarget()
-                ),
-                InternalPassDeclaration(
-                    mapOf(
-                        "colorInputTexture" to "colorTexture",
-                        "depthInputTexture" to "depthTexture"
-                    ),
-                    modifiers = listOf(blurHorz(radius)),
-                    retentionPolicy = currentRetentionPolicy,
-                    sceneDeclaration = SceneDeclaration(),
-                    target = renderContext.defaultTarget()
-                )
-            )
-        )
+        override fun blur(radius: Float): PostProcessingEffect =
+            simpleBlur(renderContext, radius)
 
         override fun adjust(brightness: Float, contrast: Float, saturation: Float) =
-            InternalPostProcessingMaterial(
-                "!shader/effect/adjust.frag",
-                "brightness" to brightness,
-                "contrast" to contrast,
-                "saturation" to saturation
-            )
+            AdjustmentMaterial(brightness, contrast, saturation)
 
         override fun fire(strength: Float) =
-            InternalBillboardEffect(
-                "!shader/effect/fire.frag",
-                "strength" to strength
-            )
-
+            FireEffect(strength)
 
         override fun fireball(power: Float) =
             InternalBillboardEffect(
