@@ -8,7 +8,6 @@ import com.zakgof.korender.impl.engine.SceneDeclaration
 import com.zakgof.korender.impl.glgpu.ColorRGBGetter
 import com.zakgof.korender.impl.glgpu.CompositeSupplier
 import com.zakgof.korender.impl.glgpu.FloatGetter
-import com.zakgof.korender.impl.glgpu.UniformSupplier
 import com.zakgof.korender.math.ColorRGB
 
 internal class BlurMaterial(
@@ -71,7 +70,7 @@ internal class WaterMaterial(
     override val plugins
         get() = super.plugins + ("sky" to sky.skyPlugin)
 
-    override val children: List<UniformSupplier>
+    override val children
         get() = listOf(sky)
 }
 

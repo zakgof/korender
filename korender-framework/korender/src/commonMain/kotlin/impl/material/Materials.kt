@@ -101,26 +101,30 @@ internal open class InternalMaterial(
     open val deferredFragmentShaderFile: String = deferredFragmentShaderFile
     open val forwardFragmentShaderFile: String = forwardFragmentShaderFile
 
+    // TODO do we actually need shader declaration?
     fun toDeclaration(
         deferredShading: Boolean,
         retentionPolicy: RetentionPolicy,
         modifiers: List<InternalMaterialModifier>,
-    ) = ShaderDeclaration(
-        vertexShaderFile,
-        if (deferredShading) deferredFragmentShaderFile else forwardFragmentShaderFile,
-        defs + modifiers.flatMap { it.defs },
-        (plugins + modifiers.flatMap { it.plugins }).toMap(),
+    ): ShaderDeclaration {
         // TODO optimize
-        (listOf(this) + modifiers).flatMap {
+        val flatModifiers = (listOf(this) + modifiers).flatMap {
             listOf(it) + ((it as? CompositeSupplier)?.children ?: listOf())
-        },
-        retentionPolicy
-    )
+        }
+        return ShaderDeclaration(
+            vertexShaderFile,
+            if (deferredShading) deferredFragmentShaderFile else forwardFragmentShaderFile,
+            defs + flatModifiers.flatMap { it.defs },
+            (plugins + flatModifiers.flatMap { it.plugins }).toMap(),
+            flatModifiers,
+            retentionPolicy
+        )
+    }
 }
 
 internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/base.vert") :
     InternalMaterial(vertexShaderFile, "!shader/deferred/geometry.frag", "!shader/forward.frag"),
-    BaseMaterialContext, UniformSupplier {
+    BaseMaterialContext, UniformSupplier, CompositeSupplier {
 
     override var color: ColorRGBA = ColorRGBA.White
     override var colorTexture: TextureDeclaration? = null
@@ -179,9 +183,13 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
             occlusionTexture?.let { "occlusion" to "!shader/plugin/occlusion.texture.frag" },
             emissionTexture?.let { "emission" to "!shader/plugin/emission.texture.frag" }
         )
+
+    override val children
+        get() = listOfNotNull(ibl as? InternalMaterialModifier)
 }
 
-internal class InternalBillboardMaterial : InternalBaseMaterial(), BillboardMaterial, BillboardMaterialContext {
+internal class InternalBillboardMaterial : InternalBaseMaterial("!shader/billboard.vert"),
+    BillboardMaterial, BillboardMaterialContext, CompositeSupplier {
 
     override var position: Vec3 = Vec3.ZERO
     override var scale: Vec2 = Vec2(1f, 1f)
@@ -192,13 +200,15 @@ internal class InternalBillboardMaterial : InternalBaseMaterial(), BillboardMate
         get() = (effect as? InternalBillboardEffect)?.fragmentShaderFile ?: super.deferredFragmentShaderFile
     override val forwardFragmentShaderFile
         get() = (effect as? InternalBillboardEffect)?.fragmentShaderFile ?: super.forwardFragmentShaderFile
+    override val children: List<InternalMaterialModifier>
+        get() = listOfNotNull(effect as? InternalMaterialModifier)
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
-            "position" -> Vec3Getter(InternalBillboardMaterial::position)
+            "pos" -> Vec3Getter(InternalBillboardMaterial::position)
             "scale" -> Vec2Getter(InternalBillboardMaterial::scale)
             "rotation" -> FloatGetter(InternalBillboardMaterial::rotation)
-            else -> (effect as? InternalBillboardEffect)?.uniform(name) ?: super.uniform(name)
+            else -> super.uniform(name)
         }
 }
 
@@ -248,10 +258,7 @@ internal open class InternalPostProcessingMaterial(
     vararg getters: Pair<String, UniformGetter<*>>,
 ) : InternalMaterial("!shader/screen.vert", fragmentShaderFile, *getters), PostProcessingMaterial
 
-internal abstract class InternalBillboardEffect(val fragmentShaderFile: String, vararg getters: Pair<String, UniformGetter<*>>) : BillboardEffect, UniformSupplier {
-    private val getterMap = getters.toMap()
-    override fun uniform(name: String) = getterMap[name]
-}
+internal abstract class InternalBillboardEffect(val fragmentShaderFile: String, vararg getters: Pair<String, UniformGetter<*>>) : BillboardEffect, InternalMaterialModifier(*getters)
 
 internal open class InternalSkyMaterial(val skyPlugin: String, vararg getters: Pair<String, UniformGetter<*>>) :
     InternalMaterial("!shader/sky/sky.vert", "!shader/sky/sky.frag", *getters),

@@ -13,6 +13,7 @@ import com.zakgof.korender.impl.gl.GL.glDeleteBuffers
 import com.zakgof.korender.impl.gl.GL.glGenBuffers
 import com.zakgof.korender.impl.gl.GLConstants.GL_DYNAMIC_DRAW
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_BUFFER
+import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
@@ -24,7 +25,7 @@ internal interface UniformSupplier {
 }
 
 internal interface CompositeSupplier {
-    val children: List<UniformSupplier>
+    val children: List<InternalMaterialModifier> // TODO: UGLY!
         get() = listOf()
 }
 

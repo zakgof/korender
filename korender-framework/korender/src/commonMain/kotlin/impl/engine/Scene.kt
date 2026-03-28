@@ -36,7 +36,6 @@ import com.zakgof.korender.impl.glgpu.IntListGetter
 import com.zakgof.korender.impl.glgpu.Mat4Getter
 import com.zakgof.korender.impl.glgpu.Mat4ListGetter
 import com.zakgof.korender.impl.glgpu.ShadowTextureListGetter
-import com.zakgof.korender.impl.glgpu.TextureGetter
 import com.zakgof.korender.impl.glgpu.TextureListGetter
 import com.zakgof.korender.impl.glgpu.UniformGetter
 import com.zakgof.korender.impl.glgpu.Vec3ListGetter
@@ -259,7 +258,7 @@ internal class Scene(
         effect.effectPasses.forEach { pass ->
             renderToReusableFb(pass.target) {
                 pass.mapping.forEach {
-                    contextMaterialModifier.customTextureUniforms[it.key] = it.value
+                    contextMaterialModifier.customTextureUniforms[it.key] = contextMaterialModifier.customTextureUniforms[it.value]!!
                 }
                 val materialDeclaration = pass.material.toDeclaration(
                     true, currentRetentionPolicy,
@@ -333,7 +332,7 @@ internal class Scene(
         contextMaterialModifier.customTextureUniforms["albedoGeometryTexture"] = geometryBuffer.colorTextures[0]
         contextMaterialModifier.customTextureUniforms["normalGeometryTexture"] = geometryBuffer.colorTextures[1]
         contextMaterialModifier.customTextureUniforms["emissionGeometryTexture"] = geometryBuffer.colorTextures[2]
-        contextMaterialModifier.customTextureUniforms["depthGeometryTexture"] = geometryBuffer.colorTextures[3]
+        contextMaterialModifier.customTextureUniforms["depthGeometryTexture"] = geometryBuffer.depthTexture!!
         renderDecals()
     }
 

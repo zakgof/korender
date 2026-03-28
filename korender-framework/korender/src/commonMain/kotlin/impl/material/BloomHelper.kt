@@ -1,10 +1,13 @@
 package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.RetentionPolicy
+import com.zakgof.korender.impl.engine.FrameTarget
+import com.zakgof.korender.impl.engine.InternalPassDeclaration
+import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.glgpu.FloatGetter
 
 internal fun bloomMipEffect(
-    renderContext: com.zakgof.korender.impl.engine.RenderContext, currentRetentionPolicy: RetentionPolicy,
+    renderContext: RenderContext, currentRetentionPolicy: RetentionPolicy,
     threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float,
 ) = InternalPostShadingEffect(
     effectPasses = listOf(bloomBrightnessPass(renderContext, currentRetentionPolicy, downsample, threshold)) +
@@ -16,7 +19,7 @@ internal fun bloomMipEffect(
 )
 
 internal fun bloomSimpleEffect(
-    renderContext: com.zakgof.korender.impl.engine.RenderContext, currentRetentionPolicy: RetentionPolicy,
+    renderContext: RenderContext, currentRetentionPolicy: RetentionPolicy,
     threshold: Float, amount: Float, radius: Float, downsample: Int,
 ) = InternalPostShadingEffect(
     effectPasses = listOf(
@@ -29,15 +32,15 @@ internal fun bloomSimpleEffect(
     currentRetentionPolicy
 )
 
-private fun bloomBrightnessPass(renderContext: com.zakgof.korender.impl.engine.RenderContext, currentRetentionPolicy: RetentionPolicy, brightnessDownsample: Int, threshold: Float) =
-    _root_ide_package_.com.zakgof.korender.impl.engine.InternalPassDeclaration(
+private fun bloomBrightnessPass(renderContext: RenderContext, currentRetentionPolicy: RetentionPolicy, brightnessDownsample: Int, threshold: Float) =
+    InternalPassDeclaration(
         mapOf(
             "colorInputTexture" to "colorTexture",
             "depthInputTexture" to "depthTexture"
         ),
         BloomMaterial(threshold),
         null,
-        _root_ide_package_.com.zakgof.korender.impl.engine.FrameTarget(
+        FrameTarget(
             renderContext.width / brightnessDownsample,
             renderContext.height / brightnessDownsample,
             "downsample0",
@@ -47,20 +50,20 @@ private fun bloomBrightnessPass(renderContext: com.zakgof.korender.impl.engine.R
     )
 
 private fun bloomDownsamplePasses(
-    renderContext: com.zakgof.korender.impl.engine.RenderContext,
+    renderContext: RenderContext,
     currentRetentionPolicy: RetentionPolicy,
     brightnessDownsample: Int,
     passes: Int,
     offset: Float,
 ) = (1..passes).map { pass ->
-    _root_ide_package_.com.zakgof.korender.impl.engine.InternalPassDeclaration(
+    InternalPassDeclaration(
         mapOf(
             "colorInputTexture" to "downsample${pass - 1}",
             "depthInputTexture" to "bloomDepth"
         ),
         KawaseMaterial(offset, null),
         null,
-        _root_ide_package_.com.zakgof.korender.impl.engine.FrameTarget(
+        FrameTarget(
             renderContext.width / (brightnessDownsample shl pass),
             renderContext.height / (brightnessDownsample shl pass),
             "downsample${pass}",
@@ -71,14 +74,14 @@ private fun bloomDownsamplePasses(
 }
 
 private fun bloomUpsamplePasses(
-    renderContext: com.zakgof.korender.impl.engine.RenderContext,
+    renderContext: RenderContext,
     currentRetentionPolicy: RetentionPolicy,
     brightnessDownsample: Int,
     passes: Int,
     offset: Float,
     highResolutionRatio: Float,
 ) = (passes downTo 1).map { pass ->
-    _root_ide_package_.com.zakgof.korender.impl.engine.InternalPassDeclaration(
+    InternalPassDeclaration(
         mapOf(
             "colorInputTexture" to if (pass == passes) "downsample${pass}" else "upsample${pass}",
             "highResTexture" to "downsample${pass - 1}",
@@ -86,7 +89,7 @@ private fun bloomUpsamplePasses(
         ),
         KawaseMaterial(offset, highResolutionRatio),
         null,
-        _root_ide_package_.com.zakgof.korender.impl.engine.FrameTarget(
+        FrameTarget(
             renderContext.width / (brightnessDownsample shl pass),
             renderContext.height / (brightnessDownsample shl pass),
             (if (pass == 1) "bloomTexture" else "upsample${pass - 1}"),
@@ -96,15 +99,15 @@ private fun bloomUpsamplePasses(
     )
 }
 
-private fun bloomVerticalBlur(renderContext: com.zakgof.korender.impl.engine.RenderContext, currentRetentionPolicy: RetentionPolicy, downsample: Int, radius: Float) =
-    _root_ide_package_.com.zakgof.korender.impl.engine.InternalPassDeclaration(
+private fun bloomVerticalBlur(renderContext: RenderContext, currentRetentionPolicy: RetentionPolicy, downsample: Int, radius: Float) =
+    InternalPassDeclaration(
         mapOf(
             "colorInputTexture" to "downsample0",
             "depthInputTexture" to "bloomDepth"
         ),
         BlurMaterial(true, radius),
         null,
-        _root_ide_package_.com.zakgof.korender.impl.engine.FrameTarget(
+        FrameTarget(
             renderContext.width / downsample,
             renderContext.height / downsample,
             "downsample1",
@@ -113,15 +116,15 @@ private fun bloomVerticalBlur(renderContext: com.zakgof.korender.impl.engine.Ren
         currentRetentionPolicy
     )
 
-private fun bloomHorizontalBlur(renderContext: com.zakgof.korender.impl.engine.RenderContext, currentRetentionPolicy: RetentionPolicy, downsample: Int, radius: Float) =
-    _root_ide_package_.com.zakgof.korender.impl.engine.InternalPassDeclaration(
+private fun bloomHorizontalBlur(renderContext: RenderContext, currentRetentionPolicy: RetentionPolicy, downsample: Int, radius: Float) =
+    InternalPassDeclaration(
         mapOf(
             "colorInputTexture" to "downsample1",
             "depthInputTexture" to "bloomDepth"
         ),
         BlurMaterial(false, radius),
         null,
-        _root_ide_package_.com.zakgof.korender.impl.engine.FrameTarget(
+        FrameTarget(
             renderContext.width / downsample,
             renderContext.height / downsample,
             "bloomTexture",
