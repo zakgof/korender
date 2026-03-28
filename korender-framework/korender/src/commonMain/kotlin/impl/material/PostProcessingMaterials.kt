@@ -6,7 +6,9 @@ import com.zakgof.korender.impl.engine.InternalPassDeclaration
 import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.engine.SceneDeclaration
 import com.zakgof.korender.impl.glgpu.ColorRGBGetter
+import com.zakgof.korender.impl.glgpu.CompositeSupplier
 import com.zakgof.korender.impl.glgpu.FloatGetter
+import com.zakgof.korender.impl.glgpu.UniformSupplier
 import com.zakgof.korender.math.ColorRGB
 
 internal class BlurMaterial(
@@ -65,9 +67,12 @@ internal class WaterMaterial(
     "transparency" to FloatGetter<WaterMaterial> { it.transparency },
     "waveScale" to FloatGetter<WaterMaterial> { it.waveScale },
     "waveMagnitude" to FloatGetter<WaterMaterial> { it.waveMagnitude },
-) {
-    override val plugins: List<Pair<String, String>>
-        get() = listOf("sky" to sky.skyPlugin)
+), CompositeSupplier {
+    override val plugins
+        get() = super.plugins + ("sky" to sky.skyPlugin)
+
+    override val children: List<UniformSupplier>
+        get() = listOf(sky)
 }
 
 internal class FogMaterial(

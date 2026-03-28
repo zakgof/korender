@@ -23,11 +23,16 @@ internal interface UniformSupplier {
     fun uniform(name: String): UniformGetter<*>?
 }
 
+internal interface CompositeSupplier {
+    val children: List<UniformSupplier>
+        get() = listOf()
+}
+
 internal class CompiledBlockBinding(
     val offset: Int,
     val name: String,
     val supplierIndex: Int,
-    val getter: UniformGetter<*>
+    val getter: UniformGetter<*>,
 ) {
     fun write(buffer: NativeByteBuffer, baseOffset: Int, suppliers: List<UniformSupplier>, materialName: String, ignoreMissing: Boolean) {
         val missingMessage = if (ignoreMissing) null else "Material $materialName does not provide blocked uniform $name"
@@ -186,7 +191,7 @@ internal class GlGpuUniformBuffer(size: Int) : AutoCloseable {
         bufferShift: Int,
         bindings: List<CompiledBlockBinding>,
         materialName: String,
-        ignoreMissing: Boolean = false
+        ignoreMissing: Boolean = false,
     ) {
         bindings.forEach { binding ->
             binding.write(uboBuffer, bufferShift, uniformSuppliers, materialName, ignoreMissing)

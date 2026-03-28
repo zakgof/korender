@@ -64,7 +64,8 @@ fun GltfLibraryExample() = Row {
     }
 
     Box(modifier = Modifier.weight(1f)) {
-        Korender(appResourceLoader = { Res.readBytes(it) }) {
+        Korender(appResourceLoader = { Res.readBytes(it)
+        }) {
             val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/sea/${it.toString().lowercase()}.jpg" })
             Frame {
                 OnLoading {
@@ -81,7 +82,7 @@ fun GltfLibraryExample() = Row {
                     Gltf(
                         // ibl(env), TODO
                         resource = model.file,
-                        resourceLoader = { GltfDownloader.load(model.folder, model.format, it) },
+                        // resourceLoader = { GltfDownloader.load(model.folder, model.format, it) },
                         transform = if (selectedCamera == AUTO_CAMERA) rotate(bs.center, 1.y, frameInfo.time * 0.3f) else Transform.IDENTITY,
                         animation = animations.indexOf(selectedAnimation),
                         materialModifier = {

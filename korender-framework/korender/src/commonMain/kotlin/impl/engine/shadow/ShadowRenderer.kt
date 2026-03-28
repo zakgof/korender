@@ -320,12 +320,12 @@ internal class CasterMaterialModifier(
     "fixedYMin" to FloatGetter<CasterMaterialModifier> { it.declaration.fixedYRange!!.first },
     "fixedYMax" to FloatGetter<CasterMaterialModifier> { it.declaration.fixedYRange!!.second }
 ) {
-    override val defs: Set<String>
-        get() = setOfNotNull(
+    override val defs
+        get() = super.defs + setOfNotNull(
             "SHADOW_CASTER",
             if (declaration.algorithm is InternalVsmShadow) "VSM_SHADOW" else null
         )
 
-    override val plugins: List<Pair<String, String>>
-        get() = listOfNotNull(declaration.fixedYRange?.let { "vprojection" to "!shader/plugin/vprojection.fixedyrange.vert" })
+    override val plugins
+        get() = super.plugins + listOfNotNull(declaration.fixedYRange?.let { "vprojection" to "!shader/plugin/vprojection.fixedyrange.vert" })
 }

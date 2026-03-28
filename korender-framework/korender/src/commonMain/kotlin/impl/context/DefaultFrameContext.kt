@@ -10,7 +10,6 @@ import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
-import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.SkyMaterial
 import com.zakgof.korender.context.BillboardInstancingDeclaration
 import com.zakgof.korender.context.DeferredShadingContext
@@ -64,7 +63,7 @@ internal class DefaultFrameContext(
         DefaultDeferredShadingContext(sceneDeclaration.deferredShadingDeclaration!!).apply(block)
     }
 
-    override fun Gltf(resource: String, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?, resourceLoader: ResourceLoader?, onUpdate: (GltfUpdate) -> Unit, materialModifier: BaseMaterialContext.() -> Unit) {
+    override fun Gltf(resource: String, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?, onUpdate: (GltfUpdate) -> Unit, materialModifier: BaseMaterialContext.() -> Unit) {
         sceneDeclaration.gltfs += GltfDeclaration(
             resource,
             onUpdate,

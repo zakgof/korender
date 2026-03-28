@@ -18,6 +18,7 @@ import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.glgpu.ColorRGBAGetter
 import com.zakgof.korender.impl.glgpu.ColorRGBGetter
+import com.zakgof.korender.impl.glgpu.CompositeSupplier
 import com.zakgof.korender.impl.glgpu.FloatGetter
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.IntGetter
@@ -33,30 +34,6 @@ import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
-//internal class MaterialBuilder(base: BaseMaterial, deferredShading: Boolean, private val retentionPolicy: RetentionPolicy) {
-//
-//    var vertShaderFile: String = when (base) {
-//        BaseMaterial.Renderable -> "!shader/base.vert"
-//        BaseMaterial.Billboard -> "!shader/billboard.vert"
-//        BaseMaterial.Screen, BaseMaterial.Shading, BaseMaterial.Composition, BaseMaterial.DecalBlend ->
-//        BaseMaterial.Font ->
-//        BaseMaterial.Image -> "!shader/gui/image.vert"
-//        BaseMaterial.Sky -> "!shader/sky/sky.vert"
-//        BaseMaterial.Decal ->
-//    }
-//    var fragShaderFile: String = when (base) {
-//        BaseMaterial.Renderable, BaseMaterial.Billboard -> if (deferredShading) "!shader/deferred/geometry.frag" else "!shader/forward.frag"
-//        BaseMaterial.Screen -> "!shader/screen.frag"
-//        BaseMaterial.Font ->
-//        BaseMaterial.Image ->
-//        BaseMaterial.Sky -> ""
-//        BaseMaterial.Shading ->
-//        BaseMaterial.Composition -> "!shader/deferred/composition.frag"
-//        BaseMaterial.Decal ->
-//        BaseMaterial.DecalBlend ->
-//    }
-
-
 internal open class InternalMaterialModifier(vararg getters: Pair<String, UniformGetter<*>>) :
     MaterialContext, UniformSupplier {
 
@@ -70,16 +47,10 @@ internal open class InternalMaterialModifier(vararg getters: Pair<String, Unifor
     val customTextureUniforms = mutableMapOf<String, Any>()
 
     open val defs: Set<String>
-        get() = setOf()
+        get() = customDefs
 
     open val plugins: List<Pair<String, String>>
-        get() = listOf()
-
-    val totalDefs: Set<String>
-        get() = defs + customDefs
-
-    val totalPlugins: List<Pair<String, String>>
-        get() = plugins + customPlugins
+        get() = customPlugins
 
     override fun defs(vararg defs: String) {
         this.customDefs += defs
@@ -135,13 +106,16 @@ internal open class InternalMaterial(
         retentionPolicy: RetentionPolicy,
         modifiers: List<InternalMaterialModifier>,
     ) = ShaderDeclaration(
-            vertexShaderFile,
-            if (deferredShading) deferredFragmentShaderFile else forwardFragmentShaderFile,
-            totalDefs + modifiers.flatMap { it.totalDefs },
-            (totalPlugins + modifiers.flatMap { it.totalPlugins }).toMap(),
-            listOf(this) + modifiers,
-            retentionPolicy
-        )
+        vertexShaderFile,
+        if (deferredShading) deferredFragmentShaderFile else forwardFragmentShaderFile,
+        defs + modifiers.flatMap { it.defs },
+        (plugins + modifiers.flatMap { it.plugins }).toMap(),
+        // TODO optimize
+        (listOf(this) + modifiers).flatMap {
+            listOf(it) + ((it as? CompositeSupplier)?.children ?: listOf())
+        },
+        retentionPolicy
+    )
 }
 
 internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/base.vert") :
@@ -188,17 +162,17 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
         }
 
     override val defs
-        get() = setOfNotNull(
+        get() = super.defs + setOfNotNull(
             colorTexture?.let { "BASE_COLOR_MAP" },
             colorTextures?.let { "TEXTURE_ARRAY" }
         )
 
     override val plugins
-        get() = listOfNotNull(
+        get() = super.plugins + listOfNotNull(
             colorTextures?.let { "texturing" to "!shader/plugin/texturing.array.frag" },
             triplanarScale?.let { "texturing" to "!shader/plugin/texturing.triplanar.frag" },
             normalTexture?.let { "normal" to "!shader/plugin/normal.texture.frag" },
-            emission?.let { "emission" to "!shader/plugin/normal.texture.frag" },
+            emission?.let { "emission" to "!shader/plugin/emission.factor.frag" },
             metallicRoughnessTexture?.let { "metallic_roughness" to "!shader/plugin/metallic_roughness.texture.frag" },
             specularGlossiness?.let { "specular_glossiness" to "!shader/plugin/specular_glossiness.factor.frag" },
             specularGlossinessTexture?.let { "specular_glossiness" to "!shader/plugin/specular_glossiness.texture.frag" },
@@ -240,14 +214,14 @@ internal class InternalTerrainMaterial : InternalBaseMaterial("!shader/terrain.v
     override var outsideHeight: Float = 0f
     override var terrainCenter: Vec3 = Vec3.ZERO
 
-    override val defs: Set<String>
-        get() = setOf("TERRAIN")
+    override val defs
+        get() = super.defs + "TERRAIN"
 
-    override val plugins: List<Pair<String, String>>
+    override val plugins
         get() = listOf(
             "normal" to "!shader/plugin/normal.terrain.frag",
             "terrain" to "!shader/plugin/terrain.texture.frag"
-        )
+        ) + super.plugins
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
@@ -261,8 +235,8 @@ internal class InternalTerrainMaterial : InternalBaseMaterial("!shader/terrain.v
 
 internal class InternalPipeMaterial : InternalBaseMaterial("!shader/pipe.vert"), PipeMaterial {
 
-    override val plugins: List<Pair<String, String>>
-        get() = listOf(
+    override val plugins
+        get() = super.plugins + listOf(
             "position" to "!shader/plugin/position.pipe.frag",
             "normal" to "!shader/plugin/normal.pipe.frag",
             "depth" to "!shader/plugin/depth.pipe.frag"
@@ -283,8 +257,8 @@ internal open class InternalSkyMaterial(val skyPlugin: String, vararg getters: P
     InternalMaterial("!shader/sky/sky.vert", "!shader/sky/sky.frag", *getters),
     SkyMaterial {
 
-    override val plugins: List<Pair<String, String>>
-        get() = listOf("sky" to skyPlugin)
+    override val plugins
+        get() = super.plugins + ("sky" to skyPlugin)
 }
 
 internal class DecalBlendMaterial(
@@ -306,6 +280,6 @@ internal class InstancingMaterialModifier : InternalMaterialModifier(
 ) {
     var jntTexture: GlGpuTexture? = null
 
-    override val defs: Set<String>
-        get() = setOf("INSTANCING")
+    override val defs
+        get() = super.defs + "INSTANCING"
 }

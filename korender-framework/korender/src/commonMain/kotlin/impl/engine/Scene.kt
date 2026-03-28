@@ -118,7 +118,6 @@ internal class Scene(
 
         var shadowTextures = GlGpuTextureList(List(5) { null }, 5)
         var pcfTextures = GlGpuShadowTextureList(List(5) { null }, 5)
-        var colorInputTexture: GlGpuTexture? = null
 
         override fun uniform(name: String): UniformGetter<*>? =
             when (name) {
@@ -126,12 +125,11 @@ internal class Scene(
                 "fbmTexture" -> fbmTexGetter
                 "shadowTextures[0]" -> TextureListGetter<ContextMaterialModifier> { it.shadowTextures }
                 "pcfTextures[0]" -> ShadowTextureListGetter<ContextMaterialModifier> { it.pcfTextures }
-                "colorInputTexture" -> TextureGetter<ContextMaterialModifier> { it.colorInputTexture }
                 else -> super.uniform(name)
             }
 
-        override val plugins: List<Pair<String, String>>
-            get() = listOfNotNull(
+        override val plugins
+            get() = super.plugins + listOfNotNull(
                 "vprojection" to renderContext.projection.mode.plugin(),
                 (renderContext.projection.mode as? LogProjectionMode)?.let {
                     "depth" to "!shader/plugin/depth.log.frag"

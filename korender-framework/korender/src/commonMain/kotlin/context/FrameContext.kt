@@ -10,7 +10,6 @@ import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
-import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.SkyMaterial
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.math.ColorRGB
@@ -55,7 +54,7 @@ interface FrameContext : KorenderContext {
      * @param resourceLoader overridden file resource loader
      * @param onUpdate callback with runtime Gltf details
      */
-    fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, time: Float? = null, animation: Int? = null, instancing: GltfInstancingDeclaration? = null, resourceLoader: ResourceLoader? = null, onUpdate: (GltfUpdate) -> Unit = {}, materialModifier: BaseMaterialContext.() -> Unit = {})
+    fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, time: Float? = null, animation: Int? = null, instancing: GltfInstancingDeclaration? = null, onUpdate: (GltfUpdate) -> Unit = {}, materialModifier: BaseMaterialContext.() -> Unit = {})
 
     /**
      * Renders a billboard - camera facing quad.

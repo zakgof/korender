@@ -138,8 +138,8 @@ private class KawaseMaterial(
     "offset" to FloatGetter<KawaseMaterial> { it.offset },
     "highResolutionRatio" to FloatGetter<KawaseMaterial> { it.highResolutionRatio }
 ) {
-    override val defs: Set<String>
-        get() = setOfNotNull(highResolutionRatio?.let { "UPSAMPLE" })
+    override val defs
+        get() = super.defs + setOfNotNull(highResolutionRatio?.let { "UPSAMPLE" })
 }
 
 private class BloomMaterial(
@@ -153,6 +153,6 @@ private class BloomMaterial(
 private class BloomCompositionMaterialModifier(val bloomAmount: Float) : InternalMaterialModifier(
     "bloomAmount" to FloatGetter<BloomCompositionMaterialModifier> { it.bloomAmount }
 ) {
-    override val defs: Set<String>
-        get() = setOf("BLOOM")
+    override val defs
+        get() = super.defs + setOf("BLOOM")
 }

@@ -59,7 +59,7 @@ private class SsrMaterial(
 private class SsrCompositionMaterialModifier(val envTexture: CubeTextureDeclaration?) : InternalMaterialModifier(
     "envTexture" to TextureGetter<SsrCompositionMaterialModifier> { it.envTexture }
 ) {
-    override val defs: Set<String>
-        get() = setOf("BLOOM")
+    override val defs
+        get() = super.defs + "BLOOM"
 }
 
