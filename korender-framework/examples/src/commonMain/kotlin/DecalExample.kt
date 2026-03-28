@@ -29,7 +29,7 @@ fun DecalExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                 val up = ((look % 1.y) % look).normalize()
                 val pos = -look * 4f
                 Decal(
-                    base {
+                    decal {
                         colorTexture = texture("texture/decal.png")
                         metallicFactor = 0.2f
                     },

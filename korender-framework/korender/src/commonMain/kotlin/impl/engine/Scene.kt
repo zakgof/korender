@@ -43,7 +43,6 @@ import com.zakgof.korender.impl.gltf.GltfSceneBuilder
 import com.zakgof.korender.impl.material.DecalBlendMaterial
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
-import com.zakgof.korender.impl.material.InternalDecalMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
@@ -373,7 +372,7 @@ internal class Scene(
                             0f, 0f, 0f, 1f
                         ) * scale(decalDeclaration.size).mat4
 
-                        val renderableDeclaration = RenderableDeclaration(InternalDecalMaterial(), listOf(), DecalCube(0.5f, currentRetentionPolicy), Transform(model), true, currentRetentionPolicy)
+                        val renderableDeclaration = RenderableDeclaration(decalDeclaration.material, listOf(), DecalCube(0.5f, currentRetentionPolicy), Transform(model), true, currentRetentionPolicy)
                         renderRenderable(renderableDeclaration, renderContext.camera)
                     }
                     inventory.uniformBufferHolder.flush()

@@ -89,6 +89,7 @@ import com.zakgof.korender.impl.material.ImageTextureArrayDeclaration
 import com.zakgof.korender.impl.material.ImageTextureDeclaration
 import com.zakgof.korender.impl.material.InternalBaseMaterial
 import com.zakgof.korender.impl.material.InternalBillboardMaterial
+import com.zakgof.korender.impl.material.InternalDecalMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalPipeMaterial
 import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
@@ -313,6 +314,9 @@ internal class Engine(
 
         override fun pipe(block: BaseMaterialContext.() -> Unit) =
             InternalPipeMaterial().also { block.invoke(it) }
+
+        override fun decal(block: BaseMaterialContext.() -> Unit) =
+            InternalDecalMaterial().also { block.invoke(it) }
 
         override fun blurVert(radius: Float) =
             BlurMaterial(true, radius)

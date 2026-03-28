@@ -6,8 +6,6 @@ uniform sampler2D depthGeometryTexture;
 //////////
 
 #uniform mat4 model;
-uniform float screenWidth;
-uniform float screenHeight;
 
 #uniform vec4 baseColor;
 #uniform float metallicFactor;

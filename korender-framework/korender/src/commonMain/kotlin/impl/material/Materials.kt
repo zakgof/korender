@@ -4,6 +4,7 @@ import com.zakgof.korender.BaseMaterialContext
 import com.zakgof.korender.BillboardEffect
 import com.zakgof.korender.BillboardMaterial
 import com.zakgof.korender.BillboardMaterialContext
+import com.zakgof.korender.DecalMaterial
 import com.zakgof.korender.Material
 import com.zakgof.korender.MaterialContext
 import com.zakgof.korender.PipeMaterial
@@ -213,7 +214,7 @@ internal class InternalBillboardMaterial : InternalBaseMaterial("!shader/billboa
         }
 }
 
-internal class InternalDecalMaterial : InternalBaseMaterial() {
+internal class InternalDecalMaterial : InternalBaseMaterial(), DecalMaterial {
     override val vertexShaderFile = "!shader/deferred/decal.vert"
     override val deferredFragmentShaderFile = "!shader/deferred/decal.frag"
 }

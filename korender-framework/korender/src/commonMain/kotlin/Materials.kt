@@ -11,6 +11,8 @@ interface BillboardMaterial : Material
 
 interface TerrainMaterial : Material
 
+interface DecalMaterial: Material
+
 interface PipeMaterial : Material
 
 interface PostProcessingMaterial : Material

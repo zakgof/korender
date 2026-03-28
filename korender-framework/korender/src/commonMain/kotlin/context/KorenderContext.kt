@@ -8,6 +8,7 @@ import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureResources
+import com.zakgof.korender.DecalMaterial
 import com.zakgof.korender.Image
 import com.zakgof.korender.Image3D
 import com.zakgof.korender.IndexType
@@ -363,6 +364,8 @@ interface KorenderContext {
     fun billboard(block: BillboardMaterialContext.() -> Unit): BillboardMaterial
 
     fun terrain(block: TerrainMaterialContext.() -> Unit): TerrainMaterial
+
+    fun decal(block: BaseMaterialContext.() -> Unit): DecalMaterial
 
 
     /**
