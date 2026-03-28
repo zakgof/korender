@@ -4,6 +4,7 @@ import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
+import com.zakgof.korender.impl.engine.shadow.CustomFrameContext
 import com.zakgof.korender.impl.engine.shadow.ShadowRenderer
 import com.zakgof.korender.impl.engine.shadow.ShadowerData
 import com.zakgof.korender.impl.geometry.DecalCube
@@ -546,6 +547,9 @@ internal class Scene(
         var success = true
         val probeFb =
             inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", envCaptureContext.resolution, envCaptureContext.resolution, true, TransientProperty(currentRetentionPolicy))) ?: return null
+
+
+
         val projection = Projection(2f * envCaptureContext.near, 2f * envCaptureContext.near, envCaptureContext.near, envCaptureContext.far, FrustumProjectionMode)
         val localRenderContext = RenderContext(envCaptureContext.resolution, envCaptureContext.resolution)
         localRenderContext.projection = projection
@@ -557,10 +561,16 @@ internal class Scene(
             GL_TEXTURE_CUBE_MAP_POSITIVE_Y to DefaultCamera(envCaptureContext.position, 1.y, 1.z),
             GL_TEXTURE_CUBE_MAP_POSITIVE_Z to DefaultCamera(envCaptureContext.position, 1.z, -1.y),
         ).forEach {
+            val frameContext = CustomFrameContext(
+                projection,
+                it.value,
+                renderContext,
+                envCaptureContext.resolution
+            )
             localRenderContext.camera = it.value
             inventory.uniformBufferHolder.populateFrame(
                 listOf(
-                    renderContext.frameMaterialModifier,
+                    FrameMaterialModifier(frameContext),
                     LightMaterialModifier(envCaptureContext.sceneDeclaration)
                 ), true
             )

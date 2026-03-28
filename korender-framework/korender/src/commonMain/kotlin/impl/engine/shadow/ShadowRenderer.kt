@@ -243,7 +243,7 @@ internal object ShadowRenderer {
         val shadowProjection = Projection(dim, dim, near, far, OrthoProjectionMode)
         val shadowCamera = DefaultCamera(cameraPos, light, up)
 
-        return FrameMaterialModifier(ShadowFrameContext(shadowProjection, shadowCamera, renderContext, declaration.mapSize))
+        return FrameMaterialModifier(CustomFrameContext(shadowProjection, shadowCamera, renderContext, declaration.mapSize))
     }
 
     private fun frustumCorners(
@@ -286,7 +286,7 @@ internal class ShadowerData(
     val f2: Float,
 )
 
-internal class ShadowFrameContext(
+internal class CustomFrameContext(
     override val projection: Projection,
     override val camera: Camera,
     val renderContext: RenderContext,

@@ -25,6 +25,7 @@ private val fbmTex = ResourceTextureDeclaration("!fbm.png", retentionPolicy = Im
 internal val noiseTexGetter = TextureGetter<Any> { noiseTex }
 internal val fbmTexGetter = TextureGetter<Any> { fbmTex }
 
+// TODO needs refactoring
 internal interface FrameContext {
     val projection: Projection
     val camera: Camera
@@ -35,7 +36,7 @@ internal interface FrameContext {
 
 internal class RenderContext(override var width: Int, override var height: Int) : FrameContext {
 
-    var customProjection: Projection? = null
+    private var customProjection: Projection? = null
 
     override var projection: Projection
         get() = customProjection ?: Projection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f, FrustumProjectionMode)
