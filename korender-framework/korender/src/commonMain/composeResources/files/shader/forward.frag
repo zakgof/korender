@@ -134,66 +134,77 @@ void main() {
             discard;
     #endif
 
-    emission = vec3(0.);
-    #ifdef PLUGIN_EMISSION
-        emission = pluginEmission();
-    #endif
-
-    metallic = metallicFactor;
-    roughness = roughnessFactor;
-
-    #ifdef PLUGIN_METALLIC_ROUGHNESS
-        vec2 mr = pluginMetallicRoughness();
-        metallic = mr.x;
-        roughness = mr.y;
-    #endif
-
-    #ifdef PLUGIN_SPECULAR_GLOSSINESS
-        vec4 sg = pluginSpecularGlossiness();
-        float maxSpec = max(max(sg.r, sg.g), sg.b);
-        metallic = clamp((maxSpec - 0.04) / (1.0 - 0.04), 0.0, 1.0);
-        if (metallic > 0.01) {
-            albedo.rgb = sg.rgb;
-        }
-        roughness = 1. - sg.a;
-    #endif
-
-    ///////////////////////
-
-    look = normalize(cameraPos - position);
-    float plane = dot((position - cameraPos), cameraDir);
-
-    float occlusion = 1.0;
-    #ifdef VERTEX_OCCLUSION
-        occlusion *= vocclusion;
-    #endif
-    #ifdef PLUGIN_OCCLUSION
-        occlusion *= pluginOcclusion();
-    #endif
-
-    populateShadowRatios(plane, position);
-
-    color = emission;
-
-    for (int l=0; l<numDirectionalLights; l++) {
-        color += dirLight(l, normal, look, albedo.rgb, metallic, roughness, occlusion);
-    }
-    for (int l=0; l<numPointLights; l++) {
-        color += pointLight(vpos, l, normal, look, albedo.rgb, metallic, roughness, occlusion);
-    }
-
-    vec3 F0 = mix(vec3(0.04), albedo.rgb, metallic);
-    vec3 diffFactor = albedo.rgb * (1.0 - metallic);
-    vec3 specFactor = fresnelSchlick(max(dot(look, normal), 0.1), F0);
-    color += ambientColor * (diffFactor + specFactor * 0.3);
-    #ifdef PLUGIN_SKY
-        color += skyibl(normal, look, roughness, diffFactor, specFactor);
-    #endif
-
-    #ifdef PLUGIN_OUTPUT
-        fragColor = pluginOutput();
+    #ifdef SHADOW_CASTER
+        #ifdef VSM_SHADOW
+            float d = gl_FragCoord.z;
+            float m1 = d * d;
+            float dx = dFdx(m1);
+            float dy = dFdy(m1);
+            float m2 = m1 * m1 + 0.25 * (dx * dx + dy * dy);
+            fragColor = vec4(m1, m2, 1.0, 1.0);
+        #endif
     #else
-        fragColor = vec4(color * albedo.a, albedo.a);
+        emission = vec3(0.);
+        #ifdef PLUGIN_EMISSION
+            emission = pluginEmission();
+        #endif
+
+        metallic = metallicFactor;
+        roughness = roughnessFactor;
+
+        #ifdef PLUGIN_METALLIC_ROUGHNESS
+            vec2 mr = pluginMetallicRoughness();
+            metallic = mr.x;
+            roughness = mr.y;
+        #endif
+
+        #ifdef PLUGIN_SPECULAR_GLOSSINESS
+            vec4 sg = pluginSpecularGlossiness();
+            float maxSpec = max(max(sg.r, sg.g), sg.b);
+            metallic = clamp((maxSpec - 0.04) / (1.0 - 0.04), 0.0, 1.0);
+            if (metallic > 0.01) {
+                albedo.rgb = sg.rgb;
+            }
+            roughness = 1. - sg.a;
+        #endif
+
+        ///////////////////////
+
+        look = normalize(cameraPos - position);
+        float plane = dot((position - cameraPos), cameraDir);
+
+        float occlusion = 1.0;
+        #ifdef VERTEX_OCCLUSION
+            occlusion *= vocclusion;
+        #endif
+        #ifdef PLUGIN_OCCLUSION
+            occlusion *= pluginOcclusion();
+        #endif
+
+        populateShadowRatios(plane, position);
+
+        color = emission;
+
+        for (int l=0; l<numDirectionalLights; l++) {
+            color += dirLight(l, normal, look, albedo.rgb, metallic, roughness, occlusion);
+        }
+        for (int l=0; l<numPointLights; l++) {
+            color += pointLight(vpos, l, normal, look, albedo.rgb, metallic, roughness, occlusion);
+        }
+
+        vec3 F0 = mix(vec3(0.04), albedo.rgb, metallic);
+        vec3 diffFactor = albedo.rgb * (1.0 - metallic);
+        vec3 specFactor = fresnelSchlick(max(dot(look, normal), 0.1), F0);
+        color += ambientColor * (diffFactor + specFactor * 0.3);
+        #ifdef PLUGIN_SKY
+            color += skyibl(normal, look, roughness, diffFactor, specFactor);
+        #endif
+
+        #ifdef PLUGIN_OUTPUT
+            fragColor = pluginOutput();
+        #else
+            fragColor = vec4(color * albedo.a, albedo.a);
+        #endif
     #endif
 
     #ifdef PLUGIN_DEPTH

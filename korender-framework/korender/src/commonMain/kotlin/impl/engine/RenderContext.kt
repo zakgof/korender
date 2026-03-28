@@ -25,17 +25,25 @@ private val fbmTex = ResourceTextureDeclaration("!fbm.png", retentionPolicy = Im
 internal val noiseTexGetter = TextureGetter<Any> { noiseTex }
 internal val fbmTexGetter = TextureGetter<Any> { fbmTex }
 
-internal class RenderContext(var width: Int, var height: Int) {
+internal interface FrameContext {
+    val projection: Projection
+    val camera: Camera
+    val width: Int
+    val height: Int
+    val time: Float
+}
+
+internal class RenderContext(override var width: Int, override var height: Int) : FrameContext {
 
     var customProjection: Projection? = null
 
-    var projection: Projection
+    override var projection: Projection
         get() = customProjection ?: Projection(width = 5f * width / height, height = 5f, near = 10f, far = 1000f, FrustumProjectionMode)
         set(value) {
             customProjection = value
         }
 
-    var camera: Camera = DefaultCamera(20.z, -1.z, 1.y)
+    override var camera: Camera = DefaultCamera(20.z, -1.z, 1.y)
     var backgroundColor = ColorRGBA.Transparent
 
     val frameInfoManager = FrameInfoManager()
@@ -43,30 +51,31 @@ internal class RenderContext(var width: Int, var height: Int) {
     val envProbes = mutableMapOf<String, GlGpuCubeTexture>()
     val frameProbes = mutableMapOf<String, GlGpuTexture>()
 
-    val frameMaterialModifier = FrameMaterialModifier()
-
-    inner class FrameMaterialModifier : InternalMaterialModifier() {
-
-        val rc = this@RenderContext
-
-        override fun uniform(name: String): UniformGetter<*>? =
-            when (name) {
-                "noiseTexture" -> TextureGetter<FrameMaterialModifier> { noiseTex }
-                "fbmTexture" -> TextureGetter<FrameMaterialModifier> { fbmTex }
-                "view" -> Mat4Getter<FrameMaterialModifier> { it.rc.camera.mat4 }
-                "projectionWidth" -> FloatGetter<FrameMaterialModifier> { it.rc.projection.width }
-                "projectionHeight" -> FloatGetter<FrameMaterialModifier> { it.rc.projection.height }
-                "projectionNear" -> FloatGetter<FrameMaterialModifier> { it.rc.projection.near }
-                "projectionFar" -> FloatGetter<FrameMaterialModifier> { it.rc.projection.far }
-                "cameraPos" -> Vec3Getter<FrameMaterialModifier> { it.rc.camera.position }
-                "cameraDir" -> Vec3Getter<FrameMaterialModifier> { it.rc.camera.direction }
-                "screenWidth" -> FloatGetter<FrameMaterialModifier> { it.rc.width.toFloat() }
-                "screenHeight" -> FloatGetter<FrameMaterialModifier> { it.rc.height.toFloat() }
-                "time" -> FloatGetter<FrameMaterialModifier> { (Platform.nanoTime() - frameInfoManager.startNanos) * 1e-9f }
-                else -> super.uniform(name)
-            }
-    }
+    override val time
+        get()= (Platform.nanoTime() - frameInfoManager.startNanos) * 1e-9f
 
     fun defaultTarget() = FrameTarget(width, height, "colorTexture", "depthTexture")
+
+    val frameMaterialModifier = FrameMaterialModifier(this)
+}
+
+internal class FrameMaterialModifier(val frameContext: FrameContext ) : InternalMaterialModifier() {
+
+    override fun uniform(name: String): UniformGetter<*>? =
+        when (name) {
+            "noiseTexture" -> TextureGetter<FrameMaterialModifier> { noiseTex }
+            "fbmTexture" -> TextureGetter<FrameMaterialModifier> { fbmTex }
+            "view" -> Mat4Getter<FrameMaterialModifier> { it.frameContext.camera.mat4 }
+            "projectionWidth" -> FloatGetter<FrameMaterialModifier> { it.frameContext.projection.width }
+            "projectionHeight" -> FloatGetter<FrameMaterialModifier> { it.frameContext.projection.height }
+            "projectionNear" -> FloatGetter<FrameMaterialModifier> { it.frameContext.projection.near }
+            "projectionFar" -> FloatGetter<FrameMaterialModifier> { it.frameContext.projection.far }
+            "cameraPos" -> Vec3Getter<FrameMaterialModifier> { it.frameContext.camera.position }
+            "cameraDir" -> Vec3Getter<FrameMaterialModifier> { it.frameContext.camera.direction }
+            "screenWidth" -> FloatGetter<FrameMaterialModifier> { it.frameContext.width.toFloat() }
+            "screenHeight" -> FloatGetter<FrameMaterialModifier> { it.frameContext.height.toFloat() }
+            "time" -> FloatGetter<FrameMaterialModifier> { it.frameContext.time }
+            else -> super.uniform(name)
+        }
 }
 

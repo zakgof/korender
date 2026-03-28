@@ -21,6 +21,7 @@ import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.MutableMesh
 import com.zakgof.korender.PipeMaterial
 import com.zakgof.korender.PixelFormat
+import com.zakgof.korender.PostProcessMaterialContext
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.PostShadingEffect
@@ -455,6 +456,8 @@ interface KorenderContext {
      * @return material modifier
      */
     fun fxaa(): PostProcessingMaterial
+
+    fun customPostProcessingFilter(fragmentShaderFile: String, block: PostProcessMaterialContext.() -> Unit = {}): PostProcessingMaterial
 
     /**
      * Creates a fire effect.

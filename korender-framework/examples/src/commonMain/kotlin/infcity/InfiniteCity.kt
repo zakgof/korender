@@ -5,7 +5,6 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
-import com.zakgof.korender.math.ColorRGB.Companion.White
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Quaternion
@@ -122,7 +121,6 @@ private fun FrameContext.building(buildingId: Int, z: Float, x: Float) {
         colorTexture = texture("infcity/dw.jpg")
         metallicFactor = 0.5f
         roughnessFactor = 0.1f
-        emission = White
         plugin("emission", "infcity/window.emission.plugin.frag")
         texture("windowTexture", texture("infcity/lw.jpg"))
     }

@@ -7,6 +7,7 @@ import com.zakgof.korender.BillboardMaterialContext
 import com.zakgof.korender.Material
 import com.zakgof.korender.MaterialContext
 import com.zakgof.korender.PipeMaterial
+import com.zakgof.korender.PostProcessMaterialContext
 import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.SkyMaterial
@@ -161,7 +162,7 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
             "specularGlossinessTexture" -> TextureGetter(InternalBaseMaterial::specularGlossinessTexture)
             "occlusionTexture" -> TextureGetter(InternalBaseMaterial::occlusionTexture)
             "emissionTexture" -> TextureGetter(InternalBaseMaterial::emissionTexture)
-            "jntMatrices" -> Mat4ListGetter(InternalBaseMaterial::jntMatrices)
+            "jntMatrices[0]" -> Mat4ListGetter(InternalBaseMaterial::jntMatrices)
             else -> super.uniform(name)
         }
 
@@ -256,7 +257,7 @@ internal class InternalPipeMaterial : InternalBaseMaterial("!shader/pipe.vert"),
 internal open class InternalPostProcessingMaterial(
     fragmentShaderFile: String,
     vararg getters: Pair<String, UniformGetter<*>>,
-) : InternalMaterial("!shader/screen.vert", fragmentShaderFile, *getters), PostProcessingMaterial
+) : InternalMaterial("!shader/screen.vert", fragmentShaderFile, *getters), PostProcessingMaterial, PostProcessMaterialContext
 
 internal abstract class InternalBillboardEffect(val fragmentShaderFile: String, vararg getters: Pair<String, UniformGetter<*>>) : BillboardEffect, InternalMaterialModifier(*getters)
 

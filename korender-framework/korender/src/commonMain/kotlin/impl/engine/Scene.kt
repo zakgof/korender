@@ -146,8 +146,8 @@ internal class Scene(
     private val deferredShading = sceneDeclaration.deferredShadingDeclaration != null
     private val reusableFrameBufferHolder = ReusableFrameBufferHolder()
 
-    private val lightMaterialModifier = LightMaterialModifier(sceneDeclaration)
-    private val contextMaterialModifier = ContextMaterialModifier(renderContext)
+    val lightMaterialModifier = LightMaterialModifier(sceneDeclaration)
+    val contextMaterialModifier = ContextMaterialModifier(renderContext)
 
     val touchBoxes = mutableListOf<TouchBox>()
 
@@ -485,6 +485,7 @@ internal class Scene(
         lightMaterialModifier.numShadows = shadowData.size
         lightMaterialModifier.bsps = shadowData.map { it.bsp }
         lightMaterialModifier.cascades = shadowData.map { ColorRGBA(it.cascade[0], it.cascade[1], it.cascade[2], it.cascade[3]) }
+        lightMaterialModifier.cascades = shadowData.map { ColorRGBA(it.cascade[0], it.cascade[1], it.cascade[2], it.cascade[3]) }
         lightMaterialModifier.yMins = shadowData.map { it.yMin }
         lightMaterialModifier.yMaxs = shadowData.map { it.yMax }
         lightMaterialModifier.shadowModes = shadowData.map { it.mode }
@@ -614,11 +615,11 @@ internal class Scene(
     ): Boolean {
         val meshLink = inventory.mesh(declaration.mesh as InternalMeshDeclaration) ?: return false
         val instancingMaterialModifier = (declaration.mesh as? Instanceable)?.instancing(meshLink, reverseZ, camera, inventory)
-        val materialModifiers = declaration.modifiers + listOfNotNull(
+        val materialModifiers =  listOfNotNull(
             contextMaterialModifier,
             instancingMaterialModifier,
             ModelModifier(declaration.transform.mat4)
-        )
+        ) + declaration.modifiers
         val materialDeclaration = declaration.material.toDeclaration(deferredShading, declaration.retentionPolicy, materialModifiers)
         if (materialDeclaration.defs.contains("NO_SHADOW_CAST") && isShadow)
             return true

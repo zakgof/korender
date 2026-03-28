@@ -21,6 +21,7 @@ import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.MutableMesh
 import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.Platform
+import com.zakgof.korender.PostProcessMaterialContext
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
@@ -339,6 +340,9 @@ internal class Engine(
 
         override fun fxaa() =
             InternalPostProcessingMaterial("!shader/effect/fxaa.frag")
+
+        override fun customPostProcessingFilter(fragmentShaderFile: String, block: PostProcessMaterialContext.() -> Unit) =
+            InternalPostProcessingMaterial(fragmentShaderFile).also { block.invoke(it) }
 
         override fun fastCloudSky(density: Float, thickness: Float, scale: Float, rippleAmount: Float, rippleScale: Float, zenithColor: ColorRGB, horizonColor: ColorRGB, cloudLight: Float, cloudDark: Float, block: MaterialContext.() -> Unit) =
             FastCloudSkyMaterial(density, thickness, scale, rippleAmount, rippleScale, zenithColor, horizonColor, cloudLight, cloudDark, block)

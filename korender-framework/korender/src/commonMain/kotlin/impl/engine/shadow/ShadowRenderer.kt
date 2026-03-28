@@ -6,13 +6,13 @@ import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.FrameBufferDeclaration
+import com.zakgof.korender.impl.engine.FrameContext
+import com.zakgof.korender.impl.engine.FrameMaterialModifier
 import com.zakgof.korender.impl.engine.ImmediatelyFreeRetentionPolicy
 import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.Scene
 import com.zakgof.korender.impl.engine.TransientProperty
-import com.zakgof.korender.impl.engine.fbmTexGetter
-import com.zakgof.korender.impl.engine.noiseTexGetter
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
@@ -20,9 +20,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
 import com.zakgof.korender.impl.glgpu.FloatGetter
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.glgpu.Mat4Getter
-import com.zakgof.korender.impl.glgpu.UniformGetter
-import com.zakgof.korender.impl.glgpu.Vec3Getter
 import com.zakgof.korender.impl.material.BlurMaterial
 import com.zakgof.korender.impl.material.InternalBaseMaterial
 import com.zakgof.korender.impl.material.InternalMaterialModifier
@@ -60,7 +57,9 @@ internal object ShadowRenderer {
         ) ?: return null
 
         val shadowFrameMaterialModifier = updateShadowCamera(scene.renderContext, lightDirection, declaration)
-        scene.inventory.uniformBufferHolder.populateFrame(listOf(shadowFrameMaterialModifier), true)
+
+        // TODO LMM is ugly
+        scene.inventory.uniformBufferHolder.populateFrame(listOf(shadowFrameMaterialModifier, scene.lightMaterialModifier), true)
 
         frameBuffer.exec {
             scene.renderContext.state.set {
@@ -80,13 +79,13 @@ internal object ShadowRenderer {
                     renderableDeclaration.transparent,
                     renderableDeclaration.retentionPolicy
                 )
-                scene.renderRenderable(casterRenderableDeclaration, shadowFrameMaterialModifier.shadowCamera, isShadow = true)
+                scene.renderRenderable(casterRenderableDeclaration, shadowFrameMaterialModifier.frameContext.camera, isShadow = true)
             }
             scene.inventory.uniformBufferHolder.flush()
         }
 
         if (declaration.algorithm is InternalVsmShadow && declaration.algorithm.blurRadius != null) {
-            val texBlurRadius = declaration.algorithm.blurRadius * declaration.mapSize / shadowFrameMaterialModifier.shadowProjection.width
+            val texBlurRadius = declaration.algorithm.blurRadius * declaration.mapSize / shadowFrameMaterialModifier.frameContext.projection.width
             blurShadowMap(
                 id,
                 declaration,
@@ -104,7 +103,7 @@ internal object ShadowRenderer {
         return ShadowerData(
             outputShadowTexture(frameBuffer, declaration),
             outputPcfTexture(frameBuffer, declaration),
-            SHADOW_SHIFTER * orthoMatrix(shadowFrameMaterialModifier.shadowProjection) * shadowFrameMaterialModifier.shadowCamera.mat4,
+            SHADOW_SHIFTER * orthoMatrix(shadowFrameMaterialModifier.frameContext.projection) * shadowFrameMaterialModifier.frameContext.camera.mat4,
             listOf(
                 if (index == 0) 0f else declaration.near,
                 if (index == 0) 0f else declarations[index - 1].far,
@@ -116,7 +115,7 @@ internal object ShadowRenderer {
             mode(declaration),
             (declaration.algorithm as? InternalSoftwarePcfShadow)?.samples ?: 0,
             when (declaration.algorithm) {
-                is InternalSoftwarePcfShadow -> declaration.algorithm.blurRadius / shadowFrameMaterialModifier.shadowProjection.width
+                is InternalSoftwarePcfShadow -> declaration.algorithm.blurRadius / shadowFrameMaterialModifier.frameContext.projection.width
                 is InternalHardwarePcfShadow -> declaration.algorithm.bias
                 else -> 0f
             },
@@ -163,16 +162,14 @@ internal object ShadowRenderer {
         scene: Scene,
         texBlurRadius: Float,
     ) {
-        val uniforms = mutableMapOf<String, Any?>()
-
         val blurFrameBuffer = scene.inventory.frameBuffer(
             FrameBufferDeclaration("shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM), true, TransientProperty(ImmediatelyFreeRetentionPolicy))
         ) ?: return
 
         val blurVQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, true)
 
-        uniforms["colorTexture"] = frameBuffer.colorTextures[0]
-        uniforms["depthTexture"] = frameBuffer.depthTexture
+        scene.contextMaterialModifier.customTextureUniforms["colorTexture"] = frameBuffer.colorTextures[0]
+        scene.contextMaterialModifier.customTextureUniforms["depthTexture"] = frameBuffer.depthTexture!!
 
         blurFrameBuffer.exec {
             scene.renderContext.state.set { }
@@ -183,8 +180,8 @@ internal object ShadowRenderer {
 
         val blurHQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, false)
 
-        uniforms["colorTexture"] = blurFrameBuffer.colorTextures[0]
-        uniforms["depthTexture"] = blurFrameBuffer.depthTexture
+        scene.contextMaterialModifier.customTextureUniforms["colorTexture"] = blurFrameBuffer.colorTextures[0]
+        scene.contextMaterialModifier.customTextureUniforms["depthTexture"] = blurFrameBuffer.depthTexture!!
 
         frameBuffer.exec {
             scene.renderContext.state.set { }
@@ -207,7 +204,7 @@ internal object ShadowRenderer {
         renderContext: RenderContext,
         light: Vec3,
         declaration: CascadeDeclaration,
-    ): ShadowFrameMaterialModifier {
+    ): FrameMaterialModifier {
 
         val projection = renderContext.projection
         val camera = renderContext.camera
@@ -246,7 +243,7 @@ internal object ShadowRenderer {
         val shadowProjection = Projection(dim, dim, near, far, OrthoProjectionMode)
         val shadowCamera = DefaultCamera(cameraPos, light, up)
 
-        return ShadowFrameMaterialModifier(shadowProjection, shadowCamera, renderContext)
+        return FrameMaterialModifier(ShadowFrameContext(shadowProjection, shadowCamera, renderContext, declaration.mapSize))
     }
 
     private fun frustumCorners(
@@ -274,7 +271,6 @@ internal object ShadowRenderer {
             camera.position + upFar - rightFar + toFar,
         )
     }
-
 }
 
 internal class ShadowerData(
@@ -290,28 +286,17 @@ internal class ShadowerData(
     val f2: Float,
 )
 
-internal class ShadowFrameMaterialModifier(
-    val shadowProjection: Projection,
-    val shadowCamera: Camera,
+internal class ShadowFrameContext(
+    override val projection: Projection,
+    override val camera: Camera,
     val renderContext: RenderContext,
-) : InternalMaterialModifier() {
+    mapSize: Int,
+) : FrameContext {
 
-    override fun uniform(name: String): UniformGetter<*>? =
-        when (name) {
-            "noiseTexture" -> noiseTexGetter
-            "fbmTexture" -> fbmTexGetter
-            "view" -> Mat4Getter<ShadowFrameMaterialModifier> { it.shadowCamera.mat4 }
-            "projectionWidth" -> FloatGetter<ShadowFrameMaterialModifier> { it.shadowProjection.width }
-            "projectionHeight" -> FloatGetter<ShadowFrameMaterialModifier> { it.shadowProjection.height }
-            "projectionNear" -> FloatGetter<ShadowFrameMaterialModifier> { it.shadowProjection.near }
-            "projectionFar" -> FloatGetter<ShadowFrameMaterialModifier> { it.shadowProjection.far }
-            "cameraPos" -> Vec3Getter<ShadowFrameMaterialModifier> { it.shadowCamera.position }
-            "cameraDir" -> Vec3Getter<ShadowFrameMaterialModifier> { it.shadowCamera.direction }
-            "screenWidth" -> FloatGetter<ShadowFrameMaterialModifier> { it.renderContext.width.toFloat() }
-            "screenHeight" -> FloatGetter<ShadowFrameMaterialModifier> { it.renderContext.height.toFloat() }
-            "time" -> FloatGetter<ShadowFrameMaterialModifier> { (Platform.nanoTime() - renderContext.frameInfoManager.startNanos) * 1e-9f }
-            else -> super.uniform(name)
-        }
+    override val width = mapSize
+    override val height = mapSize
+    override val time
+        get() = (Platform.nanoTime() - renderContext.frameInfoManager.startNanos) * 1e-9f
 }
 
 internal class CasterMaterialModifier(

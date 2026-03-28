@@ -25,10 +25,10 @@ fun ShadowExample() =
                 Cascade(mapSize = 1024, near = 10.0f, 40.0f, 0f to 10f, hardwarePcf(bias = 0.05f))
             }
             DirectionalLight(Vec3(-1f, -1f, 2f), white(3.0f)) {
-                Cascade(mapSize = 1024, near = 10.0f, 40.0f, 0f to 10f, hardwarePcf(bias = 0.05f))
+                Cascade(mapSize = 1024, near = 10.0f, 40.0f, 0f to 10f, softwarePcf(bias = 0.05f))
             }
             DirectionalLight(Vec3(0f, -1f, -3f), white(4.0f)) {
-                Cascade(mapSize = 1024, near = 10.0f, 40.0f, 0f to 10f, hardwarePcf(bias = 0.05f))
+                Cascade(mapSize = 1024, near = 10.0f, 40.0f, 0f to 10f, vsm())
             }
             AmbientLight(white(0.05f))
 
@@ -53,6 +53,6 @@ fun ShadowExample() =
                     Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
                 }
             }
-            // PostProcess(fragment("!shader/effect/shadow-debug.frag"))
+            // PostProcess(customPostProcessingFilter("!shader/effect/shadow-debug.frag"))
         }
     }
