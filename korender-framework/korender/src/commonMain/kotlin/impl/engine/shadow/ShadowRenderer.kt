@@ -4,7 +4,6 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Platform
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
-import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.FrameBufferDeclaration
 import com.zakgof.korender.impl.engine.ImmediatelyFreeRetentionPolicy
@@ -12,27 +11,19 @@ import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.Scene
 import com.zakgof.korender.impl.engine.TransientProperty
-import com.zakgof.korender.impl.engine.fbmTex
 import com.zakgof.korender.impl.engine.fbmTexGetter
-import com.zakgof.korender.impl.engine.noiseTex
 import com.zakgof.korender.impl.engine.noiseTexGetter
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_BUFFER_BIT
-import com.zakgof.korender.impl.glgpu.Color4List
 import com.zakgof.korender.impl.glgpu.FloatGetter
-import com.zakgof.korender.impl.glgpu.FloatList
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
-import com.zakgof.korender.impl.glgpu.GlGpuShadowTextureList
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.glgpu.GlGpuTextureList
-import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.Mat4Getter
-import com.zakgof.korender.impl.glgpu.Mat4List
-import com.zakgof.korender.impl.glgpu.TextureGetter
 import com.zakgof.korender.impl.glgpu.UniformGetter
 import com.zakgof.korender.impl.glgpu.Vec3Getter
+import com.zakgof.korender.impl.material.BlurMaterial
 import com.zakgof.korender.impl.material.InternalBaseMaterial
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.projection.OrthoProjectionMode
@@ -80,41 +71,22 @@ internal object ShadowRenderer {
                 // TODO: renderable or material flag to disable shadow casting
                 it.material is InternalBaseMaterial
             }.forEach { renderableDeclaration ->
-
-                val shadowMaterialModifier = InternalMaterialModifier {
-
-                    // it.vertShaderFile = if (renderableDeclaration.base == BaseMaterial.Billboard) "!shader/billboard.vert" else "!shader/base.vert"
-                    it.fragShaderFile = "!shader/caster.frag"
-                    it.plugins["vprojection"] = "!shader/plugin/vprojection.ortho.vert"
-
-                    if (declaration.fixedYRange != null) {
-                        it.plugins["vprojection"] = "!shader/plugin/vprojection.fixedyrange.vert"
-                        it.uniforms["fixedYMin"] = declaration.fixedYRange.first
-                        it.uniforms["fixedYMax"] = declaration.fixedYRange.second
-                    }
-                    when (declaration.algorithm) {
-                        is InternalVsmShadow -> it.shaderDefs += "VSM_SHADOW"
-                        is InternalHardShadow -> it.shaderDefs += "HARD_SHADOW"
-                        is InternalSoftwarePcfShadow -> it.shaderDefs += "PCSS_SHADOW"
-                        is InternalHardwarePcfShadow -> it.shaderDefs += "HARDWARE_PCF_SHADOW"
-                    }
-                }
-
+                val casterModifier = CasterMaterialModifier(declaration)
                 val casterRenderableDeclaration = RenderableDeclaration(
-                    renderableDeclaration.base,
-                    renderableDeclaration.materialModifiers + shadowMaterialModifier,
+                    renderableDeclaration.material,
+                    listOf(casterModifier),
                     renderableDeclaration.mesh,
                     renderableDeclaration.transform,
                     renderableDeclaration.transparent,
                     renderableDeclaration.retentionPolicy
                 )
-                scene.renderRenderable(casterRenderableDeclaration, shadowCamera, isShadow = true)
+                scene.renderRenderable(casterRenderableDeclaration, shadowFrameMaterialModifier.shadowCamera, isShadow = true)
             }
             scene.inventory.uniformBufferHolder.flush()
         }
 
         if (declaration.algorithm is InternalVsmShadow && declaration.algorithm.blurRadius != null) {
-            val texBlurRadius = declaration.algorithm.blurRadius * declaration.mapSize / shadowProjection.width
+            val texBlurRadius = declaration.algorithm.blurRadius * declaration.mapSize / shadowFrameMaterialModifier.shadowProjection.width
             blurShadowMap(
                 id,
                 declaration,
@@ -132,7 +104,7 @@ internal object ShadowRenderer {
         return ShadowerData(
             outputShadowTexture(frameBuffer, declaration),
             outputPcfTexture(frameBuffer, declaration),
-            SHADOW_SHIFTER * orthoMatrix(shadowProjection) * shadowCamera.mat4,
+            SHADOW_SHIFTER * orthoMatrix(shadowFrameMaterialModifier.shadowProjection) * shadowFrameMaterialModifier.shadowCamera.mat4,
             listOf(
                 if (index == 0) 0f else declaration.near,
                 if (index == 0) 0f else declarations[index - 1].far,
@@ -144,7 +116,7 @@ internal object ShadowRenderer {
             mode(declaration),
             (declaration.algorithm as? InternalSoftwarePcfShadow)?.samples ?: 0,
             when (declaration.algorithm) {
-                is InternalSoftwarePcfShadow -> declaration.algorithm.blurRadius / shadowProjection.width
+                is InternalSoftwarePcfShadow -> declaration.algorithm.blurRadius / shadowFrameMaterialModifier.shadowProjection.width
                 is InternalHardwarePcfShadow -> declaration.algorithm.bias
                 else -> 0f
             },
@@ -189,7 +161,7 @@ internal object ShadowRenderer {
         declaration: CascadeDeclaration,
         frameBuffer: GlGpuFrameBuffer,
         scene: Scene,
-        texBlurRadius: Float
+        texBlurRadius: Float,
     ) {
         val uniforms = mutableMapOf<String, Any?>()
 
@@ -197,7 +169,7 @@ internal object ShadowRenderer {
             FrameBufferDeclaration("shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM), true, TransientProperty(ImmediatelyFreeRetentionPolicy))
         ) ?: return
 
-        val blurVQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, "!shader/effect/blurv.frag")
+        val blurVQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, true)
 
         uniforms["colorTexture"] = frameBuffer.colorTextures[0]
         uniforms["depthTexture"] = frameBuffer.depthTexture
@@ -209,7 +181,7 @@ internal object ShadowRenderer {
             scene.inventory.uniformBufferHolder.flush()
         }
 
-        val blurHQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, "!shader/effect/blurh.frag")
+        val blurHQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, false)
 
         uniforms["colorTexture"] = blurFrameBuffer.colorTextures[0]
         uniforms["depthTexture"] = blurFrameBuffer.depthTexture
@@ -222,13 +194,9 @@ internal object ShadowRenderer {
         }
     }
 
-    private fun blurQuadRenderableDeclaration(texBlurRadius: Float, fragShader: String) = RenderableDeclaration(
-        BaseMaterial.Screen,
-        listOf(InternalMaterialModifier {
-            it.vertShaderFile = "!shader/screen.vert"
-            it.fragShaderFile = fragShader
-            it.uniforms["radius"] = texBlurRadius
-        }),
+    private fun blurQuadRenderableDeclaration(texBlurRadius: Float, vertical: Boolean) = RenderableDeclaration(
+        BlurMaterial(vertical, texBlurRadius),
+        listOf(),
         ScreenQuad(ImmediatelyFreeRetentionPolicy),
         Transform.IDENTITY,
         false,
@@ -238,7 +206,7 @@ internal object ShadowRenderer {
     private fun updateShadowCamera(
         renderContext: RenderContext,
         light: Vec3,
-        declaration: CascadeDeclaration
+        declaration: CascadeDeclaration,
     ): ShadowFrameMaterialModifier {
 
         val projection = renderContext.projection
@@ -285,7 +253,7 @@ internal object ShadowRenderer {
         projection: Projection,
         camera: Camera,
         near: Float,
-        far: Float
+        far: Float,
     ): List<Vec3> {
         camera as DefaultCamera
         val upNear = camera.up * (projection.height * 0.5f * near / projection.near)
@@ -319,13 +287,13 @@ internal class ShadowerData(
     val mode: Int,
     val i1: Int,
     val f1: Float,
-    val f2: Float
+    val f2: Float,
 )
 
 internal class ShadowFrameMaterialModifier(
     val shadowProjection: Projection,
     val shadowCamera: Camera,
-    val renderContext: RenderContext
+    val renderContext: RenderContext,
 ) : InternalMaterialModifier() {
 
     override fun uniform(name: String): UniformGetter<*>? =
@@ -344,4 +312,20 @@ internal class ShadowFrameMaterialModifier(
             "time" -> FloatGetter<ShadowFrameMaterialModifier> { (Platform.nanoTime() - renderContext.frameInfoManager.startNanos) * 1e-9f }
             else -> super.uniform(name)
         }
+}
+
+internal class CasterMaterialModifier(
+    val declaration: CascadeDeclaration,
+) : InternalMaterialModifier(
+    "fixedYMin" to FloatGetter<CasterMaterialModifier> { it.declaration.fixedYRange!!.first },
+    "fixedYMax" to FloatGetter<CasterMaterialModifier> { it.declaration.fixedYRange!!.second }
+) {
+    override val defs: Set<String>
+        get() = setOfNotNull(
+            "SHADOW_CASTER",
+            if (declaration.algorithm is InternalVsmShadow) "VSM_SHADOW" else null
+        )
+
+    override val plugins: List<Pair<String, String>>
+        get() = listOfNotNull(declaration.fixedYRange?.let { "vprojection" to "!shader/plugin/vprojection.fixedyrange.vert" })
 }

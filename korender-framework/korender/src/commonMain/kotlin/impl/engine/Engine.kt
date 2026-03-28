@@ -22,7 +22,6 @@ import com.zakgof.korender.MutableMesh
 import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.Platform
 import com.zakgof.korender.PostProcessingEffect
-import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ProjectionMode
@@ -78,19 +77,20 @@ import com.zakgof.korender.impl.image.InternalImage
 import com.zakgof.korender.impl.image.impl.image.InternalImage3D
 import com.zakgof.korender.impl.material.AdjustmentMaterial
 import com.zakgof.korender.impl.material.BlurMaterial
+import com.zakgof.korender.impl.material.CubeSkyMaterial
+import com.zakgof.korender.impl.material.FastCloudSkyMaterial
 import com.zakgof.korender.impl.material.FireEffect
+import com.zakgof.korender.impl.material.FireballEffect
+import com.zakgof.korender.impl.material.FogMaterial
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
 import com.zakgof.korender.impl.material.ImageTextureArrayDeclaration
 import com.zakgof.korender.impl.material.ImageTextureDeclaration
 import com.zakgof.korender.impl.material.InternalBaseMaterial
-import com.zakgof.korender.impl.material.InternalBillboardEffect
 import com.zakgof.korender.impl.material.InternalBillboardMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
-import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPipeMaterial
 import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
-import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalSkyMaterial
 import com.zakgof.korender.impl.material.InternalTerrainMaterial
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
@@ -98,7 +98,14 @@ import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureArrayDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
+import com.zakgof.korender.impl.material.SmokeEffect
+import com.zakgof.korender.impl.material.StarrySkyMaterial
+import com.zakgof.korender.impl.material.TextureSkyMaterial
+import com.zakgof.korender.impl.material.WaterMaterial
+import com.zakgof.korender.impl.material.bloomMipEffect
+import com.zakgof.korender.impl.material.bloomSimpleEffect
 import com.zakgof.korender.impl.material.simpleBlur
+import com.zakgof.korender.impl.material.ssrEffect
 import com.zakgof.korender.impl.prefab.terrain.Clipmaps
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
 import com.zakgof.korender.impl.projection.LogProjectionMode
@@ -114,7 +121,6 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
-import kotlin.math.pow
 
 internal class Engine(
     width: Int,
@@ -304,7 +310,8 @@ internal class Engine(
         override fun terrain(block: TerrainMaterialContext.() -> Unit) =
             InternalTerrainMaterial().also { block.invoke(it) }
 
-        override fun pipe() = InternalPipeMaterial()
+        override fun pipe(block: BaseMaterialContext.() -> Unit) =
+            InternalPipeMaterial().also { block.invoke(it) }
 
         override fun blurVert(radius: Float) =
             BlurMaterial(true, radius)
@@ -322,105 +329,34 @@ internal class Engine(
             FireEffect(strength)
 
         override fun fireball(power: Float) =
-            InternalBillboardEffect(
-                "!shader/effect/fireball.frag",
-                "power" to power
-            )
+            FireballEffect(power)
 
         override fun smoke(density: Float, seed: Float) =
-            InternalBillboardEffect(
-                "!shader/effect/smoke.frag",
-                "density" to density,
-                "seed" to seed
-            )
+            SmokeEffect(density, seed)
 
         override fun water(waterColor: ColorRGB, transparency: Float, waveScale: Float, waveMagnitude: Float, sky: SkyMaterial) =
-            InternalPostProcessingMaterial(
-                "!shader/effect/water.frag",
-                "waterColor" to waterColor,
-                "transparency" to transparency,
-                "waveScale" to waveScale,
-                "waveMagnitude" to waveMagnitude,
-            ) {
-                (sky as InternalSkyMaterial).compile()
-            }
-
+            WaterMaterial(waterColor, transparency, waveScale, waveMagnitude, sky as InternalSkyMaterial)
 
         override fun fxaa() =
             InternalPostProcessingMaterial("!shader/effect/fxaa.frag")
 
-        override fun fastCloudSky(density: Float, thickness: Float, scale: Float, rippleAmount: Float, rippleScale: Float, zenithColor: ColorRGB, horizonColor: ColorRGB, cloudLight: Float, cloudDark: Float) =
-            InternalSkyMaterial(
-                "!shader/plugin/sky.fastcloud.frag",
-                "density" to density,
-                "thickness" to thickness,
-                "scale" to scale,
-                "zenithcolor" to zenithColor,
-                "horizoncolor" to horizonColor,
-                "rippleamount" to rippleAmount,
-                "ripplescale" to rippleScale,
-                "cloudlight" to cloudLight,
-                "clouddark" to cloudDark
-            )
+        override fun fastCloudSky(density: Float, thickness: Float, scale: Float, rippleAmount: Float, rippleScale: Float, zenithColor: ColorRGB, horizonColor: ColorRGB, cloudLight: Float, cloudDark: Float, block: MaterialContext.() -> Unit) =
+            FastCloudSkyMaterial(density, thickness, scale, rippleAmount, rippleScale, zenithColor, horizonColor, cloudLight, cloudDark, block)
 
-        override fun starrySky(colorness: Float, density: Float, speed: Float, size: Float) =
-            InternalSkyMaterial(
-                "!shader/plugin/sky.starry.frag",
-                "colorness" to colorness,
-                "density" to density,
-                "speed" to speed,
-                "size" to size
-            )
+        override fun starrySky(colorness: Float, density: Float, speed: Float, size: Float, block: MaterialContext.() -> Unit) =
+            StarrySkyMaterial(colorness, density, speed, size, block)
 
-        override fun cubeSky(cubeTexture: CubeTextureDeclaration) =
-            InternalSkyMaterial(
-                "!shader/plugin/sky.cube.frag",
-                "cubeTexture" to cubeTexture
-            )
+        override fun cubeSky(cubeTexture: CubeTextureDeclaration, block: MaterialContext.() -> Unit) =
+            CubeSkyMaterial(cubeTexture, block)
 
-        override fun textureSky(texture: TextureDeclaration) =
-            InternalSkyMaterial(
-                "!shader/plugin/sky.texture.frag",
-                "skyTexture" to texture
-            )
+        override fun textureSky(texture: TextureDeclaration, block: MaterialContext.() -> Unit) =
+            TextureSkyMaterial(texture, block)
 
         override fun fog(density: Float, color: ColorRGB) =
-            InternalPostProcessingMaterial(
-                "!shader/effect/fog.frag",
-                "density" to density,
-                "fogColor" to color
-            )
+            FogMaterial(density, color)
 
-        override fun ssr(downsample: Int, maxReflectionDistance: Float, linearSteps: Int, binarySteps: Int, lastStepRatio: Float, envTexture: CubeTextureDeclaration?): PostShadingEffect {
-            return InternalPostShadingEffect(
-                effectPasses = listOf(
-                    InternalPassDeclaration(
-                        mapOf("colorInputTexture" to "colorTexture"),
-                        listOf(InternalMaterialModifier {
-                            it.fragShaderFile = "!shader/effect/ssr.frag"
-                            it.uniforms["linearSteps"] = linearSteps
-                            it.uniforms["binarySteps"] = binarySteps
-                            it.uniforms["maxReflectionDistance"] = maxReflectionDistance
-                            val nextStepRatio = lastStepRatio.pow(1f / (linearSteps + 1f))
-                            it.uniforms["nextStepRatio"] = nextStepRatio
-                            it.uniforms["startStep"] = maxReflectionDistance * (1f - nextStepRatio) / (1f - nextStepRatio.pow(linearSteps))
-
-                        }),
-                        null,
-                        FrameTarget(renderContext.width / downsample, renderContext.height / downsample, "ssrTexture", "ssrDepth"),
-                        currentRetentionPolicy
-                    )
-                ),
-                keepTextures = setOf("ssrTexture"),
-                compositionMaterialModifier = {
-                    it.shaderDefs += "SSR"
-                    envTexture?.let { et ->
-                        it.uniforms["envTexture"] = et
-                        it.shaderDefs += "SSR_ENV"
-                    }
-                }, currentRetentionPolicy
-            )
-        }
+        override fun ssr(downsample: Int, maxReflectionDistance: Float, linearSteps: Int, binarySteps: Int, lastStepRatio: Float, envTexture: CubeTextureDeclaration?) =
+            ssrEffect(downsample, maxReflectionDistance, linearSteps, binarySteps, lastStepRatio, envTexture, renderContext, currentRetentionPolicy)
 
         override fun bloom(threshold: Float, amount: Float, radius: Float, downsample: Int) =
             bloomSimpleEffect(renderContext, currentRetentionPolicy, threshold, amount, radius, downsample)

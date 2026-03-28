@@ -46,6 +46,7 @@ interface MaterialContext {
 
     fun float(key: String, value: Float)
     fun int(key: String, value: Int)
+    fun vec2(key: String, value: Vec2)
     fun vec3(key: String, value: Vec3)
     fun texture(key: String, value: TextureDeclaration)
 }

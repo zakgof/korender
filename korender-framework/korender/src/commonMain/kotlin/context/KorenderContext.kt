@@ -369,7 +369,7 @@ interface KorenderContext {
      * Used with the base material.
      * @return material modifier
      */
-    fun pipe(): PipeMaterial
+    fun pipe(block: BaseMaterialContext.() -> Unit = {}): PipeMaterial
 
     // TODO
 //    /**
@@ -504,6 +504,7 @@ interface KorenderContext {
         horizonColor: ColorRGB = ColorRGB(0xB8CAE9),
         cloudLight: Float = 1.0f,
         cloudDark: Float = 0.7f,
+        block: (MaterialContext) -> Unit = {},
     ): SkyMaterial
 
     /**
@@ -514,21 +515,21 @@ interface KorenderContext {
      * @param size star size factor
      * @return material modifier
      */
-    fun starrySky(colorness: Float = 0.8f, density: Float = 20.0f, speed: Float = 1.0f, size: Float = 15.0f): SkyMaterial
+    fun starrySky(colorness: Float = 0.8f, density: Float = 20.0f, speed: Float = 1.0f, size: Float = 15.0f, block: MaterialContext.() -> Unit = {}): SkyMaterial
 
     /**
      * Creates a sky material modifier from a cube texture.
      * @param cubeTexture cube texture declaration
      * @return material modifier
      */
-    fun cubeSky(cubeTexture: CubeTextureDeclaration): SkyMaterial
+    fun cubeSky(cubeTexture: CubeTextureDeclaration, block: MaterialContext.() -> Unit = {}): SkyMaterial
 
     /**
      * Creates a sky material modifier from a flat texture.
      * @param texture texture declaration
      * @return material modifier
      */
-    fun textureSky(texture: TextureDeclaration): SkyMaterial
+    fun textureSky(texture: TextureDeclaration, block: MaterialContext.() -> Unit = {}): SkyMaterial
 
 
     /**

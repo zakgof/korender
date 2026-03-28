@@ -15,13 +15,13 @@ import com.zakgof.korender.TerrainMaterial
 import com.zakgof.korender.TerrainMaterialContext
 import com.zakgof.korender.TextureArrayDeclaration
 import com.zakgof.korender.TextureDeclaration
-import com.zakgof.korender.impl.engine.MaterialDeclaration
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.glgpu.ColorRGBAGetter
 import com.zakgof.korender.impl.glgpu.ColorRGBGetter
 import com.zakgof.korender.impl.glgpu.FloatGetter
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.IntGetter
+import com.zakgof.korender.impl.glgpu.Mat4ListGetter
 import com.zakgof.korender.impl.glgpu.TextureGetter
 import com.zakgof.korender.impl.glgpu.UniformGetter
 import com.zakgof.korender.impl.glgpu.UniformSupplier
@@ -29,6 +29,7 @@ import com.zakgof.korender.impl.glgpu.Vec2Getter
 import com.zakgof.korender.impl.glgpu.Vec3Getter
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
@@ -38,7 +39,7 @@ import com.zakgof.korender.math.Vec3
 //        BaseMaterial.Renderable -> "!shader/base.vert"
 //        BaseMaterial.Billboard -> "!shader/billboard.vert"
 //        BaseMaterial.Screen, BaseMaterial.Shading, BaseMaterial.Composition, BaseMaterial.DecalBlend ->
-//        BaseMaterial.Font -> "!shader/gui/font.vert"
+//        BaseMaterial.Font ->
 //        BaseMaterial.Image -> "!shader/gui/image.vert"
 //        BaseMaterial.Sky -> "!shader/sky/sky.vert"
 //        BaseMaterial.Decal ->
@@ -46,8 +47,8 @@ import com.zakgof.korender.math.Vec3
 //    var fragShaderFile: String = when (base) {
 //        BaseMaterial.Renderable, BaseMaterial.Billboard -> if (deferredShading) "!shader/deferred/geometry.frag" else "!shader/forward.frag"
 //        BaseMaterial.Screen -> "!shader/screen.frag"
-//        BaseMaterial.Font -> "!shader/gui/font.frag"
-//        BaseMaterial.Image -> "!shader/gui/image.frag"
+//        BaseMaterial.Font ->
+//        BaseMaterial.Image ->
 //        BaseMaterial.Sky -> ""
 //        BaseMaterial.Shading ->
 //        BaseMaterial.Composition -> "!shader/deferred/composition.frag"
@@ -63,6 +64,7 @@ internal open class InternalMaterialModifier(vararg getters: Pair<String, Unifor
     private val customPlugins = mutableListOf<Pair<String, String>>()
     private val customFloatUniforms = mutableMapOf<String, Float>()
     private val customIntUniforms = mutableMapOf<String, Int>()
+    private val customVec2Uniforms = mutableMapOf<String, Vec2>()
     private val customVec3Uniforms = mutableMapOf<String, Vec3>()
     private val gettersMap = getters.toMap()
     val customTextureUniforms = mutableMapOf<String, Any>()
@@ -95,6 +97,10 @@ internal open class InternalMaterialModifier(vararg getters: Pair<String, Unifor
         customIntUniforms[key] = value
     }
 
+    override fun vec2(key: String, value: Vec2) {
+        customVec2Uniforms[key] = value
+    }
+
     override fun vec3(key: String, value: Vec3) {
         customVec3Uniforms[key] = value
     }
@@ -105,6 +111,7 @@ internal open class InternalMaterialModifier(vararg getters: Pair<String, Unifor
 
     override fun uniform(name: String): UniformGetter<*>? =
         customFloatUniforms[name]?.let { FloatGetter<InternalMaterialModifier> { it.customFloatUniforms[name] } } ?: customIntUniforms[name]?.let { IntGetter<InternalMaterialModifier> { it.customIntUniforms[name] } }
+        ?: customVec2Uniforms[name]?.let { Vec2Getter<InternalMaterialModifier> { it.customVec2Uniforms[name] } }
         ?: customVec3Uniforms[name]?.let { Vec3Getter<InternalMaterialModifier> { it.customVec3Uniforms[name] } } ?: customTextureUniforms[name]?.let { TextureGetter<InternalMaterialModifier> { it.customTextureUniforms[name] } }
         ?: gettersMap[name]
 }
@@ -113,7 +120,7 @@ internal open class InternalMaterial(
     vertexShaderFile: String,
     deferredFragmentShaderFile: String,
     forwardFragmentShaderFile: String,
-    vararg getters: Pair<String, UniformGetter<*>>
+    vararg getters: Pair<String, UniformGetter<*>>,
 ) : InternalMaterialModifier(*getters), MaterialContext, Material {
 
     constructor(vertexShaderFile: String, fragmentShaderFile: String, vararg getters: Pair<String, UniformGetter<*>>) :
@@ -127,16 +134,13 @@ internal open class InternalMaterial(
         deferredShading: Boolean,
         retentionPolicy: RetentionPolicy,
         modifiers: List<InternalMaterialModifier>,
-    ) =
-        MaterialDeclaration(
-            ShaderDeclaration(
-                vertexShaderFile,
-                if (deferredShading) deferredFragmentShaderFile else forwardFragmentShaderFile,
-                totalDefs + modifiers.flatMap { it.totalDefs },
-                (totalPlugins + modifiers.flatMap { it.totalPlugins }).toMap(),
-                retentionPolicy
-            ),
-            listOf(this) + modifiers
+    ) = ShaderDeclaration(
+            vertexShaderFile,
+            if (deferredShading) deferredFragmentShaderFile else forwardFragmentShaderFile,
+            totalDefs + modifiers.flatMap { it.totalDefs },
+            (totalPlugins + modifiers.flatMap { it.totalPlugins }).toMap(),
+            listOf(this) + modifiers,
+            retentionPolicy
         )
 }
 
@@ -160,6 +164,7 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
     override var emissionTexture: TextureDeclaration? = null
     override var occlusionTexture: TextureDeclaration? = null
     override var ibl: SkyMaterial? = null
+    var jntMatrices: List<Mat4>? = null
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
@@ -178,6 +183,7 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
             "specularGlossinessTexture" -> TextureGetter(InternalBaseMaterial::specularGlossinessTexture)
             "occlusionTexture" -> TextureGetter(InternalBaseMaterial::occlusionTexture)
             "emissionTexture" -> TextureGetter(InternalBaseMaterial::emissionTexture)
+            "jntMatrices" -> Mat4ListGetter(InternalBaseMaterial::jntMatrices)
             else -> super.uniform(name)
         }
 
@@ -234,7 +240,6 @@ internal class InternalTerrainMaterial : InternalBaseMaterial("!shader/terrain.v
     override var outsideHeight: Float = 0f
     override var terrainCenter: Vec3 = Vec3.ZERO
 
-
     override val defs: Set<String>
         get() = setOf("TERRAIN")
 
@@ -266,7 +271,7 @@ internal class InternalPipeMaterial : InternalBaseMaterial("!shader/pipe.vert"),
 
 internal open class InternalPostProcessingMaterial(
     fragmentShaderFile: String,
-    vararg getters: Pair<String, UniformGetter<*>>
+    vararg getters: Pair<String, UniformGetter<*>>,
 ) : InternalMaterial("!shader/screen.vert", fragmentShaderFile, *getters), PostProcessingMaterial
 
 internal abstract class InternalBillboardEffect(val fragmentShaderFile: String, vararg getters: Pair<String, UniformGetter<*>>) : BillboardEffect, UniformSupplier {
@@ -274,8 +279,9 @@ internal abstract class InternalBillboardEffect(val fragmentShaderFile: String, 
     override fun uniform(name: String) = getterMap[name]
 }
 
-internal open class InternalSkyMaterial(val skyPlugin: String) :
-    InternalMaterial("!shader/sky/sky.vert", "!shader/sky/sky.frag"), SkyMaterial {
+internal open class InternalSkyMaterial(val skyPlugin: String, vararg getters: Pair<String, UniformGetter<*>>) :
+    InternalMaterial("!shader/sky/sky.vert", "!shader/sky/sky.frag", *getters),
+    SkyMaterial {
 
     override val plugins: List<Pair<String, String>>
         get() = listOf("sky" to skyPlugin)
@@ -293,4 +299,13 @@ internal class DecalBlendMaterial(
             "decalNormal" -> TextureGetter<DecalBlendMaterial> { it.decalNormal }
             else -> super.uniform(name)
         }
+}
+
+internal class InstancingMaterialModifier : InternalMaterialModifier(
+    "jntTexture" to TextureGetter<InstancingMaterialModifier> { it.jntTexture }
+) {
+    var jntTexture: GlGpuTexture? = null
+
+    override val defs: Set<String>
+        get() = setOf("INSTANCING")
 }

@@ -249,13 +249,15 @@ internal class GlGpuShader(
 
     private fun fetchUniforms(): List<CompiledUniformBinding> {
         val numUniforms = glGetProgrami(programHandle, GL_ACTIVE_UNIFORMS)
-        return (0 until numUniforms).map { i ->
+        return (0 until numUniforms).mapNotNull { i ->
             val name: String = glGetActiveUniform(programHandle, i)
             val location = glGetUniformLocation(programHandle, name)
-            val index = uniformSuppliers.indices.firstOrNull { uniformSuppliers[it].uniform(name) != null }
-            if (index == null)
-                throw KorenderException("Uniform $name not declared in materials for shader $this")
-            CompiledUniformBinding(location!!, name, index, uniformSuppliers[index].uniform(name)!!)
+            location?.let {
+                val index = uniformSuppliers.indices.firstOrNull { uniformSuppliers[it].uniform(name) != null }
+                if (index == null)
+                    throw KorenderException("Uniform $name not declared in materials for shader $this")
+                CompiledUniformBinding(location, name, index, uniformSuppliers[index].uniform(name)!!)
+            }
         }
     }
 

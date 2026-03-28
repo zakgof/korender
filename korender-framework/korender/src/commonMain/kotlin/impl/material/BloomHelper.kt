@@ -1,24 +1,10 @@
-package com.zakgof.korender.impl.engine
+package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.impl.glgpu.FloatGetter
-import com.zakgof.korender.impl.glgpu.UniformGetter
-import com.zakgof.korender.impl.material.InternalMaterialModifier
-import com.zakgof.korender.impl.material.InternalPostShadingEffect
-
-internal class BloomCompositionMaterialModifier(val bloomAmount: Float) : InternalMaterialModifier() {
-    override val defs: Set<String>
-        get() = setOf("BLOOM")
-
-    override fun uniform(name: String): UniformGetter<*>? =
-        if (name == "bloomAmount")
-            FloatGetter<BloomCompositionMaterialModifier> { it.bloomAmount }
-        else
-            super.uniform(name)
-}
 
 internal fun bloomMipEffect(
-    renderContext: RenderContext, currentRetentionPolicy: RetentionPolicy,
+    renderContext: com.zakgof.korender.impl.engine.RenderContext, currentRetentionPolicy: RetentionPolicy,
     threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float,
 ) = InternalPostShadingEffect(
     effectPasses = listOf(bloomBrightnessPass(renderContext, currentRetentionPolicy, downsample, threshold)) +
@@ -30,7 +16,7 @@ internal fun bloomMipEffect(
 )
 
 internal fun bloomSimpleEffect(
-    renderContext: RenderContext, currentRetentionPolicy: RetentionPolicy,
+    renderContext: com.zakgof.korender.impl.engine.RenderContext, currentRetentionPolicy: RetentionPolicy,
     threshold: Float, amount: Float, radius: Float, downsample: Int,
 ) = InternalPostShadingEffect(
     effectPasses = listOf(
@@ -43,19 +29,15 @@ internal fun bloomSimpleEffect(
     currentRetentionPolicy
 )
 
-private fun bloomBrightnessPass(renderContext: RenderContext, currentRetentionPolicy: RetentionPolicy, brightnessDownsample: Int, threshold: Float) =
-    InternalPassDeclaration(
+private fun bloomBrightnessPass(renderContext: com.zakgof.korender.impl.engine.RenderContext, currentRetentionPolicy: RetentionPolicy, brightnessDownsample: Int, threshold: Float) =
+    _root_ide_package_.com.zakgof.korender.impl.engine.InternalPassDeclaration(
         mapOf(
             "colorInputTexture" to "colorTexture",
             "depthInputTexture" to "depthTexture"
         ),
-        listOf(
-            InternalMaterialModifier {
-                it.fragShaderFile = "!shader/effect/bloom.frag"
-                it.uniforms["threshold"] = threshold
-            }),
+        BloomMaterial(threshold),
         null,
-        FrameTarget(
+        _root_ide_package_.com.zakgof.korender.impl.engine.FrameTarget(
             renderContext.width / brightnessDownsample,
             renderContext.height / brightnessDownsample,
             "downsample0",
@@ -65,24 +47,20 @@ private fun bloomBrightnessPass(renderContext: RenderContext, currentRetentionPo
     )
 
 private fun bloomDownsamplePasses(
-    renderContext: RenderContext,
+    renderContext: com.zakgof.korender.impl.engine.RenderContext,
     currentRetentionPolicy: RetentionPolicy,
     brightnessDownsample: Int,
     passes: Int,
     offset: Float,
 ) = (1..passes).map { pass ->
-    InternalPassDeclaration(
+    _root_ide_package_.com.zakgof.korender.impl.engine.InternalPassDeclaration(
         mapOf(
             "colorInputTexture" to "downsample${pass - 1}",
             "depthInputTexture" to "bloomDepth"
         ),
-        listOf(
-            InternalMaterialModifier {
-                it.fragShaderFile = "!shader/effect/kawase.frag"
-                it.uniforms["offset"] = offset
-            }),
+        KawaseMaterial(offset, null),
         null,
-        FrameTarget(
+        _root_ide_package_.com.zakgof.korender.impl.engine.FrameTarget(
             renderContext.width / (brightnessDownsample shl pass),
             renderContext.height / (brightnessDownsample shl pass),
             "downsample${pass}",
@@ -93,28 +71,22 @@ private fun bloomDownsamplePasses(
 }
 
 private fun bloomUpsamplePasses(
-    renderContext: RenderContext,
+    renderContext: com.zakgof.korender.impl.engine.RenderContext,
     currentRetentionPolicy: RetentionPolicy,
     brightnessDownsample: Int,
     passes: Int,
     offset: Float,
     highResolutionRatio: Float,
 ) = (passes downTo 1).map { pass ->
-    InternalPassDeclaration(
+    _root_ide_package_.com.zakgof.korender.impl.engine.InternalPassDeclaration(
         mapOf(
             "colorInputTexture" to if (pass == passes) "downsample${pass}" else "upsample${pass}",
             "highResTexture" to "downsample${pass - 1}",
             "depthInputTexture" to "bloomDepth"
         ),
-        listOf(
-            InternalMaterialModifier {
-                it.fragShaderFile = "!shader/effect/kawase.frag"
-                it.uniforms["offset"] = offset
-                it.uniforms["highResolutionRatio"] = highResolutionRatio
-                it.shaderDefs += "UPSAMPLE"
-            }),
+        KawaseMaterial(offset, highResolutionRatio),
         null,
-        FrameTarget(
+        _root_ide_package_.com.zakgof.korender.impl.engine.FrameTarget(
             renderContext.width / (brightnessDownsample shl pass),
             renderContext.height / (brightnessDownsample shl pass),
             (if (pass == 1) "bloomTexture" else "upsample${pass - 1}"),
@@ -124,19 +96,15 @@ private fun bloomUpsamplePasses(
     )
 }
 
-private fun bloomVerticalBlur(renderContext: RenderContext, currentRetentionPolicy: RetentionPolicy, downsample: Int, radius: Float) =
-    InternalPassDeclaration(
+private fun bloomVerticalBlur(renderContext: com.zakgof.korender.impl.engine.RenderContext, currentRetentionPolicy: RetentionPolicy, downsample: Int, radius: Float) =
+    _root_ide_package_.com.zakgof.korender.impl.engine.InternalPassDeclaration(
         mapOf(
             "colorInputTexture" to "downsample0",
             "depthInputTexture" to "bloomDepth"
         ),
-        listOf(
-            InternalMaterialModifier {
-                it.fragShaderFile = "!shader/effect/blurv.frag"
-                it.uniforms["radius"] = radius
-            }),
+        BlurMaterial(true, radius),
         null,
-        FrameTarget(
+        _root_ide_package_.com.zakgof.korender.impl.engine.FrameTarget(
             renderContext.width / downsample,
             renderContext.height / downsample,
             "downsample1",
@@ -145,19 +113,15 @@ private fun bloomVerticalBlur(renderContext: RenderContext, currentRetentionPoli
         currentRetentionPolicy
     )
 
-private fun bloomHorizontalBlur(renderContext: RenderContext, currentRetentionPolicy: RetentionPolicy, downsample: Int, radius: Float) =
-    InternalPassDeclaration(
+private fun bloomHorizontalBlur(renderContext: com.zakgof.korender.impl.engine.RenderContext, currentRetentionPolicy: RetentionPolicy, downsample: Int, radius: Float) =
+    _root_ide_package_.com.zakgof.korender.impl.engine.InternalPassDeclaration(
         mapOf(
             "colorInputTexture" to "downsample1",
             "depthInputTexture" to "bloomDepth"
         ),
-        listOf(
-            InternalMaterialModifier {
-                it.fragShaderFile = "!shader/effect/blurh.frag"
-                it.uniforms["radius"] = radius
-            }),
+        BlurMaterial(false, radius),
         null,
-        FrameTarget(
+        _root_ide_package_.com.zakgof.korender.impl.engine.FrameTarget(
             renderContext.width / downsample,
             renderContext.height / downsample,
             "bloomTexture",
@@ -166,3 +130,29 @@ private fun bloomHorizontalBlur(renderContext: RenderContext, currentRetentionPo
         currentRetentionPolicy
     )
 
+private class KawaseMaterial(
+    val offset: Float,
+    val highResolutionRatio: Float?,
+) : InternalPostProcessingMaterial(
+    "!shader/effect/kawase.frag",
+    "offset" to FloatGetter<KawaseMaterial> { it.offset },
+    "highResolutionRatio" to FloatGetter<KawaseMaterial> { it.highResolutionRatio }
+) {
+    override val defs: Set<String>
+        get() = setOfNotNull(highResolutionRatio?.let { "UPSAMPLE" })
+}
+
+private class BloomMaterial(
+    val threshold: Float,
+) : InternalPostProcessingMaterial(
+    "!shader/effect/bloom.frag",
+    "threshold" to FloatGetter<BloomMaterial> { it.threshold },
+)
+
+
+private class BloomCompositionMaterialModifier(val bloomAmount: Float) : InternalMaterialModifier(
+    "bloomAmount" to FloatGetter<BloomCompositionMaterialModifier> { it.bloomAmount }
+) {
+    override val defs: Set<String>
+        get() = setOf("BLOOM")
+}

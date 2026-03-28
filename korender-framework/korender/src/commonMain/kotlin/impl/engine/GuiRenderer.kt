@@ -1,11 +1,17 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.font.InternalFontDeclaration
 import com.zakgof.korender.impl.geometry.FontMesh
 import com.zakgof.korender.impl.geometry.ImageQuad
-import com.zakgof.korender.impl.material.InternalMaterialModifier
+import com.zakgof.korender.impl.glgpu.ColorRGBAGetter
+import com.zakgof.korender.impl.glgpu.GlGpuTexture
+import com.zakgof.korender.impl.glgpu.TextureGetter
+import com.zakgof.korender.impl.glgpu.Vec2Getter
+import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import kotlin.math.max
@@ -14,7 +20,7 @@ internal class GuiRenderer(
     private val inventory: Inventory,
     private val width: Int,
     private val height: Int,
-    container: ElementDeclaration.Container
+    container: ElementDeclaration.Container,
 ) {
 
     val renderableDeclarations = mutableListOf<RenderableDeclaration>()
@@ -32,7 +38,7 @@ internal class GuiRenderer(
         y: Int,
         width: Int,
         height: Int,
-        container: ElementDeclaration.Container
+        container: ElementDeclaration.Container,
     ): Unit = when (container.direction) {
         Direction.Vertical -> {
             val fillers = container.elements.count { sizes[it]!!.height < 0 }
@@ -91,19 +97,20 @@ internal class GuiRenderer(
 
     private fun createImage(declaration: ElementDeclaration.Image, x: Int, y: Int) {
 
+        val imageMaterial = ImageMaterial(
+            pos = Vec2(
+                (x.toFloat() + declaration.marginLeft.toFloat()) / width,
+                1.0f - (y.toFloat() + declaration.marginTop.toFloat() + declaration.height.toFloat()) / height
+            ),
+            size = Vec2(
+                declaration.width.toFloat() / width,
+                declaration.height.toFloat() / height
+            ),
+            imageTexture = ResourceTextureDeclaration(declaration.imageResource, retentionPolicy = declaration.retentionPolicy)
+        )
         renderableDeclarations += RenderableDeclaration(
-            BaseMaterial.Image,
-            listOf(InternalMaterialModifier {
-                it.uniforms["pos"] = Vec2(
-                    (x.toFloat() + declaration.marginLeft.toFloat()) / width,
-                    1.0f - (y.toFloat() + declaration.marginTop.toFloat() + declaration.height.toFloat()) / height
-                )
-                it.uniforms["size"] = Vec2(
-                    declaration.width.toFloat() / width,
-                    declaration.height.toFloat() / height
-                )
-                it.uniforms["imageTexture"] = ResourceTextureDeclaration(declaration.imageResource, retentionPolicy = declaration.retentionPolicy)
-            }),
+            imageMaterial,
+            listOf(),
             ImageQuad(declaration.retentionPolicy),
             Transform.IDENTITY,
             true,
@@ -126,11 +133,8 @@ internal class GuiRenderer(
         val font = inventory.font(InternalFontDeclaration(declaration.fontResource, declaration.retentionPolicy))
         if (w > 0 && font != null) {
             renderableDeclarations += RenderableDeclaration(
-                BaseMaterial.Font,
-                listOf(InternalMaterialModifier {
-                    it.uniforms["color"] = declaration.color
-                    it.uniforms["fontTexture"] = font.gpuTexture
-                }),
+                FontMaterial(declaration.color, font.gpuTexture),
+                listOf(),
                 FontMesh(declaration.id, 256, declaration, width.toFloat(), height.toFloat(), xxx.toFloat(), yyy.toFloat(), font),
                 Transform.IDENTITY,
                 true,
@@ -143,7 +147,7 @@ internal class GuiRenderer(
     private fun sizeEm(
         parentDirection: Direction,
         element: ElementDeclaration,
-        sizes: MutableMap<ElementDeclaration, Size>
+        sizes: MutableMap<ElementDeclaration, Size>,
     ): Size {
         val size = when (element) {
             is ElementDeclaration.Text -> textSize(element)
@@ -219,3 +223,23 @@ internal class GuiRenderer(
 
     class Size(val width: Int, val height: Int)
 }
+
+private class ImageMaterial(
+    val pos: Vec2,
+    val size: Vec2,
+    val imageTexture: TextureDeclaration,
+) : InternalMaterial(
+    "!shader/gui/image.vert", "!shader/gui/image.frag",
+    "pos" to Vec2Getter<ImageMaterial> { it.pos },
+    "size" to Vec2Getter<ImageMaterial> { it.size },
+    "imageTexture" to TextureGetter<ImageMaterial> { it.imageTexture },
+)
+
+private class FontMaterial(
+    val color: ColorRGBA,
+    val fontTexture: GlGpuTexture,
+) : InternalMaterial(
+    "!shader/gui/font.vert", "!shader/gui/font.frag",
+    "color" to ColorRGBAGetter<FontMaterial> { it.color },
+    "fontTexture" to TextureGetter<FontMaterial> { it.fontTexture },
+)

@@ -2,8 +2,8 @@ package com.zakgof.korender.impl.prefab
 
 import com.zakgof.korender.Material
 import com.zakgof.korender.Prefab
-import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.impl.context.DefaultFrameContext
 
-interface InternalPrefab<T : Material> : Prefab<T> {
-    fun render(fc: FrameContext, material: T)
+internal interface InternalPrefab<T : Material> : Prefab<T> {
+    fun render(fc: DefaultFrameContext, material: T)
 }

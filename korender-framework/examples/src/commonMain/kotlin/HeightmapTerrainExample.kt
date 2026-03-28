@@ -23,7 +23,7 @@ fun HeightmapTerrainExample() =
             AmbientLight(ColorRGB.white(0.4f))
             DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(1.5f))
 
-            Renderable(
+            Prefab(
                 terrain {
                     colorTexture = texture("terrain/terrain-albedo.jpg", wrap = TextureWrap.ClampToEdge)
                     metallicFactor = 0.0f
@@ -37,7 +37,7 @@ fun HeightmapTerrainExample() =
 
             val sky = fastCloudSky()
             Sky(sky)
-            PostProcess(water(waveScale = 1000.0f), sky)
+            PostProcess(water(waveScale = 1000.0f, sky = sky))
             Gui {
                 Column {
                     Filler()

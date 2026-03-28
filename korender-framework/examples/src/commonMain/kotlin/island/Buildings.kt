@@ -33,11 +33,22 @@ fun FrameContext.buildings(cityGenerator: CityGenerator) {
     val dim = 32f * 512f
 
     val tr = scale(32f).translate(Vec3(-dim * 0.5f, -100f, -dim * 0.5f))
-    val concrete = base(color = white(2.0f), colorTexture = texture("infcity/roof.jpg"), metallicFactor = 0f, roughnessFactor = 1f)
+    val concrete = base {
+        color = white(2.0f)
+        colorTexture = texture("infcity/roof.jpg")
+        metallicFactor = 0f
+        roughnessFactor = 1f
+    }
+    val wnd = base {
+        color = white(2.0f)
+        colorTexture = texture("infcity/roof.jpg")
+        metallicFactor = 0f
+        roughnessFactor = 1f
+        plugin("albedo", "island/building/shader/island.window.albedo.frag")
+    }
 
     Renderable(
-        concrete,
-        plugin("albedo", "island/building/shader/island.window.albedo.frag"),
+        wnd,
         mesh = mesh("lw", cityGenerator.lightWindow),
         transform = tr
     )

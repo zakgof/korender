@@ -1,14 +1,14 @@
 package com.zakgof.korender.impl.gltf
 
+import com.zakgof.korender.BaseMaterialContext
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.SpecularGlossiness
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.gltf.GltfModel
 import com.zakgof.korender.impl.camera.DefaultCamera
-import com.zakgof.korender.impl.engine.BaseMaterial
 import com.zakgof.korender.impl.engine.GltfDeclaration
 import com.zakgof.korender.impl.engine.GltfInstance
 import com.zakgof.korender.impl.engine.MeshInstance
@@ -16,9 +16,9 @@ import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.geometry.CustomCpuMesh
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
-import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
-import com.zakgof.korender.impl.material.InternalMaterialModifier
+import com.zakgof.korender.impl.material.InternalBaseMaterial
+import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
 import com.zakgof.korender.impl.projection.OrthoProjectionMode
 import com.zakgof.korender.impl.projection.Projection
@@ -180,26 +180,26 @@ internal class GltfSceneBuilder(
             val jointMatrices = skinIndex?.let {
                 if (declaration.instancingDeclaration == null) instanceData[0].jointMatrices[it] else null
             }
-            val materialModifier = createMaterialModifiers(primitive, skinIndex, jointMatrices)
+            val transparencyToMaterial = createMaterial(primitive, skinIndex, jointMatrices, declaration.materialModifier)
 
             // TODO why this works
             val meshTransform = if (skinIndex == null) instanceData[0].nodeMatrices[nodeIndex].mat4 else Mat4.IDENTITY
             val transform = declaration.transform * Transform(meshTransform)
             RenderableDeclaration(
-                BaseMaterial.Renderable,
-                listOf(materialModifier.second) + declaration.materialModifiers,
+                transparencyToMaterial.second,
                 mesh = meshDeclaration,
                 transform = transform,
-                materialModifier.first,
-                declaration.retentionPolicy,
+                transparent = transparencyToMaterial.first,
+                retentionPolicy = declaration.retentionPolicy,
             )
         }
 
-    private fun createMaterialModifiers(
+    private fun createMaterial(
         primitive: InternalGltfModel.Mesh.Primitive,
         skinIndex: Int?,
         jointMatrices: List<Mat4>?,
-    ): Pair<Boolean, MaterialModifier> {
+        materialModifier: BaseMaterialContext.() -> Unit,
+    ): Pair<Boolean, InternalMaterial> {
 
         // TODO: split into 2 parts, precompute textures modifier, calc only skin modifier
         val material = primitive.material?.let { cache.model.materials!![it] }
@@ -208,60 +208,45 @@ internal class GltfSceneBuilder(
                 as? InternalGltfModel.KHRMaterialsPbrSpecularGlossiness
 
         // TODO: Precreate all except jointMatrices
-        val imm = InternalMaterialModifier { mb ->
+        val mat = InternalBaseMaterial()
 
-            if (skinIndex != null) {
-                mb.plugins["vposition"] = "!shader/plugin/vposition.skinning.vert"
-                mb.plugins["vnormal"] = "!shader/plugin/vnormal.skinning.vert"
-                if (declaration.instancingDeclaration == null && jointMatrices != null) {
-                    val jointMatrixList = jointMatrices.mapIndexed { ind, jm ->
-                        jm * cache.loadedSkins[skinIndex]!![ind]
-                    }
-                    mb.uniforms["jntMatrices[0]"] = Mat4List(jointMatrixList)
+        if (skinIndex != null) {
+            mat.plugin("vposition", "!shader/plugin/vposition.skinning.vert")
+            mat.plugin("vnormal", "!shader/plugin/vnormal.skinning.vert")
+            if (declaration.instancingDeclaration == null && jointMatrices != null) {
+                val jointMatrixList = jointMatrices.mapIndexed { ind, jm ->
+                    jm * cache.loadedSkins[skinIndex]!![ind]
                 }
-            }
-
-            mb.uniforms["baseColor"] = (matSpecularGlossiness?.diffuseFactor ?: matPbr?.baseColorFactor)?.let {
-                ColorRGBA(it[0], it[1], it[2], it[3])
-            } ?: ColorRGBA.White
-
-            (matPbr?.baseColorTexture ?: matSpecularGlossiness?.diffuseTexture)?.let { getTexture(it) }?.let {
-                mb.uniforms["baseColorTexture"] = it
-                mb.shaderDefs += "BASE_COLOR_MAP";
-            }
-            val alphaCutoff = if (material?.alphaMode == "MASK") material.alphaCutoff else 0.001f
-            mb.uniforms["alphaCutoff"] = alphaCutoff
-
-            mb.uniforms["metallicFactor"] = matPbr?.metallicFactor ?: 0.1f
-            mb.uniforms["roughnessFactor"] = matPbr?.roughnessFactor ?: 0.5f
-
-            material?.normalTexture?.let { getTexture(it) }?.let {
-                mb.plugins["normal"] = "!shader/plugin/normal.texture.frag"
-                mb.uniforms["normalTexture"] = it
-            }
-
-            matPbr?.metallicRoughnessTexture?.let { getTexture(it) }?.let {
-                mb.plugins["metallic_roughness"] = "!shader/plugin/metallic_roughness.texture.frag"
-                mb.uniforms["metallicRoughnessTexture"] = it
-            }
-
-            material?.occlusionTexture?.let { getTexture(it) }?.let {
-                mb.plugins["occlusion"] = "!shader/plugin/occlusion.texture.frag"
-                mb.uniforms["occlusionTexture"] = it
-            }
-
-            material?.emissiveTexture?.let { getTexture(it) }?.let {
-                mb.plugins["emission"] = "!shader/plugin/emission.texture.frag"
-                mb.uniforms["emissionTexture"] = it
-            }
-
-            matSpecularGlossiness?.let { sg ->
-                mb.plugins["specular_glossiness"] = "!shader/plugin/specular_glossiness.factor.frag"
-                mb.uniforms["specularFactor"] = sg.specularFactor.let { ColorRGB(it[0], it[1], it[2]) }
-                mb.uniforms["glossinessFactor"] = sg.glossinessFactor
+                mat.jntMatrices = jointMatrixList
             }
         }
-        return (material?.alphaMode == "BLEND") to imm
+
+        mat.color = (matSpecularGlossiness?.diffuseFactor ?: matPbr?.baseColorFactor)?.let {
+            ColorRGBA(it[0], it[1], it[2], it[3])
+        } ?: ColorRGBA.White
+
+        (matPbr?.baseColorTexture ?: matSpecularGlossiness?.diffuseTexture)?.let { getTexture(it) }?.let {
+            mat.colorTexture = it
+        }
+        val alphaCutoff = if (material?.alphaMode == "MASK") material.alphaCutoff ?: 0.001f else 0.001f
+        mat.alphaCutoff = alphaCutoff
+
+        mat.metallicFactor = matPbr?.metallicFactor ?: 0.1f
+        mat.roughnessFactor = matPbr?.roughnessFactor ?: 0.5f
+
+        mat.normalTexture = material?.normalTexture?.let { getTexture(it) }
+        mat.metallicRoughnessTexture = matPbr?.metallicRoughnessTexture?.let { getTexture(it) }
+        mat.occlusionTexture = material?.occlusionTexture?.let { getTexture(it) }
+        mat.emissionTexture = material?.emissiveTexture?.let { getTexture(it) }
+
+        mat.specularGlossiness = matSpecularGlossiness?.let { sg ->
+            SpecularGlossiness(
+                sg.specularFactor.let { ColorRGB(it[0], it[1], it[2]) },
+                sg.glossinessFactor
+            )
+        }
+        materialModifier.invoke(mat)
+        return (material?.alphaMode == "BLEND") to mat
     }
 
     private fun createMeshDeclaration(meshIndex: Int, primitiveIndex: Int, skinIndex: Int?): InternalMeshDeclaration {

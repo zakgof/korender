@@ -24,6 +24,8 @@ import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL1
 import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL2
 import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL3
 import com.zakgof.korender.impl.geometry.MeshAttributes.WEIGHTS
+import com.zakgof.korender.impl.material.InstancingMaterialModifier
+import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.TextureLinkDeclaration
 
 internal interface InternalMeshDeclaration : MeshDeclaration, Retentionable
@@ -37,9 +39,7 @@ internal interface Instanceable {
         reverseZ: Boolean,
         camera: Camera?,
         inventory: Inventory,
-        addUniforms: MutableMap<String, Any?>,
-        addDefs: MutableSet<String>,
-    )
+    ) : InternalMaterialModifier?
 }
 
 internal data class Cube(val halfSide: Float, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
@@ -69,8 +69,9 @@ internal data class InstancedMesh(
 
     override fun hashCode(): Int = id.hashCode()
 
-    override fun instancing(meshLink: MeshLink, reverseZ: Boolean, camera: Camera?, inventory: Inventory, addUniforms: MutableMap<String, Any?>, addDefs: MutableSet<String>) {
+    override fun instancing(meshLink: MeshLink, reverseZ: Boolean, camera: Camera?, inventory: Inventory): InternalMaterialModifier {
         val cpuMesh = meshLink.cpuMesh
+        val modifier = InstancingMaterialModifier()
         if (!static || !cpuMesh.instancesInitialized || transparent) {
             var instances = instancer()
             val sortFactor = if (reverseZ) -1f else 1f
@@ -99,12 +100,12 @@ internal data class InstancedMesh(
                         }
                     }
                     jointTextureLink.uploadData()
-                    addUniforms["jntTexture"] = jointTextureLink.texture
-                } ?: return
+                    modifier.jntTexture = jointTextureLink.texture
+                } ?: return modifier
             }
 
         }
-        addDefs += "INSTANCING"
+        return modifier
     }
 }
 
@@ -119,7 +120,7 @@ internal data class InstancedBillboard(
     override fun equals(other: Any?): Boolean = (other is InstancedBillboard && other.id == id)
     override fun hashCode(): Int = id.hashCode()
 
-    override fun instancing(meshLink: MeshLink, reverseZ: Boolean, camera: Camera?, inventory: Inventory, addUniforms: MutableMap<String, Any?>, addDefs: MutableSet<String>) {
+    override fun instancing(meshLink: MeshLink, reverseZ: Boolean, camera: Camera?, inventory: Inventory): InternalMaterialModifier {
         val cpuMesh = meshLink.cpuMesh
         if (!static || !cpuMesh.instancesInitialized || transparent) {
             var instances = instancer()
@@ -137,7 +138,7 @@ internal data class InstancedBillboard(
             meshLink.updateGpu(instances.size, true)
             cpuMesh.instancesInitialized = true
         }
-        addDefs += "INSTANCING"
+        return InstancingMaterialModifier()
     }
 }
 
@@ -156,11 +157,12 @@ internal data class CustomMesh(
 
     override val count = -1
 
-    override fun instancing(meshLink: MeshLink, reverseZ: Boolean, camera: Camera?, inventory: Inventory, addUniforms: MutableMap<String, Any?>, addDefs: MutableSet<String>) {
+    override fun instancing(meshLink: MeshLink, reverseZ: Boolean, camera: Camera?, inventory: Inventory): InternalMaterialModifier? {
         if (dynamic) {
             meshLink.cpuMesh.updateMesh(block)
             meshLink.updateGpu(-1, false)
         }
+        return null
     }
 }
 
@@ -181,7 +183,7 @@ internal class FontMesh(
 
     override val retentionPolicy = declaration.retentionPolicy
 
-    override fun instancing(meshLink: MeshLink, reverseZ: Boolean, camera: Camera?, inventory: Inventory, addUniforms: MutableMap<String, Any?>, addDefs: MutableSet<String>) {
+    override fun instancing(meshLink: MeshLink, reverseZ: Boolean, camera: Camera?, inventory: Inventory): InternalMaterialModifier? {
         val mesh = meshLink.cpuMesh
         if (!declaration.static || !mesh.instancesInitialized) {
             mesh.updateMesh {
@@ -202,6 +204,7 @@ internal class FontMesh(
             mesh.instancesInitialized = true
             meshLink.updateGpu(declaration.text.length, true)
         }
+        return null
     }
 }
 

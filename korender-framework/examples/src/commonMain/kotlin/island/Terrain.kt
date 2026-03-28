@@ -1,5 +1,6 @@
 import com.zakgof.korender.Image
 import com.zakgof.korender.Prefab
+import com.zakgof.korender.TerrainMaterial
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.examples.island.loadBinary
@@ -11,23 +12,24 @@ fun loadRunway(bytes: ByteArray): Pair<Vec2, Vec2> = loadBinary(bytes) {
     p1 to p2
 }
 
-fun FrameContext.island(heightMap: Image, rwSeeds: Pair<Vec2, Vec2>, terrain: Prefab) {
-    Renderable(
-        base(metallicFactor = 0.0f),
-        plugin("normal", "!shader/plugin/normal.terrain.frag"),
-        plugin("terrain", "island/terrain/shader/height.glsl"),
-        plugin("albedo", "island/terrain/shader/albedo.glsl"),
-        uniforms(
-            "heightTexture" to texture("base-terrain", heightMap),
-            "patchTexture" to texture("island/terrain/color.png"),
-            "sdf" to texture("island/terrain/sdf.png", TextureFilter.Linear),
-            "road" to texture("infcity/road.jpg"),
-            "grassTexture" to texture("texture/grass.jpg"),
-            "runwayTexture" to texture("island/terrain/runway.jpg"),
-            "runwayP1" to rwSeeds.first,
-            "runwayP2" to rwSeeds.second
-        ),
-        defs("NO_SHADOW_CAST"),
+fun FrameContext.island(heightMap: Image, rwSeeds: Pair<Vec2, Vec2>, terrain: Prefab<TerrainMaterial>) {
+    Prefab(
+        terrain {
+            metallicFactor = 0.0f
+
+            plugin("normal", "!shader/plugin/normal.terrain.frag")
+            plugin("terrain", "island/terrain/shader/height.glsl")
+            plugin("albedo", "island/terrain/shader/albedo.glsl")
+            texture("heightTexture", texture("base-terrain", heightMap))
+            texture("patchTexture", texture("island/terrain/color.png"))
+            texture("sdf", texture("island/terrain/sdf.png", TextureFilter.Linear))
+            texture("road", texture("infcity/road.jpg"))
+            texture("grassTexture", texture("texture/grass.jpg"))
+            texture("runwayTexture" ,texture("island/terrain/runway.jpg"))
+            vec2("runwayP1", rwSeeds.first)
+            vec2("runwayP2", rwSeeds.second)
+            defs ("NO_SHADOW_CAST")
+        },
         prefab = terrain
     )
 }

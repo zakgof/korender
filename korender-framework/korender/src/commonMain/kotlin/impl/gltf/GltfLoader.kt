@@ -41,13 +41,12 @@ internal object GltfLoader {
     class GlbChunk(val type: ChunkType, val data: ByteArray)
 
     fun load(declaration: GltfDeclaration, loader: Loader): GltfCache? =
-        loader.syncy(declaration.resource) { load(declaration, declaration.loader) }
+        loader.syncy(declaration.resource) { load(declaration, loader.appResourceLoader) }
 
     suspend fun load(declaration: GltfDeclaration, appResourceLoader: ResourceLoader): GltfCache {
         val extension = declaration.resource.split(".").last().lowercase() // TODO: autodetect
-        val resourceBytes = declaration.loader(declaration.resource)
+        val resourceBytes = appResourceLoader(declaration.resource)
         val loaded = when (extension) {
-
             // TODO: autodetect
             "gltf" -> loadGltf(resourceBytes, null, appResourceLoader, declaration)
             "glb" -> loadGlb(resourceBytes, appResourceLoader, declaration)

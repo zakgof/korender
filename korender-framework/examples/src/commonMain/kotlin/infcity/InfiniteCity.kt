@@ -124,7 +124,7 @@ private fun FrameContext.building(buildingId: Int, z: Float, x: Float) {
         roughnessFactor = 0.1f
         emission = White
         plugin("emission", "infcity/window.emission.plugin.frag")
-        uniforms("windowTexture" to texture("infcity/lw.jpg"))
+        texture("windowTexture", texture("infcity/lw.jpg"))
     }
 
     fun Triangulation.toCustomMesh(id: String) = customMesh(id, this.points.size, this.indexes.size, POS, NORMAL, TEX) {
@@ -194,9 +194,10 @@ private fun FrameContext.gui() =
 private fun FrameContext.atmosphere() =
     PostProcess(fog(density = 0.06f, color = white(0.05f))) {
         Sky(
-            starrySky(colorness = 0.4f, density = 20f, size = 20f),
-            plugin("secsky", "infcity/moon.secsky.plugin.frag"),
-            uniforms("moonTexture" to texture("infcity/moon.png"))
+            starrySky(colorness = 0.4f, density = 20f, size = 20f) {
+                plugin("secsky", "infcity/moon.secsky.plugin.frag")
+                texture("moonTexture", texture("infcity/moon.png"))
+            }
         )
     }
 

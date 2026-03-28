@@ -5,6 +5,7 @@ import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.context.DeferredShadingContext
 import com.zakgof.korender.impl.engine.DeferredShadingDeclaration
 import com.zakgof.korender.impl.engine.InternalDecalDeclaration
+import com.zakgof.korender.impl.material.InternalDecalMaterial
 import com.zakgof.korender.math.Vec3
 
 internal class DefaultDeferredShadingContext(private var deferredShadingDeclaration: DeferredShadingDeclaration) : DeferredShadingContext {
@@ -19,7 +20,7 @@ internal class DefaultDeferredShadingContext(private var deferredShadingDeclarat
     }
 
     override fun Decal(material: Material, position: Vec3, look: Vec3, up: Vec3, size: Float) {
-        deferredShadingDeclaration.decals += InternalDecalDeclaration(position, look, up, size, material)
+        deferredShadingDeclaration.decals += InternalDecalDeclaration(position, look, up, size, material as InternalDecalMaterial)
     }
 
 }

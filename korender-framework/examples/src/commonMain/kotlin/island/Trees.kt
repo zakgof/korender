@@ -67,9 +67,10 @@ fun FrameContext.renderBranches(branches: List<Branch>, seeds: List<Vec3>) {
         if (r < 2f * threshold) (r - threshold) * r / threshold else r
 
     Renderable(
-        base(color = ColorRGBA(0x553311FF)),
-        pipe(),
-        defs("NO_SHADOW_CAST"),
+        pipe {
+            color = ColorRGBA(0x553311FF)
+            defs("NO_SHADOW_CAST")
+        },
         mesh = pipeMesh("trunk-forest", branches.size * seeds.size, true) {
             val r = Random(0)
             seeds.forEach { seed ->
@@ -94,12 +95,12 @@ fun FrameContext.renderBranches(branches: List<Branch>, seeds: List<Vec3>) {
 
 fun FrameContext.renderCards(cards: List<Card>, seeds: List<Vec3>) {
     Renderable(
-        base(
-            colorTexture = texture("island/tree/atlas.png"),
-            metallicFactor = 0.4f,
+        base {
+            colorTexture = texture("island/tree/atlas.png")
+            metallicFactor = 0.4f
             roughnessFactor = 0.6f
-        ),
-        plugin("discard", "island/tree/shader/island.foliage.discard.frag"),
+            plugin("discard", "island/tree/shader/island.foliage.discard.frag")
+        },
         mesh = customMesh(
             "foliage", cards.size * seeds.size * 8, cards.size * seeds.size * 12,
             POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3, dynamic = false

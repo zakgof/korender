@@ -8,7 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
-internal class Loader(private val appResourceLoader: ResourceLoader) {
+internal class Loader(val appResourceLoader: ResourceLoader) {
 
     private val loadingMap = mutableMapOf<String, Deferred<ByteArray>>()
     private val waitingMap = mutableMapOf<String, Deferred<*>>()

@@ -55,7 +55,7 @@ import com.zakgof.korender.math.Vec3
 
 internal class DefaultFrameContext(
     val korenderContext: Engine.KorenderContextImpl,
-    private val sceneDeclaration: SceneDeclaration,
+    val sceneDeclaration: SceneDeclaration,
     override val frameInfo: FrameInfo,
 ) : FrameContext, KorenderContext by korenderContext {
 
@@ -81,7 +81,7 @@ internal class DefaultFrameContext(
         val meshDeclaration = (instancing as? InternalInstancingDeclaration)?.let {
             InstancedMesh(instancing.id, instancing.count, mesh, !instancing.dynamic, transparent, korenderContext.currentRetentionPolicy, instancing.instancer)
         } ?: mesh
-        val rd = RenderableDeclaration(material as InternalMaterial, meshDeclaration, transform, transparent, korenderContext.currentRetentionPolicy)
+        val rd = RenderableDeclaration(material as InternalMaterial, listOf(), meshDeclaration, transform, transparent, korenderContext.currentRetentionPolicy)
         sceneDeclaration.append(rd)
     }
 
@@ -99,6 +99,7 @@ internal class DefaultFrameContext(
         }
         val rd = RenderableDeclaration(
             material as InternalBillboardMaterial,
+            listOf(),
             meshDeclaration,
             IDENTITY,
             transparent,
@@ -108,7 +109,7 @@ internal class DefaultFrameContext(
     }
 
     override fun Sky(material: SkyMaterial) {
-        sceneDeclaration.skies += RenderableDeclaration(material as InternalSkyMaterial, ScreenQuad(korenderContext.currentRetentionPolicy), Transform.IDENTITY, false, korenderContext.currentRetentionPolicy)
+        sceneDeclaration.skies += RenderableDeclaration(material as InternalSkyMaterial, listOf(),ScreenQuad(korenderContext.currentRetentionPolicy), Transform.IDENTITY, false, korenderContext.currentRetentionPolicy)
     }
 
     override fun Gui(block: GuiContainerContext.() -> Unit) {

@@ -79,15 +79,18 @@ fun GltfLibraryExample() = Row {
                 AmbientLight(white(0.1f))
                 selectedModel?.let { model ->
                     Gltf(
-                        ibl(env),
+                        // ibl(env), TODO
                         resource = model.file,
                         resourceLoader = { GltfDownloader.load(model.folder, model.format, it) },
                         transform = if (selectedCamera == AUTO_CAMERA) rotate(bs.center, 1.y, frameInfo.time * 0.3f) else Transform.IDENTITY,
                         animation = animations.indexOf(selectedAnimation),
+                        materialModifier = {
+                            // ibl = env // TODO
+                        },
                         onUpdate = { update -> updateCameraAndAnimations(update) }
                     )
                 }
-                Sky(ibl(env))
+                Sky(cubeSky(env))
                 Gui {
                     Column {
                         Filler()

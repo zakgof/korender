@@ -16,6 +16,7 @@ import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.UniformSupplier
 import com.zakgof.korender.impl.material.InternalDecalMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
+import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGB.Companion.white
@@ -74,34 +75,28 @@ internal data class ShaderDeclaration(
     val fragFile: String,
     val defs: Set<String> = setOf(),
     val plugins: Map<String, String> = mapOf(),
+    val uniformSuppliers: List<UniformSupplier>,
     override val retentionPolicy: RetentionPolicy
 ) : Retentionable
+{
+    override fun equals(other: Any?): Boolean =
+        other is ShaderDeclaration &&
+            vertFile == other.vertFile &&
+            fragFile == other.fragFile &&
+            defs == other.defs &&
+            plugins == other.plugins
+
+    override fun hashCode(): Int = listOf(vertFile, fragFile, defs, plugins).hashCode()
+}
 
 internal class RenderableDeclaration(
     val material: InternalMaterial,
+    val modifiers: List<InternalMaterialModifier> = listOf(), // TODO poor design
     val mesh: MeshDeclaration,
     val transform: Transform = Transform.IDENTITY,
     val transparent: Boolean,
     override val retentionPolicy: RetentionPolicy
 ) : Retentionable
-
-internal enum class BaseMaterial {
-    Renderable,
-    Billboard,
-    Screen,
-    Font,
-    Image,
-    Sky,
-    Shading,
-    Composition,
-    Decal,
-    DecalBlend
-}
-
-internal class MaterialDeclaration(
-    val shader: ShaderDeclaration,
-    val uniformSuppliers: List<UniformSupplier>
-)
 
 internal sealed interface ElementDeclaration {
 

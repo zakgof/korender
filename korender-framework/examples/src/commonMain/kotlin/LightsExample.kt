@@ -11,7 +11,6 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -26,10 +25,10 @@ fun LightsExample() =
         }
         Frame {
 
-            fun LightMark(pos: Vec3, color: ColorRGB) = Renderable(
+            fun LightMark(pos: Vec3, markColor: ColorRGB) = Renderable(
                 base {
                     color = ColorRGBA.Black
-                    emission = color
+                    emission = markColor
                 },
                 mesh = sphere(0.05f),
                 transform = translate(pos)

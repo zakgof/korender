@@ -29,8 +29,8 @@ fun ProcTerrainExample() =
 
             AmbientLight(ColorRGB.white(0.3f - 0.3f * cloudy))
             DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(1.1f - cloudy))
-            Renderable(
-                base {
+            Prefab(
+                terrain {
                     metallicFactor = 0.0f
                     plugin("normal", "!shader/plugin/normal.terrain.frag")
                     plugin("terrain", "procterrain/height.glsl")

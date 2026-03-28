@@ -3,11 +3,17 @@ package com.zakgof.korender.impl.prefab.terrain
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.TerrainMaterial
-import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.impl.context.DefaultFrameContext
+import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.geometry.MeshAttributes.B1
 import com.zakgof.korender.impl.geometry.MeshAttributes.B2
+import com.zakgof.korender.impl.glgpu.FloatGetter
+import com.zakgof.korender.impl.glgpu.Vec3Getter
+import com.zakgof.korender.impl.material.InternalMaterial
+import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.prefab.InternalPrefab
+import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import kotlin.math.floor
 
@@ -112,25 +118,34 @@ internal class Clipmaps(korenderContext: KorenderContext, id: String, private va
         return list
     }
 
-    override fun render(fc: FrameContext, material: TerrainMaterial) = with(fc) {
-        val tiles = meshes(fc.camera.position)
+    override fun render(fc: DefaultFrameContext, material: TerrainMaterial) = with(fc) {
+        val tiles = meshes(camera.position)
         tiles.forEach { tile ->
-            Renderable(
-                material
-                uniforms(
-                    "tileOffsetAndScale" to tile.offsetAndScale,
-                    "antipop" to tile.antipop,
-                    "antipopSpan" to hg.toFloat() - 1f,
-                    "cell" to cellSize
-                ),
-                fc.vertex("!shader/terrain.vert"),
-                fc.defs("TERRAIN"),
-                mesh = tile.mesh
+            val modifier = TerrainMaterialModifier(tile, hg.toFloat() - 1f, cellSize)
+            val rd = RenderableDeclaration(
+                material as InternalMaterial,
+                listOf(modifier),
+                tile.mesh,
+                Transform.IDENTITY,
+                false,
+                retentionPolicy
             )
+            sceneDeclaration.append(rd)
         }
     }
 
     private data class Offset(val x: Int, val z: Int)
 
-    private class Me(val mesh: MeshDeclaration, val offsetAndScale: Vec3, val antipop: Vec3)
+    class Me(val mesh: MeshDeclaration, val offsetAndScale: Vec3, val antipop: Vec3)
 }
+
+private class TerrainMaterialModifier(
+    val tile: Clipmaps.Me,
+    val antipopSpan: Float,
+    val cellSize: Float,
+) : InternalMaterialModifier(
+    "tileOffsetAndScale" to Vec3Getter<TerrainMaterialModifier> { it.tile.offsetAndScale },
+    "antipop" to Vec3Getter<TerrainMaterialModifier> { it.tile.antipop },
+    "antipopSpan" to FloatGetter<TerrainMaterialModifier> { it.antipopSpan },
+    "cell" to FloatGetter<TerrainMaterialModifier> { it.cellSize }
+)

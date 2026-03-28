@@ -1,14 +1,11 @@
 package com.zakgof.korender.impl.engine
 
-import androidx.collection.floatListOf
-import com.zakgof.korender.KorenderException
 import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.shadow.ShadowRenderer
 import com.zakgof.korender.impl.engine.shadow.ShadowerData
-import com.zakgof.korender.impl.engine.shadow.uniforms
 import com.zakgof.korender.impl.geometry.DecalCube
 import com.zakgof.korender.impl.geometry.Instanceable
 import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
@@ -26,10 +23,8 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_X
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_Y
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_POSITIVE_Z
 import com.zakgof.korender.impl.glgpu.Color3ListGetter
-import com.zakgof.korender.impl.glgpu.Color4List
-import com.zakgof.korender.impl.glgpu.ColorRGBAGetter
+import com.zakgof.korender.impl.glgpu.Color4ListGetter
 import com.zakgof.korender.impl.glgpu.ColorRGBGetter
-import com.zakgof.korender.impl.glgpu.FloatList
 import com.zakgof.korender.impl.glgpu.FloatListGetter
 import com.zakgof.korender.impl.glgpu.GLBindableTexture
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
@@ -37,10 +32,8 @@ import com.zakgof.korender.impl.glgpu.GlGpuShadowTextureList
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.glgpu.IntGetter
-import com.zakgof.korender.impl.glgpu.IntList
 import com.zakgof.korender.impl.glgpu.IntListGetter
 import com.zakgof.korender.impl.glgpu.Mat4Getter
-import com.zakgof.korender.impl.glgpu.Mat4List
 import com.zakgof.korender.impl.glgpu.Mat4ListGetter
 import com.zakgof.korender.impl.glgpu.ShadowTextureListGetter
 import com.zakgof.korender.impl.glgpu.TextureGetter
@@ -48,7 +41,6 @@ import com.zakgof.korender.impl.glgpu.TextureListGetter
 import com.zakgof.korender.impl.glgpu.UniformGetter
 import com.zakgof.korender.impl.glgpu.Vec3ListGetter
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
-import com.zakgof.korender.impl.material.ConstMaterialModifier
 import com.zakgof.korender.impl.material.DecalBlendMaterial
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
@@ -69,11 +61,9 @@ import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.scale
-import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import kotlin.collections.set
 
 internal class Scene(
     private val sceneDeclaration: SceneDeclaration,
@@ -82,9 +72,8 @@ internal class Scene(
     val currentRetentionPolicy: RetentionPolicy,
 ) {
 
-    inner class LightMaterialModifier : InternalMaterialModifier() {
+    class LightMaterialModifier(private val sc: SceneDeclaration) : InternalMaterialModifier() {
 
-        private val sc = sceneDeclaration
         private val directionalLightsDirs = sc.directionalLights.map { it.direction }
         private val directionalLightsColors = sc.directionalLights.map { it.color }
         var dlsti = List(32) { 0 }
@@ -114,7 +103,7 @@ internal class Scene(
                 "pointLightAttenuation[0]" -> Vec3ListGetter<LightMaterialModifier> { it.sc.pointLights.map { it.attenuation } }
                 "numShadows" -> IntGetter<LightMaterialModifier> { it.numShadows }
                 "bsps[0]" -> Mat4ListGetter<LightMaterialModifier> { it.bsps }
-                "cascade[0]" -> ColorRGBAGetter<LightMaterialModifier> { it.cascades }
+                "cascade[0]" -> Color4ListGetter<LightMaterialModifier> { it.cascades }
                 "yMin[0]" -> FloatListGetter<LightMaterialModifier> { it.yMins }
                 "yMax[0]" -> FloatListGetter<LightMaterialModifier> { it.yMaxs }
                 "shadowMode[0]" -> IntListGetter<LightMaterialModifier> { it.shadowModes }
@@ -125,7 +114,7 @@ internal class Scene(
             }
     }
 
-    inner class ContextMaterialModifier : InternalMaterialModifier() {
+    class ContextMaterialModifier(private val renderContext: RenderContext) : InternalMaterialModifier() {
 
         var shadowTextures = GlGpuTextureList(List(5) { null }, 5)
         var pcfTextures = GlGpuShadowTextureList(List(5) { null }, 5)
@@ -133,8 +122,8 @@ internal class Scene(
 
         override fun uniform(name: String): UniformGetter<*>? =
             when (name) {
-                "noiseTexture" -> TextureGetter<ContextMaterialModifier> { noiseTex }
-                "fbmTexture" -> TextureGetter<ContextMaterialModifier> { fbmTex }
+                "noiseTexture" -> noiseTexGetter
+                "fbmTexture" -> fbmTexGetter
                 "shadowTextures[0]" -> TextureListGetter<ContextMaterialModifier> { it.shadowTextures }
                 "pcfTextures[0]" -> ShadowTextureListGetter<ContextMaterialModifier> { it.pcfTextures }
                 "colorInputTexture" -> TextureGetter<ContextMaterialModifier> { it.colorInputTexture }
@@ -160,8 +149,8 @@ internal class Scene(
     private val deferredShading = sceneDeclaration.deferredShadingDeclaration != null
     private val reusableFrameBufferHolder = ReusableFrameBufferHolder()
 
-    private val lightMaterialModifier = LightMaterialModifier()
-    private val contextMaterialModifier = ContextMaterialModifier()
+    private val lightMaterialModifier = LightMaterialModifier(sceneDeclaration)
+    private val contextMaterialModifier = ContextMaterialModifier(renderContext)
 
     val touchBoxes = mutableListOf<TouchBox>()
 
@@ -175,7 +164,7 @@ internal class Scene(
             is ProbeCubeTextureDeclaration -> renderContext.envProbes[value.envProbeName] ?: NotYetLoadedTexture
             is ImageTexture3DDeclaration -> inventory.texture3D(value) ?: NotYetLoadedTexture
             null -> null
-            else -> throw KorenderException("")
+            else -> value
         } as GLBindableTexture
     }
 
@@ -387,7 +376,7 @@ internal class Scene(
                             0f, 0f, 0f, 1f
                         ) * scale(decalDeclaration.size).mat4
 
-                        val renderableDeclaration = RenderableDeclaration(InternalDecalMaterial(), DecalCube(0.5f, currentRetentionPolicy), Transform(model), true, currentRetentionPolicy)
+                        val renderableDeclaration = RenderableDeclaration(InternalDecalMaterial(), listOf(), DecalCube(0.5f, currentRetentionPolicy), Transform(model), true, currentRetentionPolicy)
                         renderRenderable(renderableDeclaration, renderContext.camera)
                     }
                     inventory.uniformBufferHolder.flush()
@@ -524,13 +513,13 @@ internal class Scene(
     }
 
     private fun renderFullscreen(
-        quadMaterial: MaterialDeclaration,
+        quadMaterial: ShaderDeclaration,
         width: Int = renderContext.width,
         height: Int = renderContext.height,
         state: GlState.StateContext.() -> Unit = {},
     ) {
         val mesh = inventory.mesh(ScreenQuad(currentRetentionPolicy))
-        val shader = inventory.shader(quadMaterial.shader)
+        val shader = inventory.shader(quadMaterial)
         renderContext.state.set {
             blend(false)
             state()
@@ -561,6 +550,8 @@ internal class Scene(
         val probeFb =
             inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", envCaptureContext.resolution, envCaptureContext.resolution, true, TransientProperty(currentRetentionPolicy))) ?: return null
         val projection = Projection(2f * envCaptureContext.near, 2f * envCaptureContext.near, envCaptureContext.near, envCaptureContext.far, FrustumProjectionMode)
+        val localRenderContext = RenderContext(envCaptureContext.resolution, envCaptureContext.resolution)
+        localRenderContext.projection = projection
         mapOf(
             GL_TEXTURE_CUBE_MAP_NEGATIVE_X to DefaultCamera(envCaptureContext.position, -1.x, -1.y),
             GL_TEXTURE_CUBE_MAP_NEGATIVE_Y to DefaultCamera(envCaptureContext.position, -1.y, -1.z),
@@ -569,24 +560,19 @@ internal class Scene(
             GL_TEXTURE_CUBE_MAP_POSITIVE_Y to DefaultCamera(envCaptureContext.position, 1.y, 1.z),
             GL_TEXTURE_CUBE_MAP_POSITIVE_Z to DefaultCamera(envCaptureContext.position, 1.z, -1.y),
         ).forEach {
-            val frameUniforms = mutableMapOf<String, Any?>()
-            renderContext.frameUniforms(frameUniforms)
-            frameUniforms["view"] = it.value.mat4
-            frameUniforms["projectionWidth"] = projection.width
-            frameUniforms["projectionHeight"] = projection.height
-            frameUniforms["projectionNear"] = projection.near
-            frameUniforms["projectionFar"] = projection.far
-            frameUniforms["cameraPos"] = it.value.position
-            frameUniforms["cameraDir"] = it.value.direction
-            fillLightUniforms(frameUniforms)
-
-            val contextUniforms = mutableMapOf<String, Any?>()
-            renderContext.contextUniforms(contextUniforms)
-
+            localRenderContext.camera = it.value
+            inventory.uniformBufferHolder.populateFrame(
+                listOf(
+                    renderContext.frameMaterialModifier,
+                    LightMaterialModifier(envCaptureContext.sceneDeclaration)
+                ), true
+            )
+            val contextMaterialModifier = ContextMaterialModifier(localRenderContext)
             probeFb.exec(it.key) {
+                // TODO: pass correct contextMaterialModifier !!!!
                 prepareScene(envCaptureContext.resolution, envCaptureContext.resolution, envCaptureContext.insideOut)
-                success = success and renderForwardOpaques(sceneDeclaration)
-                success = success and renderTransparents(sceneDeclaration, it.value, envCaptureContext.insideOut)
+                success = success and renderForwardOpaques(envCaptureContext.sceneDeclaration)
+                success = success and renderTransparents(envCaptureContext.sceneDeclaration, it.value, envCaptureContext.insideOut)
             }
         }
         probeFb.finish()
@@ -594,22 +580,25 @@ internal class Scene(
     }
 
     fun renderToFrameProbe(frameCaptureContext: FrameCaptureContext, frameProbeName: String): GlGpuTexture? {
-        val frameUniforms = mutableMapOf<String, Any?>()
-        renderContext.frameUniforms(frameUniforms)
-        frameUniforms["view"] = frameCaptureContext.camera.mat4
-        frameUniforms["projectionWidth"] = frameCaptureContext.projection.width
-        frameUniforms["projectionHeight"] = frameCaptureContext.projection.height
-        frameUniforms["projectionNear"] = frameCaptureContext.projection.near
-        frameUniforms["projectionFar"] = frameCaptureContext.projection.far
-        frameUniforms["cameraPos"] = frameCaptureContext.camera.position
-        frameUniforms["cameraDir"] = frameCaptureContext.camera.direction
-        fillLightUniforms(frameUniforms)
 
+        val localRenderContext = RenderContext(frameCaptureContext.width, frameCaptureContext.height)
+        localRenderContext.projection = frameCaptureContext.projection
+        localRenderContext.camera = frameCaptureContext.camera
+
+        inventory.uniformBufferHolder.populateFrame(
+            listOf(
+                renderContext.frameMaterialModifier,
+                LightMaterialModifier(frameCaptureContext.sceneDeclaration)
+            ), true
+        )
+
+        val contextMaterialModifier = ContextMaterialModifier(localRenderContext)
         val probeFb = inventory.frameBuffer(FrameBufferDeclaration("probe-$frameProbeName", frameCaptureContext.width, frameCaptureContext.height, listOf(GlGpuTexture.Preset.RGBAFilter), true, TransientProperty(currentRetentionPolicy)))
             ?: return null
 
         var success = true
         probeFb.exec {
+            // TODO: use correct contextMaterialModifier!
             prepareScene(frameCaptureContext.width, frameCaptureContext.height)
             success = success and renderForwardOpaques(sceneDeclaration)
             success = success and renderTransparents(
@@ -628,19 +617,24 @@ internal class Scene(
     ): Boolean {
         val meshLink = inventory.mesh(declaration.mesh as InternalMeshDeclaration) ?: return false
         val instancingMaterialModifier = (declaration.mesh as? Instanceable)?.instancing(meshLink, reverseZ, camera, inventory)
-        val materialModifiers = listOfNotNull(
+        val materialModifiers = declaration.modifiers + listOfNotNull(
             contextMaterialModifier,
             instancingMaterialModifier,
-            InternalMaterialModifier("model" to Mat4Getter<InternalMaterialModifier> { declaration.transform.mat4 })
+            ModelModifier(declaration.transform.mat4)
         )
         val materialDeclaration = declaration.material.toDeclaration(deferredShading, declaration.retentionPolicy, materialModifiers)
-        if (materialDeclaration.shader.defs.contains("NO_SHADOW_CAST") && isShadow)
+        if (materialDeclaration.defs.contains("NO_SHADOW_CAST") && isShadow)
             return true
-        val shader = inventory.shader(materialDeclaration.shader) ?: return false
+        val shader = inventory.shader(materialDeclaration) ?: return false
         shader.render(materialDeclaration.uniformSuppliers, fixer, meshLink.gpuMesh)
         return true
     }
 }
+
+private class ModelModifier(
+    val model: Mat4,
+) : InternalMaterialModifier("model" to Mat4Getter<ModelModifier> { it.model })
+
 
 internal class SkipRender(val text: String) : RuntimeException()
 
