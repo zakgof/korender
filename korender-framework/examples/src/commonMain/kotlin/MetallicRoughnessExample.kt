@@ -25,8 +25,8 @@ fun MetallicRoughnessExample() = Korender(resourceLoader = { Res.readBytes("file
         Sky(sky)
         DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(3f))
         AmbientLight(ColorRGB.Black)
-        for (m in 0..4) {
-            for (r in 0..4) {
+        for (m in 0..100) {
+            for (r in 0..100) {
                 Renderable(
                     base {
                         color = ColorRGBA(0x80A0FFFF)
