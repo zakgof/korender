@@ -16,6 +16,7 @@ fun HeightmapTerrainExample() =
 
         val terrain = clipmapTerrainPrefab("terrain", 2.0f, 10, 6)
         Frame {
+            TestUtils.report(frameInfo)
 
             projection = projection(5f, 5f * height / width, 2f, 9000f)
             camera = camera(Vec3(0f, 240f, -500f - 800f * cos(frameInfo.time * 0.1f)), 1.y + 2.z, 2.y + 1.z)
@@ -46,3 +47,4 @@ fun HeightmapTerrainExample() =
             }
         }
     }
+

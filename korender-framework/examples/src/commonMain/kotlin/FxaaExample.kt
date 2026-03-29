@@ -11,6 +11,7 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 @Composable
 fun FxaaExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
+        TestUtils.report(frameInfo)
         AmbientLight(White)
         Renderable(
             base { color = Green },
@@ -27,3 +28,4 @@ fun FxaaExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         }
     }
 }
+

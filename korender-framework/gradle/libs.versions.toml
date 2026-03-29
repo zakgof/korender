@@ -13,6 +13,8 @@ kotlinxSerializationJson = "1.9.0"
 ktorClientCore = "3.3.3"
 lwjgl3-awt = "0.2.3"
 lwjgl = "3.3.6"
+junit-jupiter = "5.11.4"
+junit-platform = "1.11.4"
 vanniktechMavenPublish = "0.35.0"
 
 [libraries]
@@ -35,6 +37,10 @@ lwjgl = { module = "org.lwjgl:lwjgl", version.ref = "lwjgl" }
 lwjgl-jawt = { module= "org.lwjgl:lwjgl-jawt", version.ref = "lwjgl" }
 lwjgl-opengl = { module = "org.lwjgl:lwjgl-opengl", version.ref = "lwjgl" }
 lwjgl3-awt = { module = "org.lwjglx:lwjgl3-awt", version.ref = "lwjgl3-awt" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit-jupiter" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit-jupiter" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

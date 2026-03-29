@@ -18,6 +18,8 @@ fun BloomExample() =
     Korender(appResourceLoader = { Res.readBytes(it) }) {
 
         Frame {
+
+            TestUtils.report(frameInfo)
             camera = camera(20.z, -1.z, 1.y)
             DirectionalLight(Vec3(1f, -1f, -1f), ColorRGB.white(3f))
             DeferredShading {
@@ -52,3 +54,4 @@ fun BloomExample() =
             }
         }
     }
+

@@ -18,6 +18,8 @@ fun InstancedBillboardsExample() = Korender(appResourceLoader = { Res.readBytes(
     val particles = Array(particleNum) { Particle(Random.nextFloat() * 5f) }
 
     Frame {
+
+        TestUtils.report(frameInfo)
         AmbientLight(White)
         Billboard(
             billboard {
@@ -64,3 +66,4 @@ class Particle(initTtl: Float = 5.0f) {
         }
     }
 }
+

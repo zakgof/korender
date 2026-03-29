@@ -1,5 +1,6 @@
 package com.zakgof.korender.examples.infcity
 
+import com.zakgof.korender.examples.TestUtils
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
@@ -25,6 +26,7 @@ private val buildings = (0 until 10).map { generateBuilding() }
 @Composable
 fun InfiniteCity() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
+        TestUtils.report(frameInfo)
         OnLoading {
             loader()
         }
@@ -198,4 +200,5 @@ private fun FrameContext.atmosphere() =
             }
         )
     }
+
 

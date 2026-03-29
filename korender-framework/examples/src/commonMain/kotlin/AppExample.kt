@@ -37,47 +37,42 @@ import com.zakgof.korender.examples.infcity.InfiniteCity
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
+val pages = listOf(
+    Demo("Heightmap terrain") { HeightmapTerrainExample() },
+    Demo("Procedural terrain") { ProcTerrainExample() },
+    Demo("City demo") { InfiniteCity() },
+    Demo("PBR materials") { MetallicRoughnessExample() },
+    Demo("OBJ mesh") { ObjFileExample() },
+    Demo("GLTF crowd") { GltfCrowdExample() },
+    Demo("GLTF library") { GltfLibraryExample() },
+    Demo("Shadows") { ShadowExample() },
+    Demo("Render to texture") { RenderToTextureExample() },
+    Demo("Point lights") { LightsExample() },
+    Demo("GUI") { GuiExample() },
+    Demo("Particles / Billboards") { InstancedBillboardsExample() },
+    Demo("Particles / Cubes") { InstancedCubesExample() },
+    Demo("Blur") { BlurExample() },
+    Demo("Effects") { EffectsExample() },
+    Demo("Decals") { DecalExample() },
+    Demo("Bloom") { BloomExample() },
+    Demo("SSR") { SsrExample() },
+    Demo("Texture arrays") { TextureArrayExample() },
+    Demo("Multiple viewports") { MultipleViewportsExample() },
+    Demo("Sky") { SkyExample() },
+    Demo("Transparency") { TransparencyExample() },
+    Demo("Meshes") { MeshesExample() },
+    Demo("FXAA") { FxaaExample() },
+    Demo("CSM") { CSMExample() },
+    Demo("Env") { CaptureEnvExample() },
+    Demo("Capture frame") { CaptureFrameExample() },
+    Demo("Shapes") { BasicShapesExample() }
+)
+
 @Composable
 fun AppExample() {
-    val options = listOf(
-
-        Demo("City demo") { InfiniteCity() },
-
-        Demo("Heightmap terrain") { HeightmapTerrainExample() },
-        Demo("Procedural terrain") { ProcTerrainExample() },
-        Demo("City demo") { InfiniteCity() },
-        Demo("PBR materials") { MetallicRoughnessExample() },
-        Demo("OBJ mesh") { ObjFileExample() },
-        Demo("GLTF crowd") { GltfCrowdExample() },
-        Demo("GLTF library") { GltfLibraryExample() },
-        Demo("Shadows") { ShadowExample() },
-        Demo("Render to texture") { RenderToTextureExample() },
-        Demo("Point lights") { LightsExample() },
-        Demo("GUI") { GuiExample() },
-        Demo("Particles / Billboards") { InstancedBillboardsExample() },
-        Demo("Particles / Cubes") { InstancedCubesExample() },
-        Demo("Blur") { BlurExample() },
-        Demo("Effects") { EffectsExample() },
-        Demo("Decals") { DecalExample() },
-        Demo("Bloom") { BloomExample() },
-        Demo("SSR") { SsrExample() },
-
-
-        Demo("Texture arrays") { TextureArrayExample() },
-        Demo("Multiple viewports") { MultipleViewportsExample() },
-        Demo("Sky") { SkyExample() },
-        Demo("Transparency") { TransparencyExample() },
-        Demo("Meshes") { MeshesExample() },
-        Demo("FXAA") { FxaaExample() },
-        Demo("CSM") { CSMExample() },
-        Demo("Env") { CaptureEnvExample() },
-        Demo("Capture frame") { CaptureFrameExample() },
-        Demo("Shapes") { BasicShapesExample() }
-
-    )
 
     var isExpanded by remember { mutableStateOf(false) }
-    var selectedOption by remember { mutableStateOf(options.first()) }
+    var selectedOption by remember { mutableStateOf(pages.first()) }
     val coroutineScope = rememberCoroutineScope()
 
     val scrollState = rememberScrollState()
@@ -126,7 +121,7 @@ fun AppExample() {
                     )
                     MenuImage()
                 }
-                options.map { option ->
+                pages.map { option ->
                     Text(
                         modifier = Modifier
                             .background(color = if (option == selectedOption) selectColor else backgroundColor)
@@ -149,7 +144,7 @@ fun AppExample() {
     }
 }
 
-private data class Demo(
+data class Demo(
     val title: String,
     val composable: @Composable () -> Unit,
 )

@@ -1,5 +1,6 @@
 package com.zakgof.korender.examples.island
 
+import com.zakgof.korender.examples.TestUtils
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
@@ -26,6 +27,8 @@ fun IslandExample() =
         OnKey { game.key(it) }
 
         Frame {
+
+            TestUtils.report(frameInfo)
             if (loader.loaded()) {
                 game.frame(frameInfo.dt)
                 gameFrame(game, loader, terrain)
@@ -84,5 +87,6 @@ private fun FrameContext.loadingScreen(percent: Int) =
             Text(id = "loading", text = "Loading ${percent}%...")
         }
     }
+
 
 

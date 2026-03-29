@@ -16,6 +16,7 @@ import kotlin.math.floor
 fun EffectsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     camera = camera(Vec3(0f, 5f, 30f), -1.z, 1.y)
     Frame {
+        TestUtils.report(frameInfo)
         DirectionalLight(Vec3(1f, -1f, -1f))
         Sky(fastCloudSky())
 
@@ -70,3 +71,4 @@ private fun FrameContext.fireballDemo() {
 }
 
 fun fract(time: Float): Float = time - floor(time)
+

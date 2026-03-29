@@ -17,6 +17,7 @@ fun SkyExample() {
         val freeCamera = FreeCamera(this, Vec3(0f, 4f, 20f), -1.z)
         OnTouch { freeCamera.touch(it) }
         Frame {
+            TestUtils.report(frameInfo)
             AmbientLight(ColorRGB.White)
             camera = freeCamera.camera(projection, width, height, 0f)
             Sky(starrySky())
@@ -40,3 +41,4 @@ fun SkyExample() {
         }
     }
 }
+

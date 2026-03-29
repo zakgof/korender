@@ -21,6 +21,7 @@ fun ShadowExample() =
         }
         camera = camera(Vec3(-2.0f, 5f, 30f), -1.z, 1.y)
         Frame {
+            TestUtils.report(frameInfo)
             DirectionalLight(Vec3(1f, -1f, 2f), white(5.0f)) {
                 Cascade(mapSize = 1024, near = 10.0f, 40.0f, 0f to 10f, hardwarePcf(bias = 0.05f))
             }
@@ -56,3 +57,4 @@ fun ShadowExample() =
             // PostProcess(customPostProcessingFilter("!shader/effect/shadow-debug.frag"))
         }
     }
+

@@ -10,6 +10,7 @@ import kotlin.math.sin
 @Composable
 fun BlurExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
+        TestUtils.report(frameInfo)
         AmbientLight(White)
         Renderable(
             base { colorTexture = texture("texture/asphalt-albedo.jpg") },
@@ -25,3 +26,4 @@ fun BlurExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         }
     }
 }
+

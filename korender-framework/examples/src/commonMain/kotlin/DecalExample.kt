@@ -18,6 +18,7 @@ fun DecalExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     }
     camera = camera(20.z, -1.z, 1.y)
     Frame {
+        TestUtils.report(frameInfo)
         DirectionalLight(Vec3(1f, -1f, -1f), white(2.0f))
         AmbientLight(white(0.3f))
 
@@ -49,3 +50,4 @@ fun DecalExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         }
     }
 }
+

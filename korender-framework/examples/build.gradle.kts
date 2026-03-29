@@ -45,6 +45,14 @@ kotlin {
 
     sourceSets {
         val desktopMain by getting
+        val desktopTest by getting {
+            dependencies {
+                implementation(libs.junit.jupiter.api)
+                implementation(libs.junit.jupiter.params)
+                runtimeOnly(libs.junit.jupiter.engine)
+                runtimeOnly(libs.junit.platform.launcher)
+            }
+        }
 
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
@@ -70,6 +78,11 @@ kotlin {
             implementation(libs.ktor.client.js)
         }
     }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+    jvmArgs("--add-exports", "java.desktop/sun.awt=ALL-UNNAMED")
 }
 
 android {

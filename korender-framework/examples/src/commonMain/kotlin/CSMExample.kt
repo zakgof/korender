@@ -27,6 +27,8 @@ fun CSMExample() =
 
         Frame {
 
+            TestUtils.report(frameInfo)
+
             projection = projection(4f * width / height, 4f, 4f, 10000f)
             camera = freeCamera.camera(projection, width, height, frameInfo.dt)
             DirectionalLight(Vec3(1f, -1f, 0.3f), white(3.0f)) {
@@ -89,3 +91,4 @@ fun CSMExample() =
             // Filter(fragment("!shader/effect/shadow-debug.frag"))
         }
     }
+

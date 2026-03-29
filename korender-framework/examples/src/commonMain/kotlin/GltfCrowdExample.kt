@@ -15,6 +15,7 @@ fun GltfCrowdExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val orbitCamera = OrbitCamera(15.z, 0.y)
     OnTouch { orbitCamera.touch(it) }
     Frame {
+        TestUtils.report(frameInfo)
         camera = orbitCamera.run { camera() }
         AmbientLight(white(0.6f))
         DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(3f))
