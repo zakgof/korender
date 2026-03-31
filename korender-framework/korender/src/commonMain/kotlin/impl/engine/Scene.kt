@@ -597,7 +597,6 @@ internal class Renderer(
             }
         }
 
-
         fun renderRenderable(
             declaration: RenderableDeclaration,
             camera: Camera?,
