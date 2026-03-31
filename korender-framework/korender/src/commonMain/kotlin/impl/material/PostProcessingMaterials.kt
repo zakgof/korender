@@ -1,10 +1,11 @@
 package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.impl.engine.Engine
+import com.zakgof.korender.impl.engine.FrameContext
 import com.zakgof.korender.impl.engine.InternalFilterDeclaration
 import com.zakgof.korender.impl.engine.InternalPassDeclaration
-import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.engine.SceneDeclaration
+import com.zakgof.korender.impl.engine.defaultTarget
 import com.zakgof.korender.impl.glgpu.ColorRGBGetter
 import com.zakgof.korender.impl.glgpu.CompositeSupplier
 import com.zakgof.korender.impl.glgpu.FloatGetter
@@ -18,7 +19,7 @@ internal class BlurMaterial(
     "radius" to FloatGetter<BlurMaterial> { it.radius }
 )
 
-internal fun Engine.KorenderContextImpl.simpleBlur(renderContext: RenderContext, radius: Float) = InternalFilterDeclaration(
+internal fun Engine.KorenderContextImpl.simpleBlur(frameContext: FrameContext, radius: Float) = InternalFilterDeclaration(
     listOf(
         InternalPassDeclaration(
             mapOf(
@@ -28,7 +29,7 @@ internal fun Engine.KorenderContextImpl.simpleBlur(renderContext: RenderContext,
             material = blurVert(radius),
             retentionPolicy = currentRetentionPolicy,
             sceneDeclaration = SceneDeclaration(),
-            target = renderContext.defaultTarget()
+            target = frameContext.defaultTarget()
         ),
         InternalPassDeclaration(
             mapOf(
@@ -38,7 +39,7 @@ internal fun Engine.KorenderContextImpl.simpleBlur(renderContext: RenderContext,
             material = blurHorz(radius),
             retentionPolicy = currentRetentionPolicy,
             sceneDeclaration = SceneDeclaration(),
-            target = renderContext.defaultTarget()
+            target = frameContext.defaultTarget()
         )
     )
 )

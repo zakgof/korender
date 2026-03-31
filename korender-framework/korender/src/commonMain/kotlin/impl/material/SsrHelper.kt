@@ -3,9 +3,9 @@ package com.zakgof.korender.impl.material
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.RetentionPolicy
+import com.zakgof.korender.impl.engine.FrameContext
 import com.zakgof.korender.impl.engine.FrameTarget
 import com.zakgof.korender.impl.engine.InternalPassDeclaration
-import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.glgpu.FloatGetter
 import com.zakgof.korender.impl.glgpu.IntGetter
 import com.zakgof.korender.impl.glgpu.TextureGetter
@@ -17,7 +17,7 @@ internal fun ssrEffect(
     linearSteps: Int, binarySteps: Int,
     lastStepRatio: Float,
     envTexture: CubeTextureDeclaration?,
-    renderContext: RenderContext,
+    frameContext: FrameContext,
     currentRetentionPolicy: RetentionPolicy,
 ): PostShadingEffect {
     val nextStepRatio = lastStepRatio.pow(1f / (linearSteps + 1f))
@@ -31,7 +31,7 @@ internal fun ssrEffect(
                     maxReflectionDistance * (1f - nextStepRatio) / (1f - nextStepRatio.pow(linearSteps))
                 ),
                 null,
-                FrameTarget(renderContext.width / downsample, renderContext.height / downsample, "ssrTexture", "ssrDepth"),
+                FrameTarget(frameContext.width / downsample, frameContext.height / downsample, "ssrTexture", "ssrDepth"),
                 currentRetentionPolicy
             )
         ),

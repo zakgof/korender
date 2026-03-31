@@ -137,7 +137,8 @@ internal class Engine(
     private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
     private val loader = Loader(appResourceLoader)
     private val inventory = Inventory(loader)
-    private val renderContext = RenderContext(width, height)
+    private val renderContext = RenderContext()
+    private val regularFrameContext = RegularFrameContext(width, height, renderContext)
 
     private var touchBoxes: List<TouchBox> = listOf()
     private var pressedTouchBoxIds = setOf<Any>()
@@ -146,6 +147,7 @@ internal class Engine(
     private val kc = KorenderContextImpl()
     private var loaderLoaded = false
     private val preFrames = ArrayDeque<() -> Unit>()
+    private val renderer = Renderer(inventory, renderContext)
 
     inner class KorenderContextImpl : KorenderContext {
 
@@ -200,9 +202,8 @@ internal class Engine(
             val images = CompletableDeferred<CubeTextureImages>()
             val startNano = Platform.nanoTime()
 
-            val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
             fun tryRender(): Boolean {
-                scene.renderToEnvProbe(EnvCaptureContext(resolution, position, near, far, insideOut, sd), "#immediate")
+                renderer.renderToEnvProbe(EnvCaptureContext(resolution, position, near, far, insideOut, sd), "#immediate")
                     ?.fetch()
                     ?.let {
                         images.complete(it)
@@ -234,9 +235,8 @@ internal class Engine(
             val image = CompletableDeferred<Image>()
             val startNano = Platform.nanoTime()
 
-            val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
             fun tryRender(): Boolean {
-                scene.renderToFrameProbe(FrameCaptureContext(width, height, camera as Camera, projection as Projection, sd), "#immediate")
+                renderer.renderToFrameProbe(FrameCaptureContext(width, height, camera as Camera, projection as Projection, sd), "#immediate")
                     ?.fetch()
                     ?.let {
                         image.complete(it)
@@ -284,7 +284,6 @@ internal class Engine(
         override fun heightField(id: String, cellsX: Int, cellsZ: Int, cellWidth: Float, height: (Int, Int) -> Float): MeshDeclaration =
             HeightField(id, cellsX, cellsZ, cellWidth, height, currentRetentionPolicy)
 
-
         override fun mutableMesh(): MutableMesh =
             InternalMutableMesh()
 
@@ -325,7 +324,7 @@ internal class Engine(
             BlurMaterial(false, radius)
 
         override fun blur(radius: Float): PostProcessingEffect =
-            simpleBlur(renderContext, radius)
+            simpleBlur(regularFrameContext, radius)
 
         override fun adjust(brightness: Float, contrast: Float, saturation: Float) =
             AdjustmentMaterial(brightness, contrast, saturation)
@@ -364,13 +363,13 @@ internal class Engine(
             FogMaterial(density, color)
 
         override fun ssr(downsample: Int, maxReflectionDistance: Float, linearSteps: Int, binarySteps: Int, lastStepRatio: Float, envTexture: CubeTextureDeclaration?) =
-            ssrEffect(downsample, maxReflectionDistance, linearSteps, binarySteps, lastStepRatio, envTexture, renderContext, currentRetentionPolicy)
+            ssrEffect(downsample, maxReflectionDistance, linearSteps, binarySteps, lastStepRatio, envTexture, regularFrameContext, currentRetentionPolicy)
 
         override fun bloom(threshold: Float, amount: Float, radius: Float, downsample: Int) =
-            bloomSimpleEffect(renderContext, currentRetentionPolicy, threshold, amount, radius, downsample)
+            bloomSimpleEffect(regularFrameContext, currentRetentionPolicy, threshold, amount, radius, downsample)
 
         override fun bloomWide(threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float) =
-            bloomMipEffect(renderContext, currentRetentionPolicy, threshold, amount, downsample, mips, offset, highResolutionRatio)
+            bloomMipEffect(regularFrameContext, currentRetentionPolicy, threshold, amount, downsample, mips, offset, highResolutionRatio)
 
         override fun projection(width: Float, height: Float, near: Float, far: Float, mode: ProjectionMode) =
             Projection(width, height, near, far, mode)
@@ -400,16 +399,16 @@ internal class Engine(
 
         override
         var camera: CameraDeclaration
-            get() = renderContext.camera
+            get() = regularFrameContext.camera
             set(value) {
-                renderContext.camera = value as Camera
+                regularFrameContext.camera = value as Camera
             }
 
         override
         var projection: ProjectionDeclaration
-            get() = renderContext.projection
+            get() = regularFrameContext.projection
             set(value) {
-                renderContext.projection = value as Projection
+                regularFrameContext.projection = value as Projection
             }
 
         override
@@ -421,11 +420,11 @@ internal class Engine(
 
         override
         val width: Int
-            get() = renderContext.width
+            get() = regularFrameContext.width
 
         override
         val height: Int
-            get() = renderContext.height
+            get() = regularFrameContext.height
 
         override fun createImage(width: Int, height: Int, format: PixelFormat): Image =
             Platform.createImage(width, height, format)
@@ -571,12 +570,12 @@ internal class Engine(
             DefaultFrameContext(kc, sd, frameInfo).apply(it)
         }
         inventory.go(frameInfo.time, kc.currentRetentionGeneration) {
-            val loader = sd.loaderSceneDeclaration?.let { Scene(it, inventory, renderContext, kc.currentRetentionPolicy) }
+            val loader = sd.loaderSceneDeclaration?.let { renderer.Scene(it, regularFrameContext) }
             if (loader != null && !loaderLoaded) {
                 loaderLoaded = loader.render() || inventory.pending() > 0
                 loaderLoaded
             } else {
-                val scene = Scene(sd, inventory, renderContext, kc.currentRetentionPolicy)
+                val scene = renderer.Scene(sd, regularFrameContext)
                 val renderOk = scene.render()
                 if (loader != null && (!renderOk || inventory.pending() > 0)) {
                     loader.render()
@@ -641,8 +640,8 @@ internal class Engine(
 
     fun resize(w: Int, h: Int) {
         println("Viewport resize $w x $h")
-        renderContext.width = w
-        renderContext.height = h
+        regularFrameContext.width = w
+        regularFrameContext.height = h
     }
 }
 

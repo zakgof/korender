@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.Platform
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.glgpu.FloatGetter
@@ -34,7 +35,9 @@ internal interface FrameContext {
     val time: Float
 }
 
-internal class RenderContext(override var width: Int, override var height: Int) : FrameContext {
+internal fun FrameContext.defaultTarget() = FrameTarget(width, height, "colorTexture", "depthTexture")
+
+internal class RegularFrameContext(override var width: Int, override var height: Int, val renderContext: RenderContext) : FrameContext {
 
     private var customProjection: Projection? = null
 
@@ -45,6 +48,13 @@ internal class RenderContext(override var width: Int, override var height: Int) 
         }
 
     override var camera: Camera = DefaultCamera(20.z, -1.z, 1.y)
+
+    override val time
+        get() = renderContext.time
+}
+
+internal class RenderContext {
+
     var backgroundColor = ColorRGBA.Transparent
 
     val frameInfoManager = FrameInfoManager()
@@ -52,15 +62,13 @@ internal class RenderContext(override var width: Int, override var height: Int) 
     val envProbes = mutableMapOf<String, GlGpuCubeTexture>()
     val frameProbes = mutableMapOf<String, GlGpuTexture>()
 
-    override val time
-        get()= (Platform.nanoTime() - frameInfoManager.startNanos) * 1e-9f
+    val time
+        get() = (Platform.nanoTime() - frameInfoManager.startNanos) * 1e-9f
 
-    fun defaultTarget() = FrameTarget(width, height, "colorTexture", "depthTexture")
-
-    val frameMaterialModifier = FrameMaterialModifier(this)
+    var currentRetentionPolicy: RetentionPolicy = TimeRetentionPolicy(10f)
 }
 
-internal class FrameMaterialModifier(val frameContext: FrameContext ) : InternalMaterialModifier() {
+internal class FrameMaterialModifier(val frameContext: FrameContext) : InternalMaterialModifier() {
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
