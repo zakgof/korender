@@ -146,6 +146,7 @@ internal class Engine(
     private val keyHandlers = mutableListOf<KeyHandler>()
     private val kc = KorenderContextImpl()
     private var loaderLoaded = false
+    private var loaderComplete= false
     private val preFrames = ArrayDeque<() -> Unit>()
     private val renderer = Renderer(inventory, renderContext)
 
@@ -586,10 +587,13 @@ internal class Engine(
                 val scene = renderer.Scene(sd, regularFrameContext)
                 val mainRk = ResultKeeper()
                 scene.render(mainRk)
-                if (loader != null && (!mainRk.success || inventory.pending() > 0)) {
+                if (loader != null && (!loaderComplete || inventory.pending() > 0)) {
                     loader.render(null)
                 }
                 touchBoxes = scene.touchBoxes
+                if (mainRk.success) {
+                    loaderComplete = true
+                }
                 mainRk.success
             }
         }
