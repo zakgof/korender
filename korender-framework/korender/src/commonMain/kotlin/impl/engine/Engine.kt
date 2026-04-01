@@ -203,12 +203,15 @@ internal class Engine(
             val startNano = Platform.nanoTime()
 
             fun tryRender(): Boolean {
-                renderer.renderToEnvProbe(EnvCaptureContext(resolution, position, near, far, insideOut, sd), "#immediate")
+                val rk = ResultKeeper()
+                renderer.renderToEnvProbe(EnvCaptureContext(resolution, position, near, far, insideOut, sd), "#immediate", rk)
                     ?.fetch()
                     ?.let {
-                        images.complete(it)
-                        println("Capture env done in ${(Platform.nanoTime() - startNano) * 1e-9}s")
-                        return true
+                        if (rk.success) {
+                            images.complete(it)
+                            println("Capture env done in ${(Platform.nanoTime() - startNano) * 1e-9}s")
+                            return true
+                        }
                     }
                 println("Capturing env not complete, retrying...")
                 return false
@@ -236,12 +239,15 @@ internal class Engine(
             val startNano = Platform.nanoTime()
 
             fun tryRender(): Boolean {
-                renderer.renderToFrameProbe(FrameCaptureContext(width, height, camera as Camera, projection as Projection, sd), "#immediate")
+                val rk = ResultKeeper()
+                renderer.renderToFrameProbe(FrameCaptureContext(width, height, camera as Camera, projection as Projection, sd), "#immediate", rk)
                     ?.fetch()
                     ?.let {
-                        image.complete(it)
-                        println("Capture frame done in ${(Platform.nanoTime() - startNano) * 1e-9}s")
-                        return true
+                        if (rk.success) {
+                            image.complete(it)
+                            println("Capture frame done in ${(Platform.nanoTime() - startNano) * 1e-9}s")
+                            return true
+                        }
                     }
                 println("Capturing frame not complete, retrying...")
                 return false
@@ -572,16 +578,19 @@ internal class Engine(
         inventory.go(frameInfo.time, kc.currentRetentionGeneration) {
             val loader = sd.loaderSceneDeclaration?.let { renderer.Scene(it, regularFrameContext) }
             if (loader != null && !loaderLoaded) {
-                loaderLoaded = loader.render() || inventory.pending() > 0
-                loaderLoaded
+                val loaderRk = ResultKeeper()
+                loader.render(loaderRk)
+                loaderLoaded = loaderRk.success
+                false
             } else {
                 val scene = renderer.Scene(sd, regularFrameContext)
-                val renderOk = scene.render()
-                if (loader != null && (!renderOk || inventory.pending() > 0)) {
-                    loader.render()
+                val mainRk = ResultKeeper()
+                scene.render(mainRk)
+                if (loader != null && (!mainRk.success || inventory.pending() > 0)) {
+                    loader.render(null)
                 }
                 touchBoxes = scene.touchBoxes
-                renderOk
+                mainRk.success
             }
         }
     }

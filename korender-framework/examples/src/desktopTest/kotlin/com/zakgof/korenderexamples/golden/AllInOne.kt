@@ -13,6 +13,7 @@ val allInOne = GolderImageCase (
 
     },
     frame = {
+        DeferredShading()
         DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(3f))
         Renderable(
             base {

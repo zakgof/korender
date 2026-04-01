@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.impl.engine.ResultKeeper
 import com.zakgof.korender.impl.gl.GL.glGetInteger
 import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_UNIFORM_BLOCK_SIZE
 import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_UNIFORM_BUFFER_BINDINGS
@@ -80,11 +81,12 @@ internal class UniformBufferHolder {
         uniformSuppliers: List<UniformSupplier>,
         uniformBlock: UniformBlock?,
         materialName: String,
-        render: (Int) -> Boolean
+        rk: ResultKeeper?,
+        render: (Int, ResultKeeper?) -> Unit
     ): Int? {
         val renderItem = if (uniformBlock != null) {
             if (shaderUboSize - bufferShift < uniformBlock.size || currentBinding >= maxBindings) {
-                flush()
+                flush(rk)
             }
             shaderUbo.populate(uniformSuppliers, bufferShift, uniformBlock.bindings, materialName)
             val ri = RenderItem(render, bufferShift, uniformBlock.size, currentBinding)
@@ -98,24 +100,21 @@ internal class UniformBufferHolder {
         return renderItem.binding
     }
 
-    fun flush(): Boolean {
-        var success = true
+    fun flush(rk: ResultKeeper?) {
         if (renderQueue.isNotEmpty()) {
             shaderUbo.upload(bufferShift)
             renderQueue.forEach { renderItem ->
                 renderItem.binding?.let { shaderUbo.bindRange(it, renderItem.shift, renderItem.size) }
-                success = success and renderItem.render(renderItem.binding ?: -1)
+                renderItem.render(renderItem.binding ?: -1, rk)
             }
         }
         bufferShift = 0
         currentBinding = 1
         renderQueue.clear()
-        return success
     }
 
-
     private class RenderItem(
-        val render: (Int) -> Boolean,
+        val render: (Int, ResultKeeper?) -> Unit,
         val shift: Int,
         val size: Int,
         val binding: Int?

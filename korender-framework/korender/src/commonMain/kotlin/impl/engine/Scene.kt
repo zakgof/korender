@@ -65,6 +65,12 @@ import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
+internal class ResultKeeper(var success: Boolean = true) {
+    fun fail() {
+        success = false
+    }
+}
+
 // TODO move out
 internal class LightMaterialModifier(private val sc: SceneDeclaration) : InternalMaterialModifier() {
 
@@ -157,10 +163,14 @@ internal class Renderer(
         } as GLBindableTexture
     }
 
-    fun renderToEnvProbe(envCaptureContext: EnvCaptureContext, probeName: String): GlGpuCubeTexture? {
-        var success = true
+    fun renderToEnvProbe(envCaptureContext: EnvCaptureContext, probeName: String, rk: ResultKeeper?): GlGpuCubeTexture? {
+
         val probeFb =
-            inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", envCaptureContext.resolution, envCaptureContext.resolution, true, TransientProperty(renderContext.currentRetentionPolicy))) ?: return null
+            inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", envCaptureContext.resolution, envCaptureContext.resolution, true, TransientProperty(renderContext.currentRetentionPolicy)))
+        if (probeFb == null) {
+            rk?.fail()
+            return null
+        }
 
         val projection = Projection(2f * envCaptureContext.near, 2f * envCaptureContext.near, envCaptureContext.near, envCaptureContext.far, FrustumProjectionMode)
         mapOf(
@@ -178,19 +188,14 @@ internal class Renderer(
                 envCaptureContext.resolution,
                 envCaptureContext.resolution
             )
-            val scene = Scene(envCaptureContext.sceneDeclaration, frameContext)
-            scene.populateFrameUbo()
-            probeFb.exec(it.key) {
-                scene.prepareScene(envCaptureContext.insideOut)
-                success = success and scene.renderForwardOpaques()
-                success = success and scene.renderTransparents(envCaptureContext.insideOut)
-            }
+//            val scene = Scene(envCaptureContext.sceneDeclaration, frameContext, probeFb)
+//            scene.render(rk)
         }
         probeFb.finish()
-        return if (success) probeFb.colorTexture else null
+        return probeFb.colorTexture
     }
 
-    fun renderToFrameProbe(frameCaptureContext: FrameCaptureContext, frameProbeName: String): GlGpuTexture? {
+    fun renderToFrameProbe(frameCaptureContext: FrameCaptureContext, frameProbeName: String, rk: ResultKeeper?): GlGpuTexture? {
 
         val frameContext = CustomFrameContext(
             frameCaptureContext.projection,
@@ -201,11 +206,13 @@ internal class Renderer(
         )
 
         val probeFb = inventory.frameBuffer(FrameBufferDeclaration("probe-$frameProbeName", frameCaptureContext.width, frameCaptureContext.height, listOf(GlGpuTexture.Preset.RGBAFilter), true, TransientProperty(renderContext.currentRetentionPolicy)))
-            ?: return null
+        if (probeFb == null) {
+            rk?.fail()
+            return null
+        }
         val scene = Scene(frameCaptureContext.sceneDeclaration, frameContext, probeFb)
-
-        val success = scene.render()
-        return if (success) probeFb.colorTextures[0] else null
+        scene.render(rk)
+        return probeFb.colorTextures[0]
     }
 
     inner class Scene(
@@ -231,58 +238,59 @@ internal class Renderer(
             }
         }
 
-        fun render(): Boolean {
+        fun render(rk: ResultKeeper?) {
 
-            renderEnvProbes()
-            renderFrameProbes()
+            renderEnvProbes(rk)
+            renderFrameProbes(rk)
 
             populateFrameUbo()
 
             try {
-                renderShadows()
+                renderShadows(rk)
                 if (deferredShading) {
-                    renderSceneDeferred()
+                    renderSceneDeferred(rk)
                 } else {
-                    renderSceneForward()
+                    renderSceneForward(rk)
                 }
-                return true
             } catch (sr: SkipRender) {
                 println("Scene rendering skipped as resource not ready: [${sr.text}]")
-                return false
+                rk?.fail()
             }
         }
 
-        private fun renderEnvProbes() {
+        private fun renderEnvProbes(rk: ResultKeeper?) {
             sceneDeclaration.envCaptures.forEach { kv ->
                 try {
-                    renderToEnvProbe(kv.value, kv.key)
+                    renderToEnvProbe(kv.value, kv.key, rk)
                         ?.let {
                             renderContext.envProbes[kv.key] = it
+                            true
                         }
                 } catch (sr: SkipRender) {
                     println("Env probing skipped as resource not ready: [${sr.text}]")
-                    return
+                    rk?.fail()
                 }
             }
         }
 
-        private fun renderFrameProbes() {
+        private fun renderFrameProbes(rk: ResultKeeper?) {
             sceneDeclaration.frameCaptures.forEach { kv ->
                 try {
-                    renderToFrameProbe(kv.value, kv.key)
+                    renderToFrameProbe(kv.value, kv.key, rk)
                         ?.let {
                             renderContext.frameProbes[kv.key] = it
+                            true
                         }
                 } catch (sr: SkipRender) {
                     println("Frame probing skipped as resource not ready: [${sr.text}]")
-                    return
+                    rk?.fail()
                 }
             }
         }
 
-        private fun renderSceneDeferred() {
+        private fun renderSceneDeferred(rk: ResultKeeper?) {
 
-            renderDeferredOpaques()
+            renderDeferredOpaques(rk)
 
             val postShadingEffects = sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects.map { it as InternalPostShadingEffect }
             val hasPostShading = postShadingEffects.isNotEmpty()
@@ -290,59 +298,59 @@ internal class Renderer(
 
             if (!hasPostShading && !hasPostProcessing) {
                 renderTo(finalFb) {
-                    renderDeferredShading()
-                    renderTransparents()
+                    renderDeferredShading(rk)
+                    renderTransparents(rk = rk)
                 }
                 return
             }
 
             if (!hasPostShading && hasPostProcessing) {
-                renderToReusableFb(defaultTarget) {
-                    renderDeferredShading();
+                renderToReusableFb(defaultTarget, rk) {
+                    renderDeferredShading(rk);
                 }
-                renderPostProcessAndTransparents()
+                renderPostProcessAndTransparents(rk)
                 return
             }
 
             if (hasPostShading && !hasPostProcessing) {
-                renderToReusableFb(defaultTarget) {
-                    renderDeferredShading();
+                renderToReusableFb(defaultTarget, rk) {
+                    renderDeferredShading(rk);
                 }
                 postShadingEffects.forEach {
-                    renderPostShadingEffect(it)
+                    renderPostShadingEffect(it, rk)
                 }
                 renderTo(finalFb) {
-                    renderComposition()
-                    renderTransparents()
+                    renderComposition(rk)
+                    renderTransparents(rk = rk)
                 }
                 return
             }
 
             if (hasPostShading && hasPostProcessing) {
-                renderToReusableFb(defaultTarget) {
-                    renderDeferredShading();
+                renderToReusableFb(defaultTarget, rk) {
+                    renderDeferredShading(rk);
                 }
                 postShadingEffects.forEach {
-                    renderPostShadingEffect(it)
+                    renderPostShadingEffect(it, rk)
                 }
-                renderToReusableFb(defaultTarget) {
-                    renderComposition()
+                renderToReusableFb(defaultTarget, rk) {
+                    renderComposition(rk)
                 }
                 postShadingEffects.flatMap { it.keepTextures }
                     .forEach { reusableFrameBufferHolder.unlock(it) }
-                renderPostProcessAndTransparents()
+                renderPostProcessAndTransparents(rk)
             }
         }
 
-        private fun renderDeferredShading() {
+        private fun renderDeferredShading(rk: ResultKeeper?) {
             val shadingMaterial = InternalMaterial("!shader/screen.vert", "!shader/deferred/shading.frag")
             val shadingMaterialDeclaration = shadingMaterial.toDeclaration(true, renderContext.currentRetentionPolicy, listOf(contextMaterialModifier))
-            renderFullscreen(shadingMaterialDeclaration)
+            renderFullscreen(shadingMaterialDeclaration, rk = rk)
         }
 
-        private fun renderPostShadingEffect(effect: InternalPostShadingEffect) {
+        private fun renderPostShadingEffect(effect: InternalPostShadingEffect, rk: ResultKeeper?) {
             effect.effectPasses.forEach { pass ->
-                renderToReusableFb(pass.target) {
+                renderToReusableFb(pass.target, rk) {
                     pass.mapping.forEach {
                         contextMaterialModifier.customTextureUniforms[it.key] = contextMaterialModifier.customTextureUniforms[it.value]!!
                     }
@@ -350,7 +358,7 @@ internal class Renderer(
                         true, renderContext.currentRetentionPolicy,
                         listOf(contextMaterialModifier)
                     )
-                    renderFullscreen(materialDeclaration, pass.target.width, pass.target.height)
+                    renderFullscreen(materialDeclaration, pass.target.width, pass.target.height, rk)
                 }
             }
             effect.effectPasses.flatMap { listOf(it.target.colorOutput, it.target.depthOutput) }
@@ -358,48 +366,48 @@ internal class Renderer(
                 .forEach { reusableFrameBufferHolder.unlock(it) }
         }
 
-        private fun renderComposition() {
+        private fun renderComposition(rk: ResultKeeper?) {
             val compositionModifiers = listOf(contextMaterialModifier) + sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects
                 .map { it as InternalPostShadingEffect }
                 .map { it.compositionMaterialModifier }
             val compositionMaterial = InternalMaterial("!shader/screen.vert", "!shader/deferred/composition.frag")
             val compositionMaterialDeclaration = compositionMaterial.toDeclaration(true, renderContext.currentRetentionPolicy, compositionModifiers)
-            renderFullscreen(compositionMaterialDeclaration)
+            renderFullscreen(compositionMaterialDeclaration, rk = rk)
         }
 
-        private fun renderSceneForward() {
+        private fun renderSceneForward(rk: ResultKeeper?) {
             val hasFilters = sceneDeclaration.filters.isNotEmpty()
             if (hasFilters) {
-                renderToReusableFb(defaultTarget) {
+                renderToReusableFb(defaultTarget, rk) {
                     prepareScene()
-                    renderForwardOpaques()
+                    renderForwardOpaques(rk)
                 }
-                renderPostProcessAndTransparents()
+                renderPostProcessAndTransparents(rk)
             } else {
                 renderTo(finalFb) {
                     prepareScene()
-                    renderForwardOpaques()
-                    renderTransparents()
+                    renderForwardOpaques(rk)
+                    renderTransparents(rk = rk)
                 }
             }
         }
 
-        private fun renderPostProcessAndTransparents() {
+        private fun renderPostProcessAndTransparents(rk: ResultKeeper?) {
             val passes = sceneDeclaration.filters.flatMap { it.passes }
             if (passes.isNotEmpty()) {
                 passes.dropLast(1).forEach { pass ->
-                    renderToReusableFb(pass.target) {
-                        renderPostProcessPass(pass)
+                    renderToReusableFb(pass.target, rk) {
+                        renderPostProcessPass(pass, rk)
                     }
                 }
                 renderTo(finalFb) {
-                    renderPostProcessPass(passes.last())
-                    renderTransparents()
+                    renderPostProcessPass(passes.last(), rk)
+                    renderTransparents(rk = rk)
                 }
             }
         }
 
-        private fun renderDeferredOpaques() {
+        private fun renderDeferredOpaques(rk: ResultKeeper?) {
             val geometryBuffer = inventory.frameBuffer(
                 FrameBufferDeclaration(
                     "geometry", frameContext.width, frameContext.height,
@@ -417,17 +425,17 @@ internal class Renderer(
                 }
                 glViewport(0, 0, frameContext.width, frameContext.height)
                 glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-                renderBucket(sceneDeclaration.opaques)
+                renderBucket(sceneDeclaration.opaques, rk)
             }
             // TODO: vars !!!
             contextMaterialModifier.customTextureUniforms["albedoGeometryTexture"] = geometryBuffer.colorTextures[0]
             contextMaterialModifier.customTextureUniforms["normalGeometryTexture"] = geometryBuffer.colorTextures[1]
             contextMaterialModifier.customTextureUniforms["emissionGeometryTexture"] = geometryBuffer.colorTextures[2]
             contextMaterialModifier.customTextureUniforms["depthGeometryTexture"] = geometryBuffer.depthTexture!!
-            renderDecals()
+            renderDecals(rk)
         }
 
-        private fun renderDecals() {
+        private fun renderDecals(rk: ResultKeeper?) {
             if (sceneDeclaration.deferredShadingDeclaration!!.decals.isNotEmpty()) {
                 // TODO: downscaled
                 val decalsFb = inventory.frameBuffer(
@@ -465,9 +473,9 @@ internal class Renderer(
                             ) * scale(decalDeclaration.size).mat4
 
                             val renderableDeclaration = RenderableDeclaration(decalDeclaration.material, listOf(), DecalCube(0.5f, renderContext.currentRetentionPolicy), Transform(model), true, renderContext.currentRetentionPolicy)
-                            renderRenderable(renderableDeclaration, frameContext.camera)
+                            renderRenderable(renderableDeclaration, frameContext.camera, rk = rk)
                         }
-                        inventory.uniformBufferHolder.flush()
+                        inventory.uniformBufferHolder.flush(rk)
                     }
                     decalBlendFb.exec {
                         val decalBlendMaterial = DecalBlendMaterial(decalsFb.colorTextures[0], decalsFb.colorTextures[1])
@@ -476,21 +484,22 @@ internal class Renderer(
                             renderContext.currentRetentionPolicy,
                             listOf(contextMaterialModifier)
                         )
-                        renderFullscreen(decalBlendMaterialDeclaration) { blend(false) }
+                        renderFullscreen(decalBlendMaterialDeclaration, rk = rk) { blend(false) }
                     }
                     // TODO: vars !!!
                     contextMaterialModifier.customTextureUniforms["albedoGeometryTexture"] = decalBlendFb.colorTextures[0]
                     contextMaterialModifier.customTextureUniforms["normalGeometryTexture"] = decalBlendFb.colorTextures[1]
+                } else {
+                    rk?.fail()
                 }
             }
         }
 
-        private fun renderBucket(renderables: List<RenderableDeclaration>): Boolean {
-            var success = true
+        private fun renderBucket(renderables: List<RenderableDeclaration>, rk: ResultKeeper?) {
             renderables.forEach {
-                success = success and renderRenderable(it, frameContext.camera)
+                renderRenderable(it, frameContext.camera, rk = rk)
             }
-            return success and inventory.uniformBufferHolder.flush()
+            inventory.uniformBufferHolder.flush(rk)
         }
 
         fun prepareScene(insideOut: Boolean = false) {
@@ -506,15 +515,12 @@ internal class Renderer(
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         }
 
-        fun renderForwardOpaques(): Boolean {
-            var success = true
-            success = success and renderBucket(sceneDeclaration.opaques)
-            success = success and renderBucket(sceneDeclaration.skies)
-            return success
+        fun renderForwardOpaques(rk: ResultKeeper?) {
+            renderBucket(sceneDeclaration.opaques, rk)
+            renderBucket(sceneDeclaration.skies, rk)
         }
 
-        fun renderTransparents(insideOut: Boolean = false): Boolean {
-            var success = true
+        fun renderTransparents(insideOut: Boolean = false, rk: ResultKeeper?) {
             renderContext.state.set {
                 depthMask(false)
                 if (insideOut) {
@@ -526,9 +532,9 @@ internal class Renderer(
             sceneDeclaration.transparents
                 .sortedByDescending { (frameContext.camera.mat4 * it.transform.offset()).z * reverse }
                 .forEach {
-                    success = success and renderRenderable(it, frameContext.camera, insideOut)
+                    renderRenderable(it, frameContext.camera, insideOut, rk = rk)
                 }
-            success = success and inventory.uniformBufferHolder.flush()
+            inventory.uniformBufferHolder.flush(rk)
 
             val guiRenderers = sceneDeclaration.guis.map {
                 GuiRenderer(inventory, frameContext.width, frameContext.height, it)
@@ -536,13 +542,12 @@ internal class Renderer(
             touchBoxes += guiRenderers.flatMap { it.touchBoxes }
             guiRenderers.flatMap { it.renderableDeclarations }
                 .forEach {
-                    success = success and renderRenderable(it, frameContext.camera)
+                    renderRenderable(it, frameContext.camera, rk = rk)
                 }
-            success = success and inventory.uniformBufferHolder.flush()
-            return success
+            inventory.uniformBufferHolder.flush(rk)
         }
 
-        private fun renderShadows() {
+        private fun renderShadows(rk: ResultKeeper?) {
             val shadowData = mutableListOf<ShadowerData>()
             val directionalShadowIndexes = mutableListOf<Int>()
             val directionalShadowCounts = mutableListOf<Int>()
@@ -555,7 +560,8 @@ internal class Renderer(
                         ci,
                         sceneDeclaration.opaques + sceneDeclaration.transparents,
                         this,
-                        this@Renderer
+                        this@Renderer,
+                        rk
                     )?.let {
                         shadowData += it
                         shadowData.size - 1
@@ -585,22 +591,23 @@ internal class Renderer(
             inventory.uniformBufferHolder.populateFrame(listOf(frameMaterialModifier, lightMaterialModifier), true)
         }
 
-        private fun renderPostProcessPass(pass: InternalPassDeclaration) {
+        private fun renderPostProcessPass(pass: InternalPassDeclaration, rk: ResultKeeper?) {
             contextMaterialModifier.customTextureUniforms["colorInputTexture"] = contextMaterialModifier.customTextureUniforms["colorTexture"]!!
             contextMaterialModifier.customTextureUniforms["depthInputTexture"] = contextMaterialModifier.customTextureUniforms["depthTexture"]!!
             pass.mapping.forEach {
                 contextMaterialModifier.customTextureUniforms[it.key] = contextMaterialModifier.customTextureUniforms[it.value]!!
             }
             val passMaterialDeclaration = pass.material.toDeclaration(deferredShading, pass.retentionPolicy, listOf(contextMaterialModifier))
-            renderFullscreen(passMaterialDeclaration, pass.target.width, pass.target.height)
-            pass.sceneDeclaration?.let { Scene(it, frameContext).renderForwardOpaques() }
+            renderFullscreen(passMaterialDeclaration, pass.target.width, pass.target.height, rk)
+            pass.sceneDeclaration?.let { Scene(it, frameContext).renderForwardOpaques(rk) }
         }
 
         private fun renderFullscreen(
             quadMaterial: ShaderDeclaration,
             width: Int = frameContext.width,
             height: Int = frameContext.height,
-            state: GlState.StateContext.() -> Unit = {},
+            rk: ResultKeeper?,
+            state: GlState.StateContext.() -> Unit = {}
         ) {
             val mesh = inventory.mesh(ScreenQuad(renderContext.currentRetentionPolicy))
             val shader = inventory.shader(quadMaterial)
@@ -611,12 +618,12 @@ internal class Renderer(
             glViewport(0, 0, width, height)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             if (mesh != null && shader != null) {
-                shader.render(quadMaterial.uniformSuppliers, fixer, mesh.gpuMesh)
-                inventory.uniformBufferHolder.flush()
+                shader.render(quadMaterial.uniformSuppliers, fixer, mesh.gpuMesh, rk)
+                inventory.uniformBufferHolder.flush(rk)
             }
         }
 
-        private fun renderToReusableFb(target: FrameTarget, block: () -> Unit) {
+        private fun renderToReusableFb(target: FrameTarget, rk: ResultKeeper?, block: () -> Unit) {
             val fbDeclaration = reusableFrameBufferHolder.request(target, renderContext.currentRetentionPolicy)
             val fb = inventory.frameBuffer(fbDeclaration)
                 ?: throw SkipRender("Reusable FB '${fbDeclaration.id}'")
@@ -630,8 +637,13 @@ internal class Renderer(
             camera: Camera?,
             reverseZ: Boolean = false,
             isShadow: Boolean = false,
-        ): Boolean {
-            val meshLink = inventory.mesh(declaration.mesh as InternalMeshDeclaration) ?: return false
+            rk: ResultKeeper?
+        ) {
+            val meshLink = inventory.mesh(declaration.mesh as InternalMeshDeclaration)
+            if (meshLink == null) {
+                rk?.fail()
+                return
+            }
             val instancingMaterialModifier = (declaration.mesh as? Instanceable)?.instancing(meshLink, reverseZ, camera, inventory)
             val materialModifiers = listOfNotNull(
                 contextMaterialModifier,
@@ -640,10 +652,13 @@ internal class Renderer(
             ) + declaration.modifiers
             val materialDeclaration = declaration.material.toDeclaration(deferredShading, declaration.retentionPolicy, materialModifiers)
             if (materialDeclaration.defs.contains("NO_SHADOW_CAST") && isShadow)
-                return true
-            val shader = inventory.shader(materialDeclaration) ?: return false
-            shader.render(materialDeclaration.uniformSuppliers, fixer, meshLink.gpuMesh)
-            return true
+                return
+            val shader = inventory.shader(materialDeclaration)
+            if (shader == null) {
+                rk?.fail()
+                return
+            }
+            shader.render(materialDeclaration.uniformSuppliers, fixer, meshLink.gpuMesh, rk)
         }
     }
 }

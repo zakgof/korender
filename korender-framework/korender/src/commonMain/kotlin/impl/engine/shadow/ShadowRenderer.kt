@@ -12,6 +12,7 @@ import com.zakgof.korender.impl.engine.ImmediatelyFreeRetentionPolicy
 import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.Renderer
+import com.zakgof.korender.impl.engine.ResultKeeper
 import com.zakgof.korender.impl.engine.TransientProperty
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
@@ -49,13 +50,18 @@ internal object ShadowRenderer {
         index: Int,
         shadowCasterDeclarations: List<RenderableDeclaration>,
         scene: Renderer.Scene,
-        renderer: Renderer // TODO: Ugly
+        renderer: Renderer, // TODO: Ugly
+        rk: ResultKeeper?
     ): ShadowerData? {
 
         val declaration = declarations[index]
         val frameBuffer = renderer.inventory.frameBuffer(
             FrameBufferDeclaration("shadow-$id", declaration.mapSize, declaration.mapSize, fbPreset(declaration), true, TransientProperty(ImmediatelyFreeRetentionPolicy))
-        ) ?: return null
+        )
+        if (frameBuffer == null) {
+            rk?.fail()
+            return null
+        }
 
         val shadowFrameMaterialModifier = updateShadowCamera(scene.frameContext, renderer.renderContext, lightDirection, declaration)
 
@@ -80,9 +86,9 @@ internal object ShadowRenderer {
                     renderableDeclaration.transparent,
                     renderableDeclaration.retentionPolicy
                 )
-                scene.renderRenderable(casterRenderableDeclaration, shadowFrameMaterialModifier.frameContext.camera, isShadow = true)
+                scene.renderRenderable(casterRenderableDeclaration, shadowFrameMaterialModifier.frameContext.camera, isShadow = true, rk = rk)
             }
-            renderer.inventory.uniformBufferHolder.flush()
+            renderer.inventory.uniformBufferHolder.flush(rk)
         }
 
         if (declaration.algorithm is InternalVsmShadow && declaration.algorithm.blurRadius != null) {
@@ -93,7 +99,8 @@ internal object ShadowRenderer {
                 frameBuffer,
                 scene,
                 renderer,
-                texBlurRadius
+                texBlurRadius,
+                rk
             )
         }
 
@@ -164,6 +171,7 @@ internal object ShadowRenderer {
         scene: Renderer.Scene,
         renderer: Renderer,
         texBlurRadius: Float,
+        rk: ResultKeeper?
     ) {
         val blurFrameBuffer = renderer.inventory.frameBuffer(
             FrameBufferDeclaration("shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM), true, TransientProperty(ImmediatelyFreeRetentionPolicy))
@@ -177,8 +185,8 @@ internal object ShadowRenderer {
         blurFrameBuffer.exec {
             renderer.renderContext.state.set { }
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-            scene.renderRenderable(blurVQuadRenderableDeclaration, null)
-            renderer.inventory.uniformBufferHolder.flush()
+            scene.renderRenderable(blurVQuadRenderableDeclaration, null, rk = rk)
+            renderer.inventory.uniformBufferHolder.flush(rk)
         }
 
         val blurHQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, false)
@@ -189,8 +197,8 @@ internal object ShadowRenderer {
         frameBuffer.exec {
             renderer.renderContext.state.set { }
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-            scene.renderRenderable(blurHQuadRenderableDeclaration, null)
-            renderer.inventory.uniformBufferHolder.flush()
+            scene.renderRenderable(blurHQuadRenderableDeclaration, null, rk = rk)
+            renderer.inventory.uniformBufferHolder.flush(rk)
         }
     }
 

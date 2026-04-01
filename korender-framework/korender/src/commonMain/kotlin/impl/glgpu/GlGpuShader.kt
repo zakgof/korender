@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.impl.engine.ResultKeeper
 import com.zakgof.korender.impl.gl.GL.glAttachShader
 import com.zakgof.korender.impl.gl.GL.glCompileShader
 import com.zakgof.korender.impl.gl.GL.glCreateProgram
@@ -268,15 +269,15 @@ internal class GlGpuShader(
         glDeleteProgram(programHandle)
     }
 
-    fun render(uniformsSuppliers: List<UniformSupplier>, loader: (Any?) -> GLBindableTexture, mesh: GlGpuMesh) {
-        uboHolder.populate(uniformsSuppliers, shaderUniformBlock, this.toString()) { binding ->
+    fun render(uniformsSuppliers: List<UniformSupplier>, loader: (Any?) -> GLBindableTexture, mesh: GlGpuMesh, rk: ResultKeeper?) {
+        uboHolder.populate(uniformsSuppliers, shaderUniformBlock, this.toString(), rk) { binding, _ ->
             glUseProgram(programHandle)
             shaderUniformBlock?.let { glUniformBlockBinding(programHandle, it.shaderBlockIndex, binding) }
             if (bindUniforms(uniformsSuppliers, loader)) {
                 mesh.render()
-                true
-            } else
-                false
+            } else {
+                rk?.fail()
+            }
         }
 
     }
