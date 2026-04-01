@@ -18,7 +18,7 @@ fun MultipleViewportsExample() = Column(
     Box (modifier = Modifier.weight(1f)) {
         Korender(appResourceLoader = { Res.readBytes(it) }) {
             Frame {
-                TestUtils.report(frameInfo)
+                TestExchange.report(frameInfo)
                 DirectionalLight(Vec3(1f, -1f, 0f))
                 Renderable(
                     base { color = ColorRGBA.Red },
@@ -30,7 +30,7 @@ fun MultipleViewportsExample() = Column(
     Box (modifier = Modifier.weight(1f)) {
         Korender(appResourceLoader = { Res.readBytes(it) }) {
             Frame {
-                TestUtils.report(frameInfo)
+                TestExchange.report(frameInfo)
                 DirectionalLight(Vec3(1f, -1f, 0f))
                 Renderable(
                     base { color = ColorRGBA.Green },

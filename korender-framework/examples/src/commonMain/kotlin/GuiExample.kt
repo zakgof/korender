@@ -22,7 +22,7 @@ fun GuiExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val sliderState = SliderState(30f, 0f, 100f)
     val joystickState = JoystickState()
     Frame {
-        TestUtils.report(frameInfo)
+        TestExchange.report(frameInfo)
         val progress = fract(frameInfo.time * 0.1f)
         Sky(starrySky())
         Gui {

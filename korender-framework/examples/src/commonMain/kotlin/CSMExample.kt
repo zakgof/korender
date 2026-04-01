@@ -27,7 +27,7 @@ fun CSMExample() =
 
         Frame {
 
-            TestUtils.report(frameInfo)
+            TestExchange.report(frameInfo)
 
             projection = projection(4f * width / height, 4f, 4f, 10000f)
             camera = freeCamera.camera(projection, width, height, frameInfo.dt)

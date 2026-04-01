@@ -19,7 +19,7 @@ fun InstancedBillboardsExample() = Korender(appResourceLoader = { Res.readBytes(
 
     Frame {
 
-        TestUtils.report(frameInfo)
+        TestExchange.report(frameInfo)
         AmbientLight(White)
         Billboard(
             billboard {

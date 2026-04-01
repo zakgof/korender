@@ -17,7 +17,7 @@ fun ProcTerrainExample() =
 
         val terrain = clipmapTerrainPrefab("terrain", 2.0f, 16, 13)
         Frame {
-            TestUtils.report(frameInfo)
+            TestExchange.report(frameInfo)
 
             val cloudy = 0.5f - 0.5f * cos(frameInfo.time * 0.5f)
 

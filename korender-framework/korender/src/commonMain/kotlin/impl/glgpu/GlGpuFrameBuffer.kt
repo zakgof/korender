@@ -23,7 +23,7 @@ internal class GlGpuFrameBuffer(
     private val width: Int,
     private val height: Int,
     colorTexturePresets: List<GlGpuTexture.Preset>,
-    useDepthBuffer: Boolean
+    useDepthBuffer: Boolean,
 ) : AutoCloseable {
 
     private val fbHandle: GLFrameBuffer = glGenFramebuffers()
@@ -44,7 +44,7 @@ internal class GlGpuFrameBuffer(
 
         if (useDepthBuffer) {
             depthTexture = GlGpuTexture(width, height, GlGpuTexture.Preset.Depth)
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D,depthTexture.glHandle,0)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture.glHandle, 0)
             println(" - FB depth textures [${depthTexture.glHandle}]")
         } else {
             depthTexture = null
@@ -62,7 +62,7 @@ internal class GlGpuFrameBuffer(
     private fun attachColorTexture(index: Int, preset: GlGpuTexture.Preset): GlGpuTexture {
         repeat(preset.formats.size) {
             val tex = GlGpuTexture(width, height, preset, it)
-            glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0 + index,GL_TEXTURE_2D,tex.glHandle,0)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, GL_TEXTURE_2D, tex.glHandle, 0)
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
                 println("Framebuffer [$this] did not accept color target texture with internal format [${preset.formats[it].internal.toHexString()}]")
                 tex.close()
@@ -105,3 +105,6 @@ internal class GlGpuFrameBuffer(
 
     override fun toString() = "[$name] ${width}x${height}: $fbHandle"
 }
+
+internal fun renderTo(fb: GlGpuFrameBuffer?, block: () -> Unit) =
+    if (fb == null) block() else fb.exec(block)

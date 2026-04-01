@@ -12,7 +12,7 @@ import com.zakgof.korender.math.z
 @Composable
 fun PipeExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
-        TestUtils.report(frameInfo)
+        TestExchange.report(frameInfo)
         camera = camera((-10).z, 1.z, 1.y)
         projection = projection(3f * width / height, 3f, 3f, 100f)
         DirectionalLight(Vec3(1f, -1f, 0.1f))

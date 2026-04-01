@@ -21,7 +21,7 @@ fun MeshesExample() {
         OnTouch { orbitCamera.touch(it) }
         val material = base { color = ColorRGBA.Blue }
         Frame {
-            TestUtils.report(frameInfo)
+            TestExchange.report(frameInfo)
             AmbientLight(White)
             camera = orbitCamera.run { camera() }
             Renderable(

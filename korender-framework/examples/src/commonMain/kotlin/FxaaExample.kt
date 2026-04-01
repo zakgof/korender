@@ -6,12 +6,11 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.math.ColorRGB.Companion.White
 import com.zakgof.korender.math.ColorRGBA.Companion.Green
 import com.zakgof.korender.math.ColorRGBA.Companion.Red
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @Composable
 fun FxaaExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
-        TestUtils.report(frameInfo)
+        TestExchange.report(frameInfo)
         AmbientLight(White)
         Renderable(
             base { color = Green },

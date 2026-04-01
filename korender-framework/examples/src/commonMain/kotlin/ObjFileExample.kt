@@ -35,7 +35,7 @@ fun ObjFileExample() {
                     Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
                 }
             }
-            TestUtils.report(frameInfo)
+            TestExchange.report(frameInfo)
         }
     }
 }

@@ -24,7 +24,7 @@ fun LightsExample() =
             roughnessFactor = 0.7f
         }
         Frame {
-            TestUtils.report(frameInfo)
+            TestExchange.report(frameInfo)
 
             fun LightMark(pos: Vec3, markColor: ColorRGB) = Renderable(
                 base {

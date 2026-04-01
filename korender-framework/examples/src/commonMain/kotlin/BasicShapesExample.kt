@@ -20,7 +20,7 @@ fun BasicShapesExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     OnTouch { freeCamera.touch(it) }
     OnKey { freeCamera.handle(it) }
     Frame {
-        TestUtils.report(frameInfo)
+        TestExchange.report(frameInfo)
         val rot = rotate(Quaternion.fromAxisAngle(Vec3(1f, 1f, 0f).normalize(), frameInfo.time))
         camera = freeCamera.camera(projection, width, height, frameInfo.dt)
         DirectionalLight(Vec3(1f, -1f, 0f))

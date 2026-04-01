@@ -21,7 +21,7 @@ fun CaptureEnvExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val freeCamera = FreeCamera(this, 0.z, (-1).z)
     OnTouch { freeCamera.touch(it) }
     Frame {
-        TestUtils.report(frameInfo)
+        TestExchange.report(frameInfo)
         camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
         if (fract(frameInfo.time * 0.2f) > 0.5f && env.isCompleted) {

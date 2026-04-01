@@ -1,6 +1,6 @@
 package com.zakgof.korender.examples.island
 
-import com.zakgof.korender.examples.TestUtils
+import com.zakgof.korender.examples.TestExchange
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
@@ -28,7 +28,7 @@ fun IslandExample() =
 
         Frame {
 
-            TestUtils.report(frameInfo)
+            TestExchange.report(frameInfo)
             if (loader.loaded()) {
                 game.frame(frameInfo.dt)
                 gameFrame(game, loader, terrain)

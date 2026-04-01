@@ -1,6 +1,6 @@
 package com.zakgof.korender.examples.gltfviewer
 
-import com.zakgof.korender.examples.TestUtils
+import com.zakgof.korender.examples.TestExchange
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -69,7 +69,7 @@ fun GltfLibraryExample() = Row {
         }) {
             val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/sea/${it.toString().lowercase()}.jpg" })
             Frame {
-                TestUtils.report(frameInfo)
+                TestExchange.report(frameInfo)
                 OnLoading {
                     Gui {
                         Column {

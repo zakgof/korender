@@ -18,7 +18,7 @@ fun TextureArrayExample() {
         val objMeshDeferred = loadMesh(obj("model/head.obj"))
         val cubeMeshDeferred = loadMesh(cube(1f))
         Frame {
-            TestUtils.report(frameInfo)
+            TestExchange.report(frameInfo)
             if (objMeshDeferred.isCompleted && cubeMeshDeferred.isCompleted) {
                 val objMesh = objMeshDeferred.getCompleted()
                 val cubeMesh = cubeMeshDeferred.getCompleted()

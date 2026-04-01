@@ -17,7 +17,7 @@ fun InstancedCubesExample() = Korender(appResourceLoader = { Res.readBytes(it) }
     val freeCamera = FreeCamera(this, 50.z, -1.z)
     OnTouch { freeCamera.touch(it) }
     Frame {
-        TestUtils.report(frameInfo)
+        TestExchange.report(frameInfo)
         DirectionalLight(Vec3(1f, 1f, -2f), ColorRGB.White)
         camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 

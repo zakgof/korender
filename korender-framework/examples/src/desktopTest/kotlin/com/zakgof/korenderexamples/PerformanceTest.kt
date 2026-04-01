@@ -3,7 +3,7 @@
 import androidx.compose.ui.awt.ComposeWindow
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.examples.Demo
-import com.zakgof.korender.examples.TestUtils
+import com.zakgof.korender.examples.TestExchange
 import com.zakgof.korender.examples.pages
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
@@ -14,7 +14,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.swing.SwingUtilities
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -26,7 +25,7 @@ class PerformanceTest {
     @MethodSource("demoPages")
     fun testComposeUI(demo: Demo) {
 
-        TestUtils.report(null)
+        TestExchange.report(null)
 
         SwingUtilities.invokeAndWait {
             window.setContent {
@@ -51,30 +50,20 @@ class PerformanceTest {
 
     @AfterEach
     fun clearContent() {
-        SwingUtilities.invokeAndWait {
-            window.setContent { }
-        }
-        Thread.sleep(200)
+        TestUtil.clearContent(window)
     }
 
     @OptIn(ExperimentalAtomicApi::class)
     private fun waitKorender(sec: Float): FrameInfo {
-        val start = System.nanoTime()
-        while (true) {
-            val fi = TestUtils.fi.load()
-            if (fi != null && fi.time > sec)
-                return fi
-            val elapsedSec = (System.nanoTime() - start) / 1_000_000_000.0
-            if (elapsedSec > sec + 5f) {
-                throw IllegalStateException("Timed out waiting for Korender frameInfo")
-            }
-            Thread.sleep(200)
+        return TestUtil.poll(timeout = sec) {
+            val fi = TestExchange.fi.load()
+            if (fi != null && fi.time > sec) fi else null
         }
     }
 
     companion object {
-        private val resultsFolder = File("D:\\kot\\dev\\assets")
-        private val timestampFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
+        private val resultsFolder = TestUtil.resultsFolder
+        private val timestampFormat = TestUtil.timestampFormat
         private val results = mutableMapOf<String, Float>()
         private val baseline = loadBaseline(resultsFolder)
         private lateinit var window: ComposeWindow
@@ -82,11 +71,7 @@ class PerformanceTest {
         @JvmStatic
         @BeforeAll
         fun setupWindow() {
-            SwingUtilities.invokeAndWait {
-                window = ComposeWindow()
-                window.setSize(800, 600)
-                window.isVisible = true
-            }
+            window = TestUtil.createWindow()
         }
 
         @JvmStatic
@@ -109,11 +94,7 @@ class PerformanceTest {
                 .sortedBy { it.key }
                 .joinToString(System.lineSeparator()) { "${it.key}\t${it.value}" }
             output.writeText(lines)
-            SwingUtilities.invokeAndWait {
-                window.isVisible = false
-                window.setContent { }
-                window.dispose()
-            }
+            TestUtil.disposeWindow(window)
         }
 
         @Synchronized
@@ -228,5 +209,4 @@ class PerformanceTest {
 
     }
 }
-
 

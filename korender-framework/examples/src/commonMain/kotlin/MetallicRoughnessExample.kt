@@ -16,7 +16,7 @@ import kotlin.math.max
 fun MetallicRoughnessExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })
     Frame {
-        TestUtils.report(frameInfo)
+        TestExchange.report(frameInfo)
 
         projection = projection(width = 3f * width / height, height = 3f, near = 3f, far = 1000f)
         camera = camera(18.z, -1.z, 1.y)

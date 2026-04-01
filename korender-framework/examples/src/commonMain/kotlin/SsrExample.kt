@@ -18,7 +18,7 @@ fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     OnTouch { orbitCamera.touch(it) }
     val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })
     Frame {
-        TestUtils.report(frameInfo)
+        TestExchange.report(frameInfo)
         camera = orbitCamera.run { camera() }
         val phase = frameInfo.time.toInt() % 3
         val sky = cubeSky(env)

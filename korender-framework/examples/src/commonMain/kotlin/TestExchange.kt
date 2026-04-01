@@ -6,7 +6,7 @@ import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 @OptIn(ExperimentalAtomicApi::class)
-object TestUtils {
+object TestExchange {
 
     val fi = AtomicReference<FrameInfo?>(null)
     val screenshotStore = AtomicReference<Image?>(null)

@@ -9,7 +9,6 @@ import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.z
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @Composable
 fun SkyExample() {
@@ -17,7 +16,7 @@ fun SkyExample() {
         val freeCamera = FreeCamera(this, Vec3(0f, 4f, 20f), -1.z)
         OnTouch { freeCamera.touch(it) }
         Frame {
-            TestUtils.report(frameInfo)
+            TestExchange.report(frameInfo)
             AmbientLight(ColorRGB.White)
             camera = freeCamera.camera(projection, width, height, 0f)
             Sky(starrySky())

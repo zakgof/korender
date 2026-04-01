@@ -16,7 +16,7 @@ import kotlin.math.floor
 fun EffectsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     camera = camera(Vec3(0f, 5f, 30f), -1.z, 1.y)
     Frame {
-        TestUtils.report(frameInfo)
+        TestExchange.report(frameInfo)
         DirectionalLight(Vec3(1f, -1f, -1f))
         Sky(fastCloudSky())
 
