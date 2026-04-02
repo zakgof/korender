@@ -68,8 +68,6 @@ internal class WaterMaterial(
     "waveScale" to FloatGetter<WaterMaterial> { it.waveScale },
     "waveMagnitude" to FloatGetter<WaterMaterial> { it.waveMagnitude },
 ), CompositeSupplier {
-    override val plugins
-        get() = super.plugins + ("sky" to sky.skyPlugin)
 
     override val children
         get() = listOf(sky)

@@ -48,11 +48,13 @@ internal open class InternalMaterialModifier(vararg getters: Pair<String, Unifor
     private val gettersMap = getters.toMap()
     val customTextureUniforms = mutableMapOf<String, Any>()
 
-    open val defs: Set<String>
-        get() = customDefs
+    open fun collectDefs(accumulator: MutableSet<String>) {
+        accumulator += customDefs
+    }
 
-    open val plugins: List<Pair<String, String>>
-        get() = customPlugins
+    open fun collectPlugins(accumulator: MutableMap<String, String>) {
+        accumulator += customPlugins
+    }
 
     override fun defs(vararg defs: String) {
         this.customDefs += defs
@@ -109,15 +111,30 @@ internal open class InternalMaterial(
         retentionPolicy: RetentionPolicy,
         modifiers: List<InternalMaterialModifier>,
     ): ShaderDeclaration {
-        // TODO optimize
-        val flatModifiers = (listOf(this) + modifiers).flatMap {
-            listOf(it) + ((it as? CompositeSupplier)?.children ?: listOf())
+
+
+        val flatModifiers = mutableListOf<InternalMaterialModifier>()
+
+        fun append(m: InternalMaterialModifier) {
+            flatModifiers += m
+            if (m is CompositeSupplier) {
+                flatModifiers += m.children
+            }
+        }
+        append(this)
+        modifiers.forEach { append(it) }
+
+        val defs = mutableSetOf<String>()
+        val plugins = mutableMapOf<String, String>()
+        flatModifiers.forEach {
+            it.collectDefs(defs)
+            it.collectPlugins(plugins)
         }
         return ShaderDeclaration(
             vertexShaderFile,
             if (deferredShading) deferredFragmentShaderFile else forwardFragmentShaderFile,
-            defs + flatModifiers.flatMap { it.defs },
-            (plugins + flatModifiers.flatMap { it.plugins }).toMap(),
+            defs,
+            plugins,
             flatModifiers,
             retentionPolicy
         )
@@ -167,24 +184,24 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
             else -> super.uniform(name)
         }
 
-    override val defs
-        get() = super.defs + setOfNotNull(
-            colorTexture?.let { "BASE_COLOR_MAP" },
-            colorTextures?.let { "TEXTURE_ARRAY" }
-        )
+    override fun collectDefs(accumulator: MutableSet<String>) {
+        super.collectDefs(accumulator)
+        colorTexture?.let { accumulator += "BASE_COLOR_MAP" }
+        colorTextures?.let { accumulator += "TEXTURE_ARRAY" }
+    }
 
-    override val plugins
-        get() = super.plugins + listOfNotNull(
-            colorTextures?.let { "texturing" to "!shader/plugin/texturing.array.frag" },
-            triplanarScale?.let { "texturing" to "!shader/plugin/texturing.triplanar.frag" },
-            normalTexture?.let { "normal" to "!shader/plugin/normal.texture.frag" },
-            emission?.let { "emission" to "!shader/plugin/emission.factor.frag" },
-            metallicRoughnessTexture?.let { "metallic_roughness" to "!shader/plugin/metallic_roughness.texture.frag" },
-            specularGlossiness?.let { "specular_glossiness" to "!shader/plugin/specular_glossiness.factor.frag" },
-            specularGlossinessTexture?.let { "specular_glossiness" to "!shader/plugin/specular_glossiness.texture.frag" },
-            occlusionTexture?.let { "occlusion" to "!shader/plugin/occlusion.texture.frag" },
-            emissionTexture?.let { "emission" to "!shader/plugin/emission.texture.frag" }
-        )
+    override fun collectPlugins(accumulator: MutableMap<String, String>) {
+        super.collectPlugins(accumulator)
+        colorTextures?.let { accumulator["texturing"] = "!shader/plugin/texturing.array.frag" }
+        triplanarScale?.let { accumulator["texturing"] = "!shader/plugin/texturing.triplanar.frag" }
+        normalTexture?.let { accumulator["normal"] = "!shader/plugin/normal.texture.frag" }
+        emission?.let { accumulator["emission"] = "!shader/plugin/emission.factor.frag" }
+        metallicRoughnessTexture?.let { accumulator["metallic_roughness"] = "!shader/plugin/metallic_roughness.texture.frag" }
+        specularGlossiness?.let { accumulator["specular_glossiness"] = "!shader/plugin/specular_glossiness.factor.frag" }
+        specularGlossinessTexture?.let { accumulator["specular_glossiness"] = "!shader/plugin/specular_glossiness.texture.frag" }
+        occlusionTexture?.let { accumulator["occlusion"] = "!shader/plugin/occlusion.texture.frag" }
+        emissionTexture?.let { accumulator["emission"] = "!shader/plugin/emission.texture.frag" }
+    }
 
     override val children
         get() = listOfNotNull(ibl as? InternalMaterialModifier)
@@ -226,14 +243,16 @@ internal class InternalTerrainMaterial : InternalBaseMaterial("!shader/terrain.v
     override var outsideHeight: Float = 0f
     override var terrainCenter: Vec3 = Vec3.ZERO
 
-    override val defs
-        get() = super.defs + "TERRAIN"
+    override fun collectDefs(accumulator: MutableSet<String>) {
+        super.collectDefs(accumulator)
+        accumulator += "TERRAIN"
+    }
 
-    override val plugins
-        get() = listOf(
-            "normal" to "!shader/plugin/normal.terrain.frag",
-            "terrain" to "!shader/plugin/terrain.texture.frag"
-        ) + super.plugins
+    override fun collectPlugins(accumulator: MutableMap<String, String>) {
+        super.collectPlugins(accumulator)
+        accumulator["normal"] = "!shader/plugin/normal.terrain.frag"
+        accumulator["terrain"] = "!shader/plugin/terrain.texture.frag"
+    }
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
@@ -247,12 +266,12 @@ internal class InternalTerrainMaterial : InternalBaseMaterial("!shader/terrain.v
 
 internal class InternalPipeMaterial : InternalBaseMaterial("!shader/pipe.vert"), PipeMaterial {
 
-    override val plugins
-        get() = super.plugins + listOf(
-            "position" to "!shader/plugin/position.pipe.frag",
-            "normal" to "!shader/plugin/normal.pipe.frag",
-            "depth" to "!shader/plugin/depth.pipe.frag"
-        )
+    override fun collectPlugins(accumulator: MutableMap<String, String>) {
+        super.collectPlugins(accumulator)
+        accumulator["position"] = "!shader/plugin/position.pipe.frag"
+        accumulator["normal"] = "!shader/plugin/normal.pipe.frag"
+        accumulator["depth"] = "!shader/plugin/depth.pipe.frag"
+    }
 }
 
 internal open class InternalPostProcessingMaterial(
@@ -266,8 +285,10 @@ internal open class InternalSkyMaterial(val skyPlugin: String, vararg getters: P
     InternalMaterial("!shader/sky/sky.vert", "!shader/sky/sky.frag", *getters),
     SkyMaterial {
 
-    override val plugins
-        get() = super.plugins + ("sky" to skyPlugin)
+    override fun collectPlugins(accumulator: MutableMap<String, String>) {
+        super.collectPlugins(accumulator)
+        accumulator["sky"] = skyPlugin
+    }
 }
 
 internal class DecalBlendMaterial(
@@ -289,6 +310,8 @@ internal class InstancingMaterialModifier : InternalMaterialModifier(
 ) {
     var jntTexture: GlGpuTexture? = null
 
-    override val defs
-        get() = super.defs + "INSTANCING"
+    override fun collectDefs(accumulator: MutableSet<String>) {
+        super.collectDefs(accumulator)
+        accumulator += "INSTANCING"
+    }
 }

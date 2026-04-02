@@ -77,14 +77,15 @@ internal class ContextMaterialModifier(private val frameContext: FrameContext) :
             else -> super.uniform(name)
         }
 
-    override val plugins
-        get() = super.plugins + listOfNotNull(
-            "vprojection" to frameContext.projection.mode.plugin(),
-            (frameContext.projection.mode as? LogProjectionMode)?.let {
-                "depth" to "!shader/plugin/depth.log.frag"
-            }
-        )
+    override fun collectPlugins(accumulator: MutableMap<String, String>) {
+        super.collectPlugins(accumulator)
+        accumulator["vprojection"] = frameContext.projection.mode.plugin()
+        if (frameContext.projection.mode is LogProjectionMode) {
+            accumulator["depth"] = "!shader/plugin/depth.log.frag"
+        }
+    }
 
+    // TODO: move
     private fun ProjectionMode.plugin() = when (this) {
         is FrustumProjectionMode -> "!shader/plugin/vprojection.frustum.vert"
         is OrthoProjectionMode -> "!shader/plugin/vprojection.ortho.vert"

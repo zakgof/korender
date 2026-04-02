@@ -88,10 +88,9 @@ class GoldenImageTest {
 
         val goldenImage = ImageIO.read(baselineFile)
         if (!imagesMatch(actualImage, goldenImage)) {
-            println("Golden image mismatch for '${case.title}'")
-            println("Actual: ${actualFile.toURI()}")
-            println("Golden: ${baselineFile.toURI()}")
-            fail<Unit>("Golden image mismatch for '${case.title}'")
+            fail<Unit>("Golden image mismatch for '${case.title}' \n" +
+                    "Actual: ${actualFile.toURI()}\n" +
+                    "Golden: ${baselineFile.toURI()}")
         }
     }
 

@@ -2,9 +2,9 @@
 
 import androidx.compose.ui.awt.ComposeWindow
 import com.zakgof.korender.FrameInfo
-import com.zakgof.korender.examples.Demo
+import com.zakgof.korender.examples.Case
 import com.zakgof.korender.examples.TestExchange
-import com.zakgof.korender.examples.pages
+import com.zakgof.korenderexamples.perf.MultipleRenderables
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.fail
@@ -22,8 +22,8 @@ class PerformanceTest {
 
     @OptIn(ExperimentalAtomicApi::class)
     @ParameterizedTest
-    @MethodSource("demoPages")
-    fun testComposeUI(demo: Demo) {
+    @MethodSource("performanceCases")
+    fun testComposeUI(demo: Case) {
 
         TestExchange.report(null)
 
@@ -33,8 +33,8 @@ class PerformanceTest {
             }
         }
 
-        val t1 = waitKorender(5f)
-        val t2 = waitKorender(10f)
+        val t1 = waitKorender(10f)
+        val t2 = waitKorender(100f)
 
         val frameRate = (t2.frame - t1.frame) / (t2.time - t1.time)
 
@@ -55,7 +55,7 @@ class PerformanceTest {
 
     @OptIn(ExperimentalAtomicApi::class)
     private fun waitKorender(sec: Float): FrameInfo {
-        return TestUtil.poll(timeout = sec) {
+        return TestUtil.poll(timeout = sec + 2f) {
             val fi = TestExchange.fi.load()
             if (fi != null && fi.time > sec) fi else null
         }
@@ -75,8 +75,9 @@ class PerformanceTest {
         }
 
         @JvmStatic
-        fun demoPages(): List<Named<Demo>> =
-            pages.map { demo -> Named.of(demo.title, demo) }
+        fun performanceCases() = listOf(
+            Case("MultipleRenderables", ::MultipleRenderables)
+        ).map { Named.of(it.title, it) }
 
         @JvmStatic
         @AfterAll
@@ -143,9 +144,9 @@ class PerformanceTest {
                 val cur = current[title]
                 val base = baseline[title]
                 val lat = latest[title]
-                val curStr = cur?.let { formatValue(it) } ?: "вЂ”"
-                val baseStr = base?.let { formatValue(it) } ?: "вЂ”"
-                val latStr = lat?.let { formatValue(it) } ?: "вЂ”"
+                val curStr = cur?.let { formatValue(it) } ?: "N/A"
+                val baseStr = base?.let { formatValue(it) } ?: "N/A"
+                val latStr = lat?.let { formatValue(it) } ?: "N/A"
                 val baseDiff = formatDiffPercent(cur, base)
                 val latestDiff = formatDiffPercent(cur, lat)
                 listOf(title, curStr, baseStr, baseDiff, latStr, latestDiff)

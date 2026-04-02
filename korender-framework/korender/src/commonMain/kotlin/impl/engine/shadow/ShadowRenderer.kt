@@ -316,12 +316,18 @@ internal class CasterMaterialModifier(
     "fixedYMin" to FloatGetter<CasterMaterialModifier> { it.declaration.fixedYRange!!.first },
     "fixedYMax" to FloatGetter<CasterMaterialModifier> { it.declaration.fixedYRange!!.second }
 ) {
-    override val defs
-        get() = super.defs + setOfNotNull(
-            "SHADOW_CASTER",
-            if (declaration.algorithm is InternalVsmShadow) "VSM_SHADOW" else null
-        )
 
-    override val plugins
-        get() = super.plugins + listOfNotNull(declaration.fixedYRange?.let { "vprojection" to "!shader/plugin/vprojection.fixedyrange.vert" })
+    override fun collectDefs(accumulator: MutableSet<String>) {
+        super.collectDefs(accumulator)
+        accumulator += "SHADOW_CASTER"
+        if (declaration.algorithm is InternalVsmShadow)
+            accumulator += "VSM_SHADOW"
+    }
+
+    override fun collectPlugins(accumulator: MutableMap<String, String>) {
+        super.collectPlugins(accumulator)
+        declaration.fixedYRange?.let {
+            accumulator["vprojection"] = "!shader/plugin/vprojection.fixedyrange.vert"
+        }
+    }
 }

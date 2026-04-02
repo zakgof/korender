@@ -3,7 +3,6 @@ package com.zakgof.korender.impl.material
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.RetentionPolicy
-import com.zakgof.korender.impl.engine.FrameContext
 import com.zakgof.korender.impl.engine.FrameTarget
 import com.zakgof.korender.impl.engine.InternalPassDeclaration
 import com.zakgof.korender.impl.glgpu.FloatGetter
@@ -58,7 +57,9 @@ private class SsrMaterial(
 private class SsrCompositionMaterialModifier(val envTexture: CubeTextureDeclaration?) : InternalMaterialModifier(
     "envTexture" to TextureGetter<SsrCompositionMaterialModifier> { it.envTexture }
 ) {
-    override val defs
-        get() = super.defs + "BLOOM"
+    override fun collectDefs(accumulator: MutableSet<String>) {
+        super.collectDefs(accumulator)
+        accumulator += "BLOOM"
+    }
 }
 

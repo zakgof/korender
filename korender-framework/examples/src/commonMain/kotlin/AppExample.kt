@@ -38,34 +38,35 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 val pages = listOf(
-    Demo("Heightmap terrain") { HeightmapTerrainExample() },
-    Demo("Procedural terrain") { ProcTerrainExample() },
-    Demo("City demo") { InfiniteCity() },
-    Demo("PBR materials") { MetallicRoughnessExample() },
-    Demo("OBJ mesh") { ObjFileExample() },
-    Demo("GLTF crowd") { GltfCrowdExample() },
-    Demo("GLTF library") { GltfLibraryExample() },
-    Demo("Shadows") { ShadowExample() },
-    Demo("Render to texture") { RenderToTextureExample() },
-    Demo("Point lights") { LightsExample() },
-    Demo("GUI") { GuiExample() },
-    Demo("Particles / Billboards") { InstancedBillboardsExample() },
-    Demo("Particles / Cubes") { InstancedCubesExample() },
-    Demo("Blur") { BlurExample() },
-    Demo("Effects") { EffectsExample() },
-    Demo("Decals") { DecalExample() },
-    Demo("Bloom") { BloomExample() },
-    Demo("SSR") { SsrExample() },
-    Demo("Texture arrays") { TextureArrayExample() },
-    Demo("Multiple viewports") { MultipleViewportsExample() },
-    Demo("Sky") { SkyExample() },
-    Demo("Transparency") { TransparencyExample() },
-    Demo("Meshes") { MeshesExample() },
-    Demo("FXAA") { FxaaExample() },
-    Demo("CSM") { CSMExample() },
-    Demo("Env") { CaptureEnvExample() },
-    Demo("Capture frame") { CaptureFrameExample() },
-    Demo("Shapes") { BasicShapesExample() }
+
+    Case("Heightmap terrain") { HeightmapTerrainExample() },
+    Case("Procedural terrain") { ProcTerrainExample() },
+    Case("City demo") { InfiniteCity() },
+    Case("PBR materials") { MetallicRoughnessExample() },
+    Case("OBJ mesh") { ObjFileExample() },
+    Case("GLTF crowd") { GltfCrowdExample() },
+    Case("GLTF library") { GltfLibraryExample() },
+    Case("Shadows") { ShadowExample() },
+    Case("Render to texture") { RenderToTextureExample() },
+    Case("Point lights") { LightsExample() },
+    Case("GUI") { GuiExample() },
+    Case("Particles / Billboards") { InstancedBillboardsExample() },
+    Case("Particles / Cubes") { InstancedCubesExample() },
+    Case("Blur") { BlurExample() },
+    Case("Effects") { EffectsExample() },
+    Case("Decals") { DecalExample() },
+    Case("Bloom") { BloomExample() },
+    Case("SSR") { SsrExample() },
+    Case("Texture arrays") { TextureArrayExample() },
+    Case("Multiple viewports") { MultipleViewportsExample() },
+    Case("Sky") { SkyExample() },
+    Case("Transparency") { TransparencyExample() },
+    Case("Meshes") { MeshesExample() },
+    Case("FXAA") { FxaaExample() },
+    Case("CSM") { CSMExample() },
+    Case("Env") { CaptureEnvExample() },
+    Case("Capture frame") { CaptureFrameExample() },
+    Case("Shapes") { BasicShapesExample() }
 )
 
 @Composable
@@ -144,7 +145,7 @@ fun AppExample() {
     }
 }
 
-data class Demo(
+data class Case(
     val title: String,
     val composable: @Composable () -> Unit,
 )

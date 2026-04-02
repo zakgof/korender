@@ -133,8 +133,10 @@ private class KawaseMaterial(
     "offset" to FloatGetter<KawaseMaterial> { it.offset },
     "highResolutionRatio" to FloatGetter<KawaseMaterial> { it.highResolutionRatio }
 ) {
-    override val defs
-        get() = super.defs + setOfNotNull(highResolutionRatio?.let { "UPSAMPLE" })
+    override fun collectDefs(accumulator: MutableSet<String>) {
+        super.collectDefs(accumulator)
+        highResolutionRatio?.let { accumulator += "UPSAMPLE" }
+    }
 }
 
 private class BloomMaterial(
@@ -148,6 +150,9 @@ private class BloomMaterial(
 private class BloomCompositionMaterialModifier(val bloomAmount: Float) : InternalMaterialModifier(
     "bloomAmount" to FloatGetter<BloomCompositionMaterialModifier> { it.bloomAmount }
 ) {
-    override val defs
-        get() = super.defs + setOf("BLOOM")
+
+    override fun collectDefs(accumulator: MutableSet<String>) {
+        super.collectDefs(accumulator)
+        accumulator += "BLOOM"
+    }
 }
