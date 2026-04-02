@@ -199,4 +199,4 @@ internal class InternalPassDeclaration(val mapping: Map<String, String>, val mat
 
 internal data class ReusableFrameBufferDefinition(val pingPong: Int, val width: Int, val height: Int)
 
-internal data class FrameTarget(val width: Int, val height: Int, val colorOutput: String, val depthOutput: String)
+internal data class FrameTarget(val colorOutput: String, val depthOutput: String, val downSample: Int = 1)

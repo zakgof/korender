@@ -146,7 +146,7 @@ internal class Engine(
     private val keyHandlers = mutableListOf<KeyHandler>()
     private val kc = KorenderContextImpl()
     private var loaderLoaded = false
-    private var loaderComplete= false
+    private var loaderComplete = false
     private val preFrames = ArrayDeque<() -> Unit>()
     private val renderer = Renderer(inventory, renderContext)
 
@@ -219,11 +219,9 @@ internal class Engine(
             }
 
             fun cycle() {
-                inventory.onWaitUpdate {
-                    preFrames.addLast {
-                        if (!tryRender()) {
-                            cycle()
-                        }
+                preFrames.addLast {
+                    if (!tryRender()) {
+                        cycle()
                     }
                 }
             }
@@ -255,11 +253,9 @@ internal class Engine(
             }
 
             fun cycle() {
-                inventory.onWaitUpdate {
-                    preFrames.addLast {
-                        if (!tryRender()) {
-                            cycle()
-                        }
+                preFrames.addLast {
+                    if (!tryRender()) {
+                        cycle()
                     }
                 }
             }
@@ -370,13 +366,13 @@ internal class Engine(
             FogMaterial(density, color)
 
         override fun ssr(downsample: Int, maxReflectionDistance: Float, linearSteps: Int, binarySteps: Int, lastStepRatio: Float, envTexture: CubeTextureDeclaration?) =
-            ssrEffect(downsample, maxReflectionDistance, linearSteps, binarySteps, lastStepRatio, envTexture, regularFrameContext, currentRetentionPolicy)
+            ssrEffect(downsample, maxReflectionDistance, linearSteps, binarySteps, lastStepRatio, envTexture, currentRetentionPolicy)
 
         override fun bloom(threshold: Float, amount: Float, radius: Float, downsample: Int) =
-            bloomSimpleEffect(regularFrameContext, currentRetentionPolicy, threshold, amount, radius, downsample)
+            bloomSimpleEffect(currentRetentionPolicy, threshold, amount, radius, downsample)
 
         override fun bloomWide(threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float) =
-            bloomMipEffect(regularFrameContext, currentRetentionPolicy, threshold, amount, downsample, mips, offset, highResolutionRatio)
+            bloomMipEffect(currentRetentionPolicy, threshold, amount, downsample, mips, offset, highResolutionRatio)
 
         override fun projection(width: Float, height: Float, near: Float, far: Float, mode: ProjectionMode) =
             Projection(width, height, near, far, mode)

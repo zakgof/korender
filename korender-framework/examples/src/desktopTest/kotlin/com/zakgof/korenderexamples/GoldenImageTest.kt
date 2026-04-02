@@ -57,6 +57,9 @@ class GoldenImageTest {
                         if (captured.isCompleted) {
                             TestExchange.screenshot(captured.getCompleted())
                         }
+                        camera = camera(10.z, -1.z, 1.y)
+                        projection = projection(2f, 2f, 1f, 200f, frustum())
+                        // case.frame.invoke(this)
                     }
                 }
             }
@@ -86,8 +89,8 @@ class GoldenImageTest {
         val goldenImage = ImageIO.read(baselineFile)
         if (!imagesMatch(actualImage, goldenImage)) {
             println("Golden image mismatch for '${case.title}'")
-            println("Actual: ${actualFile.absolutePath}")
-            println("Golden: ${baselineFile.absolutePath}")
+            println("Actual: ${actualFile.toURI()}")
+            println("Golden: ${baselineFile.toURI()}")
             fail<Unit>("Golden image mismatch for '${case.title}'")
         }
     }
@@ -114,7 +117,7 @@ class GoldenImageTest {
                 val b = (c.b * 255f).roundToInt().coerceIn(0, 255)
                 val a = (c.a * 255f).roundToInt().coerceIn(0, 255)
                 val argb = (a shl 24) or (r shl 16) or (g shl 8) or b
-                buffered.setRGB(x, y, argb)
+                buffered.setRGB(x, image.height - 1 - y, argb)
             }
         }
         return buffered

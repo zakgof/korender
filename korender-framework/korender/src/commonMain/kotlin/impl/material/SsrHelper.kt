@@ -17,7 +17,6 @@ internal fun ssrEffect(
     linearSteps: Int, binarySteps: Int,
     lastStepRatio: Float,
     envTexture: CubeTextureDeclaration?,
-    frameContext: FrameContext,
     currentRetentionPolicy: RetentionPolicy,
 ): PostShadingEffect {
     val nextStepRatio = lastStepRatio.pow(1f / (linearSteps + 1f))
@@ -31,7 +30,7 @@ internal fun ssrEffect(
                     maxReflectionDistance * (1f - nextStepRatio) / (1f - nextStepRatio.pow(linearSteps))
                 ),
                 null,
-                FrameTarget(frameContext.width / downsample, frameContext.height / downsample, "ssrTexture", "ssrDepth"),
+                FrameTarget( "ssrTexture", "ssrDepth", downsample),
                 currentRetentionPolicy
             )
         ),

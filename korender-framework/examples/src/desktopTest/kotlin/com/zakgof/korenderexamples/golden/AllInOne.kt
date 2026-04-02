@@ -7,13 +7,13 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korenderexamples.GolderImageCase
 
-val allInOne = GolderImageCase (
+val allInOne = GolderImageCase(
     title = "All in one",
     init = {
 
     },
     frame = {
-        DeferredShading()
+        // DeferredShading()
         DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(3f))
         Renderable(
             base {
@@ -24,5 +24,7 @@ val allInOne = GolderImageCase (
             mesh = obj("model/head.obj"),
             transform = scale(7.0f).rotate(1.y, -PIdiv2)
         )
+        Sky(fastCloudSky())
+        PostProcess(fog(0.004f))
     }
 )

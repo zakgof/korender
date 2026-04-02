@@ -148,7 +148,7 @@ internal class DefaultFrameContext(
                     mapping = mapOf(),
                     material = material as InternalPostProcessingMaterial,
                     sceneDeclaration = sd,
-                    target = FrameTarget(fc.width, fc.height, "colorTexture", "depthTexture"),
+                    target = FrameTarget("colorTexture", "depthTexture"),
                     retentionPolicy = korenderContext.currentRetentionPolicy
                 )
             )

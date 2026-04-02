@@ -267,7 +267,7 @@ internal class Renderer(
                         true, renderContext.currentRetentionPolicy,
                         listOf(contextMaterialModifier)
                     )
-                    renderFullscreen(materialDeclaration, pass.target.width, pass.target.height, rk)
+                    renderFullscreen(materialDeclaration, frameContext.width / pass.target.downSample, frameContext.height / pass.target.downSample, rk)
                 }
             }
             effect.effectPasses.flatMap { listOf(it.target.colorOutput, it.target.depthOutput) }
@@ -507,7 +507,7 @@ internal class Renderer(
                 contextMaterialModifier.customTextureUniforms[it.key] = contextMaterialModifier.customTextureUniforms[it.value]!!
             }
             val passMaterialDeclaration = pass.material.toDeclaration(deferredShading, pass.retentionPolicy, listOf(contextMaterialModifier))
-            renderFullscreen(passMaterialDeclaration, pass.target.width, pass.target.height, rk)
+            renderFullscreen(passMaterialDeclaration, frameContext.width / pass.target.downSample, frameContext.height / pass.target.downSample, rk)
             pass.sceneDeclaration?.let { Scene(it, frameContext).renderForwardOpaques(rk) }
         }
 
@@ -533,7 +533,7 @@ internal class Renderer(
         }
 
         private fun renderToReusableFb(target: FrameTarget, rk: ResultKeeper?, block: () -> Unit) {
-            val fbDeclaration = reusableFrameBufferHolder.request(target, renderContext.currentRetentionPolicy)
+            val fbDeclaration = reusableFrameBufferHolder.request(frameContext, target, renderContext.currentRetentionPolicy)
             val fb = inventory.frameBuffer(fbDeclaration)
                 ?: throw SkipRender("Reusable FB '${fbDeclaration.id}'")
             fb.exec { block() }

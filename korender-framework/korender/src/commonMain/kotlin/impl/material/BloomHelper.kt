@@ -1,38 +1,37 @@
 package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.RetentionPolicy
-import com.zakgof.korender.impl.engine.FrameContext
 import com.zakgof.korender.impl.engine.FrameTarget
 import com.zakgof.korender.impl.engine.InternalPassDeclaration
 import com.zakgof.korender.impl.glgpu.FloatGetter
 
 internal fun bloomMipEffect(
-    frameContext: FrameContext, currentRetentionPolicy: RetentionPolicy,
+    currentRetentionPolicy: RetentionPolicy,
     threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float,
 ) = InternalPostShadingEffect(
-    effectPasses = listOf(bloomBrightnessPass(frameContext, currentRetentionPolicy, downsample, threshold)) +
-            bloomDownsamplePasses(frameContext, currentRetentionPolicy, downsample, mips, offset) +
-            bloomUpsamplePasses(frameContext, currentRetentionPolicy, downsample, mips, offset, highResolutionRatio),
+    effectPasses = listOf(bloomBrightnessPass(currentRetentionPolicy, downsample, threshold)) +
+            bloomDownsamplePasses(currentRetentionPolicy, downsample, mips, offset) +
+            bloomUpsamplePasses(currentRetentionPolicy, downsample, mips, offset, highResolutionRatio),
     keepTextures = setOf("bloomTexture", "bloomDepth"),
     compositionMaterialModifier = BloomCompositionMaterialModifier(amount),
     currentRetentionPolicy
 )
 
 internal fun bloomSimpleEffect(
-    frameContext: FrameContext, currentRetentionPolicy: RetentionPolicy,
+    currentRetentionPolicy: RetentionPolicy,
     threshold: Float, amount: Float, radius: Float, downsample: Int,
 ) = InternalPostShadingEffect(
     effectPasses = listOf(
-        bloomBrightnessPass(frameContext, currentRetentionPolicy, downsample, threshold),
-        bloomVerticalBlur(frameContext, currentRetentionPolicy, downsample, radius),
-        bloomHorizontalBlur(frameContext, currentRetentionPolicy, downsample, radius)
+        bloomBrightnessPass(currentRetentionPolicy, downsample, threshold),
+        bloomVerticalBlur(currentRetentionPolicy, downsample, radius),
+        bloomHorizontalBlur(currentRetentionPolicy, downsample, radius)
     ),
     keepTextures = setOf("bloomTexture", "bloomDepth"),
     compositionMaterialModifier = BloomCompositionMaterialModifier(amount),
     currentRetentionPolicy
 )
 
-private fun bloomBrightnessPass(frameContext: FrameContext, currentRetentionPolicy: RetentionPolicy, brightnessDownsample: Int, threshold: Float) =
+private fun bloomBrightnessPass(currentRetentionPolicy: RetentionPolicy, brightnessDownsample: Int, threshold: Float) =
     InternalPassDeclaration(
         mapOf(
             "colorInputTexture" to "colorTexture",
@@ -41,16 +40,14 @@ private fun bloomBrightnessPass(frameContext: FrameContext, currentRetentionPoli
         BloomMaterial(threshold),
         null,
         FrameTarget(
-            frameContext.width / brightnessDownsample,
-            frameContext.height / brightnessDownsample,
             "downsample0",
-            "bloomDepth"
+            "bloomDepth",
+            brightnessDownsample
         ),
         currentRetentionPolicy
     )
 
 private fun bloomDownsamplePasses(
-    frameContext: FrameContext,
     currentRetentionPolicy: RetentionPolicy,
     brightnessDownsample: Int,
     passes: Int,
@@ -64,17 +61,15 @@ private fun bloomDownsamplePasses(
         KawaseMaterial(offset, null),
         null,
         FrameTarget(
-            frameContext.width / (brightnessDownsample shl pass),
-            frameContext.height / (brightnessDownsample shl pass),
             "downsample${pass}",
-            "bloomDepth"
+            "bloomDepth",
+            brightnessDownsample shl pass
         ),
         currentRetentionPolicy
     )
 }
 
 private fun bloomUpsamplePasses(
-    frameContext: FrameContext,
     currentRetentionPolicy: RetentionPolicy,
     brightnessDownsample: Int,
     passes: Int,
@@ -90,16 +85,15 @@ private fun bloomUpsamplePasses(
         KawaseMaterial(offset, highResolutionRatio),
         null,
         FrameTarget(
-            frameContext.width / (brightnessDownsample shl pass),
-            frameContext.height / (brightnessDownsample shl pass),
             (if (pass == 1) "bloomTexture" else "upsample${pass - 1}"),
-            "bloomDepth"
+            "bloomDepth",
+            brightnessDownsample shl pass
         ),
         currentRetentionPolicy
     )
 }
 
-private fun bloomVerticalBlur(frameContext: FrameContext, currentRetentionPolicy: RetentionPolicy, downsample: Int, radius: Float) =
+private fun bloomVerticalBlur(currentRetentionPolicy: RetentionPolicy, downsample: Int, radius: Float) =
     InternalPassDeclaration(
         mapOf(
             "colorInputTexture" to "downsample0",
@@ -108,15 +102,14 @@ private fun bloomVerticalBlur(frameContext: FrameContext, currentRetentionPolicy
         BlurMaterial(true, radius),
         null,
         FrameTarget(
-            frameContext.width / downsample,
-            frameContext.height / downsample,
             "downsample1",
-            "bloomDepth"
+            "bloomDepth",
+            downsample
         ),
         currentRetentionPolicy
     )
 
-private fun bloomHorizontalBlur(frameContext: FrameContext, currentRetentionPolicy: RetentionPolicy, downsample: Int, radius: Float) =
+private fun bloomHorizontalBlur(currentRetentionPolicy: RetentionPolicy, downsample: Int, radius: Float) =
     InternalPassDeclaration(
         mapOf(
             "colorInputTexture" to "downsample1",
@@ -125,10 +118,9 @@ private fun bloomHorizontalBlur(frameContext: FrameContext, currentRetentionPoli
         BlurMaterial(false, radius),
         null,
         FrameTarget(
-            frameContext.width / downsample,
-            frameContext.height / downsample,
             "bloomTexture",
-            "bloomDepth"
+            "bloomDepth",
+            downsample
         ),
         currentRetentionPolicy
     )

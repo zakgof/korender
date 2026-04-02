@@ -35,7 +35,7 @@ internal interface FrameContext {
     val time: Float
 }
 
-internal fun FrameContext.defaultTarget() = FrameTarget(width, height, "colorTexture", "depthTexture")
+internal fun FrameContext.defaultTarget() = FrameTarget("colorTexture", "depthTexture")
 
 internal class RegularFrameContext(override var width: Int, override var height: Int, val renderContext: RenderContext) : FrameContext {
 
