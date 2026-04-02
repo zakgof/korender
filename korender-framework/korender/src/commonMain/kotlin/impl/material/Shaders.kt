@@ -9,7 +9,6 @@ import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gl.GL.shaderEnv
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.glgpu.UniformSupplier
 
 internal fun <T> MutableList<T>.peek(): T = this.last()
 internal fun <T> MutableList<T>.pop(): T = this.removeAt(this.size - 1)
@@ -49,7 +48,7 @@ internal object Shaders {
             val vertDebugInfo: (String) -> String = { debugInfo(it, vertLines) }
             val fragDebugInfo: (String) -> String = { debugInfo(it, fragLines) }
 
-            return ShaderData("${vertFile}:${fragFile} $defs", vertCode, fragCode, vertDebugInfo, fragDebugInfo)
+            return ShaderData("${vertFile}:${fragFile} $defs $plugins", vertCode, fragCode, vertDebugInfo, fragDebugInfo)
         }
 
         private fun buildUniformBlock(): List<String> {

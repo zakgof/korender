@@ -6,12 +6,22 @@ import com.zakgof.korender.impl.gl.GL.glGetError
 import com.zakgof.korender.resources.Res
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlin.time.measureTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal fun <T> Deferred<T>.resultOrNull(): T? = if (this.isCompleted) this.getCompleted() else null
 
 internal suspend fun resourceBytes(appResourceLoader: ResourceLoader, resource: String): ByteArray {
     println("Loading resource [$resource]")
+    lateinit var c: ByteArray
+    val d = measureTime {
+        c = internalLoad(resource, appResourceLoader)
+    }
+    println("Loaded [$resource] ${c.size} bytes in ${d.inWholeMicroseconds} microsec")
+    return c
+}
+
+private suspend fun internalLoad(resource: String, appResourceLoader: ResourceLoader): ByteArray {
     if (resource.startsWith("!")) {
         return Res.readBytes("files/" + resource.substring(1))
     }

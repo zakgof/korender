@@ -564,7 +564,7 @@ internal class Engine(
     }
 
     fun frame() {
-        preFrames.removeFirstOrNull()?.let { it() }
+
         val frameInfo = renderContext.frameInfoManager.frame(inventory.pending())
         processTouches()
         processKeys()
@@ -573,6 +573,8 @@ internal class Engine(
             DefaultFrameContext(kc, sd, frameInfo).apply(it)
         }
         inventory.go(frameInfo.time, kc.currentRetentionGeneration) {
+            preFrames.removeFirstOrNull()?.let { it() }
+
             val loaderScene = sd.loaderSceneDeclaration?.let { renderer.Scene(it, regularFrameContext) }
 
             if (loaderScene != null && !loaderLoaded) {
@@ -586,7 +588,7 @@ internal class Engine(
                 }
                 touchBoxes = scene.touchBoxes
                 if (success) loaderComplete = true
-                success
+                success && preFrames.isEmpty()
             }
         }
     }

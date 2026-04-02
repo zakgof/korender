@@ -9,3 +9,8 @@ vec4 pluginVProjection(vec3 viewPos) {
         1.0
     );
 }
+
+vec4 screenToViewSpace(vec2 vtex, float depth) {
+    // dummy
+    return vec4(0.);
+}

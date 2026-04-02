@@ -48,18 +48,19 @@ class GoldenImageTest {
                     case.init.invoke(this)
                     val captured = captureFrame(
                         1024, 1024,
-                        camera = camera(10.z, -1.z, 1.y),
+                        camera = camera(10.z + 3.y, -1.z, 1.y),
                         projection = projection(2f, 2f, 1f, 200f, frustum())
                     ) {
                         case.frame.invoke(this)
                     }
                     Frame {
                         if (captured.isCompleted) {
-                            TestExchange.screenshot(captured.getCompleted())
+                            // TestExchange.screenshot(captured.getCompleted())
                         }
-                        camera = camera(10.z, -1.z, 1.y)
+                        camera = camera(10.z + 3.y, -1.z, 1.y)
                         projection = projection(2f, 2f, 1f, 200f, frustum())
-                        // case.frame.invoke(this)
+
+                        case.frame.invoke(this)
                     }
                 }
             }
