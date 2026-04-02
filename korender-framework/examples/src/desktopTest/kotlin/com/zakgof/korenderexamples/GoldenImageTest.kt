@@ -153,8 +153,7 @@ class GoldenImageTest {
 
         @JvmStatic
         @AfterAll
-        fun disposeWindow() {
-            TestUtil.disposeWindow(window)
-        }
+        fun disposeWindow() = TestUtil.disposeWindow(window)
+
     }
 }

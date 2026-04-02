@@ -98,7 +98,7 @@ internal val backFormatMap = mapOf(
     GL_R16 to PixelFormat.Gray16
 )
 
-internal class GlGpuTexture(private val width: Int, private val height: Int, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024) : GLBindableTexture, AutoCloseable {
+internal class GlGpuTexture(private val width: Int, private val height: Int, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024) : GlBindableTexture, AutoCloseable {
 
     override val glHandle = glGenTextures()
     val mipmapped = filter == TextureFilter.MipMap

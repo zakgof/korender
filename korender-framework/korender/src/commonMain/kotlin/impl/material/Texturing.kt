@@ -21,7 +21,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_FLOAT
 import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA
 import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA32F
 import com.zakgof.korender.impl.gl.GLTexture
-import com.zakgof.korender.impl.glgpu.GLBindableTexture
+import com.zakgof.korender.impl.glgpu.GlBindableTexture
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture3D
@@ -29,7 +29,7 @@ import com.zakgof.korender.impl.glgpu.GlGpuTextureArray
 import com.zakgof.korender.impl.image.InternalImage
 import com.zakgof.korender.impl.image.impl.image.InternalImage3D
 
-object NotYetLoadedTexture : GLBindableTexture {
+object NotYetLoadedTexture : GlBindableTexture {
     override val glHandle: GLTexture
         get() = throw KorenderException("Internal error binding not yet loaded texture")
 
@@ -66,7 +66,7 @@ internal object Texturing {
 }
 
 internal interface InternalTexture : Retentionable {
-    fun generateGpuTexture(loader: Loader): GLBindableTexture?
+    fun generateGpuTexture(loader: Loader): GlBindableTexture?
 }
 
 internal class ResourceTextureDeclaration(

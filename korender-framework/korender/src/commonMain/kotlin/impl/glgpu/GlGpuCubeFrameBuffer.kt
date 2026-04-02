@@ -40,7 +40,7 @@ internal class GlGpuCubeFrameBuffer(
         depthTexture = if (useDepthBuffer) {
             GlGpuCubeTexture(width, height, GlGpuTexture.Preset.Depth).apply {
                 sides.forEach {
-                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, it, glHandle,0)
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, it, glHandle, 0)
                 }
             }
         } else
@@ -83,4 +83,13 @@ internal class GlGpuCubeFrameBuffer(
     }
 
     override fun toString() = "[$name] ${width}x${height}: $fbHandle"
+}
+
+internal class GlGpuCubeFrameBufferSide(
+    val cfb: GlGpuCubeFrameBuffer,
+    val side: Int
+) : GlRenderableFrameBuffer {
+    override fun exec(block: () -> Unit) {
+        cfb.exec(side, block)
+    }
 }

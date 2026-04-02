@@ -45,7 +45,7 @@ import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.image.InternalImage
 import kotlin.math.min
 
-internal class GlGpuCubeTexture : GLBindableTexture, AutoCloseable {
+internal class GlGpuCubeTexture : GlBindableTexture, AutoCloseable {
 
     override val glHandle: GLTexture = glGenTextures()
 

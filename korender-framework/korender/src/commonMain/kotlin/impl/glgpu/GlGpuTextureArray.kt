@@ -33,7 +33,7 @@ internal class GlGpuTextureArray(
     filter: TextureFilter = TextureFilter.MipMap,
     wrap: TextureWrap = TextureWrap.Repeat,
     aniso: Int = 1024
-) : GLBindableTexture, AutoCloseable {
+) : GlBindableTexture, AutoCloseable {
 
     override val glHandle = glGenTextures()
     private val mipmapped = filter == TextureFilter.MipMap

@@ -6,7 +6,7 @@ import com.zakgof.korender.impl.font.InternalFontDeclaration
 import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
 import com.zakgof.korender.impl.geometry.MeshLink
-import com.zakgof.korender.impl.glgpu.GLBindableTexture
+import com.zakgof.korender.impl.glgpu.GlBindableTexture
 import com.zakgof.korender.impl.glgpu.GlGpuCubeFrameBuffer
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
@@ -34,7 +34,7 @@ internal class Inventory(private val loader: Loader) {
 
     private val meshes = Registry<InternalMeshDeclaration, MeshLink> { Geometry.create(it, loader) }
     private val shaders = Registry<ShaderDeclaration, GlGpuShader> { Shaders.create(it, loader, zeroTex, zeroShadowTex, uniformBufferHolder) }
-    private val textures = Registry<InternalTexture, GLBindableTexture> { it.generateGpuTexture(loader) }
+    private val textures = Registry<InternalTexture, GlBindableTexture> { it.generateGpuTexture(loader) }
     private val textures3D = Registry<ImageTexture3DDeclaration, GlGpuTexture3D> { it.generateGpuTexture3D(loader) }
 
     private val textureLinks = Registry<TextureLinkDeclaration, GpuTextureLink> { it.generateGpuTextureLink(loader) }
@@ -59,7 +59,7 @@ internal class Inventory(private val loader: Loader) {
 
     fun mesh(decl: InternalMeshDeclaration): MeshLink? = meshes[decl]
     fun shader(decl: ShaderDeclaration): GlGpuShader? = shaders[decl]
-    fun texture(decl: InternalTexture): GLBindableTexture? = textures[decl]
+    fun texture(decl: InternalTexture): GlBindableTexture? = textures[decl]
     fun texture3D(decl: ImageTexture3DDeclaration): GlGpuTexture3D? = textures3D[decl]
     fun textureLink(decl: TextureLinkDeclaration): GpuTextureLink? = textureLinks[decl]
     fun cubeTexture(decl: ResourceCubeTextureDeclaration): GlGpuCubeTexture? = resourceCubeTextures[decl]

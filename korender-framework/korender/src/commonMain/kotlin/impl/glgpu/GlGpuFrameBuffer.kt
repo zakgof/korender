@@ -24,7 +24,7 @@ internal class GlGpuFrameBuffer(
     private val height: Int,
     colorTexturePresets: List<GlGpuTexture.Preset>,
     useDepthBuffer: Boolean,
-) : AutoCloseable {
+) : AutoCloseable, GlRenderableFrameBuffer {
 
     private val fbHandle: GLFrameBuffer = glGenFramebuffers()
 
@@ -80,7 +80,7 @@ internal class GlGpuFrameBuffer(
         depthTexture?.close()
     }
 
-    fun exec(block: () -> Unit) {
+    override fun exec(block: () -> Unit) {
         try {
             bind()
             block.invoke()
@@ -105,6 +105,3 @@ internal class GlGpuFrameBuffer(
 
     override fun toString() = "[$name] ${width}x${height}: $fbHandle"
 }
-
-internal fun renderTo(fb: GlGpuFrameBuffer?, block: () -> Unit) =
-    if (fb == null) block() else fb.exec(block)

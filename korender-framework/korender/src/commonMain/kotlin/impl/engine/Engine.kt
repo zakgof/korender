@@ -577,24 +577,20 @@ internal class Engine(
             DefaultFrameContext(kc, sd, frameInfo).apply(it)
         }
         inventory.go(frameInfo.time, kc.currentRetentionGeneration) {
-            val loader = sd.loaderSceneDeclaration?.let { renderer.Scene(it, regularFrameContext) }
-            if (loader != null && !loaderLoaded) {
-                val loaderRk = ResultKeeper()
-                loader.render(loaderRk)
-                loaderLoaded = loaderRk.success
+            val loaderScene = sd.loaderSceneDeclaration?.let { renderer.Scene(it, regularFrameContext) }
+
+            if (loaderScene != null && !loaderLoaded) {
+                loaderLoaded = ResultKeeper().also(loaderScene::render).success
                 false
             } else {
                 val scene = renderer.Scene(sd, regularFrameContext)
-                val mainRk = ResultKeeper()
-                scene.render(mainRk)
-                if (loader != null && (!loaderComplete || inventory.pending() > 0)) {
-                    loader.render(null)
+                val success = ResultKeeper().also(scene::render).success
+                if (loaderScene != null && (!loaderComplete || inventory.pending() > 0)) {
+                    loaderScene.render(null)
                 }
                 touchBoxes = scene.touchBoxes
-                if (mainRk.success) {
-                    loaderComplete = true
-                }
-                mainRk.success
+                if (success) loaderComplete = true
+                success
             }
         }
     }

@@ -27,7 +27,7 @@ import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.image.impl.image.InternalImage3D
 import kotlin.math.min
 
-internal class GlGpuTexture3D(private val width: Int, private val height: Int, private val depth: Int, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024) : GLBindableTexture, AutoCloseable {
+internal class GlGpuTexture3D(private val width: Int, private val height: Int, private val depth: Int, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024) : GlBindableTexture, AutoCloseable {
 
     override val glHandle = glGenTextures()
     val mipmapped = filter == TextureFilter.MipMap
