@@ -19,30 +19,29 @@ val allInOne = GolderImageCase(
 
     },
     frame = {
+        DeferredShading ()
         setupLight()
-
         fireDemo()
         smokeDemo()
         fireballDemo()
-
         instancedBillboardsDemo()
-
-
-        waterDemo()
-
+        objDemo()
         floor()
-
-        Renderable(
-            base {
-                colorTexture = texture("model/head.jpg")
-                metallicFactor = 0.3f
-                roughnessFactor = 0.5f
-            },
-            mesh = obj("model/head.obj"),
-            transform = scale(1.0f).rotate(1.y, -PIdiv2).translate(1.y)
-        )
+        waterDemo()
     }
 )
+
+private fun FrameContext.objDemo() {
+    Renderable(
+        base {
+            colorTexture = texture("model/head.jpg")
+            metallicFactor = 0.3f
+            roughnessFactor = 0.5f
+        },
+        mesh = obj("model/head.obj"),
+        transform = scale(2.0f).rotate(1.y, -PIdiv2).translate(1.5f.y)
+    )
+}
 
 private fun FrameContext.floor() =
     Renderable(
@@ -118,8 +117,8 @@ private fun FrameContext.instancedBillboardsDemo() = Billboard(
         count = 100,
         dynamic = false
     ) {
+        val r = Random(0)
         repeat(100) {
-            val r = Random(it)
             Instance(
                 pos = Vec3(r.nextFloat() * 12f - 6f, r.nextFloat() * 6f, r.nextFloat() * 12f - 6f),
                 scale = Vec2(0.2f, 0.2f)

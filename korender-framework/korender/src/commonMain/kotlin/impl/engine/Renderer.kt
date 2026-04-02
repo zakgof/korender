@@ -208,6 +208,7 @@ internal class Renderer(
             if (!hasPostShading && !hasPostProcessing) {
                 renderTo(finalFb) {
                     renderDeferredShading(rk)
+                    renderBucket(sceneDeclaration.skies, rk)
                     renderTransparents(rk = rk)
                 }
                 return
@@ -215,7 +216,8 @@ internal class Renderer(
 
             if (!hasPostShading && hasPostProcessing) {
                 renderToReusableFb(defaultTarget, rk) {
-                    renderDeferredShading(rk);
+                    renderDeferredShading(rk)
+                    renderBucket(sceneDeclaration.skies, rk)
                 }
                 renderPostProcessAndTransparents(rk)
                 return
@@ -223,13 +225,14 @@ internal class Renderer(
 
             if (hasPostShading && !hasPostProcessing) {
                 renderToReusableFb(defaultTarget, rk) {
-                    renderDeferredShading(rk);
+                    renderDeferredShading(rk)
                 }
                 postShadingEffects.forEach {
                     renderPostShadingEffect(it, rk)
                 }
                 renderTo(finalFb) {
                     renderComposition(rk)
+                    renderBucket(sceneDeclaration.skies, rk)
                     renderTransparents(rk = rk)
                 }
                 return
@@ -244,6 +247,7 @@ internal class Renderer(
                 }
                 renderToReusableFb(defaultTarget, rk) {
                     renderComposition(rk)
+                    renderBucket(sceneDeclaration.skies, rk)
                 }
                 postShadingEffects.flatMap { it.keepTextures }
                     .forEach { reusableFrameBufferHolder.unlock(it) }
@@ -508,7 +512,7 @@ internal class Renderer(
             }
             val passMaterialDeclaration = pass.material.toDeclaration(deferredShading, pass.retentionPolicy, listOf(contextMaterialModifier))
             renderFullscreen(passMaterialDeclaration, frameContext.width / pass.target.downSample, frameContext.height / pass.target.downSample, rk)
-            pass.sceneDeclaration?.let { Scene(it, frameContext).renderForwardOpaques(rk) }
+            // pass.sceneDeclaration?.let { Scene(it, frameContext).renderForwardOpaques(rk) }
         }
 
         private fun renderFullscreen(
