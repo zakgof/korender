@@ -563,7 +563,7 @@ internal class Renderer(
                 instancingMaterialModifier,
                 ModelModifier(declaration.transform.mat4)
             ) + declaration.modifiers
-            val materialDeclaration = declaration.material.toDeclaration(deferredShading, declaration.retentionPolicy, materialModifiers)
+            val materialDeclaration = declaration.material.toDeclaration(deferredShading && !declaration.transparent, declaration.retentionPolicy, materialModifiers)
             if (materialDeclaration.defs.contains("NO_SHADOW_CAST") && isShadow)
                 return
             val shader = inventory.shader(materialDeclaration)
