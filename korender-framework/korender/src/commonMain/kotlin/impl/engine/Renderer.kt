@@ -28,14 +28,12 @@ import com.zakgof.korender.impl.glgpu.GlGpuShadowTextureList
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.glgpu.GlRenderableFrameBuffer
-import com.zakgof.korender.impl.glgpu.Mat4Getter
 import com.zakgof.korender.impl.glgpu.renderTo
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
 import com.zakgof.korender.impl.material.DecalBlendMaterial
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
 import com.zakgof.korender.impl.material.InternalMaterial
-import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
@@ -575,12 +573,6 @@ internal class Renderer(
         }
     }
 }
-
-
-private class ModelModifier(
-    val model: Mat4,
-) : InternalMaterialModifier("model" to Mat4Getter<ModelModifier> { it.model })
-
 
 internal class SkipRender(val text: String) : RuntimeException()
 

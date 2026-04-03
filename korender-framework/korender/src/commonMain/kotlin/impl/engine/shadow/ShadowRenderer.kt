@@ -80,7 +80,7 @@ internal object ShadowRenderer {
                 val casterModifier = CasterMaterialModifier(declaration)
                 val casterRenderableDeclaration = RenderableDeclaration(
                     renderableDeclaration.material,
-                    listOf(casterModifier),
+                    renderableDeclaration.modifiers + casterModifier,
                     renderableDeclaration.mesh,
                     renderableDeclaration.transform,
                     renderableDeclaration.transparent,

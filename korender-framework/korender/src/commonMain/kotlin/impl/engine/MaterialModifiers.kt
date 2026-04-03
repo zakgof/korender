@@ -9,6 +9,7 @@ import com.zakgof.korender.impl.glgpu.GlGpuShadowTextureList
 import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.glgpu.IntGetter
 import com.zakgof.korender.impl.glgpu.IntListGetter
+import com.zakgof.korender.impl.glgpu.Mat4Getter
 import com.zakgof.korender.impl.glgpu.Mat4ListGetter
 import com.zakgof.korender.impl.glgpu.ShadowTextureListGetter
 import com.zakgof.korender.impl.glgpu.TextureListGetter
@@ -93,3 +94,7 @@ internal class ContextMaterialModifier(private val frameContext: FrameContext) :
         else -> ""
     }
 }
+
+internal class ModelModifier(
+    val model: Mat4,
+) : InternalMaterialModifier("model" to Mat4Getter<ModelModifier> { it.model })

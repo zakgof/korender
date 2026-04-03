@@ -1,5 +1,8 @@
 package com.zakgof.korenderexamples.golden
 
+import com.zakgof.korender.Prefab
+import com.zakgof.korender.TerrainMaterial
+import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
@@ -13,23 +16,39 @@ import com.zakgof.korenderexamples.GolderImageCase
 import kotlin.math.floor
 import kotlin.random.Random
 
+private lateinit var terrain: Prefab<TerrainMaterial>
+
 val allInOne = GolderImageCase(
     title = "All in one",
     init = {
-
+        terrain = clipmapTerrainPrefab("terrain", 0.016f, 10, 6)
     },
     frame = {
-        DeferredShading ()
+        DeferredShading()
         setupLight()
         fireDemo()
         smokeDemo()
         fireballDemo()
         instancedBillboardsDemo()
         objDemo()
-        floor()
         waterDemo()
+        terrainDemo()
     }
 )
+
+private fun FrameContext.terrainDemo() {
+    Prefab(
+        terrain {
+            colorTexture = texture("terrain/terrain-albedo.jpg", wrap = TextureWrap.ClampToEdge)
+            metallicFactor = 0.0f
+            heightTexture = texture("terrain/terrain-height.png")
+            heightScale = 2.0f
+            outsideHeight = -0.04f
+            terrainCenter = Vec3(0f, -0.03f, 0f)
+        },
+        prefab = terrain
+    )
+}
 
 private fun FrameContext.objDemo() {
     Renderable(
@@ -59,9 +78,9 @@ private fun FrameContext.setupLight() {
     // DeferredShading()
     AmbientLight(white(0.5f))
     DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(1f)) {
-        Cascade(512, 1f, 3f, 0f to 10f, hardwarePcf())
-        Cascade(512, 3f, 7f, 0f to 10f, softwarePcf())
-        Cascade(512, 7f, 20f, 0f to 10f, vsm())
+//        Cascade(512, 1f, 3f, 0f to 10f, hardwarePcf())
+//        Cascade(512, 3f, 7f, 0f to 10f, softwarePcf())
+//        Cascade(512, 7f, 20f, 0f to 10f, vsm())
     }
 }
 
@@ -103,7 +122,7 @@ private fun FrameContext.fireballDemo() {
 private fun FrameContext.waterDemo() {
     val sky = fastCloudSky()
     Sky(sky)
-    PostProcess(water(sky = sky))
+    PostProcess(water(transparency = 10.0f, waveScale = 10f, sky = sky))
 }
 
 private fun FrameContext.instancedBillboardsDemo() = Billboard(
@@ -121,7 +140,7 @@ private fun FrameContext.instancedBillboardsDemo() = Billboard(
         repeat(100) {
             Instance(
                 pos = Vec3(r.nextFloat() * 12f - 6f, r.nextFloat() * 6f, r.nextFloat() * 12f - 6f),
-                scale = Vec2(0.2f, 0.2f)
+                scale = Vec2(0.4f, 0.4f)
             )
         }
     }
