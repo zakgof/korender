@@ -1,6 +1,6 @@
 package com.zakgof.korender.examples.island
 
-import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Transform.Companion.rotate
@@ -56,12 +56,12 @@ fun loadTreeSeeds(heightFunc: Height, bytes: ByteArray) = loadBinary(bytes) {
     }
 }
 
-fun FrameContext.trees(branches: List<Branch>, cards: List<Card>, seeds: List<Vec3>) {
+fun FrameScope.trees(branches: List<Branch>, cards: List<Card>, seeds: List<Vec3>) {
     renderBranches(branches, seeds)
     renderCards(cards, seeds)
 }
 
-fun FrameContext.renderBranches(branches: List<Branch>, seeds: List<Vec3>) {
+fun FrameScope.renderBranches(branches: List<Branch>, seeds: List<Vec3>) {
 
     fun thinDown(r: Float, threshold: Float): Float =
         if (r < 2f * threshold) (r - threshold) * r / threshold else r
@@ -93,7 +93,7 @@ fun FrameContext.renderBranches(branches: List<Branch>, seeds: List<Vec3>) {
     )
 }
 
-fun FrameContext.renderCards(cards: List<Card>, seeds: List<Vec3>) {
+fun FrameScope.renderCards(cards: List<Card>, seeds: List<Vec3>) {
     Renderable(
         base {
             colorTexture = texture("island/tree/atlas.png")

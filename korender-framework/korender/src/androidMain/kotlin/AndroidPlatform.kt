@@ -22,7 +22,7 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.createBitmap
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
@@ -44,7 +44,7 @@ val androidContext = AtomicReference<Context>(null)
 
 internal actual object Platform {
 
-    actual val target = KorenderContext.TargetPlatform.Android
+    actual val target = KorenderScope.TargetPlatform.Android
 
     internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage> =
         CompletableDeferred(bitmapToImage(BitmapFactory.decodeByteArray(bytes, 0, bytes.size)))
@@ -117,7 +117,7 @@ internal actual object Platform {
 
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
-actual fun Korender(appResourceLoader: ResourceLoader, block: KorenderContext.() -> Unit) {
+actual fun Korender(appResourceLoader: ResourceLoader, block: KorenderScope.() -> Unit) {
 
     var engine: Engine? by remember { mutableStateOf(null) }
 

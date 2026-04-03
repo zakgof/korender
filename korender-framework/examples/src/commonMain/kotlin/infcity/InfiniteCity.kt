@@ -4,8 +4,8 @@ import com.zakgof.korender.examples.TestExchange
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.context.FrameContext
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.FrameScope
+import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Quaternion
@@ -34,7 +34,7 @@ fun InfiniteCity() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     }
 }
 
-private fun FrameContext.loader() =
+private fun FrameScope.loader() =
     Gui {
         Column {
             Filler()
@@ -47,7 +47,7 @@ private fun FrameContext.loader() =
         }
     }
 
-private fun FrameContext.frame() {
+private fun FrameScope.frame() {
     val z = frameInfo.time * 0.2f
 
     DeferredShading()
@@ -62,10 +62,10 @@ private fun FrameContext.frame() {
     gui()
 }
 
-private fun FrameContext.light() {
+private fun FrameScope.light() {
     AmbientLight(white(0.7f))
     DirectionalLight(Vec3(0.1f, -1f, -1f), white(2f)) {
-        if (target == KorenderContext.TargetPlatform.Desktop) {
+        if (target == KorenderScope.TargetPlatform.Desktop) {
             Cascade(1024, 0.3f, 2.0f, 0f to 60f, softwarePcf(6))
             Cascade(512, 1.7f, 12.0f, 0f to 60f, vsm())
             Cascade(512, 10.0f, 50.0f, 0f to 60f, vsm())
@@ -76,7 +76,7 @@ private fun FrameContext.light() {
     }
 }
 
-private fun FrameContext.character(z: Float) {
+private fun FrameScope.character(z: Float) {
     Gltf(
         resource = "infcity/swat-woman.glb",
         animation = 2,
@@ -84,14 +84,14 @@ private fun FrameContext.character(z: Float) {
     )
 }
 
-private fun FrameContext.city(z: Float) {
+private fun FrameScope.city(z: Float) {
     val start = floor(z / 32f) * 32f - 4f
     cityChunk(start)
     cityChunk(start + 32f)
     cityChunk(start + 64f)
 }
 
-private fun FrameContext.cityChunk(startZ: Float) {
+private fun FrameScope.cityChunk(startZ: Float) {
     road(startZ)
     building(abs(startZ.hashCode()) % 10, startZ, -20f)
     building(abs((startZ * 5f).hashCode()) % 10, startZ, 4f)
@@ -103,14 +103,14 @@ private fun FrameContext.cityChunk(startZ: Float) {
     tree(startZ + 24f, -1.2f)
 }
 
-private fun FrameContext.tree(z: Float, x: Float) {
+private fun FrameScope.tree(z: Float, x: Float) {
     Gltf(
         resource = "infcity/tree.glb",
         transform = rotate(1.y, z + x).translate(x, 0.95f, z)
     )
 }
 
-private fun FrameContext.building(buildingId: Int, z: Float, x: Float) {
+private fun FrameScope.building(buildingId: Int, z: Float, x: Float) {
 
     val building = buildings[buildingId]
 
@@ -146,7 +146,7 @@ private fun FrameContext.building(buildingId: Int, z: Float, x: Float) {
     )
 }
 
-private fun FrameContext.road(startZ: Float) = Renderable(
+private fun FrameScope.road(startZ: Float) = Renderable(
     base {
         colorTexture = texture("infcity/road.jpg")
         metallicFactor = 0f
@@ -156,7 +156,7 @@ private fun FrameContext.road(startZ: Float) = Renderable(
     transform = translate(startZ.z)
 )
 
-private fun FrameContext.roadMesh() = customMesh("road", 4, 6, POS, NORMAL, TEX) {
+private fun FrameScope.roadMesh() = customMesh("road", 4, 6, POS, NORMAL, TEX) {
     pos(Vec3(-0.5f, 0f, 0f)).normal(1.y).tex(Vec2(0f, 0f))
     pos(Vec3(-0.5f, 0f, 32f)).normal(1.y).tex(Vec2(0f, 32f))
     pos(Vec3(0.5f, 0f, 32f)).normal(1.y).tex(Vec2(1f, 32f))
@@ -164,7 +164,7 @@ private fun FrameContext.roadMesh() = customMesh("road", 4, 6, POS, NORMAL, TEX)
     index(0, 1, 2, 0, 2, 3)
 }
 
-private fun FrameContext.sidewalk(z: Float, x: Float) = Renderable(
+private fun FrameScope.sidewalk(z: Float, x: Float) = Renderable(
     base {
         colorTexture = texture("infcity/roof.jpg")
         metallicFactor = 0.1f
@@ -175,7 +175,7 @@ private fun FrameContext.sidewalk(z: Float, x: Float) = Renderable(
     transform = translate(x, 0f, z)
 )
 
-private fun FrameContext.sidewalkMesh() = customMesh("sidewalk", 4, 6, POS, NORMAL, TEX) {
+private fun FrameScope.sidewalkMesh() = customMesh("sidewalk", 4, 6, POS, NORMAL, TEX) {
     pos(Vec3(0f, 0f, 0f)).normal(1.y).tex(Vec2(0f, 0f))
     pos(Vec3(0f, 0f, 32f)).normal(1.y).tex(Vec2(0f, 1f))
     pos(Vec3(32f, 0f, 32f)).normal(1.y).tex(Vec2(1f, 1f))
@@ -183,7 +183,7 @@ private fun FrameContext.sidewalkMesh() = customMesh("sidewalk", 4, 6, POS, NORM
     index(0, 1, 2, 0, 2, 3)
 }
 
-private fun FrameContext.gui() =
+private fun FrameScope.gui() =
     Gui {
         Column {
             Filler()
@@ -191,7 +191,7 @@ private fun FrameContext.gui() =
         }
     }
 
-private fun FrameContext.atmosphere() =
+private fun FrameScope.atmosphere() =
     PostProcess(fog(density = 0.06f, color = white(0.05f))) {
         Sky(
             starrySky(colorness = 0.4f, density = 20f, size = 20f) {

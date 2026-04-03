@@ -3,7 +3,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform.Companion.scale
@@ -39,7 +39,7 @@ fun CaptureEnvExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     }
 }
 
-fun FrameContext.scene() {
+fun FrameScope.scene() {
     DirectionalLight(Vec3(1f, -1f, -1f))
     val rnd = Random(1)
     for (i in 0 until 1000) {

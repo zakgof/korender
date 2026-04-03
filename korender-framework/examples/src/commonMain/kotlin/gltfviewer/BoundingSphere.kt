@@ -3,7 +3,7 @@ package com.zakgof.korender.examples.gltfviewer
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.ProjectionDeclaration
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec3
@@ -83,13 +83,13 @@ fun boundingSphere(node: GltfUpdate.Node): BoundingSphere {
 
 fun boundingSphere(mesh: Mesh) = BoundingSphere.fromPoints(mesh.vertices.map { it.pos!! })
 
-fun KorenderContext.cameraFor(bs: BoundingSphere): CameraDeclaration {
+fun KorenderScope.cameraFor(bs: BoundingSphere): CameraDeclaration {
     val look = Vec3(0f, -1f, -2f).normalize()
     val up = Vec3(0f, 2f, -1f).normalize()
     return camera(bs.center - look * (3f * bs.radius), look, up)
 }
 
-fun KorenderContext.projectionFor(bs: BoundingSphere, whr: Float): ProjectionDeclaration {
+fun KorenderScope.projectionFor(bs: BoundingSphere, whr: Float): ProjectionDeclaration {
     val near = 2f * bs.radius
     val far = 4f * bs.radius
     val fovY2 = if (whr >= 1f) atan(0.33f) else atan(0.33f / whr)

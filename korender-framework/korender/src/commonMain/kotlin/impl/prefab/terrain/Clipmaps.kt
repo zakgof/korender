@@ -3,8 +3,8 @@ package com.zakgof.korender.impl.prefab.terrain
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.TerrainMaterial
-import com.zakgof.korender.context.KorenderContext
-import com.zakgof.korender.impl.context.DefaultFrameContext
+import com.zakgof.korender.context.KorenderScope
+import com.zakgof.korender.impl.context.DefaultFrameScope
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.geometry.MeshAttributes.B1
 import com.zakgof.korender.impl.geometry.MeshAttributes.B2
@@ -17,7 +17,7 @@ import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import kotlin.math.floor
 
-internal class Clipmaps(korenderContext: KorenderContext, id: String, private val cellSize: Float, private val hg: Int, private val rings: Int) : InternalPrefab<TerrainMaterial> {
+internal class Clipmaps(korenderScope: KorenderScope, id: String, private val cellSize: Float, private val hg: Int, private val rings: Int) : InternalPrefab<TerrainMaterial> {
 
     private val center: MeshDeclaration
     private val ring = mutableMapOf<Offset, MeshDeclaration>()
@@ -25,7 +25,7 @@ internal class Clipmaps(korenderContext: KorenderContext, id: String, private va
 
     init {
         val outer = inner * 2
-        center = korenderContext.customMesh(
+        center = korenderScope.customMesh(
             "$id-center",
             (outer + 1) * (outer + 1),
             outer * outer * 6,
@@ -35,7 +35,7 @@ internal class Clipmaps(korenderContext: KorenderContext, id: String, private va
         }
         for (ox in 0..1) {
             for (oz in 0..1) {
-                ring[Offset(ox, oz)] = korenderContext.customMesh(
+                ring[Offset(ox, oz)] = korenderScope.customMesh(
                     "$id-ring-$ox-$oz",
                     (outer + 1) * (outer + 1),
                     (outer * outer - inner * inner) * 6,
@@ -118,7 +118,7 @@ internal class Clipmaps(korenderContext: KorenderContext, id: String, private va
         return list
     }
 
-    override fun render(fc: DefaultFrameContext, material: TerrainMaterial) = with(fc) {
+    override fun render(fc: DefaultFrameScope, material: TerrainMaterial) = with(fc) {
         val tiles = meshes(camera.position)
         tiles.forEach { tile ->
             val modifier = TerrainMaterialModifier(tile, hg.toFloat() - 1f, cellSize)

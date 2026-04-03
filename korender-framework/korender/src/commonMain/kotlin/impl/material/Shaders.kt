@@ -3,7 +3,7 @@ package com.zakgof.korender.impl.material
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Platform
 import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gl.GL.shaderEnv
@@ -87,7 +87,7 @@ internal object Shaders {
                 ?.let {
                     val row = it.groups[2]!!.value.toInt()
                     val offset = when (Platform.target) {
-                        KorenderContext.TargetPlatform.Desktop -> 2
+                        KorenderScope.TargetPlatform.Desktop -> 2
                         else -> 1
                     }
                     val entry = lines[row - offset]

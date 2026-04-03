@@ -2,7 +2,7 @@ import com.zakgof.korender.Image
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.TerrainMaterial
 import com.zakgof.korender.TextureFilter
-import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.examples.island.loadBinary
 import com.zakgof.korender.math.Vec2
 
@@ -12,7 +12,7 @@ fun loadRunway(bytes: ByteArray): Pair<Vec2, Vec2> = loadBinary(bytes) {
     p1 to p2
 }
 
-fun FrameContext.island(heightMap: Image, rwSeeds: Pair<Vec2, Vec2>, terrain: Prefab<TerrainMaterial>) {
+fun FrameScope.island(heightMap: Image, rwSeeds: Pair<Vec2, Vec2>, terrain: Prefab<TerrainMaterial>) {
     Prefab(
         terrain {
             metallicFactor = 0.0f

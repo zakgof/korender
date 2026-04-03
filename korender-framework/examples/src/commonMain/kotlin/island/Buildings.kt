@@ -1,14 +1,14 @@
 package com.zakgof.korender.examples.island
 
-import com.zakgof.korender.context.FrameContext
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.FrameScope
+import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.examples.island.city.CityGenerator
 import com.zakgof.korender.examples.island.city.generateBuilding
 import com.zakgof.korender.math.ColorRGBA.Companion.white
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 
-fun KorenderContext.loadBuildings(bytes: ByteArray): CityGenerator =
+fun KorenderScope.loadBuildings(bytes: ByteArray): CityGenerator =
     loadBinary(bytes) {
         val cityGenerator = CityGenerator(this@loadBuildings)
         val size = bytes.size / (2 * 3 * 4)
@@ -28,7 +28,7 @@ fun KorenderContext.loadBuildings(bytes: ByteArray): CityGenerator =
         cityGenerator
     }
 
-fun FrameContext.buildings(cityGenerator: CityGenerator) {
+fun FrameScope.buildings(cityGenerator: CityGenerator) {
 
     val dim = 32f * 512f
 

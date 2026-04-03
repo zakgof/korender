@@ -1,6 +1,6 @@
 package com.zakgof.korender
 
-import com.zakgof.korender.context.GuiContainerContext
+import com.zakgof.korender.context.GuiContainerScope
 import com.zakgof.korender.math.ColorRGBA
 import kotlin.math.sqrt
 
@@ -27,7 +27,7 @@ class SliderState(var position: Float = 0.5f, val min: Float = 0f, val max: Floa
     internal var dragStartPos: Float? = null
 }
 
-fun GuiContainerContext.Checkbox(id: String, state: CheckboxState, text: String? = null, onChange: (Boolean) -> Unit = {}) =
+fun GuiContainerScope.Checkbox(id: String, state: CheckboxState, text: String? = null, onChange: (Boolean) -> Unit = {}) =
     Row {
         val clickHandler: (TouchEvent) -> Unit = {
             onClick(it) {
@@ -41,7 +41,7 @@ fun GuiContainerContext.Checkbox(id: String, state: CheckboxState, text: String?
         Image(id = "checkbox.image.$id.${state.state}", imageResource = if (state.state) "!gui/checkbox.checked.png" else "!gui/checkbox.unchecked.png", width = 48, height = 48, marginLeft = 8, onTouch = clickHandler)
     }
 
-fun GuiContainerContext.ProgressBar(id: String, width: Int, height: Int = 48, value: Float) =
+fun GuiContainerScope.ProgressBar(id: String, width: Int, height: Int = 48, value: Float) =
     Row {
         Image(id = "progressbar.left.$id", imageResource = "!gui/progressbar.filled.png", width = 8, height = height, marginLeft = 8)
         Image(id = "progressbar.filled.$id", imageResource = "!gui/progressbar.filled.png", width = (value * width).toInt(), height = height)
@@ -49,7 +49,7 @@ fun GuiContainerContext.ProgressBar(id: String, width: Int, height: Int = 48, va
         Image(id = "progressbar.right.$id", imageResource = "!gui/progressbar.filled.png", width = 8, height = height)
     }
 
-fun GuiContainerContext.Slider(id: String, width: Int, height: Int = 48, state: SliderState, onChange: (Float) -> Unit = {}) =
+fun GuiContainerScope.Slider(id: String, width: Int, height: Int = 48, state: SliderState, onChange: (Float) -> Unit = {}) =
     Row {
         val setPosition = { p: Float ->
             state.position = p.coerceIn(state.min, state.max)
@@ -82,7 +82,7 @@ fun GuiContainerContext.Slider(id: String, width: Int, height: Int = 48, state: 
         Image(id = "slider.right.$id", imageResource = "!gui/slider.right.png", width = 32, height = height, marginRight = 8) { onClick(it) { jumpRight() } }
     }
 
-fun GuiContainerContext.Joystick(id: String, state: JoystickState, width: Int) {
+fun GuiContainerScope.Joystick(id: String, state: JoystickState, width: Int) {
 
     val unit = width / 8
     Stack {

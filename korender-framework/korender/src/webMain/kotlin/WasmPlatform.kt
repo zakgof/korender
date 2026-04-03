@@ -11,7 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
@@ -45,7 +45,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 @OptIn(ExperimentalWasmJsInterop::class)
 internal actual object Platform {
 
-    actual val target = KorenderContext.TargetPlatform.Web
+    actual val target = KorenderScope.TargetPlatform.Web
 
     @OptIn(DelicateCoroutinesApi::class)
     internal actual fun loadFont(bytes: ByteArray): Deferred<FontDef> {
@@ -146,7 +146,7 @@ internal actual object Platform {
 @Composable
 actual fun Korender(
     appResourceLoader: ResourceLoader,
-    block: KorenderContext.() -> Unit
+    block: KorenderScope.() -> Unit
 ) {
     var engine: Engine? by remember { mutableStateOf(null) }
     val canvas by remember { mutableStateOf(document.createElement("canvas") as HTMLCanvasElement) }

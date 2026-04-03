@@ -1,9 +1,9 @@
 package com.zakgof.korender.examples.island
 
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.KorenderScope
 import loadRunway
 
-class Loader(kc: KorenderContext) {
+class Loader(kc: KorenderScope) {
 
 
     val heightMapLoading = kc.loadImage("island/terrain/height.png")

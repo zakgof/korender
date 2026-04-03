@@ -2,7 +2,7 @@ package ltree
 
 import com.zakgof.korender.Image3D
 import com.zakgof.korender.PixelFormat
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.math.ColorRGB.Companion.White
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec3
@@ -13,7 +13,7 @@ import ltree.generator.LTree
 import tree.saveImage
 
 
-fun KorenderContext.volumize(lTree: LTree): Pair<Image3D, Image3D> {
+fun KorenderScope.volumize(lTree: LTree): Pair<Image3D, Image3D> {
 
     val reso = 32
     val pixelsInSlice = 64 / 8

@@ -1,19 +1,12 @@
 package ltree
 
 import androidx.compose.runtime.Composable
-import com.zakgof.korender.Attributes.MODEL0
-import com.zakgof.korender.Attributes.MODEL1
-import com.zakgof.korender.Attributes.MODEL2
-import com.zakgof.korender.Attributes.MODEL3
-import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Image
 import com.zakgof.korender.Korender
 import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.baker.resources.Res
-import com.zakgof.korender.context.FrameContext
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.FrameScope
+import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.math.ColorRGB.Companion.White
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
@@ -78,7 +71,7 @@ fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     }
 }
 
-private fun KorenderContext.captureCard(cluster: ClusteredTree.Cluster, index: Int, leafTexture: String): Card {
+private fun KorenderScope.captureCard(cluster: ClusteredTree.Cluster, index: Int, leafTexture: String): Card {
     val right = (cluster.plane.normal % 1.y).normalize()
     val up = (right % cluster.plane.normal).normalize()
 
@@ -109,12 +102,12 @@ private fun KorenderContext.captureCard(cluster: ClusteredTree.Cluster, index: I
     )
 }
 
-fun FrameContext.renderLTree(lTree: LTree, postfix: String, leafTexture: String, translation: Vec3 = 0.x) {
+fun FrameScope.renderLTree(lTree: LTree, postfix: String, leafTexture: String, translation: Vec3 = 0.x) {
     renderTrunk(lTree, postfix, translation)
     renderFoliage(postfix, lTree, leafTexture, translation)
 }
 
-private fun FrameContext.renderFoliage(postfix: String, lTree: LTree, leafTexture: String, translation: Vec3) {
+private fun FrameScope.renderFoliage(postfix: String, lTree: LTree, leafTexture: String, translation: Vec3) {
     Renderable(
         base(colorTexture = texture(leafTexture)),
         mesh = biQuad(),
@@ -131,7 +124,7 @@ private fun FrameContext.renderFoliage(postfix: String, lTree: LTree, leafTextur
     )
 }
 
-private fun FrameContext.renderTrunk(lTree: LTree, postfix: String, translation: Vec3) {
+private fun FrameScope.renderTrunk(lTree: LTree, postfix: String, translation: Vec3) {
     if (lTree.branches.isNotEmpty()) {
         Renderable(
             base(ColorRGBA(0x553311FF)),
@@ -154,7 +147,7 @@ private fun FrameContext.renderTrunk(lTree: LTree, postfix: String, translation:
     }
 }
 
-private fun FrameContext.renderCardForest(cards: List<Card>, atlas: Image) {
+private fun FrameScope.renderCardForest(cards: List<Card>, atlas: Image) {
     cards.forEachIndexed { index, card ->
         val r = Random(1)
         Renderable(
@@ -176,7 +169,7 @@ private fun FrameContext.renderCardForest(cards: List<Card>, atlas: Image) {
     }
 }
 
-private fun FrameContext.renderCardForest2(cards: List<Card>, atlas: Image) {
+private fun FrameScope.renderCardForest2(cards: List<Card>, atlas: Image) {
     Renderable(
         base(colorTexture = texture("atlas", atlas)),
         mesh = customMesh(
@@ -222,7 +215,7 @@ class Card(
     val image: Image
 )
 
-private fun FrameContext.renderTrunkForest(lTree: LTree) {
+private fun FrameScope.renderTrunkForest(lTree: LTree) {
 
     fun thinDown(r: Float, threshold: Float): Float =
         if (r < 2f * threshold) (r - threshold) * r / threshold else r
@@ -251,7 +244,7 @@ private fun FrameContext.renderTrunkForest(lTree: LTree) {
     )
 }
 
-private fun FrameContext.renderCardFoliage(cards: List<Card>, atlas: Image, position: Vec3 = 0.x) {
+private fun FrameScope.renderCardFoliage(cards: List<Card>, atlas: Image, position: Vec3 = 0.x) {
     Renderable(
         base(colorTexture = texture("atlas", atlas)),
         mesh = customMesh(
@@ -285,7 +278,7 @@ private fun FrameContext.renderCardFoliage(cards: List<Card>, atlas: Image, posi
     )
 }
 
-private fun FrameContext.renderVolume(albedo3d: Texture3DDeclaration, normal3d: Texture3DDeclaration, offset: Vec3) {
+private fun FrameScope.renderVolume(albedo3d: Texture3DDeclaration, normal3d: Texture3DDeclaration, offset: Vec3) {
 
     Billboard(
         base(),

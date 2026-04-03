@@ -4,28 +4,28 @@ import com.zakgof.korender.TextStyle
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.math.ColorRGBA
 
-interface GuiContainerContext : FrameContext {
+interface GuiContainerScope : FrameScope {
 
     /**
      *  Arranges GUI widgets into a horizontal row.
      *
      *  @param block row's widgets or children layouts
      */
-    fun Row(block: GuiContainerContext.() -> Unit)
+    fun Row(block: GuiContainerScope.() -> Unit)
 
     /**
      *  Arranges GUI widgets into a vertical column.
      *
      *  @param block column's widgets or children layouts
      */
-    fun Column(block: GuiContainerContext.() -> Unit)
+    fun Column(block: GuiContainerScope.() -> Unit)
 
     /**
      *  Arranges GUI widgets into a stack (one on top on another).
      *
      *  @param block stack's widgets or children layouts
      */
-    fun Stack(block: GuiContainerContext.() -> Unit)
+    fun Stack(block: GuiContainerScope.() -> Unit)
 
     /**
      *  Renders a text.

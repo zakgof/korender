@@ -19,7 +19,7 @@ internal class BlurMaterial(
     "radius" to FloatGetter<BlurMaterial> { it.radius }
 )
 
-internal fun Engine.KorenderContextImpl.simpleBlur(frameContext: FrameContext, radius: Float) = InternalFilterDeclaration(
+internal fun Engine.KorenderScopeImpl.simpleBlur(frameContext: FrameContext, radius: Float) = InternalFilterDeclaration(
     listOf(
         InternalPassDeclaration(
             mapOf(

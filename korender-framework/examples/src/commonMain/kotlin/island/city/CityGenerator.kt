@@ -1,7 +1,7 @@
 package com.zakgof.korender.examples.island.city
 
 import com.zakgof.korender.MutableMesh
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
@@ -26,7 +26,7 @@ private val Int.cy: Int
 private val Int.cz: Int
     get() = (this shr 16) and 0xFF
 
-class CityGenerator(kc: KorenderContext) {
+class CityGenerator(kc: KorenderScope) {
 
     val lightWindow = kc.mutableMesh()
     val roof = kc.mutableMesh()

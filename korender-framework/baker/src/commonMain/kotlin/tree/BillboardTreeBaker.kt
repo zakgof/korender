@@ -5,7 +5,7 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.tree.Metaball
 import com.zakgof.korender.baker.tree.MetaballTree
-import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform.Companion.translate
@@ -45,7 +45,7 @@ fun BillboardTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     }
 }
 
-private fun FrameContext.tree(metaballTree: MetaballTree) {
+private fun FrameScope.tree(metaballTree: MetaballTree) {
     metaballTree.render(this)
     Renderable(
         base(

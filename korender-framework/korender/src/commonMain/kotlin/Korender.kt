@@ -1,12 +1,12 @@
 package com.zakgof.korender
 
 import androidx.compose.runtime.Composable
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.KorenderScope
 
 @Composable
 expect fun Korender(
     appResourceLoader: ResourceLoader = { throw KorenderException("No application resource provided") },
-    block: KorenderContext.() -> Unit
+    block: KorenderScope.() -> Unit
 )
 
 typealias ResourceLoader = suspend (String) -> ByteArray

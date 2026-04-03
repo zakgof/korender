@@ -48,9 +48,9 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.Vec3.Companion.ZERO
 import kotlinx.coroutines.Deferred
 
-interface KorenderContext {
+interface KorenderScope {
 
-    fun Frame(block: FrameContext.() -> Unit)
+    fun Frame(block: FrameScope.() -> Unit)
     fun OnTouch(handler: TouchHandler)
     fun OnKey(handler: KeyHandler)
 
@@ -198,7 +198,7 @@ interface KorenderContext {
      * @param block scene to capture
      * @return deferred set of 6 images (per each cube side)
      */
-    fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3 = ZERO, insideOut: Boolean = false, block: FrameContext.() -> Unit): Deferred<CubeTextureImages>
+    fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3 = ZERO, insideOut: Boolean = false, block: FrameScope.() -> Unit): Deferred<CubeTextureImages>
 
     /**
      * Captures scene into a frame image.
@@ -210,7 +210,7 @@ interface KorenderContext {
      * @param block scene to capture
      * @return deferred frame image
      */
-    fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameContext.() -> Unit): Deferred<Image>
+    fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameScope.() -> Unit): Deferred<Image>
 
     /**
      * Creates a quad mesh declaration.

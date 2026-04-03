@@ -4,8 +4,8 @@ import androidx.compose.ui.awt.ComposeWindow
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Image
 import com.zakgof.korender.Korender
-import com.zakgof.korender.context.FrameContext
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.FrameScope
+import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.examples.TestExchange
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -29,8 +29,8 @@ import kotlin.math.roundToInt
 
 class GolderImageCase(
     val title: String,
-    val init: KorenderContext.() -> Unit,
-    val frame: FrameContext.() -> Unit,
+    val init: KorenderScope.() -> Unit,
+    val frame: FrameScope.() -> Unit,
 )
 
 class GoldenImageTest {

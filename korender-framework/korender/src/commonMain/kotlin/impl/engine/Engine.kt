@@ -40,19 +40,21 @@ import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.context.InstancedBillboardsContext
 import com.zakgof.korender.context.InstancedGltfContext
 import com.zakgof.korender.context.InstancedRenderablesContext
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.context.PipeMeshContext
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
-import com.zakgof.korender.impl.context.DefaultFrameContext
+import com.zakgof.korender.impl.context.DefaultFrameScope
 import com.zakgof.korender.impl.context.DefaultInstancedBillboardsContext
 import com.zakgof.korender.impl.context.DefaultInstancedGltfContext
 import com.zakgof.korender.impl.context.DefaultInstancedRenderablesContext
+import com.zakgof.korender.impl.context.NodeContext
+import com.zakgof.korender.impl.context.NodeScope
 import com.zakgof.korender.impl.engine.shadow.InternalHardShadow
 import com.zakgof.korender.impl.engine.shadow.InternalHardwarePcfShadow
 import com.zakgof.korender.impl.engine.shadow.InternalSoftwarePcfShadow
@@ -116,6 +118,7 @@ import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.impl.resourceBytes
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -128,13 +131,13 @@ internal class Engine(
     width: Int,
     height: Int,
     kmpResourceLoader: ResourceLoader,
-    block: KorenderContext.() -> Unit,
+    block: KorenderScope.() -> Unit,
 ) {
 
     private val appResourceLoader: ResourceLoader = { resourceBytes(kmpResourceLoader, it) }
     private val touchQueue = Channel<TouchEvent>(Channel.UNLIMITED)
     private val keyQueue = Channel<KeyEvent>(Channel.UNLIMITED)
-    private val frameBlocks = mutableListOf<FrameContext.() -> Unit>()
+    private val frameBlocks = mutableListOf<FrameScope.() -> Unit>()
     private val loader = Loader(appResourceLoader)
     private val inventory = Inventory(loader)
     private val renderContext = RenderContext()
@@ -144,20 +147,21 @@ internal class Engine(
     private var pressedTouchBoxIds = setOf<Any>()
     private val touchHandlers = mutableListOf<TouchHandler>()
     private val keyHandlers = mutableListOf<KeyHandler>()
-    private val kc = KorenderContextImpl()
+    private val kc = KorenderScopeImpl()
     private var loaderLoaded = false
     private var loaderComplete = false
     private val preFrames = ArrayDeque<() -> Unit>()
     private val renderer = Renderer(inventory, renderContext)
+    private val rootNodeContext = NodeContext(kmpResourceLoader, Transform.IDENTITY, TimeRetentionPolicy(10f))
 
-    inner class KorenderContextImpl : KorenderContext {
+    inner class KorenderScopeImpl : KorenderScope, NodeScope by rootNodeContext {
 
         val appResourceLoader: ResourceLoader = this@Engine.appResourceLoader
-        var currentRetentionPolicy: RetentionPolicy = TimeRetentionPolicy(10f)
+        // var currentRetentionPolicy: RetentionPolicy = TimeRetentionPolicy(10f)
         var currentRetentionGeneration: Int = 0
-        override val target: KorenderContext.TargetPlatform = Platform.target
+        override val target: KorenderScope.TargetPlatform = Platform.target
 
-        override fun Frame(block: FrameContext.() -> Unit) {
+        override fun Frame(block: FrameScope.() -> Unit) {
             if (frameBlocks.isNotEmpty())
                 throw KorenderException("Only one Frame declaration is allowed")
             frameBlocks.add(block)
@@ -174,8 +178,7 @@ internal class Engine(
         override fun <T> load(resource: String, mapper: (ByteArray) -> T): Deferred<T> =
             CoroutineScope(Dispatchers.Default).async { mapper(appResourceLoader(resource)) }
 
-        override fun texture(textureResource: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int) =
-            ResourceTextureDeclaration(textureResource, filter, wrap, aniso, currentRetentionPolicy)
+
 
         override fun texture(id: String, image: Image, filter: TextureFilter, wrap: TextureWrap, aniso: Int) =
             ImageTextureDeclaration(id, image as InternalImage, filter, wrap, aniso, currentRetentionPolicy)
@@ -197,9 +200,9 @@ internal class Engine(
 
         override fun cubeTextureProbe(envProbeName: String): CubeTextureDeclaration = ProbeCubeTextureDeclaration(envProbeName)
 
-        override fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3, insideOut: Boolean, block: FrameContext.() -> Unit): Deferred<CubeTextureImages> {
+        override fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3, insideOut: Boolean, block: FrameScope.() -> Unit): Deferred<CubeTextureImages> {
             val sd = SceneDeclaration()
-            block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f, 0)))
+            block.invoke(DefaultFrameScope(kc, sd, FrameInfo(0, 0f, 0f, 0f, 0)))
             val images = CompletableDeferred<CubeTextureImages>()
             val startNano = Platform.nanoTime()
 
@@ -231,9 +234,9 @@ internal class Engine(
             return images
         }
 
-        override fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameContext.() -> Unit): Deferred<Image> {
+        override fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameScope.() -> Unit): Deferred<Image> {
             val sd = SceneDeclaration()
-            block.invoke(DefaultFrameContext(kc, sd, FrameInfo(0, 0f, 0f, 0f, 0)))
+            block.invoke(DefaultFrameScope(kc, sd, FrameInfo(0, 0f, 0f, 0f, 0)))
             val image = CompletableDeferred<Image>()
             val startNano = Platform.nanoTime()
 
@@ -570,7 +573,7 @@ internal class Engine(
         processKeys()
         val sd = SceneDeclaration()
         frameBlocks.forEach {
-            DefaultFrameContext(kc, sd, frameInfo).apply(it)
+            DefaultFrameScope(kc, sd, frameInfo).apply(it)
         }
         inventory.go(frameInfo.time, kc.currentRetentionGeneration) {
             preFrames.removeFirstOrNull()?.let { it() }

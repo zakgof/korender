@@ -1,6 +1,5 @@
 package com.zakgof.korender.examples.gltfviewer
 
-import com.zakgof.korender.examples.TestExchange
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,7 +13,8 @@ import androidx.compose.ui.Modifier
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.Korender
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.KorenderScope
+import com.zakgof.korender.examples.TestExchange
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
@@ -41,7 +41,7 @@ fun GltfLibraryExample() = Row {
         selectedModel = models.find { it.folder == "Avocado" }
     }
 
-    fun KorenderContext.updateCameraAndAnimations(update: GltfUpdate) {
+    fun KorenderScope.updateCameraAndAnimations(update: GltfUpdate) {
         animations = update.animations.mapIndexed { i, v -> v.name ?: "Animation $i" }
         if (animations.isNotEmpty() && !animations.contains(selectedAnimation)) {
             selectedAnimation = animations.first()
@@ -65,7 +65,8 @@ fun GltfLibraryExample() = Row {
     }
 
     Box(modifier = Modifier.weight(1f)) {
-        Korender(appResourceLoader = { Res.readBytes(it)
+        Korender(appResourceLoader = {
+            Res.readBytes(it)
         }) {
             val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/sea/${it.toString().lowercase()}.jpg" })
             Frame {
@@ -81,17 +82,19 @@ fun GltfLibraryExample() = Row {
                 DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(1f))
                 AmbientLight(white(0.1f))
                 selectedModel?.let { model ->
-                    Gltf(
-                        // ibl(env), TODO
-                        resource = model.file,
-                        // resourceLoader = { GltfDownloader.load(model.folder, model.format, it) },
+                    Node(
+                        resourceLoader = { GltfDownloader.load(model.folder, model.format, it) },
                         transform = if (selectedCamera == AUTO_CAMERA) rotate(bs.center, 1.y, frameInfo.time * 0.3f) else Transform.IDENTITY,
-                        animation = animations.indexOf(selectedAnimation),
-                        materialModifier = {
-                            // ibl = env // TODO
-                        },
-                        onUpdate = { update -> updateCameraAndAnimations(update) }
-                    )
+                    ) {
+                        Gltf(
+                            resource = model.file,
+                            animation = animations.indexOf(selectedAnimation),
+                            materialModifier = {
+                                ibl = cubeSky(env)
+                            },
+                            onUpdate = { update -> updateCameraAndAnimations(update) }
+                        )
+                    }
                 }
                 Sky(cubeSky(env))
                 Gui {
@@ -108,7 +111,7 @@ fun GltfLibraryExample() = Row {
         FixedItemsDropdown("Model", models, { it.label }, selectedModel, { selectedModel = it; animations = listOf() })
         FixedItemsDropdown("Camera", cameras, { it }, selectedCamera, { selectedCamera = it })
         if (animations.isNotEmpty()) {
-            FixedItemsDropdown("Animations", animations, { selectedAnimation}, selectedAnimation, { selectedAnimation = it })
+            FixedItemsDropdown("Animations", animations, { selectedAnimation }, selectedAnimation, { selectedAnimation = it })
         }
     }
 }

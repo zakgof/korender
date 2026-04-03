@@ -2,31 +2,31 @@ package com.zakgof.korender.impl.context
 
 import com.zakgof.korender.TextStyle
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.context.FrameContext
-import com.zakgof.korender.context.GuiContainerContext
+import com.zakgof.korender.context.FrameScope
+import com.zakgof.korender.context.GuiContainerScope
 import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.math.ColorRGBA
 
-internal class DefaultContainerContext(
-    private val frameContext: DefaultFrameContext,
+internal class DefaultContainerScope(
+    private val frameContext: DefaultFrameScope,
     private val declaration: ElementDeclaration.Container
-) : GuiContainerContext, FrameContext by frameContext {
+) : GuiContainerScope, FrameScope by frameContext {
 
-    override fun Row(block: GuiContainerContext.() -> Unit) {
+    override fun Row(block: GuiContainerScope.() -> Unit) {
         val row = ElementDeclaration.Container(Direction.Horizontal)
-        DefaultContainerContext(frameContext, row).apply(block)
+        DefaultContainerScope(frameContext, row).apply(block)
         declaration.add(row)
     }
 
-    override fun Column(block: GuiContainerContext.() -> Unit) {
+    override fun Column(block: GuiContainerScope.() -> Unit) {
         val column = ElementDeclaration.Container(Direction.Vertical)
-        DefaultContainerContext(frameContext, column).apply(block)
+        DefaultContainerScope(frameContext, column).apply(block)
         declaration.add(column)
     }
 
-    override fun Stack(block: GuiContainerContext.() -> Unit) {
+    override fun Stack(block: GuiContainerScope.() -> Unit) {
         val stack = ElementDeclaration.Container(Direction.Stack)
-        DefaultContainerContext(frameContext, stack).apply(block)
+        DefaultContainerScope(frameContext, stack).apply(block)
         declaration.add(stack)
     }
 

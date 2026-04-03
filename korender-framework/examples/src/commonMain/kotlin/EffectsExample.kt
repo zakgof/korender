@@ -4,7 +4,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
@@ -34,7 +34,7 @@ fun EffectsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     }
 }
 
-private fun FrameContext.fireDemo() = Billboard(
+private fun FrameScope.fireDemo() = Billboard(
     billboard {
         position = (-5).x + 5.y
         scale = Vec2(2f, 10f)
@@ -43,7 +43,7 @@ private fun FrameContext.fireDemo() = Billboard(
     transparent = true
 )
 
-private fun FrameContext.smokeDemo() {
+private fun FrameScope.smokeDemo() {
     val n = 100
     for (i in 1..n) {
         val phase = fract(frameInfo.time * 0.5f + n.toFloat() / i)
@@ -58,7 +58,7 @@ private fun FrameContext.smokeDemo() {
     }
 }
 
-private fun FrameContext.fireballDemo() {
+private fun FrameScope.fireballDemo() {
     val phase = fract(frameInfo.time)
     Billboard(
         billboard {

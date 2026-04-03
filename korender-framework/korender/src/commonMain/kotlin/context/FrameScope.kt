@@ -10,13 +10,15 @@ import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.ResourceLoader
+import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.SkyMaterial
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 
-interface FrameContext : KorenderContext {
+interface FrameScope : KorenderScope {
 
     /**
      * Frame information.
@@ -77,7 +79,7 @@ interface FrameContext : KorenderContext {
      *
      * @param block GUI declaration
      */
-    fun Gui(block: GuiContainerContext.() -> Unit)
+    fun Gui(block: GuiContainerScope.() -> Unit)
 
     /**
      * Adds a post processing effect to a frame.
@@ -85,7 +87,7 @@ interface FrameContext : KorenderContext {
      * @param postProcessingEffect post processing effect
      * @param block geometry to be rendered after this effect
      */
-    fun PostProcess(postProcessingEffect: PostProcessingEffect, block: FrameContext.() -> Unit = {})
+    fun PostProcess(postProcessingEffect: PostProcessingEffect, block: FrameScope.() -> Unit = {})
 
     /**
      * Adds a post processing effect with the given material modifiers.
@@ -93,7 +95,7 @@ interface FrameContext : KorenderContext {
      * @param materialModifiers post processing effect material modifiers
      * @param block geometry to be rendered after this effect
      */
-    fun PostProcess(material: PostProcessingMaterial, block: FrameContext.() -> Unit = {})
+    fun PostProcess(material: PostProcessingMaterial, block: FrameScope.() -> Unit = {})
 
     /**
      * Adds a directional light to the frame.
@@ -139,7 +141,7 @@ interface FrameContext : KorenderContext {
      * @param insideOut experimental option to enable radiant capture
      * @param block scene to capture
      */
-    fun CaptureEnv(envProbeName: String, resolution: Int, position: Vec3 = Vec3.ZERO, near: Float = 10f, far: Float = 1000f, insideOut: Boolean = false, block: FrameContext.() -> Unit)
+    fun CaptureEnv(envProbeName: String, resolution: Int, position: Vec3 = Vec3.ZERO, near: Float = 10f, far: Float = 1000f, insideOut: Boolean = false, block: FrameScope.() -> Unit)
 
     /**
      * Renders a scene into an frame probe.
@@ -151,12 +153,19 @@ interface FrameContext : KorenderContext {
      * @param projection capture projection declaration
      * @param block scene to capture
      */
-    fun CaptureFrame(frameProbeName: String, width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameContext.() -> Unit)
+    fun CaptureFrame(frameProbeName: String, width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameScope.() -> Unit)
 
     /**
      * Sets a loader scene to display while the resources are being loaded.
      *
      * @param block loader scene
      */
-    fun OnLoading(block: FrameContext.() -> Unit)
+    fun OnLoading(block: FrameScope.() -> Unit)
+
+    fun Node(
+        resourceLoader: ResourceLoader? = null,
+        transform: Transform = Transform.IDENTITY,
+        retentionPolicy: RetentionPolicy? = null,
+        block: FrameScope.() -> Unit
+    )
 }

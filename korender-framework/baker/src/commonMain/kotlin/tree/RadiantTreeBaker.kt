@@ -1,19 +1,12 @@
 package com.zakgof.korender.baker.tree
 
 import androidx.compose.runtime.Composable
-import com.zakgof.korender.Attributes.MODEL0
-import com.zakgof.korender.Attributes.MODEL1
-import com.zakgof.korender.Attributes.MODEL2
-import com.zakgof.korender.Attributes.MODEL3
-import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.Korender
 import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.baker.resources.Res
-import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Quaternion
@@ -136,7 +129,7 @@ fun saveCubeMap(images: CubeTextureImages, pathPrefix: String) {
     }
 }
 
-private fun FrameContext.renderHull(hullMesh: MeshDeclaration, offset: Vec3 = ZERO, vararg mods: MaterialModifier) {
+private fun FrameScope.renderHull(hullMesh: MeshDeclaration, offset: Vec3 = ZERO, vararg mods: MaterialModifier) {
     Renderable(
         base(color = ColorRGBA.Red),
         *mods,
@@ -145,7 +138,7 @@ private fun FrameContext.renderHull(hullMesh: MeshDeclaration, offset: Vec3 = ZE
     )
 }
 
-private fun FrameContext.renderTree(leaf: MeshDeclaration, leafInstances: List<Transform>, vararg mods: MaterialModifier) {
+private fun FrameScope.renderTree(leaf: MeshDeclaration, leafInstances: List<Transform>, vararg mods: MaterialModifier) {
     Renderable(
         base(colorTexture = texture("model/leaf.png")),
         *mods,

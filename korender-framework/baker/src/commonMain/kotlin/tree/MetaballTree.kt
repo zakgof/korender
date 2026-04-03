@@ -8,15 +8,15 @@ import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.MaterialModifier
-import com.zakgof.korender.context.FrameContext
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.FrameScope
+import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.z
 import kotlin.random.Random
 
-class MetaballTree(kc: KorenderContext, metaball: Metaball, private val id: String, center: Vec3 = Vec3.ZERO) {
+class MetaballTree(kc: KorenderScope, metaball: Metaball, private val id: String, center: Vec3 = Vec3.ZERO) {
 
     private val leafMesh = kc.customMesh("leaf", 4, 6, POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3) {
         pos(Vec3(-0.5f, -0.5f, 0f)).normal(1.z).tex(0f, 0f)
@@ -37,7 +37,7 @@ class MetaballTree(kc: KorenderContext, metaball: Metaball, private val id: Stri
             .translate((pt.pos - center))
     }
 
-    fun render(fc: FrameContext, vararg mods: MaterialModifier) = with(fc) {
+    fun render(fc: FrameScope, vararg mods: MaterialModifier) = with(fc) {
         Renderable(
             base(colorTexture = texture("model/leaf.png")),
             *mods,

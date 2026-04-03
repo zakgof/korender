@@ -3,7 +3,7 @@ package com.zakgof.korenderexamples.golden
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.TerrainMaterial
 import com.zakgof.korender.TextureWrap
-import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.FloatMath.PIdiv2
@@ -36,7 +36,7 @@ val allInOne = GolderImageCase(
     }
 )
 
-private fun FrameContext.terrainDemo() {
+private fun FrameScope.terrainDemo() {
     Prefab(
         terrain {
             colorTexture = texture("terrain/terrain-albedo.jpg", wrap = TextureWrap.ClampToEdge)
@@ -50,7 +50,7 @@ private fun FrameContext.terrainDemo() {
     )
 }
 
-private fun FrameContext.objDemo() {
+private fun FrameScope.objDemo() {
     Renderable(
         base {
             colorTexture = texture("model/head.jpg")
@@ -62,7 +62,7 @@ private fun FrameContext.objDemo() {
     )
 }
 
-private fun FrameContext.floor() =
+private fun FrameScope.floor() =
     Renderable(
         base {
             colorTexture = texture("texture/asphalt-albedo.jpg")
@@ -74,7 +74,7 @@ private fun FrameContext.floor() =
         transform = scale(12f, 0.4f, 12f)
     )
 
-private fun FrameContext.setupLight() {
+private fun FrameScope.setupLight() {
     // DeferredShading()
     AmbientLight(white(0.5f))
     DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(1f)) {
@@ -84,7 +84,7 @@ private fun FrameContext.setupLight() {
     }
 }
 
-private fun FrameContext.fireDemo() = Billboard(
+private fun FrameScope.fireDemo() = Billboard(
     billboard {
         position = (-5).x + 5.y
         scale = Vec2(2f, 10f)
@@ -93,7 +93,7 @@ private fun FrameContext.fireDemo() = Billboard(
     transparent = true
 )
 
-private fun FrameContext.smokeDemo() {
+private fun FrameScope.smokeDemo() {
     val n = 100
     for (i in 1..n) {
         val phase = fract(n.toFloat() / i)
@@ -108,7 +108,7 @@ private fun FrameContext.smokeDemo() {
     }
 }
 
-private fun FrameContext.fireballDemo() {
+private fun FrameScope.fireballDemo() {
     Billboard(
         billboard {
             position = 5.x + 3.y
@@ -119,13 +119,13 @@ private fun FrameContext.fireballDemo() {
     )
 }
 
-private fun FrameContext.waterDemo() {
+private fun FrameScope.waterDemo() {
     val sky = fastCloudSky()
     Sky(sky)
     PostProcess(water(transparency = 10.0f, waveScale = 10f, sky = sky))
 }
 
-private fun FrameContext.instancedBillboardsDemo() = Billboard(
+private fun FrameScope.instancedBillboardsDemo() = Billboard(
     billboard {
         color = ColorRGBA.white(0.9f)
         colorTexture = texture("texture/splat.png")

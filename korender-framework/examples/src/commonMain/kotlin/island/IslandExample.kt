@@ -6,7 +6,7 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.TerrainMaterial
-import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec3
@@ -39,7 +39,7 @@ fun IslandExample() =
     }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-private fun FrameContext.gameFrame(game: Game, loader: Loader, terrain: Prefab<TerrainMaterial>) {
+private fun FrameScope.gameFrame(game: Game, loader: Loader, terrain: Prefab<TerrainMaterial>) {
     projection = projection(2f, 2f * height / width, 2f, 32000f, log())
     camera = camera(game.cameraPos, game.cameraDir, game.cameraUp)
 
@@ -52,14 +52,14 @@ private fun FrameContext.gameFrame(game: Game, loader: Loader, terrain: Prefab<T
 }
 
 
-private fun FrameContext.plane(position: Vec3, look: Vec3, up: Vec3) = Gltf(
+private fun FrameScope.plane(position: Vec3, look: Vec3, up: Vec3) = Gltf(
     resource = "island/models/plane.glb",
     transform = rotate(look, up)
         .scale(100.0f)
         .translate(position + 16.y)
 )
 
-private fun FrameContext.atmosphere() {
+private fun FrameScope.atmosphere() {
     AmbientLight(ColorRGB.white(0.5f))
     DirectionalLight(Vec3(3.0f, -3.0f, 1.0f), ColorRGB.white(3.5f)) {
         Cascade(512, 2f, 5000f, 0f to 4000f, hardwarePcf())
@@ -71,7 +71,7 @@ private fun FrameContext.atmosphere() {
     }
 }
 
-private fun FrameContext.gui(game: Game) =
+private fun FrameScope.gui(game: Game) =
     Gui {
         Column {
             Filler()
@@ -80,7 +80,7 @@ private fun FrameContext.gui(game: Game) =
         }
     }
 
-private fun FrameContext.loadingScreen(percent: Int) =
+private fun FrameScope.loadingScreen(percent: Int) =
     Gui {
         Column {
             Filler()
