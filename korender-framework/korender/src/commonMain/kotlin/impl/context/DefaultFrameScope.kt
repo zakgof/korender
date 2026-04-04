@@ -281,12 +281,13 @@ internal class DefaultFrameScope(
         DefaultFrameScope(korenderContext, sceneDeclaration.loaderSceneDeclaration!!, frameInfo, nodeContext).apply(block)
     }
 
-    override fun Node(resourceLoader: (suspend (String) -> ByteArray)?, transform: Transform, retentionPolicy: RetentionPolicy?, block: FrameScope.() -> Unit) {
+    override fun Node(resourceLoader: (suspend (String) -> ByteArray)?, transform: Transform, retentionPolicy: RetentionPolicy?, time: Float?, block: FrameScope.() -> Unit) {
 
         val childNodeContext = NodeContext(
             resourceLoader ?: nodeContext.resourceLoader,
             transform * nodeContext.transform,
-            retentionPolicy ?: nodeContext.retentionPolicy
+            retentionPolicy ?: nodeContext.retentionPolicy,
+            time
         )
         DefaultFrameScope(korenderContext, sceneDeclaration, frameInfo, childNodeContext).apply(block)
     }

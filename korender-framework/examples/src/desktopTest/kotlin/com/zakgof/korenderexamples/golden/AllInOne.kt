@@ -24,15 +24,17 @@ val allInOne = GolderImageCase(
         terrain = clipmapTerrainPrefab("terrain", 0.016f, 10, 6)
     },
     frame = {
-        DeferredShading()
-        setupLight()
-        fireDemo()
-        smokeDemo()
-        fireballDemo()
-        instancedBillboardsDemo()
-        objDemo()
-        waterDemo()
-        terrainDemo()
+        Node(time = 0f) {
+            DeferredShading()
+            setupLight()
+            fireDemo()
+            smokeDemo()
+            fireballDemo()
+            instancedBillboardsDemo()
+            objDemo()
+            waterDemo()
+            terrainDemo()
+        }
     }
 )
 

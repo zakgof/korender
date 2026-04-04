@@ -91,7 +91,6 @@ internal class FrameMaterialModifier(val frameContext: FrameContext, val nodeCon
             "cameraDir" -> Vec3Getter<FrameMaterialModifier> { it.frameContext.camera.direction }
             "screenWidth" -> FloatGetter<FrameMaterialModifier> { it.frameContext.width.toFloat() }
             "screenHeight" -> FloatGetter<FrameMaterialModifier> { it.frameContext.height.toFloat() }
-            "time" -> FloatGetter<FrameMaterialModifier> { it.frameContext.time }
             else -> super.uniform(name)
         }
 }

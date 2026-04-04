@@ -267,7 +267,7 @@ internal class Renderer(
                     }
                     val materialDeclaration = pass.material.toDeclaration(
                         true, effect.nodeContext,
-                        listOf(contextMaterialModifier)
+                        listOf(contextMaterialModifier, TimeMaterialModifier(effect.nodeContext, renderContext))
                     )
                     renderFullscreen(materialDeclaration, frameContext.width / pass.target.downSample, frameContext.height / pass.target.downSample, rk)
                 }
@@ -508,7 +508,7 @@ internal class Renderer(
             pass.mapping.forEach {
                 contextMaterialModifier.customTextureUniforms[it.key] = contextMaterialModifier.customTextureUniforms[it.value]!!
             }
-            val passMaterialDeclaration = pass.material.toDeclaration(deferredShading, pass.nodeContext, listOf(contextMaterialModifier))
+            val passMaterialDeclaration = pass.material.toDeclaration(deferredShading, pass.nodeContext, listOf(contextMaterialModifier, TimeMaterialModifier(pass.nodeContext, renderContext)))
             renderFullscreen(passMaterialDeclaration, frameContext.width / pass.target.downSample, frameContext.height / pass.target.downSample, rk)
             pass.sceneDeclaration?.let { Scene(pass.nodeContext, it, frameContext).renderForwardOpaques(rk) }
         }
@@ -560,7 +560,8 @@ internal class Renderer(
             val materialModifiers = listOfNotNull(
                 contextMaterialModifier,
                 instancingMaterialModifier,
-                ModelModifier(declaration.nodeContext.transform.mat4 * declaration.transform.mat4)
+                ModelModifier(declaration.nodeContext.transform.mat4 * declaration.transform.mat4),
+                TimeMaterialModifier(declaration.nodeContext, renderContext)
             ) + declaration.modifiers
             val materialDeclaration = declaration.material.toDeclaration(doDeferredShading, declaration.nodeContext, materialModifiers)
             if (materialDeclaration.defs.contains("NO_SHADOW_CAST") && isShadow)

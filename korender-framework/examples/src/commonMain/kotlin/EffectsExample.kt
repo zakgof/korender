@@ -18,13 +18,15 @@ fun EffectsExample() = Korender(resourceLoader = { Res.readBytes("files/$it") })
     Frame {
         TestExchange.report(frameInfo)
         DirectionalLight(Vec3(1f, -1f, -1f))
-        Sky(fastCloudSky())
+
+        val sky = fastCloudSky()
+        Sky(sky)
+        PostProcess(water(sky = sky))
 
         fireDemo()
         smokeDemo()
         fireballDemo()
 
-        PostProcess(water(sky = fastCloudSky()))
         Gui {
             Column {
                 Filler()

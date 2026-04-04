@@ -8,6 +8,7 @@ in vec2 vtex;
 
 #uniform float density;
 #uniform float seed;
+#uniform float time;
 
 #uniforms
 

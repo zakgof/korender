@@ -1,6 +1,8 @@
 uniform sampler2D windowTexture;
 uniform sampler2D noiseTexture;
 
+#uniform float time;
+
 vec3 pluginEmission() {
 
     float delta = fract(vpos.x);

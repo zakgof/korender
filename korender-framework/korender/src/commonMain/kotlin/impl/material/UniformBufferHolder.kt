@@ -13,8 +13,7 @@ import com.zakgof.korender.impl.glgpu.UniformSupplier
 
 internal class UniformBufferHolder {
 
-
-    private val frameUbo = GlGpuUniformBuffer(4650)
+    private val frameUbo = GlGpuUniformBuffer(4640)
 
     private val frameBindings: List<Pair<String, Int>> = listOf(
         "cameraPos" to 0,
@@ -26,7 +25,6 @@ internal class UniformBufferHolder {
         "projectionFar" to 108,
         "screenWidth" to 112,
         "screenHeight" to 116,
-        "time" to 120,
         "ambientColor" to 128,
         "numDirectionalLights" to 140,
         "directionalLightDir[0]" to 144,
@@ -82,7 +80,7 @@ internal class UniformBufferHolder {
         uniformBlock: UniformBlock?,
         materialName: String,
         rk: ResultKeeper?,
-        render: (Int, ResultKeeper?) -> Unit
+        render: (Int, ResultKeeper?) -> Unit,
     ): Int? {
         val renderItem = if (uniformBlock != null) {
             if (shaderUboSize - bufferShift < uniformBlock.size || currentBinding >= maxBindings) {
@@ -117,6 +115,6 @@ internal class UniformBufferHolder {
         val render: (Int, ResultKeeper?) -> Unit,
         val shift: Int,
         val size: Int,
-        val binding: Int?
+        val binding: Int?,
     )
 }

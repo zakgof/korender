@@ -59,6 +59,7 @@ internal class NodeContext(
     val resourceLoader: ResourceLoader,
     val transform: Transform,
     override var retentionPolicy: RetentionPolicy,
+    val time: Float? = null
 ) : ResourceScope {
 
     override fun hashCode() = 0

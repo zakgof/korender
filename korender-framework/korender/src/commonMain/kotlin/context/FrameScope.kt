@@ -166,6 +166,7 @@ interface FrameScope : KorenderScope {
         resourceLoader: ResourceLoader? = null,
         transform: Transform = Transform.IDENTITY,
         retentionPolicy: RetentionPolicy? = null,
+        time: Float? = null,
         block: FrameScope.() -> Unit
     )
 }

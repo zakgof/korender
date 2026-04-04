@@ -11,7 +11,6 @@ layout(std140) uniform Frame {
 
     float screenWidth;
     float screenHeight;
-    float time;
 
     vec3 ambientColor;
     int numDirectionalLights;

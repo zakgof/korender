@@ -9,6 +9,7 @@
 #uniform vec3 horizoncolor;
 #uniform float cloudlight;
 #uniform float clouddark;
+#uniform float time;
 
 vec3 sky(vec3 look, float bias) {
 
