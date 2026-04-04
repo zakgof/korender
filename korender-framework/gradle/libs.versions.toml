@@ -7,6 +7,8 @@ androidx-activityCompose = "1.12.2"
 commonsMath3 = "3.6.1"
 compose = "1.9.3"
 kotlin = "2.3.0"
+junit-jupiter = "5.11.4"
+junit-platform = "1.11.4"
 kotlinxCoroutinesCore = "1.10.2"
 kotlinxBrowser = "0.5.0"
 kotlinxSerializationJson = "1.9.0"
@@ -25,6 +27,10 @@ kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version.re
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinxCoroutinesCore" }
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerializationJson" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit-jupiter" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit-jupiter" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktorClientCore" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorClientCore" }
 ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktorClientCore" }

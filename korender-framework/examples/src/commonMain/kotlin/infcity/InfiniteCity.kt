@@ -6,6 +6,7 @@ import com.zakgof.korender.Attributes.NORMAL
 import com.zakgof.korender.Attributes.POS
 import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Korender
+import com.zakgof.korender.examples.TestExchange
 import com.zakgof.korender.context.FrameContext
 import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.math.ColorRGB.Companion.White
@@ -28,6 +29,7 @@ private val buildings = (0 until 10).map { generateBuilding() }
 @Composable
 fun InfiniteCity() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     Frame {
+        TestExchange.report(frameInfo)
         OnLoading {
             loader()
         }
