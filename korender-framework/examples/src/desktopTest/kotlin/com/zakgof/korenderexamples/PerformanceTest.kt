@@ -4,6 +4,8 @@ import androidx.compose.ui.awt.ComposeWindow
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.examples.Case
 import com.zakgof.korender.examples.TestExchange
+import com.zakgof.korender.examples.infcity.InfiniteCity
+import com.zakgof.korenderexamples.perf.InstancedRenderables
 import com.zakgof.korenderexamples.perf.MultipleRenderables
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
@@ -23,7 +25,7 @@ class PerformanceTest {
     @OptIn(ExperimentalAtomicApi::class)
     @ParameterizedTest
     @MethodSource("performanceCases")
-    fun testComposeUI(demo: Case) {
+    fun performance(demo: Case) {
 
         TestExchange.report(null)
 
@@ -76,7 +78,10 @@ class PerformanceTest {
 
         @JvmStatic
         fun performanceCases() = listOf(
-            Case("MultipleRenderables", ::MultipleRenderables)
+            Case("10K renderables", ::MultipleRenderables),
+            Case("10K instanced renderables - dynamic", { InstancedRenderables(true) }),
+            Case("10K instanced renderables - static", { InstancedRenderables(false) }),
+            Case("City Demo", ::InfiniteCity)
         ).map { Named.of(it.title, it) }
 
         @JvmStatic
@@ -137,7 +142,7 @@ class PerformanceTest {
         private fun printComparisonTable(
             current: Map<String, Float>,
             baseline: Map<String, Float>,
-            latest: Map<String, Float>
+            latest: Map<String, Float>,
         ) {
             val header = listOf("Test", "Current", "Baseline", "О” vs Base", "Latest", "О” vs Latest")
             val rows = current.keys.sorted().map { title ->

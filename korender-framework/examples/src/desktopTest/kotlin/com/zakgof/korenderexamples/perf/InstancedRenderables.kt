@@ -13,7 +13,7 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 @Composable
-fun MultipleRenderables() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
+fun InstancedRenderables(dynamic: Boolean) = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
     val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })
     Frame {
 
@@ -28,20 +28,25 @@ fun MultipleRenderables() = Korender(resourceLoader = { Res.readBytes("files/$it
         Sky(sky)
         DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(3f))
         AmbientLight(ColorRGB.Black)
-        for (m in 0 until w) {
-            for (r in 0 until h) {
-                Renderable(
-                    base {
-                        color = ColorRGBA(0x80A0FFFF)
-                        metallicFactor = r.toFloat() / w
-                        roughnessFactor = m.toFloat() / h
-                        ibl = sky
-                    },
-                    mesh = sphere(4f / w),
-                    transform = translate((m - w/2) * 8f / w, (r - h/2) * 8f / h, 8f)
-                )
+
+        Renderable(
+            base {
+                color = ColorRGBA(0x80A0FFFF)
+                metallicFactor = 0.5f
+                roughnessFactor = 0.5f
+                ibl = sky
+            },
+            mesh = sphere(4f / w),
+            instancing = instancing("10K", w * h, dynamic) {
+                for (m in 0 until w) {
+                    for (r in 0 until h) {
+                        Instance(
+                            transform = translate((m - w / 2) * 8f / w, (r - h / 2) * 8f / h, 8f)
+                        )
+                    }
+                }
             }
-        }
+        )
         Gui {
             Column {
                 Filler()
