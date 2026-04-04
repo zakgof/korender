@@ -25,14 +25,14 @@ import kotlinx.coroutines.Deferred
 
 interface ResourceScope {
 
-    /** Current object retention policy */
+    /** Current object retention policy. */
     var retentionPolicy: RetentionPolicy
 
     /**
      * Helper method to load a resource file into an object.
      *
      * @param resource resource file name
-     * @param mapper: function to instantiate object representation from the raw file's bytes
+     * @param mapper function to instantiate object representation from the raw file's bytes
      * @return deferred object
      */
     fun <T> load(resource: String, mapper: (ByteArray) -> T): Deferred<T>
@@ -211,6 +211,7 @@ interface ResourceScope {
      *
      * @param id unique declaration id
      * @param mesh Mesh object
+     * @return mesh declaration
      */
     fun mesh(id: String, mesh: Mesh): MeshDeclaration
 
@@ -238,8 +239,9 @@ interface ResourceScope {
 
 
     /**
-     * Loads a Mesh from a MeshDeclaration
+     * Loads a Mesh from a MeshDeclaration.
      * @param meshDeclaration mesh declaration
+     * @return deferred mesh
      */
     fun loadMesh(meshDeclaration: MeshDeclaration): Deferred<Mesh>
 
@@ -273,6 +275,7 @@ interface ResourceScope {
      * @param binarySteps number of binary search steps after the forward tracing
      * @param lastStepRatio factor to multiply forward raytracing step at maxReflectionDistance
      * @param envTexture cube texture declaration for environment reflections
+     * @return post shading effect
      */
     fun ssr(downsample: Int = 2, maxReflectionDistance: Float = 10f, linearSteps: Int = 64, binarySteps: Int = 5, lastStepRatio: Float = 4f, envTexture: CubeTextureDeclaration? = null): PostShadingEffect
 

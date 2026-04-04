@@ -37,30 +37,47 @@ import kotlinx.coroutines.Deferred
 
 interface KorenderScope : ResourceScope {
 
+    /**
+     * Declares a renderable frame.
+     *
+     * @param block frame content
+     */
     fun Frame(block: FrameScope.() -> Unit)
+
+    /**
+     * Registers a touch input handler.
+     *
+     * @param handler touch handler
+     */
     fun OnTouch(handler: TouchHandler)
+
+    /**
+     * Registers a keyboard input handler.
+     *
+     * @param handler key handler
+     */
     fun OnKey(handler: KeyHandler)
 
-    /** Current camera */
+    /** Current camera. */
     var camera: CameraDeclaration
 
-    /** Current projection */
+    /** Current projection. */
     var projection: ProjectionDeclaration
 
-    /** Background clear color */
+    /** Background clear color. */
     var background: ColorRGBA
 
-    /** Current object retention generation */
+    /** Current object retention generation. */
     var retentionGeneration: Int
 
-    /** Viewport width */
+    /** Viewport width. */
     val width: Int
 
-    /** Viewport height */
+    /** Viewport height. */
     val height: Int
 
     /**
-     * Creates a texture declaration from an frame probe.
+     * Creates a texture declaration from a frame probe.
      *
      * Frame probes can be created using CaptureFrame
      *
@@ -81,9 +98,9 @@ interface KorenderScope : ResourceScope {
     fun cubeTextureProbe(envProbeName: String): CubeTextureDeclaration
 
     /**
-     * Captures scene into a cube texture images.
+     * Captures scene into cube texture images.
      *
-     * Captures a scene into 6 frames images representing cube sides from the specified point.
+     * Captures a scene into 6 frame images representing cube sides from the specified point.
      *
      * @param resolution each frame resolution in pixels (both width and height)
      * @param near distance from camera to near clipping plane
@@ -115,55 +132,64 @@ interface KorenderScope : ResourceScope {
     fun mutableMesh(): MutableMesh
 
     /**
-     * Creates a material that applies custom vertex and fragment shaders
+     * Creates a material that applies custom vertex and fragment shaders.
+     *
+     * @param vertShaderFile vertex shader resource file
+     * @param fragShaderFile fragment shader resource file
+     * @param block material configuration block
+     * @return material
      */
     fun customMaterial(vertShaderFile: String, fragShaderFile: String, block: MaterialContext.() -> Unit): Material
 
     /**
-     * Creates a material that applies a custom vertex shader and standard fragment shader
+     * Creates a material that applies a custom vertex shader and standard fragment shader.
+     *
+     * @param vertShaderFile vertex shader resource file
+     * @param block material configuration block
+     * @return material
      */
     fun customMaterial(vertShaderFile: String, block: BaseMaterialContext.() -> Unit): Material
 
+    /**
+     * Creates a base material.
+     *
+     * @param block material configuration block
+     * @return material
+     */
     fun base(block: BaseMaterialContext.() -> Unit): Material
 
+    /**
+     * Creates a billboard material.
+     *
+     * @param block material configuration block
+     * @return material
+     */
     fun billboard(block: BillboardMaterialContext.() -> Unit): BillboardMaterial
 
+    /**
+     * Creates a terrain material.
+     *
+     * @param block material configuration block
+     * @return material
+     */
     fun terrain(block: TerrainMaterialContext.() -> Unit): TerrainMaterial
 
+    /**
+     * Creates a decal material.
+     *
+     * @param block material configuration block
+     * @return material
+     */
     fun decal(block: BaseMaterialContext.() -> Unit): DecalMaterial
-
 
     /**
      * Creates a material modifier for pipe shapes
      * Used with the base material.
+     *
+     * @param block material configuration block
      * @return material modifier
      */
     fun pipe(block: BaseMaterialContext.() -> Unit = {}): PipeMaterial
-
-    // TODO
-//    /**
-//     * Creates a material modifier for convex radiant mapping shapes
-//     * Used with the base material.
-//     * @param radiantTexture cube texture declaration representing distance from the object center to the surface at the given direction
-//     * @param radiantNormalTexture cube texture declaration representing object convex shape normal at the surface point at the given direction from the object center
-//     * @param radiantNormalTexture cube texture declaration representing albedo color of the surface point at the given direction to the object center
-//     * @param radiantNormalTexture cube texture declaration for local normal at the surface point at the given direction to the object center
-//     * @return material modifier
-//     */
-//    fun radiant(radiantTexture: CubeTextureDeclaration, radiantNormalTexture: CubeTextureDeclaration, colorTexture: CubeTextureDeclaration, normalTexture: CubeTextureDeclaration): MaterialModifier
-//
-//    /**
-//     * Material modifier that outputs distance to origin when capturing environment probes
-//     * @param radiantMax max distance to origin
-//     * @return material modifier
-//     */
-//    fun radiantCapture(radiantMax: Float): MaterialModifier
-
-    /**
-     * Material modifier that outputs normal map when capturing environment probes.
-     * @return material modifier
-     */
-    // fun normalCapture(): MaterialModifier
 
     /**
      * Creates one-dimensional gaussian blur material modifier in horizontal direction.
@@ -180,11 +206,11 @@ interface KorenderScope : ResourceScope {
     fun blurVert(radius: Float): PostProcessingMaterial
 
     /**
-     * Creates material modifier to adjust scene's brighness/contract/saturation.
+     * Creates material modifier to adjust scene's brightness/contrast/saturation.
      * Used as a post processing effect.
      * @param brightness brightness adjustment, -1..1 (0 does not change)
      * @param contrast contrast adjustment, 0..infinity (1 does not change)
-     * @param contrast saturation adjustment, 0..infinity (1 does not change)
+     * @param saturation saturation adjustment, 0..infinity (1 does not change)
      * @return material modifier
      */
     fun adjust(brightness: Float = 0.0f, contrast: Float = 1.0f, saturation: Float = 1.0f): PostProcessingMaterial
@@ -197,6 +223,7 @@ interface KorenderScope : ResourceScope {
      * @param transparency water transparency factor
      * @param waveScale horizontal scale factor for waves
      * @param waveMagnitude vertical scale factor for waves
+     * @param sky sky material for reflections
      * @return material modifier
      */
     fun water(waterColor: ColorRGB = ColorRGB(0x00182A), transparency: Float = 0.1f, waveScale: Float = 25.0f, waveMagnitude: Float = 0.3f, sky: SkyMaterial): PostProcessingMaterial
@@ -218,13 +245,20 @@ interface KorenderScope : ResourceScope {
      */
     fun fxaa(): PostProcessingMaterial
 
+    /**
+     * Creates a custom post processing filter.
+     *
+     * @param fragmentShaderFile fragment shader resource file
+     * @param block material configuration block
+     * @return post processing material
+     */
     fun customPostProcessingFilter(fragmentShaderFile: String, block: PostProcessMaterialContext.() -> Unit = {}): PostProcessingMaterial
 
     /**
      * Creates a fire effect.
      * Normally used on a billboard.
      * @param strength fire strength factor 1..5
-     * @return material modifier
+     * @return billboard effect
      */
     fun fire(strength: Float = 3.0f): BillboardEffect
 
@@ -232,7 +266,7 @@ interface KorenderScope : ResourceScope {
      * Creates a fireball effect.
      * Normally used on a billboard.
      * @param power power fireball explosion phase 0..1
-     * @return material modifier
+     * @return billboard effect
      */
     fun fireball(power: Float = 0.5f): BillboardEffect
 
@@ -241,7 +275,7 @@ interface KorenderScope : ResourceScope {
      * Normally used on a billboard.
      * @param density smoke density
      * @param seed seed for randomness (0..1)
-     * @return material modifier
+     * @return billboard effect
      */
     fun smoke(density: Float = 0.5f, seed: Float = 0f): BillboardEffect
 
@@ -255,7 +289,8 @@ interface KorenderScope : ResourceScope {
      * @param zenithColor color at zenith
      * @param horizonColor color at horizon
      * @param cloudLight white intensity for light clouds
-     * @param cloudLight white intensity for dark clouds
+     * @param cloudDark white intensity for dark clouds
+     * @param block optional material customization block
      * @return material modifier
      */
     fun fastCloudSky(
@@ -277,6 +312,7 @@ interface KorenderScope : ResourceScope {
      * @param density factor for amount of stars
      * @param speed star motion speed factor
      * @param size star size factor
+     * @param block optional material customization block
      * @return material modifier
      */
     fun starrySky(colorness: Float = 0.8f, density: Float = 20.0f, speed: Float = 1.0f, size: Float = 15.0f, block: MaterialContext.() -> Unit = {}): SkyMaterial
@@ -284,6 +320,7 @@ interface KorenderScope : ResourceScope {
     /**
      * Creates a sky material modifier from a cube texture.
      * @param cubeTexture cube texture declaration
+     * @param block optional material customization block
      * @return material modifier
      */
     fun cubeSky(cubeTexture: CubeTextureDeclaration, block: MaterialContext.() -> Unit = {}): SkyMaterial
@@ -291,6 +328,7 @@ interface KorenderScope : ResourceScope {
     /**
      * Creates a sky material modifier from a flat texture.
      * @param texture texture declaration
+     * @param block optional material customization block
      * @return material modifier
      */
     fun textureSky(texture: TextureDeclaration, block: MaterialContext.() -> Unit = {}): SkyMaterial
@@ -303,7 +341,7 @@ interface KorenderScope : ResourceScope {
      * @param height height at near clipping plane
      * @param near distance from camera to near clipping plane
      * @param far distance from camera to far clipping plane
-     * @param mode projection mode: frustum, orthographic of logarithmic frustum
+     * @param mode projection mode: frustum, orthographic or logarithmic frustum
      * @return projection declaration
      */
     fun projection(width: Float, height: Float, near: Float, far: Float, mode: ProjectionMode = frustum()): ProjectionDeclaration
@@ -332,6 +370,8 @@ interface KorenderScope : ResourceScope {
 
     /**
      * Returns logarithmic depth frustum projection mode. Use with larger depth ranges.
+     *
+     * @param c logarithmic depth constant
      * @return projection mode
      */
     fun log(c: Float = 1.0f): ProjectionMode
@@ -341,7 +381,7 @@ interface KorenderScope : ResourceScope {
      *
      * @param width image width in pixels
      * @param height image height in pixels
-     * @param format image pixel formal
+     * @param format image pixel format
      * @return image
      */
     fun createImage(width: Int, height: Int, format: PixelFormat): Image
@@ -358,7 +398,8 @@ interface KorenderScope : ResourceScope {
      * Creates an image from raw bytes in png or jpg format.
      *
      * @param bytes image file bytes
-     * @return type png or jpg
+     * @param type image type, png or jpg
+     * @return image (deferred)
      */
     fun loadImage(bytes: ByteArray, type: String): Deferred<Image>
 
@@ -368,7 +409,7 @@ interface KorenderScope : ResourceScope {
      * @param width image width in pixels
      * @param height image height in pixels
      * @param depth image depth in pixels
-     * @param format image pixel formal
+     * @param format image pixel format
      * @return image
      */
     fun createImage3D(width: Int, height: Int, depth: Int, format: PixelFormat): Image3D
@@ -486,26 +527,67 @@ interface KorenderScope : ResourceScope {
         Web
     }
 
+    /** Position attribute. */
     val POS: MeshAttribute<Vec3>
+
+    /** Normal attribute. */
     val NORMAL: MeshAttribute<Vec3>
+
+    /** Texture coordinate attribute. */
     val TEX: MeshAttribute<Vec2>
+
+    /** Joints attribute using bytes. */
     val JOINTS_BYTE: MeshAttribute<ByteArray>
+
+    /** Joints attribute using shorts. */
     val JOINTS_SHORT: MeshAttribute<ShortArray>
+
+    /** Joints attribute using ints. */
     val JOINTS_INT: MeshAttribute<IntArray>
+
+    /** Weights attribute. */
     val WEIGHTS: MeshAttribute<FloatArray>
+
+    /** Scale attribute. */
     val SCALE: MeshAttribute<Vec2>
+
+    /** Color/texture index attribute. */
     val COLORTEXINDEX: MeshAttribute<Byte>
+
+    /** Custom attribute B1. */
     val B1: MeshAttribute<Byte>
+
+    /** Custom attribute B2. */
     val B2: MeshAttribute<Byte>
+
+    /** Custom attribute B3. */
     val B3: MeshAttribute<Byte>
+
+    /** Model matrix column 0 attribute. */
     val MODEL0: MeshAttribute<FloatArray>
+
+    /** Model matrix column 1 attribute. */
     val MODEL1: MeshAttribute<FloatArray>
+
+    /** Model matrix column 2 attribute. */
     val MODEL2: MeshAttribute<FloatArray>
+
+    /** Model matrix column 3 attribute. */
     val MODEL3: MeshAttribute<FloatArray>
+
+    /** Instance position attribute. */
     val INSTPOS: MeshAttribute<Vec3>
+
+    /** Instance scale attribute. */
     val INSTSCALE: MeshAttribute<Vec2>
+
+    /** Instance rotation attribute. */
     val INSTROT: MeshAttribute<Float>
+
+    /** Instance texture parameters attribute. */
     val INSTTEX: MeshAttribute<FloatArray>
+
+    /** Instance screen-space parameters attribute. */
     val INSTSCREEN: MeshAttribute<FloatArray>
 }
 

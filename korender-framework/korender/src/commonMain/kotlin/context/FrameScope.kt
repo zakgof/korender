@@ -28,7 +28,7 @@ interface FrameScope : KorenderScope {
     /**
      * Renders a mesh.
      *
-     * @param materialModifiers object surface material modifiers
+     * @param material object surface material
      * @param mesh geometry mesh declaration
      * @param transform model space transformation
      * @param transparent true if the object has transparency
@@ -39,7 +39,7 @@ interface FrameScope : KorenderScope {
     /**
      * Renders a geometry prefab.
      *
-     * @param materialModifiers object surface material modifiers
+     * @param material object surface material
      * @param prefab geometry prefab
      */
     fun <M : Material> Prefab(material: M, prefab: Prefab<M>)
@@ -47,21 +47,19 @@ interface FrameScope : KorenderScope {
     /**
      * Renders a GLTF model from a resource file.
      *
-     * @param materialModifiers material modifiers
      * @param resource resource file
      * @param transform model space transform
-     * @param time overridden time for animation
      * @param animation index of animation to apply
      * @param instancing instancing declaration to render multiple objects in a batch
-     * @param resourceLoader overridden file resource loader
      * @param onUpdate callback with runtime Gltf details
+     * @param materialModifier material modifiers block
      */
     fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, animation: Int? = null, instancing: GltfInstancingDeclaration? = null, onUpdate: (GltfUpdate) -> Unit = {}, materialModifier: BaseMaterialContext.() -> Unit = {})
 
     /**
      * Renders a billboard - camera facing quad.
      *
-     * @param materialModifiers object surface material modifiers
+     * @param material object surface material
      * @param transparent true if object has transparency
      * @param instancing instancing declaration to render multiple objects in a batch
      */
@@ -70,7 +68,7 @@ interface FrameScope : KorenderScope {
     /**
      * Renders a sky.
      *
-     * @param materialModifiers material modifiers
+     * @param material sky material
      */
     fun Sky(material: SkyMaterial)
 
@@ -92,7 +90,7 @@ interface FrameScope : KorenderScope {
     /**
      * Adds a post processing effect with the given material modifiers.
      *
-     * @param materialModifiers post processing effect material modifiers
+     * @param material post processing effect material
      * @param block geometry to be rendered after this effect
      */
     fun PostProcess(material: PostProcessingMaterial, block: FrameScope.() -> Unit = {})
@@ -109,7 +107,7 @@ interface FrameScope : KorenderScope {
     /**
      * Adds a point light to the frame.
      *
-     * @param position light source positions
+     * @param position light source position
      * @param color light color
      * @param attenuationLinear linear attenuation factor
      * @param attenuationQuadratic quadratic attenuation factor
@@ -144,7 +142,7 @@ interface FrameScope : KorenderScope {
     fun CaptureEnv(envProbeName: String, resolution: Int, position: Vec3 = Vec3.ZERO, near: Float = 10f, far: Float = 1000f, insideOut: Boolean = false, block: FrameScope.() -> Unit)
 
     /**
-     * Renders a scene into an frame probe.
+     * Renders a scene into a frame probe.
      *
      * @param frameProbeName output frame probe name
      * @param width probe texture width
@@ -162,6 +160,15 @@ interface FrameScope : KorenderScope {
      */
     fun OnLoading(block: FrameScope.() -> Unit)
 
+    /**
+     * Creates a child node for hierarchical scene composition.
+     *
+     * @param resourceLoader overridden resource loader for this node
+     * @param transform model space transform for the node
+     * @param retentionPolicy resource retention policy for this node
+     * @param time override for real time (frameInfo.time) used by animated shaders and GLTF animations
+     * @param block node contents
+     */
     fun Node(
         resourceLoader: ResourceLoader? = null,
         transform: Transform = Transform.IDENTITY,
