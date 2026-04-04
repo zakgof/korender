@@ -170,12 +170,12 @@ internal class DefaultFrameScope(
         DefaultDeferredShadingContext(sceneDeclaration.deferredShadingDeclaration!!).apply(block)
     }
 
-    override fun Gltf(resource: String, transform: Transform, time: Float?, animation: Int?, instancing: GltfInstancingDeclaration?, onUpdate: (GltfUpdate) -> Unit, materialModifier: BaseMaterialContext.() -> Unit) {
+    override fun Gltf(resource: String, transform: Transform, animation: Int?, instancing: GltfInstancingDeclaration?, onUpdate: (GltfUpdate) -> Unit, materialModifier: BaseMaterialContext.() -> Unit) {
         sceneDeclaration.gltfs += GltfDeclaration(
             resource,
             onUpdate,
             transform,
-            time ?: frameInfo.time,
+            nodeContext.time ?: frameInfo.time,
             animation ?: 0,
             instancing as InternalGltfInstancingDeclaration?,
             materialModifier,

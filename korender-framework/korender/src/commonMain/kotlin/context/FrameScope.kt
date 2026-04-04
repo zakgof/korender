@@ -56,7 +56,7 @@ interface FrameScope : KorenderScope {
      * @param resourceLoader overridden file resource loader
      * @param onUpdate callback with runtime Gltf details
      */
-    fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, time: Float? = null, animation: Int? = null, instancing: GltfInstancingDeclaration? = null, onUpdate: (GltfUpdate) -> Unit = {}, materialModifier: BaseMaterialContext.() -> Unit = {})
+    fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, animation: Int? = null, instancing: GltfInstancingDeclaration? = null, onUpdate: (GltfUpdate) -> Unit = {}, materialModifier: BaseMaterialContext.() -> Unit = {})
 
     /**
      * Renders a billboard - camera facing quad.
