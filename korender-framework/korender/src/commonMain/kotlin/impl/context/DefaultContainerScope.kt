@@ -40,7 +40,7 @@ internal class DefaultContainerScope(
                 color ?: style?.color ?: ColorRGBA(0x66FF55A0),
                 static,
                 onTouch,
-                frameContext.korenderContext.currentRetentionPolicy
+                frameContext.nodeContext
             )
         )
     }
@@ -50,7 +50,7 @@ internal class DefaultContainerScope(
     }
 
     override fun Image(id: String, imageResource: String, width: Int, height: Int, marginTop: Int, marginBottom: Int, marginLeft: Int, marginRight: Int, onTouch: TouchHandler) {
-        declaration.add(ElementDeclaration.Image(id, imageResource, width, height, marginTop, marginBottom, marginLeft, marginRight, onTouch, frameContext.korenderContext.currentRetentionPolicy))
+        declaration.add(ElementDeclaration.Image(id, imageResource, width, height, marginTop, marginBottom, marginLeft, marginRight, onTouch, frameContext.nodeContext))
     }
 }
 

@@ -1,11 +1,10 @@
 package com.zakgof.korender.impl.material
 
-import com.zakgof.korender.impl.engine.Engine
-import com.zakgof.korender.impl.engine.FrameContext
+import com.zakgof.korender.impl.context.NodeContext
+import com.zakgof.korender.impl.engine.FrameTarget
 import com.zakgof.korender.impl.engine.InternalFilterDeclaration
 import com.zakgof.korender.impl.engine.InternalPassDeclaration
 import com.zakgof.korender.impl.engine.SceneDeclaration
-import com.zakgof.korender.impl.engine.defaultTarget
 import com.zakgof.korender.impl.glgpu.ColorRGBGetter
 import com.zakgof.korender.impl.glgpu.CompositeSupplier
 import com.zakgof.korender.impl.glgpu.FloatGetter
@@ -19,27 +18,27 @@ internal class BlurMaterial(
     "radius" to FloatGetter<BlurMaterial> { it.radius }
 )
 
-internal fun Engine.KorenderScopeImpl.simpleBlur(frameContext: FrameContext, radius: Float) = InternalFilterDeclaration(
+internal fun simpleBlur(radius: Float, nodeContext: NodeContext) = InternalFilterDeclaration(
     listOf(
         InternalPassDeclaration(
             mapOf(
                 "colorInputTexture" to "colorTexture",
                 "depthInputTexture" to "depthTexture"
             ),
-            material = blurVert(radius),
-            retentionPolicy = currentRetentionPolicy,
+            material = BlurMaterial(true, radius),
+            nodeContext = nodeContext,
             sceneDeclaration = SceneDeclaration(),
-            target = frameContext.defaultTarget()
+            target = FrameTarget.default
         ),
         InternalPassDeclaration(
             mapOf(
                 "colorInputTexture" to "colorTexture",
                 "depthInputTexture" to "depthTexture"
             ),
-            material = blurHorz(radius),
-            retentionPolicy = currentRetentionPolicy,
+            material = BlurMaterial(false, radius),
+            nodeContext = nodeContext,
             sceneDeclaration = SceneDeclaration(),
-            target = frameContext.defaultTarget()
+            target = FrameTarget.default
         )
     )
 )
@@ -54,7 +53,6 @@ internal class AdjustmentMaterial(
     "contrast" to FloatGetter<AdjustmentMaterial> { it.contrast },
     "saturation" to FloatGetter<AdjustmentMaterial> { it.saturation }
 )
-
 internal class WaterMaterial(
     val waterColor: ColorRGB,
     val transparency: Float,

@@ -106,15 +106,15 @@ internal class GuiRenderer(
                 declaration.width.toFloat() / width,
                 declaration.height.toFloat() / height
             ),
-            imageTexture = ResourceTextureDeclaration(declaration.imageResource, retentionPolicy = declaration.retentionPolicy)
+            imageTexture = ResourceTextureDeclaration(declaration.imageResource, nodeContext = declaration.nodeContext)
         )
         renderableDeclarations += RenderableDeclaration(
             imageMaterial,
             listOf(),
-            ImageQuad(declaration.retentionPolicy),
+            ImageQuad(declaration.nodeContext),
             Transform.IDENTITY,
             true,
-            declaration.retentionPolicy
+            declaration.nodeContext
         )
 
         touchBoxes.add(
@@ -130,7 +130,7 @@ internal class GuiRenderer(
     }
 
     private fun createText(declaration: ElementDeclaration.Text, xxx: Int, yyy: Int, w: Int) {
-        val font = inventory.font(InternalFontDeclaration(declaration.fontResource, declaration.retentionPolicy))
+        val font = inventory.font(InternalFontDeclaration(declaration.fontResource, declaration.nodeContext))
         if (w > 0 && font != null) {
             renderableDeclarations += RenderableDeclaration(
                 FontMaterial(declaration.color, font.gpuTexture),
@@ -138,7 +138,7 @@ internal class GuiRenderer(
                 FontMesh(declaration.id, 256, declaration, width.toFloat(), height.toFloat(), xxx.toFloat(), yyy.toFloat(), font),
                 Transform.IDENTITY,
                 true,
-                declaration.retentionPolicy
+                declaration.nodeContext
             )
             touchBoxes.add(TouchBox(xxx, yyy, w, declaration.height, declaration.id, declaration.onTouch))
         }
@@ -214,7 +214,7 @@ internal class GuiRenderer(
     }
 
     private fun textSize(textDeclaration: ElementDeclaration.Text): Size {
-        val font = inventory.font(InternalFontDeclaration(textDeclaration.fontResource, textDeclaration.retentionPolicy))
+        val font = inventory.font(InternalFontDeclaration(textDeclaration.fontResource, textDeclaration.nodeContext))
         return Size(
             font?.textWidth(textDeclaration.height, textDeclaration.text) ?: 0,
             textDeclaration.height

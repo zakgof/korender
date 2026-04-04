@@ -21,6 +21,7 @@ import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
 import com.zakgof.korender.impl.geometry.MeshAttributes.WEIGHTS
 import com.zakgof.korender.impl.gl.GLConstants
 import com.zakgof.korender.impl.glgpu.toGL
+import com.zakgof.korender.impl.load
 import com.zakgof.korender.math.Mat4
 import kotlinx.serialization.json.Json
 import kotlin.io.encoding.Base64
@@ -41,15 +42,15 @@ internal object GltfLoader {
     class GlbChunk(val type: ChunkType, val data: ByteArray)
 
     fun load(declaration: GltfDeclaration, loader: Loader): GltfCache? =
-        loader.syncy(declaration.resource) { load(declaration, loader.appResourceLoader) }
+        loader.syncy(declaration.resource, declaration.nodeContext.resourceLoader) { load(declaration) }
 
-    suspend fun load(declaration: GltfDeclaration, appResourceLoader: ResourceLoader): GltfCache {
+    suspend fun load(declaration: GltfDeclaration): GltfCache {
         val extension = declaration.resource.split(".").last().lowercase() // TODO: autodetect
-        val resourceBytes = appResourceLoader(declaration.resource)
+        val resourceBytes = declaration.nodeContext.resourceLoader.load(declaration.resource)
         val loaded = when (extension) {
             // TODO: autodetect
-            "gltf" -> loadGltf(resourceBytes, null, appResourceLoader, declaration)
-            "glb" -> loadGlb(resourceBytes, appResourceLoader, declaration)
+            "gltf" -> loadGltf(resourceBytes, null, declaration)
+            "glb" -> loadGlb(resourceBytes, declaration)
             else -> throw KorenderException("Unknown extension of gltf/glb resource: $extension")
         }
         return loaded
@@ -57,7 +58,6 @@ internal object GltfLoader {
 
     private suspend fun loadGlb(
         resourceBytes: ByteArray,
-        appResourceLoader: ResourceLoader,
         declaration: GltfDeclaration,
     ): GltfCache {
         val reader = ByteArrayReader(resourceBytes)
@@ -82,7 +82,7 @@ internal object GltfLoader {
 
         val binData = chunks.find { it.type == ChunkType.BIN }?.data
 
-        return loadGltf(jsonChunk.data, binData, appResourceLoader, declaration)
+        return loadGltf(jsonChunk.data, binData, declaration)
     }
 
     private fun readGlbHeader(reader: ByteArrayReader, resourceBytes: ByteArray) {
@@ -102,10 +102,10 @@ internal object GltfLoader {
         }
     }
 
-    private suspend fun loadGltf(resourceBytes: ByteArray, binData: ByteArray?, appResourceLoader: ResourceLoader, declaration: GltfDeclaration): GltfCache {
+    private suspend fun loadGltf(resourceBytes: ByteArray, binData: ByteArray?, declaration: GltfDeclaration): GltfCache {
         val gltfCode = resourceBytes.decodeToString()
         val model = json.decodeFromString<InternalGltfModel>(gltfCode)
-        val loadedUris = preloadUris(model, appResourceLoader, declaration.resource, binData)
+        val loadedUris = preloadUris(model, declaration.nodeContext.resourceLoader, declaration.resource, binData)
         val loadedAccessors = preloadAccessors(model, loadedUris)
         val loadedSkins = preloadSkins(model, loadedAccessors)
         val loadedMeshes = preloadMeshes(model, loadedAccessors, declaration)
@@ -192,7 +192,7 @@ internal object GltfLoader {
             val bytes = if (isBase64) Base64.decode(data) else data.encodeToByteArray()
             return bytes
         }
-        return appResourceLoader(resourceUri)
+        return appResourceLoader.load(resourceUri)
     }
 
     private fun preloadMeshes(model: InternalGltfModel, loadedAccessors: AccessorCache, declaration: GltfDeclaration): Map<Pair<Int, Int>, CMesh> =

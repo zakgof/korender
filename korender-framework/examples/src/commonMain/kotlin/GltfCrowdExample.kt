@@ -11,7 +11,7 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 @Composable
-fun GltfCrowdExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun GltfCrowdExample() = Korender(resourceLoader = { Res.readBytes(it) }) {
     val orbitCamera = OrbitCamera(15.z, 0.y)
     OnTouch { orbitCamera.touch(it) }
     Frame {

@@ -12,7 +12,7 @@ import kotlin.math.cos
 
 @Composable
 fun HeightmapTerrainExample() =
-    Korender(appResourceLoader = { Res.readBytes(it) }) {
+    Korender(resourceLoader = { Res.readBytes(it) }) {
 
         val terrain = clipmapTerrainPrefab("terrain", 2.0f, 10, 6)
         Frame {

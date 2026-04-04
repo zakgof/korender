@@ -190,7 +190,7 @@ internal class GltfSceneBuilder(
                 mesh = meshDeclaration,
                 transform = transform,
                 transparent = transparencyToMaterial.first,
-                retentionPolicy = declaration.retentionPolicy,
+                nodeContext = declaration.nodeContext,
             )
         }
 
@@ -256,13 +256,13 @@ internal class GltfSceneBuilder(
         val meshDeclaration = CustomCpuMesh(
             "${declaration.resource}:$meshIndex:$primitiveIndex",
             cpuMesh,
-            declaration.retentionPolicy
+            declaration.nodeContext
         )
 
         if (declaration.instancingDeclaration == null)
             return meshDeclaration
 
-        return InstancedMesh(declaration.resource, declaration.instancingDeclaration.count, meshDeclaration, !declaration.instancingDeclaration.dynamic, false, declaration.retentionPolicy) {
+        return InstancedMesh(declaration.resource, declaration.instancingDeclaration.count, meshDeclaration, !declaration.instancingDeclaration.dynamic, false, declaration.nodeContext) {
             declaration.instancingDeclaration.instancer().mapIndexed { i, it ->
                 MeshInstance(it.transform, skinIndex?.let {
                     instanceData[i].jointMatrices[skinIndex].mapIndexed { ind, jm -> jm * cache.loadedSkins[skinIndex]!![ind] }
@@ -297,7 +297,7 @@ internal class GltfSceneBuilder(
                 1024,
                 { getImageBytes(img) },
                 img.mimeType?.split("/")?.last() ?: img.uri?.split(".")?.last() ?: "unknown",
-                declaration.retentionPolicy
+                declaration.nodeContext
             )
         }
     }

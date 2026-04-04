@@ -32,15 +32,15 @@ internal class Inventory(private val loader: Loader) {
 
     val uniformBufferHolder = UniformBufferHolder()
 
-    private val meshes = Registry<InternalMeshDeclaration, MeshLink> { Geometry.create(it, loader) }
-    private val shaders = Registry<ShaderDeclaration, GlGpuShader> { Shaders.create(it, loader, zeroTex, zeroShadowTex, uniformBufferHolder) }
+    private val meshes = Registry<InternalMeshDeclaration, MeshLink> { Geometry.create(it, loader, it.nodeContext) }
+    private val shaders = Registry<ShaderDeclaration, GlGpuShader> { Shaders.create(it, loader, zeroTex, zeroShadowTex, uniformBufferHolder, it.nodeContext.resourceLoader) }
     private val textures = Registry<InternalTexture, GlBindableTexture> { it.generateGpuTexture(loader) }
     private val textures3D = Registry<ImageTexture3DDeclaration, GlGpuTexture3D> { it.generateGpuTexture3D(loader) }
 
     private val textureLinks = Registry<TextureLinkDeclaration, GpuTextureLink> { it.generateGpuTextureLink(loader) }
     private val resourceCubeTextures = Registry<ResourceCubeTextureDeclaration, GlGpuCubeTexture> { Texturing.cube(it, loader) }
     private val imageCubeTextures = Registry<ImageCubeTextureDeclaration, GlGpuCubeTexture> { Texturing.cube(it) }
-    private val fonts = Registry<InternalFontDeclaration, Font> { Fonts.load(it.resource, loader) }
+    private val fonts = Registry<InternalFontDeclaration, Font> { Fonts.load(it.resource, loader, it.nodeContext) }
     private val frameBuffers = Registry<FrameBufferDeclaration, GlGpuFrameBuffer> { GlGpuFrameBuffer(it.id, it.width, it.height, it.colorTexturePresets, it.withDepth) }
     private val cubeFrameBuffers = Registry<CubeFrameBufferDeclaration, GlGpuCubeFrameBuffer> { GlGpuCubeFrameBuffer(it.id, it.width, it.height, it.withDepth) }
     private val gltfs = Registry<GltfDeclaration, GltfCache> { GltfLoader.load(it, loader) }

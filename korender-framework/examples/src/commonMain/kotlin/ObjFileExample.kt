@@ -14,7 +14,7 @@ import com.zakgof.korender.math.z
 
 @Composable
 fun ObjFileExample() {
-    Korender(appResourceLoader = { Res.readBytes(it) }) {
+    Korender(resourceLoader = { Res.readBytes(it) }) {
         val orbitCamera = OrbitCamera(20.z, 0.z)
         OnTouch { orbitCamera.touch(it) }
         Frame {

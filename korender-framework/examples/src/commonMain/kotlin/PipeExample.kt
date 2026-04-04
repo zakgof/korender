@@ -10,7 +10,7 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 @Composable
-fun PipeExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun PipeExample() = Korender(resourceLoader = { Res.readBytes(it) }) {
     Frame {
         TestExchange.report(frameInfo)
         camera = camera((-10).z, 1.z, 1.y)

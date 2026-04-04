@@ -13,7 +13,7 @@ import com.zakgof.korender.math.z
 import kotlin.math.max
 
 @Composable
-fun MetallicRoughnessExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun MetallicRoughnessExample() = Korender(resourceLoader = { Res.readBytes(it) }) {
     val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })
     Frame {
         TestExchange.report(frameInfo)

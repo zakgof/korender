@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.RetentionPolicy
+import com.zakgof.korender.impl.context.NodeContext
 
 internal object ImmediatelyFreeRetentionPolicy: RetentionPolicy
 
@@ -10,6 +11,6 @@ internal class UntilGenerationRetentionPolicy(val generation: Int) : RetentionPo
 
 internal class TimeRetentionPolicy(val seconds: Float) : RetentionPolicy
 
-internal interface Retentionable {
-    val retentionPolicy: RetentionPolicy
+internal interface NodeKeeper {
+    val nodeContext: NodeContext
 }

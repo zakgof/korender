@@ -6,7 +6,7 @@ import com.zakgof.korender.CubeTextureResources
 import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Platform
-import com.zakgof.korender.RetentionPolicy
+import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureArrayDeclaration
 import com.zakgof.korender.TextureArrayImages
@@ -15,8 +15,9 @@ import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.impl.buffer.NativeFloatBuffer
+import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.Loader
-import com.zakgof.korender.impl.engine.Retentionable
+import com.zakgof.korender.impl.engine.NodeKeeper
 import com.zakgof.korender.impl.gl.GLConstants.GL_FLOAT
 import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA
 import com.zakgof.korender.impl.gl.GLConstants.GL_RGBA32F
@@ -42,7 +43,7 @@ internal object Texturing {
 
     fun cube(decl: ResourceCubeTextureDeclaration, loader: Loader): GlGpuCubeTexture? {
         val resources = CubeTextureSide.entries.map { decl.resources[it]!! }
-        val byteArrays = resources.map { it to loader.unsafeBytes(it) }
+        val byteArrays = resources.map { it to loader.unsafeBytes(it, decl.nodeContext.resourceLoader) }
         val images = byteArrays
             .filter { it.second != null }
             .mapNotNull { loader.unsafeWait(it.first) { Platform.loadImage(it.second!!, it.first.split(".").last()) } }
@@ -55,8 +56,8 @@ internal object Texturing {
             null
     }
 
-    fun toImage(loader: Loader, resource: String): InternalImage? =
-        loader.safeBytes(resource) {
+    fun toImage(loader: Loader, resource: String, resourceLoader: ResourceLoader): InternalImage? =
+        loader.safeBytes(resource, resourceLoader) {
             loader.wait(resource) { Platform.loadImage(it, resource.split(".").last()) }
         }
 
@@ -65,7 +66,7 @@ internal object Texturing {
 
 }
 
-internal interface InternalTexture : Retentionable {
+internal interface InternalTexture : NodeKeeper {
     fun generateGpuTexture(loader: Loader): GlBindableTexture?
 }
 
@@ -74,7 +75,7 @@ internal class ResourceTextureDeclaration(
     val filter: TextureFilter = TextureFilter.MipMap,
     private val wrap: TextureWrap = TextureWrap.Repeat,
     private val aniso: Int = 1024,
-    override val retentionPolicy: RetentionPolicy
+    override val nodeContext: NodeContext
 ) : TextureDeclaration, InternalTexture {
     override fun equals(other: Any?): Boolean =
         (other is ResourceTextureDeclaration && other.textureResource == textureResource)
@@ -82,7 +83,7 @@ internal class ResourceTextureDeclaration(
     override fun hashCode(): Int = textureResource.hashCode()
 
     override fun generateGpuTexture(loader: Loader): GlGpuTexture? =
-        Texturing.toImage(loader, textureResource)?.let {
+        Texturing.toImage(loader, textureResource, nodeContext.resourceLoader)?.let {
             GlGpuTexture(it, filter, wrap, aniso)
         }
 }
@@ -93,7 +94,7 @@ internal class ImageTextureDeclaration(
     val filter: TextureFilter,
     private val wrap: TextureWrap,
     private val aniso: Int,
-    override val retentionPolicy: RetentionPolicy
+    override val nodeContext: NodeContext
 ) : TextureDeclaration, InternalTexture {
     override fun equals(other: Any?): Boolean =
         (other is ImageTextureDeclaration && other.id == id)
@@ -109,7 +110,7 @@ internal class ResourceTextureArrayDeclaration(
     val filter: TextureFilter = TextureFilter.MipMap,
     private val wrap: TextureWrap = TextureWrap.Repeat,
     private val aniso: Int = 1024,
-    override val retentionPolicy: RetentionPolicy
+    override val nodeContext: NodeContext
 ) : TextureArrayDeclaration, InternalTexture {
     override fun equals(other: Any?): Boolean =
         (other is ResourceTextureArrayDeclaration && other.textureResources == textureResources)
@@ -117,7 +118,7 @@ internal class ResourceTextureArrayDeclaration(
     override fun hashCode(): Int = textureResources.hashCode()
 
     override fun generateGpuTexture(loader: Loader): GlGpuTextureArray? {
-        val images = textureResources.map { Texturing.toImage(loader, it) }
+        val images = textureResources.map { Texturing.toImage(loader, it, nodeContext.resourceLoader) }
         if (images.any { it == null }) {
             return null
         }
@@ -131,7 +132,7 @@ internal class ImageTextureArrayDeclaration(
     val filter: TextureFilter,
     private val wrap: TextureWrap,
     private val aniso: Int,
-    override val retentionPolicy: RetentionPolicy
+    override val nodeContext: NodeContext
 ) : TextureArrayDeclaration, InternalTexture {
     override fun equals(other: Any?): Boolean =
         (other is ImageTextureArrayDeclaration && other.id == id)
@@ -148,8 +149,8 @@ internal class ImageTexture3DDeclaration(
     val filter: TextureFilter,
     private val wrap: TextureWrap,
     private val aniso: Int,
-    override val retentionPolicy: RetentionPolicy
-) : Texture3DDeclaration, Retentionable {
+    override val nodeContext: NodeContext
+) : Texture3DDeclaration, NodeKeeper {
     override fun equals(other: Any?): Boolean =
         (other is ImageTexture3DDeclaration && other.id == id)
 
@@ -166,7 +167,7 @@ internal class ByteArrayTextureDeclaration(
     val aniso: Int,
     val fileBytesLoader: () -> ByteArray,
     val extension: String,
-    override val retentionPolicy: RetentionPolicy
+    override val nodeContext: NodeContext
 ) : TextureDeclaration, InternalTexture {
 
     override fun equals(other: Any?): Boolean =
@@ -186,7 +187,7 @@ internal class TextureLinkDeclaration(
     private val id: String,
     val width: Int,
     val height: Int,
-    override val retentionPolicy: RetentionPolicy
+    override val nodeContext: NodeContext
 ) : TextureDeclaration, InternalTexture {
     override fun equals(other: Any?): Boolean =
         (other is TextureLinkDeclaration && other.id == id)
@@ -203,7 +204,7 @@ internal class TextureLinkDeclaration(
 internal data class ProbeTextureDeclaration(val frameProbeName: String) : TextureDeclaration
 
 
-internal data class ResourceCubeTextureDeclaration(val resources: CubeTextureResources, override val retentionPolicy: RetentionPolicy) : CubeTextureDeclaration, Retentionable {
+internal data class ResourceCubeTextureDeclaration(val resources: CubeTextureResources, override val nodeContext: NodeContext) : CubeTextureDeclaration, NodeKeeper {
     override fun equals(other: Any?): Boolean =
         (other is ResourceCubeTextureDeclaration && other.resources == resources)
 
@@ -213,8 +214,8 @@ internal data class ResourceCubeTextureDeclaration(val resources: CubeTextureRes
 internal class ImageCubeTextureDeclaration(
     val id: String,
     val images: CubeTextureImages,
-    override val retentionPolicy: RetentionPolicy
-) : CubeTextureDeclaration, Retentionable {
+    override val nodeContext: NodeContext
+) : CubeTextureDeclaration, NodeKeeper {
     override fun equals(other: Any?): Boolean =
         (other is ImageCubeTextureDeclaration && other.id == id)
 

@@ -4,7 +4,6 @@ import com.zakgof.korender.BaseMaterialContext
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostShadingEffect
-import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.context.BillboardInstancingDeclaration
@@ -12,6 +11,7 @@ import com.zakgof.korender.context.GltfInstancingDeclaration
 import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.context.Direction
+import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.UniformSupplier
 import com.zakgof.korender.impl.material.InternalDecalMaterial
@@ -50,7 +50,7 @@ internal class SceneDeclaration {
             opaques += renderableDeclaration
 }
 
-internal class DeferredShadingDeclaration() {
+internal class DeferredShadingDeclaration(val nodeContext: NodeContext) {
     var postShadingEffects = mutableListOf<PostShadingEffect>()
     var decals = mutableListOf<InternalDecalDeclaration>()
 }
@@ -76,8 +76,8 @@ internal data class ShaderDeclaration(
     val defs: Set<String> = setOf(),
     val plugins: Map<String, String> = mapOf(),
     val uniformSuppliers: List<UniformSupplier>,
-    override val retentionPolicy: RetentionPolicy
-) : Retentionable
+    override val nodeContext: NodeContext
+) : NodeKeeper
 {
     override fun equals(other: Any?): Boolean =
         other is ShaderDeclaration &&
@@ -95,8 +95,8 @@ internal class RenderableDeclaration(
     val mesh: MeshDeclaration,
     val transform: Transform = Transform.IDENTITY,
     val transparent: Boolean,
-    override val retentionPolicy: RetentionPolicy
-) : Retentionable
+    override val nodeContext: NodeContext
+) : NodeKeeper
 
 internal sealed interface ElementDeclaration {
 
@@ -110,8 +110,8 @@ internal sealed interface ElementDeclaration {
         val color: ColorRGBA,
         val static: Boolean,
         val onTouch: TouchHandler,
-        override val retentionPolicy: RetentionPolicy
-    ) : ElementDeclaration, Retentionable
+        override val nodeContext: NodeContext
+    ) : ElementDeclaration, NodeKeeper
 
     class Image(
         val id: String,
@@ -123,8 +123,8 @@ internal sealed interface ElementDeclaration {
         val marginLeft: Int,
         val marginRight: Int,
         val onTouch: TouchHandler,
-        override val retentionPolicy: RetentionPolicy
-    ) : ElementDeclaration, Retentionable {
+        override val nodeContext: NodeContext
+    ) : ElementDeclaration, NodeKeeper {
         val fullWidth = width + marginLeft + marginRight
         val fullHeight = height + marginTop + marginBottom
     }
@@ -146,9 +146,9 @@ internal data class FrameBufferDeclaration(
     val height: Int,
     val colorTexturePresets: List<GlGpuTexture.Preset>,
     val withDepth: Boolean,
-    val retentionPolicyHolder: TransientProperty<RetentionPolicy>
-) : Retentionable {
-    override val retentionPolicy = retentionPolicyHolder.property
+    val nodeContextHolder: TransientProperty<NodeContext>
+) : NodeKeeper {
+    override val nodeContext = nodeContextHolder.property
 }
 
 internal data class CubeFrameBufferDeclaration(
@@ -156,9 +156,9 @@ internal data class CubeFrameBufferDeclaration(
     val width: Int,
     val height: Int,
     val withDepth: Boolean,
-    val retentionPolicyHolder: TransientProperty<RetentionPolicy>
-) : Retentionable {
-    override val retentionPolicy = retentionPolicyHolder.property
+    val nodeContextHolder: TransientProperty<NodeContext>
+) : NodeKeeper {
+    override val nodeContext = nodeContextHolder.property
 }
 
 internal class ShadowDeclaration {
@@ -175,8 +175,8 @@ internal class GltfDeclaration(
     val animation: Int,
     val instancingDeclaration: InternalGltfInstancingDeclaration?,
     val materialModifier: BaseMaterialContext.() -> Unit,
-    override val retentionPolicy: RetentionPolicy
-) : Retentionable {
+    override val nodeContext: NodeContext
+) : NodeKeeper {
     override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.resource == resource)
     override fun hashCode(): Int = resource.hashCode()
 }
@@ -195,8 +195,12 @@ internal class InternalBillboardInstancingDeclaration(val id: String, val count:
 
 internal class InternalFilterDeclaration(val passes: List<InternalPassDeclaration>) : PostProcessingEffect
 
-internal class InternalPassDeclaration(val mapping: Map<String, String>, val material: InternalPostProcessingMaterial, val sceneDeclaration: SceneDeclaration?, val target: FrameTarget, override val retentionPolicy: RetentionPolicy) : Retentionable
+internal class InternalPassDeclaration(val mapping: Map<String, String>, val material: InternalPostProcessingMaterial, val sceneDeclaration: SceneDeclaration?, val target: FrameTarget, override val nodeContext: NodeContext) : NodeKeeper
 
 internal data class ReusableFrameBufferDefinition(val pingPong: Int, val width: Int, val height: Int)
 
-internal data class FrameTarget(val colorOutput: String, val depthOutput: String, val downSample: Int = 1)
+internal data class FrameTarget(val colorOutput: String, val depthOutput: String, val downSample: Int = 1) {
+    companion object {
+        val default = FrameTarget("colorTexture", "depthTexture")
+    }
+}

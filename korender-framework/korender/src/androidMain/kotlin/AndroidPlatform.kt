@@ -117,14 +117,14 @@ internal actual object Platform {
 
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
-actual fun Korender(appResourceLoader: ResourceLoader, block: KorenderScope.() -> Unit) {
+actual fun Korender(resourceLoader: ResourceLoader, block: KorenderScope.() -> Unit) {
 
     var engine: Engine? by remember { mutableStateOf(null) }
 
     class KorenderGLRenderer(private val view: View) : GLSurfaceView.Renderer {
 
         override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
-            engine = Engine(view.width, view.height, appResourceLoader, block)
+            engine = Engine(view.width, view.height, resourceLoader, block)
         }
 
         override fun onDrawFrame(unused: GL10) {

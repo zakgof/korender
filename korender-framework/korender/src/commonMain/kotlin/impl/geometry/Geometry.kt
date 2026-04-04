@@ -5,6 +5,7 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.ResourceLoader
+import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTPOS
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTROT
@@ -19,6 +20,7 @@ import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
 import com.zakgof.korender.impl.geometry.MeshAttributes.POS
 import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
 import com.zakgof.korender.impl.glgpu.GlGpuMesh
+import com.zakgof.korender.impl.load
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
@@ -60,10 +62,10 @@ internal class MeshLink(val cpuMesh: CMesh, dynamic: Boolean) : AutoCloseable {
 
 internal object Geometry {
 
-    fun create(meshDeclaration: MeshDeclaration, loader: Loader): MeshLink? {
+    fun create(meshDeclaration: MeshDeclaration, loader: Loader, nodeContext: NodeContext): MeshLink? {
         val dynamic = ((meshDeclaration as? InstancedMesh)?.static == false) or
                 (meshDeclaration is InstancedBillboard)
-        return createCpuMesh(meshDeclaration, loader)?.let {
+        return createCpuMesh(meshDeclaration, loader, nodeContext.resourceLoader)?.let {
             MeshLink(it, dynamic)
         }
     }
@@ -71,17 +73,18 @@ internal object Geometry {
     fun loadCpuMesh(meshDeclaration: MeshDeclaration, appResourceLoader: ResourceLoader): Deferred<CMesh> {
         return when (meshDeclaration) {
             is ObjMesh -> CoroutineScope(Dispatchers.Default).async {
-                obj(appResourceLoader(meshDeclaration.objFile), -1)
+                obj(appResourceLoader.load(meshDeclaration.objFile), -1)
             }
+
             else -> CompletableDeferred(createMeshSync(meshDeclaration, -1))
         }
     }
 
-    fun createCpuMesh(meshDeclaration: MeshDeclaration, loader: Loader): CMesh? {
-        val simpleMeshDeclaration = (meshDeclaration as? InstancedMesh)?.mesh ?: (meshDeclaration as? InstancedBillboard)?.let { Billboard(it.retentionPolicy) } ?: meshDeclaration
+    fun createCpuMesh(meshDeclaration: MeshDeclaration, loader: Loader, resourceLoader: ResourceLoader): CMesh? {
+        val simpleMeshDeclaration = (meshDeclaration as? InstancedMesh)?.mesh ?: (meshDeclaration as? InstancedBillboard)?.let { Billboard(it.nodeContext) } ?: meshDeclaration
         val count = (meshDeclaration as? Instanceable)?.count ?: -1
         return when (simpleMeshDeclaration) {
-            is ObjMesh -> loader.safeBytes(simpleMeshDeclaration.objFile) { obj(it, count) }
+            is ObjMesh -> loader.safeBytes(simpleMeshDeclaration.objFile, resourceLoader) { obj(it, count) }
             is CustomCpuMesh -> toCMesh(simpleMeshDeclaration.mesh, count)
             is CustomMesh -> CMesh(simpleMeshDeclaration.vertexCount, simpleMeshDeclaration.indexCount, count, attributes = simpleMeshDeclaration.attributes.toTypedArray(), simpleMeshDeclaration.indexType, simpleMeshDeclaration.block)
             is FontMesh -> font(count)
@@ -220,11 +223,13 @@ internal object Geometry {
     ) {
         for (x in 0..xsize) {
             for (z in 0..zsize) {
-                pos(Vec3(
-                    x * cell - 0.5f * cell * xsize,
-                    height(x, z),
-                    z * cell - 0.5f * cell * zsize
-                ))
+                pos(
+                    Vec3(
+                        x * cell - 0.5f * cell * xsize,
+                        height(x, z),
+                        z * cell - 0.5f * cell * zsize
+                    )
+                )
                 val n = normal(x, z, xsize, zsize, cell, height)
                 normal(n)
                 tex(Vec2(x.toFloat() / xsize, z.toFloat() / zsize))

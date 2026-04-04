@@ -10,13 +10,13 @@ import com.zakgof.korender.MaterialContext
 import com.zakgof.korender.PipeMaterial
 import com.zakgof.korender.PostProcessMaterialContext
 import com.zakgof.korender.PostProcessingMaterial
-import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.SkyMaterial
 import com.zakgof.korender.SpecularGlossiness
 import com.zakgof.korender.TerrainMaterial
 import com.zakgof.korender.TerrainMaterialContext
 import com.zakgof.korender.TextureArrayDeclaration
 import com.zakgof.korender.TextureDeclaration
+import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.glgpu.ColorRGBAGetter
 import com.zakgof.korender.impl.glgpu.ColorRGBGetter
@@ -105,13 +105,11 @@ internal open class InternalMaterial(
     open val deferredFragmentShaderFile: String = deferredFragmentShaderFile
     open val forwardFragmentShaderFile: String = forwardFragmentShaderFile
 
-    // TODO do we actually need shader declaration?
     fun toDeclaration(
         deferredShading: Boolean,
-        retentionPolicy: RetentionPolicy,
+        nodeContext: NodeContext,
         modifiers: List<InternalMaterialModifier>,
     ): ShaderDeclaration {
-
 
         val flatModifiers = mutableListOf<InternalMaterialModifier>()
 
@@ -121,8 +119,9 @@ internal open class InternalMaterial(
                 flatModifiers += m.children
             }
         }
-        append(this)
+
         modifiers.forEach { append(it) }
+        append(this)
 
         val defs = mutableSetOf<String>()
         val plugins = mutableMapOf<String, String>()
@@ -136,7 +135,7 @@ internal open class InternalMaterial(
             defs,
             plugins,
             flatModifiers,
-            retentionPolicy
+            nodeContext
         )
     }
 }
@@ -249,9 +248,9 @@ internal class InternalTerrainMaterial : InternalBaseMaterial("!shader/terrain.v
     }
 
     override fun collectPlugins(accumulator: MutableMap<String, String>) {
-        super.collectPlugins(accumulator)
         accumulator["normal"] = "!shader/plugin/normal.terrain.frag"
         accumulator["terrain"] = "!shader/plugin/terrain.texture.frag"
+        super.collectPlugins(accumulator)
     }
 
     override fun uniform(name: String): UniformGetter<*>? =

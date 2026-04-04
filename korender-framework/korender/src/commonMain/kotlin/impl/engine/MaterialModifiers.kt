@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.ProjectionMode
+import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.glgpu.Color3ListGetter
 import com.zakgof.korender.impl.glgpu.Color4ListGetter
 import com.zakgof.korender.impl.glgpu.ColorRGBGetter
@@ -12,10 +13,12 @@ import com.zakgof.korender.impl.glgpu.IntListGetter
 import com.zakgof.korender.impl.glgpu.Mat4Getter
 import com.zakgof.korender.impl.glgpu.Mat4ListGetter
 import com.zakgof.korender.impl.glgpu.ShadowTextureListGetter
+import com.zakgof.korender.impl.glgpu.TextureGetter
 import com.zakgof.korender.impl.glgpu.TextureListGetter
 import com.zakgof.korender.impl.glgpu.UniformGetter
 import com.zakgof.korender.impl.glgpu.Vec3ListGetter
 import com.zakgof.korender.impl.material.InternalMaterialModifier
+import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
 import com.zakgof.korender.impl.projection.LogProjectionMode
 import com.zakgof.korender.impl.projection.OrthoProjectionMode
@@ -64,15 +67,18 @@ internal class LightMaterialModifier(private val sc: SceneDeclaration) : Interna
         }
 }
 
-internal class ContextMaterialModifier(private val frameContext: FrameContext) : InternalMaterialModifier() {
+internal class ContextMaterialModifier(private val frameContext: FrameContext, rootNodeContext: NodeContext) : InternalMaterialModifier() {
+
+    val noiseTex = ResourceTextureDeclaration("!noise.png", nodeContext = rootNodeContext)
+    val fbmTex = ResourceTextureDeclaration("!fbm.png", nodeContext = rootNodeContext)
 
     var shadowTextures = GlGpuTextureList(List(5) { null }, 5)
     var pcfTextures = GlGpuShadowTextureList(List(5) { null }, 5)
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
-            "noiseTexture" -> noiseTexGetter
-            "fbmTexture" -> fbmTexGetter
+            "noiseTexture" -> TextureGetter<ContextMaterialModifier> { it.noiseTex }
+            "fbmTexture" -> TextureGetter<ContextMaterialModifier> { it.fbmTex }
             "shadowTextures[0]" -> TextureListGetter<ContextMaterialModifier> { it.shadowTextures }
             "pcfTextures[0]" -> ShadowTextureListGetter<ContextMaterialModifier> { it.pcfTextures }
             else -> super.uniform(name)

@@ -15,7 +15,7 @@ import com.zakgof.korender.TextStyle
 import com.zakgof.korender.math.ColorRGBA
 
 @Composable
-fun GuiExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun GuiExample() = Korender(resourceLoader = { Res.readBytes(it) }) {
     val statusStyle = TextStyle(height = 36, color = ColorRGBA(0xF06543A0))
     val widgetStyle = TextStyle(height = 48, color = ColorRGBA(0x66FF55A0))
     val checkboxState = CheckboxState(true)

@@ -4,11 +4,11 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Platform
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
+import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.FrameBufferDeclaration
 import com.zakgof.korender.impl.engine.FrameContext
 import com.zakgof.korender.impl.engine.FrameMaterialModifier
-import com.zakgof.korender.impl.engine.ImmediatelyFreeRetentionPolicy
 import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.Renderer
@@ -56,14 +56,14 @@ internal object ShadowRenderer {
 
         val declaration = declarations[index]
         val frameBuffer = renderer.inventory.frameBuffer(
-            FrameBufferDeclaration("shadow-$id", declaration.mapSize, declaration.mapSize, fbPreset(declaration), true, TransientProperty(ImmediatelyFreeRetentionPolicy))
+            FrameBufferDeclaration("shadow-$id", declaration.mapSize, declaration.mapSize, fbPreset(declaration), true, TransientProperty(scene.rootNodeContext))
         )
         if (frameBuffer == null) {
             rk?.fail()
             return null
         }
 
-        val shadowFrameMaterialModifier = updateShadowCamera(scene.frameContext, renderer.renderContext, lightDirection, declaration)
+        val shadowFrameMaterialModifier = updateShadowCamera(scene.frameContext, renderer.renderContext, lightDirection, declaration, scene.rootNodeContext)
 
         // TODO LMM is ugly
         renderer.inventory.uniformBufferHolder.populateFrame(listOf(shadowFrameMaterialModifier, scene.lightMaterialModifier), true)
@@ -84,7 +84,7 @@ internal object ShadowRenderer {
                     renderableDeclaration.mesh,
                     renderableDeclaration.transform,
                     renderableDeclaration.transparent,
-                    renderableDeclaration.retentionPolicy
+                    renderableDeclaration.nodeContext
                 )
                 scene.renderRenderable(casterRenderableDeclaration, shadowFrameMaterialModifier.frameContext.camera, isShadow = true, rk = rk)
             }
@@ -174,10 +174,10 @@ internal object ShadowRenderer {
         rk: ResultKeeper?
     ) {
         val blurFrameBuffer = renderer.inventory.frameBuffer(
-            FrameBufferDeclaration("shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM), true, TransientProperty(ImmediatelyFreeRetentionPolicy))
+            FrameBufferDeclaration("shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM), true, TransientProperty(scene.rootNodeContext))
         ) ?: return
 
-        val blurVQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, true)
+        val blurVQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, true, scene.rootNodeContext)
 
         scene.contextMaterialModifier.customTextureUniforms["colorTexture"] = frameBuffer.colorTextures[0]
         scene.contextMaterialModifier.customTextureUniforms["depthTexture"] = frameBuffer.depthTexture!!
@@ -189,7 +189,7 @@ internal object ShadowRenderer {
             renderer.inventory.uniformBufferHolder.flush(rk)
         }
 
-        val blurHQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, false)
+        val blurHQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, false, scene.rootNodeContext)
 
         scene.contextMaterialModifier.customTextureUniforms["colorTexture"] = blurFrameBuffer.colorTextures[0]
         scene.contextMaterialModifier.customTextureUniforms["depthTexture"] = blurFrameBuffer.depthTexture!!
@@ -202,13 +202,13 @@ internal object ShadowRenderer {
         }
     }
 
-    private fun blurQuadRenderableDeclaration(texBlurRadius: Float, vertical: Boolean) = RenderableDeclaration(
+    private fun blurQuadRenderableDeclaration(texBlurRadius: Float, vertical: Boolean, rootNodeContext: NodeContext) = RenderableDeclaration(
         BlurMaterial(vertical, texBlurRadius),
         listOf(),
-        ScreenQuad(ImmediatelyFreeRetentionPolicy),
+        ScreenQuad(rootNodeContext),
         Transform.IDENTITY,
         false,
-        ImmediatelyFreeRetentionPolicy
+        rootNodeContext
     )
 
     private fun updateShadowCamera(
@@ -216,6 +216,7 @@ internal object ShadowRenderer {
         renderContext: RenderContext,
         light: Vec3,
         declaration: CascadeDeclaration,
+        nodeContext: NodeContext
     ): FrameMaterialModifier {
 
         val projection = frameContext.projection
@@ -255,7 +256,7 @@ internal object ShadowRenderer {
         val shadowProjection = Projection(dim, dim, near, far, OrthoProjectionMode)
         val shadowCamera = DefaultCamera(cameraPos, light, up)
 
-        return FrameMaterialModifier(CustomFrameContext(shadowProjection, shadowCamera, renderContext, declaration.mapSize, declaration.mapSize))
+        return FrameMaterialModifier(CustomFrameContext(shadowProjection, shadowCamera, renderContext, declaration.mapSize, declaration.mapSize), nodeContext)
     }
 
     private fun frustumCorners(

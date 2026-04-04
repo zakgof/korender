@@ -3,7 +3,7 @@ package com.zakgof.korender.impl.engine
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.RetentionPolicy
 
-internal class Registry<D : Retentionable, R : AutoCloseable>(
+internal class Registry<D : NodeKeeper, R : AutoCloseable>(
     private val factory: (D) -> R?
 ) {
 
@@ -15,7 +15,7 @@ internal class Registry<D : Retentionable, R : AutoCloseable>(
 
     fun end(time: Float, generation: Int) {
         map.entries.removeAll {
-            !it.value.used && it.value.attemptDelete(it.key.retentionPolicy, time, generation)
+            !it.value.used && it.value.attemptDelete(it.key.nodeContext.retentionPolicy, time, generation)
         }
     }
 

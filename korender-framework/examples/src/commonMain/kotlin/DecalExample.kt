@@ -10,7 +10,7 @@ import com.zakgof.korender.math.z
 import kotlin.random.Random
 
 @Composable
-fun DecalExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun DecalExample() = Korender(resourceLoader = { Res.readBytes(it) }) {
     val material = base {
         colorTexture = texture("texture/asphalt-albedo.jpg")
         metallicFactor = 0.2f

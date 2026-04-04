@@ -3,16 +3,28 @@ package com.zakgof.korender.impl.context
 import com.zakgof.korender.BaseMaterialContext
 import com.zakgof.korender.BillboardMaterial
 import com.zakgof.korender.CameraDeclaration
+import com.zakgof.korender.CubeTextureDeclaration
+import com.zakgof.korender.CubeTextureImages
+import com.zakgof.korender.CubeTextureResources
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.Image
+import com.zakgof.korender.Image3D
+import com.zakgof.korender.IndexType
 import com.zakgof.korender.Material
+import com.zakgof.korender.Mesh
+import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostProcessingMaterial
+import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.SkyMaterial
+import com.zakgof.korender.Texture3DDeclaration
+import com.zakgof.korender.TextureArrayDeclaration
+import com.zakgof.korender.TextureArrayImages
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -23,6 +35,8 @@ import com.zakgof.korender.context.GltfInstancingDeclaration
 import com.zakgof.korender.context.GuiContainerScope
 import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.context.KorenderScope
+import com.zakgof.korender.context.PipeMeshContext
+import com.zakgof.korender.context.ResourceScope
 import com.zakgof.korender.context.ShadowContext
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.camera.Camera
@@ -62,12 +76,97 @@ internal class DefaultFrameScope(
     val sceneDeclaration: SceneDeclaration,
     override val frameInfo: FrameInfo,
     val nodeContext: NodeContext,
-) : FrameScope, KorenderScope by korenderContext, NodeScope by nodeContext {
+) : FrameScope, KorenderScope by korenderContext, ResourceScope {
 
-    override var retentionPolicy = nodeContext.retentionPolicy
+    override var retentionPolicy: RetentionPolicy
+        get() = nodeContext.retentionPolicy
+        set(value) {
+            nodeContext.retentionPolicy = value
+        }
+
+    override fun texture(textureResource: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureDeclaration =
+        nodeContext.texture(textureResource, filter, wrap, aniso)
+
+    override fun texture(id: String, image: Image, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureDeclaration =
+        nodeContext.texture(id, image, filter, wrap, aniso)
+
+    override fun textureArray(vararg textureResources: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureArrayDeclaration =
+        nodeContext.textureArray(*textureResources, filter = filter, wrap = wrap, aniso = aniso)
+
+    override fun textureArray(id: String, images: TextureArrayImages, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureArrayDeclaration =
+        nodeContext.textureArray(id, images, filter, wrap, aniso)
+
+    override fun texture3D(id: String, image: Image3D, filter: TextureFilter, wrap: TextureWrap, aniso: Int): Texture3DDeclaration =
+        nodeContext.texture3D(id, image, filter, wrap, aniso)
+
+    override fun cubeTexture(resources: CubeTextureResources): CubeTextureDeclaration =
+        nodeContext.cubeTexture(resources)
+
+    override fun cubeTexture(id: String, images: CubeTextureImages): CubeTextureDeclaration =
+        nodeContext.cubeTexture(id, images)
+
+    override fun quad(halfSideX: Float, halfSideY: Float): MeshDeclaration =
+        nodeContext.quad(halfSideX, halfSideY)
+
+    override fun biQuad(halfSideX: Float, halfSideY: Float): MeshDeclaration =
+        nodeContext.biQuad(halfSideX, halfSideY)
+
+    override fun cube(halfSide: Float): MeshDeclaration =
+        nodeContext.cube(halfSide)
+
+    override fun sphere(radius: Float, slices: Int, sectors: Int): MeshDeclaration =
+        nodeContext.sphere(radius, slices, sectors)
+
+    override fun cylinderSide(height: Float, radius: Float, sectors: Int): MeshDeclaration =
+        nodeContext.cylinderSide(height, radius, sectors)
+
+    override fun coneTop(height: Float, radius: Float, sectors: Int): MeshDeclaration =
+        nodeContext.coneTop(height, radius, sectors)
+
+    override fun disk(radius: Float, sectors: Int): MeshDeclaration =
+        nodeContext.disk(radius, sectors)
+
+    override fun obj(objFile: String): MeshDeclaration =
+        nodeContext.obj(objFile)
+
+    override fun customMesh(
+        id: String,
+        vertexCount: Int,
+        indexCount: Int,
+        vararg attributes: MeshAttribute<*>,
+        dynamic: Boolean,
+        indexType: IndexType?,
+        block: MeshInitializer.() -> Unit,
+    ): MeshDeclaration =
+        nodeContext.customMesh(id, vertexCount, indexCount, *attributes, dynamic = dynamic, indexType = indexType, block = block)
+
+    override fun heightField(id: String, cellsX: Int, cellsZ: Int, cellWidth: Float, height: (Int, Int) -> Float): MeshDeclaration =
+        nodeContext.heightField(id, cellsX, cellsZ, cellWidth, height)
+
+    override fun mesh(id: String, mesh: Mesh): MeshDeclaration =
+        nodeContext.mesh(id, mesh)
+
+    override fun pipeMesh(id: String, segments: Int, dynamic: Boolean, block: PipeMeshContext.() -> Unit): MeshDeclaration =
+        nodeContext.pipeMesh(id, segments, dynamic, block)
+
+    override fun ssr(
+        downsample: Int,
+        maxReflectionDistance: Float,
+        linearSteps: Int,
+        binarySteps: Int,
+        lastStepRatio: Float,
+        envTexture: CubeTextureDeclaration?,
+    ): PostShadingEffect =
+        nodeContext.ssr(downsample, maxReflectionDistance, linearSteps, binarySteps, lastStepRatio, envTexture)
+
+    override fun bloom(threshold: Float, amount: Float, radius: Float, downsample: Int): PostShadingEffect =
+        nodeContext.bloom(threshold, amount, radius, downsample)
+
+    override fun bloomWide(threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float): PostShadingEffect =
+        nodeContext.bloomWide(threshold, amount, downsample, mips, offset, highResolutionRatio)
 
     override fun DeferredShading(block: DeferredShadingContext.() -> Unit) {
-        sceneDeclaration.deferredShadingDeclaration = DeferredShadingDeclaration()
+        sceneDeclaration.deferredShadingDeclaration = DeferredShadingDeclaration(nodeContext)
         DefaultDeferredShadingContext(sceneDeclaration.deferredShadingDeclaration!!).apply(block)
     }
 
@@ -80,15 +179,15 @@ internal class DefaultFrameScope(
             animation ?: 0,
             instancing as InternalGltfInstancingDeclaration?,
             materialModifier,
-            korenderContext.currentRetentionPolicy
+            nodeContext
         )
     }
 
     override fun Renderable(material: Material, mesh: MeshDeclaration, transform: Transform, transparent: Boolean, instancing: InstancingDeclaration?) {
         val meshDeclaration = (instancing as? InternalInstancingDeclaration)?.let {
-            InstancedMesh(instancing.id, instancing.count, mesh, !instancing.dynamic, transparent, korenderContext.currentRetentionPolicy, instancing.instancer)
+            InstancedMesh(instancing.id, instancing.count, mesh, !instancing.dynamic, transparent, nodeContext, instancing.instancer)
         } ?: mesh
-        val rd = RenderableDeclaration(material as InternalMaterial, listOf(), meshDeclaration, transform, transparent, korenderContext.currentRetentionPolicy)
+        val rd = RenderableDeclaration(material as InternalMaterial, listOf(), meshDeclaration, transform, transparent, nodeContext)
         sceneDeclaration.append(rd)
     }
 
@@ -97,10 +196,10 @@ internal class DefaultFrameScope(
     }
 
     override fun Billboard(material: BillboardMaterial, transparent: Boolean, instancing: BillboardInstancingDeclaration?) {
-        val mesh = com.zakgof.korender.impl.geometry.Billboard(korenderContext.currentRetentionPolicy)
+        val mesh = com.zakgof.korender.impl.geometry.Billboard(nodeContext)
         val meshDeclaration = if (instancing != null) {
             instancing as InternalBillboardInstancingDeclaration
-            InstancedBillboard(instancing.id, instancing.count, !instancing.dynamic, transparent, korenderContext.currentRetentionPolicy, instancing.instancer)
+            InstancedBillboard(instancing.id, instancing.count, !instancing.dynamic, transparent, nodeContext, instancing.instancer)
         } else {
             mesh
         }
@@ -110,13 +209,13 @@ internal class DefaultFrameScope(
             meshDeclaration,
             IDENTITY,
             transparent,
-            korenderContext.currentRetentionPolicy
+            nodeContext
         )
         sceneDeclaration.append(rd)
     }
 
     override fun Sky(material: SkyMaterial) {
-        sceneDeclaration.skies += RenderableDeclaration(material as InternalSkyMaterial, listOf(), ScreenQuad(korenderContext.currentRetentionPolicy), Transform.IDENTITY, false, korenderContext.currentRetentionPolicy)
+        sceneDeclaration.skies += RenderableDeclaration(material as InternalSkyMaterial, listOf(), ScreenQuad(nodeContext), Transform.IDENTITY, false, nodeContext)
     }
 
     override fun Gui(block: GuiContainerScope.() -> Unit) {
@@ -141,14 +240,14 @@ internal class DefaultFrameScope(
 
     override fun PostProcess(postProcessingEffect: PostProcessingEffect, block: FrameScope.() -> Unit) {
         val sd = SceneDeclaration()
-        val fc = DefaultFrameScope(korenderContext, sd, frameInfo)
+        val fc = DefaultFrameScope(korenderContext, sd, frameInfo, nodeContext)
         fc.apply(block)
         sceneDeclaration.filters += postProcessingEffect as InternalFilterDeclaration
     }
 
     override fun PostProcess(material: PostProcessingMaterial, block: FrameScope.() -> Unit) {
         val sd = SceneDeclaration()
-        val fc = DefaultFrameScope(korenderContext, sd, frameInfo)
+        val fc = DefaultFrameScope(korenderContext, sd, frameInfo, nodeContext)
         fc.apply(block)
         sceneDeclaration.filters += InternalFilterDeclaration(
             listOf(
@@ -157,7 +256,7 @@ internal class DefaultFrameScope(
                     material = material as InternalPostProcessingMaterial,
                     sceneDeclaration = sd,
                     target = FrameTarget("colorTexture", "depthTexture"),
-                    retentionPolicy = korenderContext.currentRetentionPolicy
+                    nodeContext = nodeContext
                 )
             )
         )
@@ -165,21 +264,21 @@ internal class DefaultFrameScope(
 
     override fun CaptureEnv(envProbeName: String, resolution: Int, position: Vec3, near: Float, far: Float, insideOut: Boolean, block: FrameScope.() -> Unit) {
         val captureSceneDeclaration = SceneDeclaration()
-        val envCaptureContext = EnvCaptureContext(resolution, position, near, far, insideOut, captureSceneDeclaration)
-        DefaultFrameScope(korenderContext, captureSceneDeclaration, frameInfo).apply(block)
+        val envCaptureContext = EnvCaptureContext(resolution, position, near, far, insideOut, captureSceneDeclaration, nodeContext)
+        DefaultFrameScope(korenderContext, captureSceneDeclaration, frameInfo, nodeContext).apply(block)
         sceneDeclaration.envCaptures[envProbeName] = envCaptureContext
     }
 
     override fun CaptureFrame(frameProbeName: String, width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameScope.() -> Unit) {
         val captureSceneDeclaration = SceneDeclaration()
-        val frameCaptureContext = FrameCaptureContext(width, height, camera as Camera, projection as Projection, captureSceneDeclaration)
-        DefaultFrameScope(korenderContext, captureSceneDeclaration, frameInfo).apply(block)
+        val frameCaptureContext = FrameCaptureContext(width, height, camera as Camera, projection as Projection, captureSceneDeclaration, nodeContext)
+        DefaultFrameScope(korenderContext, captureSceneDeclaration, frameInfo, nodeContext).apply(block)
         sceneDeclaration.frameCaptures[frameProbeName] = frameCaptureContext
     }
 
     override fun OnLoading(block: FrameScope.() -> Unit) {
         sceneDeclaration.loaderSceneDeclaration = SceneDeclaration()
-        DefaultFrameScope(korenderContext, sceneDeclaration.loaderSceneDeclaration!!, frameInfo).apply(block)
+        DefaultFrameScope(korenderContext, sceneDeclaration.loaderSceneDeclaration!!, frameInfo, nodeContext).apply(block)
     }
 
     override fun Node(resourceLoader: (suspend (String) -> ByteArray)?, transform: Transform, retentionPolicy: RetentionPolicy?, block: FrameScope.() -> Unit) {

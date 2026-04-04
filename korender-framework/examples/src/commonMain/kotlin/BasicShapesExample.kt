@@ -14,7 +14,7 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 @Composable
-fun BasicShapesExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun BasicShapesExample() = Korender(resourceLoader = { Res.readBytes(it) }) {
     val material = base { color = ColorRGBA.Blue }
     val freeCamera = FreeCamera(this, 20.z, (-1).z)
     OnTouch { freeCamera.touch(it) }

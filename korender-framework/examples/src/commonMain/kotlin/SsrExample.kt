@@ -13,7 +13,7 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 @Composable
-fun SsrExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun SsrExample() = Korender(resourceLoader = { Res.readBytes(it) }) {
     val orbitCamera = OrbitCamera(20.z + 4.y, 1.y)
     OnTouch { orbitCamera.touch(it) }
     val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })

@@ -28,7 +28,7 @@ import kotlin.math.max
 import kotlin.random.Random
 
 @Composable
-fun LTreeBaker() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun LTreeBaker() = Korender(resourceLoader = { Res.readBytes(it) }) {
 
     val spruce = SpruceTreeGenerator().generateTree()
     val oak = OakTreeGenerator().generateTree()

@@ -13,7 +13,7 @@ import com.zakgof.korender.math.z
 import kotlin.math.floor
 
 @Composable
-fun EffectsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun EffectsExample() = Korender(resourceLoader = { Res.readBytes(it) }) {
     camera = camera(Vec3(0f, 5f, 30f), -1.z, 1.y)
     Frame {
         TestExchange.report(frameInfo)

@@ -66,7 +66,7 @@ private fun detectDevicePixelRatio(): List<Float> {
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
 actual fun Korender(
-    appResourceLoader: ResourceLoader,
+    resourceLoader: ResourceLoader,
     block: KorenderScope.() -> Unit
 ) {
     var engine: Engine? by remember { mutableStateOf(null) }
@@ -133,7 +133,7 @@ actual fun Korender(
                     engine = Engine(
                         (this.size.width * pixelRatio[0]).toInt(),
                         (this.size.height * pixelRatio[1]).toInt(),
-                        appResourceLoader,
+                        resourceLoader,
                         block
                     )
 

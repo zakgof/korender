@@ -16,7 +16,7 @@ import kotlin.math.sin
 
 @Composable
 fun MeshesExample() {
-    Korender(appResourceLoader = { Res.readBytes(it) }) {
+    Korender(resourceLoader = { Res.readBytes(it) }) {
         val orbitCamera = OrbitCamera(20.z, 2.y)
         OnTouch { orbitCamera.touch(it) }
         val material = base { color = ColorRGBA.Blue }

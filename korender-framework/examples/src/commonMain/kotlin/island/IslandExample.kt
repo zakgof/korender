@@ -17,7 +17,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun IslandExample() =
-    Korender(appResourceLoader = { Res.readBytes(it) }) {
+    Korender(resourceLoader = { Res.readBytes(it) }) {
 
         val terrain = clipmapTerrainPrefab("terrain", 32.0f, 24, 6)
         val loader = Loader(this)

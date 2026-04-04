@@ -145,7 +145,7 @@ internal actual object Platform {
 @OptIn(DelicateCoroutinesApi::class, ExperimentalWasmJsInterop::class)
 @Composable
 actual fun Korender(
-    appResourceLoader: ResourceLoader,
+    resourceLoader: ResourceLoader,
     block: KorenderScope.() -> Unit
 ) {
     var engine: Engine? by remember { mutableStateOf(null) }
@@ -220,7 +220,7 @@ actual fun Korender(
             }
         }
 
-        engine = Engine(800, 600, appResourceLoader, block)
+        engine = Engine(800, 600, resourceLoader, block)
 
         animate()
 

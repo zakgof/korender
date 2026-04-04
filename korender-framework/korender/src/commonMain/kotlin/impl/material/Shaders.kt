@@ -9,6 +9,7 @@ import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.gl.GL.shaderEnv
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
+import com.zakgof.korender.impl.load
 
 internal fun <T> MutableList<T>.peek(): T = this.last()
 internal fun <T> MutableList<T>.pop(): T = this.removeAt(this.size - 1)
@@ -18,8 +19,8 @@ private class Line(val text: String, val originFile: String, val originLine: Int
 
 internal object Shaders {
 
-    fun create(declaration: ShaderDeclaration, loader: Loader, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, uniformBufferHolder: UniformBufferHolder): GlGpuShader? =
-        loader.syncy(declaration) { load(declaration, it) }?.let {
+    fun create(declaration: ShaderDeclaration, loader: Loader, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, uniformBufferHolder: UniformBufferHolder, resourceLoader: ResourceLoader): GlGpuShader? =
+        loader.syncy(declaration, resourceLoader) { load(declaration, it) }?.let {
             GlGpuShader(it.title, it.vertCode, it.fragCode, it.vertDebugInfo, it.fragDebugInfo, zeroTex, zeroShadowTex, uniformBufferHolder, declaration.uniformSuppliers)
         }
 
@@ -100,7 +101,7 @@ internal object Shaders {
             private val includedFnames = mutableSetOf<String>()
 
             suspend fun preprocessFile(fname: String): MutableList<Line> {
-                val content = appResourceLoader(fname).decodeToString()
+                val content = appResourceLoader.load(fname).decodeToString()
                 return preprocess(content, fname)
             }
 

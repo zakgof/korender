@@ -4,6 +4,7 @@ import com.zakgof.korender.Platform
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
+import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.glgpu.FloatGetter
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
@@ -20,12 +21,6 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 
-private val noiseTex = ResourceTextureDeclaration("!noise.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)
-private val fbmTex = ResourceTextureDeclaration("!fbm.png", retentionPolicy = ImmediatelyFreeRetentionPolicy)
-
-internal val noiseTexGetter = TextureGetter<Any> { noiseTex }
-internal val fbmTexGetter = TextureGetter<Any> { fbmTex }
-
 // TODO needs refactoring
 internal interface FrameContext {
     val projection: Projection
@@ -34,8 +29,6 @@ internal interface FrameContext {
     val height: Int
     val time: Float
 }
-
-internal fun FrameContext.defaultTarget() = FrameTarget("colorTexture", "depthTexture")
 
 internal class RegularFrameContext(override var width: Int, override var height: Int, val renderContext: RenderContext) : FrameContext {
 
@@ -68,12 +61,15 @@ internal class RenderContext {
     var currentRetentionPolicy: RetentionPolicy = TimeRetentionPolicy(10f)
 }
 
-internal class FrameMaterialModifier(val frameContext: FrameContext) : InternalMaterialModifier() {
+internal class FrameMaterialModifier(val frameContext: FrameContext, val nodeContext: NodeContext) : InternalMaterialModifier() {
+
+    private val noiseTex = ResourceTextureDeclaration("!noise.png", nodeContext = nodeContext)
+    private val fbmTex = ResourceTextureDeclaration("!fbm.png", nodeContext = nodeContext)
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
-            "noiseTexture" -> TextureGetter<FrameMaterialModifier> { noiseTex }
-            "fbmTexture" -> TextureGetter<FrameMaterialModifier> { fbmTex }
+            "noiseTexture" -> TextureGetter<FrameMaterialModifier> { it.noiseTex }
+            "fbmTexture" -> TextureGetter<FrameMaterialModifier> { it.fbmTex }
             "view" -> Mat4Getter<FrameMaterialModifier> { it.frameContext.camera.mat4 }
             "projectionWidth" -> FloatGetter<FrameMaterialModifier> { it.frameContext.projection.width }
             "projectionHeight" -> FloatGetter<FrameMaterialModifier> { it.frameContext.projection.height }

@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.impl.camera.Camera
+import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.Vec3
 
@@ -10,7 +11,8 @@ internal class EnvCaptureContext(
     val near: Float,
     val far: Float,
     val insideOut: Boolean,
-    val sceneDeclaration: SceneDeclaration
+    val sceneDeclaration: SceneDeclaration,
+    val nodeContext: NodeContext
 )
 
 internal class FrameCaptureContext(
@@ -18,5 +20,6 @@ internal class FrameCaptureContext(
     val height: Int,
     val camera: Camera,
     val projection: Projection,
-    val sceneDeclaration: SceneDeclaration
+    val sceneDeclaration: SceneDeclaration,
+    val nodeContext: NodeContext
 )

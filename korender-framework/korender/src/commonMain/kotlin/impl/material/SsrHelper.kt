@@ -3,6 +3,7 @@ package com.zakgof.korender.impl.material
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.RetentionPolicy
+import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.FrameTarget
 import com.zakgof.korender.impl.engine.InternalPassDeclaration
 import com.zakgof.korender.impl.glgpu.FloatGetter
@@ -16,7 +17,7 @@ internal fun ssrEffect(
     linearSteps: Int, binarySteps: Int,
     lastStepRatio: Float,
     envTexture: CubeTextureDeclaration?,
-    currentRetentionPolicy: RetentionPolicy,
+    nodeContext: NodeContext,
 ): PostShadingEffect {
     val nextStepRatio = lastStepRatio.pow(1f / (linearSteps + 1f))
     return InternalPostShadingEffect(
@@ -30,12 +31,12 @@ internal fun ssrEffect(
                 ),
                 null,
                 FrameTarget( "ssrTexture", "ssrDepth", downsample),
-                currentRetentionPolicy
+                nodeContext
             )
         ),
         keepTextures = setOf("ssrTexture"),
         compositionMaterialModifier = SsrCompositionMaterialModifier(envTexture),
-        currentRetentionPolicy
+        nodeContext = nodeContext
     )
 }
 

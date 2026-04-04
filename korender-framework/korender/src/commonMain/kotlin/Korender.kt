@@ -5,7 +5,7 @@ import com.zakgof.korender.context.KorenderScope
 
 @Composable
 expect fun Korender(
-    appResourceLoader: ResourceLoader = { throw KorenderException("No application resource provided") },
+    resourceLoader: ResourceLoader = { throw KorenderException("No application resource provided") },
     block: KorenderScope.() -> Unit
 )
 

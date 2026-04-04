@@ -12,7 +12,7 @@ import com.zakgof.korender.math.y
 import kotlin.random.Random
 
 @Composable
-fun InstancedBillboardsExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun InstancedBillboardsExample() = Korender(resourceLoader = { Res.readBytes(it) }) {
 
     val particleNum = 1000
     val particles = Array(particleNum) { Particle(Random.nextFloat() * 5f) }

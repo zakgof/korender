@@ -5,14 +5,14 @@ import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
-import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.impl.buffer.put
 import com.zakgof.korender.impl.camera.Camera
+import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.BillboardInstance
 import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.MeshInstance
-import com.zakgof.korender.impl.engine.Retentionable
+import com.zakgof.korender.impl.engine.NodeKeeper
 import com.zakgof.korender.impl.font.Font
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTPOS
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTROT
@@ -28,7 +28,7 @@ import com.zakgof.korender.impl.material.InstancingMaterialModifier
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.TextureLinkDeclaration
 
-internal interface InternalMeshDeclaration : MeshDeclaration, Retentionable
+internal interface InternalMeshDeclaration : MeshDeclaration, NodeKeeper
 
 internal interface Instanceable {
 
@@ -42,18 +42,18 @@ internal interface Instanceable {
     ) : InternalMaterialModifier?
 }
 
-internal data class Cube(val halfSide: Float, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
-internal data class DecalCube(val halfSide: Float = 0.5f, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
-internal data class Sphere(val radius: Float, val slices: Int, val sectors: Int, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
-internal data class ObjMesh(val objFile: String, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
-internal data class Billboard(override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
-internal data class ImageQuad(override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
-internal data class ScreenQuad(override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
-internal data class Quad(val halfSideX: Float, val halfSideY: Float, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
-internal data class BiQuad(val halfSideX: Float, val halfSideY: Float, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
-internal data class CylinderSide(val height: Float, val radius: Float, val sectors: Int, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
-internal data class ConeTop(val height: Float, val radius: Float, val sectors: Int, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
-internal data class Disk(val radius: Float, val sectors: Int, override val retentionPolicy: RetentionPolicy) : InternalMeshDeclaration
+internal data class Cube(val halfSide: Float, override val nodeContext: NodeContext) : InternalMeshDeclaration
+internal data class DecalCube(val halfSide: Float = 0.5f, override val nodeContext: NodeContext) : InternalMeshDeclaration
+internal data class Sphere(val radius: Float, val slices: Int, val sectors: Int, override val nodeContext: NodeContext) : InternalMeshDeclaration
+internal data class ObjMesh(val objFile: String, override val nodeContext: NodeContext) : InternalMeshDeclaration
+internal data class Billboard(override val nodeContext: NodeContext) : InternalMeshDeclaration
+internal data class ImageQuad(override val nodeContext: NodeContext) : InternalMeshDeclaration
+internal data class ScreenQuad(override val nodeContext: NodeContext) : InternalMeshDeclaration
+internal data class Quad(val halfSideX: Float, val halfSideY: Float, override val nodeContext: NodeContext) : InternalMeshDeclaration
+internal data class BiQuad(val halfSideX: Float, val halfSideY: Float, override val nodeContext: NodeContext) : InternalMeshDeclaration
+internal data class CylinderSide(val height: Float, val radius: Float, val sectors: Int, override val nodeContext: NodeContext) : InternalMeshDeclaration
+internal data class ConeTop(val height: Float, val radius: Float, val sectors: Int, override val nodeContext: NodeContext) : InternalMeshDeclaration
+internal data class Disk(val radius: Float, val sectors: Int, override val nodeContext: NodeContext) : InternalMeshDeclaration
 
 internal data class InstancedMesh(
     val id: String,
@@ -61,7 +61,7 @@ internal data class InstancedMesh(
     val mesh: MeshDeclaration,
     val static: Boolean,
     val transparent: Boolean,
-    override val retentionPolicy: RetentionPolicy,
+    override val nodeContext: NodeContext,
     val instancer: () -> List<MeshInstance>,
 ) : InternalMeshDeclaration, Instanceable {
 
@@ -91,7 +91,7 @@ internal data class InstancedMesh(
             meshLink.updateGpu(instances.size, true)
 
             if (cpuMesh.attrMap.containsKey(WEIGHTS)) {
-                val texDecl = TextureLinkDeclaration(id, 32 * 4, cpuMesh.instanceCount, retentionPolicy)
+                val texDecl = TextureLinkDeclaration(id, 32 * 4, cpuMesh.instanceCount, nodeContext)
                 inventory.textureLink(texDecl)?.let { jointTextureLink ->
                     instances.forEachIndexed { i, instance ->
                         jointTextureLink.buffer.position(32 * 4 * 4 * i)
@@ -114,7 +114,7 @@ internal data class InstancedBillboard(
     override val count: Int,
     val static: Boolean,
     val transparent: Boolean,
-    override val retentionPolicy: RetentionPolicy,
+    override val nodeContext: NodeContext,
     val instancer: () -> List<BillboardInstance>,
 ) : InternalMeshDeclaration, Instanceable {
     override fun equals(other: Any?): Boolean = (other is InstancedBillboard && other.id == id)
@@ -149,7 +149,7 @@ internal data class CustomMesh(
     val attributes: List<MeshAttribute<*>>,
     val dynamic: Boolean,
     val indexType: IndexType?,
-    override val retentionPolicy: RetentionPolicy,
+    override val nodeContext: NodeContext,
     val block: MeshInitializer.() -> Unit,
 ) : InternalMeshDeclaration, Instanceable {
     override fun equals(other: Any?): Boolean = (other is CustomMesh && other.id == id)
@@ -181,7 +181,7 @@ internal class FontMesh(
 
     override fun hashCode(): Int = id.hashCode()
 
-    override val retentionPolicy = declaration.retentionPolicy
+    override val nodeContext = declaration.nodeContext
 
     override fun instancing(meshLink: MeshLink, reverseZ: Boolean, camera: Camera?, inventory: Inventory): InternalMaterialModifier? {
         val mesh = meshLink.cpuMesh
@@ -211,7 +211,7 @@ internal class FontMesh(
 internal data class CustomCpuMesh(
     val id: String,
     val mesh: Mesh,
-    override val retentionPolicy: RetentionPolicy,
+    override val nodeContext: NodeContext,
 ) : InternalMeshDeclaration {
     override fun equals(other: Any?): Boolean = (other is CustomCpuMesh && other.id == id)
     override fun hashCode(): Int = id.hashCode()
@@ -223,7 +223,7 @@ internal data class HeightField(
     val cellsZ: Int,
     val cellWidth: Float,
     val height: (Int, Int) -> Float,
-    override val retentionPolicy: RetentionPolicy,
+    override val nodeContext: NodeContext,
 ) : InternalMeshDeclaration {
     override fun equals(other: Any?): Boolean = (other is HeightField && other.id == id)
     override fun hashCode(): Int = id.hashCode()
