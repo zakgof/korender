@@ -2,7 +2,6 @@ package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.PostShadingEffect
-import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.FrameTarget
 import com.zakgof.korender.impl.engine.InternalPassDeclaration
@@ -60,7 +59,7 @@ private class SsrCompositionMaterialModifier(val envTexture: CubeTextureDeclarat
 ) {
     override fun collectDefs(accumulator: MutableSet<String>) {
         super.collectDefs(accumulator)
-        accumulator += "BLOOM"
+        accumulator += "SSR"
     }
 }
 

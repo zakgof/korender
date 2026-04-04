@@ -61,6 +61,18 @@ internal class RenderContext {
     var currentRetentionPolicy: RetentionPolicy = TimeRetentionPolicy(10f)
 }
 
+internal class CustomFrameContext(
+    override val projection: Projection,
+    override val camera: Camera,
+    val renderContext: RenderContext,
+    override val width: Int,
+    override val height: Int,
+) : FrameContext {
+
+    override val time
+        get() = (Platform.nanoTime() - renderContext.frameInfoManager.startNanos) * 1e-9f
+}
+
 internal class FrameMaterialModifier(val frameContext: FrameContext, val nodeContext: NodeContext) : InternalMaterialModifier() {
 
     private val noiseTex = ResourceTextureDeclaration("!noise.png", nodeContext = nodeContext)

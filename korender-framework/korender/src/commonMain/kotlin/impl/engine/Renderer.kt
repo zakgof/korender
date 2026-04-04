@@ -3,9 +3,8 @@ package com.zakgof.korender.impl.engine
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.context.NodeContext
-import com.zakgof.korender.impl.engine.shadow.CustomFrameContext
-import com.zakgof.korender.impl.engine.shadow.ShadowRenderer
 import com.zakgof.korender.impl.engine.shadow.ShadowerData
+import com.zakgof.korender.impl.engine.shadow.shadows
 import com.zakgof.korender.impl.geometry.DecalCube
 import com.zakgof.korender.impl.geometry.Instanceable
 import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
@@ -466,13 +465,12 @@ internal class Renderer(
             val directionalShadowCounts = mutableListOf<Int>()
             sceneDeclaration.directionalLights.forEachIndexed { li, dl ->
                 val indexes = dl.shadowDeclaration.cascades.mapIndexedNotNull { ci, cascadeDeclaration ->
-                    ShadowRenderer.render(
+                    shadows(
                         "$li-$ci",
                         dl.direction,
                         dl.shadowDeclaration.cascades,
                         ci,
                         sceneDeclaration.opaques + sceneDeclaration.transparents,
-                        this,
                         this@Renderer,
                         rk
                     )?.let {
