@@ -12,7 +12,7 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 @Composable
-fun RenderToTextureExample() = Korender(resourceLoader = { Res.readBytes(it) }) {
+fun RenderToTextureExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
 
     Frame {
 

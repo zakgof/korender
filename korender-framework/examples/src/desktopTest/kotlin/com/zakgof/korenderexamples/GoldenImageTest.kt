@@ -44,7 +44,7 @@ class GoldenImageTest {
 
         SwingUtilities.invokeAndWait {
             window.setContent {
-                Korender(resourceLoader = { Res.readBytes(it) }) {
+                Korender(resourceLoader = { Res.readBytes("files/$it") }) {
                     case.init.invoke(this)
                     val captured = captureFrame(
                         1024, 1024,

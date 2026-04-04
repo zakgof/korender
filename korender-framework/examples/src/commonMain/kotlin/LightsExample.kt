@@ -16,7 +16,7 @@ import kotlin.math.sin
 
 @Composable
 fun LightsExample() =
-    Korender(resourceLoader = { Res.readBytes(it) }) {
+    Korender(resourceLoader = { Res.readBytes("files/$it") }) {
         camera = camera(Vec3(0f, 3f, 20f), (-1).z, 1.y)
 
         val mat = base {

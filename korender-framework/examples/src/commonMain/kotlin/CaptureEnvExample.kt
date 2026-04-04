@@ -14,7 +14,7 @@ import kotlin.random.Random
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
-fun CaptureEnvExample() = Korender(resourceLoader = { Res.readBytes(it) }) {
+fun CaptureEnvExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
     val env = captureEnv(1024, 1f, 1000f) {
         scene()
     }

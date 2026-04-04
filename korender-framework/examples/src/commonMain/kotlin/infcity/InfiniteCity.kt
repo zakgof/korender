@@ -24,7 +24,7 @@ import kotlin.math.floor
 private val buildings = (0 until 10).map { generateBuilding() }
 
 @Composable
-fun InfiniteCity() = Korender(resourceLoader = { Res.readBytes(it) }) {
+fun InfiniteCity() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
     Frame {
         TestExchange.report(frameInfo)
         OnLoading {

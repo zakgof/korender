@@ -16,7 +16,7 @@ import kotlinx.coroutines.runBlocking
 import kotlin.math.pow
 
 @Composable
-fun BillboardTreeBaker() = Korender(resourceLoader = { Res.readBytes(it) }) {
+fun BillboardTreeBaker() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
 
     val basePath = "D:\\kot\\dev\\assets\\" // TODO
 

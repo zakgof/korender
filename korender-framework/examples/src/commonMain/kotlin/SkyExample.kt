@@ -12,7 +12,7 @@ import com.zakgof.korender.math.z
 
 @Composable
 fun SkyExample() {
-    Korender(resourceLoader = { Res.readBytes(it) }) {
+    Korender(resourceLoader = { Res.readBytes("files/$it") }) {
         val freeCamera = FreeCamera(this, Vec3(0f, 4f, 20f), -1.z)
         OnTouch { freeCamera.touch(it) }
         Frame {

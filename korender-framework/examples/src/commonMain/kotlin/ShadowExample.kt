@@ -13,7 +13,7 @@ import kotlin.math.sin
 
 @Composable
 fun ShadowExample() =
-    Korender(resourceLoader = { Res.readBytes(it) }) {
+    Korender(resourceLoader = { Res.readBytes("files/$it") }) {
         val material = base {
             colorTexture = texture("texture/asphalt-albedo.jpg")
             metallicFactor = 0.2f

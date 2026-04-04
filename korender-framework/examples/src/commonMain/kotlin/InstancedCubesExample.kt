@@ -13,7 +13,7 @@ import com.zakgof.korender.math.z
 import kotlin.random.Random
 
 @Composable
-fun InstancedCubesExample() = Korender(resourceLoader = { Res.readBytes(it) }) {
+fun InstancedCubesExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
     val freeCamera = FreeCamera(this, 50.z, -1.z)
     OnTouch { freeCamera.touch(it) }
     Frame {

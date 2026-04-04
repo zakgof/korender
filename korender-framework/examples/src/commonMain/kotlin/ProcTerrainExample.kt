@@ -13,7 +13,7 @@ import kotlin.math.sin
 
 @Composable
 fun ProcTerrainExample() =
-    Korender(resourceLoader = { Res.readBytes(it) }) {
+    Korender(resourceLoader = { Res.readBytes("files/$it") }) {
 
         val terrain = clipmapTerrainPrefab("terrain", 2.0f, 16, 13)
         Frame {

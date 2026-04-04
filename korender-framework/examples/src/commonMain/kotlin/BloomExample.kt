@@ -15,7 +15,7 @@ import com.zakgof.korender.math.z
 
 @Composable
 fun BloomExample() =
-    Korender(resourceLoader = { Res.readBytes(it) }) {
+    Korender(resourceLoader = { Res.readBytes("files/$it") }) {
 
         Frame {
 

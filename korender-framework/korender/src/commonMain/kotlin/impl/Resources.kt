@@ -15,7 +15,7 @@ internal suspend fun ResourceLoader.load(resource: String): ByteArray {
     if (resource.startsWith("!")) {
         return Res.readBytes("files/" + resource.substring(1))
     }
-    return this.invoke("files/$resource")
+    return this.invoke(resource)
 }
 
 internal fun absolutizeResource(resource: String, referrer: String): String {

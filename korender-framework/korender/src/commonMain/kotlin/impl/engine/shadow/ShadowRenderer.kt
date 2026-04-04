@@ -51,7 +51,7 @@ internal object ShadowRenderer {
         shadowCasterDeclarations: List<RenderableDeclaration>,
         scene: Renderer.Scene,
         renderer: Renderer, // TODO: Ugly
-        rk: ResultKeeper?
+        rk: ResultKeeper?,
     ): ShadowerData? {
 
         val declaration = declarations[index]
@@ -86,7 +86,7 @@ internal object ShadowRenderer {
                     renderableDeclaration.transparent,
                     renderableDeclaration.nodeContext
                 )
-                scene.renderRenderable(casterRenderableDeclaration, shadowFrameMaterialModifier.frameContext.camera, isShadow = true, rk = rk)
+                scene.renderRenderable(casterRenderableDeclaration, shadowFrameMaterialModifier.frameContext.camera, isShadow = true, doDeferredShading = false, rk = rk)
             }
             renderer.inventory.uniformBufferHolder.flush(rk)
         }
@@ -171,7 +171,7 @@ internal object ShadowRenderer {
         scene: Renderer.Scene,
         renderer: Renderer,
         texBlurRadius: Float,
-        rk: ResultKeeper?
+        rk: ResultKeeper?,
     ) {
         val blurFrameBuffer = renderer.inventory.frameBuffer(
             FrameBufferDeclaration("shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM), true, TransientProperty(scene.rootNodeContext))
@@ -185,7 +185,7 @@ internal object ShadowRenderer {
         blurFrameBuffer.exec {
             renderer.renderContext.state.set { }
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-            scene.renderRenderable(blurVQuadRenderableDeclaration, null, rk = rk)
+            scene.renderRenderable(blurVQuadRenderableDeclaration, null, false, rk = rk)
             renderer.inventory.uniformBufferHolder.flush(rk)
         }
 
@@ -197,7 +197,7 @@ internal object ShadowRenderer {
         frameBuffer.exec {
             renderer.renderContext.state.set { }
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-            scene.renderRenderable(blurHQuadRenderableDeclaration, null, rk = rk)
+            scene.renderRenderable(blurHQuadRenderableDeclaration, null, false, rk = rk)
             renderer.inventory.uniformBufferHolder.flush(rk)
         }
     }
@@ -216,7 +216,7 @@ internal object ShadowRenderer {
         renderContext: RenderContext,
         light: Vec3,
         declaration: CascadeDeclaration,
-        nodeContext: NodeContext
+        nodeContext: NodeContext,
     ): FrameMaterialModifier {
 
         val projection = frameContext.projection
@@ -304,7 +304,7 @@ internal class CustomFrameContext(
     override val camera: Camera,
     val renderContext: RenderContext,
     override val width: Int,
-    override val height: Int
+    override val height: Int,
 ) : FrameContext {
 
     override val time

@@ -16,7 +16,7 @@ fun MultipleViewportsExample() = Column(
     verticalArrangement = Arrangement.spacedBy(5.dp)
 ) {
     Box (modifier = Modifier.weight(1f)) {
-        Korender(resourceLoader = { Res.readBytes(it) }) {
+        Korender(resourceLoader = { Res.readBytes("files/$it") }) {
             Frame {
                 TestExchange.report(frameInfo)
                 DirectionalLight(Vec3(1f, -1f, 0f))
@@ -28,7 +28,7 @@ fun MultipleViewportsExample() = Column(
         }
     }
     Box (modifier = Modifier.weight(1f)) {
-        Korender(resourceLoader = { Res.readBytes(it) }) {
+        Korender(resourceLoader = { Res.readBytes("files/$it") }) {
             Frame {
                 TestExchange.report(frameInfo)
                 DirectionalLight(Vec3(1f, -1f, 0f))

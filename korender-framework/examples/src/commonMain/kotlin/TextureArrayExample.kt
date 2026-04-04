@@ -14,7 +14,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun TextureArrayExample() {
-    Korender(resourceLoader = { Res.readBytes(it) }) {
+    Korender(resourceLoader = { Res.readBytes("files/$it") }) {
         val objMeshDeferred = loadMesh(obj("model/head.obj"))
         val cubeMeshDeferred = loadMesh(cube(1f))
         Frame {

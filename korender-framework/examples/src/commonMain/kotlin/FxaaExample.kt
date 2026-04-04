@@ -8,7 +8,7 @@ import com.zakgof.korender.math.ColorRGBA.Companion.Green
 import com.zakgof.korender.math.ColorRGBA.Companion.Red
 
 @Composable
-fun FxaaExample() = Korender(resourceLoader = { Res.readBytes(it) }) {
+fun FxaaExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
     Frame {
         TestExchange.report(frameInfo)
         AmbientLight(White)

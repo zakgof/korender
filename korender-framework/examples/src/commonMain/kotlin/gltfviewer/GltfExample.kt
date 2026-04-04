@@ -66,7 +66,7 @@ fun GltfLibraryExample() = Row {
 
     Box(modifier = Modifier.weight(1f)) {
         Korender(resourceLoader = {
-            Res.readBytes(it)
+            Res.readBytes("files/$it")
         }) {
             val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/sea/${it.toString().lowercase()}.jpg" })
             Frame {

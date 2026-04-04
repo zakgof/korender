@@ -28,7 +28,7 @@ import kotlin.math.pow
 import kotlin.random.Random
 
 @Composable
-fun RadiantTreeBaker() = Korender(resourceLoader = { Res.readBytes(it) }) {
+fun RadiantTreeBaker() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
 
     val basePath = "D:\\kot\\dev\\assets\\" // TODO
 

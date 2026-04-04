@@ -207,7 +207,7 @@ internal class Renderer(
             if (!hasPostShading && !hasPostProcessing) {
                 renderTo(finalFb) {
                     renderDeferredShading(rk)
-                    renderBucket(sceneDeclaration.skies, rk)
+                    renderBucket(sceneDeclaration.skies, true, rk)
                     renderTransparents(rk = rk)
                 }
                 return
@@ -216,7 +216,7 @@ internal class Renderer(
             if (!hasPostShading && hasPostProcessing) {
                 renderToReusableFb(FrameTarget.default, rk) {
                     renderDeferredShading(rk)
-                    renderBucket(sceneDeclaration.skies, rk)
+                    renderBucket(sceneDeclaration.skies, true, rk)
                 }
                 renderPostProcessAndTransparents(rk)
                 return
@@ -231,7 +231,7 @@ internal class Renderer(
                 }
                 renderTo(finalFb) {
                     renderComposition(rk)
-                    renderBucket(sceneDeclaration.skies, rk)
+                    renderBucket(sceneDeclaration.skies, true, rk)
                     renderTransparents(rk = rk)
                 }
                 return
@@ -246,7 +246,7 @@ internal class Renderer(
                 }
                 renderToReusableFb(FrameTarget.default, rk) {
                     renderComposition(rk)
-                    renderBucket(sceneDeclaration.skies, rk)
+                    renderBucket(sceneDeclaration.skies, true, rk)
                 }
                 postShadingEffects.flatMap { it.keepTextures }
                     .forEach { reusableFrameBufferHolder.unlock(it) }
@@ -337,7 +337,7 @@ internal class Renderer(
                 }
                 glViewport(0, 0, frameContext.width, frameContext.height)
                 glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-                renderBucket(sceneDeclaration.opaques, rk)
+                renderBucket(sceneDeclaration.opaques, true, rk)
             }
             // TODO: vars !!!
             contextMaterialModifier.customTextureUniforms["albedoGeometryTexture"] = geometryBuffer.colorTextures[0]
@@ -384,8 +384,9 @@ internal class Renderer(
                                 0f, 0f, 0f, 1f
                             ) * scale(decalDeclaration.size).mat4
 
-                            val renderableDeclaration = RenderableDeclaration(decalDeclaration.material, listOf(), DecalCube(0.5f, sceneDeclaration.deferredShadingDeclaration!!.nodeContext), Transform(model), true, sceneDeclaration.deferredShadingDeclaration!!.nodeContext)
-                            renderRenderable(renderableDeclaration, frameContext.camera, rk = rk)
+                            val renderableDeclaration =
+                                RenderableDeclaration(decalDeclaration.material, listOf(), DecalCube(0.5f, sceneDeclaration.deferredShadingDeclaration!!.nodeContext), Transform(model), true, sceneDeclaration.deferredShadingDeclaration!!.nodeContext)
+                            renderRenderable(renderableDeclaration, frameContext.camera, true, rk = rk)
                         }
                         inventory.uniformBufferHolder.flush(rk)
                     }
@@ -407,9 +408,9 @@ internal class Renderer(
             }
         }
 
-        private fun renderBucket(renderables: List<RenderableDeclaration>, rk: ResultKeeper?) {
+        private fun renderBucket(renderables: List<RenderableDeclaration>, doDeferredShading: Boolean, rk: ResultKeeper?) {
             renderables.forEach {
-                renderRenderable(it, frameContext.camera, rk = rk)
+                renderRenderable(it, frameContext.camera, doDeferredShading, rk = rk)
             }
             inventory.uniformBufferHolder.flush(rk)
         }
@@ -428,8 +429,8 @@ internal class Renderer(
         }
 
         fun renderForwardOpaques(rk: ResultKeeper?) {
-            renderBucket(sceneDeclaration.opaques, rk)
-            renderBucket(sceneDeclaration.skies, rk)
+            renderBucket(sceneDeclaration.opaques, deferredShading, rk)
+            renderBucket(sceneDeclaration.skies, deferredShading, rk)
         }
 
         fun renderTransparents(insideOut: Boolean = false, rk: ResultKeeper?) {
@@ -454,7 +455,7 @@ internal class Renderer(
             touchBoxes += guiRenderers.flatMap { it.touchBoxes }
             guiRenderers.flatMap { it.renderableDeclarations }
                 .forEach {
-                    renderRenderable(it, frameContext.camera, rk = rk)
+                    renderRenderable(it, frameContext.camera, false, rk = rk)
                 }
             inventory.uniformBufferHolder.flush(rk)
         }
@@ -547,6 +548,7 @@ internal class Renderer(
         fun renderRenderable(
             declaration: RenderableDeclaration,
             camera: Camera?,
+            doDeferredShading: Boolean,
             reverseZ: Boolean = false,
             isShadow: Boolean = false,
             rk: ResultKeeper?,
@@ -562,7 +564,7 @@ internal class Renderer(
                 instancingMaterialModifier,
                 ModelModifier(declaration.nodeContext.transform.mat4 * declaration.transform.mat4)
             ) + declaration.modifiers
-            val materialDeclaration = declaration.material.toDeclaration(deferredShading && !declaration.transparent, declaration.nodeContext, materialModifiers)
+            val materialDeclaration = declaration.material.toDeclaration(doDeferredShading, declaration.nodeContext, materialModifiers)
             if (materialDeclaration.defs.contains("NO_SHADOW_CAST") && isShadow)
                 return
             val shader = inventory.shader(materialDeclaration)

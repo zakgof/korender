@@ -8,7 +8,7 @@ import com.zakgof.korender.math.ColorRGBA
 import kotlin.math.sin
 
 @Composable
-fun BlurExample() = Korender(resourceLoader = { Res.readBytes(it) }) {
+fun BlurExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
     Frame {
         TestExchange.report(frameInfo)
         AmbientLight(White)

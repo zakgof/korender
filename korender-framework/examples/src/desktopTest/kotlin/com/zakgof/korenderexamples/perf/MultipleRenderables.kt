@@ -13,7 +13,7 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 @Composable
-fun MultipleRenderables() = Korender(resourceLoader = { Res.readBytes(it) }) {
+fun MultipleRenderables() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
     val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })
     Frame {
 
