@@ -58,8 +58,11 @@ import kotlinx.coroutines.async
 internal class NodeContext(
     val resourceLoader: ResourceLoader,
     val transform: Transform,
-    override var retentionPolicy: RetentionPolicy
+    override var retentionPolicy: RetentionPolicy,
 ) : ResourceScope {
+
+    override fun hashCode() = 0
+    override fun equals(other: Any?) = true
 
     override fun texture(textureResource: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int) =
         ResourceTextureDeclaration(textureResource, filter, wrap, aniso, this)

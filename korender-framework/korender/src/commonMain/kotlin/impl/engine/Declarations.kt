@@ -135,31 +135,22 @@ internal sealed interface ElementDeclaration {
     }
 }
 
-internal class TransientProperty<T>(val property: T) {
-    override fun equals(other: Any?) = true
-    override fun hashCode() = 0
-}
-
 internal data class FrameBufferDeclaration(
     val id: String,
     val width: Int,
     val height: Int,
     val colorTexturePresets: List<GlGpuTexture.Preset>,
     val withDepth: Boolean,
-    val nodeContextHolder: TransientProperty<NodeContext>
-) : NodeKeeper {
-    override val nodeContext = nodeContextHolder.property
-}
+    override val nodeContext: NodeContext
+) : NodeKeeper
 
 internal data class CubeFrameBufferDeclaration(
     val id: String,
     val width: Int,
     val height: Int,
     val withDepth: Boolean,
-    val nodeContextHolder: TransientProperty<NodeContext>
-) : NodeKeeper {
-    override val nodeContext = nodeContextHolder.property
-}
+    override val nodeContext: NodeContext
+) : NodeKeeper
 
 internal class ShadowDeclaration {
     val cascades = mutableListOf<CascadeDeclaration>()

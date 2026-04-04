@@ -72,7 +72,7 @@ internal class Renderer(
     fun renderToEnvProbe(envCaptureContext: EnvCaptureContext, probeName: String, rk: ResultKeeper?): GlGpuCubeTexture? {
 
         val probeFb =
-            inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", envCaptureContext.resolution, envCaptureContext.resolution, true, TransientProperty(envCaptureContext.nodeContext)))
+            inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", envCaptureContext.resolution, envCaptureContext.resolution, true, envCaptureContext.nodeContext))
         if (probeFb == null) {
             rk?.fail()
             return null
@@ -112,7 +112,7 @@ internal class Renderer(
             frameCaptureContext.height
         )
 
-        val probeFb = inventory.frameBuffer(FrameBufferDeclaration("probe-$frameProbeName", frameCaptureContext.width, frameCaptureContext.height, listOf(GlGpuTexture.Preset.RGBAFilter), true, TransientProperty(frameCaptureContext.nodeContext)))
+        val probeFb = inventory.frameBuffer(FrameBufferDeclaration("probe-$frameProbeName", frameCaptureContext.width, frameCaptureContext.height, listOf(GlGpuTexture.Preset.RGBAFilter), true, frameCaptureContext.nodeContext))
         if (probeFb == null) {
             rk?.fail()
             return null
@@ -327,7 +327,7 @@ internal class Renderer(
                         GlGpuTexture.Preset.Normal,
                         GlGpuTexture.Preset.RGBAFilter,
                     ),
-                    true, TransientProperty(rootNodeContext)
+                    true, rootNodeContext
                 )
             ) ?: throw SkipRender("Geometry FB")
             geometryBuffer.exec {
@@ -353,14 +353,14 @@ internal class Renderer(
                     FrameBufferDeclaration(
                         "decals", frameContext.width, frameContext.height,
                         listOf(GlGpuTexture.Preset.RGBAFilter, GlGpuTexture.Preset.RGBAFilter, GlGpuTexture.Preset.RGBAFilter),
-                        true, TransientProperty(sceneDeclaration.deferredShadingDeclaration!!.nodeContext)
+                        true, sceneDeclaration.deferredShadingDeclaration!!.nodeContext
                     )
                 )
                 // TODO: no depth on blend
                 val decalBlendFb = inventory.frameBuffer(
                     FrameBufferDeclaration(
                         "decal-blend", frameContext.width, frameContext.height,
-                        listOf(GlGpuTexture.Preset.RGBAFilter, GlGpuTexture.Preset.RGBAFilter), false, TransientProperty(sceneDeclaration.deferredShadingDeclaration!!.nodeContext)
+                        listOf(GlGpuTexture.Preset.RGBAFilter, GlGpuTexture.Preset.RGBAFilter), false, sceneDeclaration.deferredShadingDeclaration!!.nodeContext
                     )
                 )
 

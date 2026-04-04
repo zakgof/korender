@@ -13,7 +13,6 @@ import com.zakgof.korender.impl.engine.RenderContext
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.Renderer
 import com.zakgof.korender.impl.engine.ResultKeeper
-import com.zakgof.korender.impl.engine.TransientProperty
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_BUFFER_BIT
@@ -54,7 +53,7 @@ internal fun Renderer.Scene.shadows(
 
     val declaration = declarations[index]
     val frameBuffer = renderer.inventory.frameBuffer(
-        FrameBufferDeclaration("shadow-$id", declaration.mapSize, declaration.mapSize, fbPreset(declaration), true, TransientProperty(rootNodeContext))
+        FrameBufferDeclaration("shadow-$id", declaration.mapSize, declaration.mapSize, fbPreset(declaration), true, rootNodeContext)
     )
     if (frameBuffer == null) {
         rk?.fail()
@@ -172,7 +171,7 @@ private fun blurShadowMap(
     rk: ResultKeeper?,
 ) {
     val blurFrameBuffer = renderer.inventory.frameBuffer(
-        FrameBufferDeclaration("shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM), true, TransientProperty(scene.rootNodeContext))
+        FrameBufferDeclaration("shadow-$id-blur", declaration.mapSize, declaration.mapSize, listOf(GlGpuTexture.Preset.VSM), true, scene.rootNodeContext)
     ) ?: return
 
     val blurVQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, true, scene.rootNodeContext)
