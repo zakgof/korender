@@ -25,8 +25,8 @@ internal interface UniformSupplier {
 }
 
 internal interface CompositeSupplier {
-    val children: List<InternalMaterialModifier> // TODO: UGLY!
-        get() = listOf()
+    val child: InternalMaterialModifier? // TODO: UGLY!
+        get() = null
 }
 
 internal class CompiledBlockBinding(

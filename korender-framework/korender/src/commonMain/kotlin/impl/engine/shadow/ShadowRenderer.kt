@@ -77,13 +77,12 @@ internal fun Renderer.Scene.shadows(
             val casterModifier = CasterMaterialModifier(declaration)
             val casterRenderableDeclaration = RenderableDeclaration(
                 renderableDeclaration.material,
-                renderableDeclaration.modifiers + casterModifier,
                 renderableDeclaration.mesh,
                 renderableDeclaration.transform,
                 renderableDeclaration.transparent,
                 renderableDeclaration.nodeContext
             )
-            renderRenderable(casterRenderableDeclaration, shadowFrameMaterialModifier.frameContext.camera, isShadow = true, doDeferredShading = false, rk = rk)
+            renderRenderable(casterRenderableDeclaration, shadowFrameMaterialModifier.frameContext.camera, shadowCasterModifier = casterModifier, doDeferredShading = false, rk = rk)
         }
         renderer.inventory.uniformBufferHolder.flush(rk)
     }
@@ -201,7 +200,6 @@ private fun blurShadowMap(
 
 private fun blurQuadRenderableDeclaration(texBlurRadius: Float, vertical: Boolean, rootNodeContext: NodeContext) = RenderableDeclaration(
     BlurMaterial(vertical, texBlurRadius),
-    listOf(),
     ScreenQuad(rootNodeContext),
     Transform.IDENTITY,
     false,

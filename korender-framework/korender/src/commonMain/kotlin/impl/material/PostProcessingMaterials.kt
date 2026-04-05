@@ -53,6 +53,7 @@ internal class AdjustmentMaterial(
     "contrast" to FloatGetter<AdjustmentMaterial> { it.contrast },
     "saturation" to FloatGetter<AdjustmentMaterial> { it.saturation }
 )
+
 internal class WaterMaterial(
     val waterColor: ColorRGB,
     val transparency: Float,
@@ -67,8 +68,8 @@ internal class WaterMaterial(
     "waveMagnitude" to FloatGetter<WaterMaterial> { it.waveMagnitude },
 ), CompositeSupplier {
 
-    override val children
-        get() = listOf(sky)
+    override val child
+        get() = sky
 }
 
 internal class FogMaterial(

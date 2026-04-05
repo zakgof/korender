@@ -110,7 +110,6 @@ internal class GuiRenderer(
         )
         renderableDeclarations += RenderableDeclaration(
             imageMaterial,
-            listOf(),
             ImageQuad(declaration.nodeContext),
             Transform.IDENTITY,
             true,
@@ -134,7 +133,6 @@ internal class GuiRenderer(
         if (w > 0 && font != null) {
             renderableDeclarations += RenderableDeclaration(
                 FontMaterial(declaration.color, font.gpuTexture),
-                listOf(),
                 FontMesh(declaration.id, 256, declaration, width.toFloat(), height.toFloat(), xxx.toFloat(), yyy.toFloat(), font),
                 Transform.IDENTITY,
                 true,

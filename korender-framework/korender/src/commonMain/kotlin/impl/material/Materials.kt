@@ -30,6 +30,7 @@ import com.zakgof.korender.impl.glgpu.UniformGetter
 import com.zakgof.korender.impl.glgpu.UniformSupplier
 import com.zakgof.korender.impl.glgpu.Vec2Getter
 import com.zakgof.korender.impl.glgpu.Vec3Getter
+import com.zakgof.korender.impl.prefab.terrain.TerrainMaterialModifier
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
@@ -111,30 +112,29 @@ internal open class InternalMaterial(
         modifiers: List<InternalMaterialModifier>,
     ): ShaderDeclaration {
 
-        val flatModifiers = mutableListOf<InternalMaterialModifier>()
-
-        fun append(m: InternalMaterialModifier) {
-            flatModifiers += m
-            if (m is CompositeSupplier) {
-                flatModifiers += m.children
-            }
-        }
-
-        modifiers.forEach { append(it) }
-        append(this)
-
+        val uniformSuppliers = mutableListOf<UniformSupplier>()
         val defs = mutableSetOf<String>()
         val plugins = mutableMapOf<String, String>()
-        flatModifiers.forEach {
-            it.collectDefs(defs)
-            it.collectPlugins(plugins)
+
+        fun append(modifier: InternalMaterialModifier) {
+            uniformSuppliers += modifier
+            modifier.collectDefs(defs)
+            modifier.collectPlugins(plugins)
+            (modifier as? CompositeSupplier)?.let {
+                val imm = (it as InternalMaterialModifier)
+                uniformSuppliers += imm
+                imm.collectDefs(defs)
+                imm.collectPlugins(plugins)
+            }
         }
+        append(this)
+        modifiers.forEach { append(it) }
         return ShaderDeclaration(
             vertexShaderFile,
             if (deferredShading) deferredFragmentShaderFile else forwardFragmentShaderFile,
             defs,
             plugins,
-            flatModifiers,
+            uniformSuppliers,
             nodeContext
         )
     }
@@ -164,22 +164,22 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
-            "baseColor" -> ColorRGBAGetter(InternalBaseMaterial::color)
-            "baseColorTexture" -> TextureGetter(InternalBaseMaterial::colorTexture)
-            "metallicFactor" -> FloatGetter(InternalBaseMaterial::metallicFactor)
-            "roughnessFactor" -> FloatGetter(InternalBaseMaterial::roughnessFactor)
-            "alphaCutoff" -> FloatGetter(InternalBaseMaterial::alphaCutoff)
-            "colorTextures" -> TextureGetter(InternalBaseMaterial::colorTextures)
-            "triplanarScale" -> TextureGetter(InternalBaseMaterial::triplanarScale)
-            "normalTexture" -> TextureGetter(InternalBaseMaterial::normalTexture)
+            "baseColor" -> ColorRGBAGetter<InternalBaseMaterial> { it.color }
+            "baseColorTexture" -> TextureGetter<InternalBaseMaterial> { it.colorTexture }
+            "metallicFactor" -> FloatGetter<InternalBaseMaterial> { it.metallicFactor }
+            "roughnessFactor" -> FloatGetter<InternalBaseMaterial> { it.roughnessFactor }
+            "alphaCutoff" -> FloatGetter<InternalBaseMaterial> { it.alphaCutoff }
+            "colorTextures" -> TextureGetter<InternalBaseMaterial> { it.colorTextures }
+            "triplanarScale" -> TextureGetter<InternalBaseMaterial> { it.triplanarScale }
+            "normalTexture" -> TextureGetter<InternalBaseMaterial> { it.normalTexture }
             "emissionFactor" -> ColorRGBGetter<InternalBaseMaterial> { it.emission!! }
-            "metallicRoughnessTexture" -> TextureGetter(InternalBaseMaterial::metallicRoughnessTexture)
+            "metallicRoughnessTexture" -> TextureGetter<InternalBaseMaterial> { it.metallicRoughnessTexture }
             "specularFactor" -> ColorRGBGetter<InternalBaseMaterial> { it.specularGlossiness?.specularFactor }
             "glossinessFactor" -> FloatGetter<InternalBaseMaterial> { it.specularGlossiness?.glossinessFactor }
-            "specularGlossinessTexture" -> TextureGetter(InternalBaseMaterial::specularGlossinessTexture)
-            "occlusionTexture" -> TextureGetter(InternalBaseMaterial::occlusionTexture)
-            "emissionTexture" -> TextureGetter(InternalBaseMaterial::emissionTexture)
-            "jntMatrices[0]" -> Mat4ListGetter(InternalBaseMaterial::jntMatrices)
+            "specularGlossinessTexture" -> TextureGetter<InternalBaseMaterial> { it.specularGlossinessTexture }
+            "occlusionTexture" -> TextureGetter<InternalBaseMaterial> { it.occlusionTexture }
+            "emissionTexture" -> TextureGetter<InternalBaseMaterial> { it.emissionTexture }
+            "jntMatrices[0]" -> Mat4ListGetter<InternalBaseMaterial> { it.jntMatrices }
             else -> super.uniform(name)
         }
 
@@ -202,8 +202,8 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
         emissionTexture?.let { accumulator["emission"] = "!shader/plugin/emission.texture.frag" }
     }
 
-    override val children
-        get() = listOfNotNull(ibl as? InternalMaterialModifier)
+    override val child
+        get() = ibl as? InternalMaterialModifier
 }
 
 internal class InternalBillboardMaterial : InternalBaseMaterial("!shader/billboard.vert"),
@@ -218,14 +218,14 @@ internal class InternalBillboardMaterial : InternalBaseMaterial("!shader/billboa
         get() = (effect as? InternalBillboardEffect)?.fragmentShaderFile ?: super.deferredFragmentShaderFile
     override val forwardFragmentShaderFile
         get() = (effect as? InternalBillboardEffect)?.fragmentShaderFile ?: super.forwardFragmentShaderFile
-    override val children: List<InternalMaterialModifier>
-        get() = listOfNotNull(effect as? InternalMaterialModifier)
+    override val child
+        get() = effect as? InternalMaterialModifier
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
-            "pos" -> Vec3Getter(InternalBillboardMaterial::position)
-            "scale" -> Vec2Getter(InternalBillboardMaterial::scale)
-            "rotation" -> FloatGetter(InternalBillboardMaterial::rotation)
+            "pos" -> Vec3Getter<InternalBillboardMaterial> { it.position }
+            "scale" -> Vec2Getter<InternalBillboardMaterial> { it.scale }
+            "rotation" -> FloatGetter<InternalBillboardMaterial> { it.rotation }
             else -> super.uniform(name)
         }
 }
@@ -241,6 +241,7 @@ internal class InternalTerrainMaterial : InternalBaseMaterial("!shader/terrain.v
     override var heightScale: Float = 0.1f
     override var outsideHeight: Float = 0f
     override var terrainCenter: Vec3 = Vec3.ZERO
+    var modifier: TerrainMaterialModifier? = null // TODO ugly
 
     override fun collectDefs(accumulator: MutableSet<String>) {
         super.collectDefs(accumulator)
@@ -255,12 +256,15 @@ internal class InternalTerrainMaterial : InternalBaseMaterial("!shader/terrain.v
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
-            "heightTexture" -> TextureGetter(InternalTerrainMaterial::heightTexture)
-            "heightScale" -> FloatGetter(InternalTerrainMaterial::heightScale)
-            "outsideHeight" -> FloatGetter(InternalTerrainMaterial::outsideHeight)
-            "terrainCenter" -> Vec3Getter(InternalTerrainMaterial::terrainCenter)
+            "heightTexture" -> TextureGetter<InternalTerrainMaterial> { it.heightTexture }
+            "heightScale" -> FloatGetter<InternalTerrainMaterial> { it.heightScale }
+            "outsideHeight" -> FloatGetter<InternalTerrainMaterial> { it.outsideHeight }
+            "terrainCenter" -> Vec3Getter<InternalTerrainMaterial> { it.terrainCenter }
             else -> super.uniform(name)
         }
+
+    override val child: InternalMaterialModifier?
+        get() = modifier
 }
 
 internal class InternalPipeMaterial : InternalBaseMaterial("!shader/pipe.vert"), PipeMaterial {

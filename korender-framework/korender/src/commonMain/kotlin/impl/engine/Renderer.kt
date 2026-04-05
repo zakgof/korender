@@ -34,6 +34,7 @@ import com.zakgof.korender.impl.material.DecalBlendMaterial
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
 import com.zakgof.korender.impl.material.InternalMaterial
+import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
@@ -254,6 +255,7 @@ internal class Renderer(
         }
 
         private fun renderDeferredShading(rk: ResultKeeper?) {
+            // TODO cache instance
             val shadingMaterial = InternalMaterial("!shader/screen.vert", "!shader/deferred/shading.frag")
             val shadingMaterialDeclaration = shadingMaterial.toDeclaration(true, sceneDeclaration.deferredShadingDeclaration!!.nodeContext, listOf(contextMaterialModifier))
             renderFullscreen(shadingMaterialDeclaration, rk = rk)
@@ -384,7 +386,7 @@ internal class Renderer(
                             ) * scale(decalDeclaration.size).mat4
 
                             val renderableDeclaration =
-                                RenderableDeclaration(decalDeclaration.material, listOf(), DecalCube(0.5f, sceneDeclaration.deferredShadingDeclaration!!.nodeContext), Transform(model), true, sceneDeclaration.deferredShadingDeclaration!!.nodeContext)
+                                RenderableDeclaration(decalDeclaration.material, DecalCube(0.5f, sceneDeclaration.deferredShadingDeclaration!!.nodeContext), Transform(model), true, sceneDeclaration.deferredShadingDeclaration!!.nodeContext)
                             renderRenderable(renderableDeclaration, frameContext.camera, true, rk = rk)
                         }
                         inventory.uniformBufferHolder.flush(rk)
@@ -548,7 +550,7 @@ internal class Renderer(
             camera: Camera?,
             doDeferredShading: Boolean,
             reverseZ: Boolean = false,
-            isShadow: Boolean = false,
+            shadowCasterModifier: InternalMaterialModifier? = null,
             rk: ResultKeeper?,
         ) {
             val meshLink = inventory.mesh(declaration.mesh as InternalMeshDeclaration)
@@ -561,10 +563,11 @@ internal class Renderer(
                 contextMaterialModifier,
                 instancingMaterialModifier,
                 ModelModifier(declaration.nodeContext.transform.mat4 * declaration.transform.mat4),
-                TimeMaterialModifier(declaration.nodeContext, renderContext)
-            ) + declaration.modifiers
+                TimeMaterialModifier(declaration.nodeContext, renderContext),
+                shadowCasterModifier
+            )
             val materialDeclaration = declaration.material.toDeclaration(doDeferredShading, declaration.nodeContext, materialModifiers)
-            if (materialDeclaration.defs.contains("NO_SHADOW_CAST") && isShadow)
+            if (materialDeclaration.defs.contains("NO_SHADOW_CAST") && shadowCasterModifier != null)
                 return
             val shader = inventory.shader(materialDeclaration)
             if (shader == null) {

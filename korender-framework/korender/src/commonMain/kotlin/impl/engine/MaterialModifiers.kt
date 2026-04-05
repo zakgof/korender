@@ -26,10 +26,16 @@ import com.zakgof.korender.impl.projection.OrthoProjectionMode
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
 
-internal class LightMaterialModifier(private val sc: SceneDeclaration) : InternalMaterialModifier() {
+internal class LightMaterialModifier(sc: SceneDeclaration) : InternalMaterialModifier() {
 
+    private val numDirectionalLights = sc.directionalLights.size
     private val directionalLightsDirs = sc.directionalLights.map { it.direction }
     private val directionalLightsColors = sc.directionalLights.map { it.color }
+    private val ambientLightColor = sc.ambientLightColor
+    private val numPointLights = sc.pointLights.size
+    private val pointLightPositions = sc.pointLights.map { it.position }
+    private val pointLightColors = sc.pointLights.map { it.color }
+    private val pointLightAttenuations = sc.pointLights.map { it.attenuation }
     var dlsti = List(32) { 0 }
     var dlstc = List(32) { 0 }
     var numShadows = 0
@@ -44,17 +50,16 @@ internal class LightMaterialModifier(private val sc: SceneDeclaration) : Interna
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
-            // TODO move ALL composites to vals
-            "numDirectionalLights" -> IntGetter<LightMaterialModifier> { it.sc.directionalLights.size }
+            "numDirectionalLights" -> IntGetter<LightMaterialModifier> { it.numDirectionalLights }
             "directionalLightDir[0]" -> Vec3ListGetter<LightMaterialModifier> { it.directionalLightsDirs }
             "directionalLightColor[0]" -> Color3ListGetter<LightMaterialModifier> { it.directionalLightsColors }
             "directionalLightShadowTextureIndex[0]" -> IntListGetter<LightMaterialModifier> { it.dlsti }
             "directionalLightShadowTextureCount[0]" -> IntListGetter<LightMaterialModifier> { it.dlstc }
-            "ambientColor" -> ColorRGBGetter<LightMaterialModifier> { it.sc.ambientLightColor }
-            "numPointLights" -> IntGetter<LightMaterialModifier> { it.sc.pointLights.size }
-            "pointLightPos[0]" -> Vec3ListGetter<LightMaterialModifier> { it.sc.pointLights.map { it.position } }
-            "pointLightColor[0]" -> Color3ListGetter<LightMaterialModifier> { it.sc.pointLights.map { it.color } }
-            "pointLightAttenuation[0]" -> Vec3ListGetter<LightMaterialModifier> { it.sc.pointLights.map { it.attenuation } }
+            "ambientColor" -> ColorRGBGetter<LightMaterialModifier> { it.ambientLightColor }
+            "numPointLights" -> IntGetter<LightMaterialModifier> { it.numPointLights }
+            "pointLightPos[0]" -> Vec3ListGetter<LightMaterialModifier> { it.pointLightPositions }
+            "pointLightColor[0]" -> Color3ListGetter<LightMaterialModifier> { it.pointLightColors }
+            "pointLightAttenuation[0]" -> Vec3ListGetter<LightMaterialModifier> { it.pointLightAttenuations }
             "numShadows" -> IntGetter<LightMaterialModifier> { it.numShadows }
             "bsps[0]" -> Mat4ListGetter<LightMaterialModifier> { it.bsps }
             "cascade[0]" -> Color4ListGetter<LightMaterialModifier> { it.cascades }

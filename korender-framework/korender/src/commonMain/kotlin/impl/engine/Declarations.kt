@@ -16,7 +16,6 @@ import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.UniformSupplier
 import com.zakgof.korender.impl.material.InternalDecalMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
-import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGB.Companion.white
@@ -79,6 +78,14 @@ internal data class ShaderDeclaration(
     override val nodeContext: NodeContext
 ) : NodeKeeper
 {
+//    private val signature = "$vertFile $fragFile $defs $plugins"
+//    private val hash = signature.hashCode()
+//
+//    override fun equals(other: Any?) = other is ShaderDeclaration && signature == other.signature
+//
+//    override fun hashCode(): Int = hash
+
+
     override fun equals(other: Any?): Boolean =
         other is ShaderDeclaration &&
             vertFile == other.vertFile &&
@@ -91,7 +98,6 @@ internal data class ShaderDeclaration(
 
 internal class RenderableDeclaration(
     val material: InternalMaterial,
-    val modifiers: List<InternalMaterialModifier> = listOf(), // TODO poor design
     val mesh: MeshDeclaration,
     val transform: Transform = Transform.IDENTITY,
     val transparent: Boolean,

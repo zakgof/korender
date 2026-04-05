@@ -187,7 +187,7 @@ internal class DefaultFrameScope(
         val meshDeclaration = (instancing as? InternalInstancingDeclaration)?.let {
             InstancedMesh(instancing.id, instancing.count, mesh, !instancing.dynamic, transparent, nodeContext, instancing.instancer)
         } ?: mesh
-        val rd = RenderableDeclaration(material as InternalMaterial, listOf(), meshDeclaration, transform, transparent, nodeContext)
+        val rd = RenderableDeclaration(material as InternalMaterial, meshDeclaration, transform, transparent, nodeContext)
         sceneDeclaration.append(rd)
     }
 
@@ -205,7 +205,6 @@ internal class DefaultFrameScope(
         }
         val rd = RenderableDeclaration(
             material as InternalBillboardMaterial,
-            listOf(),
             meshDeclaration,
             IDENTITY,
             transparent,
@@ -215,7 +214,7 @@ internal class DefaultFrameScope(
     }
 
     override fun Sky(material: SkyMaterial) {
-        sceneDeclaration.skies += RenderableDeclaration(material as InternalSkyMaterial, listOf(), ScreenQuad(nodeContext), Transform.IDENTITY, false, nodeContext)
+        sceneDeclaration.skies += RenderableDeclaration(material as InternalSkyMaterial, ScreenQuad(nodeContext), Transform.IDENTITY, false, nodeContext)
     }
 
     override fun Gui(block: GuiContainerScope.() -> Unit) {

@@ -10,8 +10,8 @@ import com.zakgof.korender.impl.geometry.MeshAttributes.B1
 import com.zakgof.korender.impl.geometry.MeshAttributes.B2
 import com.zakgof.korender.impl.glgpu.FloatGetter
 import com.zakgof.korender.impl.glgpu.Vec3Getter
-import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalMaterialModifier
+import com.zakgof.korender.impl.material.InternalTerrainMaterial
 import com.zakgof.korender.impl.prefab.InternalPrefab
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
@@ -121,10 +121,9 @@ internal class Clipmaps(nodeContext: NodeContext, id: String, private val cellSi
     override fun render(fc: DefaultFrameScope, material: TerrainMaterial) = with(fc) {
         val tiles = meshes(camera.position)
         tiles.forEach { tile ->
-            val modifier = TerrainMaterialModifier(tile, hg.toFloat() - 1f, cellSize)
+            (material as InternalTerrainMaterial).modifier = TerrainMaterialModifier(tile, hg.toFloat() - 1f, cellSize)
             val rd = RenderableDeclaration(
-                material as InternalMaterial,
-                listOf(modifier),
+                material,
                 tile.mesh,
                 Transform.IDENTITY,
                 false,
@@ -139,7 +138,7 @@ internal class Clipmaps(nodeContext: NodeContext, id: String, private val cellSi
     class Me(val mesh: MeshDeclaration, val offsetAndScale: Vec3, val antipop: Vec3)
 }
 
-private class TerrainMaterialModifier(
+internal class TerrainMaterialModifier(
     val tile: Clipmaps.Me,
     val antipopSpan: Float,
     val cellSize: Float,
