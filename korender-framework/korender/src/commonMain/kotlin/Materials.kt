@@ -28,23 +28,16 @@ interface BillboardEffect
 
 interface MaterialContext {
     /**
-     * Creates a material modifier that applies shader definitions.
-     *
-     * Definitions affect the #ifdef / #ifndef directives in shaders
-     *
-     * @param defs fragment shader defines
-     * @return material modifier
-     */
-    fun defs(vararg defs: String)
+//     * Creates a material modifier that applies shader definitions.
+//     *
+//     * Definitions affect the #ifdef / #ifndef directives in shaders
+//     *
+//     * @param defs fragment shader defines
+//     * @return material modifier
+//     */
+//    fun defs(vararg defs: String)
 
-    /**
-     * Creates a material modifier that applies a shader plugin.
-     *
-     * @param name plugin mount point name
-     * @param shaderFile plugin shader code resource file
-     * @return material modifier
-     */
-    fun plugin(name: String, shaderFile: String)
+    fun plugin(plugin: ShaderPlugin)
 
     fun float(key: String, value: Float)
     fun int(key: String, value: Int)

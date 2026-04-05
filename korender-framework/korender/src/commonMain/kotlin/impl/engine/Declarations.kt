@@ -59,41 +59,34 @@ internal class InternalDecalDeclaration(
     val look: Vec3,
     val up: Vec3,
     val size: Float,
-    val material: InternalDecalMaterial
+    val material: InternalDecalMaterial,
 )
 
 internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
 
 internal class MeshInstance(
     val transform: Transform,
-    val jointMatrices: List<Mat4>?
+    val jointMatrices: List<Mat4>?,
 )
 
 internal data class ShaderDeclaration(
     val vertFile: String,
     val fragFile: String,
-    val defs: Set<String> = setOf(),
-    val plugins: Map<String, String> = mapOf(),
+    val defs: Long,
+    val plugins1: Long,
+    val plugins2: Long,
     val uniformSuppliers: List<UniformSupplier>,
-    override val nodeContext: NodeContext
-) : NodeKeeper
-{
-//    private val signature = "$vertFile $fragFile $defs $plugins"
-//    private val hash = signature.hashCode()
-//
-//    override fun equals(other: Any?) = other is ShaderDeclaration && signature == other.signature
-//
-//    override fun hashCode(): Int = hash
-
-
+    override val nodeContext: NodeContext,
+) : NodeKeeper {
     override fun equals(other: Any?): Boolean =
         other is ShaderDeclaration &&
-            vertFile == other.vertFile &&
-            fragFile == other.fragFile &&
-            defs == other.defs &&
-            plugins == other.plugins
+                vertFile == other.vertFile &&
+                fragFile == other.fragFile &&
+                defs == other.defs &&
+                plugins1 == other.plugins1 &&
+                plugins2 == other.plugins2
 
-    override fun hashCode(): Int = listOf(vertFile, fragFile, defs, plugins).hashCode()
+    override fun hashCode(): Int = listOf(vertFile, fragFile, defs, plugins1, plugins2).hashCode()  // TODO
 }
 
 internal class RenderableDeclaration(
@@ -101,7 +94,7 @@ internal class RenderableDeclaration(
     val mesh: MeshDeclaration,
     val transform: Transform = Transform.IDENTITY,
     val transparent: Boolean,
-    override val nodeContext: NodeContext
+    override val nodeContext: NodeContext,
 ) : NodeKeeper
 
 internal sealed interface ElementDeclaration {
@@ -116,7 +109,7 @@ internal sealed interface ElementDeclaration {
         val color: ColorRGBA,
         val static: Boolean,
         val onTouch: TouchHandler,
-        override val nodeContext: NodeContext
+        override val nodeContext: NodeContext,
     ) : ElementDeclaration, NodeKeeper
 
     class Image(
@@ -129,7 +122,7 @@ internal sealed interface ElementDeclaration {
         val marginLeft: Int,
         val marginRight: Int,
         val onTouch: TouchHandler,
-        override val nodeContext: NodeContext
+        override val nodeContext: NodeContext,
     ) : ElementDeclaration, NodeKeeper {
         val fullWidth = width + marginLeft + marginRight
         val fullHeight = height + marginTop + marginBottom
@@ -147,7 +140,7 @@ internal data class FrameBufferDeclaration(
     val height: Int,
     val colorTexturePresets: List<GlGpuTexture.Preset>,
     val withDepth: Boolean,
-    override val nodeContext: NodeContext
+    override val nodeContext: NodeContext,
 ) : NodeKeeper
 
 internal data class CubeFrameBufferDeclaration(
@@ -155,7 +148,7 @@ internal data class CubeFrameBufferDeclaration(
     val width: Int,
     val height: Int,
     val withDepth: Boolean,
-    override val nodeContext: NodeContext
+    override val nodeContext: NodeContext,
 ) : NodeKeeper
 
 internal class ShadowDeclaration {
@@ -172,7 +165,7 @@ internal class GltfDeclaration(
     val animation: Int,
     val instancingDeclaration: InternalGltfInstancingDeclaration?,
     val materialModifier: BaseMaterialContext.() -> Unit,
-    override val nodeContext: NodeContext
+    override val nodeContext: NodeContext,
 ) : NodeKeeper {
     override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.resource == resource)
     override fun hashCode(): Int = resource.hashCode()

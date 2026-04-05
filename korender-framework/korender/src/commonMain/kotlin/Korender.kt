@@ -24,3 +24,5 @@ class FrameInfo(
 interface Prefab<M : Material>
 
 interface RetentionPolicy
+
+interface ShaderPlugin

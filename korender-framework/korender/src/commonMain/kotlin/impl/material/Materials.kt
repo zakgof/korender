@@ -10,6 +10,7 @@ import com.zakgof.korender.MaterialContext
 import com.zakgof.korender.PipeMaterial
 import com.zakgof.korender.PostProcessMaterialContext
 import com.zakgof.korender.PostProcessingMaterial
+import com.zakgof.korender.ShaderPlugin
 import com.zakgof.korender.SkyMaterial
 import com.zakgof.korender.SpecularGlossiness
 import com.zakgof.korender.TerrainMaterial
@@ -40,8 +41,9 @@ import com.zakgof.korender.math.Vec3
 internal open class InternalMaterialModifier(vararg getters: Pair<String, UniformGetter<*>>) :
     MaterialContext, UniformSupplier {
 
-    private val customDefs = mutableSetOf<String>()
-    private val customPlugins = mutableListOf<Pair<String, String>>()
+    private var customDefs = 0L
+    private var customPlugins1 = 0L
+    private var customPlugins2 = 0L
     private val customFloatUniforms = mutableMapOf<String, Float>()
     private val customIntUniforms = mutableMapOf<String, Int>()
     private val customVec2Uniforms = mutableMapOf<String, Vec2>()
@@ -49,20 +51,15 @@ internal open class InternalMaterialModifier(vararg getters: Pair<String, Unifor
     private val gettersMap = getters.toMap()
     val customTextureUniforms = mutableMapOf<String, Any>()
 
-    open fun collectDefs(accumulator: MutableSet<String>) {
-        accumulator += customDefs
-    }
+    open fun collectDefs(accumulator: Long): Long = accumulator or customDefs
 
-    open fun collectPlugins(accumulator: MutableMap<String, String>) {
-        accumulator += customPlugins
-    }
+    open fun collectPlugins1(accumulator: Long): Long = accumulator pluginOverride customPlugins1
+    open fun collectPlugins2(accumulator: Long): Long = accumulator pluginOverride customPlugins2
 
-    override fun defs(vararg defs: String) {
-        this.customDefs += defs
-    }
-
-    override fun plugin(name: String, shaderFile: String) {
-        this.customPlugins += name to shaderFile
+    override fun plugin(plugin: ShaderPlugin) {
+        plugin as InternalShaderPlugin
+        customPlugins1 = plugin.apply1(customPlugins1)
+        customPlugins2 = plugin.apply2(customPlugins2)
     }
 
     override fun float(key: String, value: Float) {
@@ -113,17 +110,20 @@ internal open class InternalMaterial(
     ): ShaderDeclaration {
 
         val uniformSuppliers = mutableListOf<UniformSupplier>()
-        val defs = mutableSetOf<String>()
-        val plugins = mutableMapOf<String, String>()
+        val defs = 0L
+        val plugins1 = 0L
+        val plugins2 = 0L
 
         fun append(modifier: InternalMaterialModifier) {
             uniformSuppliers += modifier
             modifier.collectDefs(defs)
-            modifier.collectPlugins(plugins)
+            modifier.collectPlugins1(plugins1)
+            modifier.collectPlugins2(plugins2)
             (modifier as? CompositeSupplier)?.child?.let {
                 uniformSuppliers += it
                 it.collectDefs(defs)
-                it.collectPlugins(plugins)
+                it.collectPlugins1(plugins1)
+                it.collectPlugins2(plugins2)
             }
         }
         append(this)
@@ -132,7 +132,8 @@ internal open class InternalMaterial(
             vertexShaderFile,
             if (deferredShading) deferredFragmentShaderFile else forwardFragmentShaderFile,
             defs,
-            plugins,
+            plugins1,
+            plugins2,
             uniformSuppliers,
             nodeContext
         )
@@ -182,11 +183,14 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
             else -> super.uniform(name)
         }
 
-    override fun collectDefs(accumulator: MutableSet<String>) {
-        super.collectDefs(accumulator)
-        colorTexture?.let { accumulator += "BASE_COLOR_MAP" }
-        colorTextures?.let { accumulator += "TEXTURE_ARRAY" }
-    }
+    override fun collectDefs(accumulator: Long) = accumulator or
+            (colorTexture?.let { ShaderPluginRegistry.BASE_COLOR_MAP } ?: 0) or
+            (colorTextures?.let { ShaderPluginRegistry.TEXTURE_ARRAY } ?: 0)
+
+    override fun collectPlugins1(accumulator: Long) =
+        accumulator.pluginOverride1IfNotNull(colorTextures, ShaderPluginRegistry.TEXTURING_ARRAY)
+            .pluginOverride1IfNotNull(triplanarScale, ShaderPluginRegistry.TEXTURING_TRIPLANAR)
+
 
     override fun collectPlugins(accumulator: MutableMap<String, String>) {
         super.collectPlugins(accumulator)

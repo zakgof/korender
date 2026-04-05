@@ -41,6 +41,7 @@ import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
+import com.zakgof.korender.impl.material.ShaderPluginRegistry
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGBA
@@ -567,7 +568,7 @@ internal class Renderer(
                 shadowCasterModifier
             )
             val materialDeclaration = declaration.material.toDeclaration(doDeferredShading, declaration.nodeContext, materialModifiers)
-            if (materialDeclaration.defs.contains("NO_SHADOW_CAST") && shadowCasterModifier != null)
+            if ((materialDeclaration.defs and ShaderPluginRegistry.NO_SHADOW_CAST) != 0L && shadowCasterModifier != null)
                 return
             val shader = inventory.shader(materialDeclaration)
             if (shader == null) {

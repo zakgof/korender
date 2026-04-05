@@ -20,6 +20,7 @@ import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
+import com.zakgof.korender.impl.material.ShaderPluginRegistry
 import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.impl.material.TextureLinkDeclaration
 import com.zakgof.korender.impl.material.Texturing
@@ -29,11 +30,12 @@ internal class Inventory(private val loader: Loader) {
 
     private val zeroTex = GlGpuTexture.zeroTex()
     private val zeroShadowTex = GlGpuTexture.zeroShadowTex()
+    private val shaderPluginRegistry = ShaderPluginRegistry()
 
     val uniformBufferHolder = UniformBufferHolder()
 
     private val meshes = Registry<InternalMeshDeclaration, MeshLink> { Geometry.create(it, loader, it.nodeContext) }
-    private val shaders = Registry<ShaderDeclaration, GlGpuShader> { Shaders.create(it, loader, zeroTex, zeroShadowTex, uniformBufferHolder, it.nodeContext.resourceLoader) }
+    private val shaders = Registry<ShaderDeclaration, GlGpuShader> { Shaders.create(shaderPluginRegistry,it, loader, zeroTex, zeroShadowTex, uniformBufferHolder, it.nodeContext.resourceLoader) }
     private val textures = Registry<InternalTexture, GlBindableTexture> { it.generateGpuTexture(loader) }
     private val textures3D = Registry<ImageTexture3DDeclaration, GlGpuTexture3D> { it.generateGpuTexture3D(loader) }
 

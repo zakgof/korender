@@ -19,14 +19,14 @@ private class Line(val text: String, val originFile: String, val originLine: Int
 
 internal object Shaders {
 
-    fun create(declaration: ShaderDeclaration, loader: Loader, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, uniformBufferHolder: UniformBufferHolder, resourceLoader: ResourceLoader): GlGpuShader? =
-        loader.syncy(declaration, resourceLoader) { load(declaration, it) }?.let {
+    fun create(shaderPluginRegistry: ShaderPluginRegistry, declaration: ShaderDeclaration, loader: Loader, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, uniformBufferHolder: UniformBufferHolder, resourceLoader: ResourceLoader): GlGpuShader? =
+        loader.syncy(declaration, resourceLoader) { load(shaderPluginRegistry, declaration, it) }?.let {
             GlGpuShader(it.title, it.vertCode, it.fragCode, it.vertDebugInfo, it.fragDebugInfo, zeroTex, zeroShadowTex, uniformBufferHolder, declaration.uniformSuppliers)
         }
 
-    private suspend fun load(declaration: ShaderDeclaration, appResourceLoader: ResourceLoader): ShaderData {
-        val defs = declaration.defs + shaderEnv + declaration.plugins.keys.map { "PLUGIN_" + it.uppercase() }
-        val shaderBaker = ShaderBaker(defs, declaration.plugins, appResourceLoader)
+    private suspend fun load(shaderPluginRegistry: ShaderPluginRegistry, declaration: ShaderDeclaration, appResourceLoader: ResourceLoader): ShaderData {
+        val (defs, plugins) = shaderPluginRegistry.decode(declaration, shaderEnv)
+        val shaderBaker = ShaderBaker(defs, plugins, appResourceLoader)
         return shaderBaker.load(declaration.vertFile, declaration.fragFile)
     }
 
