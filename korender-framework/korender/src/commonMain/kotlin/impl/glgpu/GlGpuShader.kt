@@ -48,7 +48,7 @@ internal sealed interface UniformGetter<T> {
 
     fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) {}
 
-    fun writeTo(location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Int? = 0
+    fun writeTo(shader: GlGpuShader, location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Int? = 0
 
     @Suppress("UNCHECKED_CAST")
     fun <V> safe(getter: (T) -> V?, obj: Any, missingMessage: String?, consumer: (V) -> Unit) {
@@ -64,7 +64,7 @@ internal sealed interface UniformGetter<T> {
 }
 
 internal class TextureGetter<T>(private val f: (T) -> Any?) : UniformGetter<T> {
-    override fun writeTo(location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?) =
+    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?) =
         safeInt(f, obj, missingMessage) { v ->
             val texture = loader(v)
             if (texture == NotYetLoadedTexture) {
@@ -73,13 +73,13 @@ internal class TextureGetter<T>(private val f: (T) -> Any?) : UniformGetter<T> {
             } else {
                 texture.bind(currentTextureUnit)
             }
-            glUniform1i(location, currentTextureUnit)
+            shader.uniformI(location, currentTextureUnit)
             1
         }
 }
 
 internal class TextureListGetter<T>(private val f: (T) -> GlGpuTextureList) : UniformGetter<T> {
-    override fun writeTo(location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?) =
+    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?) =
         safeInt(f, obj, missingMessage) { v ->
             val units = (0 until v.totalNum)
                 .map {
@@ -88,13 +88,13 @@ internal class TextureListGetter<T>(private val f: (T) -> GlGpuTextureList) : Un
                     (tex ?: zeroTex).bind(ctu)
                     ctu
                 }
-            glUniform1iv(location, *units.toIntArray())
+            shader.uniformIV(location, units)
             v.totalNum
         }
 }
 
 internal class ShadowTextureListGetter<T>(private val f: (T) -> GlGpuShadowTextureList) : UniformGetter<T> {
-    override fun writeTo(location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?) =
+    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?) =
         safeInt(f, obj, missingMessage) { v ->
             val units = (0 until v.totalNum)
                 .map {
@@ -103,7 +103,7 @@ internal class ShadowTextureListGetter<T>(private val f: (T) -> GlGpuShadowTextu
                     (tex ?: zeroShadowTex).bind(ctu)
                     ctu
                 }
-            glUniform1iv(location, *units.toIntArray())
+            shader.uniformIV(location, units)
             v.totalNum
         }
 }
@@ -126,6 +126,8 @@ internal class GlGpuShader(
     private val shaderUniformBlock: UniformBlock?
     private val uniformBindings: List<CompiledUniformBinding>
 
+    private val uniformCache = mutableMapOf<GLUniformLocation, Int>()
+    private val uniformArrayCache = mutableMapOf<GLUniformLocation, List<Int>>()
 
     internal inner class CompiledUniformBinding(
         val location: GLUniformLocation,
@@ -136,7 +138,7 @@ internal class GlGpuShader(
         fun write(currentTextureUnit: Int, suppliers: List<UniformSupplier>, loader: (Any?) -> GlBindableTexture, materialName: String, rk: ResultKeeper?): Int? {
             val missingMessage = "Material $materialName does not provide uniform $name"
             val obj = suppliers[supplierIndex]
-            return getter.writeTo(location, currentTextureUnit, obj, missingMessage, zeroTex, zeroShadowTex, loader, rk)
+            return getter.writeTo(this@GlGpuShader, location, currentTextureUnit, obj, missingMessage, zeroTex, zeroShadowTex, loader, rk)
         }
     }
 
@@ -299,6 +301,20 @@ internal class GlGpuShader(
     }
 
     override fun toString() = name
+
+    fun uniformI(location: GLUniformLocation, value: Int) {
+        if (uniformCache[location] != value) {
+            glUniform1i(location, value)
+            uniformCache[location] = value
+        }
+    }
+
+    fun uniformIV(location: GLUniformLocation, value: List<Int>) {
+        if (uniformArrayCache[location] != value) {
+            glUniform1iv(location, *value.toIntArray())
+            uniformArrayCache[location] = value
+        }
+    }
 }
 
 internal data class GlGpuTextureList(val textures: List<GlGpuTexture?>, val totalNum: Int)

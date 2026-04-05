@@ -174,10 +174,12 @@ internal class GlGpuUniformBuffer(size: Int) : AutoCloseable {
 
     private val ubo = glGenBuffers()
     private val uboBuffer = NativeByteBuffer(size)
+    private var allocatedSize = 0
 
     init {
         glBindBuffer(GL_UNIFORM_BUFFER, ubo)
         glBufferData(GL_UNIFORM_BUFFER, uboBuffer.rewind(), GL_DYNAMIC_DRAW)
+        allocatedSize = uboBuffer.size()
         println("Creating GPU UBO : $ubo")
     }
 
@@ -200,9 +202,12 @@ internal class GlGpuUniformBuffer(size: Int) : AutoCloseable {
     }
 
     fun upload(size: Int) {
-        // TODO honor size
+        val requestedSize = size.coerceAtMost(uboBuffer.size())
         glBindBuffer(GL_UNIFORM_BUFFER, ubo)
-        glBufferData(GL_UNIFORM_BUFFER, uboBuffer.size().toLong(), GL_DYNAMIC_DRAW)
+        if (requestedSize > allocatedSize) {
+            glBufferData(GL_UNIFORM_BUFFER, requestedSize.toLong(), GL_DYNAMIC_DRAW)
+            allocatedSize = requestedSize
+        }
         glBufferSubData(GL_UNIFORM_BUFFER, 0, uboBuffer.rewind())
     }
 

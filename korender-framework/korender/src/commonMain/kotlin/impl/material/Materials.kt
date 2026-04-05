@@ -120,11 +120,10 @@ internal open class InternalMaterial(
             uniformSuppliers += modifier
             modifier.collectDefs(defs)
             modifier.collectPlugins(plugins)
-            (modifier as? CompositeSupplier)?.let {
-                val imm = (it as InternalMaterialModifier)
-                uniformSuppliers += imm
-                imm.collectDefs(defs)
-                imm.collectPlugins(plugins)
+            (modifier as? CompositeSupplier)?.child?.let {
+                uniformSuppliers += it
+                it.collectDefs(defs)
+                it.collectPlugins(plugins)
             }
         }
         append(this)

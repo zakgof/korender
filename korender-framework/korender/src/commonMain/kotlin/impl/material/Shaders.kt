@@ -122,7 +122,7 @@ internal object Shaders {
                 outputLines: MutableList<Line>,
                 lineText: String,
                 originFile: String,
-                originLine: Int
+                originLine: Int,
             ) {
                 val ifdefMatcher = Regex("#ifdef (.+)").find(lineText)
                 if (ifdefMatcher != null) {
@@ -190,7 +190,7 @@ internal object Shaders {
 
             private fun includeToFile(include: String, plugins: Map<String, String>): String {
                 return if (include.startsWith("$")) {
-                    plugins[include.substring(1)] ?: throw KorenderException("Cannot find shader plugin $include")
+                    plugins[include.substring(1)] ?: throw KorenderException("Cannot find shader plugin $include for")
                 } else {
                     include
                 }
