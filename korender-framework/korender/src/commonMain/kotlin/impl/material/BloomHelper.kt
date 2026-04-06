@@ -1,13 +1,12 @@
 package com.zakgof.korender.impl.material
 
-import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.FrameTarget
 import com.zakgof.korender.impl.engine.InternalPassDeclaration
 import com.zakgof.korender.impl.glgpu.FloatGetter
 
 internal fun bloomMipEffect(
-    threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float, nodeContext: NodeContext
+    threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float, nodeContext: NodeContext,
 ) = InternalPostShadingEffect(
     effectPasses = listOf(bloomBrightnessPass(nodeContext, downsample, threshold)) +
             bloomDownsamplePasses(nodeContext, downsample, mips, offset) +
@@ -18,7 +17,7 @@ internal fun bloomMipEffect(
 )
 
 internal fun bloomSimpleEffect(
-    threshold: Float, amount: Float, radius: Float, downsample: Int, nodeContext: NodeContext
+    threshold: Float, amount: Float, radius: Float, downsample: Int, nodeContext: NodeContext,
 ) = InternalPostShadingEffect(
     effectPasses = listOf(
         bloomBrightnessPass(nodeContext, downsample, threshold),
@@ -132,10 +131,8 @@ private class KawaseMaterial(
     "offset" to FloatGetter<KawaseMaterial> { it.offset },
     "highResolutionRatio" to FloatGetter<KawaseMaterial> { it.highResolutionRatio }
 ) {
-    override fun collectDefs(accumulator: MutableSet<String>) {
-        super.collectDefs(accumulator)
-        highResolutionRatio?.let { accumulator += "UPSAMPLE" }
-    }
+    override fun collectDefs(accumulator: Long) = super.collectDefs(accumulator)
+        .combineDefsIfNotNull(highResolutionRatio, Defs.UPSAMPLE)
 }
 
 private class BloomMaterial(
@@ -150,8 +147,6 @@ private class BloomCompositionMaterialModifier(val bloomAmount: Float) : Interna
     "bloomAmount" to FloatGetter<BloomCompositionMaterialModifier> { it.bloomAmount }
 ) {
 
-    override fun collectDefs(accumulator: MutableSet<String>) {
-        super.collectDefs(accumulator)
-        accumulator += "BLOOM"
-    }
+    override fun collectDefs(accumulator: Long): Long =
+        super.collectDefs(accumulator) or Defs.BLOOM.bit
 }

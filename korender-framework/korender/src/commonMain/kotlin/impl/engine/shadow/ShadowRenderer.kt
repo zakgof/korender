@@ -21,8 +21,11 @@ import com.zakgof.korender.impl.glgpu.FloatGetter
 import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.material.BlurMaterial
+import com.zakgof.korender.impl.material.Defs
 import com.zakgof.korender.impl.material.InternalBaseMaterial
 import com.zakgof.korender.impl.material.InternalMaterialModifier
+import com.zakgof.korender.impl.material.Plugins
+import com.zakgof.korender.impl.material.pluginOverride2IfNotNull
 import com.zakgof.korender.impl.projection.OrthoProjectionMode
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGBA
@@ -300,17 +303,15 @@ internal class CasterMaterialModifier(
     "fixedYMax" to FloatGetter<CasterMaterialModifier> { it.declaration.fixedYRange!!.second }
 ) {
 
-    override fun collectDefs(accumulator: MutableSet<String>) {
-        super.collectDefs(accumulator)
-        accumulator += "SHADOW_CASTER"
-        if (declaration.algorithm is InternalVsmShadow)
-            accumulator += "VSM_SHADOW"
+    override fun collectDefs(accumulator: Long): Long {
+        var result = super.collectDefs(accumulator) or Defs.SHADOW_CASTER.bit
+        if (declaration.algorithm is InternalVsmShadow) {
+            result = result or Defs.VSM_SHADOW.bit
+        }
+        return result
     }
 
-    override fun collectPlugins(accumulator: MutableMap<String, String>) {
-        super.collectPlugins(accumulator)
-        declaration.fixedYRange?.let {
-            accumulator["vprojection"] = "!shader/plugin/vprojection.fixedyrange.vert"
-        }
-    }
+    override fun collectPlugins2(accumulator: Long): Long =
+        super.collectPlugins2(accumulator)
+            .pluginOverride2IfNotNull(declaration.fixedYRange, Plugins.VPROJECTION_FIXED_Y_RANGE)
 }

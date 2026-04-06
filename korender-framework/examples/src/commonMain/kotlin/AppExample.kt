@@ -39,7 +39,7 @@ import org.jetbrains.compose.resources.painterResource
 
 val pages = listOf(
 
-    Case("Effects") { EffectsExample() },
+    Case("OBJ mesh") { ObjFileExample() },
 
     Case("Heightmap terrain") { HeightmapTerrainExample() },
     Case("Procedural terrain") { ProcTerrainExample() },

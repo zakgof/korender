@@ -1,5 +1,7 @@
 package com.zakgof.korender.examples.island
 
+import com.zakgof.korender.ShaderPlugin
+import com.zakgof.korender.ShaderPluginId
 import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.examples.island.city.CityGenerator
@@ -8,8 +10,11 @@ import com.zakgof.korender.math.ColorRGBA.Companion.white
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 
-fun KorenderScope.loadBuildings(bytes: ByteArray): CityGenerator =
-    loadBinary(bytes) {
+private lateinit var buildingsAlbedoPlugin: ShaderPlugin
+
+fun KorenderScope.loadBuildings(bytes: ByteArray): CityGenerator {
+    buildingsAlbedoPlugin = shaderPlugin(ShaderPluginId.ALBEDO, "island/building/shader/island.window.albedo.frag")
+    return loadBinary(bytes) {
         val cityGenerator = CityGenerator(this@loadBuildings)
         val size = bytes.size / (2 * 3 * 4)
         (0 until size).forEach { i ->
@@ -27,6 +32,7 @@ fun KorenderScope.loadBuildings(bytes: ByteArray): CityGenerator =
         }
         cityGenerator
     }
+}
 
 fun FrameScope.buildings(cityGenerator: CityGenerator) {
 
@@ -44,7 +50,7 @@ fun FrameScope.buildings(cityGenerator: CityGenerator) {
         colorTexture = texture("infcity/roof.jpg")
         metallicFactor = 0f
         roughnessFactor = 1f
-        plugin("albedo", "island/building/shader/island.window.albedo.frag")
+        plugin(buildingsAlbedoPlugin)
     }
 
     Renderable(

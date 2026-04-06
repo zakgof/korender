@@ -1,5 +1,7 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.ShaderPlugin
+import com.zakgof.korender.ShaderPluginId
 import com.zakgof.korender.impl.font.Font
 import com.zakgof.korender.impl.font.Fonts
 import com.zakgof.korender.impl.font.InternalFontDeclaration
@@ -70,6 +72,9 @@ internal class Inventory(private val loader: Loader) {
     fun frameBuffer(decl: FrameBufferDeclaration): GlGpuFrameBuffer? = frameBuffers[decl]
     fun cubeFrameBuffer(decl: CubeFrameBufferDeclaration): GlGpuCubeFrameBuffer? = cubeFrameBuffers[decl]
     fun gltf(decl: GltfDeclaration): GltfCache? = gltfs[decl]
+
+    fun shaderPlugin(id: ShaderPluginId, file: String): ShaderPlugin =
+        shaderPluginRegistry.registerCustom(id, file)
 
     fun onWaitUpdate(block: () -> Unit) = loader.onWaitUpdate(block)
 }

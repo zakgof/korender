@@ -29,7 +29,7 @@ internal fun ssrEffect(
                     maxReflectionDistance * (1f - nextStepRatio) / (1f - nextStepRatio.pow(linearSteps))
                 ),
                 null,
-                FrameTarget( "ssrTexture", "ssrDepth", downsample),
+                FrameTarget("ssrTexture", "ssrDepth", downsample),
                 nodeContext
             )
         ),
@@ -57,9 +57,7 @@ private class SsrMaterial(
 private class SsrCompositionMaterialModifier(val envTexture: CubeTextureDeclaration?) : InternalMaterialModifier(
     "envTexture" to TextureGetter<SsrCompositionMaterialModifier> { it.envTexture }
 ) {
-    override fun collectDefs(accumulator: MutableSet<String>) {
-        super.collectDefs(accumulator)
-        accumulator += "SSR"
-    }
+    override fun collectDefs(accumulator: Long) =
+        super.collectDefs(accumulator) or Defs.SSR.bit
 }
 

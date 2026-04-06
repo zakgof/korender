@@ -31,6 +31,7 @@ import com.zakgof.korender.impl.glgpu.GlRenderableFrameBuffer
 import com.zakgof.korender.impl.glgpu.renderTo
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
 import com.zakgof.korender.impl.material.DecalBlendMaterial
+import com.zakgof.korender.impl.material.Defs
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
 import com.zakgof.korender.impl.material.InternalMaterial
@@ -41,7 +42,6 @@ import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
-import com.zakgof.korender.impl.material.ShaderPluginRegistry
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGBA
@@ -568,7 +568,7 @@ internal class Renderer(
                 shadowCasterModifier
             )
             val materialDeclaration = declaration.material.toDeclaration(doDeferredShading, declaration.nodeContext, materialModifiers)
-            if ((materialDeclaration.defs and ShaderPluginRegistry.NO_SHADOW_CAST) != 0L && shadowCasterModifier != null)
+            if ((materialDeclaration.defs and Defs.NO_SHADOW_CAST.bit) != 0L && shadowCasterModifier != null)
                 return
             val shader = inventory.shader(materialDeclaration)
             if (shader == null) {

@@ -1,6 +1,5 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.glgpu.Color3ListGetter
 import com.zakgof.korender.impl.glgpu.Color4ListGetter
@@ -19,7 +18,10 @@ import com.zakgof.korender.impl.glgpu.TextureListGetter
 import com.zakgof.korender.impl.glgpu.UniformGetter
 import com.zakgof.korender.impl.glgpu.Vec3ListGetter
 import com.zakgof.korender.impl.material.InternalMaterialModifier
+import com.zakgof.korender.impl.material.Plugins
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
+import com.zakgof.korender.impl.material.pluginOverride1
+import com.zakgof.korender.impl.material.pluginOverride2IfNotNull
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
 import com.zakgof.korender.impl.projection.LogProjectionMode
 import com.zakgof.korender.impl.projection.OrthoProjectionMode
@@ -90,20 +92,18 @@ internal class ContextMaterialModifier(private val frameContext: FrameContext, r
             else -> super.uniform(name)
         }
 
-    override fun collectPlugins(accumulator: MutableMap<String, String>) {
-        super.collectPlugins(accumulator)
-        accumulator["vprojection"] = frameContext.projection.mode.plugin()
-        if (frameContext.projection.mode is LogProjectionMode) {
-            accumulator["depth"] = "!shader/plugin/depth.log.frag"
-        }
-    }
+    override fun collectPlugins1(accumulator: Long): Long =
+        super.collectPlugins1(accumulator)
+            .pluginOverride1(frameContext.projection.mode is LogProjectionMode, Plugins.DEPTH_LOG)
 
-    // TODO: move
-    private fun ProjectionMode.plugin() = when (this) {
-        is FrustumProjectionMode -> "!shader/plugin/vprojection.frustum.vert"
-        is OrthoProjectionMode -> "!shader/plugin/vprojection.ortho.vert"
-        is LogProjectionMode -> "!shader/plugin/vprojection.log.vert"
-        else -> ""
+    override fun collectPlugins2(accumulator: Long): Long {
+        val plugin = when (frameContext.projection.mode) {
+            is FrustumProjectionMode -> Plugins.VPROJECTION_FRUSTUM
+            is OrthoProjectionMode -> Plugins.VPROJECTION_ORTHO
+            is LogProjectionMode -> Plugins.VPROJECTION_LOG
+            else -> null
+        }
+        return super.collectPlugins2(accumulator).pluginOverride2IfNotNull(plugin, plugin!!)
     }
 }
 

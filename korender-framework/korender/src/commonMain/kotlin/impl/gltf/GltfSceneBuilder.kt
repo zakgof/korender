@@ -19,6 +19,7 @@ import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
 import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
 import com.zakgof.korender.impl.material.InternalBaseMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
+import com.zakgof.korender.impl.material.Plugins
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
 import com.zakgof.korender.impl.projection.OrthoProjectionMode
 import com.zakgof.korender.impl.projection.Projection
@@ -211,8 +212,8 @@ internal class GltfSceneBuilder(
         val mat = InternalBaseMaterial()
 
         if (skinIndex != null) {
-            mat.plugin("vposition", "!shader/plugin/vposition.skinning.vert")
-            mat.plugin("vnormal", "!shader/plugin/vnormal.skinning.vert")
+            mat.plugin(Plugins.VPOSITION_SKINNING)
+            mat.plugin(Plugins.VNORMAL_SKINNING)
             if (declaration.instancingDeclaration == null && jointMatrices != null) {
                 val jointMatrixList = jointMatrices.mapIndexed { ind, jm ->
                     jm * cache.loadedSkins[skinIndex]!![ind]

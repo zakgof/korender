@@ -57,7 +57,7 @@ internal open class InternalMaterialModifier(vararg getters: Pair<String, Unifor
     open fun collectPlugins2(accumulator: Long): Long = accumulator pluginOverride customPlugins2
 
     override fun plugin(plugin: ShaderPlugin) {
-        plugin as InternalShaderPlugin
+        plugin as AppliedPlugin
         customPlugins1 = plugin.apply1(customPlugins1)
         customPlugins2 = plugin.apply2(customPlugins2)
     }
@@ -110,20 +110,20 @@ internal open class InternalMaterial(
     ): ShaderDeclaration {
 
         val uniformSuppliers = mutableListOf<UniformSupplier>()
-        val defs = 0L
-        val plugins1 = 0L
-        val plugins2 = 0L
+        var defs = 0L
+        var plugins1 = 0L
+        var plugins2 = 0L
 
         fun append(modifier: InternalMaterialModifier) {
             uniformSuppliers += modifier
-            modifier.collectDefs(defs)
-            modifier.collectPlugins1(plugins1)
-            modifier.collectPlugins2(plugins2)
+            defs = modifier.collectDefs(defs)
+            plugins1 = modifier.collectPlugins1(plugins1)
+            plugins2 = modifier.collectPlugins2(plugins2)
             (modifier as? CompositeSupplier)?.child?.let {
                 uniformSuppliers += it
-                it.collectDefs(defs)
-                it.collectPlugins1(plugins1)
-                it.collectPlugins2(plugins2)
+                defs = it.collectDefs(defs)
+                plugins1 = it.collectPlugins1(plugins1)
+                plugins2 = it.collectPlugins2(plugins2)
             }
         }
         append(this)
@@ -183,27 +183,22 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
             else -> super.uniform(name)
         }
 
-    override fun collectDefs(accumulator: Long) = accumulator or
-            (colorTexture?.let { ShaderPluginRegistry.BASE_COLOR_MAP } ?: 0) or
-            (colorTextures?.let { ShaderPluginRegistry.TEXTURE_ARRAY } ?: 0)
+    override fun collectDefs(accumulator: Long) = super.collectDefs(accumulator)
+        .combineDefsIfNotNull(colorTexture, Defs.BASE_COLOR_MAP)
+        .combineDefsIfNotNull(colorTextures, Defs.TEXTURE_ARRAY)
 
-    override fun collectPlugins1(accumulator: Long) =
-        accumulator.pluginOverride1IfNotNull(colorTextures, ShaderPluginRegistry.TEXTURING_ARRAY)
-            .pluginOverride1IfNotNull(triplanarScale, ShaderPluginRegistry.TEXTURING_TRIPLANAR)
+    override fun collectPlugins1(accumulator: Long) = super.collectPlugins1(accumulator)
+        .pluginOverride1IfNotNull(colorTextures, Plugins.TEXTURING_ARRAY)
+        .pluginOverride1IfNotNull(triplanarScale, Plugins.TEXTURING_TRIPLANAR)
+        .pluginOverride1IfNotNull(normalTexture, Plugins.NORMAL_TEXTURE)
+        .pluginOverride1IfNotNull(emission, Plugins.EMISSION_FACTOR)
+        .pluginOverride1IfNotNull(metallicRoughnessTexture, Plugins.METALLIC_ROUGHNESS_TEXTURE)
+        .pluginOverride1IfNotNull(specularGlossiness, Plugins.SPECULAR_GLOSSINESS_FACTOR)
+        .pluginOverride1IfNotNull(specularGlossinessTexture, Plugins.SPECULAR_GLOSSINESS_TEXTURE)
+        .pluginOverride1IfNotNull(occlusionTexture, Plugins.OCCLUSION_TEXTURE)
+        .pluginOverride1IfNotNull(emissionTexture, Plugins.EMISSION_TEXTURE)
 
-
-    override fun collectPlugins(accumulator: MutableMap<String, String>) {
-        super.collectPlugins(accumulator)
-        colorTextures?.let { accumulator["texturing"] = "!shader/plugin/texturing.array.frag" }
-        triplanarScale?.let { accumulator["texturing"] = "!shader/plugin/texturing.triplanar.frag" }
-        normalTexture?.let { accumulator["normal"] = "!shader/plugin/normal.texture.frag" }
-        emission?.let { accumulator["emission"] = "!shader/plugin/emission.factor.frag" }
-        metallicRoughnessTexture?.let { accumulator["metallic_roughness"] = "!shader/plugin/metallic_roughness.texture.frag" }
-        specularGlossiness?.let { accumulator["specular_glossiness"] = "!shader/plugin/specular_glossiness.factor.frag" }
-        specularGlossinessTexture?.let { accumulator["specular_glossiness"] = "!shader/plugin/specular_glossiness.texture.frag" }
-        occlusionTexture?.let { accumulator["occlusion"] = "!shader/plugin/occlusion.texture.frag" }
-        emissionTexture?.let { accumulator["emission"] = "!shader/plugin/emission.texture.frag" }
-    }
+    override fun collectPlugins2(accumulator: Long) = super.collectPlugins2(accumulator)
 
     override val child
         get() = ibl as? InternalMaterialModifier
@@ -246,16 +241,9 @@ internal class InternalTerrainMaterial : InternalBaseMaterial("!shader/terrain.v
     override var terrainCenter: Vec3 = Vec3.ZERO
     var modifier: TerrainMaterialModifier? = null // TODO ugly
 
-    override fun collectDefs(accumulator: MutableSet<String>) {
-        super.collectDefs(accumulator)
-        accumulator += "TERRAIN"
-    }
-
-    override fun collectPlugins(accumulator: MutableMap<String, String>) {
-        accumulator["normal"] = "!shader/plugin/normal.terrain.frag"
-        accumulator["terrain"] = "!shader/plugin/terrain.texture.frag"
-        super.collectPlugins(accumulator)
-    }
+    override fun collectPlugins1(accumulator: Long): Long = super.collectPlugins1(accumulator)
+        .pluginOverride1(Plugins.NORMAL_TERRAIN)
+        .pluginOverride1(Plugins.TERRAIN_TEXTURE)
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
@@ -272,12 +260,10 @@ internal class InternalTerrainMaterial : InternalBaseMaterial("!shader/terrain.v
 
 internal class InternalPipeMaterial : InternalBaseMaterial("!shader/pipe.vert"), PipeMaterial {
 
-    override fun collectPlugins(accumulator: MutableMap<String, String>) {
-        super.collectPlugins(accumulator)
-        accumulator["position"] = "!shader/plugin/position.pipe.frag"
-        accumulator["normal"] = "!shader/plugin/normal.pipe.frag"
-        accumulator["depth"] = "!shader/plugin/depth.pipe.frag"
-    }
+    override fun collectPlugins1(accumulator: Long): Long = super.collectPlugins1(accumulator)
+        .pluginOverride1(Plugins.POSITION_PIPE)
+        .pluginOverride1(Plugins.NORMAL_PIPE)
+        .pluginOverride1(Plugins.DEPTH_PIPE)
 }
 
 internal open class InternalPostProcessingMaterial(
@@ -291,9 +277,16 @@ internal open class InternalSkyMaterial(val skyPlugin: String, vararg getters: P
     InternalMaterial("!shader/sky/sky.vert", "!shader/sky/sky.frag", *getters),
     SkyMaterial {
 
-    override fun collectPlugins(accumulator: MutableMap<String, String>) {
-        super.collectPlugins(accumulator)
-        accumulator["sky"] = skyPlugin
+    override fun collectPlugins1(accumulator: Long): Long {
+        var result = super.collectPlugins1(accumulator)
+        val plugin = when (skyPlugin) {
+            "!shader/plugin/sky.fastcloud.frag" -> Plugins.SKY_FASTCLOUD
+            "!shader/plugin/sky.starry.frag" -> Plugins.SKY_STARRY
+            "!shader/plugin/sky.cube.frag" -> Plugins.SKY_CUBE
+            "!shader/plugin/sky.texture.frag" -> Plugins.SKY_TEXTURE
+            else -> null
+        }
+        return result.pluginOverride1IfNotNull(plugin, plugin!!)
     }
 }
 
@@ -316,8 +309,6 @@ internal class InstancingMaterialModifier : InternalMaterialModifier(
 ) {
     var jntTexture: GlGpuTexture? = null
 
-    override fun collectDefs(accumulator: MutableSet<String>) {
-        super.collectDefs(accumulator)
-        accumulator += "INSTANCING"
-    }
+    override fun collectDefs(accumulator: Long): Long =
+        super.collectDefs(accumulator) or Defs.INSTANCING.bit
 }

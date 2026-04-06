@@ -1,7 +1,7 @@
 package com.zakgof.korender.examples.island
 
 import com.zakgof.korender.context.KorenderScope
-import loadRunway
+import island.loadRunway
 
 class Loader(kc: KorenderScope) {
 

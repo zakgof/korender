@@ -21,6 +21,8 @@ import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
+import com.zakgof.korender.ShaderPlugin
+import com.zakgof.korender.ShaderPluginId
 import com.zakgof.korender.SkyMaterial
 import com.zakgof.korender.TerrainMaterialContext
 import com.zakgof.korender.TextureDeclaration
@@ -123,6 +125,9 @@ internal class Engine(
                 throw KorenderException("Only one Frame declaration is allowed")
             frameBlocks.add(block)
         }
+
+        override fun shaderPlugin(id: ShaderPluginId, file: String): ShaderPlugin =
+            inventory.shaderPlugin(id, file)
 
         override fun OnTouch(handler: (TouchEvent) -> Unit) {
             touchHandlers.add(handler)

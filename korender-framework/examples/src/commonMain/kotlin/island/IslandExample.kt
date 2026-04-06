@@ -1,23 +1,33 @@
 package com.zakgof.korender.examples.island
 
-import com.zakgof.korender.examples.TestExchange
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.Prefab
+import com.zakgof.korender.ShaderPlugin
+import com.zakgof.korender.ShaderPluginId
 import com.zakgof.korender.TerrainMaterial
 import com.zakgof.korender.context.FrameScope
+import com.zakgof.korender.examples.TestExchange
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
-import island
+import island.island
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+
+internal lateinit var normalTerrainPlugin: ShaderPlugin
+internal lateinit var terrainHeightPlugin: ShaderPlugin
+internal lateinit var albedoTerrainPlugin: ShaderPlugin
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun IslandExample() =
     Korender(resourceLoader = { Res.readBytes("files/$it") }) {
+
+        normalTerrainPlugin = shaderPlugin(ShaderPluginId.NORMAL, "!shader/plugin/normal.terrain.frag")
+        terrainHeightPlugin = shaderPlugin(ShaderPluginId.TERRAIN, "island/terrain/shader/height.glsl")
+        albedoTerrainPlugin = shaderPlugin(ShaderPluginId.ALBEDO, "island/terrain/shader/albedo.glsl")
 
         val terrain = clipmapTerrainPrefab("terrain", 32.0f, 24, 6)
         val loader = Loader(this)

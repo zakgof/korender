@@ -1,11 +1,13 @@
 package com.zakgof.korender.examples.infcity
 
-import com.zakgof.korender.examples.TestExchange
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
+import com.zakgof.korender.ShaderPlugin
+import com.zakgof.korender.ShaderPluginId
 import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.context.KorenderScope
+import com.zakgof.korender.examples.TestExchange
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Quaternion
@@ -22,9 +24,13 @@ import kotlin.math.cos
 import kotlin.math.floor
 
 private val buildings = (0 until 10).map { generateBuilding() }
+private lateinit var emissionPlugin: ShaderPlugin
+private lateinit var secSkyPlugin: ShaderPlugin
 
 @Composable
 fun InfiniteCity() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
+    emissionPlugin = shaderPlugin(ShaderPluginId.EMISSION, "infcity/window.emission.plugin.frag")
+    secSkyPlugin = shaderPlugin(ShaderPluginId.SECSKY, "infcity/moon.secsky.plugin.frag")
     Frame {
         TestExchange.report(frameInfo)
         OnLoading {
@@ -123,7 +129,7 @@ private fun FrameScope.building(buildingId: Int, z: Float, x: Float) {
         colorTexture = texture("infcity/dw.jpg")
         metallicFactor = 0.5f
         roughnessFactor = 0.1f
-        plugin("emission", "infcity/window.emission.plugin.frag")
+        plugin(emissionPlugin)
         texture("windowTexture", texture("infcity/lw.jpg"))
     }
 
@@ -195,7 +201,7 @@ private fun FrameScope.atmosphere() =
     PostProcess(fog(density = 0.06f, color = white(0.05f))) {
         Sky(
             starrySky(colorness = 0.4f, density = 20f, size = 20f) {
-                plugin("secsky", "infcity/moon.secsky.plugin.frag")
+                plugin(secSkyPlugin)
                 texture("moonTexture", texture("infcity/moon.png"))
             }
         )

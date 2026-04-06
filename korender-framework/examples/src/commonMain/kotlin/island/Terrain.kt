@@ -1,9 +1,14 @@
+package island
+
 import com.zakgof.korender.Image
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.TerrainMaterial
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.context.FrameScope
+import com.zakgof.korender.examples.island.albedoTerrainPlugin
 import com.zakgof.korender.examples.island.loadBinary
+import com.zakgof.korender.examples.island.normalTerrainPlugin
+import com.zakgof.korender.examples.island.terrainHeightPlugin
 import com.zakgof.korender.math.Vec2
 
 fun loadRunway(bytes: ByteArray): Pair<Vec2, Vec2> = loadBinary(bytes) {
@@ -17,9 +22,9 @@ fun FrameScope.island(heightMap: Image, rwSeeds: Pair<Vec2, Vec2>, terrain: Pref
         terrain {
             metallicFactor = 0.0f
 
-            plugin("normal", "!shader/plugin/normal.terrain.frag")
-            plugin("terrain", "island/terrain/shader/height.glsl")
-            plugin("albedo", "island/terrain/shader/albedo.glsl")
+            plugin(normalTerrainPlugin)
+            plugin(terrainHeightPlugin)
+            plugin(albedoTerrainPlugin)
             texture("heightTexture", texture("base-terrain", heightMap))
             texture("patchTexture", texture("island/terrain/color.png"))
             texture("sdf", texture("island/terrain/sdf.png", TextureFilter.Linear))
@@ -28,7 +33,7 @@ fun FrameScope.island(heightMap: Image, rwSeeds: Pair<Vec2, Vec2>, terrain: Pref
             texture("runwayTexture" ,texture("island/terrain/runway.jpg"))
             vec2("runwayP1", rwSeeds.first)
             vec2("runwayP2", rwSeeds.second)
-            defs ("NO_SHADOW_CAST")
+            // defs ("NO_SHADOW_CAST")
         },
         prefab = terrain
     )

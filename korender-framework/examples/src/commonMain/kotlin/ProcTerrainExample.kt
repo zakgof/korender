@@ -3,6 +3,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
+import com.zakgof.korender.ShaderPluginId.*
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
@@ -15,6 +16,8 @@ import kotlin.math.sin
 fun ProcTerrainExample() =
     Korender(resourceLoader = { Res.readBytes("files/$it") }) {
 
+        val procTerrainHeightPlugin = shaderPlugin(TERRAIN, "procterrain/height.glsl")
+        val procTerrainAlbedoPlugin = shaderPlugin(ALBEDO, "procterrain/albedo.glsl")
         val terrain = clipmapTerrainPrefab("terrain", 2.0f, 16, 13)
         Frame {
             TestExchange.report(frameInfo)
@@ -33,8 +36,8 @@ fun ProcTerrainExample() =
             Prefab(
                 terrain {
                     metallicFactor = 0.0f
-                    plugin("terrain", "procterrain/height.glsl")
-                    plugin("albedo", "procterrain/albedo.glsl")
+                    plugin(procTerrainHeightPlugin)
+                    plugin(procTerrainAlbedoPlugin)
                 },
                 prefab = terrain
             )

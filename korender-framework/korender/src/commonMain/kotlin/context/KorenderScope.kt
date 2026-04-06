@@ -23,6 +23,8 @@ import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
+import com.zakgof.korender.ShaderPlugin
+import com.zakgof.korender.ShaderPluginId
 import com.zakgof.korender.SkyMaterial
 import com.zakgof.korender.TerrainMaterial
 import com.zakgof.korender.TerrainMaterialContext
@@ -75,6 +77,15 @@ interface KorenderScope : ResourceScope {
 
     /** Viewport height. */
     val height: Int
+
+    /**
+     * Registers a custom shader plugin for the given id.
+     *
+     * @param id plugin id
+     * @param file shader plugin file
+     * @return shader plugin
+     */
+    fun shaderPlugin(id: ShaderPluginId, file: String): ShaderPlugin
 
     /**
      * Creates a texture declaration from a frame probe.
