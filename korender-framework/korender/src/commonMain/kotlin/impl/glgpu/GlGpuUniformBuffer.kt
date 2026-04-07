@@ -20,6 +20,8 @@ import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
+internal typealias UniformPack = Array<UniformSupplier?>
+
 internal interface UniformSupplier {
     fun uniform(name: String): UniformGetter<*>?
 }
@@ -35,10 +37,10 @@ internal class CompiledBlockBinding(
     val supplierIndex: Int,
     val getter: UniformGetter<*>,
 ) {
-    fun write(buffer: NativeByteBuffer, baseOffset: Int, suppliers: List<UniformSupplier>, materialName: String, ignoreMissing: Boolean) {
+    fun write(buffer: NativeByteBuffer, baseOffset: Int, uniformPack: UniformPack, materialName: String, ignoreMissing: Boolean) {
         val missingMessage = if (ignoreMissing) null else "Material $materialName does not provide blocked uniform $name"
         buffer.position(baseOffset + offset)
-        val obj = suppliers[supplierIndex]
+        val obj = uniformPack[supplierIndex]!!
         getter.writeTo(buffer, obj, missingMessage)
     }
 }
@@ -97,7 +99,7 @@ internal class ColorRGBAGetter<T>(private val f: (T) -> ColorRGBA) : UniformGett
 internal class Mat4Getter<T>(private val f: (T) -> Mat4) : UniformGetter<T> {
     override fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) =
         safe(f, obj, missingMessage) { v ->
-            buffer.put(f(obj as T).asArray())
+            buffer.put(v.asArray())
         }
 }
 
@@ -190,14 +192,14 @@ internal class GlGpuUniformBuffer(size: Int) : AutoCloseable {
         glBindBufferRange(GL_UNIFORM_BUFFER, binding, ubo, shift, size)
 
     fun populate(
-        uniformSuppliers: List<UniformSupplier>,
+        uniformPack: UniformPack,
         bufferShift: Int,
         bindings: List<CompiledBlockBinding>,
         materialName: String,
         ignoreMissing: Boolean = false,
     ) {
         bindings.forEach { binding ->
-            binding.write(uboBuffer, bufferShift, uniformSuppliers, materialName, ignoreMissing)
+            binding.write(uboBuffer, bufferShift, uniformPack, materialName, ignoreMissing)
         }
     }
 

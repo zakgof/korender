@@ -9,7 +9,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_BUFFER_OFFSET_ALIGNMEN
 import com.zakgof.korender.impl.glgpu.CompiledBlockBinding
 import com.zakgof.korender.impl.glgpu.GlGpuUniformBuffer
 import com.zakgof.korender.impl.glgpu.UniformBlock
-import com.zakgof.korender.impl.glgpu.UniformSupplier
+import com.zakgof.korender.impl.glgpu.UniformPack
 
 internal class UniformBufferHolder {
 
@@ -62,21 +62,21 @@ internal class UniformBufferHolder {
         frameUbo.bindBase(0)
     }
 
-    fun populateFrame(uniforms: List<UniformSupplier>, ignoreMissing: Boolean = false) {
+    fun populateFrame(uniformPack: UniformPack, ignoreMissing: Boolean = false) {
         if (compiledUniformBindings.isEmpty()) {
             compiledUniformBindings += frameBindings.map { pair ->
                 val name = pair.first
-                val index = uniforms.indices.firstOrNull { uniforms[it].uniform(name) != null }
-                val getter = uniforms[index!!].uniform(name) ?: throw KorenderException("Uniform $name not declared in materials for shader $this")
+                val index = uniformPack.indices.firstOrNull { uniformPack[it]?.uniform(name) != null }
+                val getter = uniformPack[index!!]!!.uniform(name) ?: throw KorenderException("Uniform $name not declared in materials for shader $this")
                 CompiledBlockBinding(pair.second, name, index, getter)
             }
         }
-        frameUbo.populate(uniforms, 0, compiledUniformBindings, "FrameContext", ignoreMissing)
+        frameUbo.populate(uniformPack, 0, compiledUniformBindings, "FrameContext", ignoreMissing)
         frameUbo.upload(4650)
     }
 
     fun populate(
-        uniformSuppliers: List<UniformSupplier>,
+        uniformPack: UniformPack,
         uniformBlock: UniformBlock?,
         materialName: String,
         rk: ResultKeeper?,
@@ -86,7 +86,7 @@ internal class UniformBufferHolder {
             if (shaderUboSize - bufferShift < uniformBlock.size || currentBinding >= maxBindings) {
                 flush(rk)
             }
-            shaderUbo.populate(uniformSuppliers, bufferShift, uniformBlock.bindings, materialName)
+            shaderUbo.populate(uniformPack, bufferShift, uniformBlock.bindings, materialName)
             val ri = RenderItem(render, bufferShift, uniformBlock.size, currentBinding)
             bufferShift = ((bufferShift + uniformBlock.size + bufferOffsetAlignment - 1) / bufferOffsetAlignment) * bufferOffsetAlignment
             currentBinding++

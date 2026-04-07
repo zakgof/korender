@@ -13,7 +13,7 @@ import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.glgpu.UniformSupplier
+import com.zakgof.korender.impl.glgpu.UniformPack
 import com.zakgof.korender.impl.material.InternalDecalMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
@@ -75,7 +75,7 @@ internal data class ShaderDeclaration(
     val defs: Long,
     val plugins1: Long,
     val plugins2: Long,
-    val uniformSuppliers: List<UniformSupplier>,
+    val uniformPack: UniformPack,
     override val nodeContext: NodeContext,
 ) : NodeKeeper {
     override fun equals(other: Any?): Boolean =
@@ -186,8 +186,6 @@ internal class InternalBillboardInstancingDeclaration(val id: String, val count:
 internal class InternalFilterDeclaration(val passes: List<InternalPassDeclaration>) : PostProcessingEffect
 
 internal class InternalPassDeclaration(val mapping: Map<String, String>, val material: InternalPostProcessingMaterial, val sceneDeclaration: SceneDeclaration?, val target: FrameTarget, override val nodeContext: NodeContext) : NodeKeeper
-
-internal data class ReusableFrameBufferDefinition(val pingPong: Int, val width: Int, val height: Int)
 
 internal data class FrameTarget(val colorOutput: String, val depthOutput: String, val downSample: Int = 1) {
     companion object {

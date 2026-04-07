@@ -35,8 +35,8 @@ class PerformanceTest {
             }
         }
 
-        val t1 = waitKorender(10f)
-        val t2 = waitKorender(100f)
+        val t1 = waitKorender(5f)
+        val t2 = waitKorender(250f)
 
         val frameRate = (t2.frame - t1.frame) / (t2.time - t1.time)
 

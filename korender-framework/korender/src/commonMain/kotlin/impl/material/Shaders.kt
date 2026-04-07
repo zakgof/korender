@@ -21,7 +21,7 @@ internal object Shaders {
 
     fun create(shaderPluginRegistry: ShaderPluginRegistry, declaration: ShaderDeclaration, loader: Loader, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, uniformBufferHolder: UniformBufferHolder, resourceLoader: ResourceLoader): GlGpuShader? =
         loader.syncy(declaration, resourceLoader) { load(shaderPluginRegistry, declaration, it) }?.let {
-            GlGpuShader(it.title, it.vertCode, it.fragCode, it.vertDebugInfo, it.fragDebugInfo, zeroTex, zeroShadowTex, uniformBufferHolder, declaration.uniformSuppliers)
+            GlGpuShader(it.title, it.vertCode, it.fragCode, it.vertDebugInfo, it.fragDebugInfo, zeroTex, zeroShadowTex, uniformBufferHolder, declaration.uniformPack)
         }
 
     private suspend fun load(shaderPluginRegistry: ShaderPluginRegistry, declaration: ShaderDeclaration, appResourceLoader: ResourceLoader): ShaderData {
@@ -190,7 +190,7 @@ internal object Shaders {
 
             private fun includeToFile(include: String, plugins: Map<String, String>): String {
                 return if (include.startsWith("$")) {
-                    plugins[include.substring(1)] ?: throw KorenderException("Cannot find shader plugin $include for")
+                    plugins[include.substring(1)] ?: throw KorenderException("Cannot find shader plugin $include")
                 } else {
                     include
                 }

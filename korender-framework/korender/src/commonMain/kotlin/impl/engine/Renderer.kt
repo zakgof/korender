@@ -28,12 +28,14 @@ import com.zakgof.korender.impl.glgpu.GlGpuShadowTextureList
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.glgpu.GlRenderableFrameBuffer
+import com.zakgof.korender.impl.glgpu.UniformSupplier
 import com.zakgof.korender.impl.glgpu.renderTo
 import com.zakgof.korender.impl.gltf.GltfSceneBuilder
 import com.zakgof.korender.impl.material.DecalBlendMaterial
 import com.zakgof.korender.impl.material.Defs
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
+import com.zakgof.korender.impl.material.InternalBaseMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalPostShadingEffect
@@ -258,7 +260,7 @@ internal class Renderer(
         private fun renderDeferredShading(rk: ResultKeeper?) {
             // TODO cache instance
             val shadingMaterial = InternalMaterial("!shader/screen.vert", "!shader/deferred/shading.frag")
-            val shadingMaterialDeclaration = shadingMaterial.toDeclaration(true, sceneDeclaration.deferredShadingDeclaration!!.nodeContext, listOf(contextMaterialModifier))
+            val shadingMaterialDeclaration = shadingMaterial.toDeclaration(true, sceneDeclaration.deferredShadingDeclaration!!.nodeContext, arrayOf(contextMaterialModifier, null, null))
             renderFullscreen(shadingMaterialDeclaration, rk = rk)
         }
 
@@ -268,9 +270,10 @@ internal class Renderer(
                     pass.mapping.forEach {
                         contextMaterialModifier.customTextureUniforms[it.key] = contextMaterialModifier.customTextureUniforms[it.value]!!
                     }
+                    pass.material.time = pass.nodeContext.time ?: renderContext.time
                     val materialDeclaration = pass.material.toDeclaration(
                         true, effect.nodeContext,
-                        listOf(contextMaterialModifier, TimeMaterialModifier(effect.nodeContext, renderContext))
+                        arrayOf(contextMaterialModifier, null, null)
                     )
                     renderFullscreen(materialDeclaration, frameContext.width / pass.target.downSample, frameContext.height / pass.target.downSample, rk)
                 }
@@ -281,11 +284,12 @@ internal class Renderer(
         }
 
         private fun renderComposition(rk: ResultKeeper?) {
+            // TODO: rewrite
             val compositionModifiers = listOf(contextMaterialModifier) + sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects
                 .map { it as InternalPostShadingEffect }
-                .map { it.compositionMaterialModifier }
+                .map { it.compositionMaterialModifier } + listOf(null, null)
             val compositionMaterial = InternalMaterial("!shader/screen.vert", "!shader/deferred/composition.frag")
-            val compositionMaterialDeclaration = compositionMaterial.toDeclaration(true, sceneDeclaration.deferredShadingDeclaration!!.nodeContext, compositionModifiers)
+            val compositionMaterialDeclaration = compositionMaterial.toDeclaration(true, sceneDeclaration.deferredShadingDeclaration!!.nodeContext, compositionModifiers.toTypedArray())
             renderFullscreen(compositionMaterialDeclaration, rk = rk)
         }
 
@@ -397,7 +401,7 @@ internal class Renderer(
                         val decalBlendMaterialDeclaration = decalBlendMaterial.toDeclaration(
                             true,
                             sceneDeclaration.deferredShadingDeclaration!!.nodeContext,
-                            listOf(contextMaterialModifier)
+                            arrayOf(contextMaterialModifier, null, null)
                         )
                         renderFullscreen(decalBlendMaterialDeclaration, rk = rk) { blend(false) }
                     }
@@ -502,7 +506,7 @@ internal class Renderer(
         }
 
         fun populateFrameUbo() {
-            inventory.uniformBufferHolder.populateFrame(listOf(frameMaterialModifier, lightMaterialModifier), true)
+            inventory.uniformBufferHolder.populateFrame(arrayOf(frameMaterialModifier, lightMaterialModifier), true)
         }
 
         private fun renderPostProcessPass(pass: InternalPassDeclaration, rk: ResultKeeper?) {
@@ -511,7 +515,8 @@ internal class Renderer(
             pass.mapping.forEach {
                 contextMaterialModifier.customTextureUniforms[it.key] = contextMaterialModifier.customTextureUniforms[it.value]!!
             }
-            val passMaterialDeclaration = pass.material.toDeclaration(deferredShading, pass.nodeContext, listOf(contextMaterialModifier, TimeMaterialModifier(pass.nodeContext, renderContext)))
+            pass.material.time = pass.nodeContext.time ?: renderContext.time
+            val passMaterialDeclaration = pass.material.toDeclaration(deferredShading, pass.nodeContext, arrayOf(contextMaterialModifier, null, null))
             renderFullscreen(passMaterialDeclaration, frameContext.width / pass.target.downSample, frameContext.height / pass.target.downSample, rk)
             pass.sceneDeclaration?.let { Scene(pass.nodeContext, it, frameContext).renderForwardOpaques(rk) }
         }
@@ -532,7 +537,7 @@ internal class Renderer(
             glViewport(0, 0, width, height)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             if (mesh != null && shader != null) {
-                shader.render(quadMaterial.uniformSuppliers, fixer, mesh.gpuMesh, rk)
+                shader.render(quadMaterial.uniformPack, fixer, mesh.gpuMesh, rk)
                 inventory.uniformBufferHolder.flush(rk)
             }
         }
@@ -559,15 +564,18 @@ internal class Renderer(
                 rk?.fail()
                 return
             }
+            (declaration.material as? InternalBaseMaterial)?.model = declaration.nodeContext.transform.mat4 * declaration.transform.mat4
+            declaration.material.time = declaration.nodeContext.time ?: renderContext.time
+
             val instancingMaterialModifier = (declaration.mesh as? Instanceable)?.instancing(meshLink, reverseZ, camera, inventory)
-            val materialModifiers = listOfNotNull(
+            val uniformPack = arrayOf<UniformSupplier?>(
                 contextMaterialModifier,
                 instancingMaterialModifier,
-                ModelModifier(declaration.nodeContext.transform.mat4 * declaration.transform.mat4),
-                TimeMaterialModifier(declaration.nodeContext, renderContext),
-                shadowCasterModifier
+                shadowCasterModifier,
+                null,
+                null
             )
-            val materialDeclaration = declaration.material.toDeclaration(doDeferredShading, declaration.nodeContext, materialModifiers)
+            val materialDeclaration = declaration.material.toDeclaration(doDeferredShading, declaration.nodeContext, uniformPack)
             if ((materialDeclaration.defs and Defs.NO_SHADOW_CAST.bit) != 0L && shadowCasterModifier != null)
                 return
             val shader = inventory.shader(materialDeclaration)
@@ -575,7 +583,7 @@ internal class Renderer(
                 rk?.fail()
                 return
             }
-            shader.render(materialDeclaration.uniformSuppliers, fixer, meshLink.gpuMesh, rk)
+            shader.render(materialDeclaration.uniformPack, fixer, meshLink.gpuMesh, rk)
         }
     }
 }

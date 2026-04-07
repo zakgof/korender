@@ -117,7 +117,7 @@ internal class GlGpuShader(
     private val zeroTex: GlGpuTexture,
     private val zeroShadowTex: GlGpuTexture,
     private val uboHolder: UniformBufferHolder,
-    private val uniformSuppliers: List<UniformSupplier>
+    private val uniformPack: UniformPack
 ) : AutoCloseable {
 
     private val programHandle = glCreateProgram()
@@ -135,9 +135,9 @@ internal class GlGpuShader(
         val supplierIndex: Int,
         val getter: UniformGetter<*>
     ) {
-        fun write(currentTextureUnit: Int, suppliers: List<UniformSupplier>, loader: (Any?) -> GlBindableTexture, materialName: String, rk: ResultKeeper?): Int? {
+        fun write(currentTextureUnit: Int, uniformPack: UniformPack, loader: (Any?) -> GlBindableTexture, materialName: String, rk: ResultKeeper?): Int? {
             val missingMessage = "Material $materialName does not provide uniform $name"
-            val obj = suppliers[supplierIndex]
+            val obj = uniformPack[supplierIndex]!!
             return getter.writeTo(this@GlGpuShader, location, currentTextureUnit, obj, missingMessage, zeroTex, zeroShadowTex, loader, rk)
         }
     }
@@ -245,10 +245,10 @@ internal class GlGpuShader(
 
         return (0 until uniformCount[0]).map { i ->
             val name = glGetActiveUniformName(programHandle, uniformIndices[i])
-            val index = uniformSuppliers.indices.firstOrNull { uniformSuppliers[it].uniform(name) != null }
+            val index = uniformPack.indices.firstOrNull { uniformPack[it]?.uniform(name) != null }
             if (index == null)
                 throw KorenderException("Uniform $name not declared in materials for shader $this")
-            val getter = uniformSuppliers[index].uniform(name)!!
+            val getter = uniformPack[index]!!.uniform(name)!!
             CompiledBlockBinding(uniformOffsets[i], name, index, getter)
         }
     }
@@ -259,10 +259,10 @@ internal class GlGpuShader(
             val name: String = glGetActiveUniform(programHandle, i)
             val location = glGetUniformLocation(programHandle, name)
             location?.let {
-                val index = uniformSuppliers.indices.firstOrNull { uniformSuppliers[it].uniform(name) != null }
+                val index = uniformPack.indices.firstOrNull { uniformPack[it]?.uniform(name) != null }
                 if (index == null)
                     throw KorenderException("Uniform $name not declared in materials for shader $this")
-                CompiledUniformBinding(location, name, index, uniformSuppliers[index].uniform(name)!!)
+                CompiledUniformBinding(location, name, index, uniformPack[index]!!.uniform(name)!!)
             }
         }
     }
@@ -274,11 +274,11 @@ internal class GlGpuShader(
         glDeleteProgram(programHandle)
     }
 
-    fun render(uniformsSuppliers: List<UniformSupplier>, loader: (Any?) -> GlBindableTexture, mesh: GlGpuMesh, rk: ResultKeeper?) {
-        uboHolder.populate(uniformsSuppliers, shaderUniformBlock, this.toString(), rk) { binding, _ ->
+    fun render(uniformPack: UniformPack, loader: (Any?) -> GlBindableTexture, mesh: GlGpuMesh, rk: ResultKeeper?) {
+        uboHolder.populate(uniformPack, shaderUniformBlock, this.toString(), rk) { binding, _ ->
             glUseProgram(programHandle)
             shaderUniformBlock?.let { glUniformBlockBinding(programHandle, it.shaderBlockIndex, binding) }
-            if (bindUniforms(uniformsSuppliers, loader, rk)) {
+            if (bindUniforms(uniformPack, loader, rk)) {
                 mesh.render()
             } else {
                 rk?.fail()
@@ -287,10 +287,10 @@ internal class GlGpuShader(
 
     }
 
-    private fun bindUniforms(uniformSuppliers: List<UniformSupplier>, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean {
+    private fun bindUniforms(uniformPack: UniformPack, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean {
         var currentTextureUnit = 1
         uniformBindings.forEach { binding ->
-            val ret = binding.write(currentTextureUnit, uniformSuppliers, loader, toString(), rk)
+            val ret = binding.write(currentTextureUnit, uniformPack, loader, toString(), rk)
             if (ret == null) {
                 println("Skipping shader rendering because texture [${binding.name}] not loaded")
                 return false

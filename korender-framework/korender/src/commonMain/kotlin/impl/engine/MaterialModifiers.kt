@@ -4,13 +4,11 @@ import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.glgpu.Color3ListGetter
 import com.zakgof.korender.impl.glgpu.Color4ListGetter
 import com.zakgof.korender.impl.glgpu.ColorRGBGetter
-import com.zakgof.korender.impl.glgpu.FloatGetter
 import com.zakgof.korender.impl.glgpu.FloatListGetter
 import com.zakgof.korender.impl.glgpu.GlGpuShadowTextureList
 import com.zakgof.korender.impl.glgpu.GlGpuTextureList
 import com.zakgof.korender.impl.glgpu.IntGetter
 import com.zakgof.korender.impl.glgpu.IntListGetter
-import com.zakgof.korender.impl.glgpu.Mat4Getter
 import com.zakgof.korender.impl.glgpu.Mat4ListGetter
 import com.zakgof.korender.impl.glgpu.ShadowTextureListGetter
 import com.zakgof.korender.impl.glgpu.TextureGetter
@@ -105,18 +103,4 @@ internal class ContextMaterialModifier(private val frameContext: FrameContext, r
         }
         return super.collectPlugins2(accumulator).pluginOverride2IfNotNull(plugin, plugin!!)
     }
-}
-
-internal class ModelModifier(
-    val model: Mat4,
-) : InternalMaterialModifier(
-    "model" to Mat4Getter<ModelModifier> { it.model },
-)
-
-internal class TimeMaterialModifier(nodeContext: NodeContext, renderContext: RenderContext) : InternalMaterialModifier(
-    "time" to FloatGetter<TimeMaterialModifier> {
-        it.time
-    }
-) {
-    val time = nodeContext.time ?: renderContext.time
 }

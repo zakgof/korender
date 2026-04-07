@@ -66,7 +66,7 @@ internal fun Renderer.Scene.shadows(
     val shadowFrameMaterialModifier = updateShadowCamera(frameContext, renderer.renderContext, lightDirection, declaration, rootNodeContext)
 
     // TODO LMM is ugly
-    renderer.inventory.uniformBufferHolder.populateFrame(listOf(shadowFrameMaterialModifier, lightMaterialModifier), true)
+    renderer.inventory.uniformBufferHolder.populateFrame(arrayOf(shadowFrameMaterialModifier, lightMaterialModifier), true)
 
     frameBuffer.exec {
         renderer.renderContext.state.set {

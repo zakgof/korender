@@ -25,9 +25,11 @@ import com.zakgof.korender.impl.glgpu.CompositeSupplier
 import com.zakgof.korender.impl.glgpu.FloatGetter
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.IntGetter
+import com.zakgof.korender.impl.glgpu.Mat4Getter
 import com.zakgof.korender.impl.glgpu.Mat4ListGetter
 import com.zakgof.korender.impl.glgpu.TextureGetter
 import com.zakgof.korender.impl.glgpu.UniformGetter
+import com.zakgof.korender.impl.glgpu.UniformPack
 import com.zakgof.korender.impl.glgpu.UniformSupplier
 import com.zakgof.korender.impl.glgpu.Vec2Getter
 import com.zakgof.korender.impl.glgpu.Vec3Getter
@@ -103,38 +105,34 @@ internal open class InternalMaterial(
     open val deferredFragmentShaderFile: String = deferredFragmentShaderFile
     open val forwardFragmentShaderFile: String = forwardFragmentShaderFile
 
+    var time = 0f
+
+    override fun uniform(name: String) = if (name == "time") FloatGetter<InternalMaterial> {it.time} else super.uniform(name)
+
     fun toDeclaration(
         deferredShading: Boolean,
         nodeContext: NodeContext,
-        modifiers: List<InternalMaterialModifier>,
+        uniformPack: UniformPack,
     ): ShaderDeclaration {
-
-        val uniformSuppliers = mutableListOf<UniformSupplier>()
         var defs = 0L
         var plugins1 = 0L
         var plugins2 = 0L
-
-        fun append(modifier: InternalMaterialModifier) {
-            uniformSuppliers += modifier
-            defs = modifier.collectDefs(defs)
-            plugins1 = modifier.collectPlugins1(plugins1)
-            plugins2 = modifier.collectPlugins2(plugins2)
-            (modifier as? CompositeSupplier)?.child?.let {
-                uniformSuppliers += it
-                defs = it.collectDefs(defs)
-                plugins1 = it.collectPlugins1(plugins1)
-                plugins2 = it.collectPlugins2(plugins2)
+        uniformPack[uniformPack.size - 2] = this as UniformSupplier
+        (this as? CompositeSupplier)?.let { uniformPack[uniformPack.size - 1] = it.child as UniformSupplier? }
+        uniformPack.forEach {
+            (it as? InternalMaterialModifier)?.let { modifier ->
+                defs = modifier.collectDefs(defs)
+                plugins1 = modifier.collectPlugins1(plugins1)
+                plugins2 = modifier.collectPlugins2(plugins2)
             }
         }
-        append(this)
-        modifiers.forEach { append(it) }
         return ShaderDeclaration(
             vertexShaderFile,
             if (deferredShading) deferredFragmentShaderFile else forwardFragmentShaderFile,
             defs,
             plugins1,
             plugins2,
-            uniformSuppliers,
+            uniformPack,
             nodeContext
         )
     }
@@ -161,6 +159,7 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
     override var occlusionTexture: TextureDeclaration? = null
     override var ibl: SkyMaterial? = null
     var jntMatrices: List<Mat4>? = null
+    var model: Mat4 = Mat4.IDENTITY
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
@@ -180,6 +179,7 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
             "occlusionTexture" -> TextureGetter<InternalBaseMaterial> { it.occlusionTexture }
             "emissionTexture" -> TextureGetter<InternalBaseMaterial> { it.emissionTexture }
             "jntMatrices[0]" -> Mat4ListGetter<InternalBaseMaterial> { it.jntMatrices }
+            "model" -> Mat4Getter<InternalBaseMaterial> {it.model}
             else -> super.uniform(name)
         }
 
@@ -205,7 +205,7 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
 }
 
 internal class InternalBillboardMaterial : InternalBaseMaterial("!shader/billboard.vert"),
-    BillboardMaterial, BillboardMaterialContext, CompositeSupplier {
+    BillboardMaterial, BillboardMaterialContext {
 
     override var position: Vec3 = Vec3.ZERO
     override var scale: Vec2 = Vec2(1f, 1f)
