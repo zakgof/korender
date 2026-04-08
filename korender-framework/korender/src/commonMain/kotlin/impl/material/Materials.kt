@@ -55,8 +55,8 @@ internal open class InternalMaterialModifier(vararg getters: Pair<String, Unifor
 
     open fun collectDefs(accumulator: Long): Long = accumulator or customDefs
 
-    open fun collectPlugins1(accumulator: Long): Long = accumulator pluginOverride customPlugins1
-    open fun collectPlugins2(accumulator: Long): Long = accumulator pluginOverride customPlugins2
+    open fun collectPlugins1(accumulator: Long): Long = accumulator.pluginOverride(customPlugins1)
+    open fun collectPlugins2(accumulator: Long): Long = accumulator.pluginOverride(customPlugins2)
 
     override fun plugin(plugin: ShaderPlugin) {
         plugin as AppliedPlugin
@@ -241,9 +241,11 @@ internal class InternalTerrainMaterial : InternalBaseMaterial("!shader/terrain.v
     override var terrainCenter: Vec3 = Vec3.ZERO
     var modifier: TerrainMaterialModifier? = null // TODO ugly
 
-    override fun collectPlugins1(accumulator: Long): Long = super.collectPlugins1(accumulator)
+    // TODO ugly
+    override fun collectPlugins1(accumulator: Long): Long = super.collectPlugins1(0L
         .pluginOverride1(Plugins.NORMAL_TERRAIN)
         .pluginOverride1(Plugins.TERRAIN_TEXTURE)
+    )
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {

@@ -3,7 +3,8 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.ShaderPluginId.*
+import com.zakgof.korender.ShaderPluginId.ALBEDO
+import com.zakgof.korender.ShaderPluginId.TERRAIN
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
