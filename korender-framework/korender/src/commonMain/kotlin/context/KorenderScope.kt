@@ -1,9 +1,9 @@
 package com.zakgof.korender.context
 
-import com.zakgof.korender.BaseMaterialContext
+import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.BillboardEffect
 import com.zakgof.korender.BillboardMaterial
-import com.zakgof.korender.BillboardMaterialContext
+import com.zakgof.korender.BillboardMaterialScope
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
@@ -12,22 +12,20 @@ import com.zakgof.korender.Image
 import com.zakgof.korender.Image3D
 import com.zakgof.korender.KeyHandler
 import com.zakgof.korender.Material
-import com.zakgof.korender.MaterialContext
+import com.zakgof.korender.MaterialScope
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MutableMesh
 import com.zakgof.korender.PipeMaterial
 import com.zakgof.korender.PixelFormat
-import com.zakgof.korender.PostProcessMaterialContext
+import com.zakgof.korender.PostProcessMaterialScope
 import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.RetentionPolicy
-import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.ShaderPlugin
 import com.zakgof.korender.ShaderPluginId
+import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SkyMaterial
-import com.zakgof.korender.TerrainMaterial
-import com.zakgof.korender.TerrainMaterialContext
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.math.ColorRGB
@@ -150,7 +148,7 @@ interface KorenderScope : ResourceScope {
      * @param block material configuration block
      * @return material
      */
-    fun customMaterial(vertShaderFile: String, fragShaderFile: String, block: MaterialContext.() -> Unit): Material
+    fun customMaterial(vertShaderFile: String, fragShaderFile: String, block: MaterialScope.() -> Unit): Material
 
     /**
      * Creates a material that applies a custom vertex shader and standard fragment shader.
@@ -159,7 +157,7 @@ interface KorenderScope : ResourceScope {
      * @param block material configuration block
      * @return material
      */
-    fun customMaterial(vertShaderFile: String, block: BaseMaterialContext.() -> Unit): Material
+    fun customMaterial(vertShaderFile: String, block: BaseMaterialScope.() -> Unit): Material
 
     /**
      * Creates a base material.
@@ -167,7 +165,7 @@ interface KorenderScope : ResourceScope {
      * @param block material configuration block
      * @return material
      */
-    fun base(block: BaseMaterialContext.() -> Unit): Material
+    fun base(block: BaseMaterialScope.() -> Unit): Material
 
     /**
      * Creates a billboard material.
@@ -175,15 +173,7 @@ interface KorenderScope : ResourceScope {
      * @param block material configuration block
      * @return material
      */
-    fun billboard(block: BillboardMaterialContext.() -> Unit): BillboardMaterial
-
-    /**
-     * Creates a terrain material.
-     *
-     * @param block material configuration block
-     * @return material
-     */
-    fun terrain(block: TerrainMaterialContext.() -> Unit): TerrainMaterial
+    fun billboard(block: BillboardMaterialScope.() -> Unit): BillboardMaterial
 
     /**
      * Creates a decal material.
@@ -191,7 +181,7 @@ interface KorenderScope : ResourceScope {
      * @param block material configuration block
      * @return material
      */
-    fun decal(block: BaseMaterialContext.() -> Unit): DecalMaterial
+    fun decal(block: BaseMaterialScope.() -> Unit): DecalMaterial
 
     /**
      * Creates a material modifier for pipe shapes
@@ -200,7 +190,7 @@ interface KorenderScope : ResourceScope {
      * @param block material configuration block
      * @return material modifier
      */
-    fun pipe(block: BaseMaterialContext.() -> Unit = {}): PipeMaterial
+    fun pipe(block: BaseMaterialScope.() -> Unit = {}): PipeMaterial
 
     /**
      * Creates one-dimensional gaussian blur material modifier in horizontal direction.
@@ -263,7 +253,7 @@ interface KorenderScope : ResourceScope {
      * @param block material configuration block
      * @return post processing material
      */
-    fun customPostProcessingFilter(fragmentShaderFile: String, block: PostProcessMaterialContext.() -> Unit = {}): PostProcessingMaterial
+    fun customPostProcessingFilter(fragmentShaderFile: String, block: PostProcessMaterialScope.() -> Unit = {}): PostProcessingMaterial
 
     /**
      * Creates a fire effect.
@@ -314,7 +304,7 @@ interface KorenderScope : ResourceScope {
         horizonColor: ColorRGB = ColorRGB(0xB8CAE9),
         cloudLight: Float = 1.0f,
         cloudDark: Float = 0.7f,
-        block: (MaterialContext) -> Unit = {},
+        block: (MaterialScope) -> Unit = {},
     ): SkyMaterial
 
     /**
@@ -326,7 +316,7 @@ interface KorenderScope : ResourceScope {
      * @param block optional material customization block
      * @return material modifier
      */
-    fun starrySky(colorness: Float = 0.8f, density: Float = 20.0f, speed: Float = 1.0f, size: Float = 15.0f, block: MaterialContext.() -> Unit = {}): SkyMaterial
+    fun starrySky(colorness: Float = 0.8f, density: Float = 20.0f, speed: Float = 1.0f, size: Float = 15.0f, block: MaterialScope.() -> Unit = {}): SkyMaterial
 
     /**
      * Creates a sky material modifier from a cube texture.
@@ -334,7 +324,7 @@ interface KorenderScope : ResourceScope {
      * @param block optional material customization block
      * @return material modifier
      */
-    fun cubeSky(cubeTexture: CubeTextureDeclaration, block: MaterialContext.() -> Unit = {}): SkyMaterial
+    fun cubeSky(cubeTexture: CubeTextureDeclaration, block: MaterialScope.() -> Unit = {}): SkyMaterial
 
     /**
      * Creates a sky material modifier from a flat texture.
@@ -342,7 +332,7 @@ interface KorenderScope : ResourceScope {
      * @param block optional material customization block
      * @return material modifier
      */
-    fun textureSky(texture: TextureDeclaration, block: MaterialContext.() -> Unit = {}): SkyMaterial
+    fun textureSky(texture: TextureDeclaration, block: MaterialScope.() -> Unit = {}): SkyMaterial
 
 
     /**

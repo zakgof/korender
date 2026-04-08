@@ -181,6 +181,8 @@ internal class GlGpuTexture(private val width: Int, private val height: Int, fil
     override fun bind(unit: Int) {
         glActiveTexture(GL_TEXTURE0 + unit)
         glBindTexture(GL_TEXTURE_2D, glHandle)
+
+        // println("BIND:    unit=$unit  text=$this")
     }
 
     fun fetch(): Image {

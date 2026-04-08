@@ -13,7 +13,7 @@ import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.RetentionPolicy
-import com.zakgof.korender.TerrainMaterial
+import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureArrayDeclaration
 import com.zakgof.korender.TextureArrayImages
@@ -145,6 +145,6 @@ internal class NodeContext(
     override fun bloomWide(threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float) =
         bloomMipEffect(threshold, amount, downsample, mips, offset, highResolutionRatio, this)
 
-    override fun clipmapTerrainPrefab(id: String, cellSize: Float, hg: Int, rings: Int): Prefab<TerrainMaterial> =
+    override fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab<TerrainMaterialScope> =
         Clipmaps(this, id, cellSize, hg, rings)
 }

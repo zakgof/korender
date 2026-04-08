@@ -1,6 +1,6 @@
 package com.zakgof.korender.context
 
-import com.zakgof.korender.BaseMaterialContext
+import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.BillboardMaterial
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.FrameInfo
@@ -39,10 +39,10 @@ interface FrameScope : KorenderScope {
     /**
      * Renders a geometry prefab.
      *
-     * @param material object surface material
      * @param prefab geometry prefab
+     * @param block prefab rendering parameters block
      */
-    fun <M : Material> Prefab(material: M, prefab: Prefab<M>)
+    fun <S> Prefab(prefab: Prefab<S>, block: S.() -> Unit)
 
     /**
      * Renders a GLTF model from a resource file.
@@ -54,7 +54,7 @@ interface FrameScope : KorenderScope {
      * @param onUpdate callback with runtime Gltf details
      * @param materialModifier material modifiers block
      */
-    fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, animation: Int? = null, instancing: GltfInstancingDeclaration? = null, onUpdate: (GltfUpdate) -> Unit = {}, materialModifier: BaseMaterialContext.() -> Unit = {})
+    fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, animation: Int? = null, instancing: GltfInstancingDeclaration? = null, onUpdate: (GltfUpdate) -> Unit = {}, materialModifier: BaseMaterialScope.() -> Unit = {})
 
     /**
      * Renders a billboard - camera facing quad.

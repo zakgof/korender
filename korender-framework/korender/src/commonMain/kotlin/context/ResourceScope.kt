@@ -14,7 +14,7 @@ import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.RetentionPolicy
-import com.zakgof.korender.TerrainMaterial
+import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureArrayDeclaration
 import com.zakgof.korender.TextureArrayImages
@@ -313,5 +313,5 @@ interface ResourceScope {
      * @param rings number of visible rings
      * @return terrain geometry prefab
      */
-    fun clipmapTerrainPrefab(id: String, cellSize: Float, hg: Int, rings: Int): Prefab<TerrainMaterial>
+    fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab<TerrainMaterialScope>
 }

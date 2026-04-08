@@ -6,7 +6,7 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.Prefab
 import com.zakgof.korender.ShaderPlugin
 import com.zakgof.korender.ShaderPluginId
-import com.zakgof.korender.TerrainMaterial
+import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.examples.TestExchange
 import com.zakgof.korender.math.ColorRGB
@@ -29,7 +29,7 @@ fun IslandExample() =
         terrainHeightPlugin = shaderPlugin(ShaderPluginId.TERRAIN, "island/terrain/shader/height.glsl")
         albedoTerrainPlugin = shaderPlugin(ShaderPluginId.ALBEDO, "island/terrain/shader/albedo.glsl")
 
-        val terrain = clipmapTerrainPrefab("terrain", 32.0f, 24, 6)
+        val terrain = clipmapTerrain("terrain", 32.0f, 24, 6)
         val loader = Loader(this)
         val game = Game(loader)
 
@@ -49,7 +49,7 @@ fun IslandExample() =
     }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-private fun FrameScope.gameFrame(game: Game, loader: Loader, terrain: Prefab<TerrainMaterial>) {
+private fun FrameScope.gameFrame(game: Game, loader: Loader, terrain: Prefab<TerrainMaterialScope>) {
     projection = projection(2f, 2f * height / width, 2f, 32000f, log())
     camera = camera(game.cameraPos, game.cameraDir, game.cameraUp)
 

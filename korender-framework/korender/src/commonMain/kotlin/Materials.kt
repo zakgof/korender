@@ -9,15 +9,13 @@ interface Material
 
 interface BillboardMaterial : Material
 
-interface TerrainMaterial : Material
-
-interface DecalMaterial: Material
+interface DecalMaterial : Material
 
 interface PipeMaterial : Material
 
 interface PostProcessingMaterial : Material
 
-interface SkyMaterial: Material
+interface SkyMaterial : Material
 
 data class SpecularGlossiness(
     val specularFactor: ColorRGB,
@@ -26,19 +24,8 @@ data class SpecularGlossiness(
 
 interface BillboardEffect
 
-interface MaterialContext {
-    /**
-//     * Creates a material modifier that applies shader definitions.
-//     *
-//     * Definitions affect the #ifdef / #ifndef directives in shaders
-//     *
-//     * @param defs fragment shader defines
-//     * @return material modifier
-//     */
-//    fun defs(vararg defs: String)
-
+interface MaterialScope {
     fun plugin(plugin: ShaderPlugin)
-
     fun float(key: String, value: Float)
     fun int(key: String, value: Int)
     fun vec2(key: String, value: Vec2)
@@ -46,7 +33,7 @@ interface MaterialContext {
     fun texture(key: String, value: TextureDeclaration)
 }
 
-interface BaseMaterialContext : MaterialContext {
+interface BaseMaterialScope : MaterialScope {
 
     /**
      * Base albedo color (multiplied by [colorTexture]).
@@ -130,7 +117,7 @@ interface BaseMaterialContext : MaterialContext {
     var ibl: SkyMaterial?
 }
 
-interface BillboardMaterialContext : BaseMaterialContext {
+interface BillboardMaterialScope : BaseMaterialScope {
     /**
      * Creates a material modifier for billboards.
      * Used with the base material.
@@ -147,9 +134,10 @@ interface BillboardMaterialContext : BaseMaterialContext {
     var effect: BillboardEffect?
 }
 
-interface TerrainMaterialContext: BaseMaterialContext {
+interface TerrainMaterialScope : BaseMaterialScope {
 
     /**
+     * TODO
      * Creates a material modifier for clipmap terrains.
      * Used with the base material.
      *
@@ -160,15 +148,10 @@ interface TerrainMaterialContext: BaseMaterialContext {
      * @return material modifier
      */
 
-    var heightTexture: TextureDeclaration?
-    var heightScale: Float
-    var outsideHeight: Float
-    var terrainCenter: Vec3
+    fun heightTexture(heightTexture: TextureDeclaration, heightScale: Float, outsideHeight: Float = 0f, terrainCenter: Vec3 = Vec3.ZERO)
 }
 
-interface PostProcessMaterialContext: MaterialContext {
-
-}
+interface PostProcessMaterialScope : MaterialScope
 
 
 interface PostShadingEffect

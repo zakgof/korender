@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.BaseMaterialContext
-import com.zakgof.korender.BillboardMaterialContext
+import com.zakgof.korender.BaseMaterialScope
+import com.zakgof.korender.BillboardMaterialScope
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
@@ -11,11 +11,11 @@ import com.zakgof.korender.Image3D
 import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.KeyHandler
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.MaterialContext
+import com.zakgof.korender.MaterialScope
 import com.zakgof.korender.MutableMesh
 import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.Platform
-import com.zakgof.korender.PostProcessMaterialContext
+import com.zakgof.korender.PostProcessMaterialScope
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.ResourceLoader
@@ -24,7 +24,7 @@ import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.ShaderPlugin
 import com.zakgof.korender.ShaderPluginId
 import com.zakgof.korender.SkyMaterial
-import com.zakgof.korender.TerrainMaterialContext
+import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
@@ -212,25 +212,22 @@ internal class Engine(
         override fun mutableMesh(): MutableMesh =
             InternalMutableMesh()
 
-        override fun customMaterial(vertShaderFile: String, fragShaderFile: String, block: MaterialContext.() -> Unit) =
+        override fun customMaterial(vertShaderFile: String, fragShaderFile: String, block: MaterialScope.() -> Unit) =
             InternalMaterial(vertShaderFile, fragShaderFile).also { block.invoke(it) }
 
-        override fun customMaterial(vertShaderFile: String, block: BaseMaterialContext.() -> Unit) =
+        override fun customMaterial(vertShaderFile: String, block: BaseMaterialScope.() -> Unit) =
             InternalBaseMaterial(vertShaderFile).also { block.invoke(it) }
 
-        override fun base(block: BaseMaterialContext.() -> Unit) =
+        override fun base(block: BaseMaterialScope.() -> Unit) =
             InternalBaseMaterial().also { block.invoke(it) }
 
-        override fun billboard(block: BillboardMaterialContext.() -> Unit) =
+        override fun billboard(block: BillboardMaterialScope.() -> Unit) =
             InternalBillboardMaterial().also { block.invoke(it) }
 
-        override fun terrain(block: TerrainMaterialContext.() -> Unit) =
-            InternalTerrainMaterial().also { block.invoke(it) }
-
-        override fun pipe(block: BaseMaterialContext.() -> Unit) =
+        override fun pipe(block: BaseMaterialScope.() -> Unit) =
             InternalPipeMaterial().also { block.invoke(it) }
 
-        override fun decal(block: BaseMaterialContext.() -> Unit) =
+        override fun decal(block: BaseMaterialScope.() -> Unit) =
             InternalDecalMaterial().also { block.invoke(it) }
 
         override fun blurVert(radius: Float) =
@@ -257,19 +254,19 @@ internal class Engine(
         override fun fxaa() =
             InternalPostProcessingMaterial("!shader/effect/fxaa.frag")
 
-        override fun customPostProcessingFilter(fragmentShaderFile: String, block: PostProcessMaterialContext.() -> Unit) =
+        override fun customPostProcessingFilter(fragmentShaderFile: String, block: PostProcessMaterialScope.() -> Unit) =
             InternalPostProcessingMaterial(fragmentShaderFile).also { block.invoke(it) }
 
-        override fun fastCloudSky(density: Float, thickness: Float, scale: Float, rippleAmount: Float, rippleScale: Float, zenithColor: ColorRGB, horizonColor: ColorRGB, cloudLight: Float, cloudDark: Float, block: MaterialContext.() -> Unit) =
+        override fun fastCloudSky(density: Float, thickness: Float, scale: Float, rippleAmount: Float, rippleScale: Float, zenithColor: ColorRGB, horizonColor: ColorRGB, cloudLight: Float, cloudDark: Float, block: MaterialScope.() -> Unit) =
             FastCloudSkyMaterial(density, thickness, scale, rippleAmount, rippleScale, zenithColor, horizonColor, cloudLight, cloudDark, block)
 
-        override fun starrySky(colorness: Float, density: Float, speed: Float, size: Float, block: MaterialContext.() -> Unit) =
+        override fun starrySky(colorness: Float, density: Float, speed: Float, size: Float, block: MaterialScope.() -> Unit) =
             StarrySkyMaterial(colorness, density, speed, size, block)
 
-        override fun cubeSky(cubeTexture: CubeTextureDeclaration, block: MaterialContext.() -> Unit) =
+        override fun cubeSky(cubeTexture: CubeTextureDeclaration, block: MaterialScope.() -> Unit) =
             CubeSkyMaterial(cubeTexture, block)
 
-        override fun textureSky(texture: TextureDeclaration, block: MaterialContext.() -> Unit) =
+        override fun textureSky(texture: TextureDeclaration, block: MaterialScope.() -> Unit) =
             TextureSkyMaterial(texture, block)
 
         override fun fog(density: Float, color: ColorRGB) =

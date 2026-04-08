@@ -1,6 +1,6 @@
 package com.zakgof.korender.impl.context
 
-import com.zakgof.korender.BaseMaterialContext
+import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.BillboardMaterial
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.CubeTextureDeclaration
@@ -170,7 +170,7 @@ internal class DefaultFrameScope(
         DefaultDeferredShadingContext(sceneDeclaration.deferredShadingDeclaration!!).apply(block)
     }
 
-    override fun Gltf(resource: String, transform: Transform, animation: Int?, instancing: GltfInstancingDeclaration?, onUpdate: (GltfUpdate) -> Unit, materialModifier: BaseMaterialContext.() -> Unit) {
+    override fun Gltf(resource: String, transform: Transform, animation: Int?, instancing: GltfInstancingDeclaration?, onUpdate: (GltfUpdate) -> Unit, materialModifier: BaseMaterialScope.() -> Unit) {
         sceneDeclaration.gltfs += GltfDeclaration(
             resource,
             onUpdate,
@@ -191,8 +191,8 @@ internal class DefaultFrameScope(
         sceneDeclaration.append(rd)
     }
 
-    override fun <M : Material> Prefab(material: M, prefab: Prefab<M>) {
-        (prefab as InternalPrefab).render(this, material)
+    override fun <S> Prefab(prefab: Prefab<S>, block: S.() -> Unit) {
+        (prefab as InternalPrefab).render(this, block)
     }
 
     override fun Billboard(material: BillboardMaterial, transparent: Boolean, instancing: BillboardInstancingDeclaration?) {

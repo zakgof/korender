@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.CubeTextureDeclaration
-import com.zakgof.korender.MaterialContext
+import com.zakgof.korender.MaterialScope
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.impl.glgpu.ColorRGBGetter
 import com.zakgof.korender.impl.glgpu.FloatGetter
@@ -18,7 +18,7 @@ internal class FastCloudSkyMaterial(
     val horizonColor: ColorRGB,
     val cloudLight: Float,
     val cloudDark: Float,
-    block: MaterialContext.() -> Unit,
+    block: MaterialScope.() -> Unit,
 ) : InternalSkyMaterial(
     "!shader/plugin/sky.fastcloud.frag",
     "density" to FloatGetter<FastCloudSkyMaterial> { it.density },
@@ -41,7 +41,7 @@ internal class StarrySkyMaterial(
     val density: Float,
     val speed: Float,
     val size: Float,
-    block: MaterialContext.() -> Unit,
+    block: MaterialScope.() -> Unit,
 ) : InternalSkyMaterial(
     "!shader/plugin/sky.starry.frag",
     "colorness" to FloatGetter<StarrySkyMaterial> { it.colorness },
@@ -56,7 +56,7 @@ internal class StarrySkyMaterial(
 
 internal class CubeSkyMaterial(
     val cubeTexture: CubeTextureDeclaration,
-    block: MaterialContext.() -> Unit,
+    block: MaterialScope.() -> Unit,
 ) : InternalSkyMaterial(
     "!shader/plugin/sky.cube.frag",
     "cubeTexture" to TextureGetter<CubeSkyMaterial> { it.cubeTexture }
@@ -68,7 +68,7 @@ internal class CubeSkyMaterial(
 
 internal class TextureSkyMaterial(
     val texture: TextureDeclaration,
-    block: MaterialContext.() -> Unit,
+    block: MaterialScope.() -> Unit,
 ) : InternalSkyMaterial(
     "!shader/plugin/sky.texture.frag",
     "texture" to TextureGetter<TextureSkyMaterial> { it.texture }

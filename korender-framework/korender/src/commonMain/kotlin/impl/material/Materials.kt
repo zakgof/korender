@@ -1,20 +1,19 @@
 package com.zakgof.korender.impl.material
 
-import com.zakgof.korender.BaseMaterialContext
+import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.BillboardEffect
 import com.zakgof.korender.BillboardMaterial
-import com.zakgof.korender.BillboardMaterialContext
+import com.zakgof.korender.BillboardMaterialScope
 import com.zakgof.korender.DecalMaterial
 import com.zakgof.korender.Material
-import com.zakgof.korender.MaterialContext
+import com.zakgof.korender.MaterialScope
 import com.zakgof.korender.PipeMaterial
-import com.zakgof.korender.PostProcessMaterialContext
+import com.zakgof.korender.PostProcessMaterialScope
 import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.ShaderPlugin
 import com.zakgof.korender.SkyMaterial
 import com.zakgof.korender.SpecularGlossiness
-import com.zakgof.korender.TerrainMaterial
-import com.zakgof.korender.TerrainMaterialContext
+import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.TextureArrayDeclaration
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.impl.context.NodeContext
@@ -41,7 +40,7 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
 internal open class InternalMaterialModifier(vararg getters: Pair<String, UniformGetter<*>>) :
-    MaterialContext, UniformSupplier {
+    MaterialScope, UniformSupplier {
 
     private var customDefs = 0L
     private var customPlugins1 = 0L
@@ -96,7 +95,7 @@ internal open class InternalMaterial(
     deferredFragmentShaderFile: String,
     forwardFragmentShaderFile: String,
     vararg getters: Pair<String, UniformGetter<*>>,
-) : InternalMaterialModifier(*getters), MaterialContext, Material {
+) : InternalMaterialModifier(*getters), MaterialScope, Material {
 
     constructor(vertexShaderFile: String, fragmentShaderFile: String, vararg getters: Pair<String, UniformGetter<*>>) :
             this(vertexShaderFile, fragmentShaderFile, fragmentShaderFile, *getters)
@@ -140,7 +139,7 @@ internal open class InternalMaterial(
 
 internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/base.vert") :
     InternalMaterial(vertexShaderFile, "!shader/deferred/geometry.frag", "!shader/forward.frag"),
-    BaseMaterialContext, UniformSupplier, CompositeSupplier {
+    BaseMaterialScope, UniformSupplier, CompositeSupplier {
 
     override var color: ColorRGBA = ColorRGBA.White
     override var colorTexture: TextureDeclaration? = null
@@ -205,7 +204,7 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
 }
 
 internal class InternalBillboardMaterial : InternalBaseMaterial("!shader/billboard.vert"),
-    BillboardMaterial, BillboardMaterialContext {
+    BillboardMaterial, BillboardMaterialScope {
 
     override var position: Vec3 = Vec3.ZERO
     override var scale: Vec2 = Vec2(1f, 1f)
@@ -233,30 +232,37 @@ internal class InternalDecalMaterial : InternalBaseMaterial(), DecalMaterial {
     override val deferredFragmentShaderFile = "!shader/deferred/decal.frag"
 }
 
-internal class InternalTerrainMaterial : InternalBaseMaterial("!shader/terrain.vert"), TerrainMaterial, TerrainMaterialContext {
+internal data class InternalTerrainMaterial(val modifier: TerrainMaterialModifier) : InternalBaseMaterial("!shader/terrain.vert"), TerrainMaterialScope {
 
-    override var heightTexture: TextureDeclaration? = null
-    override var heightScale: Float = 0.1f
-    override var outsideHeight: Float = 0f
-    override var terrainCenter: Vec3 = Vec3.ZERO
-    var modifier: TerrainMaterialModifier? = null // TODO ugly
+    class HeightTexturePlugin (
+        val heightTexture: TextureDeclaration?,
+        val heightScale: Float,
+        val outsideHeight: Float,
+        val terrainCenter: Vec3
+    )
+
+    var heightTexturePlugin: HeightTexturePlugin? = null
+
+    override fun heightTexture(heightTexture: TextureDeclaration, heightScale: Float, outsideHeight: Float, terrainCenter: Vec3) {
+        heightTexturePlugin = HeightTexturePlugin(heightTexture, heightScale, outsideHeight, terrainCenter)
+    }
 
     // TODO ugly
     override fun collectPlugins1(accumulator: Long): Long = super.collectPlugins1(0L
         .pluginOverride1(Plugins.NORMAL_TERRAIN)
-        .pluginOverride1(Plugins.TERRAIN_TEXTURE)
+        .pluginOverride1IfNotNull(heightTexturePlugin, Plugins.TERRAIN_TEXTURE)
     )
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
-            "heightTexture" -> TextureGetter<InternalTerrainMaterial> { it.heightTexture }
-            "heightScale" -> FloatGetter<InternalTerrainMaterial> { it.heightScale }
-            "outsideHeight" -> FloatGetter<InternalTerrainMaterial> { it.outsideHeight }
-            "terrainCenter" -> Vec3Getter<InternalTerrainMaterial> { it.terrainCenter }
+            "heightTexture" -> TextureGetter<InternalTerrainMaterial> { it.heightTexturePlugin?.heightTexture }
+            "heightScale" -> FloatGetter<InternalTerrainMaterial> { it.heightTexturePlugin?.heightScale }
+            "outsideHeight" -> FloatGetter<InternalTerrainMaterial> { it.heightTexturePlugin?.outsideHeight }
+            "terrainCenter" -> Vec3Getter<InternalTerrainMaterial> { it.heightTexturePlugin?.terrainCenter }
             else -> super.uniform(name)
         }
 
-    override val child: InternalMaterialModifier?
+    override val child
         get() = modifier
 }
 
@@ -271,7 +277,7 @@ internal class InternalPipeMaterial : InternalBaseMaterial("!shader/pipe.vert"),
 internal open class InternalPostProcessingMaterial(
     fragmentShaderFile: String,
     vararg getters: Pair<String, UniformGetter<*>>,
-) : InternalMaterial("!shader/screen.vert", fragmentShaderFile, *getters), PostProcessingMaterial, PostProcessMaterialContext
+) : InternalMaterial("!shader/screen.vert", fragmentShaderFile, *getters), PostProcessingMaterial, PostProcessMaterialScope
 
 internal abstract class InternalBillboardEffect(val fragmentShaderFile: String, vararg getters: Pair<String, UniformGetter<*>>) : BillboardEffect, InternalMaterialModifier(*getters)
 

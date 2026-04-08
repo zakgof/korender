@@ -1,6 +1,6 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.BaseMaterialContext
+import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostShadingEffect
@@ -164,7 +164,7 @@ internal class GltfDeclaration(
     val time: Float,
     val animation: Int,
     val instancingDeclaration: InternalGltfInstancingDeclaration?,
-    val materialModifier: BaseMaterialContext.() -> Unit,
+    val materialModifier: BaseMaterialScope.() -> Unit,
     override val nodeContext: NodeContext,
 ) : NodeKeeper {
     override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.resource == resource)

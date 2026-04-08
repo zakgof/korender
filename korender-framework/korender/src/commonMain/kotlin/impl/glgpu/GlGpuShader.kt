@@ -41,31 +41,33 @@ import com.zakgof.korender.impl.material.UniformBufferHolder
 internal class UniformBlock(
     val shaderBlockIndex: Int,
     val size: Int,
-    val bindings: List<CompiledBlockBinding>
+    val bindings: List<CompiledBlockBinding>,
 )
 
 internal sealed interface UniformGetter<T> {
 
-    fun writeTo(buffer: NativeByteBuffer, obj: Any, missingMessage: String?) {}
+    fun writeTo(buffer: NativeByteBuffer, obj: Any, missing: () -> Unit) {}
 
-    fun writeTo(shader: GlGpuShader, location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Int? = 0
+    fun writeTo(shader: GlGpuShader, location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missing: () -> Unit, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Int? = 0
 
     @Suppress("UNCHECKED_CAST")
-    fun <V> safe(getter: (T) -> V?, obj: Any, missingMessage: String?, consumer: (V) -> Unit) {
-        val v = getter(obj as T) ?: missingMessage?.let { throw KorenderException(it) }
-        v?.let { consumer(it) }
+    fun <V> safe(getter: (T) -> V?, obj: Any, missing: () -> Unit, consumer: (V) -> Unit) {
+        getter(obj as T)
+            ?.let { consumer(it) }
+            ?: missing()
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <V> safeInt(getter: (T) -> V, obj: Any, missingMessage: String?, consumer: (V) -> Int?): Int? {
-        val v = getter(obj as T) ?: missingMessage?.let { throw KorenderException(it) }
-        return v?.let { consumer(it) } ?: 0
-    }
+    fun <V> safeInt(getter: (T) -> V, obj: Any, missing: () -> Unit, consumer: (V) -> Int?) =
+        getter(obj as T)
+            ?.let { consumer(it) }
+            ?: 0.also { missing() }
+
 }
 
 internal class TextureGetter<T>(private val f: (T) -> Any?) : UniformGetter<T> {
-    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?) =
-        safeInt(f, obj, missingMessage) { v ->
+    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missing: () -> Unit, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?) =
+        safeInt(f, obj, missing) { v ->
             val texture = loader(v)
             if (texture == NotYetLoadedTexture) {
                 zeroTex.bind(currentTextureUnit)
@@ -79,8 +81,8 @@ internal class TextureGetter<T>(private val f: (T) -> Any?) : UniformGetter<T> {
 }
 
 internal class TextureListGetter<T>(private val f: (T) -> GlGpuTextureList) : UniformGetter<T> {
-    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?) =
-        safeInt(f, obj, missingMessage) { v ->
+    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missing: () -> Unit, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?) =
+        safeInt(f, obj, missing) { v ->
             val units = (0 until v.totalNum)
                 .map {
                     val ctu = currentTextureUnit + it
@@ -94,8 +96,8 @@ internal class TextureListGetter<T>(private val f: (T) -> GlGpuTextureList) : Un
 }
 
 internal class ShadowTextureListGetter<T>(private val f: (T) -> GlGpuShadowTextureList) : UniformGetter<T> {
-    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missingMessage: String?, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?) =
-        safeInt(f, obj, missingMessage) { v ->
+    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missing: () -> Unit, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?) =
+        safeInt(f, obj, missing) { v ->
             val units = (0 until v.totalNum)
                 .map {
                     val ctu = currentTextureUnit + it
@@ -117,7 +119,7 @@ internal class GlGpuShader(
     private val zeroTex: GlGpuTexture,
     private val zeroShadowTex: GlGpuTexture,
     private val uboHolder: UniformBufferHolder,
-    private val uniformPack: UniformPack
+    private val uniformPack: UniformPack,
 ) : AutoCloseable {
 
     private val programHandle = glCreateProgram()
@@ -133,12 +135,13 @@ internal class GlGpuShader(
         val location: GLUniformLocation,
         val name: String,
         val supplierIndex: Int,
-        val getter: UniformGetter<*>
+        val getter: UniformGetter<*>,
     ) {
         fun write(currentTextureUnit: Int, uniformPack: UniformPack, loader: (Any?) -> GlBindableTexture, materialName: String, rk: ResultKeeper?): Int? {
-            val missingMessage = "Material $materialName does not provide uniform $name"
             val obj = uniformPack[supplierIndex]!!
-            return getter.writeTo(this@GlGpuShader, location, currentTextureUnit, obj, missingMessage, zeroTex, zeroShadowTex, loader, rk)
+            return getter.writeTo(this@GlGpuShader, location, currentTextureUnit, obj,
+                { throw KorenderException("Material $materialName does not provide uniform $name") },
+                zeroTex, zeroShadowTex, loader, rk)
         }
     }
 

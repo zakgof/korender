@@ -1,6 +1,6 @@
 package com.zakgof.korender.impl.gltf
 
-import com.zakgof.korender.BaseMaterialContext
+import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.SpecularGlossiness
@@ -199,7 +199,7 @@ internal class GltfSceneBuilder(
         primitive: InternalGltfModel.Mesh.Primitive,
         skinIndex: Int?,
         jointMatrices: List<Mat4>?,
-        materialModifier: BaseMaterialContext.() -> Unit,
+        materialModifier: BaseMaterialScope.() -> Unit,
     ): Pair<Boolean, InternalMaterial> {
 
         // TODO: split into 2 parts, precompute textures modifier, calc only skin modifier

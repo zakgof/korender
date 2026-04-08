@@ -2,7 +2,7 @@ package island
 
 import com.zakgof.korender.Image
 import com.zakgof.korender.Prefab
-import com.zakgof.korender.TerrainMaterial
+import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.examples.island.albedoTerrainPlugin
@@ -17,24 +17,20 @@ fun loadRunway(bytes: ByteArray): Pair<Vec2, Vec2> = loadBinary(bytes) {
     p1 to p2
 }
 
-fun FrameScope.island(heightMap: Image, rwSeeds: Pair<Vec2, Vec2>, terrain: Prefab<TerrainMaterial>) {
-    Prefab(
-        terrain {
-            metallicFactor = 0.0f
-
-            plugin(normalTerrainPlugin)
-            plugin(terrainHeightPlugin)
-            plugin(albedoTerrainPlugin)
-            texture("heightTexture", texture("base-terrain", heightMap))
-            texture("patchTexture", texture("island/terrain/color.png"))
-            texture("sdf", texture("island/terrain/sdf.png", TextureFilter.Linear))
-            texture("road", texture("infcity/road.jpg"))
-            texture("grassTexture", texture("texture/grass.jpg"))
-            texture("runwayTexture" ,texture("island/terrain/runway.jpg"))
-            vec2("runwayP1", rwSeeds.first)
-            vec2("runwayP2", rwSeeds.second)
-            // defs ("NO_SHADOW_CAST")
-        },
-        prefab = terrain
-    )
+fun FrameScope.island(heightMap: Image, rwSeeds: Pair<Vec2, Vec2>, terrain: Prefab<TerrainMaterialScope>) {
+    Prefab(terrain) {
+        metallicFactor = 0.0f
+        plugin(normalTerrainPlugin)
+        plugin(terrainHeightPlugin)
+        plugin(albedoTerrainPlugin)
+        texture("heightTexture", texture("base-terrain", heightMap))
+        texture("patchTexture", texture("island/terrain/color.png"))
+        texture("sdf", texture("island/terrain/sdf.png", TextureFilter.Linear))
+        texture("road", texture("infcity/road.jpg"))
+        texture("grassTexture", texture("texture/grass.jpg"))
+        texture("runwayTexture", texture("island/terrain/runway.jpg"))
+        vec2("runwayP1", rwSeeds.first)
+        vec2("runwayP2", rwSeeds.second)
+        // defs ("NO_SHADOW_CAST")
+    }
 }

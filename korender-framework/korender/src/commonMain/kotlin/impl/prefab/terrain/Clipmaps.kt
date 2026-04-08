@@ -2,7 +2,7 @@ package com.zakgof.korender.impl.prefab.terrain
 
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
-import com.zakgof.korender.TerrainMaterial
+import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.impl.context.DefaultFrameScope
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.RenderableDeclaration
@@ -17,7 +17,7 @@ import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import kotlin.math.floor
 
-internal class Clipmaps(nodeContext: NodeContext, id: String, private val cellSize: Float, private val hg: Int, private val rings: Int) : InternalPrefab<TerrainMaterial> {
+internal class Clipmaps(nodeContext: NodeContext, id: String, private val cellSize: Float, private val hg: Int, private val rings: Int) : InternalPrefab<TerrainMaterialScope> {
 
     private val center: MeshDeclaration
     private val ring = mutableMapOf<Offset, MeshDeclaration>()
@@ -118,10 +118,12 @@ internal class Clipmaps(nodeContext: NodeContext, id: String, private val cellSi
         return list
     }
 
-    override fun render(fc: DefaultFrameScope, material: TerrainMaterial) = with(fc) {
+    override fun render(fc: DefaultFrameScope, block: TerrainMaterialScope.() -> Unit) = with(fc) {
         val tiles = meshes(camera.position)
         tiles.forEach { tile ->
-            (material as InternalTerrainMaterial).modifier = TerrainMaterialModifier(tile, hg.toFloat() - 1f, cellSize)
+            // TODO overhead!!!
+            val modifier = TerrainMaterialModifier(tile, hg.toFloat() - 1f, cellSize)
+            val material = InternalTerrainMaterial(modifier).apply(block)
             val rd = RenderableDeclaration(
                 material,
                 tile.mesh,

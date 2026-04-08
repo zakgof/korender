@@ -14,7 +14,7 @@ import kotlin.math.cos
 fun HeightmapTerrainExample() =
     Korender(resourceLoader = { Res.readBytes("files/$it") }) {
 
-        val terrain = clipmapTerrainPrefab("terrain", 2.0f, 10, 6)
+        val terrain = clipmapTerrain("terrain", 2.0f, 10, 6)
         Frame {
             TestExchange.report(frameInfo)
 
@@ -23,18 +23,16 @@ fun HeightmapTerrainExample() =
 
             AmbientLight(ColorRGB.white(0.4f))
             DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(1.5f))
-
-            Prefab(
-                terrain {
-                    colorTexture = texture("terrain/terrain-albedo.jpg", wrap = TextureWrap.ClampToEdge)
-                    metallicFactor = 0.0f
-                    heightTexture = texture("terrain/terrain-height.png")
-                    heightScale = 200.0f
-                    outsideHeight = -100.0f
+            Prefab(terrain) {
+                colorTexture = texture("terrain/terrain-albedo.jpg", wrap = TextureWrap.ClampToEdge)
+                metallicFactor = 0.0f
+                heightTexture(
+                    heightTexture = texture("terrain/terrain-height.png"),
+                    heightScale = 200.0f,
+                    outsideHeight = -100.0f,
                     terrainCenter = Vec3(0f, -14f, 0f)
-                },
-                prefab = terrain
-            )
+                )
+            }
 
             val sky = fastCloudSky()
             Sky(sky)

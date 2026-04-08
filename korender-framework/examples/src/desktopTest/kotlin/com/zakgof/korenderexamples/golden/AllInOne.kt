@@ -1,7 +1,7 @@
 package com.zakgof.korenderexamples.golden
 
 import com.zakgof.korender.Prefab
-import com.zakgof.korender.TerrainMaterial
+import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.math.ColorRGB.Companion.white
@@ -16,12 +16,12 @@ import com.zakgof.korenderexamples.GolderImageCase
 import kotlin.math.floor
 import kotlin.random.Random
 
-private lateinit var terrain: Prefab<TerrainMaterial>
+private lateinit var terrain: Prefab<TerrainMaterialScope>
 
 val allInOne = GolderImageCase(
     title = "All in one",
     init = {
-        terrain = clipmapTerrainPrefab("terrain", 0.016f, 10, 6)
+        terrain = clipmapTerrain("terrain", 0.016f, 10, 6)
     },
     frame = {
         Node(time = 0f) {
@@ -39,17 +39,16 @@ val allInOne = GolderImageCase(
 )
 
 private fun FrameScope.terrainDemo() {
-    Prefab(
-        terrain {
-            colorTexture = texture("terrain/terrain-albedo.jpg", wrap = TextureWrap.ClampToEdge)
-            metallicFactor = 0.0f
-            heightTexture = texture("terrain/terrain-height.png")
-            heightScale = 2.0f
-            outsideHeight = -0.04f
+    Prefab(terrain) {
+        colorTexture = texture("terrain/terrain-albedo.jpg", wrap = TextureWrap.ClampToEdge)
+        metallicFactor = 0.0f
+        heightTexture(
+            heightTexture = texture("terrain/terrain-height.png"),
+            heightScale = 2.0f,
+            outsideHeight = -0.04f,
             terrainCenter = Vec3(0f, -0.03f, 0f)
-        },
-        prefab = terrain
-    )
+        )
+    }
 }
 
 private fun FrameScope.objDemo() {
