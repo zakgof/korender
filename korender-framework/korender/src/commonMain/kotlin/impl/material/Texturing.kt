@@ -34,6 +34,8 @@ object NotYetLoadedTexture : GlBindableTexture {
     override val glHandle: GLTexture
         get() = throw KorenderException("Internal error binding not yet loaded texture")
 
+    override val unit = -1
+
     override fun bind(unit: Int) {}
 
     override fun close() {}
@@ -205,10 +207,13 @@ internal data class ProbeTextureDeclaration(val frameProbeName: String) : Textur
 
 
 internal data class ResourceCubeTextureDeclaration(val resources: CubeTextureResources, override val nodeContext: NodeContext) : CubeTextureDeclaration, NodeKeeper {
+
+    private val _hash = resources.values.hashCode()
+
     override fun equals(other: Any?): Boolean =
         (other is ResourceCubeTextureDeclaration && other.resources == resources)
 
-    override fun hashCode(): Int = resources.hashCode()
+    override fun hashCode(): Int = _hash
 }
 
 internal class ImageCubeTextureDeclaration(

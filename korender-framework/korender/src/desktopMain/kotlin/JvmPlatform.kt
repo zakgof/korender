@@ -48,6 +48,7 @@ import javax.imageio.ImageIO
 import javax.swing.SwingUtilities
 import kotlin.math.max
 import kotlin.math.round
+import kotlin.time.measureTime
 
 private fun detectDevicePixelRatio(): List<Float> {
     val device = GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice
@@ -145,7 +146,9 @@ actual fun Korender(
 
                 override fun paintGL() {
                     engine?.frame()
-                    swapBuffers()
+                    val time = measureTime {  swapBuffers() }
+                    if (time.inWholeMicroseconds % 50 == 0L)
+                        println("SWAP TIME microsec: ${time.inWholeMicroseconds}")
                 }
             }
 

@@ -66,7 +66,7 @@ internal fun Renderer.Scene.shadows(
     val shadowFrameMaterialModifier = updateShadowCamera(frameContext, renderer.renderContext, lightDirection, declaration, rootNodeContext)
 
     // TODO LMM is ugly
-    renderer.inventory.uniformBufferHolder.populateFrame(arrayOf(shadowFrameMaterialModifier, lightMaterialModifier), true)
+    renderer.inventory.shaderServices.uboHolder.populateFrame(arrayOf(shadowFrameMaterialModifier, lightMaterialModifier), true)
 
     frameBuffer.exec {
         renderer.renderContext.state.set {
@@ -87,7 +87,7 @@ internal fun Renderer.Scene.shadows(
             )
             renderRenderable(casterRenderableDeclaration, shadowFrameMaterialModifier.frameContext.camera, shadowCasterModifier = casterModifier, doDeferredShading = false, rk = rk)
         }
-        renderer.inventory.uniformBufferHolder.flush(rk)
+        renderer.inventory.shaderServices.uboHolder.flush(rk)
     }
 
     if (declaration.algorithm is InternalVsmShadow && declaration.algorithm.blurRadius != null) {
@@ -185,7 +185,7 @@ private fun blurShadowMap(
         renderer.renderContext.state.set { }
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         scene.renderRenderable(blurVQuadRenderableDeclaration, null, false, rk = rk)
-        renderer.inventory.uniformBufferHolder.flush(rk)
+        renderer.inventory.shaderServices.uboHolder.flush(rk)
     }
 
     val blurHQuadRenderableDeclaration = blurQuadRenderableDeclaration(texBlurRadius, false, scene.rootNodeContext)
@@ -197,7 +197,7 @@ private fun blurShadowMap(
         renderer.renderContext.state.set { }
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         scene.renderRenderable(blurHQuadRenderableDeclaration, null, false, rk = rk)
-        renderer.inventory.uniformBufferHolder.flush(rk)
+        renderer.inventory.shaderServices.uboHolder.flush(rk)
     }
 }
 

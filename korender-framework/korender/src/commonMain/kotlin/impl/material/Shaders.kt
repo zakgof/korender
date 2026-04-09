@@ -1,11 +1,13 @@
 package com.zakgof.korender.impl.material
 
+import androidx.compose.runtime.CompositionServices
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Platform
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.engine.ShaderDeclaration
+import com.zakgof.korender.impl.engine.ShaderServices
 import com.zakgof.korender.impl.gl.GL.shaderEnv
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
@@ -19,9 +21,9 @@ private class Line(val text: String, val originFile: String, val originLine: Int
 
 internal object Shaders {
 
-    fun create(shaderPluginRegistry: ShaderPluginRegistry, declaration: ShaderDeclaration, loader: Loader, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, uniformBufferHolder: UniformBufferHolder, resourceLoader: ResourceLoader): GlGpuShader? =
-        loader.syncy(declaration, resourceLoader) { load(shaderPluginRegistry, declaration, it) }?.let {
-            GlGpuShader(it.title, it.vertCode, it.fragCode, it.vertDebugInfo, it.fragDebugInfo, zeroTex, zeroShadowTex, uniformBufferHolder, declaration.uniformPack)
+    fun create(shaderServices: ShaderServices, declaration: ShaderDeclaration, loader: Loader, resourceLoader: ResourceLoader): GlGpuShader? =
+        loader.syncy(declaration, resourceLoader) { load(shaderServices.shaderPluginRegistry, declaration, it) }?.let {
+            GlGpuShader(it.title, it.vertCode, it.fragCode, it.vertDebugInfo, it.fragDebugInfo, declaration.uniformPack, shaderServices)
         }
 
     private suspend fun load(shaderPluginRegistry: ShaderPluginRegistry, declaration: ShaderDeclaration, appResourceLoader: ResourceLoader): ShaderData {

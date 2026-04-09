@@ -28,16 +28,20 @@ import com.zakgof.korender.impl.material.TextureLinkDeclaration
 import com.zakgof.korender.impl.material.Texturing
 import com.zakgof.korender.impl.material.UniformBufferHolder
 
+internal class ShaderServices(
+    val zeroTex: GlGpuTexture = GlGpuTexture.zeroTex(),
+    val zeroShadowTex: GlGpuTexture = GlGpuTexture.zeroShadowTex(),
+    val uboHolder: UniformBufferHolder = UniformBufferHolder(),
+    val shaderPluginRegistry: ShaderPluginRegistry = ShaderPluginRegistry(),
+    val textureBindingCache: TextureBindingCache = TextureBindingCache()
+)
+
 internal class Inventory(private val loader: Loader) {
 
-    private val zeroTex = GlGpuTexture.zeroTex()
-    private val zeroShadowTex = GlGpuTexture.zeroShadowTex()
-    private val shaderPluginRegistry = ShaderPluginRegistry()
-
-    val uniformBufferHolder = UniformBufferHolder()
+    val shaderServices = ShaderServices()
 
     private val meshes = Registry<InternalMeshDeclaration, MeshLink> { Geometry.create(it, loader, it.nodeContext) }
-    private val shaders = Registry<ShaderDeclaration, GlGpuShader> { Shaders.create(shaderPluginRegistry,it, loader, zeroTex, zeroShadowTex, uniformBufferHolder, it.nodeContext.resourceLoader) }
+    private val shaders = Registry<ShaderDeclaration, GlGpuShader> { Shaders.create(shaderServices, it, loader, it.nodeContext.resourceLoader) }
     private val textures = Registry<InternalTexture, GlBindableTexture> { it.generateGpuTexture(loader) }
     private val textures3D = Registry<ImageTexture3DDeclaration, GlGpuTexture3D> { it.generateGpuTexture3D(loader) }
 
@@ -74,7 +78,7 @@ internal class Inventory(private val loader: Loader) {
     fun gltf(decl: GltfDeclaration): GltfCache? = gltfs[decl]
 
     fun shaderPlugin(id: ShaderPluginId, file: String): ShaderPlugin =
-        shaderPluginRegistry.registerCustom(id, file)
+        shaderServices.shaderPluginRegistry.registerCustom(id, file)
 
     fun onWaitUpdate(block: () -> Unit) = loader.onWaitUpdate(block)
 }

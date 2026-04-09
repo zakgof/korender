@@ -40,6 +40,8 @@ internal class GlGpuTextureArray(
 
     private var format: PixelFormat? = null
 
+    override var unit = -1
+
     constructor(
         images: List<InternalImage>,
         filter: TextureFilter = TextureFilter.MipMap,
@@ -144,8 +146,11 @@ internal class GlGpuTextureArray(
     }
 
     override fun bind(unit: Int) {
-        glActiveTexture(GL_TEXTURE0 + unit)
-        glBindTexture(GL_TEXTURE_2D_ARRAY, glHandle)
+        if (unit >= 0) {
+            glActiveTexture(GL_TEXTURE0 + unit)
+            glBindTexture(GL_TEXTURE_2D_ARRAY, glHandle)
+        }
+        this.unit = unit
     }
 
     override fun close() {

@@ -394,7 +394,7 @@ internal class Renderer(
                                 RenderableDeclaration(decalDeclaration.material, DecalCube(0.5f, sceneDeclaration.deferredShadingDeclaration!!.nodeContext), Transform(model), true, sceneDeclaration.deferredShadingDeclaration!!.nodeContext)
                             renderRenderable(renderableDeclaration, frameContext.camera, true, rk = rk)
                         }
-                        inventory.uniformBufferHolder.flush(rk)
+                        inventory.shaderServices.uboHolder.flush(rk)
                     }
                     decalBlendFb.exec {
                         val decalBlendMaterial = DecalBlendMaterial(decalsFb.colorTextures[0], decalsFb.colorTextures[1])
@@ -418,7 +418,7 @@ internal class Renderer(
             renderables.forEach {
                 renderRenderable(it, frameContext.camera, doDeferredShading, rk = rk)
             }
-            inventory.uniformBufferHolder.flush(rk)
+            inventory.shaderServices.uboHolder.flush(rk)
         }
 
         fun prepareScene(insideOut: Boolean = false) {
@@ -453,7 +453,7 @@ internal class Renderer(
                 .forEach {
                     renderRenderable(it, frameContext.camera, insideOut, rk = rk)
                 }
-            inventory.uniformBufferHolder.flush(rk)
+            inventory.shaderServices.uboHolder.flush(rk)
 
             val guiRenderers = sceneDeclaration.guis.map {
                 GuiRenderer(inventory, frameContext.width, frameContext.height, it)
@@ -463,7 +463,7 @@ internal class Renderer(
                 .forEach {
                     renderRenderable(it, frameContext.camera, false, rk = rk)
                 }
-            inventory.uniformBufferHolder.flush(rk)
+            inventory.shaderServices.uboHolder.flush(rk)
         }
 
         private fun renderShadows(rk: ResultKeeper?) {
@@ -506,7 +506,7 @@ internal class Renderer(
         }
 
         fun populateFrameUbo() {
-            inventory.uniformBufferHolder.populateFrame(arrayOf(frameMaterialModifier, lightMaterialModifier), true)
+            inventory.shaderServices.uboHolder.populateFrame(arrayOf(frameMaterialModifier, lightMaterialModifier), true)
         }
 
         private fun renderPostProcessPass(pass: InternalPassDeclaration, rk: ResultKeeper?) {
@@ -538,7 +538,7 @@ internal class Renderer(
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
             if (mesh != null && shader != null) {
                 shader.render(quadMaterial.uniformPack, fixer, mesh.gpuMesh, rk)
-                inventory.uniformBufferHolder.flush(rk)
+                inventory.shaderServices.uboHolder.flush(rk)
             }
         }
 

@@ -106,6 +106,8 @@ internal class GlGpuTexture(private val width: Int, private val height: Int, fil
     private var format: PixelFormat? = null
     private lateinit var glFormat: GlFormat
 
+    override var unit = -1
+
     constructor(image: InternalImage, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024) : this(image.width, image.height, filter, wrap, aniso) {
         uploadData(image.bytes, formatMap[image.format]!!)
     }
@@ -179,10 +181,11 @@ internal class GlGpuTexture(private val width: Int, private val height: Int, fil
     }
 
     override fun bind(unit: Int) {
-        glActiveTexture(GL_TEXTURE0 + unit)
-        glBindTexture(GL_TEXTURE_2D, glHandle)
-
-        // println("BIND:    unit=$unit  text=$this")
+        if (unit >= 0) {
+            glActiveTexture(GL_TEXTURE0 + unit)
+            glBindTexture(GL_TEXTURE_2D, glHandle)
+        }
+        this.unit = unit
     }
 
     fun fetch(): Image {

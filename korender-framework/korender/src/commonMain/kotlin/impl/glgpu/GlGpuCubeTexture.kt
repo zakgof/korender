@@ -54,6 +54,8 @@ internal class GlGpuCubeTexture : GlBindableTexture, AutoCloseable {
     private var format: PixelFormat? = null
     private var glFormat: GlGpuTexture.GlFormat? = null
 
+    override var unit = -1
+
     val sides = listOf(
         GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
         GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
@@ -74,7 +76,7 @@ internal class GlGpuCubeTexture : GlBindableTexture, AutoCloseable {
         format = images[CubeTextureSide.NX]!!.format
         glFormat = formatMap[format]!!
 
-        sides.forEachIndexed{ index, glSide ->
+        sides.forEachIndexed { index, glSide ->
             loadSide(glSide, images[CubeTextureSide.entries[index]]!! as InternalImage)
         }
 
@@ -140,8 +142,11 @@ internal class GlGpuCubeTexture : GlBindableTexture, AutoCloseable {
     }
 
     override fun bind(unit: Int) {
-        glActiveTexture(GLConstants.GL_TEXTURE0 + unit)
-        glBindTexture(GL_TEXTURE_CUBE_MAP, glHandle)
+        if (unit >= 0) {
+            glActiveTexture(GLConstants.GL_TEXTURE0 + unit)
+            glBindTexture(GL_TEXTURE_CUBE_MAP, glHandle)
+        }
+        this.unit = unit
     }
 
     override fun close() {

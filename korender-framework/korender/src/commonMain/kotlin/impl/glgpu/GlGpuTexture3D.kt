@@ -35,6 +35,8 @@ internal class GlGpuTexture3D(private val width: Int, private val height: Int, p
     private var format: PixelFormat? = null
     private lateinit var glFormat: GlGpuTexture.GlFormat
 
+    override var unit = -1
+
     constructor(image: InternalImage3D, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024) : this(image.width, image.height, image.depth, filter, wrap, aniso) {
         uploadData(image.bytes, formatMap[image.format]!!)
     }
@@ -96,8 +98,11 @@ internal class GlGpuTexture3D(private val width: Int, private val height: Int, p
     }
 
     override fun bind(unit: Int) {
-        glActiveTexture(GL_TEXTURE0 + unit)
-        glBindTexture(GL_TEXTURE_3D, glHandle)
+        if (unit >= 0) {
+            glActiveTexture(GL_TEXTURE0 + unit)
+            glBindTexture(GL_TEXTURE_3D, glHandle)
+        }
+        this.unit = unit
     }
 
     override fun close() {

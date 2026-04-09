@@ -3,6 +3,7 @@ package com.zakgof.korender.impl.glgpu
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.ResultKeeper
+import com.zakgof.korender.impl.engine.ShaderServices
 import com.zakgof.korender.impl.gl.GL.glAttachShader
 import com.zakgof.korender.impl.gl.GL.glCompileShader
 import com.zakgof.korender.impl.gl.GL.glCreateProgram
@@ -36,7 +37,6 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_OFFSET
 import com.zakgof.korender.impl.gl.GLConstants.GL_VERTEX_SHADER
 import com.zakgof.korender.impl.gl.GLUniformLocation
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
-import com.zakgof.korender.impl.material.UniformBufferHolder
 
 internal class UniformBlock(
     val shaderBlockIndex: Int,
@@ -48,7 +48,7 @@ internal sealed interface UniformGetter<T> {
 
     fun writeTo(buffer: NativeByteBuffer, obj: Any, missing: () -> Unit) {}
 
-    fun writeTo(shader: GlGpuShader, location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missing: () -> Unit, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Int? = 0
+    fun writeTo(shader: GlGpuShader, location: GLUniformLocation, obj: Any, missing: () -> Unit, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean = true
 
     @Suppress("UNCHECKED_CAST")
     fun <V> safe(getter: (T) -> V?, obj: Any, missing: () -> Unit, consumer: (V) -> Unit) {
@@ -58,55 +58,53 @@ internal sealed interface UniformGetter<T> {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <V> safeInt(getter: (T) -> V, obj: Any, missing: () -> Unit, consumer: (V) -> Int?) =
-        getter(obj as T)
+    fun <V> safeBool(getter: (T) -> V?, obj: Any, missing: () -> Unit, consumer: (V) -> Boolean): Boolean {
+        return getter(obj as T)
             ?.let { consumer(it) }
-            ?: 0.also { missing() }
-
+            ?: false
+    }
 }
 
 internal class TextureGetter<T>(private val f: (T) -> Any?) : UniformGetter<T> {
-    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missing: () -> Unit, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?) =
-        safeInt(f, obj, missing) { v ->
+    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, obj: Any, missing: () -> Unit, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean =
+        safeBool(f, obj, missing) { v ->
             val texture = loader(v)
             if (texture == NotYetLoadedTexture) {
-                zeroTex.bind(currentTextureUnit)
                 rk?.fail()
+                val unit = shader.shaderServices.textureBindingCache.bind(shader.shaderServices.zeroTex)
+                shader.uniformI(location, unit)
+                false
             } else {
-                texture.bind(currentTextureUnit)
+                val unit = shader.shaderServices.textureBindingCache.bind(texture)
+                shader.uniformI(location, unit)
+                true
             }
-            shader.uniformI(location, currentTextureUnit)
-            1
         }
 }
 
 internal class TextureListGetter<T>(private val f: (T) -> GlGpuTextureList) : UniformGetter<T> {
-    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missing: () -> Unit, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?) =
-        safeInt(f, obj, missing) { v ->
+    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, obj: Any, missing: () -> Unit, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean =
+        safeBool(f, obj, missing) { v ->
             val units = (0 until v.totalNum)
                 .map {
-                    val ctu = currentTextureUnit + it
                     val tex = if (it < v.textures.size) v.textures[it] else null
-                    (tex ?: zeroTex).bind(ctu)
-                    ctu
+                    shader.shaderServices.textureBindingCache.bind(tex ?: shader.shaderServices.zeroTex)
                 }
             shader.uniformIV(location, units)
-            v.totalNum
+            true
         }
 }
 
 internal class ShadowTextureListGetter<T>(private val f: (T) -> GlGpuShadowTextureList) : UniformGetter<T> {
-    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, currentTextureUnit: Int, obj: Any, missing: () -> Unit, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?) =
-        safeInt(f, obj, missing) { v ->
+    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, obj: Any, missing: () -> Unit, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean =
+        safeBool(f, obj, missing) { v ->
             val units = (0 until v.totalNum)
                 .map {
-                    val ctu = currentTextureUnit + it
                     val tex = if (it < v.textures.size) v.textures[it] else null
-                    (tex ?: zeroShadowTex).bind(ctu)
-                    ctu
+                    shader.shaderServices.textureBindingCache.bind(tex ?: shader.shaderServices.zeroShadowTex)
                 }
             shader.uniformIV(location, units)
-            v.totalNum
+            true
         }
 }
 
@@ -116,10 +114,8 @@ internal class GlGpuShader(
     fragmentShaderText: String,
     vertDebugInfo: (String) -> String,
     fragDebugInfo: (String) -> String,
-    private val zeroTex: GlGpuTexture,
-    private val zeroShadowTex: GlGpuTexture,
-    private val uboHolder: UniformBufferHolder,
     private val uniformPack: UniformPack,
+    val shaderServices: ShaderServices
 ) : AutoCloseable {
 
     private val programHandle = glCreateProgram()
@@ -137,11 +133,13 @@ internal class GlGpuShader(
         val supplierIndex: Int,
         val getter: UniformGetter<*>,
     ) {
-        fun write(currentTextureUnit: Int, uniformPack: UniformPack, loader: (Any?) -> GlBindableTexture, materialName: String, rk: ResultKeeper?): Int? {
+        fun write(uniformPack: UniformPack, loader: (Any?) -> GlBindableTexture, materialName: String, rk: ResultKeeper?): Boolean {
             val obj = uniformPack[supplierIndex]!!
-            return getter.writeTo(this@GlGpuShader, location, currentTextureUnit, obj,
+            return getter.writeTo(
+                this@GlGpuShader, location, obj,
                 { throw KorenderException("Material $materialName does not provide uniform $name") },
-                zeroTex, zeroShadowTex, loader, rk)
+                loader, rk
+            )
         }
     }
 
@@ -278,9 +276,11 @@ internal class GlGpuShader(
     }
 
     fun render(uniformPack: UniformPack, loader: (Any?) -> GlBindableTexture, mesh: GlGpuMesh, rk: ResultKeeper?) {
-        uboHolder.populate(uniformPack, shaderUniformBlock, this.toString(), rk) { binding, _ ->
+        shaderServices.uboHolder.populate(uniformPack, shaderUniformBlock, this.toString(), rk) { binding, _ ->
             glUseProgram(programHandle)
             shaderUniformBlock?.let { glUniformBlockBinding(programHandle, it.shaderBlockIndex, binding) }
+            // println("---------- Draw call: $this -------------")
+            shaderServices.textureBindingCache.nextDraw()
             if (bindUniforms(uniformPack, loader, rk)) {
                 mesh.render()
             } else {
@@ -291,14 +291,12 @@ internal class GlGpuShader(
     }
 
     private fun bindUniforms(uniformPack: UniformPack, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean {
-        var currentTextureUnit = 1
         uniformBindings.forEach { binding ->
-            val ret = binding.write(currentTextureUnit, uniformPack, loader, toString(), rk)
-            if (ret == null) {
+            val res = binding.write(uniformPack, loader, toString(), rk)
+            if (!res) {
                 println("Skipping shader rendering because texture [${binding.name}] not loaded")
                 return false
             }
-            currentTextureUnit += ret
         }
         return true
     }

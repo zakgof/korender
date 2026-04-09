@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.impl.gl.GL.glActiveTexture
 import com.zakgof.korender.impl.gl.GL.glBindFramebuffer
 import com.zakgof.korender.impl.gl.GL.glBindTexture
 import com.zakgof.korender.impl.gl.GL.glCheckFramebufferStatus
@@ -14,6 +15,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_ATTACHMENT0
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_ATTACHMENT
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER_COMPLETE
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE0
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_2D
 import com.zakgof.korender.impl.gl.GLFrameBuffer
 
@@ -95,6 +97,7 @@ internal class GlGpuFrameBuffer(
     }
 
     private fun unbind() {
+        glActiveTexture(GL_TEXTURE0)
         colorTextures.filter { it.mipmapped }.forEach {
             glBindTexture(GL_TEXTURE_2D, it.glHandle)
             glGenerateMipmap(GL_TEXTURE_2D)
