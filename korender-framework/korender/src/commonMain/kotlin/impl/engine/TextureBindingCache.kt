@@ -1,18 +1,26 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.KorenderException
+import com.zakgof.korender.impl.gl.GL.glGetInteger
+import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS
+import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_TEXTURE_IMAGE_UNITS
 import com.zakgof.korender.impl.glgpu.GlBindableTexture
+import kotlin.math.min
 
 internal data class UnitSlot(
     var tex: GlBindableTexture? = null,
     var lastUsed: Int = -1
 )
 
+internal class NoTexUnitsAvailableException : RuntimeException()
+
 internal class TextureBindingCache {
 
-    // TODO
-    val MAX_UNITS = 16 - 1
-    val slots = Array(MAX_UNITS) { UnitSlot() }
+    val maxUnits = min(
+        glGetInteger(GL_MAX_TEXTURE_IMAGE_UNITS),
+        glGetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS),
+    ).coerceIn(8, 128)
+
+    val slots = Array(maxUnits) { UnitSlot() }
     var currentDrawIndex = 0
     var forbiddenUnitsMask: Int = 0
 
@@ -32,7 +40,7 @@ internal class TextureBindingCache {
         }
 
         // 2. Try find free slot
-        for (unit in 1 until MAX_UNITS) {
+        for (unit in 1 until maxUnits) {
             if (slots[unit].tex == null) {
                 assign(unit, tex)
                 forbiddenUnitsMask = forbiddenUnitsMask or (1 shl unit)
@@ -44,7 +52,7 @@ internal class TextureBindingCache {
         // 3. Evict LRU (but not forbidden)
         var lruUnit = -1
         var oldest = Int.MAX_VALUE
-        for (unit in 1 until MAX_UNITS) {
+        for (unit in 1 until maxUnits) {
             if (forbiddenUnitsMask and (1 shl unit) != 0) continue
             val lastUsed = slots[unit].lastUsed
             if (lastUsed < oldest) {
@@ -54,7 +62,7 @@ internal class TextureBindingCache {
         }
 
         if (lruUnit == -1) {
-            throw KorenderException("No available texture unit for binding")
+            throw NoTexUnitsAvailableException()
         }
 
         // 4. Evict + assign

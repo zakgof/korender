@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.impl.engine.NoTexUnitsAvailableException
 import com.zakgof.korender.impl.engine.ResultKeeper
 import com.zakgof.korender.impl.engine.ShaderServices
 import com.zakgof.korender.impl.gl.GL.glAttachShader
@@ -291,14 +292,21 @@ internal class GlGpuShader(
     }
 
     private fun bindUniforms(uniformPack: UniformPack, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean {
-        uniformBindings.forEach { binding ->
-            val res = binding.write(uniformPack, loader, toString(), rk)
-            if (!res) {
-                println("Skipping shader rendering because texture [${binding.name}] not loaded")
-                return false
+        try {
+            uniformBindings.forEach { binding ->
+                val res = binding.write(uniformPack, loader, toString(), rk)
+                if (!res) {
+                    println("Skipping shader rendering because texture [${binding.name}] not loaded")
+                    return false
+                }
             }
+            return true
+        } catch (_: NoTexUnitsAvailableException) {
+            val textureList = uniformBindings
+                .filter { it.getter is TextureGetter || it.getter is TextureListGetter || it.getter is ShadowTextureListGetter }
+                .joinToString("") { " - ${it.name}\n" }
+            throw KorenderException("No texture units available for $this:\nTexture uniforms:\n$textureList")
         }
-        return true
     }
 
     override fun toString() = name
