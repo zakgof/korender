@@ -46,19 +46,18 @@ internal class UniformBlock(
 
 internal sealed interface UniformGetter<T> {
 
-    fun writeTo(buffer: NativeByteBuffer, obj: Any, missing: () -> Unit) {}
+    fun writeTo(buffer: NativeByteBuffer, obj: T, missing: () -> Unit) {}
 
-    fun writeTo(shader: GlGpuShader, location: GLUniformLocation, obj: Any, missing: () -> Unit, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean = true
+    fun writeTo(shader: GlGpuShader, location: GLUniformLocation, obj: T, missing: () -> Unit, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean = true
 
     @Suppress("UNCHECKED_CAST")
-    fun <V> safe(getter: (T) -> V?, obj: Any, missing: () -> Unit, consumer: (V) -> Unit) {
-        getter(obj as T)
-            ?.let { consumer(it) }
-            ?: missing()
+    fun <T, V> safe(getter: (T) -> V?, obj: T, missing: () -> Unit, consumer: (V) -> Unit) {
+        val v = getter(obj)
+        if (v != null) consumer(v) else missing()
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <V> safeBool(getter: (T) -> V?, obj: Any, missing: () -> Unit, consumer: (V) -> Boolean): Boolean {
+    fun <T, V> safeBool(getter: (T) -> V?, obj: T, missing: () -> Unit, consumer: (V) -> Boolean): Boolean {
         return getter(obj as T)
             ?.let { consumer(it) }
             ?: false
@@ -66,7 +65,7 @@ internal sealed interface UniformGetter<T> {
 }
 
 internal class TextureGetter<T>(private val f: (T) -> Any?) : UniformGetter<T> {
-    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, obj: Any, missing: () -> Unit, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean =
+    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, obj: T, missing: () -> Unit, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean =
         safeBool(f, obj, missing) { v ->
             val texture = loader(v)
             if (texture == NotYetLoadedTexture) {
@@ -83,7 +82,7 @@ internal class TextureGetter<T>(private val f: (T) -> Any?) : UniformGetter<T> {
 }
 
 internal class TextureListGetter<T>(private val f: (T) -> GlGpuTextureList) : UniformGetter<T> {
-    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, obj: Any, missing: () -> Unit, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean =
+    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, obj: T, missing: () -> Unit, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean =
         safeBool(f, obj, missing) { v ->
             val units = (0 until v.totalNum)
                 .map {
@@ -96,7 +95,7 @@ internal class TextureListGetter<T>(private val f: (T) -> GlGpuTextureList) : Un
 }
 
 internal class ShadowTextureListGetter<T>(private val f: (T) -> GlGpuShadowTextureList) : UniformGetter<T> {
-    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, obj: Any, missing: () -> Unit, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean =
+    override fun writeTo(shader: GlGpuShader, location: GLUniformLocation, obj: T, missing: () -> Unit, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean =
         safeBool(f, obj, missing) { v ->
             val units = (0 until v.totalNum)
                 .map {
@@ -131,7 +130,7 @@ internal class GlGpuShader(
         val location: GLUniformLocation,
         val name: String,
         val supplierIndex: Int,
-        val getter: UniformGetter<*>,
+        val getter: UniformGetter<Any>,
     ) {
         fun write(uniformPack: UniformPack, loader: (Any?) -> GlBindableTexture, materialName: String, rk: ResultKeeper?): Boolean {
             val obj = uniformPack[supplierIndex]!!
@@ -234,6 +233,7 @@ internal class GlGpuShader(
         return UniformBlock(blockIndex, blockSize[0], fetchUniformBlockBindings(blockIndex))
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun fetchUniformBlockBindings(blockIndex: Int): List<CompiledBlockBinding> {
         val uniformCount = IntArray(1)
         glGetActiveUniformBlockiv(programHandle, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, uniformCount)
@@ -249,11 +249,11 @@ internal class GlGpuShader(
             val index = uniformPack.indices.firstOrNull { uniformPack[it]?.uniform(name) != null }
             if (index == null)
                 throw KorenderException("Uniform $name not declared in materials for shader $this")
-            val getter = uniformPack[index]!!.uniform(name)!!
-            CompiledBlockBinding(uniformOffsets[i], name, index, getter)
+            CompiledBlockBinding(uniformOffsets[i], name, index, uniformPack[index]!!.uniform(name)!! as UniformGetter<Any>)
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun fetchUniforms(): List<CompiledUniformBinding> {
         val numUniforms = glGetProgrami(programHandle, GL_ACTIVE_UNIFORMS)
         return (0 until numUniforms).mapNotNull { i ->
@@ -263,7 +263,7 @@ internal class GlGpuShader(
                 val index = uniformPack.indices.firstOrNull { uniformPack[it]?.uniform(name) != null }
                 if (index == null)
                     throw KorenderException("Uniform $name not declared in materials for shader $this")
-                CompiledUniformBinding(location, name, index, uniformPack[index]!!.uniform(name)!!)
+                CompiledUniformBinding(location, name, index, uniformPack[index]!!.uniform(name)!! as UniformGetter<Any>)
             }
         }
     }

@@ -9,6 +9,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_BUFFER_OFFSET_ALIGNMEN
 import com.zakgof.korender.impl.glgpu.CompiledBlockBinding
 import com.zakgof.korender.impl.glgpu.GlGpuUniformBuffer
 import com.zakgof.korender.impl.glgpu.UniformBlock
+import com.zakgof.korender.impl.glgpu.UniformGetter
 import com.zakgof.korender.impl.glgpu.UniformPack
 
 internal class UniformBufferHolder {
@@ -62,13 +63,14 @@ internal class UniformBufferHolder {
         frameUbo.bindBase(0)
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun populateFrame(uniformPack: UniformPack, ignoreMissing: Boolean = false) {
         if (compiledUniformBindings.isEmpty()) {
             compiledUniformBindings += frameBindings.map { pair ->
                 val name = pair.first
                 val index = uniformPack.indices.firstOrNull { uniformPack[it]?.uniform(name) != null }
                 val getter = uniformPack[index!!]!!.uniform(name) ?: throw KorenderException("Uniform $name not declared in materials for shader $this")
-                CompiledBlockBinding(pair.second, name, index, getter)
+                CompiledBlockBinding(pair.second, name, index, getter as UniformGetter<Any>)
             }
         }
         frameUbo.populate(uniformPack, 0, compiledUniformBindings, "FrameContext", ignoreMissing)

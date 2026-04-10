@@ -36,7 +36,7 @@ internal class CompiledBlockBinding(
     val offset: Int,
     val name: String,
     val supplierIndex: Int,
-    val getter: UniformGetter<*>,
+    val getter: UniformGetter<Any>,
 ) {
     fun write(buffer: NativeByteBuffer, baseOffset: Int, uniformPack: UniformPack, materialName: String, ignoreMissing: Boolean) {
         buffer.position(baseOffset + offset)
@@ -46,7 +46,7 @@ internal class CompiledBlockBinding(
 }
 
 internal class IntGetter<T>(private val f: (T) -> Int?) : UniformGetter<T> {
-    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missing: () -> Unit) {
+    override fun writeTo(buffer: NativeByteBuffer, obj: T, missing: () -> Unit) {
         safe(f, obj, missing) { v ->
             buffer.put(v)
         }
@@ -54,14 +54,14 @@ internal class IntGetter<T>(private val f: (T) -> Int?) : UniformGetter<T> {
 }
 
 internal class FloatGetter<T>(private val f: (T) -> Float?) : UniformGetter<T> {
-    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missing: () -> Unit) =
+    override fun writeTo(buffer: NativeByteBuffer, obj: T, missing: () -> Unit) =
         safe(f, obj, missing) { v ->
             buffer.put(v)
         }
 }
 
 internal class Vec2Getter<T>(private val f: (T) -> Vec2?) : UniformGetter<T> {
-    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missing: () -> Unit) =
+    override fun writeTo(buffer: NativeByteBuffer, obj: T, missing: () -> Unit) =
         safe(f, obj, missing) { v ->
             buffer.put(v.x)
             buffer.put(v.y)
@@ -69,7 +69,7 @@ internal class Vec2Getter<T>(private val f: (T) -> Vec2?) : UniformGetter<T> {
 }
 
 internal class Vec3Getter<T>(private val f: (T) -> Vec3?) : UniformGetter<T> {
-    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missing: () -> Unit) =
+    override fun writeTo(buffer: NativeByteBuffer, obj: T, missing: () -> Unit) =
         safe(f, obj, missing) { v ->
             buffer.put(v.x)
             buffer.put(v.y)
@@ -78,7 +78,7 @@ internal class Vec3Getter<T>(private val f: (T) -> Vec3?) : UniformGetter<T> {
 }
 
 internal class ColorRGBGetter<T>(private val f: (T) -> ColorRGB?) : UniformGetter<T> {
-    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missing: () -> Unit) =
+    override fun writeTo(buffer: NativeByteBuffer, obj: T, missing: () -> Unit) =
         safe(f, obj, missing) { v ->
             buffer.put(v.r)
             buffer.put(v.g)
@@ -87,7 +87,7 @@ internal class ColorRGBGetter<T>(private val f: (T) -> ColorRGB?) : UniformGette
 }
 
 internal class ColorRGBAGetter<T>(private val f: (T) -> ColorRGBA) : UniformGetter<T> {
-    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missing: () -> Unit) =
+    override fun writeTo(buffer: NativeByteBuffer, obj: T, missing: () -> Unit) =
         safe(f, obj, missing) { v ->
             buffer.put(v.r)
             buffer.put(v.g)
@@ -97,14 +97,14 @@ internal class ColorRGBAGetter<T>(private val f: (T) -> ColorRGBA) : UniformGett
 }
 
 internal class Mat4Getter<T>(private val f: (T) -> Mat4) : UniformGetter<T> {
-    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missing: () -> Unit) =
+    override fun writeTo(buffer: NativeByteBuffer, obj: T, missing: () -> Unit) =
         safe(f, obj, missing) { v ->
             buffer.put(v.asArray())
         }
 }
 
 internal class IntListGetter<T>(private val f: (T) -> List<Int>) : UniformGetter<T> {
-    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missing: () -> Unit) =
+    override fun writeTo(buffer: NativeByteBuffer, obj: T, missing: () -> Unit) =
         safe(f, obj, missing) { v ->
             v.forEach {
                 buffer.put(it)
@@ -116,7 +116,7 @@ internal class IntListGetter<T>(private val f: (T) -> List<Int>) : UniformGetter
 }
 
 internal class FloatListGetter<T>(private val f: (T) -> List<Float>) : UniformGetter<T> {
-    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missing: () -> Unit) =
+    override fun writeTo(buffer: NativeByteBuffer, obj: T, missing: () -> Unit) =
         safe(f, obj, missing) { v ->
             v.forEach {
                 buffer.put(it)
@@ -128,7 +128,7 @@ internal class FloatListGetter<T>(private val f: (T) -> List<Float>) : UniformGe
 }
 
 internal class Vec3ListGetter<T>(private val f: (T) -> List<Vec3>) : UniformGetter<T> {
-    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missing: () -> Unit) =
+    override fun writeTo(buffer: NativeByteBuffer, obj: T, missing: () -> Unit) =
         safe(f, obj, missing) { v ->
             v.forEach {
                 buffer.put(it.x)
@@ -140,7 +140,7 @@ internal class Vec3ListGetter<T>(private val f: (T) -> List<Vec3>) : UniformGett
 }
 
 internal class Color3ListGetter<T>(private val f: (T) -> List<ColorRGB>) : UniformGetter<T> {
-    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missing: () -> Unit) =
+    override fun writeTo(buffer: NativeByteBuffer, obj: T, missing: () -> Unit) =
         safe(f, obj, missing) { v ->
             v.forEach {
                 buffer.put(it.r)
@@ -152,7 +152,7 @@ internal class Color3ListGetter<T>(private val f: (T) -> List<ColorRGB>) : Unifo
 }
 
 internal class Color4ListGetter<T>(private val f: (T) -> List<ColorRGBA>) : UniformGetter<T> {
-    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missing: () -> Unit) =
+    override fun writeTo(buffer: NativeByteBuffer, obj: T, missing: () -> Unit) =
         safe(f, obj, missing) { v ->
             v.forEach {
                 buffer.put(it.r)
@@ -164,7 +164,7 @@ internal class Color4ListGetter<T>(private val f: (T) -> List<ColorRGBA>) : Unif
 }
 
 internal class Mat4ListGetter<T>(private val f: (T) -> List<Mat4>?) : UniformGetter<T> {
-    override fun writeTo(buffer: NativeByteBuffer, obj: Any, missing: () -> Unit) =
+    override fun writeTo(buffer: NativeByteBuffer, obj: T, missing: () -> Unit) =
         safe(f, obj, missing) { v ->
             v.forEach {
                 buffer.put(it.asArray())
