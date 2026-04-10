@@ -278,7 +278,7 @@ internal object Geometry {
             2 + (slices - 1) * sectors,
             sectors * 3 * 2 + (slices - 2) * sectors * 6,
             count,
-            POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+            POS, NORMAL, TEX //, MODEL0, MODEL1, MODEL2, MODEL3
         ) {
             pos(Vec3(0f, -radius, 0f)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(0f, 0f))
             for (slice in 1..<slices) {

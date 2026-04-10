@@ -19,10 +19,6 @@ import com.zakgof.korender.impl.geometry.MeshAttributes.INSTROT
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTSCALE
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTSCREEN
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTTEX
-import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL0
-import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL1
-import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL2
-import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL3
 import com.zakgof.korender.impl.geometry.MeshAttributes.WEIGHTS
 import com.zakgof.korender.impl.material.InstancingMaterialModifier
 import com.zakgof.korender.impl.material.InternalMaterialModifier
@@ -39,7 +35,7 @@ internal interface Instanceable {
         reverseZ: Boolean,
         camera: Camera?,
         inventory: Inventory,
-    ) : InternalMaterialModifier?
+    ): InternalMaterialModifier?
 }
 
 internal data class Cube(val halfSide: Float, override val nodeContext: NodeContext) : InternalMeshDeclaration
@@ -72,12 +68,17 @@ internal data class InstancedMesh(
     override fun instancing(meshLink: MeshLink, reverseZ: Boolean, camera: Camera?, inventory: Inventory): InternalMaterialModifier {
         val cpuMesh = meshLink.cpuMesh
         val modifier = InstancingMaterialModifier()
+        val instancingTexDecl = TextureLinkDeclaration("#instancing.$id", 16 * 4, cpuMesh.instanceCount, nodeContext)
+        val instTextureLink = inventory.textureLink(instancingTexDecl) ?: return modifier
+
         if (!static || !cpuMesh.instancesInitialized || transparent) {
             var instances = instancer()
             val sortFactor = if (reverseZ) -1f else 1f
             if (transparent) {
                 instances = instances.sortedBy { (camera!!.mat4 * it.transform.offset()).z * sortFactor }
             }
+
+            /*
             cpuMesh.updateMesh {
                 instances.forEachIndexed { i, it ->
                     val m = it.transform.mat4
@@ -87,11 +88,19 @@ internal data class InstancedMesh(
                     attrSet(MODEL3, i, floatArrayOf(m.m03, m.m13, m.m23, m.m33))
                 }
             }
-            cpuMesh.instancesInitialized = true
+            meshLink.updateGpu(instances.size, true)
+            */
+
+            instances.forEachIndexed { i, instance ->
+                instTextureLink.buffer.position(16 * 4 * 4 * i)
+                instTextureLink.buffer.put(instance.transform.mat4.asArray())
+            }
+            instTextureLink.uploadData()
             meshLink.updateGpu(instances.size, true)
 
+            cpuMesh.instancesInitialized = true
             if (cpuMesh.attrMap.containsKey(WEIGHTS)) {
-                val texDecl = TextureLinkDeclaration(id, 32 * 4, cpuMesh.instanceCount, nodeContext)
+                val texDecl = TextureLinkDeclaration("#skinning.$id", 32 * 4, cpuMesh.instanceCount, nodeContext)
                 inventory.textureLink(texDecl)?.let { jointTextureLink ->
                     instances.forEachIndexed { i, instance ->
                         jointTextureLink.buffer.position(32 * 4 * 4 * i)
@@ -101,10 +110,10 @@ internal data class InstancedMesh(
                     }
                     jointTextureLink.uploadData()
                     modifier.jntTexture = jointTextureLink.texture
-                } ?: return modifier
+                } ?: return modifier // TODO rk
             }
-
         }
+        modifier.instTexture = instTextureLink.texture
         return modifier
     }
 }

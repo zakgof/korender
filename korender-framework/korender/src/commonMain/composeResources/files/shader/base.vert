@@ -9,10 +9,11 @@ layout(location = 2) in vec2 tex;
     flat out int vcolortexindex;
 #endif
 #ifdef INSTANCING
-    layout(location = 11) in vec4 instanceModel0;
-    layout(location = 12) in vec4 instanceModel1;
-    layout(location = 13) in vec4 instanceModel2;
-    layout(location = 14) in vec4 instanceModel3;
+//    layout(location = 11) in vec4 instanceModel0;
+//    layout(location = 12) in vec4 instanceModel1;
+//    layout(location = 13) in vec4 instanceModel2;
+//    layout(location = 14) in vec4 instanceModel3;
+    uniform sampler2D instTexture;
 #endif
 
 out vec3 vpos;
@@ -23,6 +24,16 @@ out vec2 vtex;
 #uniforms
 
 mat4 totalModel;
+
+#ifdef INSTANCING
+    mat4 fetchInstancingMatrix(int instanceId) {
+        vec4 col0 = texelFetch(instTexture, ivec2(0, instanceId), 0);
+        vec4 col1 = texelFetch(instTexture, ivec2(1, instanceId), 0);
+        vec4 col2 = texelFetch(instTexture, ivec2(2, instanceId), 0);
+        vec4 col3 = texelFetch(instTexture, ivec2(3, instanceId), 0);
+        return mat4(col0, col1, col2, col3);
+    }
+#endif
 
 #ifdef PLUGIN_VPOSITION
 #import "$vposition"
@@ -39,7 +50,7 @@ void main() {
     totalModel = model;
 
     #ifdef INSTANCING
-        totalModel = model * mat4(instanceModel0, instanceModel1, instanceModel2, instanceModel3);
+        totalModel = model * fetchInstancingMatrix(gl_InstanceID);
     #endif
 
     #ifdef PLUGIN_VPOSITION
@@ -51,7 +62,7 @@ void main() {
     #ifdef PLUGIN_VNORMAL
         vnormal = pluginVNormal();
     #else
-        vnormal = mat3(transpose(inverse(totalModel))) * normal;
+        vnormal =  mat3(totalModel) * normal; //mat3(transpose(inverse(totalModel))) * normal;
     #endif
 
     #ifdef TEXTURE_ARRAY

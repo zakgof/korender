@@ -106,7 +106,7 @@ internal open class InternalMaterial(
 
     var time = 0f
 
-    override fun uniform(name: String) = if (name == "time") FloatGetter<InternalMaterial> {it.time} else super.uniform(name)
+    override fun uniform(name: String) = if (name == "time") FloatGetter<InternalMaterial> { it.time } else super.uniform(name)
 
     fun toDeclaration(
         deferredShading: Boolean,
@@ -178,7 +178,7 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
             "occlusionTexture" -> TextureGetter<InternalBaseMaterial> { it.occlusionTexture }
             "emissionTexture" -> TextureGetter<InternalBaseMaterial> { it.emissionTexture }
             "jntMatrices[0]" -> Mat4ListGetter<InternalBaseMaterial> { it.jntMatrices }
-            "model" -> Mat4Getter<InternalBaseMaterial> {it.model}
+            "model" -> Mat4Getter<InternalBaseMaterial> { it.model }
             else -> super.uniform(name)
         }
 
@@ -234,11 +234,11 @@ internal class InternalDecalMaterial : InternalBaseMaterial(), DecalMaterial {
 
 internal data class InternalTerrainMaterial(val modifier: TerrainMaterialModifier) : InternalBaseMaterial("!shader/terrain.vert"), TerrainMaterialScope {
 
-    class HeightTexturePlugin (
+    class HeightTexturePlugin(
         val heightTexture: TextureDeclaration?,
         val heightScale: Float,
         val outsideHeight: Float,
-        val terrainCenter: Vec3
+        val terrainCenter: Vec3,
     )
 
     var heightTexturePlugin: HeightTexturePlugin? = null
@@ -248,9 +248,10 @@ internal data class InternalTerrainMaterial(val modifier: TerrainMaterialModifie
     }
 
     // TODO ugly
-    override fun collectPlugins1(accumulator: Long): Long = super.collectPlugins1(0L
-        .pluginOverride1(Plugins.NORMAL_TERRAIN)
-        .pluginOverride1IfNotNull(heightTexturePlugin, Plugins.TERRAIN_TEXTURE)
+    override fun collectPlugins1(accumulator: Long): Long = super.collectPlugins1(
+        0L
+            .pluginOverride1(Plugins.NORMAL_TERRAIN)
+            .pluginOverride1IfNotNull(heightTexturePlugin, Plugins.TERRAIN_TEXTURE)
     )
 
     override fun uniform(name: String): UniformGetter<*>? =
@@ -313,8 +314,10 @@ internal class DecalBlendMaterial(
 }
 
 internal class InstancingMaterialModifier : InternalMaterialModifier(
+    "instTexture" to TextureGetter<InstancingMaterialModifier> { it.instTexture },
     "jntTexture" to TextureGetter<InstancingMaterialModifier> { it.jntTexture }
 ) {
+    var instTexture: GlGpuTexture? = null
     var jntTexture: GlGpuTexture? = null
 
     override fun collectDefs(accumulator: Long): Long =
