@@ -59,9 +59,11 @@ internal sealed interface UniformGetter<T> {
 
     @Suppress("UNCHECKED_CAST")
     fun <T, V> safeBool(getter: (T) -> V?, obj: T, missing: () -> Unit, consumer: (V) -> Boolean): Boolean {
-        return getter(obj as T)
-            ?.let { consumer(it) }
-            ?: false
+        val v = getter(obj)
+        return if (v != null) consumer(v) else {
+            missing()
+            false
+        }
     }
 }
 

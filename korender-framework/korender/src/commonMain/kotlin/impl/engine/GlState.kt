@@ -59,6 +59,7 @@ internal class GlState {
 
     private val actual = Array<Any?>(defaults.size) { null }
 
+    @Suppress("UNCHECKED_CAST")
     fun set(block: StateContext.() -> Unit) {
         val context = StateContext()
         context.apply(block)
