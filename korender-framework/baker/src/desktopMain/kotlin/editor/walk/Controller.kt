@@ -4,7 +4,7 @@ import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.TouchEvent
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.scale
@@ -34,7 +34,7 @@ class Controller(bvhBytes: ByteArray) {
         }
     }
 
-    context(kc: KorenderContext)
+    context(kc: KorenderScope)
     fun touch(touchEvent: TouchEvent) {
         if (touchEvent.type == TouchEvent.Type.DOWN) {
             touchDown = screenToLook(touchEvent)
@@ -50,7 +50,7 @@ class Controller(bvhBytes: ByteArray) {
         }
     }
 
-    context(kc: KorenderContext)
+    context(kc: KorenderScope)
     fun camera(): CameraDeclaration {
         return kc.camera(player - look * 2f + up * 1f, look, up)
     }
@@ -81,7 +81,7 @@ class Controller(bvhBytes: ByteArray) {
 
     }
 
-    context(kc: KorenderContext)
+    context(kc: KorenderScope)
     private fun screenToLook(e: TouchEvent): Vec3 {
         val right = kc.camera.direction.cross(kc.camera.up)
 

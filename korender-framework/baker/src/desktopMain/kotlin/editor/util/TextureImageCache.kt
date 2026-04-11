@@ -2,7 +2,7 @@ package editor.util
 
 import androidx.compose.ui.graphics.ImageBitmap
 import com.zakgof.korender.Image
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.KorenderScope
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.decodeToImageBitmap
 import java.io.File
@@ -12,7 +12,7 @@ object TextureImageCache {
     val korender = mutableMapOf<String, Image>()
     val compose = mutableMapOf<String, ImageBitmap>()
 
-    context(context: KorenderContext)
+    context(context: KorenderScope)
     fun korender(path: String): Image =
         korender.computeIfAbsent(path) {
             val file = File(path)

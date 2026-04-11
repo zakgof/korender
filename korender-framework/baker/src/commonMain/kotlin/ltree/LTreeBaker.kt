@@ -3,7 +3,6 @@ package ltree
 import androidx.compose.runtime.Composable
 import com.zakgof.korender.Image
 import com.zakgof.korender.Korender
-import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.context.KorenderScope
@@ -109,7 +108,7 @@ fun FrameScope.renderLTree(lTree: LTree, postfix: String, leafTexture: String, t
 
 private fun FrameScope.renderFoliage(postfix: String, lTree: LTree, leafTexture: String, translation: Vec3) {
     Renderable(
-        base(colorTexture = texture(leafTexture)),
+        base { colorTexture = texture(leafTexture) },
         mesh = biQuad(),
         instancing = instancing("leaves$postfix", lTree.leaves.size, dynamic = true) {
             lTree.leaves.map { leaf ->
@@ -127,8 +126,7 @@ private fun FrameScope.renderFoliage(postfix: String, lTree: LTree, leafTexture:
 private fun FrameScope.renderTrunk(lTree: LTree, postfix: String, translation: Vec3) {
     if (lTree.branches.isNotEmpty()) {
         Renderable(
-            base(ColorRGBA(0x553311FF)),
-            pipe(),
+            pipe { color = ColorRGBA(0x553311FF) },
             mesh = pipeMesh("trunk$postfix", lTree.branches.size) {
                 lTree.branches
                     .filter { branch -> branch.raidusAtHead > 0.04f }
@@ -151,7 +149,9 @@ private fun FrameScope.renderCardForest(cards: List<Card>, atlas: Image) {
     cards.forEachIndexed { index, card ->
         val r = Random(1)
         Renderable(
-            base(colorTexture = texture("card$index", card.image)),
+            base {
+                colorTexture = texture("card$index", card.image)
+            },
             mesh = biQuad(card.size, card.size),
             instancing = instancing("card$index", 41 * 41, false) {
                 for (xx in -20..20) {
@@ -171,7 +171,9 @@ private fun FrameScope.renderCardForest(cards: List<Card>, atlas: Image) {
 
 private fun FrameScope.renderCardForest2(cards: List<Card>, atlas: Image) {
     Renderable(
-        base(colorTexture = texture("atlas", atlas)),
+        base {
+            colorTexture = texture("atlas", atlas)
+        },
         mesh = customMesh(
             "foliage", cards.size * 41 * 41 * 8, cards.size * 41 * 41 * 12,
             POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3, dynamic = false
@@ -212,7 +214,7 @@ class Card(
     val normal: Vec3,
     val up: Vec3,
     val size: Float,
-    val image: Image
+    val image: Image,
 )
 
 private fun FrameScope.renderTrunkForest(lTree: LTree) {
@@ -221,8 +223,7 @@ private fun FrameScope.renderTrunkForest(lTree: LTree) {
         if (r < 2f * threshold) (r - threshold) * r / threshold else r
 
     Renderable(
-        base(color = ColorRGBA(0x553311FF)),
-        pipe(),
+        pipe { color = ColorRGBA(0x553311FF) },
         mesh = pipeMesh("trunk-forest", lTree.branches.size * 41 * 41, true) {
             val r = Random(1)
             for (xx in -20..20) {
@@ -246,7 +247,7 @@ private fun FrameScope.renderTrunkForest(lTree: LTree) {
 
 private fun FrameScope.renderCardFoliage(cards: List<Card>, atlas: Image, position: Vec3 = 0.x) {
     Renderable(
-        base(colorTexture = texture("atlas", atlas)),
+        base { colorTexture = texture("atlas", atlas) },
         mesh = customMesh(
             "foliage", cards.size * 8, cards.size * 12,
             POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3, dynamic = false
@@ -277,17 +278,19 @@ private fun FrameScope.renderCardFoliage(cards: List<Card>, atlas: Image, positi
             .translate(position)
     )
 }
-
-private fun FrameScope.renderVolume(albedo3d: Texture3DDeclaration, normal3d: Texture3DDeclaration, offset: Vec3) {
-
-    Billboard(
-        base(),
-        billboard(offset, scale = Vec2(11f, 9f)),
-        plugin("albedo", "ltree/albedo.volume.frag"),
-        plugin("normal", "ltree/normal.volume.frag"),
-        uniforms("volumeAlbedoTexture" to albedo3d),
-        uniforms("volumeNormalTexture" to normal3d),
-    )
-
-}
+//
+//private fun FrameScope.renderVolume(albedo3d: Texture3DDeclaration, normal3d: Texture3DDeclaration, offset: Vec3) {
+//
+//    Billboard(
+//        billboard {
+//            position = offset
+//            scale = Vec2(11f, 9f))
+//            plugin("albedo", "ltree/albedo.volume.frag")
+//            plugin("normal", "ltree/normal.volume.frag")
+//            uniforms("volumeAlbedoTexture" to albedo3d)
+//            uniforms("volumeNormalTexture" to normal3d)
+//        }
+//    )
+//
+//}
 

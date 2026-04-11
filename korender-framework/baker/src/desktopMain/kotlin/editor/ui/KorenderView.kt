@@ -5,12 +5,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.Korender
-import com.zakgof.korender.MaterialModifier
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.baker.editor.util.toKorender
 import com.zakgof.korender.baker.resources.Res
-import com.zakgof.korender.context.FrameContext
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.context.FrameScope
+import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Quaternion
@@ -26,7 +25,7 @@ object TouchHandler {
 
     private var down: Vec3? = null
 
-    fun KorenderContext.screenToLook(e: TouchEvent): Vec3 {
+    fun KorenderScope.screenToLook(e: TouchEvent): Vec3 {
         val right = camera.direction.cross(camera.up)
 
         val nx = (e.x + 0.5f) / width * 2f - 1f
@@ -38,7 +37,7 @@ object TouchHandler {
                 ).normalize()
     }
 
-    fun KorenderContext.touch(e: TouchEvent, holder: StateHolder) {
+    fun KorenderScope.touch(e: TouchEvent, holder: StateHolder) {
         if (e.type == TouchEvent.Type.DOWN) {
             val look = screenToLook(e)
             holder.selectViaRay(look, e.keyboardModifiers.ctrlPressed)
@@ -59,7 +58,7 @@ object TouchHandler {
 fun KorenderView(holder: StateHolder) {
     val state by holder.state.collectAsState()
     val model by holder.model.collectAsState()
-    Korender(appResourceLoader = Res::readBytes, vSync = true) {
+    Korender(resourceLoader = { Res.readBytes("files/$it") }, vSync = true) {
         OnKey { keyEvent ->
             if (State.STATE_KEYS.contains(keyEvent.composeKey)) {
                 when (keyEvent.type) {
@@ -84,7 +83,8 @@ fun KorenderView(holder: StateHolder) {
                     brush.faces
                         .forEachIndexed { i, matPlane ->
                             Renderable(
-                                model.materials[matPlane.materialId]!!.toBaseMM(
+                                toBaseMM(
+                                    model.materials[matPlane.materialId]!!,
                                     state.selection.contains(brush.id)
                                 ),
                                 mesh = customMesh(brush.id + "-" + i, 128, 0, POS, NORMAL, TEX, dynamic = true) {
@@ -107,9 +107,8 @@ fun KorenderView(holder: StateHolder) {
     }
 }
 
-context (context: FrameContext)
-fun Material.toBaseMM(selected: Boolean): MaterialModifier =
-    context.base(
-        color = if (selected) ColorRGBA.Red else baseColor.toKorender(),
-        colorTexture = colorTexture?.let { context.texture(name, TextureImageCache.korender(it.path)) }
-    )
+fun FrameScope.toBaseMM(material: Material, selected: Boolean): com.zakgof.korender.Material =
+    base {
+        color = if (selected) ColorRGBA.Red else material.baseColor.toKorender()
+        colorTexture = material.colorTexture?.let { texture(material.id, TextureImageCache.korender(it.path)) }
+    }

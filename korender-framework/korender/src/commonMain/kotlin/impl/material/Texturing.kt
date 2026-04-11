@@ -68,11 +68,11 @@ internal object Texturing {
         }
 
     // TODO: move to loader!
-    fun toImages(loader: Loader, textureResources: TextureArrayResources): List<InternalImage>? =
+    fun toImages(loader: Loader, textureResources: TextureArrayResources, resourceLoader: ResourceLoader): List<InternalImage>? =
         loader.wait(textureResources.joinToString("/")) {
             CoroutineScope(Dispatchers.Default).async {
                 textureResources.map { resource ->
-                    Platform.loadImage(loader.appResourceLoader(resource), resource.split(".").last())
+                    Platform.loadImage(resourceLoader(resource), resource.split(".").last())
                 }.awaitAll()
             }
         }
@@ -136,7 +136,7 @@ internal class ResourceTextureArrayDeclaration(
     override fun hashCode(): Int = textureResources.hashCode()
 
     override fun generateGpuTexture(loader: Loader): GlGpuTextureArray? {
-        return Texturing.toImages(loader, textureResources)?.let { images ->
+        return Texturing.toImages(loader, textureResources, nodeContext.resourceLoader)?.let { images ->
             GlGpuTextureArray(images, filter, wrap, aniso)
         }
     }

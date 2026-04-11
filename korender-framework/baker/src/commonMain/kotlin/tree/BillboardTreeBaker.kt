@@ -46,11 +46,11 @@ fun BillboardTreeBaker() = Korender(resourceLoader = { Res.readBytes("files/$it"
 }
 
 private fun FrameScope.tree(metaballTree: MetaballTree) {
-    metaballTree.render(this)
+    // metaballTree.render(this)
     Renderable(
-        base(
+        base {
             color = ColorRGBA(0x302010FF)
-        ),
+        },
         mesh = cylinderSide(30f, 1.0f),
         transform = translate(-10.y)
     )

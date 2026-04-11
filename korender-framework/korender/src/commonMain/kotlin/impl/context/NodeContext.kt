@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.context
 
+import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureResources
@@ -48,6 +49,7 @@ import com.zakgof.korender.impl.material.bloomMipEffect
 import com.zakgof.korender.impl.material.bloomSimpleEffect
 import com.zakgof.korender.impl.material.simpleBlur
 import com.zakgof.korender.impl.material.ssrEffect
+import com.zakgof.korender.impl.prefab.scene.ScenePrefab
 import com.zakgof.korender.impl.prefab.terrain.Clipmaps
 import com.zakgof.korender.math.Transform
 import kotlinx.coroutines.CoroutineScope
@@ -147,4 +149,8 @@ internal class NodeContext(
 
     override fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab<TerrainMaterialScope> =
         Clipmaps(this, id, cellSize, hg, rings)
+
+    override fun scenePrefab(resource: String): Prefab<BaseMaterialScope> =
+        ScenePrefab(this, resource)
+
 }

@@ -1,7 +1,5 @@
 package com.zakgof.korender.baker.tree
 
-import com.zakgof.korender.MaterialModifier
-import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform.Companion.rotate
@@ -31,20 +29,20 @@ class MetaballTree(kc: KorenderScope, metaball: Metaball, private val id: String
             .translate((pt.pos - center))
     }
 
-    fun render(fc: FrameScope, vararg mods: MaterialModifier) = with(fc) {
-        Renderable(
-            base(colorTexture = texture("model/leaf.png")),
-            *mods,
-            mesh = leafMesh,
-            transparent = true,
-            instancing = instancing(
-                id = id,
-                count = leafInstances.size,
-                dynamic = false
-            ) {
-                leafInstances.forEach { Instance(it) }
-            })
-    }
+//    fun render(fc: FrameScope, vararg mods: MaterialModifier) = with(fc) {
+//        Renderable(
+//            base(colorTexture = texture("model/leaf.png")),
+//            *mods,
+//            mesh = leafMesh,
+//            transparent = true,
+//            instancing = instancing(
+//                id = id,
+//                count = leafInstances.size,
+//                dynamic = false
+//            ) {
+//                leafInstances.forEach { Instance(it) }
+//            })
+//    }
 
 }
 

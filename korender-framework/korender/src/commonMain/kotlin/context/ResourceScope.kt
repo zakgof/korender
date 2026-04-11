@@ -1,5 +1,6 @@
 package com.zakgof.korender.context
 
+import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureResources
@@ -314,4 +315,6 @@ interface ResourceScope {
      * @return terrain geometry prefab
      */
     fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab<TerrainMaterialScope>
+
+    fun scenePrefab(resource: String): Prefab<BaseMaterialScope>
 }

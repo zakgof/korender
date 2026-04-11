@@ -259,30 +259,30 @@ fun RowScope.MaterialPreview(holder: StateHolder) {
             }
             val worldTexMesh = customMesh("fit", 24, 36, POS, NORMAL, TEX) {
                 val s = 1f
-                pos(Vec3(-3f, -2f,  1f)).normal(1.z).tex(Vec2(-3f*s,  2f*s))
-                pos(Vec3( 3f, -2f,  1f)).normal(1.z).tex(Vec2( 3f*s,  2f*s))
-                pos(Vec3( 3f,  2f,  1f)).normal(1.z).tex(Vec2( 3f*s, -2f*s))
-                pos(Vec3(-3f,  2f,  1f)).normal(1.z).tex(Vec2(-3f*s, -2f*s))
-                pos(Vec3( 3f, -2f, -1f)).normal((-1).z).tex(Vec2(-3f*s,  2f*s))
-                pos(Vec3(-3f, -2f, -1f)).normal((-1).z).tex(Vec2( 3f*s,  2f*s))
-                pos(Vec3(-3f,  2f, -1f)).normal((-1).z).tex(Vec2( 3f*s, -2f*s))
-                pos(Vec3( 3f,  2f, -1f)).normal((-1).z).tex(Vec2(-3f*s, -2f*s))
-                pos(Vec3(-3f, -2f, -1f)).normal((-1).x).tex(Vec2(-1f*s,  2f*s))
-                pos(Vec3(-3f, -2f,  1f)).normal((-1).x).tex(Vec2( 1f*s,  2f*s))
-                pos(Vec3(-3f,  2f,  1f)).normal((-1).x).tex(Vec2( 1f*s, -2f*s))
-                pos(Vec3(-3f,  2f, -1f)).normal((-1).x).tex(Vec2(-1f*s, -2f*s))
-                pos(Vec3( 3f, -2f,  1f)).normal(1.x).tex(Vec2(-1f*s,  2f*s))
-                pos(Vec3( 3f, -2f, -1f)).normal(1.x).tex(Vec2( 1f*s,  2f*s))
-                pos(Vec3( 3f,  2f, -1f)).normal(1.x).tex(Vec2( 1f*s, -2f*s))
-                pos(Vec3( 3f,  2f,  1f)).normal(1.x).tex(Vec2(-1f*s, -2f*s))
-                pos(Vec3(-3f,  2f,  1f)).normal(1.y).tex(Vec2(-3f*s,  1f*s))
-                pos(Vec3( 3f,  2f,  1f)).normal(1.y).tex(Vec2( 3f*s,  1f*s))
-                pos(Vec3( 3f,  2f, -1f)).normal(1.y).tex(Vec2( 3f*s, -1f*s))
-                pos(Vec3(-3f,  2f, -1f)).normal(1.y).tex(Vec2(-3f*s, -1f*s))
-                pos(Vec3(-3f, -2f, -1f)).normal((-1).y).tex(Vec2(-3f*s,  1f*s))
-                pos(Vec3( 3f, -2f, -1f)).normal((-1).y).tex(Vec2( 3f*s,  1f*s))
-                pos(Vec3( 3f, -2f,  1f)).normal((-1).y).tex(Vec2( 3f*s, -1f*s))
-                pos(Vec3(-3f, -2f,  1f)).normal((-1).y).tex(Vec2(-3f*s, -1f*s))
+                pos(Vec3(-3f, -2f, 1f)).normal(1.z).tex(Vec2(-3f * s, 2f * s))
+                pos(Vec3(3f, -2f, 1f)).normal(1.z).tex(Vec2(3f * s, 2f * s))
+                pos(Vec3(3f, 2f, 1f)).normal(1.z).tex(Vec2(3f * s, -2f * s))
+                pos(Vec3(-3f, 2f, 1f)).normal(1.z).tex(Vec2(-3f * s, -2f * s))
+                pos(Vec3(3f, -2f, -1f)).normal((-1).z).tex(Vec2(-3f * s, 2f * s))
+                pos(Vec3(-3f, -2f, -1f)).normal((-1).z).tex(Vec2(3f * s, 2f * s))
+                pos(Vec3(-3f, 2f, -1f)).normal((-1).z).tex(Vec2(3f * s, -2f * s))
+                pos(Vec3(3f, 2f, -1f)).normal((-1).z).tex(Vec2(-3f * s, -2f * s))
+                pos(Vec3(-3f, -2f, -1f)).normal((-1).x).tex(Vec2(-1f * s, 2f * s))
+                pos(Vec3(-3f, -2f, 1f)).normal((-1).x).tex(Vec2(1f * s, 2f * s))
+                pos(Vec3(-3f, 2f, 1f)).normal((-1).x).tex(Vec2(1f * s, -2f * s))
+                pos(Vec3(-3f, 2f, -1f)).normal((-1).x).tex(Vec2(-1f * s, -2f * s))
+                pos(Vec3(3f, -2f, 1f)).normal(1.x).tex(Vec2(-1f * s, 2f * s))
+                pos(Vec3(3f, -2f, -1f)).normal(1.x).tex(Vec2(1f * s, 2f * s))
+                pos(Vec3(3f, 2f, -1f)).normal(1.x).tex(Vec2(1f * s, -2f * s))
+                pos(Vec3(3f, 2f, 1f)).normal(1.x).tex(Vec2(-1f * s, -2f * s))
+                pos(Vec3(-3f, 2f, 1f)).normal(1.y).tex(Vec2(-3f * s, 1f * s))
+                pos(Vec3(3f, 2f, 1f)).normal(1.y).tex(Vec2(3f * s, 1f * s))
+                pos(Vec3(3f, 2f, -1f)).normal(1.y).tex(Vec2(3f * s, -1f * s))
+                pos(Vec3(-3f, 2f, -1f)).normal(1.y).tex(Vec2(-3f * s, -1f * s))
+                pos(Vec3(-3f, -2f, -1f)).normal((-1).y).tex(Vec2(-3f * s, 1f * s))
+                pos(Vec3(3f, -2f, -1f)).normal((-1).y).tex(Vec2(3f * s, 1f * s))
+                pos(Vec3(3f, -2f, 1f)).normal((-1).y).tex(Vec2(3f * s, -1f * s))
+                pos(Vec3(-3f, -2f, 1f)).normal((-1).y).tex(Vec2(-3f * s, -1f * s))
                 index(
                     0, 1, 2, 0, 2, 3,
                     4, 5, 6, 4, 6, 7,
@@ -299,7 +299,7 @@ fun RowScope.MaterialPreview(holder: StateHolder) {
                 AmbientLight(white(0.5f))
                 DirectionalLight(Vec3(1f, -1f, -1f), white(0.5f))
                 Renderable(
-                    mat.toBaseMM(false),
+                    toBaseMM(mat, false),
                     mesh = if (mat.fitToFace) fitToFaceMesh else worldTexMesh,
                     transform = rotate(Quaternion.fromAxisAngle(1.y, frameInfo.time)),
                     transparent = true

@@ -40,7 +40,7 @@ interface FrameScope : KorenderScope {
      * @param prefab geometry prefab
      * @param block prefab rendering parameters block
      */
-    fun <S> Prefab(prefab: Prefab<S>, block: S.() -> Unit)
+    fun <S> Prefab(prefab: Prefab<S>, block: S.() -> Unit = {})
 
     /**
      * Renders a GLTF model from a resource file.

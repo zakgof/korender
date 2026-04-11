@@ -60,7 +60,9 @@ internal sealed interface UniformGetter<T> {
     @Suppress("UNCHECKED_CAST")
     fun <T, V> safeBool(getter: (T) -> V?, obj: T, missing: () -> Unit, consumer: (V) -> Boolean): Boolean {
         val v = getter(obj)
-        return if (v != null) consumer(v) else {
+        return if (v != null)
+            consumer(v)
+        else {
             missing()
             false
         }
@@ -117,7 +119,7 @@ internal class GlGpuShader(
     vertDebugInfo: (String) -> String,
     fragDebugInfo: (String) -> String,
     private val uniformPack: UniformPack,
-    val shaderServices: ShaderServices
+    val shaderServices: ShaderServices,
 ) : AutoCloseable {
 
     private val programHandle = glCreateProgram()

@@ -38,10 +38,10 @@ fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
             state = rememberDialogState(size = DpSize(800.dp, 600.dp))
         ) {
             Korender({
-                if (it.startsWith("files/scene/")) Cbor.encodeToByteArray(data!!.first) else Res.readBytes(it)
+                if (it == "scene/foobar") Cbor.encodeToByteArray(data!!.first) else Res.readBytes("files/$it")
             }) {
                 val controller = Controller(data!!.second)
-                val prefab: Prefab = scene("scene/foobar")
+                val prefab: Prefab<*> = scenePrefab("scene/foobar")
                 OnKey { controller.key(it) }
                 OnTouch { controller.touch(it) }
                 Frame {
@@ -52,7 +52,7 @@ fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
                     controller.update(frameInfo.dt, frameInfo.time)
                     projection = projection(0.2f * width / height, 0.2f, 0.2f, 1000f)
                     camera = controller.camera()
-                    Renderable(prefab = prefab)
+                    Prefab(prefab) {}
                     Gltf(resource = "walk/swat-woman.glb", transform = controller.player())
                     Gui {
                         Column {
@@ -60,7 +60,7 @@ fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
                             Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
                         }
                     }
-                    PostProcess(fragment("!shader/effect/shadow-debug.frag"))
+                    // PostProcess(customPostProcessingFilter("!shader/effect/shadow-debug.frag"))
                 }
             }
         }
