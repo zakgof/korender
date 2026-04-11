@@ -277,27 +277,44 @@ internal actual object Platform {
     }
 
     private fun image(bufferedImage: BufferedImage): InternalImage {
-        val raster = bufferedImage.raster
-        val bytes = when (bufferedImage.type) {
+        // Convert unsupported BufferedImage types (e.g. TYPE_BYTE_BINARY, TYPE_INT_ARGB, etc.)
+        // to a known byte-based format to simplify extraction.
+        var img = bufferedImage
+        val supportedTypes = setOf(
+            BufferedImage.TYPE_3BYTE_BGR,
+            BufferedImage.TYPE_4BYTE_ABGR,
+            BufferedImage.TYPE_BYTE_GRAY,
+            BufferedImage.TYPE_USHORT_GRAY,
+            BufferedImage.TYPE_BYTE_INDEXED
+        )
+        if (img.type !in supportedTypes) {
+            val converted = BufferedImage(img.width, img.height, BufferedImage.TYPE_4BYTE_ABGR)
+            val g = converted.createGraphics()
+            g.drawImage(img, 0, 0, null)
+            g.dispose()
+            img = converted
+        }
+
+        val raster = img.raster
+        val bytes = when (img.type) {
             BufferedImage.TYPE_3BYTE_BGR -> loadBgr((raster.dataBuffer as DataBufferByte).data)
             BufferedImage.TYPE_4BYTE_ABGR -> loadAbgr((raster.dataBuffer as DataBufferByte).data)
             BufferedImage.TYPE_BYTE_GRAY -> loadGray((raster.dataBuffer as DataBufferByte).data)
             BufferedImage.TYPE_USHORT_GRAY -> loadGray16((raster.dataBuffer as DataBufferUShort).data)
-            BufferedImage.TYPE_BYTE_INDEXED -> loadIndexed(bufferedImage)
-            else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
+            BufferedImage.TYPE_BYTE_INDEXED -> loadIndexed(img)
+            else -> throw KorenderException("Unknown image format ${img.type}")
         }
-        val format = when (bufferedImage.type) {
+        val format = when (img.type) {
             BufferedImage.TYPE_3BYTE_BGR -> PixelFormat.RGB
             BufferedImage.TYPE_4BYTE_ABGR -> PixelFormat.RGBA
             BufferedImage.TYPE_BYTE_GRAY -> PixelFormat.Gray
             BufferedImage.TYPE_USHORT_GRAY -> PixelFormat.Gray16
-            // TODO support TYPE_BYTE_BINARY
-            BufferedImage.TYPE_BYTE_INDEXED -> if ((bufferedImage.colorModel as IndexColorModel).numComponents == 3) PixelFormat.RGB else PixelFormat.RGBA
-            else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
+            BufferedImage.TYPE_BYTE_INDEXED -> if ((img.colorModel as IndexColorModel).numComponents == 3) PixelFormat.RGB else PixelFormat.RGBA
+            else -> throw KorenderException("Unknown image format ${img.type}")
         }
         return InternalImage(
-            bufferedImage.width,
-            bufferedImage.height,
+            img.width,
+            img.height,
             bytes,
             format
         )
