@@ -5,7 +5,7 @@ vec3 dirLight(int l, vec3 N, vec3 V, vec3 albedo, float metallic, float roughnes
         int idx = directionalLightShadowTextureIndex[l] + c;
         shadowRatio += shadowRatios[idx];
     }
-    float lightCoef = min(occlusion, 1. - shadowRatio);
+    float lightCoef = occlusion * clamp(1.0 - shadowRatio, 0.0, 1.0);
     vec3 lightValue = directionalLightColor[l].rgb * lightCoef;
     vec3 L = normalize(-directionalLightDir[l]);
     return calculatePBR(N, V, L, albedo, metallic, roughness, lightValue);

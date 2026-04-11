@@ -42,9 +42,20 @@ float swPcf(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float penumb
         vec2 offset = vogelDiskSample(s, sampleCount, phi) * penumbraWidth;
         vec2 uv = vshadow.xy + offset;
         float shadowSample = textureGrad(shadowTexture, uv, dx, dy).r;
-        float val = (shadowSample < vshadow.z - bias
-            && uv.x > 0.001 && uv.x < 0.999
-            && uv.y > 0.001 && uv.y < 0.999) ? 1. : 0.;
+        // ignore samples outside the valid UV range
+        if (uv.x <= 0.001 || uv.x >= 0.999 || uv.y <= 0.001 || uv.y >= 0.999) {
+            weight += 1.;
+            continue;
+        }
+        float diff = vshadow.z - bias - shadowSample;
+        float val;
+        if (penumbraWidth > 0.0) {
+            // smooth transition across penumbra region (centered)
+            float edge = penumbraWidth * 0.5;
+            val = smoothstep(-edge, edge, diff);
+        } else {
+            val = diff > 0.0 ? 1.0 : 0.0;
+        }
         cumulative += val;
         weight += 1.;
     }
@@ -91,9 +102,16 @@ float casc(int s, float plane, vec3 vpos, sampler2D shadowTexture, sampler2DShad
 }
 
 void populateShadowRatios(float plane, vec3 vpos) {
-    if (numShadows > 0) shadowRatios[0] = casc(0, plane, vpos, shadowTextures[0], pcfTextures[0]);
-    if (numShadows > 1) shadowRatios[1] = casc(1, plane, vpos, shadowTextures[1], pcfTextures[1]);
-    if (numShadows > 2) shadowRatios[2] = casc(2, plane, vpos, shadowTextures[2], pcfTextures[2]);
-    if (numShadows > 3) shadowRatios[3] = casc(3, plane, vpos, shadowTextures[3], pcfTextures[3]);
-    if (numShadows > 4) shadowRatios[4] = casc(4, plane, vpos, shadowTextures[4], pcfTextures[4]);
+    float sum = 0.0;
+    if (numShadows > 0) { shadowRatios[0] = clamp(casc(0, plane, vpos, shadowTextures[0], pcfTextures[0]), 0.0, 1.0); sum += shadowRatios[0]; } else shadowRatios[0] = 0.0;
+    if (numShadows > 1) { shadowRatios[1] = clamp(casc(1, plane, vpos, shadowTextures[1], pcfTextures[1]), 0.0, 1.0); sum += shadowRatios[1]; } else shadowRatios[1] = 0.0;
+    if (numShadows > 2) { shadowRatios[2] = clamp(casc(2, plane, vpos, shadowTextures[2], pcfTextures[2]), 0.0, 1.0); sum += shadowRatios[2]; } else shadowRatios[2] = 0.0;
+    if (numShadows > 3) { shadowRatios[3] = clamp(casc(3, plane, vpos, shadowTextures[3], pcfTextures[3]), 0.0, 1.0); sum += shadowRatios[3]; } else shadowRatios[3] = 0.0;
+    if (numShadows > 4) { shadowRatios[4] = clamp(casc(4, plane, vpos, shadowTextures[4], pcfTextures[4]), 0.0, 1.0); sum += shadowRatios[4]; } else shadowRatios[4] = 0.0;
+    if (sum > 1.0) {
+        float inv = 1.0 / sum;
+        for (int i = 0; i < 5; ++i) {
+            shadowRatios[i] *= inv;
+        }
+    }
 }

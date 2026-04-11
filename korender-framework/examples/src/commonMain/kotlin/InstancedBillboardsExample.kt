@@ -17,18 +17,18 @@ import kotlin.random.Random
 @Composable
 fun InstancedBillboardsExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
 
-    val particleNum = 2000
-    val particles = Array(particleNum) { Particle(Random.nextFloat()) }
+    val particleNum = 4000
+    val particles = Array(particleNum) { Particle(Random.nextFloat(), width.toFloat() / height) }
 
     Frame {
-
+        val aspect = width.toFloat() / height
         TestExchange.report(frameInfo)
         AmbientLight(White)
-        camera = camera(11.z, -1.z, 1.y)
-        projection = projection(2f * width / height, 2f, 1f, 200f, frustum())
+        camera = camera(-1.z, 1.z, 1.y)
+        projection = projection(2f * aspect, 2f, 1f, 31f, frustum())
         Billboard(
             billboard {
-                color = ColorRGBA(1f, 1f, 1f, 0.3f)
+                color = ColorRGBA(0.8f, 0.9f, 1f, 0.25f)
                 colorTexture = texture("texture/splat.png")
             },
             transparent = true,
@@ -37,10 +37,10 @@ fun InstancedBillboardsExample() = Korender(resourceLoader = { Res.readBytes("fi
                 count = particleNum,
                 dynamic = true
             ) {
-                repeat (particleNum) { i ->
+                repeat(particleNum) { i ->
                     val particle = particles[i]
                     if (!particle.update(frameInfo.dt)) {
-                        particles[i] = Particle()
+                        particles[i] = Particle(1f, aspect)
                     }
                     Instance(
                         pos = particle.pos,
@@ -58,14 +58,15 @@ fun InstancedBillboardsExample() = Korender(resourceLoader = { Res.readBytes("fi
     }
 }
 
-class Particle(startTtl: Float = 1.0f) {
+class Particle(startTtl: Float = 1.0f, aspect: Float) {
     var ttl = startTtl
-    val startPos = Vec3(-10f + 20f * Random.nextFloat(), 10f,  10f * Random.nextFloat())
-    val scale = 0.1f + 0.1f * Random.nextFloat()
+    val startPos = Vec3((-1f + 2f * Random.nextFloat()) * 30f * aspect, 30f, 30f * Random.nextFloat())
+    val scale = 0.4f + 0.3f * Random.nextFloat()
     val pos
-        get() = startPos - (1f - ttl).y * 20f + (1f - ttl).z * 10f + (0.5f * sin(ttl * 8f + startPos.z * 8f)).x
+        get() = startPos - (1f - ttl).y * 60f + (2f * sin(ttl * 8f + startPos.z * 8f)).x
+
     fun update(dt: Float): Boolean {
-        ttl -= dt * 0.2f
+        ttl -= dt * 0.1f
         return ttl > 0
     }
 }
