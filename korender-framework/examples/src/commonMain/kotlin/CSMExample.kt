@@ -2,6 +2,8 @@ package com.zakgof.korender.examples
 
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
+import com.zakgof.korender.Checkbox
+import com.zakgof.korender.CheckboxState
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.math.ColorRGB.Companion.white
@@ -25,6 +27,10 @@ fun CSMExample() =
         OnTouch { freeCamera.touch(it) }
         OnKey { freeCamera.handle(it) }
 
+        val cascade1checkbox = CheckboxState(true)
+        val cascade2checkbox = CheckboxState(true)
+        val cascade3checkbox = CheckboxState(true)
+
         Frame {
 
             TestExchange.report(frameInfo)
@@ -32,9 +38,12 @@ fun CSMExample() =
             projection = projection(4f * width / height, 4f, 4f, 10000f)
             camera = freeCamera.camera(projection, width, height, frameInfo.dt)
             DirectionalLight(Vec3(1f, -1f, 0.3f), white(3.0f)) {
-                Cascade(1024, 4f, 12f, -0f to 50f, softwarePcf(blurRadius = 0.02f, bias = 0.001f))
-                Cascade(1024, 10f, 30f, 0f to 50f, vsm())
-                Cascade(1024, 25f, 100f, 0f to 50f, vsm())
+                if (cascade1checkbox.state)
+                    Cascade(1024, 4f, 12f, -0f to 50f, softwarePcf(blurRadius = 0.02f, bias = 0.001f))
+                if (cascade2checkbox.state)
+                    Cascade(1024, 10f, 30f, 0f to 50f, vsm())
+                if (cascade3checkbox.state)
+                    Cascade(1024, 25f, 100f, 0f to 50f, vsm())
             }
             Renderable(
                 material,
@@ -85,10 +94,21 @@ fun CSMExample() =
                 transform = translate(2f, 0.5f, -3f),
             )
             Gui {
-                Filler()
-                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
+                Row {
+                    Column {
+                        Filler()
+                        Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
+                    }
+                    Filler()
+                    Column {
+                        Filler()
+                        Column {
+                            Checkbox(id = "c1", state = cascade1checkbox, text = "Cascade 1")
+                            Checkbox(id = "c2", state = cascade2checkbox, text = "Cascade 2")
+                            Checkbox(id = "c3", state = cascade3checkbox, text = "Cascade 3")
+                        }
+                    }
+                }
             }
-            // Filter(fragment("!shader/effect/shadow-debug.frag"))
         }
     }
-
