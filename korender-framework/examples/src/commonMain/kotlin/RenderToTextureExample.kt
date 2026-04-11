@@ -18,7 +18,9 @@ fun RenderToTextureExample() = Korender(resourceLoader = { Res.readBytes("files/
 
         TestExchange.report(frameInfo)
 
-        CaptureFrame("timer", 256, 256, camera = camera(10.z, -1.z, 1.y), projection = projection(2f, 2f, 1f, 20f, ortho())) {
+        CaptureFrame("timer", 256, 256) {
+            camera = camera(10.z, -1.z, 1.y)
+            projection = projection(2f, 2f, 1f, 20f, ortho())
             Sky(starrySky(density = 250f))
             Gui {
                 Column {

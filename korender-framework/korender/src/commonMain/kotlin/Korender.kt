@@ -6,7 +6,7 @@ import com.zakgof.korender.context.KorenderScope
 @Composable
 expect fun Korender(
     resourceLoader: ResourceLoader = { throw KorenderException("No application resource provided") },
-    block: KorenderScope.() -> Unit
+    block: KorenderScope.() -> Unit,
 )
 
 typealias ResourceLoader = suspend (String) -> ByteArray
@@ -18,8 +18,9 @@ class FrameInfo(
     val time: Float,
     val dt: Float,
     val avgFps: Float,
-    val pending: Int
-)
+) {
+    constructor() : this(0L, 0f, 0f, 0f)
+}
 
 interface Prefab<S>
 

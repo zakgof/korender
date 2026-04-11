@@ -20,11 +20,10 @@ import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.RetentionPolicy
-import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.ShaderPlugin
 import com.zakgof.korender.ShaderPluginId
+import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.SkyMaterial
-import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
@@ -67,7 +66,6 @@ import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalPipeMaterial
 import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
 import com.zakgof.korender.impl.material.InternalSkyMaterial
-import com.zakgof.korender.impl.material.InternalTerrainMaterial
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.SmokeEffect
@@ -117,6 +115,9 @@ internal class Engine(
 
     inner class KorenderScopeImpl : KorenderScope, ResourceScope by rootNodeContext {
 
+        val regularFrameContext = this@Engine.regularFrameContext
+        val renderContext = this@Engine.renderContext
+
         var currentRetentionGeneration: Int = 0
         override val target: KorenderScope.TargetPlatform = Platform.target
 
@@ -141,15 +142,16 @@ internal class Engine(
 
         override fun cubeTextureProbe(envProbeName: String): CubeTextureDeclaration = ProbeCubeTextureDeclaration(envProbeName)
 
-        override fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3, insideOut: Boolean, block: FrameScope.() -> Unit): Deferred<CubeTextureImages> {
+        override fun captureEnv(resolution: Int, block: FrameScope.() -> Unit): Deferred<CubeTextureImages> {
             val sd = SceneDeclaration()
-            block.invoke(DefaultFrameScope(kc, sd, FrameInfo(0, 0f, 0f, 0f, 0), rootNodeContext))
+            val rfc = RegularFrameContext(resolution, resolution, renderContext)
+            block.invoke(DefaultFrameScope(kc, rfc, sd, FrameInfo(), rootNodeContext))
             val images = CompletableDeferred<CubeTextureImages>()
             val startNano = Platform.nanoTime()
 
             fun tryRender(): Boolean {
                 val rk = ResultKeeper()
-                renderer.renderToEnvProbe(EnvCaptureContext(resolution, position, near, far, insideOut, sd, rootNodeContext), "#immediate", rk)
+                renderer.renderToEnvProbe(CaptureContext(rfc, sd, rootNodeContext), "#immediate", rk)
                     ?.fetch()
                     ?.let {
                         if (rk.success) {
@@ -175,15 +177,16 @@ internal class Engine(
             return images
         }
 
-        override fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameScope.() -> Unit): Deferred<Image> {
+        override fun captureFrame(width: Int, height: Int, block: FrameScope.() -> Unit): Deferred<Image> {
             val sd = SceneDeclaration()
-            block.invoke(DefaultFrameScope(kc, sd, FrameInfo(0, 0f, 0f, 0f, 0), rootNodeContext))
+            val rfc = RegularFrameContext(width, height, renderContext)
+            block.invoke(DefaultFrameScope(kc, rfc, sd, FrameInfo(), rootNodeContext))
             val image = CompletableDeferred<Image>()
             val startNano = Platform.nanoTime()
 
             fun tryRender(): Boolean {
                 val rk = ResultKeeper()
-                renderer.renderToFrameProbe(FrameCaptureContext(width, height, camera as Camera, projection as Projection, sd, rootNodeContext), "#immediate", rk)
+                renderer.renderToFrameProbe(CaptureContext(rfc, sd, rootNodeContext), "#immediate", rk)
                     ?.fetch()
                     ?.let {
                         if (rk.success) {
@@ -460,12 +463,12 @@ internal class Engine(
 
     fun frame() {
 
-        val frameInfo = renderContext.frameInfoManager.frame(inventory.pending())
+        val frameInfo = renderContext.frameInfoManager.frame()
         processTouches()
         processKeys()
         val sd = SceneDeclaration()
         frameBlocks.forEach {
-            DefaultFrameScope(kc, sd, frameInfo, rootNodeContext).apply(it)
+            DefaultFrameScope(kc, kc.regularFrameContext, sd, frameInfo, rootNodeContext).apply(it)
         }
         inventory.go(frameInfo.time, kc.currentRetentionGeneration) {
             preFrames.removeFirstOrNull()?.let { it() }

@@ -44,8 +44,6 @@ import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
-import com.zakgof.korender.impl.projection.FrustumProjectionMode
-import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform
@@ -73,55 +71,45 @@ internal class Renderer(
         } as GlBindableTexture
     }
 
-    fun renderToEnvProbe(envCaptureContext: EnvCaptureContext, probeName: String, rk: ResultKeeper?): GlGpuCubeTexture? {
+    fun renderToEnvProbe(captureContext: CaptureContext, probeName: String, rk: ResultKeeper?): GlGpuCubeTexture? {
 
         val probeFb =
-            inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", envCaptureContext.resolution, envCaptureContext.resolution, true, envCaptureContext.nodeContext))
+            inventory.cubeFrameBuffer(CubeFrameBufferDeclaration("probe-$probeName", captureContext.frameContext.width, captureContext.frameContext.height, true, captureContext.nodeContext))
         if (probeFb == null) {
             rk?.fail()
             return null
         }
 
-        val projection = Projection(2f * envCaptureContext.near, 2f * envCaptureContext.near, envCaptureContext.near, envCaptureContext.far, FrustumProjectionMode)
         mapOf(
-            GL_TEXTURE_CUBE_MAP_NEGATIVE_X to DefaultCamera(envCaptureContext.position, -1.x, -1.y),
-            GL_TEXTURE_CUBE_MAP_NEGATIVE_Y to DefaultCamera(envCaptureContext.position, -1.y, -1.z),
-            GL_TEXTURE_CUBE_MAP_NEGATIVE_Z to DefaultCamera(envCaptureContext.position, -1.z, -1.y),
-            GL_TEXTURE_CUBE_MAP_POSITIVE_X to DefaultCamera(envCaptureContext.position, 1.x, -1.y),
-            GL_TEXTURE_CUBE_MAP_POSITIVE_Y to DefaultCamera(envCaptureContext.position, 1.y, 1.z),
-            GL_TEXTURE_CUBE_MAP_POSITIVE_Z to DefaultCamera(envCaptureContext.position, 1.z, -1.y),
+            GL_TEXTURE_CUBE_MAP_NEGATIVE_X to DefaultCamera(captureContext.frameContext.camera.position, -1.x, -1.y),
+            GL_TEXTURE_CUBE_MAP_NEGATIVE_Y to DefaultCamera(captureContext.frameContext.camera.position, -1.y, -1.z),
+            GL_TEXTURE_CUBE_MAP_NEGATIVE_Z to DefaultCamera(captureContext.frameContext.camera.position, -1.z, -1.y),
+            GL_TEXTURE_CUBE_MAP_POSITIVE_X to DefaultCamera(captureContext.frameContext.camera.position, 1.x, -1.y),
+            GL_TEXTURE_CUBE_MAP_POSITIVE_Y to DefaultCamera(captureContext.frameContext.camera.position, 1.y, 1.z),
+            GL_TEXTURE_CUBE_MAP_POSITIVE_Z to DefaultCamera(captureContext.frameContext.camera.position, 1.z, -1.y),
         ).forEach {
             val frameContext = CustomFrameContext(
-                projection,
+                captureContext.frameContext.projection,
                 it.value,
                 renderContext,
-                envCaptureContext.resolution,
-                envCaptureContext.resolution
+                captureContext.frameContext.width,
+                captureContext.frameContext.height
             )
             val sideFb = GlGpuCubeFrameBufferSide(probeFb, it.key)
-            val scene = Scene(envCaptureContext.nodeContext, envCaptureContext.sceneDeclaration, frameContext, sideFb)
+            val scene = Scene(captureContext.nodeContext, captureContext.sceneDeclaration, frameContext, sideFb)
             scene.render(rk)
         }
         probeFb.finish()
         return probeFb.colorTexture
     }
 
-    fun renderToFrameProbe(frameCaptureContext: FrameCaptureContext, frameProbeName: String, rk: ResultKeeper?): GlGpuTexture? {
-
-        val frameContext = CustomFrameContext(
-            frameCaptureContext.projection,
-            frameCaptureContext.camera,
-            renderContext,
-            frameCaptureContext.width,
-            frameCaptureContext.height
-        )
-
-        val probeFb = inventory.frameBuffer(FrameBufferDeclaration("probe-$frameProbeName", frameCaptureContext.width, frameCaptureContext.height, listOf(GlGpuTexture.Preset.RGBAFilter), true, frameCaptureContext.nodeContext))
+    fun renderToFrameProbe(captureContext: CaptureContext, frameProbeName: String, rk: ResultKeeper?): GlGpuTexture? {
+        val probeFb = inventory.frameBuffer(FrameBufferDeclaration("probe-$frameProbeName", captureContext.frameContext.width, captureContext.frameContext.height, listOf(GlGpuTexture.Preset.RGBAFilter), true, captureContext.nodeContext))
         if (probeFb == null) {
             rk?.fail()
             return null
         }
-        val scene = Scene(frameCaptureContext.nodeContext, frameCaptureContext.sceneDeclaration, frameContext, probeFb)
+        val scene = Scene(captureContext.nodeContext, captureContext.sceneDeclaration, captureContext.frameContext, probeFb)
         scene.render(rk)
         return probeFb.colorTextures[0]
     }
@@ -471,7 +459,7 @@ internal class Renderer(
             val directionalShadowIndexes = mutableListOf<Int>()
             val directionalShadowCounts = mutableListOf<Int>()
             sceneDeclaration.directionalLights.forEachIndexed { li, dl ->
-                val indexes = dl.shadowDeclaration.cascades.mapIndexedNotNull { ci, cascadeDeclaration ->
+                val indexes = dl.shadowDeclaration.cascades.indices.mapNotNull { ci ->
                     shadows(
                         "$li-$ci",
                         dl.direction,

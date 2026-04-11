@@ -18,11 +18,9 @@ import kotlin.random.Random
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun CaptureFrameExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
-    val frame = captureFrame(
-        256, 256,
-        camera(-40.z, 1.z, 1.y),
-        projection(5f, 5f, 5f, 100f)
-    ) {
+    val frame = captureFrame(256, 256) {
+        camera = camera(-40.z, 1.z, 1.y)
+        projection = projection(5f, 5f, 5f, 100f)
         frameScene()
     }
     val freeCamera = FreeCamera(this, -40.z, 1.z)

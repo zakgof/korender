@@ -8,6 +8,7 @@ import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.random.Random
@@ -15,13 +16,16 @@ import kotlin.random.Random
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun CaptureEnvExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
-    val env = captureEnv(1024, 1f, 1000f) {
+    val env = captureEnv(256) {
+        projection = projection(2f, 2f, 1f, 1000f, frustum())
+        camera  = camera(Vec3.ZERO, 1.z, 1.y)
         scene()
     }
     val freeCamera = FreeCamera(this, 0.z, (-1).z)
     OnTouch { freeCamera.touch(it) }
     Frame {
         TestExchange.report(frameInfo)
+        projection = projection(2f * width/height, 2f, 1f, 1000f, frustum())
         camera = freeCamera.camera(projection, width, height, frameInfo.dt)
 
         if (fract(frameInfo.time * 0.2f) > 0.5f && env.isCompleted) {

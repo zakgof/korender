@@ -32,7 +32,6 @@ import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.math.Vec3.Companion.ZERO
 import kotlinx.coroutines.Deferred
 
 interface KorenderScope : ResourceScope {
@@ -112,26 +111,20 @@ interface KorenderScope : ResourceScope {
      * Captures a scene into 6 frame images representing cube sides from the specified point.
      *
      * @param resolution each frame resolution in pixels (both width and height)
-     * @param near distance from camera to near clipping plane
-     * @param far distance from camera to far clipping plane
-     * @param position camera position
-     * @param insideOut experimental option to capture radial mapping when enabled
      * @param block scene to capture
      * @return deferred set of 6 images (per each cube side)
      */
-    fun captureEnv(resolution: Int, near: Float, far: Float, position: Vec3 = ZERO, insideOut: Boolean = false, block: FrameScope.() -> Unit): Deferred<CubeTextureImages>
+    fun captureEnv(resolution: Int, block: FrameScope.() -> Unit): Deferred<CubeTextureImages>
 
     /**
      * Captures scene into a frame image.
      *
      * @param width frame width in pixels
      * @param height frame height in pixels
-     * @param camera camera declaration for frame capture
-     * @param projection projection declaration for frame capture
      * @param block scene to capture
      * @return deferred frame image
      */
-    fun captureFrame(width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameScope.() -> Unit): Deferred<Image>
+    fun captureFrame(width: Int, height: Int, block: FrameScope.() -> Unit): Deferred<Image>
 
     /**
      * Creates an empty mutable mesh object.

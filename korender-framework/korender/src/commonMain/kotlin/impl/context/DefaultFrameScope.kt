@@ -40,12 +40,11 @@ import com.zakgof.korender.context.ResourceScope
 import com.zakgof.korender.context.ShadowContext
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.camera.Camera
+import com.zakgof.korender.impl.engine.CaptureContext
 import com.zakgof.korender.impl.engine.DeferredShadingDeclaration
 import com.zakgof.korender.impl.engine.DirectionalLightDeclaration
 import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.Engine
-import com.zakgof.korender.impl.engine.EnvCaptureContext
-import com.zakgof.korender.impl.engine.FrameCaptureContext
 import com.zakgof.korender.impl.engine.FrameTarget
 import com.zakgof.korender.impl.engine.GltfDeclaration
 import com.zakgof.korender.impl.engine.InternalBillboardInstancingDeclaration
@@ -54,6 +53,7 @@ import com.zakgof.korender.impl.engine.InternalGltfInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalPassDeclaration
 import com.zakgof.korender.impl.engine.PointLightDeclaration
+import com.zakgof.korender.impl.engine.RegularFrameContext
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.SceneDeclaration
 import com.zakgof.korender.impl.engine.ShadowDeclaration
@@ -73,6 +73,7 @@ import com.zakgof.korender.math.Vec3
 
 internal class DefaultFrameScope(
     val korenderContext: Engine.KorenderScopeImpl,
+    val frameContext: RegularFrameContext,
     val sceneDeclaration: SceneDeclaration,
     override val frameInfo: FrameInfo,
     val nodeContext: NodeContext,
@@ -82,6 +83,20 @@ internal class DefaultFrameScope(
         get() = nodeContext.retentionPolicy
         set(value) {
             nodeContext.retentionPolicy = value
+        }
+
+    override
+    var camera: CameraDeclaration
+        get() = frameContext.camera
+        set(value) {
+            frameContext.camera = value as Camera
+        }
+
+    override
+    var projection: ProjectionDeclaration
+        get() = frameContext.projection
+        set(value) {
+            frameContext.projection = value as Projection
         }
 
     override fun texture(textureResource: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureDeclaration =
@@ -239,14 +254,14 @@ internal class DefaultFrameScope(
 
     override fun PostProcess(postProcessingEffect: PostProcessingEffect, block: FrameScope.() -> Unit) {
         val sd = SceneDeclaration()
-        val fc = DefaultFrameScope(korenderContext, sd, frameInfo, nodeContext)
+        val fc = DefaultFrameScope(korenderContext, korenderContext.regularFrameContext, sd, frameInfo, nodeContext)
         fc.apply(block)
         sceneDeclaration.filters += postProcessingEffect as InternalFilterDeclaration
     }
 
     override fun PostProcess(material: PostProcessingMaterial, block: FrameScope.() -> Unit) {
         val sd = SceneDeclaration()
-        val fc = DefaultFrameScope(korenderContext, sd, frameInfo, nodeContext)
+        val fc = DefaultFrameScope(korenderContext, korenderContext.regularFrameContext, sd, frameInfo, nodeContext)
         fc.apply(block)
         sceneDeclaration.filters += InternalFilterDeclaration(
             listOf(
@@ -261,23 +276,25 @@ internal class DefaultFrameScope(
         )
     }
 
-    override fun CaptureEnv(envProbeName: String, resolution: Int, position: Vec3, near: Float, far: Float, insideOut: Boolean, block: FrameScope.() -> Unit) {
+    override fun CaptureEnv(envProbeName: String, resolution: Int, block: FrameScope.() -> Unit) {
         val captureSceneDeclaration = SceneDeclaration()
-        val envCaptureContext = EnvCaptureContext(resolution, position, near, far, insideOut, captureSceneDeclaration, nodeContext)
-        DefaultFrameScope(korenderContext, captureSceneDeclaration, frameInfo, nodeContext).apply(block)
-        sceneDeclaration.envCaptures[envProbeName] = envCaptureContext
+        val rfc = RegularFrameContext(resolution, resolution, korenderContext.renderContext)
+        val captureContext = CaptureContext(rfc, captureSceneDeclaration, nodeContext)
+        DefaultFrameScope(korenderContext, rfc, captureSceneDeclaration, frameInfo, nodeContext).apply(block)
+        sceneDeclaration.envCaptures[envProbeName] = captureContext
     }
 
-    override fun CaptureFrame(frameProbeName: String, width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameScope.() -> Unit) {
+    override fun CaptureFrame(frameProbeName: String, width: Int, height: Int, block: FrameScope.() -> Unit) {
         val captureSceneDeclaration = SceneDeclaration()
-        val frameCaptureContext = FrameCaptureContext(width, height, camera as Camera, projection as Projection, captureSceneDeclaration, nodeContext)
-        DefaultFrameScope(korenderContext, captureSceneDeclaration, frameInfo, nodeContext).apply(block)
-        sceneDeclaration.frameCaptures[frameProbeName] = frameCaptureContext
+        val rfc = RegularFrameContext(width, height, korenderContext.renderContext)
+        val captureContext = CaptureContext(rfc, captureSceneDeclaration, nodeContext)
+        DefaultFrameScope(korenderContext, rfc, captureSceneDeclaration, frameInfo, nodeContext).apply(block)
+        sceneDeclaration.frameCaptures[frameProbeName] = captureContext
     }
 
     override fun OnLoading(block: FrameScope.() -> Unit) {
         sceneDeclaration.loaderSceneDeclaration = SceneDeclaration()
-        DefaultFrameScope(korenderContext, sceneDeclaration.loaderSceneDeclaration!!, frameInfo, nodeContext).apply(block)
+        DefaultFrameScope(korenderContext, korenderContext.regularFrameContext, sceneDeclaration.loaderSceneDeclaration!!, frameInfo, nodeContext).apply(block)
     }
 
     override fun Node(resourceLoader: (suspend (String) -> ByteArray)?, transform: Transform, retentionPolicy: RetentionPolicy?, time: Float?, block: FrameScope.() -> Unit) {
@@ -288,6 +305,6 @@ internal class DefaultFrameScope(
             retentionPolicy ?: nodeContext.retentionPolicy,
             time
         )
-        DefaultFrameScope(korenderContext, sceneDeclaration, frameInfo, childNodeContext).apply(block)
+        DefaultFrameScope(korenderContext, korenderContext.regularFrameContext, sceneDeclaration, frameInfo, childNodeContext).apply(block)
     }
 }

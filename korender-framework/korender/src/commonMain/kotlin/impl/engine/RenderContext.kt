@@ -1,7 +1,6 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.Platform
-import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.context.NodeContext
@@ -47,18 +46,13 @@ internal class RegularFrameContext(override var width: Int, override var height:
 }
 
 internal class RenderContext {
-
     var backgroundColor = ColorRGBA.Transparent
-
     val frameInfoManager = FrameInfoManager()
     val state = GlState()
     val envProbes = mutableMapOf<String, GlGpuCubeTexture>()
     val frameProbes = mutableMapOf<String, GlGpuTexture>()
-
     val time
         get() = (Platform.nanoTime() - frameInfoManager.startNanos) * 1e-9f
-
-    var currentRetentionPolicy: RetentionPolicy = TimeRetentionPolicy(10f)
 }
 
 internal class CustomFrameContext(

@@ -2,14 +2,12 @@ package com.zakgof.korender.context
 
 import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.BillboardMaterial
-import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.Material
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.Prefab
-import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.SkyMaterial
@@ -133,13 +131,9 @@ interface FrameScope : KorenderScope {
      *
      * @param envProbeName output env probe name
      * @param resolution probe cube texture resolution
-     * @param position camera position to capture scene
-     * @param near capture camera's near clipping plane
-     * @param far capture camera's far clipping plane (effectively, scene bounding radius)
-     * @param insideOut experimental option to enable radiant capture
      * @param block scene to capture
      */
-    fun CaptureEnv(envProbeName: String, resolution: Int, position: Vec3 = Vec3.ZERO, near: Float = 10f, far: Float = 1000f, insideOut: Boolean = false, block: FrameScope.() -> Unit)
+    fun CaptureEnv(envProbeName: String, resolution: Int, block: FrameScope.() -> Unit)
 
     /**
      * Renders a scene into a frame probe.
@@ -147,11 +141,9 @@ interface FrameScope : KorenderScope {
      * @param frameProbeName output frame probe name
      * @param width probe texture width
      * @param height probe texture height
-     * @param camera capture camera declaration
-     * @param projection capture projection declaration
      * @param block scene to capture
      */
-    fun CaptureFrame(frameProbeName: String, width: Int, height: Int, camera: CameraDeclaration, projection: ProjectionDeclaration, block: FrameScope.() -> Unit)
+    fun CaptureFrame(frameProbeName: String, width: Int, height: Int, block: FrameScope.() -> Unit)
 
     /**
      * Sets a loader scene to display while the resources are being loaded.
