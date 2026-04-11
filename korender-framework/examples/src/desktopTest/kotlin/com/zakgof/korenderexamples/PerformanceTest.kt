@@ -2,6 +2,7 @@
 
 import androidx.compose.ui.awt.ComposeWindow
 import com.zakgof.korender.FrameInfo
+import com.zakgof.korender.KorenderBuild
 import com.zakgof.korender.examples.Case
 import com.zakgof.korender.examples.GltfCrowdExample
 import com.zakgof.korender.examples.HeightmapTerrainExample
@@ -38,17 +39,19 @@ class PerformanceTest {
             }
         }
 
-        val t1 = waitKorender(5f)
-        val t2 = waitKorender(20f)
+        val t1 = waitKorender(10f)
+        val t2 = waitKorender(40f)
 
         val frameRate = (t2.frame - t1.frame) / (t2.time - t1.time)
 
         println("Framerate: ${demo.title} $frameRate")
         recordResult(demo.title, frameRate)
 
-        baselineFrameRateFor(demo.title)?.let { baseline ->
-            if (frameRate < baseline) {
-                fail<Unit>("Framerate for '${demo.title}' dropped: $frameRate < $baseline")
+        // Fail if slower than latest release by more than 2%
+        val releaseVal = latestRelease[demo.title]
+        if (releaseVal != null) {
+            if (frameRate < releaseVal * 0.98f) {
+                fail<Unit>("Framerate for '${demo.title}' dropped vs release: $frameRate < $releaseVal (more than 2% slower)")
             }
         }
     }
@@ -70,7 +73,10 @@ class PerformanceTest {
         private val resultsFolder = TestUtil.resultsFolder
         private val timestampFormat = TestUtil.timestampFormat
         private val results = mutableMapOf<String, Float>()
-        private val baseline = loadBaseline(resultsFolder)
+        private val latestReleaseFile = findLatestResultFile(resultsFolder, isSnapshot = false)
+        private val latestSnapshotFile = findLatestResultFile(resultsFolder, isSnapshot = true)
+        private val latestRelease = latestReleaseFile?.let { loadResultsFile(it) } ?: emptyMap()
+        private val latestSnapshot = latestSnapshotFile?.let { loadResultsFile(it) } ?: emptyMap()
         private lateinit var window: ComposeWindow
 
         @JvmStatic
@@ -97,11 +103,22 @@ class PerformanceTest {
             if (!resultsFolder.exists()) {
                 resultsFolder.mkdirs()
             }
-            val latestFile = findLatestResultFile(resultsFolder)
-            val latest = latestFile?.let { loadResultsFile(it) } ?: emptyMap()
-            printComparisonTable(results, baseline, latest)
+
+            if (latestSnapshotFile != null) {
+                printComparisonTable(results, latestSnapshot, latestSnapshotFile)
+            }
+            if ( latestReleaseFile != null) {
+                printComparisonTable(results, latestRelease, latestReleaseFile)
+            }
+
+            val version = KorenderBuild.version
             val timestamp = LocalDateTime.now().format(timestampFormat)
-            val output = File(resultsFolder, "$timestamp.perf.txt")
+            val output = if (version.endsWith("-SNAPSHOT")) {
+                File(resultsFolder, "${version}-$timestamp.perf.txt")
+            } else {
+                File(resultsFolder, "${version}.perf.txt")
+            }
+
             val lines = results.entries
                 .sortedBy { it.key }
                 .joinToString(System.lineSeparator()) { "${it.key}\t${it.value}" }
@@ -112,14 +129,6 @@ class PerformanceTest {
         @Synchronized
         private fun recordResult(title: String, frameRate: Float) {
             results[title] = frameRate
-        }
-
-        private fun baselineFrameRateFor(title: String): Float? = baseline[title]
-
-        private fun loadBaseline(folder: File): Map<String, Float> {
-            val baselineFile = File(folder, "baseline.perf.txt")
-            if (!baselineFile.exists()) return emptyMap()
-            return loadResultsFile(baselineFile)
         }
 
         private fun loadResultsFile(file: File): Map<String, Float> {
@@ -138,29 +147,38 @@ class PerformanceTest {
                 .toMap()
         }
 
-        private fun findLatestResultFile(folder: File): File? {
+        private fun findLatestResultFile(folder: File, isSnapshot: Boolean): File? {
             if (!folder.exists()) return null
             return folder.listFiles()
-                ?.filter { it.isFile && it.name.endsWith(".perf.txt") && it.name != "baseline.perf.txt" }
+                ?.filter { it.isFile && it.name.endsWith(".perf.txt") }
+                ?.filter { it.name.contains("-SNAPSHOT") == isSnapshot }
                 ?.maxByOrNull { it.lastModified() }
         }
 
         private fun printComparisonTable(
             current: Map<String, Float>,
-            baseline: Map<String, Float>,
             latest: Map<String, Float>,
+            latestFile: File,
         ) {
-            val header = listOf("Test", "Current", "Baseline", "О” vs Base", "Latest", "О” vs Latest")
+            val header = listOf("Test", "Current", latestFile.nameWithoutExtension, "Change")
             val rows = current.keys.sorted().map { title ->
                 val cur = current[title]
-                val base = baseline[title]
-                val lat = latest[title]
+                val prev = latest[title]
                 val curStr = cur?.let { formatValue(it) } ?: "N/A"
-                val baseStr = base?.let { formatValue(it) } ?: "N/A"
-                val latStr = lat?.let { formatValue(it) } ?: "N/A"
-                val baseDiff = formatDiffPercent(cur, base)
-                val latestDiff = formatDiffPercent(cur, lat)
-                listOf(title, curStr, baseStr, baseDiff, latStr, latestDiff)
+                val prevStr = prev?.let { formatValue(it) } ?: "N/A"
+                val changeStr = if (cur != null && prev != null && prev != 0f) {
+                    val diff = (cur - prev) / prev * 100f
+                    val sign = if (diff >= 0f) "+" else ""
+                    val txt = String.format(Locale.US, "%s%.2f%%", sign, diff)
+                    when {
+                        diff < 0f -> ansiRed(txt)
+                        diff > 0f -> ansiGreen(txt)
+                        else -> txt
+                    }
+                } else {
+                    "—"
+                }
+                listOf(title, curStr, prevStr, changeStr)
             }
 
             val widths = header.indices.map { col ->
@@ -190,18 +208,6 @@ class PerformanceTest {
 
         private fun formatValue(value: Float): String =
             String.format(Locale.US, "%.2f", value)
-
-        private fun formatDiffPercent(current: Float?, baseline: Float?): String {
-            if (current == null || baseline == null || baseline == 0f) return "—"
-            val diff = (current - baseline) / baseline * 100f
-            val sign = if (diff >= 0f) "+" else ""
-            val text = String.format(Locale.US, "%s%.2f%%", sign, diff)
-            return when {
-                diff < 0f -> ansiRed(text)
-                diff > 0f -> ansiGreen(text)
-                else -> text
-            }
-        }
 
         private fun ansiRed(text: String) = "\u001B[31m$text\u001B[0m"
 

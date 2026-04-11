@@ -15,6 +15,27 @@ compose.resources {
     generateResClass = always
 }
 
+// Generated build config
+val generatedBuildDir = layout.buildDirectory.dir("generated/kotlin/korenderBuild")
+
+val generateKorenderBuild by tasks.registering {
+    outputs.dir(generatedBuildDir)
+    doLast {
+        val korenderVersion: String by project
+        val korenderVersionSuffix: String by project
+        val versionValue = korenderVersion + korenderVersionSuffix
+        val pkgDir = generatedBuildDir.get().asFile.resolve("com/zakgof/korender")
+        pkgDir.mkdirs()
+        val outFile = pkgDir.resolve("KorenderBuild.kt")
+        outFile.writeText("""package com.zakgof.korender
+
+object KorenderBuild {
+    const val version: String = "${versionValue}"
+}
+""")
+    }
+}
+
 kotlin {
 
     jvm("desktop")
@@ -43,6 +64,9 @@ kotlin {
 
     sourceSets {
         val desktopMain by getting
+        val commonMain by getting {
+            kotlin.srcDir(generatedBuildDir)
+        }
 
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
@@ -75,6 +99,8 @@ kotlin {
         }
     }
 }
+
+tasks.matching { it.name.startsWith("compileKotlin") }.configureEach { dependsOn(generateKorenderBuild) }
 
 mavenPublishing {
     val korenderVersion: String by project

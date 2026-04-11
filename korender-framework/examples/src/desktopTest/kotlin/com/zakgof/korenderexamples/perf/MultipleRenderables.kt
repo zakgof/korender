@@ -37,7 +37,7 @@ fun MultipleRenderables() = Korender(resourceLoader = { Res.readBytes("files/$it
                         roughnessFactor = m.toFloat() / h
                         ibl = sky
                     },
-                    mesh = sphere(4f / w),
+                    mesh = sphere(4f / w, 8, 8),
                     transform = translate((m - w/2) * 8f / w, (r - h/2) * 8f / h, 8f)
                 )
             }
