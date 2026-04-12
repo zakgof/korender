@@ -2,6 +2,7 @@ package editor.model.brush
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import com.zakgof.korender.baker.editor.model.brush.CreatorShape
 import com.zakgof.korender.math.Vec3
 import editor.model.BoundingBox
 import kotlin.math.abs
@@ -26,8 +27,14 @@ data class Brush(
     val id: String = Uuid.generateV7().toHexDashString(),
 ) {
 
-    constructor(name: String, projectionColor: Color, bb: BoundingBox, materialId: String, fitToFace: Boolean) :
-            this(name, projectionColor.toArgb(), Plane.cube(bb).map { Face(it, materialId, fitToFace) })
+    constructor(
+        name: String,
+        projectionColor: Color,
+        bb: BoundingBox,
+        shape: CreatorShape,
+        materialId: String,
+        fitToFace: Boolean,
+    ) : this(name, projectionColor.toArgb(), shape.makeFaces(bb, materialId, fitToFace))
 
     val mesh by lazy { BrushMesher.buildBrushMesh(this) }
 

@@ -33,6 +33,7 @@ kotlin {
             implementation("com.github.haifengl:smile-core:4.4.0")
             implementation(libs.kotlinxcollections.immutable)
             implementation(libs.kotlinx.serialization.cbor)
+            implementation(compose.materialIconsExtended)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

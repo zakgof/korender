@@ -2,13 +2,16 @@ package editor.ui
 
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,12 +20,27 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType.Companion.PrimaryNotEditable
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -32,6 +50,7 @@ import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.zakgof.korender.baker.editor.model.brush.CreatorShape
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
 import com.zakgof.korender.baker.editor.util.nextSane
@@ -84,6 +103,7 @@ fun Sidebar(holder: StateHolder) {
             .padding(2.dp)
     ) {
         modes(state, holder)
+        shape(state, holder)
         grid(holder, state)
         scale(holder, state)
         materials(holder, state, model)
@@ -148,6 +168,109 @@ private fun modes(state: State, holder: StateHolder) {
         ) {
             holder.setMouseMode(State.MouseMode.entries.toTypedArray()[it])
         }
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
+@Composable
+private fun shape(state: State, holder: StateHolder) {
+    GroupBox("Shape") {
+
+        class ShapeDef(
+            val title: String,
+            val test: (CreatorShape) -> Boolean,
+            val factory: () -> CreatorShape,
+            val additionalContent: @Composable () -> Unit = {}
+        )
+
+        val options = listOf(
+            ShapeDef("Box", { it is CreatorShape.Box }, { CreatorShape.Box }),
+            ShapeDef("Cylinder", { it is CreatorShape.Cylinder }, { CreatorShape.Cylinder() }) {
+                Row (
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ){
+                    Text(
+                        text = "Sides ",
+                        style = Theme.label
+                    )
+                    FancyClickToTextInput(
+                        value = ""  + (state.creatorShape as CreatorShape.Cylinder).sides,
+                        validator = {
+                            val int = it.toIntOrNull()
+                            int != null && int >= 3 && int <= 64
+                        },
+                        onValueChange = {
+                            holder.setCreatorShape(CreatorShape.Cylinder(it.toInt()))
+                        },
+                        editorModifier = Modifier.width(64.dp),
+                        textModifier = Modifier.width(64.dp),
+                    )
+                }
+            }
+        )
+        var expanded by remember { mutableStateOf(false) }
+
+        ExposedDropdownMenuBox(
+            modifier = Modifier.width(200.dp).border(1.dp, Theme.medium, RoundedCornerShape(4.dp)),
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded },
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .menuAnchor(PrimaryNotEditable)
+                    .padding(4.dp)
+            ) {
+                Text(
+                    text = options.first { it.test(state.creatorShape) }.title,
+                    style = Theme.label,
+                    modifier = Modifier.menuAnchor(PrimaryNotEditable)
+                        .weight(1f)
+                        .clickable { expanded = true }
+                        .padding(1.dp)
+                )
+                Spacer(Modifier.width(4.dp))
+                Icon(
+                    imageVector = if (expanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    tint = Theme.medium
+                )
+            }
+
+            CompositionLocalProvider(
+                LocalMinimumInteractiveComponentSize provides 0.dp
+            ) {
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    containerColor = Theme.background,
+                    modifier = Modifier.border(1.dp, Theme.dark)
+                ) {
+                    options.forEach { item ->
+                        DropdownMenuItem(
+                            contentPadding = PaddingValues(horizontal =  8.dp, vertical = 2.dp),
+                            colors = MenuDefaults.itemColors(
+                                textColor = Theme.light
+                            ),
+                            onClick = {
+                                holder.setCreatorShape(item.factory())
+                                expanded = false
+                            },
+                            text = {
+                                Text(
+                                    text = item.title,
+                                    style = Theme.label
+                                )
+                            }
+
+                        )
+                    }
+                }
+            }
+        }
+        options.first { it.test(state.creatorShape) }.additionalContent()
     }
 }
 

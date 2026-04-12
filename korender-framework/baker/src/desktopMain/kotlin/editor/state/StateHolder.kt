@@ -6,6 +6,7 @@ import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.baker.editor.collision.BvhCompiler
 import com.zakgof.korender.baker.editor.collision.CollisionSerialModel
 import com.zakgof.korender.baker.editor.model.Group
+import com.zakgof.korender.baker.editor.model.brush.CreatorShape
 import com.zakgof.korender.baker.editor.util.floor2
 import com.zakgof.korender.baker.editor.util.floorSig
 import com.zakgof.korender.baker.editor.util.roundSane
@@ -134,6 +135,7 @@ class StateHolder {
             "Brush ${_model.value.brushes.size}",
             randomBrushColor(model.value.brushes.size),
             bb,
+            state.value.creatorShape,
             state.value.materialId,
             model.value.materials[state.value.materialId]!!.fitToFace
         )
@@ -594,6 +596,10 @@ class StateHolder {
         val sceneModel = ModelCompiler.compile(model.value)
         val bytes = Cbor.encodeToByteArray(sceneModel)
         File(path).writeBytes(bytes)
+    }
+
+    fun setCreatorShape(shape: CreatorShape) {
+        _state.update { it.copy(creatorShape = shape) }
     }
 }
 
