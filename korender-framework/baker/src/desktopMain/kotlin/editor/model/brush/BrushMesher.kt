@@ -8,7 +8,7 @@ import kotlin.math.atan2
 class BrushMesh(
     val points: List<Vec3>,
     val edges: List<Pair<Int, Int>>,
-    val faces: Map<Plane, List<Tri>>,
+    val faces: Map<Face, List<Tri>>,
 ) {
     class Tri(
         val points: List<Vec3>,
@@ -52,7 +52,7 @@ object BrushMesher {
         fun edge(a: Int, b: Int): Pair<Int, Int> =
             if (a < b) a to b else b to a
 
-        val faces = mutableMapOf<Plane, List<BrushMesh.Tri>>()
+        val faces = mutableMapOf<Face, List<BrushMesh.Tri>>()
 
         for (face in brush.faces) {
 
@@ -105,7 +105,7 @@ object BrushMesher {
                 val tex = listOf(texes[0], texes[i], texes[i + 1])
                 triangles += BrushMesh.Tri(pos, tex, n)
             }
-            faces[plane] = triangles
+            faces[face] = triangles
         }
 
         return BrushMesh(

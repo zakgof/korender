@@ -59,7 +59,7 @@ object ModelCompiler {
             .map { matToMeshFaces ->
                 SceneModel.Mesh(
                     matToMeshFaces.key,
-                    matToMeshFaces.value.sumOf { it.first.faces[it.second.plane]!!.size * 3 },
+                    matToMeshFaces.value.sumOf { it.first.faces[it.second]!!.size * 3 },
                     0,
                     mapOf(
                         Attribute.POS to posBytes(matToMeshFaces.value),
@@ -77,7 +77,7 @@ object ModelCompiler {
                 val faces = matToMeshFacesWithId.value.map { it.first }
                 SceneModel.Mesh(
                     matToMeshFacesWithId.key,
-                    matToMeshFacesWithId.value.sumOf { it.first.first.faces[it.first.second.plane]!!.size * 3 },
+                    matToMeshFacesWithId.value.sumOf { it.first.first.faces[it.first.second]!!.size * 3 },
                     0,
                     mapOf(
                         Attribute.POS to posBytes(faces),
@@ -114,7 +114,7 @@ object ModelCompiler {
 
     private fun posBytes(faces: List<Pair<BrushMesh, Face>>): ByteArray {
         val poses = faces
-            .flatMap { it.first.faces[it.second.plane]!! }
+            .flatMap { it.first.faces[it.second]!! }
             .flatMap { it.points }
         val nbb = NativeFloatBuffer(poses.size * 3)
         poses.forEach {
@@ -127,7 +127,7 @@ object ModelCompiler {
 
     private fun normalBytes(faces: List<Pair<BrushMesh, Face>>): ByteArray {
         val normals = faces
-            .flatMap { it.first.faces[it.second.plane]!! }
+            .flatMap { it.first.faces[it.second]!! }
             .map { it.normal }
         val nbb = NativeFloatBuffer(normals.size * 3 * 3)
         normals.forEach { p ->
@@ -142,7 +142,7 @@ object ModelCompiler {
 
     private fun colorTexIndex(faces: List<Pair<Pair<BrushMesh, Face>, Int>>): ByteArray {
         val index = faces
-            .flatMap { pair -> List(pair.first.first.faces[pair.first.second.plane]!!.size * 3) { pair.second } }
+            .flatMap { pair -> List(pair.first.first.faces[pair.first.second]!!.size * 3) { pair.second } }
         val nbb = NativeByteBuffer(index.size * 1)
         index.forEach {
             nbb.put(it.toUByte().toByte())
@@ -153,7 +153,7 @@ object ModelCompiler {
 
     private fun texBytes(faces: List<Pair<BrushMesh, Face>>): ByteArray {
         val texes = faces
-            .flatMap { it.first.faces[it.second.plane]!! }
+            .flatMap { it.first.faces[it.second]!! }
             .flatMap { it.tex }
         val nbb = NativeFloatBuffer(texes.size * 2)
         texes.forEach {

@@ -80,18 +80,21 @@ fun KorenderView(holder: StateHolder) {
             model.brushes.values
                 .filter { brush -> !model.invisibleBrushes.contains(brush.id) }
                 .forEach { brush ->
-                    brush.faces
-                        .forEachIndexed { i, matPlane ->
+                    brush.mesh.faces.entries
+                        .forEachIndexed { i, faceToTris ->
+                            val face = faceToTris.key
+                            val tris = faceToTris.value
+                            val vertexCount = tris.sumOf { it.points.size }
                             Renderable(
                                 toBaseMM(
-                                    model.materials[matPlane.materialId]!!,
+                                    model.materials[face.materialId]!!,
                                     state.selection.contains(brush.id)
                                 ),
-                                mesh = customMesh(brush.id + "-" + i, 128, 0, POS, NORMAL, TEX, dynamic = true) {
-                                    brush.mesh.faces[matPlane.plane]!!.forEach {
-                                        pos(*it.points.toTypedArray())
-                                        tex(*it.tex.toTypedArray())
-                                        normal(it.normal, it.normal, it.normal)
+                                mesh = customMesh(brush.id + "-" + i, vertexCount, 0, POS, NORMAL, TEX, dynamic = true) {
+                                    tris.forEach {tri ->
+                                        pos(*tri.points.toTypedArray())
+                                        tex(*tri.tex.toTypedArray())
+                                        normal(tri.normal, tri.normal, tri.normal)
                                     }
                                 }
                             )

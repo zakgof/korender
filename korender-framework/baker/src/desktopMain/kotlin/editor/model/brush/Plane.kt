@@ -6,7 +6,7 @@ import editor.model.BoundingBox
 import editor.model.rotateVec
 import kotlin.math.sqrt
 
-data class Plane(
+class Plane(
     val p0: Vec3,
     val pu: Vec3,
     val pv: Vec3,
@@ -38,12 +38,12 @@ data class Plane(
     fun distanceTo(p: Vec3) = normal * p + d
 
     fun translate(offset: Vec3): Plane =
-        copy(p0 = p0 + offset, pu = pu + offset, pv = pv + offset)
+        Plane (p0 = p0 + offset, pu = pu + offset, pv = pv + offset)
 
     fun scale(oldBB: BoundingBox, newBB: BoundingBox): Plane {
         val scale = (newBB.max - newBB.min) divpercomp (oldBB.max - oldBB.min)
         fun xform(p: Vec3): Vec3 = newBB.min + ((p - oldBB.min) multpercomp scale)
-        return copy(
+        return Plane(
             p0 = xform(p0),
             pu = xform(pu),
             pv = xform(pv)
@@ -52,7 +52,7 @@ data class Plane(
 
     fun rotate(center: Vec3, axis: Vec3, angle: Float): Plane {
         fun xform(p: Vec3): Vec3 = center + rotateVec(p - center, axis, angle)
-        return copy(
+        return Plane(
             p0 = xform(p0),
             pu = xform(pu),
             pv = xform(pv)
