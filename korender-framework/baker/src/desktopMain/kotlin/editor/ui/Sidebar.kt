@@ -50,7 +50,6 @@ import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.zakgof.korender.baker.editor.model.brush.CreatorShape
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
 import com.zakgof.korender.baker.editor.util.nextSane
@@ -74,6 +73,7 @@ import editor.model.BoundingBox
 import editor.model.Material
 import editor.model.Model
 import editor.model.TexId
+import editor.model.brush.CreatorShape
 import editor.state.State
 import editor.state.StateHolder
 import editor.ui.dialog.MaterialsDialog
@@ -180,32 +180,88 @@ private fun shape(state: State, holder: StateHolder) {
             val title: String,
             val test: (CreatorShape) -> Boolean,
             val factory: () -> CreatorShape,
-            val additionalContent: @Composable () -> Unit = {}
+            val additionalContent: @Composable () -> Unit = {},
         )
 
         val options = listOf(
             ShapeDef("Box", { it is CreatorShape.Box }, { CreatorShape.Box }),
             ShapeDef("Cylinder", { it is CreatorShape.Cylinder }, { CreatorShape.Cylinder() }) {
-                Row (
+                Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ){
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     Text(
                         text = "Sides ",
                         style = Theme.label
                     )
                     FancyClickToTextInput(
-                        value = ""  + (state.creatorShape as CreatorShape.Cylinder).sides,
+                        value = "" + (state.creatorShape as CreatorShape.Cylinder).sides,
                         validator = {
                             val int = it.toIntOrNull()
                             int != null && int >= 3 && int <= 64
                         },
-                        onValueChange = {
-                            holder.setCreatorShape(CreatorShape.Cylinder(it.toInt()))
+                        onValueChange = { holder.setCreatorShape(CreatorShape.Cylinder(it.toInt())) },
+                        editorModifier = Modifier.width(32.dp),
+                        textModifier = Modifier.width(24.dp),
+                    )
+                }
+            },
+            ShapeDef("Cone", { it is CreatorShape.Cone }, { CreatorShape.Cone() }) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "Sides ",
+                        style = Theme.label
+                    )
+                    FancyClickToTextInput(
+                        value = "" + (state.creatorShape as CreatorShape.Cone).sides,
+                        validator = {
+                            val int = it.toIntOrNull()
+                            int != null && int >= 3 && int <= 64
                         },
-                        editorModifier = Modifier.width(64.dp),
-                        textModifier = Modifier.width(64.dp),
+                        onValueChange = { holder.setCreatorShape(CreatorShape.Cone(it.toInt())) },
+                        editorModifier = Modifier.width(32.dp),
+                        textModifier = Modifier.width(24.dp),
+                    )
+                }
+            },
+            ShapeDef("Sphere", { it is CreatorShape.Sphere }, { CreatorShape.Sphere() }) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "Slices",
+                        style = Theme.label
+                    )
+                    FancyClickToTextInput(
+                        value = "" + (state.creatorShape as CreatorShape.Sphere).slices,
+                        validator = {
+                            val int = it.toIntOrNull()
+                            int != null && int >= 3 && int <= 16
+                        },
+                        onValueChange = { holder.setCreatorShape((state.creatorShape as CreatorShape.Sphere).copy(slices = it.toInt())) },
+                        editorModifier = Modifier.width(32.dp),
+                        textModifier = Modifier.width(24.dp),
+                    )
+                    Text(
+                        text = "Sectors",
+                        style = Theme.label
+                    )
+                    FancyClickToTextInput(
+                        value = "" + (state.creatorShape as CreatorShape.Sphere).sectors,
+                        validator = {
+                            val int = it.toIntOrNull()
+                            int != null && int >= 4 && int <= 16
+                        },
+                        onValueChange = { holder.setCreatorShape((state.creatorShape as CreatorShape.Sphere).copy(sectors = it.toInt())) },
+                        editorModifier = Modifier.width(32.dp),
+                        textModifier = Modifier.width(24.dp),
                     )
                 }
             }
@@ -250,7 +306,7 @@ private fun shape(state: State, holder: StateHolder) {
                 ) {
                     options.forEach { item ->
                         DropdownMenuItem(
-                            contentPadding = PaddingValues(horizontal =  8.dp, vertical = 2.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                             colors = MenuDefaults.itemColors(
                                 textColor = Theme.light
                             ),

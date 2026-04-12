@@ -1,7 +1,7 @@
 package editor.state
 
 import androidx.compose.ui.input.key.Key
-import com.zakgof.korender.baker.editor.model.brush.CreatorShape
+import editor.model.brush.CreatorShape
 import com.zakgof.korender.impl.scene.SceneModel
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Vec3

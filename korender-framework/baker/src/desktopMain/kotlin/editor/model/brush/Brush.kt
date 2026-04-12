@@ -2,7 +2,6 @@ package editor.model.brush
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import com.zakgof.korender.baker.editor.model.brush.CreatorShape
 import com.zakgof.korender.math.Vec3
 import editor.model.BoundingBox
 import kotlin.math.abs

@@ -1,9 +1,7 @@
-package com.zakgof.korender.baker.editor.model.brush
+package editor.model.brush
 
 import com.zakgof.korender.math.Vec3
 import editor.model.BoundingBox
-import editor.model.brush.Face
-import editor.model.brush.Plane
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -12,12 +10,12 @@ sealed interface CreatorShape {
 
     fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean): List<Face>
 
-    object Box: CreatorShape {
+    object Box : CreatorShape {
         override fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean) =
             Plane.cube(bb).map { Face(it, materialId, fitToFace) }
     }
 
-    class Cylinder(val sides: Int = 8): CreatorShape {
+    data class Cylinder(val sides: Int = 8) : CreatorShape {
         override fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean): List<Face> {
             val cx = (bb.min.x + bb.max.x) / 2f
             val cz = (bb.min.z + bb.max.z) / 2f
@@ -67,6 +65,18 @@ sealed interface CreatorShape {
             faces += Face(bottomPlane, materialId, fitToFace)
 
             return faces
+        }
+    }
+
+    data class Cone(val sides: Int = 8) : CreatorShape {
+        override fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean): List<Face> {
+            throw NotImplementedError()
+        }
+    }
+
+    data class Sphere(val slices: Int = 8, val sectors: Int = 8) : CreatorShape {
+        override fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean): List<Face> {
+            throw NotImplementedError()
         }
     }
 }
