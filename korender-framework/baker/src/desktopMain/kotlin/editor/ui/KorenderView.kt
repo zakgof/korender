@@ -90,7 +90,7 @@ fun KorenderView(holder: StateHolder) {
                                     model.materials[face.materialId]!!,
                                     state.selection.contains(brush.id)
                                 ),
-                                mesh = customMesh(brush.id + "-" + i, vertexCount, 0, POS, NORMAL, TEX, dynamic = true) {
+                                mesh = customMesh(brush.id + "-" + i + "-" + vertexCount, vertexCount, 0, POS, NORMAL, TEX, dynamic = true) {
                                     tris.forEach {tri ->
                                         pos(*tri.points.toTypedArray())
                                         tex(*tri.tex.toTypedArray())
