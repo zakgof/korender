@@ -2,7 +2,10 @@ package editor.ui.widget
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +25,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.zakgof.korender.baker.editor.util.sanity
 import editor.ui.Theme
@@ -58,7 +62,7 @@ fun FancyClickToFloatInput(value: Float, textModifier: Modifier = Modifier,  edi
     var editing by remember { mutableStateOf(false) }
     var editorWasActive by remember { mutableStateOf(false) }
     Box (
-        modifier = Modifier.height(32.dp),
+        modifier = Modifier.height(22.dp),
         contentAlignment = Alignment.Center
     ) {
         if (editing) {
@@ -98,4 +102,17 @@ fun FancyClickToFloatInput(value: Float, textModifier: Modifier = Modifier,  edi
         }
     }
 }
+
+@Composable
+fun LabeledFloatInput(label: String, labelW: Dp, value: Float, validator: (Float) -> Boolean, onValueChanged: (Float) -> Unit) =
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, style = Theme.label, modifier = Modifier.width(labelW).wrapContentHeight(Alignment.CenterVertically))
+        FancyClickToFloatInput(value,
+            validator  = validator,
+            editorModifier = Modifier.width(48.dp),
+            textModifier = Modifier.width(36.dp),
+            onValueChange = onValueChanged)
+    }
 

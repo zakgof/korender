@@ -49,12 +49,12 @@ import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
 import com.zakgof.korender.baker.editor.util.nextSane
 import com.zakgof.korender.baker.editor.util.prevSane
-import com.zakgof.korender.baker.editor.util.sanity
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
 import com.zakgof.korender.baker.resources.drag
@@ -69,6 +69,7 @@ import com.zakgof.korender.baker.resources.texsetup
 import com.zakgof.korender.baker.resources.ungroup
 import com.zakgof.korender.baker.resources.zoomin
 import com.zakgof.korender.baker.resources.zoomout
+import com.zakgof.korender.math.Vec3
 import editor.model.BoundingBox
 import editor.model.Material
 import editor.model.Model
@@ -82,6 +83,7 @@ import editor.ui.widget.FancyClickToFloatInput
 import editor.ui.widget.FancyClickToTextInput
 import editor.ui.widget.GroupBox
 import editor.ui.widget.IconButton
+import editor.ui.widget.LabeledFloatInput
 import editor.ui.widget.RadioButtonRow
 
 @Composable
@@ -356,7 +358,9 @@ private fun materials(holder: StateHolder, state: State, model: Model) {
 fun selection(holder: StateHolder, state: State, model: Model) {
 
     GroupBox("Selection") {
-        Column(modifier = Modifier.height(96.dp)) {
+        Column(
+
+        ) {
             if (state.selection.isEmpty()) {
                 Text("No selection", style = Theme.label)
             } else {
@@ -378,7 +382,7 @@ fun selection(holder: StateHolder, state: State, model: Model) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
-                    Box(modifier = Modifier.weight(1f)) {
+                    Box(modifier = Modifier.weight(1f).padding(4.dp)) {
                         if (state.selection.size == 1) {
                             val brush = model.brushes[state.selection.first()]!!
                             FancyClickToTextInput(brush.name) {
@@ -416,21 +420,46 @@ fun selection(holder: StateHolder, state: State, model: Model) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("x: ${bb.center.x.sanity()}", style = Theme.label)
-                    Text("y: ${bb.center.y.sanity()}", style = Theme.label)
-                    Text("z: ${bb.center.z.sanity()}", style = Theme.label)
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        fun setCenter(x: Float, y: Float, z: Float) {
+                            val newBB = bb.move(Vec3(x, y, z))
+                            state.selection.forEach {
+                                holder.brushChanged(model.brushes[it]!!.scale(bb, newBB))
+                            }
+                        }
+                        Text("Center", style = Theme.mediumLabel, modifier = Modifier.padding(vertical = 4.dp))
+                        val coordValidator = { it: Float -> it in -1e6..1e6 }
+                        LabeledFloatInput("x:", 12.dp, bb.center.x, coordValidator) { setCenter(it, bb.center.y, bb.center.z) }
+                        LabeledFloatInput("y:", 12.dp, bb.center.y, coordValidator) { setCenter(bb.center.x, it, bb.center.z) }
+                        LabeledFloatInput("z:", 12.dp, bb.center.z, coordValidator) { setCenter(bb.center.x, bb.center.y, it) }
+                    }
+                    Column(
+                        modifier = Modifier.weight(1.4f)
+                    ) {
+                        fun setSize(x: Float, y: Float, z: Float) {
+                            val newBB = bb.resize(Vec3(x, y, z))
+                            state.selection.forEach {
+                                holder.brushChanged(model.brushes[it]!!.scale(bb, newBB))
+                            }
+                        }
+                        Text("Dims", style = Theme.mediumLabel, modifier = Modifier.padding(vertical = 4.dp))
+                        val dimValidator = { it: Float -> it in 1e-3..1e6 }
+                        LabeledFloatInput("width:", 40.dp, bb.size.x, dimValidator) { setSize(it, bb.size.y, bb.size.z) }
+                        LabeledFloatInput("height:", 40.dp, bb.size.y, dimValidator) { setSize(bb.size.x, it, bb.size.z) }
+                        LabeledFloatInput("depth:", 40.dp, bb.size.z, dimValidator) { setSize(bb.size.x, bb.size.y, it) }
+                    }
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("w: ${bb.size.x.sanity()}", style = Theme.label)
-                    Text("h: ${bb.size.y.sanity()}", style = Theme.label)
-                    Text("d: ${bb.size.z.sanity()}", style = Theme.label)
-                }
+
             }
         }
     }
+}
+
+@Composable
+fun LabeledFloatEditor(x0: String, x1: Dp, x2: Float, x3: (Float) -> Boolean, content: @Composable () -> Unit) {
+    TODO("Not yet implemented")
 }
 
 

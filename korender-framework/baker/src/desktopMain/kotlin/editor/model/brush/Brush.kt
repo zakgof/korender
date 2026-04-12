@@ -55,8 +55,6 @@ data class Brush(
         copy(faces = faces.map { face -> face.copy(plane = face.plane.translate(offset)) })
 
     fun scale(oldBB: BoundingBox, newBB: BoundingBox): Brush {
-        val scale = (newBB.max - newBB.min) divpercomp (oldBB.max - oldBB.min)
-
         return copy(faces = faces.map { face ->
             face.copy(plane = face.plane.scale(oldBB, newBB))
         })

@@ -113,5 +113,5 @@ fun KorenderView(holder: StateHolder) {
 fun FrameScope.toBaseMM(material: Material, selected: Boolean): com.zakgof.korender.Material =
     base {
         color = if (selected) ColorRGBA.Red else material.baseColor.toKorender()
-        colorTexture = material.colorTexture?.let { texture(material.id, TextureImageCache.korender(it.path)) }
+        colorTexture = material.colorTexture?.let { texture(it.path, TextureImageCache.korender(it.path)) }
     }

@@ -43,9 +43,9 @@ fun FancyTextInput(value: String, modifier: Modifier = Modifier, validator: (Str
         value = text,
         cursorBrush = SolidColor(border),
         modifier = modifier
-            .padding(2.dp)
+            .padding(0.dp)
             .border(1.dp, border, RoundedCornerShape(4.dp))
-            .padding(4.dp)
+            .padding(2.dp)
             .onFocusEvent {
                 if (!it.isFocused) {
                     text = value
@@ -67,7 +67,7 @@ fun FancyClickToTextInput(value: String, textModifier: Modifier = Modifier, edit
     var editing by remember { mutableStateOf(false) }
     var editorWasActive by remember { mutableStateOf(false) }
     Box(
-        modifier = Modifier.height(32.dp),
+        modifier = Modifier.height(22.dp),
         contentAlignment = Alignment.Center
     ) {
         if (editing) {

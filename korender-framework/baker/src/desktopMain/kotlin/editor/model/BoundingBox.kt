@@ -24,15 +24,40 @@ class BoundingBox(val min: Vec3, val max: Vec3) {
 
     fun intersects(other: BoundingBox): Boolean {
         return max.x >= other.min.x &&
-            min.x <= other.max.x &&
-            max.y >= other.min.y &&
-            min.y <= other.max.y &&
-            max.z >= other.min.z &&
-            min.z <= other.max.z
+                min.x <= other.max.x &&
+                max.y >= other.min.y &&
+                min.y <= other.max.y &&
+                max.z >= other.min.z &&
+                min.z <= other.max.z
     }
 
+    fun scale(olbBB: BoundingBox, newBB: BoundingBox): BoundingBox {
+        val scale = Vec3(
+            newBB.size.x / olbBB.size.x,
+            newBB.size.y / olbBB.size.y,
+            newBB.size.z / olbBB.size.z
+        )
+        val shift = center multpercomp (Vec3(1f, 1f, 1f) - scale)
+        return BoundingBox(
+            (min multpercomp scale) + shift,
+            (max multpercomp scale) + shift
+        )
+    }
+
+    fun resize(newSize: Vec3) =
+        BoundingBox(
+            center - (newSize * 0.5f),
+            center + (newSize * 0.5f)
+        )
+
+    fun move(newCenter: Vec3) =
+        BoundingBox(
+            min + newCenter - center,
+            max + newCenter - center
+        )
+
     companion object {
-        fun from(c1: Vec3, c2: Vec3): BoundingBox =
+        fun from(c1: Vec3, c2: Vec3) =
             BoundingBox(
                 Vec3(min(c1.x, c2.x), min(c1.y, c2.y), min(c1.z, c2.z)),
                 Vec3(max(c1.x, c2.x), max(c1.y, c2.y), max(c1.z, c2.z))

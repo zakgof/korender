@@ -6,7 +6,6 @@ import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.baker.editor.collision.BvhCompiler
 import com.zakgof.korender.baker.editor.collision.CollisionSerialModel
 import com.zakgof.korender.baker.editor.model.Group
-import editor.model.brush.CreatorShape
 import com.zakgof.korender.baker.editor.util.floor2
 import com.zakgof.korender.baker.editor.util.floorSig
 import com.zakgof.korender.baker.editor.util.roundSane
@@ -19,6 +18,7 @@ import editor.model.Material
 import editor.model.Model
 import editor.model.ModelDto
 import editor.model.brush.Brush
+import editor.model.brush.CreatorShape
 import editor.model.snap
 import editor.state.State.MouseMode
 import editor.util.ModelCompiler
@@ -601,6 +601,7 @@ class StateHolder {
     fun setCreatorShape(shape: CreatorShape) {
         _state.update { it.copy(creatorShape = shape) }
     }
+
 }
 
 fun <K, V> PersistentMap<K, V>.removeAll(keys: Collection<K>): PersistentMap<K, V> {
