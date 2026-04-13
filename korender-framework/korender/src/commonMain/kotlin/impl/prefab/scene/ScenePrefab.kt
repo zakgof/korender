@@ -85,7 +85,7 @@ internal class ScenePrefab(nodeContext: NodeContext, resource: String) : Interna
         SceneModel.Attribute.POS -> MeshAttributes.POS
         SceneModel.Attribute.NORMAL -> MeshAttributes.NORMAL
         SceneModel.Attribute.TEX -> MeshAttributes.TEX
-        SceneModel.Attribute.COLORTEXINDEX -> MeshAttributes.COLORTEXINDEX
+        SceneModel.Attribute.COLORTEXINDEX -> MeshAttributes.INSTCOLORTEXINDEX
     }
 }
 

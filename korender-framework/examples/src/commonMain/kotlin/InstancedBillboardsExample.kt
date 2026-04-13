@@ -4,6 +4,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
+import com.zakgof.korender.context.BillboardInstancingParameter
 import com.zakgof.korender.math.ColorRGB.Companion.White
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec2
@@ -28,14 +29,14 @@ fun InstancedBillboardsExample() = Korender(resourceLoader = { Res.readBytes("fi
         projection = projection(2f * aspect, 2f, 1f, 31f, frustum())
         Billboard(
             billboard {
-                color = ColorRGBA(0.8f, 0.9f, 1f, 0.25f)
                 colorTexture = texture("texture/splat.png")
             },
             transparent = true,
             instancing = billboardInstancing(
                 id = "particles",
                 count = particleNum,
-                dynamic = true
+                dynamic = true,
+                BillboardInstancingParameter.Position, BillboardInstancingParameter.Scale, BillboardInstancingParameter.Color
             ) {
                 repeat(particleNum) { i ->
                     val particle = particles[i]
@@ -44,7 +45,8 @@ fun InstancedBillboardsExample() = Korender(resourceLoader = { Res.readBytes("fi
                     }
                     Instance(
                         pos = particle.pos,
-                        scale = Vec2(particle.scale, particle.scale)
+                        scale = Vec2(particle.scale, particle.scale),
+                        color = particle.color
                     )
                 }
             }
@@ -62,6 +64,7 @@ class Particle(startTtl: Float = 1.0f, aspect: Float) {
     var ttl = startTtl
     val startPos = Vec3((-1f + 2f * Random.nextFloat()) * 30f * aspect, 30f, 30f * Random.nextFloat())
     val scale = 0.4f + 0.3f * Random.nextFloat()
+    val color = ColorRGBA(0.8f + 0.2f * Random.nextFloat(), 0.9f + 0.1f * Random.nextFloat(), 1f, 0.25f)
     val pos
         get() = startPos - (1f - ttl).y * 60f + (2f * sin(ttl * 8f + startPos.z * 8f)).x
 

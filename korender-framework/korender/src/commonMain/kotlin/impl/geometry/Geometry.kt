@@ -3,12 +3,18 @@ package com.zakgof.korender.impl.geometry
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Mesh
+import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.ResourceLoader
+import com.zakgof.korender.context.InstancingParameter
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.Loader
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTCOLOR
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTCOLORTEXINDEX
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTMETALLIC
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTPOS
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTROT
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTROUGHNESS
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTSCALE
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTSCREEN
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTTEX
@@ -31,10 +37,19 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlin.arrayOf
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
+
+private val instancingParametersMapping = mapOf(
+    InstancingParameter.Transform to listOf(MODEL0, MODEL1, MODEL2, MODEL3),
+    InstancingParameter.Color to listOf(INSTCOLOR),
+    InstancingParameter.Metallic to listOf(INSTMETALLIC),
+    InstancingParameter.Roughness to listOf(INSTROUGHNESS),
+    InstancingParameter.ColorTextureIndex to listOf(INSTCOLORTEXINDEX)
+)
 
 internal class MeshLink(val cpuMesh: CMesh, dynamic: Boolean) : AutoCloseable {
 
@@ -76,25 +91,32 @@ internal object Geometry {
                 obj(appResourceLoader.load(meshDeclaration.objFile), -1)
             }
 
-            else -> CompletableDeferred(createMeshSync(meshDeclaration, -1))
+            else -> CompletableDeferred(createMeshSync(meshDeclaration, -1, setOf()))
         }
     }
 
     fun createCpuMesh(meshDeclaration: MeshDeclaration, loader: Loader, resourceLoader: ResourceLoader): CMesh? {
         val simpleMeshDeclaration = (meshDeclaration as? InstancedMesh)?.mesh ?: (meshDeclaration as? InstancedBillboard)?.let { Billboard(it.nodeContext) } ?: meshDeclaration
         val count = (meshDeclaration as? Instanceable)?.count ?: -1
+        val instancingAttributes = instancingAttributes(meshDeclaration)
         return when (simpleMeshDeclaration) {
             is ObjMesh -> loader.safeBytes(simpleMeshDeclaration.objFile, resourceLoader) { obj(it, count) }
             is CustomCpuMesh -> toCMesh(simpleMeshDeclaration.mesh, count)
             is CustomMesh -> CMesh(simpleMeshDeclaration.vertexCount, simpleMeshDeclaration.indexCount, count, attributes = simpleMeshDeclaration.attributes.toTypedArray(), simpleMeshDeclaration.indexType, simpleMeshDeclaration.block)
             is FontMesh -> font(count)
-            else -> createMeshSync(simpleMeshDeclaration, count)
+            else -> createMeshSync(simpleMeshDeclaration, count, instancingAttributes)
         }
     }
 
-    private fun createMeshSync(meshDeclaration: MeshDeclaration, count: Int): CMesh {
+    private fun instancingAttributes(meshDeclaration: MeshDeclaration): Array<MeshAttribute<*>> =
+        when (meshDeclaration) {
+            is InstancedMesh -> meshDeclaration.parameters.flatMap { instancingParametersMapping[it]!! }.toTypedArray()
+            else -> arrayOf()
+        }
+
+    private fun createMeshSync(meshDeclaration: MeshDeclaration, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>): CMesh {
         return when (meshDeclaration) {
-            is Sphere -> sphere(meshDeclaration.radius, meshDeclaration.slices, meshDeclaration.sectors, count)
+            is Sphere -> sphere(meshDeclaration.radius, meshDeclaration.slices, meshDeclaration.sectors, count, instancingAttributes)
             is Cube -> cube(meshDeclaration.halfSide, count)
             is DecalCube -> decalCube(meshDeclaration.halfSide, count)
             is ScreenQuad -> screenQuad()
@@ -273,12 +295,12 @@ internal object Geometry {
         }
     }
 
-    private fun sphere(radius: Float, slices: Int, sectors: Int, count: Int) =
+    private fun sphere(radius: Float, slices: Int, sectors: Int, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>) =
         CMesh(
             2 + (slices - 1) * sectors,
             sectors * 3 * 2 + (slices - 2) * sectors * 6,
             count,
-            POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+            POS, NORMAL, TEX, *instancingAttributes
         ) {
             pos(Vec3(0f, -radius, 0f)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(0f, 0f))
             for (slice in 1..<slices) {

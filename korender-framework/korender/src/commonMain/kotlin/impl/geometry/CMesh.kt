@@ -5,7 +5,7 @@ import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
-import com.zakgof.korender.impl.geometry.MeshAttributes.COLORTEXINDEX
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTCOLORTEXINDEX
 import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
 import com.zakgof.korender.impl.geometry.MeshAttributes.POS
 import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
@@ -93,11 +93,11 @@ internal open class CMesh(
         return this
     }
 
-    override fun embed(prototype: Mesh, transform: Transform, colorTexIndex: Int?) {
+    override fun embed(prototype: Mesh, instance: InstancedMesh) {
         val targetAttrs = attributes.filter { !it.instance }
         val commonAttrs = targetAttrs
             .filter { hasPrototypeAttribute(prototype, it) }
-            .filterNot { colorTexIndex != null && it == COLORTEXINDEX }
+            .filterNot { colorTexIndex != null && it == INSTCOLORTEXINDEX }
 
         prototype.vertices.forEach { vertex ->
             commonAttrs.forEach { attr ->
@@ -105,10 +105,8 @@ internal open class CMesh(
             }
         }
 
-        if (colorTexIndex != null && attrMap.containsKey(COLORTEXINDEX)) {
-            repeat(prototype.vertices.size) {
-                attr(COLORTEXINDEX, colorTexIndex.toByte())
-            }
+        if (colorTexIndex != null && attrMap.containsKey(INSTCOLORTEXINDEX)) {
+            attr(INSTCOLORTEXINDEX, colorTexIndex.toByte())
         }
 
         val offset = attrMap[POS]

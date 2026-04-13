@@ -34,6 +34,7 @@ import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.context.GltfInstancingDeclaration
 import com.zakgof.korender.context.GuiContainerScope
 import com.zakgof.korender.context.InstancingDeclaration
+import com.zakgof.korender.context.InstancingScope
 import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.context.PipeMeshContext
 import com.zakgof.korender.context.ResourceScope
@@ -155,6 +156,15 @@ internal class DefaultFrameScope(
     ): MeshDeclaration =
         nodeContext.customMesh(id, vertexCount, indexCount, *attributes, dynamic = dynamic, indexType = indexType, block = block)
 
+    override fun compositeMesh(
+        id: String,
+        prototypeMeshes: List<Pair<Mesh, Int>>,
+        vararg attributes: MeshAttribute<*>,
+        dynamic: Boolean,
+        block: InstancingScope.() -> Unit,
+    ): MeshDeclaration =
+        nodeContext.compositeMesh(id, prototypeMeshes, *attributes, dynamic = dynamic, block = block)
+
     override fun heightField(id: String, cellsX: Int, cellsZ: Int, cellWidth: Float, height: (Int, Int) -> Float): MeshDeclaration =
         nodeContext.heightField(id, cellsX, cellsZ, cellWidth, height)
 
@@ -200,7 +210,7 @@ internal class DefaultFrameScope(
 
     override fun Renderable(material: Material, mesh: MeshDeclaration, transform: Transform, transparent: Boolean, instancing: InstancingDeclaration?) {
         val meshDeclaration = (instancing as? InternalInstancingDeclaration)?.let {
-            InstancedMesh(instancing.id, instancing.count, mesh, !instancing.dynamic, transparent, nodeContext, instancing.instancer)
+            InstancedMesh(instancing.id, instancing.count, mesh, !instancing.dynamic, transparent, nodeContext, instancing.parameters, instancing.instancer)
         } ?: mesh
         val rd = RenderableDeclaration(material as InternalMaterial, meshDeclaration, transform, transparent, nodeContext)
         sceneDeclaration.append(rd)

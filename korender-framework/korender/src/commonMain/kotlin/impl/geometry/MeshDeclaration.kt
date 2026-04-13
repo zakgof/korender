@@ -5,6 +5,7 @@ import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
+import com.zakgof.korender.context.InstancingParameter
 import com.zakgof.korender.impl.buffer.put
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.context.NodeContext
@@ -62,6 +63,7 @@ internal data class InstancedMesh(
     val static: Boolean,
     val transparent: Boolean,
     override val nodeContext: NodeContext,
+    val parameters: Set<InstancingParameter>,
     val instancer: () -> List<MeshInstance>,
 ) : InternalMeshDeclaration, Instanceable {
 

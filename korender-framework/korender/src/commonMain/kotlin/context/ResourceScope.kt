@@ -238,6 +238,14 @@ interface ResourceScope {
         block: MeshInitializer.() -> Unit,
     ): MeshDeclaration
 
+    fun compositeMesh(
+        id: String,
+        prototypeMeshes: List<Pair<Mesh, Int>>,
+        vararg attributes: MeshAttribute<*>,
+        dynamic: Boolean = false,
+        block: InstancingScope.() -> Unit,
+    ): MeshDeclaration
+
 
     /**
      * Loads a Mesh from a MeshDeclaration.

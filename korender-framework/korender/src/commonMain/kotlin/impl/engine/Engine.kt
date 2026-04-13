@@ -28,18 +28,20 @@ import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.context.FrameScope
-import com.zakgof.korender.context.InstancedBillboardsContext
-import com.zakgof.korender.context.InstancedGltfContext
-import com.zakgof.korender.context.InstancedRenderablesContext
+import com.zakgof.korender.context.BillboardInstancingScope
+import com.zakgof.korender.context.GltfInstancingScope
+import com.zakgof.korender.context.InstancingDeclaration
+import com.zakgof.korender.context.InstancingParameter
+import com.zakgof.korender.context.InstancingScope
 import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.context.ResourceScope
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.context.DefaultFrameScope
-import com.zakgof.korender.impl.context.DefaultInstancedBillboardsContext
-import com.zakgof.korender.impl.context.DefaultInstancedGltfContext
-import com.zakgof.korender.impl.context.DefaultInstancedRenderablesContext
+import com.zakgof.korender.impl.context.DefaultBillboardInstancingScope
+import com.zakgof.korender.impl.context.DefaultGltfInstancingScope
+import com.zakgof.korender.impl.context.DefaultInstancingScope
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.shadow.InternalHardShadow
 import com.zakgof.korender.impl.engine.shadow.InternalHardwarePcfShadow
@@ -356,26 +358,26 @@ internal class Engine(
         override fun hardwarePcf(bias: Float): ShadowAlgorithmDeclaration =
             InternalHardwarePcfShadow(bias)
 
-        override fun instancing(id: String, count: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit) =
-            InternalInstancingDeclaration(id, count, dynamic) {
+        override fun instancing(id: String, count: Int, dynamic: Boolean, vararg parameter: InstancingParameter, block: InstancingScope.() -> Unit): InstancingDeclaration {
+            InternalInstancingDeclaration(id, count, dynamic, parameter.toSet()) {
                 val instances = mutableListOf<MeshInstance>()
-                val context = DefaultInstancedRenderablesContext(instances)
+                val context = DefaultInstancingScope(instances)
                 block.invoke(context)
                 instances
             }
 
-        override fun billboardInstancing(id: String, count: Int, dynamic: Boolean, block: InstancedBillboardsContext.() -> Unit) =
+        override fun billboardInstancing(id: String, count: Int, dynamic: Boolean, block: BillboardInstancingScope.() -> Unit) =
             InternalBillboardInstancingDeclaration(id, count, dynamic) {
                 val instances = mutableListOf<BillboardInstance>()
-                val context = DefaultInstancedBillboardsContext(instances)
+                val context = DefaultBillboardInstancingScope(instances)
                 block.invoke(context)
                 instances
             }
 
-        override fun gltfInstancing(id: String, count: Int, dynamic: Boolean, block: InstancedGltfContext.() -> Unit) =
+        override fun gltfInstancing(id: String, count: Int, dynamic: Boolean, block: GltfInstancingScope.() -> Unit) =
             InternalGltfInstancingDeclaration(id, count, dynamic) {
                 val instances = mutableListOf<GltfInstance>()
-                val context = DefaultInstancedGltfContext(instances)
+                val context = DefaultGltfInstancingScope(instances)
                 block.invoke(context)
                 instances
             }
@@ -410,7 +412,7 @@ internal class Engine(
         val SCALE = MeshAttributes.SCALE
 
         override
-        val COLORTEXINDEX = MeshAttributes.COLORTEXINDEX
+        val INSTCOLORTEXINDEX = MeshAttributes.INSTCOLORTEXINDEX
 
         override
         val B1 = MeshAttributes.B1

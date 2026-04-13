@@ -18,21 +18,46 @@ fun TextureArrayExample() {
         val objMeshDeferred = loadMesh(obj("model/head.obj"))
         val cubeMeshDeferred = loadMesh(cube(1f))
         Frame {
-            TestExchange.report(frameInfo)
             if (objMeshDeferred.isCompleted && cubeMeshDeferred.isCompleted) {
                 val objMesh = objMeshDeferred.getCompleted()
                 val cubeMesh = cubeMeshDeferred.getCompleted()
                 Renderable(
-                    base { colorTextures = textureArray("model/head.jpg", "texture/asphalt-albedo.jpg") },
-                    mesh = customMesh(
+                    base {
+                        colorTextures = textureArray(
+                            "model/head.jpg",
+                            "texture/asphalt-albedo.jpg",
+                            "texture/grass.jpg"
+                        )
+                    },
+                    mesh = compositeMesh(
                         "combined",
-                        objMesh.vertices.size + cubeMesh.vertices.size,
-                        objMesh.indices!!.size + cubeMesh.indices!!.size,
-                        POS, NORMAL, TEX, COLORTEXINDEX,
+                        listOf(
+                            objMesh to 2,
+                            cubeMesh to 3
+                        ),
+                        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3, INSTCOLORTEXINDEX,
                         dynamic = false
                     ) {
-                        embed(objMesh, scale(2f).rotate(1.y, -PIdiv2).translate(-2.x), colorTexIndex = 0)
-                        embed(cubeMesh, translate(2.x), colorTexIndex = 1)
+                        Instance(
+                            transform = scale(2f).rotate(1.y, -PIdiv2).translate(-4.x),
+                            colorTextureIndex = 0
+                        )
+                        Instance(
+                            transform = scale(2f).rotate(1.y, -PIdiv2).translate(-2.x),
+                            colorTextureIndex = 0
+                        )
+                        Instance(
+                            transform = translate(2.x),
+                            colorTextureIndex = 1
+                        )
+                        Instance(
+                            transform = translate(2.x + 2.y),
+                            colorTextureIndex = 2
+                        )
+                        Instance(
+                            transform = translate(2.x - 2.y),
+                            colorTextureIndex = 2
+                        )
                     }
                 )
                 Gui {

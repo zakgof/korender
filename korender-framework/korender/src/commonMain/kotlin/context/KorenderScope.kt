@@ -455,18 +455,7 @@ interface KorenderScope : ResourceScope {
      * @param block instances declaration block
      * @return mesh instancing declaration
      */
-    fun instancing(id: String, count: Int, dynamic: Boolean, block: InstancedRenderablesContext.() -> Unit): InstancingDeclaration
-
-    /**
-     * Creates GLTF object instancing declaration.
-     *
-     * @param id unique declaration id
-     * @param count maximum number of instances
-     * @param dynamic set to true to update instances each frame
-     * @param block instances declaration block
-     * @return GLTF object instancing declaration
-     */
-    fun gltfInstancing(id: String, count: Int, dynamic: Boolean, block: InstancedGltfContext.() -> Unit): GltfInstancingDeclaration
+    fun instancing(id: String, count: Int, dynamic: Boolean, vararg parameter: InstancingParameter, block: InstancingScope.() -> Unit): InstancingDeclaration
 
     /**
      * Creates billboard object instancing declaration.
@@ -477,7 +466,19 @@ interface KorenderScope : ResourceScope {
      * @param block instances declaration block
      * @return billboard instancing declaration
      */
-    fun billboardInstancing(id: String, count: Int, dynamic: Boolean, block: InstancedBillboardsContext.() -> Unit): BillboardInstancingDeclaration
+    fun billboardInstancing(id: String, count: Int, dynamic: Boolean, vararg parameter: BillboardInstancingParameter, block: BillboardInstancingScope.() -> Unit): BillboardInstancingDeclaration
+
+    /**
+     * Creates GLTF object instancing declaration.
+     *
+     * @param id unique declaration id
+     * @param count maximum number of instances
+     * @param dynamic set to true to update instances each frame
+     * @param block instances declaration block
+     * @return GLTF object instancing declaration
+     */
+    fun gltfInstancing(id: String, count: Int, dynamic: Boolean, block: GltfInstancingScope.() -> Unit): GltfInstancingDeclaration
+
 
     /**
      * Defines the retention policy to unload an object from GPU immediately after it was not used in a rendering frame.
@@ -546,7 +547,7 @@ interface KorenderScope : ResourceScope {
     val SCALE: MeshAttribute<Vec2>
 
     /** Color/texture index attribute. */
-    val COLORTEXINDEX: MeshAttribute<Byte>
+    val INSTCOLORTEXINDEX: MeshAttribute<Byte>
 
     /** Custom attribute B1. */
     val B1: MeshAttribute<Byte>

@@ -9,6 +9,7 @@ import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.context.BillboardInstancingDeclaration
 import com.zakgof.korender.context.GltfInstancingDeclaration
 import com.zakgof.korender.context.InstancingDeclaration
+import com.zakgof.korender.context.InstancingParameter
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.context.NodeContext
@@ -177,7 +178,7 @@ internal class PointLightDeclaration(val position: Vec3, val color: ColorRGB, va
 
 internal class DirectionalLightDeclaration(val direction: Vec3, val color: ColorRGB, val shadowDeclaration: ShadowDeclaration)
 
-internal class InternalInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<MeshInstance>) : InstancingDeclaration
+internal class InternalInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val parameters: Set<InstancingParameter>, val instancer: () -> List<MeshInstance>) : InstancingDeclaration
 
 internal class InternalGltfInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<GltfInstance>) : GltfInstancingDeclaration
 
