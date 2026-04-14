@@ -23,7 +23,6 @@ import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.context.InstancingScope
 import com.zakgof.korender.context.PipeMeshContext
 import com.zakgof.korender.context.ResourceScope
-import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.engine.createPipeMesh
 import com.zakgof.korender.impl.geometry.BiQuad
 import com.zakgof.korender.impl.geometry.ConeTop
@@ -127,56 +126,46 @@ internal class NodeContext(
         ) {
 
         }
-    return InstancedMesh("$id.instanced", prototypeMeshes.
-    override val count: Int,
-    val mesh: MeshDeclaration,
-    val static: Boolean,
-    val transparent: Boolean,
-    override val nodeContext: NodeContext,
-    val instancer: () -> List<MeshInstance>, )
 
 
-}
-CustomMesh(id, vertexCount, indexCount, attributes.asList(), dynamic, indexType, this, block)
+    override fun <T> load(resource: String, mapper: (ByteArray) -> T): Deferred<T> =
+        CoroutineScope(Dispatchers.Default).async { mapper(resourceLoader.load(resource)) }
 
-override fun <T> load(resource: String, mapper: (ByteArray) -> T): Deferred<T> =
-    CoroutineScope(Dispatchers.Default).async { mapper(resourceLoader.load(resource)) }
+    override fun heightField(id: String, cellsX: Int, cellsZ: Int, cellWidth: Float, height: (Int, Int) -> Float): MeshDeclaration =
+        HeightField(id, cellsX, cellsZ, cellWidth, height, this)
 
-override fun heightField(id: String, cellsX: Int, cellsZ: Int, cellWidth: Float, height: (Int, Int) -> Float): MeshDeclaration =
-    HeightField(id, cellsX, cellsZ, cellWidth, height, this)
+    override fun mesh(id: String, mesh: Mesh) =
+        CustomCpuMesh(id, mesh, this)
 
-override fun mesh(id: String, mesh: Mesh) =
-    CustomCpuMesh(id, mesh, this)
+    override fun loadMesh(meshDeclaration: MeshDeclaration): Deferred<Mesh> =
+        Geometry.loadCpuMesh(meshDeclaration, resourceLoader)
 
-override fun loadMesh(meshDeclaration: MeshDeclaration): Deferred<Mesh> =
-    Geometry.loadCpuMesh(meshDeclaration, resourceLoader)
+    override fun pipeMesh(id: String, segments: Int, dynamic: Boolean, block: PipeMeshContext.() -> Unit) =
+        createPipeMesh(id, segments, dynamic, this, block)
 
-override fun pipeMesh(id: String, segments: Int, dynamic: Boolean, block: PipeMeshContext.() -> Unit) =
-    createPipeMesh(id, segments, dynamic, this, block)
+    override fun blur(radius: Float) =
+        simpleBlur(radius, this)
 
-override fun blur(radius: Float) =
-    simpleBlur(radius, this)
+    override fun ssr(
+        downsample: Int,
+        maxReflectionDistance: Float,
+        linearSteps: Int,
+        binarySteps: Int,
+        lastStepRatio: Float,
+        envTexture: CubeTextureDeclaration?,
+    ) =
+        ssrEffect(downsample, maxReflectionDistance, linearSteps, binarySteps, lastStepRatio, envTexture, this)
 
-override fun ssr(
-    downsample: Int,
-    maxReflectionDistance: Float,
-    linearSteps: Int,
-    binarySteps: Int,
-    lastStepRatio: Float,
-    envTexture: CubeTextureDeclaration?,
-) =
-    ssrEffect(downsample, maxReflectionDistance, linearSteps, binarySteps, lastStepRatio, envTexture, this)
+    override fun bloom(threshold: Float, amount: Float, radius: Float, downsample: Int) =
+        bloomSimpleEffect(threshold, amount, radius, downsample, this)
 
-override fun bloom(threshold: Float, amount: Float, radius: Float, downsample: Int) =
-    bloomSimpleEffect(threshold, amount, radius, downsample, this)
+    override fun bloomWide(threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float) =
+        bloomMipEffect(threshold, amount, downsample, mips, offset, highResolutionRatio, this)
 
-override fun bloomWide(threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float) =
-    bloomMipEffect(threshold, amount, downsample, mips, offset, highResolutionRatio, this)
+    override fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab<TerrainMaterialScope> =
+        Clipmaps(this, id, cellSize, hg, rings)
 
-override fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab<TerrainMaterialScope> =
-    Clipmaps(this, id, cellSize, hg, rings)
-
-override fun scenePrefab(resource: String): Prefab<BaseMaterialScope> =
-    ScenePrefab(this, resource)
+    override fun scenePrefab(resource: String): Prefab<BaseMaterialScope> =
+        ScenePrefab(this, resource)
 
 }

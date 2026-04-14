@@ -27,10 +27,10 @@ import com.zakgof.korender.SkyMaterial
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.context.FrameScope
+import com.zakgof.korender.context.BillboardInstancingParameter
 import com.zakgof.korender.context.BillboardInstancingScope
+import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.context.GltfInstancingScope
-import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.context.InstancingParameter
 import com.zakgof.korender.context.InstancingScope
 import com.zakgof.korender.context.KorenderScope
@@ -38,8 +38,8 @@ import com.zakgof.korender.context.ResourceScope
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
-import com.zakgof.korender.impl.context.DefaultFrameScope
 import com.zakgof.korender.impl.context.DefaultBillboardInstancingScope
+import com.zakgof.korender.impl.context.DefaultFrameScope
 import com.zakgof.korender.impl.context.DefaultGltfInstancingScope
 import com.zakgof.korender.impl.context.DefaultInstancingScope
 import com.zakgof.korender.impl.context.NodeContext
@@ -47,6 +47,8 @@ import com.zakgof.korender.impl.engine.shadow.InternalHardShadow
 import com.zakgof.korender.impl.engine.shadow.InternalHardwarePcfShadow
 import com.zakgof.korender.impl.engine.shadow.InternalSoftwarePcfShadow
 import com.zakgof.korender.impl.engine.shadow.InternalVsmShadow
+import com.zakgof.korender.impl.geometry.InternalBillboardInstancingParameter
+import com.zakgof.korender.impl.geometry.InternalInstancingParameter
 import com.zakgof.korender.impl.geometry.InternalMutableMesh
 import com.zakgof.korender.impl.geometry.MeshAttributes
 import com.zakgof.korender.impl.gl.GL.glEnable
@@ -358,16 +360,16 @@ internal class Engine(
         override fun hardwarePcf(bias: Float): ShadowAlgorithmDeclaration =
             InternalHardwarePcfShadow(bias)
 
-        override fun instancing(id: String, count: Int, dynamic: Boolean, vararg parameter: InstancingParameter, block: InstancingScope.() -> Unit): InstancingDeclaration {
-            InternalInstancingDeclaration(id, count, dynamic, parameter.toSet()) {
+        override fun instancing(id: String, count: Int, dynamic: Boolean, vararg parameter: InstancingParameter, block: InstancingScope.() -> Unit) =
+            InternalInstancingDeclaration(id, count, dynamic, parameter.toList()) {
                 val instances = mutableListOf<MeshInstance>()
                 val context = DefaultInstancingScope(instances)
                 block.invoke(context)
                 instances
             }
 
-        override fun billboardInstancing(id: String, count: Int, dynamic: Boolean, block: BillboardInstancingScope.() -> Unit) =
-            InternalBillboardInstancingDeclaration(id, count, dynamic) {
+        override fun billboardInstancing(id: String, count: Int, dynamic: Boolean, vararg parameter: BillboardInstancingParameter, block: BillboardInstancingScope.() -> Unit) =
+            InternalBillboardInstancingDeclaration(id, count, dynamic, parameter.toList()) {
                 val instances = mutableListOf<BillboardInstance>()
                 val context = DefaultBillboardInstancingScope(instances)
                 block.invoke(context)
@@ -453,6 +455,27 @@ internal class Engine(
         override
         val INSTSCREEN =
             MeshAttributes.INSTSCREEN
+
+        override val TRANSFORM_INSTANCING = InternalInstancingParameter.TRANSFORM_INSTANCING
+
+        override val COLOR_INSTANCING: InstancingParameter = InternalInstancingParameter.COLOR_INSTANCING
+
+        override val METALLIC_INSTANCING: InstancingParameter = InternalInstancingParameter.METALLIC_INSTANCING
+
+        override val ROUGHNESS_INSTANCING: InstancingParameter = InternalInstancingParameter.ROUGHNESS_INSTANCING
+
+        override val COLOR_TEXTURE_INDEX_INSTANCING: InstancingParameter = InternalInstancingParameter.COLOR_TEXTURE_INDEX_INSTANCING
+
+
+        override val POSITION_BILLBOARD_INSTANCING: BillboardInstancingParameter = InternalBillboardInstancingParameter.POSITION_BILLBOARD_INSTANCING
+
+        override val SCALE_BILLBOARD_INSTANCING: BillboardInstancingParameter = InternalBillboardInstancingParameter.SCALE_BILLBOARD_INSTANCING
+
+        override val ROTATION_BILLBOARD_INSTANCING: BillboardInstancingParameter = InternalBillboardInstancingParameter.ROTATION_BILLBOARD_INSTANCING
+
+        override val COLOR_BILLBOARD_INSTANCING: BillboardInstancingParameter = InternalBillboardInstancingParameter.COLOR_BILLBOARD_INSTANCING
+
+        override val COLOR_TEXTURE_INDEX_BILLBOARD_INSTANCING: BillboardInstancingParameter = InternalBillboardInstancingParameter.COLOR_TEXTURE_INDEX_BILLBOARD_INSTANCING
     }
 
     init {

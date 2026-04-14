@@ -6,6 +6,7 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec3
@@ -30,7 +31,8 @@ fun InstancedCubesExample() = Korender(resourceLoader = { Res.readBytes("files/$
             instancing = instancing(
                 id = "particles",
                 count = 41 * 41,
-                dynamic = true
+                dynamic = true,
+                TRANSFORM_INSTANCING, COLOR_INSTANCING
             ) {
                 for (x in -20..20) {
                     for (y in -20..20) {
@@ -38,7 +40,8 @@ fun InstancedCubesExample() = Korender(resourceLoader = { Res.readBytes("files/$
                         val axis = Vec3(random.nextFloat(), random.nextFloat(), random.nextFloat()).normalize()
                         Instance(
                             transform = rotate(Quaternion.fromAxisAngle(axis, frameInfo.time * 3f))
-                                .translate(Vec3(x.toFloat(), y.toFloat(), 0f))
+                                .translate(Vec3(x.toFloat(), y.toFloat(), 0f)),
+                            color = ColorRGBA(0.5f + 0.02f * x, 0.5f + 0.02f * y, 0.5f, 1f)
                         )
                     }
                 }

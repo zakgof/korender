@@ -584,6 +584,29 @@ interface KorenderScope : ResourceScope {
 
     /** Instance screen-space parameters attribute. */
     val INSTSCREEN: MeshAttribute<FloatArray>
+
+
+    val TRANSFORM_INSTANCING: InstancingParameter
+
+    val COLOR_INSTANCING: InstancingParameter
+
+    val METALLIC_INSTANCING: InstancingParameter
+
+    val ROUGHNESS_INSTANCING: InstancingParameter
+
+    val COLOR_TEXTURE_INDEX_INSTANCING: InstancingParameter
+
+
+    val POSITION_BILLBOARD_INSTANCING: BillboardInstancingParameter
+
+    val SCALE_BILLBOARD_INSTANCING: BillboardInstancingParameter
+
+    val ROTATION_BILLBOARD_INSTANCING: BillboardInstancingParameter
+
+    val COLOR_BILLBOARD_INSTANCING: BillboardInstancingParameter
+
+    val COLOR_TEXTURE_INDEX_BILLBOARD_INSTANCING: BillboardInstancingParameter
+
 }
 
 

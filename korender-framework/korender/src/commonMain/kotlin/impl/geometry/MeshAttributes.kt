@@ -19,6 +19,11 @@ internal object MeshAttributes {
     val MODEL2 = InternalMeshAttribute<FloatArray>("instanceModel2", 4, AttributeType.Float, 13, Float4BufferAccessor, true)
     val MODEL3 = InternalMeshAttribute<FloatArray>("instanceModel3", 4, AttributeType.Float, 14, Float4BufferAccessor, true)
 
+    val COLOR = InternalMeshAttribute<ColorRGBA>()
+    val METALLIC = InternalMeshAttribute<Float>()
+    val ROUGHNESS = InternalMeshAttribute<Float>()
+    val COLORTEXINDEX = InternalMeshAttribute<Byte>("colortexindex", 1, AttributeType.SignedByte, 8, ByteBufferAccessor, true)
+
     val INSTCOLOR = InternalMeshAttribute<ColorRGBA>()
     val INSTMETALLIC = InternalMeshAttribute<Float>()
     val INSTROUGHNESS = InternalMeshAttribute<Float>()

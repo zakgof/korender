@@ -7,6 +7,7 @@ import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.context.BillboardInstancingDeclaration
+import com.zakgof.korender.context.BillboardInstancingParameter
 import com.zakgof.korender.context.GltfInstancingDeclaration
 import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.context.InstancingParameter
@@ -63,11 +64,21 @@ internal class InternalDecalDeclaration(
     val material: InternalDecalMaterial,
 )
 
-internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
+internal class BillboardInstance(
+    val pos: Vec3?,
+    val scale: Vec2?,
+    val rotation: Float?,
+    val color: ColorRGBA?,
+    val colorTextureIndex: Int?
+)
 
 internal class MeshInstance(
-    val transform: Transform,
+    val transform: Transform?,
     val jointMatrices: List<Mat4>?,
+    val color: ColorRGBA?,
+    val metallic: Float?,
+    val roughness: Float?,
+    val colorTextureIndex: Int?
 )
 
 internal data class ShaderDeclaration(
@@ -172,17 +183,17 @@ internal class GltfDeclaration(
     override fun hashCode(): Int = resource.hashCode()
 }
 
-internal class GltfInstance(val transform: Transform, val time: Float?, val animation: Int?)
+internal class GltfInstance(val transform: Transform, val animation: Int?)
 
 internal class PointLightDeclaration(val position: Vec3, val color: ColorRGB, val attenuation: Vec3)
 
 internal class DirectionalLightDeclaration(val direction: Vec3, val color: ColorRGB, val shadowDeclaration: ShadowDeclaration)
 
-internal class InternalInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val parameters: Set<InstancingParameter>, val instancer: () -> List<MeshInstance>) : InstancingDeclaration
+internal class InternalInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val parameters: List<InstancingParameter>, val instancer: () -> List<MeshInstance>) : InstancingDeclaration
 
 internal class InternalGltfInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<GltfInstance>) : GltfInstancingDeclaration
 
-internal class InternalBillboardInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<BillboardInstance>) : BillboardInstancingDeclaration
+internal class InternalBillboardInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val parameters: List<BillboardInstancingParameter>, val instancer: () -> List<BillboardInstance>) : BillboardInstancingDeclaration
 
 internal class InternalFilterDeclaration(val passes: List<InternalPassDeclaration>) : PostProcessingEffect
 

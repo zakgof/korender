@@ -38,18 +38,6 @@ interface GltfInstancingScope {
     )
 }
 
-enum class InstancingParameter {
-    Transform,
-    Color,
-    Metallic,
-    Roughness,
-    ColorTextureIndex,
-}
+interface InstancingParameter
 
-enum class BillboardInstancingParameter {
-    Position,
-    Scale,
-    Rotation,
-    Color,
-    ColorTextureIndex
-}
+interface BillboardInstancingParameter

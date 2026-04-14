@@ -60,6 +60,7 @@ import com.zakgof.korender.impl.engine.SceneDeclaration
 import com.zakgof.korender.impl.engine.ShadowDeclaration
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
+import com.zakgof.korender.impl.geometry.InternalInstancingParameter
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.material.InternalBillboardMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
@@ -208,9 +209,10 @@ internal class DefaultFrameScope(
         )
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun Renderable(material: Material, mesh: MeshDeclaration, transform: Transform, transparent: Boolean, instancing: InstancingDeclaration?) {
         val meshDeclaration = (instancing as? InternalInstancingDeclaration)?.let {
-            InstancedMesh(instancing.id, instancing.count, mesh, !instancing.dynamic, transparent, nodeContext, instancing.parameters, instancing.instancer)
+            InstancedMesh(instancing.id, instancing.count, mesh, !instancing.dynamic, transparent, nodeContext, instancing.parameters as List<InternalInstancingParameter>, instancing.instancer)
         } ?: mesh
         val rd = RenderableDeclaration(material as InternalMaterial, meshDeclaration, transform, transparent, nodeContext)
         sceneDeclaration.append(rd)

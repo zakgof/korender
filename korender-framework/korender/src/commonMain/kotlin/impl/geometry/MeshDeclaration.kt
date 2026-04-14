@@ -5,7 +5,6 @@ import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
-import com.zakgof.korender.context.InstancingParameter
 import com.zakgof.korender.impl.buffer.put
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.context.NodeContext
@@ -15,8 +14,12 @@ import com.zakgof.korender.impl.engine.Inventory
 import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.engine.NodeKeeper
 import com.zakgof.korender.impl.font.Font
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTCOLOR
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTCOLORTEXINDEX
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTMETALLIC
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTPOS
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTROT
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTROUGHNESS
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTSCALE
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTSCREEN
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTTEX
@@ -28,6 +31,7 @@ import com.zakgof.korender.impl.geometry.MeshAttributes.WEIGHTS
 import com.zakgof.korender.impl.material.InstancingMaterialModifier
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.TextureLinkDeclaration
+import com.zakgof.korender.math.Vec3
 
 internal interface InternalMeshDeclaration : MeshDeclaration, NodeKeeper
 
@@ -40,7 +44,7 @@ internal interface Instanceable {
         reverseZ: Boolean,
         camera: Camera?,
         inventory: Inventory,
-    ) : InternalMaterialModifier?
+    ): InternalMaterialModifier?
 }
 
 internal data class Cube(val halfSide: Float, override val nodeContext: NodeContext) : InternalMeshDeclaration
@@ -63,7 +67,7 @@ internal data class InstancedMesh(
     val static: Boolean,
     val transparent: Boolean,
     override val nodeContext: NodeContext,
-    val parameters: Set<InstancingParameter>,
+    val parameters: List<InternalInstancingParameter>,
     val instancer: () -> List<MeshInstance>,
 ) : InternalMeshDeclaration, Instanceable {
 
@@ -78,15 +82,29 @@ internal data class InstancedMesh(
             var instances = instancer()
             val sortFactor = if (reverseZ) -1f else 1f
             if (transparent) {
-                instances = instances.sortedBy { (camera!!.mat4 * it.transform.offset()).z * sortFactor }
+                instances = instances.sortedBy { (camera!!.mat4 * (it.transform?.offset() ?: Vec3.ZERO)).z * sortFactor }
             }
             cpuMesh.updateMesh {
                 instances.forEachIndexed { i, it ->
-                    val m = it.transform.mat4
-                    attrSet(MODEL0, i, floatArrayOf(m.m00, m.m10, m.m20, m.m30))
-                    attrSet(MODEL1, i, floatArrayOf(m.m01, m.m11, m.m21, m.m31))
-                    attrSet(MODEL2, i, floatArrayOf(m.m02, m.m12, m.m22, m.m32))
-                    attrSet(MODEL3, i, floatArrayOf(m.m03, m.m13, m.m23, m.m33))
+                    it.transform?.let { trns ->
+                        val m = trns.mat4
+                        attrSet(MODEL0, i, floatArrayOf(m.m00, m.m10, m.m20, m.m30))
+                        attrSet(MODEL1, i, floatArrayOf(m.m01, m.m11, m.m21, m.m31))
+                        attrSet(MODEL2, i, floatArrayOf(m.m02, m.m12, m.m22, m.m32))
+                        attrSet(MODEL3, i, floatArrayOf(m.m03, m.m13, m.m23, m.m33))
+                    }
+                    it.color?.let { color ->
+                        attrSet(INSTCOLOR, i, color)
+                    }
+                    it.metallic?.let { metallic ->
+                        attrSet(INSTMETALLIC, i, metallic)
+                    }
+                    it.roughness?.let { roughness ->
+                        attrSet(INSTROUGHNESS, i, roughness)
+                    }
+                    it.colorTextureIndex?.let { colorTextureIndex ->
+                        attrSet(INSTCOLORTEXINDEX, i, colorTextureIndex.toByte())
+                    }
                 }
             }
             cpuMesh.instancesInitialized = true
@@ -128,13 +146,13 @@ internal data class InstancedBillboard(
             var instances = instancer()
             val sortFactor = if (reverseZ) -1f else 1f
             if (transparent) {
-                instances = instances.sortedBy { (camera!!.mat4 * it.pos).z * sortFactor }
+                instances = instances.sortedBy { (camera!!.mat4 * (it.pos ?: Vec3.ZERO)).z * sortFactor }
             }
             cpuMesh.updateMesh {
                 instances.forEachIndexed { i, it ->
-                    attrSet(INSTPOS, i, it.pos)
-                    attrSet(INSTROT, i, it.phi)
-                    attrSet(INSTSCALE, i, it.scale)
+                    it.pos?.let { attrSet(INSTPOS, i, it) }
+                    it.rotation?.let { attrSet(INSTROT, i, it) }
+                    it.scale?.let { attrSet(INSTSCALE, i, it) }
                 }
             }
             meshLink.updateGpu(instances.size, true)

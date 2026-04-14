@@ -3,12 +3,14 @@ package com.zakgof.korender.impl.geometry
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Mesh
-import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.ResourceLoader
+import com.zakgof.korender.context.BillboardInstancingParameter
 import com.zakgof.korender.context.InstancingParameter
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.Loader
+import com.zakgof.korender.impl.geometry.MeshAttributes.COLOR
+import com.zakgof.korender.impl.geometry.MeshAttributes.COLORTEXINDEX
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTCOLOR
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTCOLORTEXINDEX
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTMETALLIC
@@ -18,12 +20,14 @@ import com.zakgof.korender.impl.geometry.MeshAttributes.INSTROUGHNESS
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTSCALE
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTSCREEN
 import com.zakgof.korender.impl.geometry.MeshAttributes.INSTTEX
+import com.zakgof.korender.impl.geometry.MeshAttributes.METALLIC
 import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL0
 import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL1
 import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL2
 import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL3
 import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
 import com.zakgof.korender.impl.geometry.MeshAttributes.POS
+import com.zakgof.korender.impl.geometry.MeshAttributes.ROUGHNESS
 import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
 import com.zakgof.korender.impl.glgpu.GlGpuMesh
 import com.zakgof.korender.impl.load
@@ -37,19 +41,32 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlin.arrayOf
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
 
-private val instancingParametersMapping = mapOf(
-    InstancingParameter.Transform to listOf(MODEL0, MODEL1, MODEL2, MODEL3),
-    InstancingParameter.Color to listOf(INSTCOLOR),
-    InstancingParameter.Metallic to listOf(INSTMETALLIC),
-    InstancingParameter.Roughness to listOf(INSTROUGHNESS),
-    InstancingParameter.ColorTextureIndex to listOf(INSTCOLORTEXINDEX)
-)
+internal enum class InternalInstancingParameter (
+    val composeMeshAttributes: List<InternalMeshAttribute<*>>,
+    val instanceMeshAttributes: List<InternalMeshAttribute<*>>
+) : InstancingParameter {
+    TRANSFORM_INSTANCING(listOf(), listOf(MODEL0, MODEL1, MODEL2, MODEL3)),
+    COLOR_INSTANCING(composeMeshAttributes = listOf(COLOR), instanceMeshAttributes = listOf(INSTCOLOR)),
+    METALLIC_INSTANCING(listOf(METALLIC), listOf(INSTMETALLIC)),
+    ROUGHNESS_INSTANCING(listOf(ROUGHNESS), listOf(INSTROUGHNESS)),
+    COLOR_TEXTURE_INDEX_INSTANCING(listOf(COLORTEXINDEX), listOf(INSTCOLORTEXINDEX)),
+}
+
+internal enum class InternalBillboardInstancingParameter (
+    val composeMeshAttributes: List<InternalMeshAttribute<*>>,
+    val instanceMeshAttributes: List<InternalMeshAttribute<*>>
+) : BillboardInstancingParameter {
+    POSITION_BILLBOARD_INSTANCING(listOf(), listOf(INSTPOS)),
+    SCALE_BILLBOARD_INSTANCING(composeMeshAttributes = listOf(), instanceMeshAttributes = listOf(INSTSCALE)),
+    ROTATION_BILLBOARD_INSTANCING(listOf(), listOf(INSTROT)),
+    COLOR_BILLBOARD_INSTANCING(listOf(COLOR), listOf(INSTCOLOR)),
+    COLOR_TEXTURE_INDEX_BILLBOARD_INSTANCING(listOf(COLORTEXINDEX), listOf(INSTCOLORTEXINDEX)),
+}
 
 internal class MeshLink(val cpuMesh: CMesh, dynamic: Boolean) : AutoCloseable {
 
@@ -91,7 +108,7 @@ internal object Geometry {
                 obj(appResourceLoader.load(meshDeclaration.objFile), -1)
             }
 
-            else -> CompletableDeferred(createMeshSync(meshDeclaration, -1, setOf()))
+            else -> CompletableDeferred(createMeshSync(meshDeclaration, -1, arrayOf()))
         }
     }
 
@@ -108,9 +125,9 @@ internal object Geometry {
         }
     }
 
-    private fun instancingAttributes(meshDeclaration: MeshDeclaration): Array<MeshAttribute<*>> =
+    private fun instancingAttributes(meshDeclaration: MeshDeclaration): Array<InternalMeshAttribute<*>> =
         when (meshDeclaration) {
-            is InstancedMesh -> meshDeclaration.parameters.flatMap { instancingParametersMapping[it]!! }.toTypedArray()
+            is InstancedMesh -> meshDeclaration.parameters.flatMap { it.instanceMeshAttributes }.toTypedArray()
             else -> arrayOf()
         }
 
