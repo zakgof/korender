@@ -39,7 +39,7 @@ fun InstancedBillboardsExample() = Korender(resourceLoader = { Res.readBytes("fi
             ) {
                 repeat(particleNum) { i ->
                     val particle = particles[i]
-                    if (!particle.update(frameInfo.dt)) {
+                    if (frameInfo.frame > 10 && !particle.update(frameInfo.dt)) {
                         particles[i] = Particle(1f, aspect)
                     }
                     Instance(
