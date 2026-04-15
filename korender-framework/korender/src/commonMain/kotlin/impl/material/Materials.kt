@@ -42,7 +42,7 @@ import com.zakgof.korender.math.Vec3
 internal open class InternalMaterialModifier(vararg getters: Pair<String, UniformGetter<*>>) :
     MaterialScope, UniformSupplier {
 
-    private var customDefs = 0L
+    var customDefs = 0L
     private var customPlugins1 = 0L
     private var customPlugins2 = 0L
     private val customFloatUniforms = mutableMapOf<String, Float>()

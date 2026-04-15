@@ -47,28 +47,27 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
 
-internal enum class InternalInstancingParameter (
-    val composeMeshAttributes: List<InternalMeshAttribute<*>>,
+internal enum class InternalInstancingParameter(
+    val composeMeshAttribute: InternalMeshAttribute<*>?,
     val instanceMeshAttributes: List<InternalMeshAttribute<*>>,
     val instancingDefs: Long
 ) : InstancingParameter {
-    TRANSFORM_INSTANCING(listOf(), listOf(MODEL0, MODEL1, MODEL2, MODEL3), Defs.VERTEX_TRANSFORM.bit),
-    COLOR_INSTANCING(listOf(COLOR), listOf(INSTCOLOR), Defs.VERTEX_COLOR.bit),
-    METALLIC_INSTANCING(listOf(METALLIC), listOf(INSTMETALLIC), Defs.VERTEX_METALLIC.bit),
-    ROUGHNESS_INSTANCING(listOf(ROUGHNESS), listOf(INSTROUGHNESS), Defs.VERTEX_ROUGHNESS.bit),
-    COLOR_TEXTURE_INDEX_INSTANCING(listOf(COLORTEXINDEX), listOf(INSTCOLORTEXINDEX), Defs.VERTEX_COLORTEXINDEX.bit),;
+    TRANSFORM_INSTANCING(null, listOf(MODEL0, MODEL1, MODEL2, MODEL3), Defs.VERTEX_TRANSFORM.bit),
+    COLOR_INSTANCING(COLOR, listOf(INSTCOLOR), Defs.VERTEX_COLOR.bit),
+    METALLIC_INSTANCING(METALLIC, listOf(INSTMETALLIC), Defs.VERTEX_METALLIC.bit),
+    ROUGHNESS_INSTANCING(ROUGHNESS, listOf(INSTROUGHNESS), Defs.VERTEX_ROUGHNESS.bit),
+    COLOR_TEXTURE_INDEX_INSTANCING(COLORTEXINDEX, listOf(INSTCOLORTEXINDEX), Defs.VERTEX_COLORTEXINDEX.bit), ;
 }
 
-internal enum class InternalBillboardInstancingParameter (
-    val composeMeshAttributes: List<InternalMeshAttribute<*>>,
+internal enum class InternalBillboardInstancingParameter(
     val instanceMeshAttribute: InternalMeshAttribute<*>,
     val instancingDefs: Long
 ) : BillboardInstancingParameter {
-    POSITION_BILLBOARD_INSTANCING(listOf(), INSTPOS, Defs.VERTEX_POS.bit),
-    SCALE_BILLBOARD_INSTANCING(listOf(), INSTSCALE, Defs.VERTEX_SCALE.bit),
-    ROTATION_BILLBOARD_INSTANCING(listOf(), INSTROT, Defs.VERTEX_ROT.bit),
-    COLOR_BILLBOARD_INSTANCING(listOf(COLOR), INSTCOLOR ,Defs.VERTEX_COLOR.bit),
-    COLOR_TEXTURE_INDEX_BILLBOARD_INSTANCING(listOf(COLORTEXINDEX), INSTCOLORTEXINDEX, Defs.VERTEX_COLORTEXINDEX.bit),
+    POSITION_BILLBOARD_INSTANCING(INSTPOS, Defs.VERTEX_POS.bit),
+    SCALE_BILLBOARD_INSTANCING(INSTSCALE, Defs.VERTEX_SCALE.bit),
+    ROTATION_BILLBOARD_INSTANCING(INSTROT, Defs.VERTEX_ROT.bit),
+    COLOR_BILLBOARD_INSTANCING(INSTCOLOR, Defs.VERTEX_COLOR.bit),
+    COLOR_TEXTURE_INDEX_BILLBOARD_INSTANCING(INSTCOLORTEXINDEX, Defs.VERTEX_COLORTEXINDEX.bit),
 }
 
 internal class MeshLink(val cpuMesh: CMesh, dynamic: Boolean) : AutoCloseable {
@@ -131,7 +130,7 @@ internal object Geometry {
     private fun instancingAttributes(meshDeclaration: MeshDeclaration): Array<InternalMeshAttribute<*>> =
         when (meshDeclaration) {
             is InstancedMesh -> meshDeclaration.parameters.flatMap { it.instanceMeshAttributes }.toTypedArray()
-            is InstancedBillboard -> meshDeclaration.parameters.map {it.instanceMeshAttribute}.toTypedArray()
+            is InstancedBillboard -> meshDeclaration.parameters.map { it.instanceMeshAttribute }.toTypedArray()
             else -> arrayOf()
         }
 

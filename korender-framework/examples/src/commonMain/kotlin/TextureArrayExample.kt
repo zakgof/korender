@@ -4,6 +4,7 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.FloatMath.PIdiv2
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
@@ -35,8 +36,9 @@ fun TextureArrayExample() {
                             objMesh to 2,
                             cubeMesh to 3
                         ),
-                        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3, INSTCOLORTEXINDEX,
-                        dynamic = false
+                        POS, NORMAL, TEX,
+                        instancingParameters = setOf(TRANSFORM_INSTANCING, COLOR_INSTANCING, COLOR_TEXTURE_INDEX_INSTANCING),
+                        dynamic = false,
                     ) {
                         Instance(
                             transform = scale(2f).rotate(1.y, -PIdiv2).translate(-4.x),
@@ -44,19 +46,21 @@ fun TextureArrayExample() {
                         )
                         Instance(
                             transform = scale(2f).rotate(1.y, -PIdiv2).translate(-2.x),
-                            colorTextureIndex = 0
+                            colorTextureIndex = 0,
+                            color = ColorRGBA.Red
                         )
                         Instance(
                             transform = translate(2.x),
                             colorTextureIndex = 1
                         )
                         Instance(
-                            transform = translate(2.x + 2.y),
+                            transform = translate(2.x + 2.1f.y),
                             colorTextureIndex = 2
                         )
                         Instance(
-                            transform = translate(2.x - 2.y),
-                            colorTextureIndex = 2
+                            transform = translate(2.x - 2.1f.y),
+                            colorTextureIndex = 2,
+                            color = ColorRGBA.Red
                         )
                     }
                 )

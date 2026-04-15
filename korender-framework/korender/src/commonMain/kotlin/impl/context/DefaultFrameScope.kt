@@ -34,6 +34,7 @@ import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.context.GltfInstancingDeclaration
 import com.zakgof.korender.context.GuiContainerScope
 import com.zakgof.korender.context.InstancingDeclaration
+import com.zakgof.korender.context.InstancingParameter
 import com.zakgof.korender.context.InstancingScope
 import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.context.PipeMeshContext
@@ -162,10 +163,11 @@ internal class DefaultFrameScope(
         id: String,
         prototypeMeshes: List<Pair<Mesh, Int>>,
         vararg attributes: MeshAttribute<*>,
+        instancingParameters: Set<InstancingParameter>,
         dynamic: Boolean,
-        block: InstancingScope.() -> Unit,
+        block: InstancingScope.() -> Unit
     ): MeshDeclaration =
-        nodeContext.compositeMesh(id, prototypeMeshes, *attributes, dynamic = dynamic, block = block)
+        nodeContext.compositeMesh(id, prototypeMeshes, *attributes, dynamic = dynamic, instancingParameters = instancingParameters, block = block)
 
     override fun heightField(id: String, cellsX: Int, cellsZ: Int, cellWidth: Float, height: (Int, Int) -> Float): MeshDeclaration =
         nodeContext.heightField(id, cellsX, cellsZ, cellWidth, height)

@@ -8,6 +8,8 @@ import com.zakgof.korender.impl.engine.shadow.shadows
 import com.zakgof.korender.impl.geometry.DecalCube
 import com.zakgof.korender.impl.geometry.Instanceable
 import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
+import com.zakgof.korender.impl.geometry.MeshAttributes.COLOR
+import com.zakgof.korender.impl.geometry.MeshAttributes.COLORTEXINDEX
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glViewport
@@ -554,6 +556,14 @@ internal class Renderer(
             }
             (declaration.material as? InternalBaseMaterial)?.model = declaration.nodeContext.transform.mat4 * declaration.transform.mat4
             declaration.material.time = declaration.nodeContext.time ?: renderContext.time
+
+            // TODO: ugly hack
+            if (meshLink.cpuMesh.attrMap.containsKey(COLORTEXINDEX)) {
+                declaration.material.customDefs = declaration.material.customDefs or Defs.VERTEX_COLORTEXINDEX.bit
+            }
+            if (meshLink.cpuMesh.attrMap.containsKey(COLOR)) {
+                declaration.material.customDefs = declaration.material.customDefs or Defs.VERTEX_COLOR.bit
+            }
 
             val instancingMaterialModifier = (declaration.mesh as? Instanceable)?.instancing(meshLink, reverseZ, camera, inventory)
             val uniformPack = arrayOf<UniformSupplier?>(

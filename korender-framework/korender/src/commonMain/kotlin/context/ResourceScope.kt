@@ -242,6 +242,7 @@ interface ResourceScope {
         id: String,
         prototypeMeshes: List<Pair<Mesh, Int>>,
         vararg attributes: MeshAttribute<*>,
+        instancingParameters: Set<InstancingParameter>,
         dynamic: Boolean = false,
         block: InstancingScope.() -> Unit,
     ): MeshDeclaration
