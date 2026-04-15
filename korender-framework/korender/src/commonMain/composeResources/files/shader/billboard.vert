@@ -2,19 +2,25 @@
 #import "!shader/lib/ubo.glsl"
 
 layout(location = 2) in vec2 tex;
-#ifdef INSTANCING
-    layout(location = 11) in vec3 instpos;
-    layout(location = 12) in vec2 instscale;
-    layout(location = 13) in float instrot;
+#ifdef VERTEX_POS
+    layout(location = 5) in vec3 instpos;
+#endif
+#ifdef VERTEX_SCALE
+    layout(location = 6) in vec2 instscale;
+#endif
+#ifdef VERTEX_ROT
+    layout(location = 7) in float instrot;
+#endif
+#ifdef VERTEX_COLOR
+    layout(location = 9) in vec4 instcolor;
+    out vec4 vcolor;
 #endif
 
 #uniform mat4 model;
 
-#ifndef INSTANCING
-    #uniform vec3 pos;
-    #uniform vec2 scale;
-    #uniform float rotation;
-#endif
+#uniform vec3 pos;
+#uniform vec2 scale;
+#uniform float rotation;
 
 #uniforms
 
@@ -28,14 +34,21 @@ out vec2 vtex;
 
 void main() {
 
-    #ifdef INSTANCING
-        vec3 bpos = instpos;
-        vec2 bscale = instscale;
-        float brot = instrot;
-    #else
-        vec3 bpos = pos;
-        vec2 bscale = scale;
-        float brot = rotation;
+    vec3 bpos = pos;
+    vec2 bscale = scale;
+    float brot = rotation;
+
+    #ifdef VERTEX_POS
+        bpos = bpos + instpos;
+    #endif
+    #ifdef VERTEX_SCALE
+        bscale = bscale * instscale;
+    #endif
+    #ifdef VERTEX_ROT
+        brot = brot + instrot;
+    #endif
+    #ifdef VERTEX_COLOR
+        vcolor = instcolor;
     #endif
 
     vcenter = bpos;

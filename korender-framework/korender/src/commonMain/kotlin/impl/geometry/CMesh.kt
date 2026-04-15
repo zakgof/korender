@@ -93,7 +93,7 @@ internal open class CMesh(
         return this
     }
 
-    override fun embed() {
+    override fun embed(prototype: Mesh, transform: Transform, colorTexIndex: Int?) {
         val targetAttrs = attributes.filter { !it.instance }
         val commonAttrs = targetAttrs
             .filter { hasPrototypeAttribute(prototype, it) }

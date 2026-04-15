@@ -2,6 +2,7 @@ package com.zakgof.korender.impl.geometry
 
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
@@ -21,6 +22,7 @@ internal interface BufferAccessor<T> {
         seek(buffer, index)
         put(buffer, value)
     }
+
     fun seek(buffer: NativeByteBuffer, index: Int)
     fun put(buffer: NativeByteBuffer, value: T)
 }
@@ -106,6 +108,21 @@ internal object Float4BufferAccessor : BufferAccessor<FloatArray> {
 
     override fun put(buffer: NativeByteBuffer, value: FloatArray) {
         value.forEach { buffer.put(it) }
+    }
+}
+
+internal object ColorRGBABufferAccessor : BufferAccessor<ColorRGBA> {
+    override fun get(buffer: NativeByteBuffer, index: Int) =
+        ColorRGBA(buffer.float(index), buffer.float(index + 1), buffer.float(index + 2), buffer.float(index + 3))
+
+    override fun seek(buffer: NativeByteBuffer, index: Int) =
+        buffer.position(16 * index)
+
+    override fun put(buffer: NativeByteBuffer, value: ColorRGBA) {
+        buffer.put(value.r)
+        buffer.put(value.g)
+        buffer.put(value.b)
+        buffer.put(value.a)
     }
 }
 

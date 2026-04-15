@@ -183,7 +183,7 @@ internal class GltfDeclaration(
     override fun hashCode(): Int = resource.hashCode()
 }
 
-internal class GltfInstance(val transform: Transform, val animation: Int?)
+internal class GltfInstance(val transform: Transform, val time: Float?, val animation: Int?)
 
 internal class PointLightDeclaration(val position: Vec3, val color: ColorRGB, val attenuation: Vec3)
 

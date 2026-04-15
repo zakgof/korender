@@ -24,7 +24,7 @@ internal class DefaultInstancingScope internal constructor(private val instances
 }
 
 internal class DefaultGltfInstancingScope internal constructor(private val instances: MutableList<GltfInstance>) : GltfInstancingScope {
-    override fun Instance(transform: Transform, animation: Int?) {
-        instances.add(GltfInstance(transform, animation))
+    override fun Instance(transform: Transform, time: Float?, animation: Int?) {
+        instances.add(GltfInstance(transform, time, animation))
     }
 }

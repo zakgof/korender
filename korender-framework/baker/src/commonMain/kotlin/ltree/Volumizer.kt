@@ -40,7 +40,9 @@ fun KorenderScope.volumize(lTree: LTree): Pair<Image3D, Image3D> {
         println("Z=$z: z range: ${minBB.z}..${maxBB.z} NEAR: ${projection.near} FAR: ${projection.far}")
 
         val image = runBlocking {
-            captureFrame(reso, reso, camera, projection) {
+            captureFrame(reso, reso) {
+                this.camera = camera
+                this.projection = projection
                 AmbientLight(White)
                 renderLTree(lTree, "capture-$z", "ltree/oak.png")
             }.await()

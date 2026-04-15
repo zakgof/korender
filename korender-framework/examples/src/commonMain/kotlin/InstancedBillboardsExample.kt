@@ -4,7 +4,6 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.context.BillboardInstancingParameter
 import com.zakgof.korender.math.ColorRGB.Companion.White
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec2
@@ -36,7 +35,7 @@ fun InstancedBillboardsExample() = Korender(resourceLoader = { Res.readBytes("fi
                 id = "particles",
                 count = particleNum,
                 dynamic = true,
-                BillboardInstancingParameter.Position, BillboardInstancingParameter.Scale, BillboardInstancingParameter.Color
+                POSITION_BILLBOARD_INSTANCING, SCALE_BILLBOARD_INSTANCING, COLOR_BILLBOARD_INSTANCING
             ) {
                 repeat(particleNum) { i ->
                     val particle = particles[i]
@@ -64,7 +63,7 @@ class Particle(startTtl: Float = 1.0f, aspect: Float) {
     var ttl = startTtl
     val startPos = Vec3((-1f + 2f * Random.nextFloat()) * 30f * aspect, 30f, 30f * Random.nextFloat())
     val scale = 0.4f + 0.3f * Random.nextFloat()
-    val color = ColorRGBA(0.8f + 0.2f * Random.nextFloat(), 0.9f + 0.1f * Random.nextFloat(), 1f, 0.25f)
+    val color = ColorRGBA(0.6f + 0.4f * Random.nextFloat(), 0.7f + 0.3f * Random.nextFloat(), 1f, 0.25f)
     val pos
         get() = startPos - (1f - ttl).y * 60f + (2f * sin(ttl * 8f + startPos.z * 8f)).x
 

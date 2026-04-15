@@ -60,6 +60,7 @@ import com.zakgof.korender.impl.engine.SceneDeclaration
 import com.zakgof.korender.impl.engine.ShadowDeclaration
 import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
+import com.zakgof.korender.impl.geometry.InternalBillboardInstancingParameter
 import com.zakgof.korender.impl.geometry.InternalInstancingParameter
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.material.InternalBillboardMaterial
@@ -222,11 +223,12 @@ internal class DefaultFrameScope(
         (prefab as InternalPrefab).render(this, block)
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun Billboard(material: BillboardMaterial, transparent: Boolean, instancing: BillboardInstancingDeclaration?) {
         val mesh = com.zakgof.korender.impl.geometry.Billboard(nodeContext)
         val meshDeclaration = if (instancing != null) {
             instancing as InternalBillboardInstancingDeclaration
-            InstancedBillboard(instancing.id, instancing.count, !instancing.dynamic, transparent, nodeContext, instancing.instancer)
+            InstancedBillboard(instancing.id, instancing.count, !instancing.dynamic, transparent, nodeContext, instancing.parameters as List<InternalBillboardInstancingParameter>, instancing.instancer)
         } else {
             mesh
         }

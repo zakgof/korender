@@ -77,7 +77,7 @@ internal data class InstancedMesh(
 
     override fun instancing(meshLink: MeshLink, reverseZ: Boolean, camera: Camera?, inventory: Inventory): InternalMaterialModifier {
         val cpuMesh = meshLink.cpuMesh
-        val modifier = InstancingMaterialModifier()
+        val modifier = InstancingMaterialModifier(parameters.fold(0L) { c, p -> c or p.instancingDefs })
         if (!static || !cpuMesh.instancesInitialized || transparent) {
             var instances = instancer()
             val sortFactor = if (reverseZ) -1f else 1f
@@ -135,6 +135,7 @@ internal data class InstancedBillboard(
     val static: Boolean,
     val transparent: Boolean,
     override val nodeContext: NodeContext,
+    val parameters: List<InternalBillboardInstancingParameter>,
     val instancer: () -> List<BillboardInstance>,
 ) : InternalMeshDeclaration, Instanceable {
     override fun equals(other: Any?): Boolean = (other is InstancedBillboard && other.id == id)
@@ -153,12 +154,13 @@ internal data class InstancedBillboard(
                     it.pos?.let { attrSet(INSTPOS, i, it) }
                     it.rotation?.let { attrSet(INSTROT, i, it) }
                     it.scale?.let { attrSet(INSTSCALE, i, it) }
+                    it.color?.let { attrSet(INSTCOLOR, i, it) }
                 }
             }
             meshLink.updateGpu(instances.size, true)
             cpuMesh.instancesInitialized = true
         }
-        return InstancingMaterialModifier()
+        return InstancingMaterialModifier(parameters.fold(0L) { c, p -> c or p.instancingDefs })
     }
 }
 

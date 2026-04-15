@@ -85,7 +85,9 @@ private fun KorenderScope.captureCard(cluster: ClusteredTree.Cluster, index: Int
     val camera = camera(cluster.plane.center - cluster.plane.normal * 200f, cluster.plane.normal, up)
     val projection = projection(size, size, 100f, 300f, ortho())
     val image = runBlocking {
-        captureFrame(1024, 1024, camera, projection) {
+        captureFrame(1024, 1024) {
+            this.camera = camera
+            this.projection = projection
             AmbientLight(White)
             renderLTree(cluster.lTree, "$index", leafTexture)
         }.await()

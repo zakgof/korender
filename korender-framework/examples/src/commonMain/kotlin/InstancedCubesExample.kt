@@ -41,7 +41,7 @@ fun InstancedCubesExample() = Korender(resourceLoader = { Res.readBytes("files/$
                         Instance(
                             transform = rotate(Quaternion.fromAxisAngle(axis, frameInfo.time * 3f))
                                 .translate(Vec3(x.toFloat(), y.toFloat(), 0f)),
-                            color = ColorRGBA(0.5f + 0.02f * x, 0.5f + 0.02f * y, 0.5f, 1f)
+                            color = ColorRGBA(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1f)
                         )
                     }
                 }

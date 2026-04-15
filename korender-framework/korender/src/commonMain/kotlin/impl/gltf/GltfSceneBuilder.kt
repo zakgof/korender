@@ -15,6 +15,7 @@ import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.geometry.CustomCpuMesh
 import com.zakgof.korender.impl.geometry.InstancedMesh
+import com.zakgof.korender.impl.geometry.InternalInstancingParameter
 import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
 import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
 import com.zakgof.korender.impl.material.InternalBaseMaterial
@@ -263,11 +264,11 @@ internal class GltfSceneBuilder(
         if (declaration.instancingDeclaration == null)
             return meshDeclaration
 
-        return InstancedMesh(declaration.resource, declaration.instancingDeclaration.count, meshDeclaration, !declaration.instancingDeclaration.dynamic, false, declaration.nodeContext) {
+        return InstancedMesh(declaration.resource, declaration.instancingDeclaration.count, meshDeclaration, !declaration.instancingDeclaration.dynamic, false, declaration.nodeContext, listOf(InternalInstancingParameter.TRANSFORM_INSTANCING)) {
             declaration.instancingDeclaration.instancer().mapIndexed { i, it ->
                 MeshInstance(it.transform, skinIndex?.let {
                     instanceData[i].jointMatrices[skinIndex].mapIndexed { ind, jm -> jm * cache.loadedSkins[skinIndex]!![ind] }
-                })
+                }, null, null, null, null)
             }
         }
     }

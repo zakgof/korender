@@ -8,6 +8,12 @@ in vec2 vtex;
 #ifdef VERTEX_COLOR
     in vec4 vcolor;
 #endif
+#ifdef VERTEX_METALLIC
+    in float vmetallic;
+#endif
+#ifdef VERTEX_ROUGHNESS
+    in float vroughness;
+#endif
 #ifdef VERTEX_OCCLUSION
     in float vocclusion;
 #endif
@@ -137,6 +143,14 @@ void main() {
             albedo.rgb = sg.rgb;
         }
         roughness = 1. - sg.a;
+    #endif
+
+    #ifdef VERTEX_METALLIC
+        metallic = vmetallic;
+    #endif
+
+    #ifdef VERTEX_ROUGHNESS
+        roughness = vroughness;
     #endif
 
     occlusion = 1.;

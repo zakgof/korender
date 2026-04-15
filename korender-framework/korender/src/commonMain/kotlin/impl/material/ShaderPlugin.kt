@@ -139,7 +139,7 @@ internal class ShaderPluginRegistry {
         val defs = mutableSetOf<String>()
         Defs.entries.forEach { def ->
             if ((declaration.defs and def.bit) != 0L) {
-                defs += def.defName
+                defs += def.toString()
             }
         }
         defs += shaderEnv
@@ -168,19 +168,27 @@ internal class ShaderPluginRegistry {
 
 }
 
-internal enum class Defs(val bit: Long, val defName: String) {
-    BASE_COLOR_MAP(1L shl 0, "BASE_COLOR_MAP"),
-    TEXTURE_ARRAY(1L shl 1, "TEXTURE_ARRAY"),
-    BLOOM(1L shl 2, "BLOOM"),
-    INSTANCING(1L shl 3, "INSTANCING"),
-    SHADOW_CASTER(1L shl 4, "SHADOW_CASTER"),
-    SSR(1L shl 5, "SSR"),
-    UPSAMPLE(1L shl 6, "UPSAMPLE"),
-    VERTEX_COLOR(1L shl 7, "VERTEX_COLOR"),
-    VERTEX_OCCLUSION(1L shl 8, "VERTEX_OCCLUSION"),
-    VERTEX_SHADER(1L shl 9, "VERTEX_SHADER"),
-    VSM_SHADOW(1L shl 10, "VSM_SHADOW"),
-    NO_SHADOW_CAST(1L shl 11, "NO_SHADOW_CAST")
+// TODO just use toString
+internal enum class Defs(val defName: String) {
+    BASE_COLOR_MAP( "BASE_COLOR_MAP"),
+    TEXTURE_ARRAY("TEXTURE_ARRAY"),
+    BLOOM("BLOOM"),
+    VERTEX_TRANSFORM("VERTEX_TRANSFORM"),
+    VERTEX_COLOR("VERTEX_COLOR"),
+    VERTEX_METALLIC("VERTEX_METALLIC"),
+    VERTEX_ROUGHNESS("VERTEX_ROUGHNESS"),
+    VERTEX_COLORTEXINDEX("VERTEX_COLORTEXINDEX"),
+    VERTEX_POS("VERTEX_POS"),
+    VERTEX_ROT("VERTEX_ROT"),
+    VERTEX_SCALE("VERTEX_SCALE"),
+    SHADOW_CASTER("SHADOW_CASTER"),
+    SSR("SSR"),
+    UPSAMPLE("UPSAMPLE"),
+    VERTEX_OCCLUSION( "VERTEX_OCCLUSION"),
+    VSM_SHADOW("VSM_SHADOW"),
+    NO_SHADOW_CAST("NO_SHADOW_CAST");
+
+    val bit = 1L shl ordinal
 }
 
 internal infix fun Long.pluginOverride(code: Long) : Long {

@@ -1,8 +1,8 @@
 #import "!shader/lib/header.glsl"
 #import "!shader/lib/ubo.glsl"
 
-layout(location = 8) in int b1;
-layout(location = 9) in int b2;
+layout(location = 5) in int b1;
+layout(location = 6) in int b2;
 
 out vec3 vpos;
 out vec3 vnormal;

@@ -313,11 +313,11 @@ internal class DecalBlendMaterial(
         }
 }
 
-internal class InstancingMaterialModifier : InternalMaterialModifier(
+internal class InstancingMaterialModifier(val defs: Long) : InternalMaterialModifier(
     "jntTexture" to TextureGetter<InstancingMaterialModifier> { it.jntTexture }
 ) {
     var jntTexture: GlGpuTexture? = null
 
     override fun collectDefs(accumulator: Long): Long =
-        super.collectDefs(accumulator) or Defs.INSTANCING.bit
+        super.collectDefs(accumulator) or defs
 }

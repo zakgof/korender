@@ -1,8 +1,8 @@
 #import "!shader/lib/header.glsl"
 
 layout(location = 2) in vec2 tex;
-layout(location = 11) in vec4 insttexrect;
-layout(location = 12) in vec4 instscreenrect;
+layout(location = 8) in vec4 insttexrect;
+layout(location = 9) in vec4 instscreenrect;
 
 out vec2 vtex;
 

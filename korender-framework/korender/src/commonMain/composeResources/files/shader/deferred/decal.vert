@@ -4,10 +4,10 @@
 layout(location = 0) in vec3 pos;
 
 #ifdef INSTANCING
-    layout(location = 11) in vec4 instanceModel0;
-    layout(location = 12) in vec4 instanceModel1;
-    layout(location = 13) in vec4 instanceModel2;
-    layout(location = 14) in vec4 instanceModel3;
+    layout(location = 5) in vec4 instanceModel0;
+    layout(location = 6) in vec4 instanceModel1;
+    layout(location = 7) in vec4 instanceModel2;
+    layout(location = 8) in vec4 instanceModel3;
 #endif
 
 out vec3 vpos;

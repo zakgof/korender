@@ -34,6 +34,7 @@ interface BillboardInstancingScope {
 interface GltfInstancingScope {
     fun Instance(
         transform: Transform,
+        time: Float? = null,
         animation: Int? = null,
     )
 }
