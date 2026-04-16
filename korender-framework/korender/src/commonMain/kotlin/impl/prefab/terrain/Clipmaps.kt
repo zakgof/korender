@@ -2,46 +2,44 @@ package com.zakgof.korender.impl.prefab.terrain
 
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
-import com.zakgof.korender.TerrainMaterialScope
-import com.zakgof.korender.impl.context.DefaultFrameScope
-import com.zakgof.korender.impl.context.NodeContext
+import com.zakgof.korender.impl.engine.HeightFieldDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
+import com.zakgof.korender.impl.engine.SceneDeclaration
 import com.zakgof.korender.impl.geometry.MeshAttributes.B1
 import com.zakgof.korender.impl.geometry.MeshAttributes.B2
 import com.zakgof.korender.impl.glgpu.FloatGetter
 import com.zakgof.korender.impl.glgpu.Vec3Getter
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.InternalTerrainMaterial
-import com.zakgof.korender.impl.prefab.InternalPrefab
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import kotlin.math.floor
 
-internal class Clipmaps(nodeContext: NodeContext, id: String, private val cellSize: Float, private val hg: Int, private val rings: Int) : InternalPrefab<TerrainMaterialScope> {
+internal class Clipmaps(val declaration: HeightFieldDeclaration) : AutoCloseable {
 
     private val center: MeshDeclaration
     private val ring = mutableMapOf<Offset, MeshDeclaration>()
-    private val inner = 2 * hg + 3
+    private val inner = 2 * declaration.hg + 3
 
     init {
         val outer = inner * 2
-        center = nodeContext.customMesh(
-            "$id-center",
+        center = declaration.nodeContext.customMesh(
+            "${declaration.id}-center",
             (outer + 1) * (outer + 1),
             outer * outer * 6,
             B1, B2
         ) {
-            buildBlock(hg, null)
+            buildBlock(declaration.hg, null)
         }
         for (ox in 0..1) {
             for (oz in 0..1) {
-                ring[Offset(ox, oz)] = nodeContext.customMesh(
-                    "$id-ring-$ox-$oz",
+                ring[Offset(ox, oz)] = declaration.nodeContext.customMesh(
+                    "${declaration.id}-ring-$ox-$oz",
                     (outer + 1) * (outer + 1),
                     (outer * outer - inner * inner) * 6,
                     B1, B2
                 ) {
-                    buildBlock(hg, Offset(ox, oz))
+                    buildBlock(declaration.hg, Offset(ox, oz))
                 }
             }
         }
@@ -73,8 +71,8 @@ internal class Clipmaps(nodeContext: NodeContext, id: String, private val cellSi
 
     private fun meshes(camPos: Vec3): List<Me> {
 
-        val posx = camPos.x / cellSize
-        val posz = camPos.z / cellSize
+        val posx = camPos.x / declaration.cellSize
+        val posz = camPos.z / declaration.cellSize
 
         fun Float.snap(power: Int, offset: Int = 0) = floor(this - offset).toInt() and (Int.MAX_VALUE shl power)
         fun Float.fract(power: Int, offset: Int = 0) = (this - offset - snap(power, offset)) / (1 shl power)
@@ -92,10 +90,10 @@ internal class Clipmaps(nodeContext: NodeContext, id: String, private val cellSi
             Vec3(px, pz, inner * 2f)
         )
 
-        for (r in 1..rings) {
+        for (r in 1..declaration.rings) {
             val step = 1 shl r
 
-            val theOffset = (hg + 1) * (step - 1) * 2 + inner
+            val theOffset = (declaration.hg + 1) * (step - 1) * 2 + inner
 
             val newxpos = posx.snap(r + 1, theOffset)
             val newzpos = posz.snap(r + 1, theOffset)
@@ -103,7 +101,7 @@ internal class Clipmaps(nodeContext: NodeContext, id: String, private val cellSi
             val prx = posx.fract(r + 1, theOffset)
             val prz = posz.fract(r + 1, theOffset)
 
-            val offs = Offset((xpos - newxpos) / step - 1 - hg, (zpos - newzpos) / step - 1 - hg)
+            val offs = Offset((xpos - newxpos) / step - 1 - declaration.hg, (zpos - newzpos) / step - 1 - declaration.hg)
             val rrr = ring[offs]
             rrr?.let {
                 list += Me(
@@ -118,22 +116,24 @@ internal class Clipmaps(nodeContext: NodeContext, id: String, private val cellSi
         return list
     }
 
-    override fun render(fc: DefaultFrameScope, block: TerrainMaterialScope.() -> Unit) = with(fc) {
-        val tiles = meshes(camera.position)
+    fun build(sceneDeclaration: SceneDeclaration) {
+        val tiles = meshes(declaration.frameScope.camera.position)
         tiles.forEach { tile ->
             // TODO overhead!!!
-            val modifier = TerrainMaterialModifier(tile, hg.toFloat() - 1f, cellSize)
-            val material = InternalTerrainMaterial(modifier).apply(block)
+            val modifier = TerrainMaterialModifier(tile, declaration.hg.toFloat() - 1f, declaration.cellSize)
+            val material = InternalTerrainMaterial(modifier).apply(declaration.block)
             val rd = RenderableDeclaration(
                 material,
                 tile.mesh,
                 Transform.IDENTITY,
                 false,
-                nodeContext
+                declaration.nodeContext
             )
             sceneDeclaration.append(rd)
         }
     }
+
+    override fun close() {}
 
     private data class Offset(val x: Int, val z: Int)
 

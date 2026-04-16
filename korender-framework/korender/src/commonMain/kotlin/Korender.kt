@@ -23,8 +23,6 @@ class FrameInfo(
     constructor() : this(0L, 0f, 0f, 0f)
 }
 
-interface Prefab<S>
-
 interface RetentionPolicy
 
 interface ShaderPlugin

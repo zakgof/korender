@@ -27,6 +27,8 @@ import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.impl.material.TextureLinkDeclaration
 import com.zakgof.korender.impl.material.Texturing
 import com.zakgof.korender.impl.material.UniformBufferHolder
+import com.zakgof.korender.impl.prefab.scene.KrScene
+import com.zakgof.korender.impl.prefab.terrain.Clipmaps
 
 internal class ShaderServices(
     val zeroTex: GlGpuTexture = GlGpuTexture.zeroTex(),
@@ -52,8 +54,10 @@ internal class Inventory(private val loader: Loader) {
     private val frameBuffers = Registry<FrameBufferDeclaration, GlGpuFrameBuffer> { GlGpuFrameBuffer(it.id, it.width, it.height, it.colorTexturePresets, it.withDepth) }
     private val cubeFrameBuffers = Registry<CubeFrameBufferDeclaration, GlGpuCubeFrameBuffer> { GlGpuCubeFrameBuffer(it.id, it.width, it.height, it.withDepth) }
     private val gltfs = Registry<GltfDeclaration, GltfCache> { GltfLoader.load(it, loader) }
+    private val heightFields = Registry<HeightFieldDeclaration, Clipmaps> { Clipmaps(it) }
+    private val krscenes = Registry<KrSceneDeclaration, KrScene> { KrScene(it) }
 
-    private val registries = listOf(meshes, shaders, textures, textures3D, textureLinks, resourceCubeTextures, imageCubeTextures, fonts, frameBuffers, cubeFrameBuffers, gltfs)
+    private val registries = listOf(meshes, shaders, textures, textures3D, textureLinks, resourceCubeTextures, imageCubeTextures, fonts, frameBuffers, cubeFrameBuffers, gltfs, heightFields, krscenes)
 
     fun go(time: Float, generation: Int, block: Inventory.() -> Boolean) {
         registries.forEach { it.begin() }
@@ -76,10 +80,10 @@ internal class Inventory(private val loader: Loader) {
     fun frameBuffer(decl: FrameBufferDeclaration): GlGpuFrameBuffer? = frameBuffers[decl]
     fun cubeFrameBuffer(decl: CubeFrameBufferDeclaration): GlGpuCubeFrameBuffer? = cubeFrameBuffers[decl]
     fun gltf(decl: GltfDeclaration): GltfCache? = gltfs[decl]
+    fun heightField(decl: HeightFieldDeclaration): Clipmaps? = heightFields[decl]
+    fun krscene(decl: KrSceneDeclaration): KrScene? = krscenes[decl]
 
     fun shaderPlugin(id: ShaderPluginId, file: String): ShaderPlugin =
         shaderServices.shaderPluginRegistry.registerCustom(id, file)
-
-    fun onWaitUpdate(block: () -> Unit) = loader.onWaitUpdate(block)
 }
 

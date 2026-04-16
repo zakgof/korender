@@ -10,7 +10,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import com.zakgof.korender.Korender
-import com.zakgof.korender.Prefab
 import com.zakgof.korender.baker.editor.walk.Controller
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.impl.scene.SceneModel
@@ -41,7 +40,6 @@ fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
                 if (it == "scene/foobar") Cbor.encodeToByteArray(data!!.first) else Res.readBytes("files/$it")
             }) {
                 val controller = Controller(data!!.second)
-                val prefab: Prefab<*> = scenePrefab("scene/foobar")
                 OnKey { controller.key(it) }
                 OnTouch { controller.touch(it) }
                 Frame {
@@ -52,7 +50,7 @@ fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
                     controller.update(frameInfo.dt, frameInfo.time)
                     projection = projection(0.2f * width / height, 0.2f, 0.2f, 1000f)
                     camera = controller.camera()
-                    Prefab(prefab) {}
+                    KrScene("scene/foobar") {}
                     Gltf(resource = "walk/swat-woman.glb", transform = controller.player())
                     Gui {
                         Column {

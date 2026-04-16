@@ -1,13 +1,13 @@
 package com.zakgof.korender.impl.prefab.scene
 
-import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.context.FrameScope
-import com.zakgof.korender.impl.context.DefaultFrameScope
 import com.zakgof.korender.impl.context.NodeContext
+import com.zakgof.korender.impl.engine.KrSceneDeclaration
+import com.zakgof.korender.impl.engine.RenderableDeclaration
+import com.zakgof.korender.impl.engine.SceneDeclaration
 import com.zakgof.korender.impl.geometry.MeshAttributes
-import com.zakgof.korender.impl.prefab.InternalPrefab
+import com.zakgof.korender.impl.material.InternalBaseMaterial
 import com.zakgof.korender.impl.scene.SceneModel
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
@@ -18,12 +18,12 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 
 @OptIn(ExperimentalSerializationApi::class, ExperimentalCoroutinesApi::class)
-internal class ScenePrefab(nodeContext: NodeContext, resource: String) : InternalPrefab<BaseMaterialScope> {
+internal class KrScene(val declaration: KrSceneDeclaration) : AutoCloseable {
 
-    private val prefix = "scene[$resource]"
+    private val prefix = "scene[${declaration.resource}]"
     private val texturePrefix = "$prefix.texture."
 
-    private val sceneModelDeferred = nodeContext.load(resource) {
+    private val sceneModelDeferred = declaration.nodeContext.load(declaration.resource) {
         Cbor.decodeFromByteArray<SceneModel>(it)
     }
 
@@ -36,23 +36,31 @@ internal class ScenePrefab(nodeContext: NodeContext, resource: String) : Interna
         }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun render(fc: DefaultFrameScope, block: BaseMaterialScope.() -> Unit) = with(fc) {
+    fun build(sceneDeclaration: SceneDeclaration) {
         if (sceneModelDeferred.isCompleted) {
             val sceneModel = sceneModelDeferred.getCompleted()
-            Node(resourceLoader = { loadResource(it, nodeContext.resourceLoader) }) {
-                sceneModel.renderables.forEach { re ->
-                    Renderable(
-                        material = material(sceneModel.materials[re.value.materialId]!!),
-                        mesh = mesh(re.value.meshId, sceneModel.meshes[re.value.meshId]!!),
-                        transform = Transform(Mat4(re.value.transform))
+            val childNodeContext = NodeContext(
+                { loadResource(it, declaration.nodeContext.resourceLoader) },
+                declaration.nodeContext.transform,
+                declaration.nodeContext.retentionPolicy,
+                declaration.nodeContext.time
+            )
+            sceneModel.renderables.forEach { re ->
+                sceneDeclaration.append(
+                    RenderableDeclaration(
+                        material = childNodeContext.material(sceneModel.materials[re.value.materialId]!!),
+                        mesh = childNodeContext.mesh(re.value.meshId, sceneModel.meshes[re.value.meshId]!!),
+                        transform = Transform(Mat4(re.value.transform)),
+                        transparent = false, // TODO,
+                        childNodeContext
                     )
-                }
+                )
             }
         }
     }
 
-    private fun FrameScope.material(material: SceneModel.Material) =
-        base {
+    private fun NodeContext.material(material: SceneModel.Material) =
+        InternalBaseMaterial().apply {
             color = ColorRGBA(material.baseColor)
             colorTexture = material.colorTextureId?.let {
                 texture(texturePrefix + it)
@@ -62,7 +70,7 @@ internal class ScenePrefab(nodeContext: NodeContext, resource: String) : Interna
             }
         }
 
-    private fun FrameScope.mesh(id: String, mesh: SceneModel.Mesh) =
+    private fun NodeContext.mesh(id: String, mesh: SceneModel.Mesh) =
         customMesh(
             id = "$prefix.mesh.$id",
             vertexCount = mesh.vertices,
@@ -86,6 +94,9 @@ internal class ScenePrefab(nodeContext: NodeContext, resource: String) : Interna
         SceneModel.Attribute.NORMAL -> MeshAttributes.NORMAL
         SceneModel.Attribute.TEX -> MeshAttributes.TEX
         SceneModel.Attribute.COLORTEXINDEX -> MeshAttributes.COLORTEXINDEX
+    }
+
+    override fun close() {
     }
 }
 

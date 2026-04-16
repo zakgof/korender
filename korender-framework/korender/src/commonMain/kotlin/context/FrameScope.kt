@@ -7,10 +7,10 @@ import com.zakgof.korender.Material
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostProcessingMaterial
-import com.zakgof.korender.Prefab
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.SkyMaterial
+import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
@@ -33,14 +33,6 @@ interface FrameScope : KorenderScope {
      * @param instancing instancing declaration to render multiple objects in a batch
      */
     fun Renderable(material: Material, mesh: MeshDeclaration, transform: Transform = Transform.IDENTITY, transparent: Boolean = false, instancing: InstancingDeclaration? = null)
-
-    /**
-     * Renders a geometry prefab.
-     *
-     * @param prefab geometry prefab
-     * @param block prefab rendering parameters block
-     */
-    fun <S> Prefab(prefab: Prefab<S>, block: S.() -> Unit = {})
 
     /**
      * Renders a GLTF model from a resource file.
@@ -168,5 +160,18 @@ interface FrameScope : KorenderScope {
         time: Float? = null,
         block: FrameScope.() -> Unit
     )
+
+    /**
+     * Renders a heightfield using clipmaps technique.
+     *
+     * @param id unique declaration id
+     * @param cellSize terrain cell size (at the highest resolution)
+     * @param hg parameter affecting number of cells in a clipmap ring
+     * @param rings number of visible rings
+     * @param block block of rendering parameters
+     */
+    fun HeightField(id: String, cellSize: Float, hg: Int, rings: Int, block: TerrainMaterialScope.() -> Unit)
+
+    fun KrScene(resource: String, transform: Transform = Transform.IDENTITY, block: BaseMaterialScope.()-> Unit = {})
 }
 

@@ -3,10 +3,8 @@ package com.zakgof.korender.examples.island
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
-import com.zakgof.korender.Prefab
 import com.zakgof.korender.ShaderPlugin
 import com.zakgof.korender.ShaderPluginId
-import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.examples.TestExchange
 import com.zakgof.korender.math.ColorRGB
@@ -29,7 +27,6 @@ fun IslandExample() =
         terrainHeightPlugin = shaderPlugin(ShaderPluginId.TERRAIN, "island/terrain/shader/height.glsl")
         albedoTerrainPlugin = shaderPlugin(ShaderPluginId.ALBEDO, "island/terrain/shader/albedo.glsl")
 
-        val terrain = clipmapTerrain("terrain", 32.0f, 24, 6)
         val loader = Loader(this)
         val game = Game(loader)
 
@@ -41,7 +38,7 @@ fun IslandExample() =
             TestExchange.report(frameInfo)
             if (loader.loaded()) {
                 game.frame(frameInfo.dt)
-                gameFrame(game, loader, terrain)
+                gameFrame(game, loader)
             } else {
                 loadingScreen(loader.percent())
             }
@@ -49,11 +46,11 @@ fun IslandExample() =
     }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-private fun FrameScope.gameFrame(game: Game, loader: Loader, terrain: Prefab<TerrainMaterialScope>) {
+private fun FrameScope.gameFrame(game: Game, loader: Loader) {
     projection = projection(2f, 2f * height / width, 2f, 32000f, log())
     camera = camera(game.cameraPos, game.cameraDir, game.cameraUp)
 
-    island(loader.heightMapLoading.getCompleted(), loader.runwaySeedLoading.getCompleted(), terrain)
+    island(loader.heightMapLoading.getCompleted(), loader.runwaySeedLoading.getCompleted())
     atmosphere()
     buildings(loader.deferredBuildings.getCompleted())
     trees(loader.deferredBranches.getCompleted(), loader.deferredCards.getCompleted(), loader.deferredTreeSeeds.getCompleted())

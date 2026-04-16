@@ -19,7 +19,6 @@ fun ProcTerrainExample() =
 
         val procTerrainHeightPlugin = shaderPlugin(TERRAIN, "procterrain/height.glsl")
         val procTerrainAlbedoPlugin = shaderPlugin(ALBEDO, "procterrain/albedo.glsl")
-        val terrain = clipmapTerrain("terrain", 2.0f, 16, 13)
         Frame {
             TestExchange.report(frameInfo)
 
@@ -34,7 +33,7 @@ fun ProcTerrainExample() =
 
             AmbientLight(ColorRGB.white(0.3f - 0.3f * cloudy))
             DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(1.1f - cloudy))
-            Prefab(terrain) {
+            HeightField("terrain", 2.0f, 16, 13) {
                 metallicFactor = 0.0f
                 plugin(procTerrainHeightPlugin)
                 plugin(procTerrainAlbedoPlugin)

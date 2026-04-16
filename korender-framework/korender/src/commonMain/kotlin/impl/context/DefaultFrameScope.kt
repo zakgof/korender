@@ -18,10 +18,10 @@ import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.PostShadingEffect
-import com.zakgof.korender.Prefab
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.SkyMaterial
+import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureArrayDeclaration
 import com.zakgof.korender.TextureArrayImages
@@ -49,11 +49,13 @@ import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.engine.FrameTarget
 import com.zakgof.korender.impl.engine.GltfDeclaration
+import com.zakgof.korender.impl.engine.HeightFieldDeclaration
 import com.zakgof.korender.impl.engine.InternalBillboardInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalFilterDeclaration
 import com.zakgof.korender.impl.engine.InternalGltfInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalPassDeclaration
+import com.zakgof.korender.impl.engine.KrSceneDeclaration
 import com.zakgof.korender.impl.engine.PointLightDeclaration
 import com.zakgof.korender.impl.engine.RegularFrameContext
 import com.zakgof.korender.impl.engine.RenderableDeclaration
@@ -68,7 +70,6 @@ import com.zakgof.korender.impl.material.InternalBillboardMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
 import com.zakgof.korender.impl.material.InternalSkyMaterial
-import com.zakgof.korender.impl.prefab.InternalPrefab
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
@@ -221,10 +222,6 @@ internal class DefaultFrameScope(
         sceneDeclaration.append(rd)
     }
 
-    override fun <S> Prefab(prefab: Prefab<S>, block: S.() -> Unit) {
-        (prefab as InternalPrefab).render(this, block)
-    }
-
     @Suppress("UNCHECKED_CAST")
     override fun Billboard(material: BillboardMaterial, transparent: Boolean, instancing: BillboardInstancingDeclaration?) {
         val mesh = com.zakgof.korender.impl.geometry.Billboard(nodeContext)
@@ -322,5 +319,13 @@ internal class DefaultFrameScope(
             time
         )
         DefaultFrameScope(korenderContext, korenderContext.regularFrameContext, sceneDeclaration, frameInfo, childNodeContext).apply(block)
+    }
+
+    override fun HeightField(id: String, cellSize: Float, hg: Int, rings: Int, block: TerrainMaterialScope.() -> Unit) {
+        sceneDeclaration.heightFields += HeightFieldDeclaration(id, cellSize, hg, rings, block, this)
+    }
+
+    override fun KrScene(resource: String, transform: Transform, block: BaseMaterialScope.() -> Unit) {
+        sceneDeclaration.krscenes += KrSceneDeclaration(resource, transform, block, nodeContext)
     }
 }

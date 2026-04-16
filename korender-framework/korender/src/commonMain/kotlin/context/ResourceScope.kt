@@ -1,6 +1,5 @@
 package com.zakgof.korender.context
 
-import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureResources
@@ -13,9 +12,7 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostShadingEffect
-import com.zakgof.korender.Prefab
 import com.zakgof.korender.RetentionPolicy
-import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureArrayDeclaration
 import com.zakgof.korender.TextureArrayImages
@@ -313,17 +310,4 @@ interface ResourceScope {
      * @return post shading effect
      */
     fun bloomWide(threshold: Float = 0.9f, amount: Float = 3.0f, downsample: Int = 2, mips: Int = 3, offset: Float = 1.0f, highResolutionRatio: Float = 0.2f): PostShadingEffect
-
-    /**
-     * Creates a geometry prefab for clipmap terrain.
-     *
-     * @param id unique declaration id
-     * @param cellSize terrain cell size (at the highest resolution)
-     * @param hg parameter affecting number of cells in a clipmap ring
-     * @param rings number of visible rings
-     * @return terrain geometry prefab
-     */
-    fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab<TerrainMaterialScope>
-
-    fun scenePrefab(resource: String): Prefab<BaseMaterialScope>
 }

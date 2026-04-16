@@ -5,6 +5,7 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.ShadowAlgorithmDeclaration
+import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.context.BillboardInstancingDeclaration
 import com.zakgof.korender.context.BillboardInstancingParameter
@@ -12,6 +13,7 @@ import com.zakgof.korender.context.GltfInstancingDeclaration
 import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.context.InstancingParameter
 import com.zakgof.korender.gltf.GltfUpdate
+import com.zakgof.korender.impl.context.DefaultFrameScope
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
@@ -38,6 +40,8 @@ internal class SceneDeclaration {
 
     val guis = mutableListOf<ElementDeclaration.Container>()
     val gltfs = mutableListOf<GltfDeclaration>()
+    val krscenes = mutableListOf<KrSceneDeclaration>()
+    val heightFields = mutableListOf<HeightFieldDeclaration>()
     var filters = mutableListOf<InternalFilterDeclaration>()
     var deferredShadingDeclaration: DeferredShadingDeclaration? = null
     val envCaptures = mutableMapOf<String, CaptureContext>()
@@ -180,6 +184,29 @@ internal class GltfDeclaration(
     override val nodeContext: NodeContext,
 ) : NodeKeeper {
     override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.resource == resource)
+    override fun hashCode(): Int = resource.hashCode()
+}
+
+internal class HeightFieldDeclaration(
+    val id: String,
+    val cellSize: Float,
+    val hg: Int,
+    val rings: Int,
+    val block: TerrainMaterialScope.() -> Unit,
+    val frameScope: DefaultFrameScope
+) : NodeKeeper {
+    override val nodeContext = frameScope.nodeContext
+    override fun equals(other: Any?): Boolean = (other is HeightFieldDeclaration && other.id == id)
+    override fun hashCode(): Int = id.hashCode()
+}
+
+internal class KrSceneDeclaration(
+    val resource: String,
+    val transform: Transform,
+    val block: BaseMaterialScope.() -> Unit,
+    override val nodeContext: NodeContext,
+) : NodeKeeper {
+    override fun equals(other: Any?): Boolean = (other is KrSceneDeclaration && other.resource == resource)
     override fun hashCode(): Int = resource.hashCode()
 }
 

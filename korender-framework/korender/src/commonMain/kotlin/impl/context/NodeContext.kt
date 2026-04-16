@@ -1,6 +1,5 @@
 package com.zakgof.korender.impl.context
 
-import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureResources
@@ -12,10 +11,8 @@ import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
-import com.zakgof.korender.Prefab
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.RetentionPolicy
-import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureArrayDeclaration
 import com.zakgof.korender.TextureArrayImages
@@ -60,8 +57,6 @@ import com.zakgof.korender.impl.material.bloomMipEffect
 import com.zakgof.korender.impl.material.bloomSimpleEffect
 import com.zakgof.korender.impl.material.simpleBlur
 import com.zakgof.korender.impl.material.ssrEffect
-import com.zakgof.korender.impl.prefab.scene.ScenePrefab
-import com.zakgof.korender.impl.prefab.terrain.Clipmaps
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
 import kotlinx.coroutines.CoroutineScope
@@ -230,11 +225,4 @@ internal class NodeContext(
 
     override fun bloomWide(threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float) =
         bloomMipEffect(threshold, amount, downsample, mips, offset, highResolutionRatio, this)
-
-    override fun clipmapTerrain(id: String, cellSize: Float, hg: Int, rings: Int): Prefab<TerrainMaterialScope> =
-        Clipmaps(this, id, cellSize, hg, rings)
-
-    override fun scenePrefab(resource: String): Prefab<BaseMaterialScope> =
-        ScenePrefab(this, resource)
-
 }

@@ -137,6 +137,16 @@ internal class Renderer(
                     GltfSceneBuilder(it, gltfLoaded).build().forEach { rd -> sceneDeclaration.append(rd) }
                 }
             }
+            sceneDeclaration.heightFields.forEach {
+                inventory.heightField(it)?.let { clipmaps ->
+                    clipmaps.build(sceneDeclaration)
+                }
+            }
+            sceneDeclaration.krscenes.forEach {
+                inventory.krscene(it)?.let { krscene ->
+                    krscene.build(sceneDeclaration)
+                }
+            }
         }
 
         fun render(rk: ResultKeeper?) {

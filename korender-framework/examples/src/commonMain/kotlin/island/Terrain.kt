@@ -1,8 +1,6 @@
 package island
 
 import com.zakgof.korender.Image
-import com.zakgof.korender.Prefab
-import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.examples.island.albedoTerrainPlugin
@@ -17,8 +15,8 @@ fun loadRunway(bytes: ByteArray): Pair<Vec2, Vec2> = loadBinary(bytes) {
     p1 to p2
 }
 
-fun FrameScope.island(heightMap: Image, rwSeeds: Pair<Vec2, Vec2>, terrain: Prefab<TerrainMaterialScope>) {
-    Prefab(terrain) {
+fun FrameScope.island(heightMap: Image, rwSeeds: Pair<Vec2, Vec2>) {
+    HeightField("terrain", 32.0f, 24, 6) {
         metallicFactor = 0.0f
         plugin(normalTerrainPlugin)
         plugin(terrainHeightPlugin)
