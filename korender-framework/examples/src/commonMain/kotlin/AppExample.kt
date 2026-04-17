@@ -39,8 +39,6 @@ import org.jetbrains.compose.resources.painterResource
 
 val pages = listOf(
 
-    Case("City demo") { InfiniteCity() },
-
     Case("Heightmap terrain") { HeightmapTerrainExample() },
     Case("Procedural terrain") { ProcTerrainExample() },
     Case("City demo") { InfiniteCity() },
@@ -68,7 +66,8 @@ val pages = listOf(
     Case("CSM") { CSMExample() },
     Case("Env") { CaptureEnvExample() },
     Case("Capture frame") { CaptureFrameExample() },
-    Case("Shapes") { BasicShapesExample() }
+    Case("Shapes") { BasicShapesExample() },
+    Case("Stochastic Texturing") { StochasticTexturingExample() },
 )
 
 @Composable

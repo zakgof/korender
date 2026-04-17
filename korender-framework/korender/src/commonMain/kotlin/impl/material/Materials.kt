@@ -170,6 +170,7 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
             "alphaCutoff" -> FloatGetter<InternalBaseMaterial> { it.alphaCutoff }
             "colorTextures" -> TextureGetter<InternalBaseMaterial> { it.colorTextures }
             "triplanarScale" -> FloatGetter<InternalBaseMaterial> { it.triplanarScale }
+            "stochasticSharpness" -> FloatGetter<InternalBaseMaterial> { it.stochasticSharpness }
             "normalTexture" -> TextureGetter<InternalBaseMaterial> { it.normalTexture }
             "emissionFactor" -> ColorRGBGetter<InternalBaseMaterial> { it.emission!! }
             "metallicRoughnessTexture" -> TextureGetter<InternalBaseMaterial> { it.metallicRoughnessTexture }

@@ -1,5 +1,9 @@
 #uniform float stochasticSharpness;
 
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
 vec4 pluginTexturing() {
 
     const mat2 skewMat = mat2(1.0, 0.0, 0.5, 1.0);
@@ -15,9 +19,9 @@ vec4 pluginTexturing() {
     vec2 w2 = temp;
     vec2 w3 = baseId + 1.0;
 
-    vec2 uv1 = uv + hash(w1);
-    vec2 uv2 = uv + hash(w2);
-    vec2 uv3 = uv + hash(w3);
+    vec2 uv1 = vtex + hash(w1);
+    vec2 uv2 = vtex + hash(w2);
+    vec2 uv3 = vtex + hash(w3);
 
     vec3 weights;
     vec2 p = unskewMat * f;
@@ -31,11 +35,11 @@ vec4 pluginTexturing() {
         weights = vec3(1.0 - f.y, f.y - f.x, f.x);
     }
 
-    weights = pow(weights, vec3(sharpness));
+    weights = pow(weights, vec3(stochasticSharpness));
     weights /= (weights.x + weights.y + weights.z);
 
-    vec2 dx = dFdx(uv);
-    vec2 dy = dFdy(uv);
+    vec2 dx = dFdx(vtex);
+    vec2 dy = dFdy(vtex);
 
     return  pluginTextureSourceGrad(uv1, dx, dy) * weights.x +
             pluginTextureSourceGrad(uv2, dx, dy) * weights.y +
