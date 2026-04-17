@@ -15,65 +15,68 @@ internal interface AppliedPlugin : ShaderPlugin {
 }
 
 internal enum class Plugins(
-    override val id: Int,
+    pluginId: ShaderPluginId,
     override val value: Int,
-    override val key: String,
     override val file: String,
 ) : AppliedPlugin {
-    TEXTURING_ARRAY(ShaderPluginId.TEXTURING.id, 1, "texturing", "!shader/plugin/texturing.array.frag"),
-    TEXTURING_TRIPLANAR(ShaderPluginId.TEXTURING.id, 2, "texturing", "!shader/plugin/texturing.triplanar.frag"),
+        
+    TEXSOURCE_TEXTURE(ShaderPluginId.TEXSOURCE, 1, "!shader/plugin/texturesource.texture.frag"),
+    TEXSOURCE_ARRAY(ShaderPluginId.TEXSOURCE, 2, "!shader/plugin/texturesource.array.frag"),
 
-    ALBEDO_ISLAND_WINDOW(ShaderPluginId.ALBEDO.id, 1, "albedo", "island/building/shader/island.window.albedo.frag"),
-    ALBEDO_RADIANT(ShaderPluginId.ALBEDO.id, 2, "albedo", "!shader/plugin/albedo.radiant.frag"),
-    ALBEDO_VOLUME(ShaderPluginId.ALBEDO.id, 3, "albedo", "ltree/albedo.volume.frag"),
+    TEXTURING_TRIPLANAR(ShaderPluginId.TEXTURING, 1, "!shader/plugin/texturing.triplanar.frag"),
+    TEXTURING_STOCHASTIC(ShaderPluginId.TEXTURING, 2, "!shader/plugin/texturing.stochastic.frag"),
 
-    DEPTH_LOG(ShaderPluginId.DEPTH.id, 1, "depth", "!shader/plugin/depth.log.frag"),
-    DEPTH_PIPE(ShaderPluginId.DEPTH.id, 2, "depth", "!shader/plugin/depth.pipe.frag"),
-    DEPTH_RADIANT(ShaderPluginId.DEPTH.id, 3, "depth", "!shader/plugin/depth.radiant.frag"),
+    ALBEDO_ISLAND_WINDOW(ShaderPluginId.ALBEDO, 1,  "island/building/shader/island.window.albedo.frag"),
+    ALBEDO_RADIANT(ShaderPluginId.ALBEDO, 2,  "!shader/plugin/albedo.radiant.frag"),
+    ALBEDO_VOLUME(ShaderPluginId.ALBEDO, 3,  "ltree/albedo.volume.frag"),
 
-    DISCARD_ISLAND_FOLIAGE(ShaderPluginId.DISCARD.id, 1, "discard", "island/tree/shader/island.foliage.discard.frag"),
+    DEPTH_LOG(ShaderPluginId.DEPTH, 1,  "!shader/plugin/depth.log.frag"),
+    DEPTH_PIPE(ShaderPluginId.DEPTH, 2,  "!shader/plugin/depth.pipe.frag"),
+    DEPTH_RADIANT(ShaderPluginId.DEPTH, 3,  "!shader/plugin/depth.radiant.frag"),
 
-    EMISSION_FACTOR(ShaderPluginId.EMISSION.id, 1, "emission", "!shader/plugin/emission.factor.frag"),
-    EMISSION_TEXTURE(ShaderPluginId.EMISSION.id, 2, "emission", "!shader/plugin/emission.texture.frag"),
-    EMISSION_WINDOW(ShaderPluginId.EMISSION.id, 3, "emission", "infcity/window.emission.plugin.frag"),
+    EMISSION_FACTOR(ShaderPluginId.EMISSION, 1,  "!shader/plugin/emission.factor.frag"),
+    EMISSION_TEXTURE(ShaderPluginId.EMISSION, 2,  "!shader/plugin/emission.texture.frag"),
 
-    METALLIC_ROUGHNESS_TEXTURE(ShaderPluginId.METALLIC_ROUGHNESS.id, 1, "metallic_roughness", "!shader/plugin/metallic_roughness.texture.frag"),
+    METALLIC_ROUGHNESS_TEXTURE(ShaderPluginId.METALLIC_ROUGHNESS, 1, "!shader/plugin/metallic_roughness.texture.frag"),
 
-    NORMAL_PIPE(ShaderPluginId.NORMAL.id, 1, "normal", "!shader/plugin/normal.pipe.frag"),
-    NORMAL_RADIANT(ShaderPluginId.NORMAL.id, 2, "normal", "!shader/plugin/normal.radiant.frag"),
-    NORMAL_TERRAIN(ShaderPluginId.NORMAL.id, 3, "normal", "!shader/plugin/normal.terrain.frag"),
-    NORMAL_TEXTURE(ShaderPluginId.NORMAL.id, 4, "normal", "!shader/plugin/normal.texture.frag"),
-    NORMAL_VOLUME(ShaderPluginId.NORMAL.id, 5, "normal", "ltree/normal.volume.frag"),
+    NORMAL_PIPE(ShaderPluginId.NORMAL, 1,  "!shader/plugin/normal.pipe.frag"),
+    NORMAL_RADIANT(ShaderPluginId.NORMAL, 2,  "!shader/plugin/normal.radiant.frag"),
+    NORMAL_TERRAIN(ShaderPluginId.NORMAL, 3,  "!shader/plugin/normal.terrain.frag"),
+    NORMAL_TEXTURE(ShaderPluginId.NORMAL, 4,  "!shader/plugin/normal.texture.frag"),
 
-    OCCLUSION_TEXTURE(ShaderPluginId.OCCLUSION.id, 1, "occlusion", "!shader/plugin/occlusion.texture.frag"),
+    OCCLUSION_TEXTURE(ShaderPluginId.OCCLUSION, 1, "!shader/plugin/occlusion.texture.frag"),
 
-    OUTPUT_NORMAL(ShaderPluginId.OUTPUT.id, 1, "output", "!shader/plugin/output.normal.frag"),
-    OUTPUT_RADIANT(ShaderPluginId.OUTPUT.id, 2, "output", "!shader/plugin/output.radiant.frag"),
+    OUTPUT_NORMAL(ShaderPluginId.OUTPUT, 1,  "!shader/plugin/output.normal.frag"),
+    OUTPUT_RADIANT(ShaderPluginId.OUTPUT, 2,  "!shader/plugin/output.radiant.frag"),
 
-    POSITION_PIPE(ShaderPluginId.POSITION.id, 1, "position", "!shader/plugin/position.pipe.frag"),
-    POSITION_RADIANT(ShaderPluginId.POSITION.id, 2, "position", "!shader/plugin/position.radiant.frag"),
+    POSITION_PIPE(ShaderPluginId.POSITION, 1, "!shader/plugin/position.pipe.frag"),
+    POSITION_RADIANT(ShaderPluginId.POSITION, 2, "!shader/plugin/position.radiant.frag"),
 
-    SECSKY_MOON(ShaderPluginId.SECSKY.id, 1, "secsky", "infcity/moon.secsky.plugin.frag"),
+    SECSKY_MOON(ShaderPluginId.SECSKY, 1,  "infcity/moon.secsky.plugin.frag"),
 
-    SKY_CUBE(ShaderPluginId.SKY.id, 1, "sky", "!shader/plugin/sky.cube.frag"),
-    SKY_FASTCLOUD(ShaderPluginId.SKY.id, 2, "sky", "!shader/plugin/sky.fastcloud.frag"),
-    SKY_STARRY(ShaderPluginId.SKY.id, 3, "sky", "!shader/plugin/sky.starry.frag"),
-    SKY_TEXTURE(ShaderPluginId.SKY.id, 4, "sky", "!shader/plugin/sky.texture.frag"),
+    SKY_CUBE(ShaderPluginId.SKY, 1,  "!shader/plugin/sky.cube.frag"),
+    SKY_FASTCLOUD(ShaderPluginId.SKY, 2,  "!shader/plugin/sky.fastcloud.frag"),
+    SKY_STARRY(ShaderPluginId.SKY, 3,  "!shader/plugin/sky.starry.frag"),
+    SKY_TEXTURE(ShaderPluginId.SKY, 4,  "!shader/plugin/sky.texture.frag"),
 
-    SPECULAR_GLOSSINESS_FACTOR(ShaderPluginId.SPECULAR_GLOSSINESS.id, 1, "specular_glossiness", "!shader/plugin/specular_glossiness.factor.frag"),
-    SPECULAR_GLOSSINESS_TEXTURE(ShaderPluginId.SPECULAR_GLOSSINESS.id, 2, "specular_glossiness", "!shader/plugin/specular_glossiness.texture.frag"),
+    SPECULAR_GLOSSINESS_FACTOR(ShaderPluginId.SPECULAR_GLOSSINESS, 1,  "!shader/plugin/specular_glossiness.factor.frag"),
+    SPECULAR_GLOSSINESS_TEXTURE(ShaderPluginId.SPECULAR_GLOSSINESS, 2,  "!shader/plugin/specular_glossiness.texture.frag"),
 
-    TERRAIN_TEXTURE(ShaderPluginId.TERRAIN.id, 1, "terrain", "!shader/plugin/terrain.texture.frag"),
+    TERRAIN_TEXTURE(ShaderPluginId.TERRAIN, 1,  "!shader/plugin/terrain.texture.frag"),
 
-    VNORMAL_SKINNING(ShaderPluginId.VNORMAL.id, 1, "vnormal", "!shader/plugin/vnormal.skinning.vert"),
-    VPOSITION_SKINNING(ShaderPluginId.VPOSITION.id, 1, "vposition", "!shader/plugin/vposition.skinning.vert"),
+    VNORMAL_SKINNING(ShaderPluginId.VNORMAL, 1,  "!shader/plugin/vnormal.skinning.vert"),
 
-    VPROJECTION_FIXED_Y_RANGE(ShaderPluginId.VPROJECTION.id, 1, "vprojection", "!shader/plugin/vprojection.fixedyrange.vert"),
-    VPROJECTION_FRUSTUM(ShaderPluginId.VPROJECTION.id, 2, "vprojection", "!shader/plugin/vprojection.frustum.vert"),
-    VPROJECTION_LOG(ShaderPluginId.VPROJECTION.id, 3, "vprojection", "!shader/plugin/vprojection.log.vert"),
-    VPROJECTION_ORTHO(ShaderPluginId.VPROJECTION.id, 4, "vprojection", "!shader/plugin/vprojection.ortho.vert"),
+    VPOSITION_SKINNING(ShaderPluginId.VPOSITION, 1,  "!shader/plugin/vposition.skinning.vert"),
+
+    VPROJECTION_FIXED_Y_RANGE(ShaderPluginId.VPROJECTION, 1, "!shader/plugin/vprojection.fixedyrange.vert"),
+    VPROJECTION_FRUSTUM(ShaderPluginId.VPROJECTION, 2, "!shader/plugin/vprojection.frustum.vert"),
+    VPROJECTION_LOG(ShaderPluginId.VPROJECTION, 3, "!shader/plugin/vprojection.log.vert"),
+    VPROJECTION_ORTHO(ShaderPluginId.VPROJECTION, 4, "!shader/plugin/vprojection.ortho.vert"),
     ;
 
+    override val id = pluginId.id
+    override val key = pluginId.key
+    
     override fun apply1(accumulator: Long): Long {
         if (value == 0 || id !in 0..15) return accumulator
         val shift = id * 4
@@ -169,24 +172,23 @@ internal class ShaderPluginRegistry {
 }
 
 // TODO just use toString
-internal enum class Defs(val defName: String) {
-    BASE_COLOR_MAP( "BASE_COLOR_MAP"),
-    TEXTURE_ARRAY("TEXTURE_ARRAY"),
-    BLOOM("BLOOM"),
-    VERTEX_TRANSFORM("VERTEX_TRANSFORM"),
-    VERTEX_COLOR("VERTEX_COLOR"),
-    VERTEX_METALLIC("VERTEX_METALLIC"),
-    VERTEX_ROUGHNESS("VERTEX_ROUGHNESS"),
-    VERTEX_COLORTEXINDEX("VERTEX_COLORTEXINDEX"),
-    VERTEX_POS("VERTEX_POS"),
-    VERTEX_ROT("VERTEX_ROT"),
-    VERTEX_SCALE("VERTEX_SCALE"),
-    SHADOW_CASTER("SHADOW_CASTER"),
-    SSR("SSR"),
-    UPSAMPLE("UPSAMPLE"),
-    VERTEX_OCCLUSION( "VERTEX_OCCLUSION"),
-    VSM_SHADOW("VSM_SHADOW"),
-    NO_SHADOW_CAST("NO_SHADOW_CAST");
+internal enum class Defs {
+
+    VERTEX_TRANSFORM,
+    VERTEX_COLOR,
+    VERTEX_METALLIC,
+    VERTEX_ROUGHNESS,
+    VERTEX_COLORTEXINDEX,
+    VERTEX_POS,
+    VERTEX_ROT,
+    VERTEX_SCALE,
+    VERTEX_OCCLUSION,
+    SHADOW_CASTER,
+    SSR,
+    BLOOM,
+    UPSAMPLE,
+    VSM_SHADOW,
+    NO_SHADOW_CAST;
 
     val bit = 1L shl ordinal
 }

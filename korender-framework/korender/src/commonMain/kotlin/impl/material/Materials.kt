@@ -148,6 +148,7 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
     override var alphaCutoff: Float = 0.01f
 
     override var triplanarScale: Float? = null
+    override var stochasticSharpness: Float? = null
     override var colorTextures: TextureArrayDeclaration? = null
     override var normalTexture: TextureDeclaration? = null
     override var emission: ColorRGB? = null
@@ -163,12 +164,12 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
             "baseColor" -> ColorRGBAGetter<InternalBaseMaterial> { it.color }
-            "baseColorTexture" -> TextureGetter<InternalBaseMaterial> { it.colorTexture }
+            "colorTexture" -> TextureGetter<InternalBaseMaterial> { it.colorTexture }
             "metallicFactor" -> FloatGetter<InternalBaseMaterial> { it.metallicFactor }
             "roughnessFactor" -> FloatGetter<InternalBaseMaterial> { it.roughnessFactor }
             "alphaCutoff" -> FloatGetter<InternalBaseMaterial> { it.alphaCutoff }
             "colorTextures" -> TextureGetter<InternalBaseMaterial> { it.colorTextures }
-            "triplanarScale" -> TextureGetter<InternalBaseMaterial> { it.triplanarScale }
+            "triplanarScale" -> FloatGetter<InternalBaseMaterial> { it.triplanarScale }
             "normalTexture" -> TextureGetter<InternalBaseMaterial> { it.normalTexture }
             "emissionFactor" -> ColorRGBGetter<InternalBaseMaterial> { it.emission!! }
             "metallicRoughnessTexture" -> TextureGetter<InternalBaseMaterial> { it.metallicRoughnessTexture }
@@ -182,13 +183,11 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
             else -> super.uniform(name)
         }
 
-    override fun collectDefs(accumulator: Long) = super.collectDefs(accumulator)
-        .combineDefsIfNotNull(colorTexture, Defs.BASE_COLOR_MAP)
-        .combineDefsIfNotNull(colorTextures, Defs.TEXTURE_ARRAY)
-
     override fun collectPlugins1(accumulator: Long) = super.collectPlugins1(accumulator)
-        .pluginOverride1IfNotNull(colorTextures, Plugins.TEXTURING_ARRAY)
+        .pluginOverride1IfNotNull(colorTexture, Plugins.TEXSOURCE_TEXTURE)
+        .pluginOverride1IfNotNull(colorTextures, Plugins.TEXSOURCE_ARRAY)
         .pluginOverride1IfNotNull(triplanarScale, Plugins.TEXTURING_TRIPLANAR)
+        .pluginOverride1IfNotNull(stochasticSharpness, Plugins.TEXTURING_STOCHASTIC)
         .pluginOverride1IfNotNull(normalTexture, Plugins.NORMAL_TEXTURE)
         .pluginOverride1IfNotNull(emission, Plugins.EMISSION_FACTOR)
         .pluginOverride1IfNotNull(metallicRoughnessTexture, Plugins.METALLIC_ROUGHNESS_TEXTURE)

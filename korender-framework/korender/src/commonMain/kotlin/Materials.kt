@@ -67,6 +67,12 @@ interface BaseMaterialScope : MaterialScope {
     var triplanarScale: Float?
 
     /**
+     * Sharpness factor for stochastic texture sampling.
+     * Set to enable stochastic sampling to reduce texture repetitiveness patterns.
+     */
+    var stochasticSharpness: Float?
+
+    /**
      * Texture array for texture-array-based texturing.
      * Set to enable texture array texturing for the base material.
      */

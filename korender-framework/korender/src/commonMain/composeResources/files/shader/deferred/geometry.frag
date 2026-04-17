@@ -45,8 +45,13 @@ vec3 color;
 #import "$position"
 #endif
 
-#ifdef PLUGIN_TEXTURING
-#import "$texturing"
+#ifdef PLUGIN_TEXSOURCE
+    #import "$texsource"
+    #ifndef PLUGIN_TEXTURING
+        #import "!shader/plugin/texturing.default.frag"
+    #else
+        #import "$texturing"
+    #endif
 #endif
 
 #ifdef PLUGIN_ALBEDO
@@ -95,18 +100,14 @@ void main() {
         position = vpos;
     #endif
 
-    #ifdef PLUGIN_TEXTURING
-        albedo *= pluginTexturing();
-    #else
-        #ifdef BASE_COLOR_MAP
-            albedo *= texture(baseColorTexture, vtex);
-        #endif
-    #endif
-
     #ifdef PLUGIN_NORMAL
         normal = pluginNormal();
     #else
         normal = normalize(vnormal);
+    #endif
+
+    #ifdef PLUGIN_TEXSOURCE
+        albedo *= pluginTexturing();
     #endif
 
     #ifdef PLUGIN_ALBEDO

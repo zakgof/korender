@@ -19,9 +19,6 @@ in vec2 vtex;
 #endif
 
 #uniform vec4 baseColor;
-#ifdef BASE_COLOR_MAP
-    uniform sampler2D baseColorTexture;
-#endif
 
 #uniform float metallicFactor;
 #uniform float roughnessFactor;
@@ -46,47 +43,52 @@ vec3 color;
 vec3 look;
 
 #ifdef PLUGIN_POSITION
-#import "$position"
-#endif
-
-#ifdef PLUGIN_TEXTURING
-#import "$texturing"
+    #import "$position"
 #endif
 
 #ifdef PLUGIN_NORMAL
-#import "$normal"
+    #import "$normal"
+#endif
+
+#ifdef PLUGIN_TEXSOURCE
+    #import "$texsource"
+    #ifndef PLUGIN_TEXTURING
+        #import "!shader/plugin/texturing.default.frag"
+    #else
+        #import "$texturing"
+    #endif
 #endif
 
 #ifdef PLUGIN_ALBEDO
-#import "$albedo"
+    #import "$albedo"
 #endif
 
 #ifdef PLUGIN_DISCARD
-#import "$discard"
+    #import "$discard"
 #endif
 
 #ifdef PLUGIN_EMISSION
-#import "$emission"
+    #import "$emission"
 #endif
 
 #ifdef PLUGIN_METALLIC_ROUGHNESS
-#import "$metallic_roughness"
+    #import "$metallic_roughness"
 #endif
 
 #ifdef PLUGIN_SPECULAR_GLOSSINESS
-#import "$specular_glossiness"
+    #import "$specular_glossiness"
 #endif
 
 #ifdef PLUGIN_OUTPUT
-#import "$output"
+    #import "$output"
 #endif
 
 #ifdef PLUGIN_DEPTH
-#import "$depth"
+    #import "$depth"
 #endif
 
 #ifdef PLUGIN_OCCLUSION
-#import "$occlusion"
+    #import "$occlusion"
 #endif
 
 #import "!shader/lib/shadow.glsl"
@@ -94,10 +96,10 @@ vec3 look;
 #import "!shader/lib/light.glsl"
 
 #ifdef PLUGIN_SKY
-#import "!shader/lib/space.glsl"
-#import "!shader/lib/sky.glsl"
-#import "$sky"
-#import "!shader/lib/skyibl.glsl"
+    #import "!shader/lib/space.glsl"
+    #import "!shader/lib/sky.glsl"
+    #import "$sky"
+    #import "!shader/lib/skyibl.glsl"
 #endif
 
 void main() {
@@ -114,12 +116,8 @@ void main() {
         position = vpos;
     #endif
 
-    #ifdef PLUGIN_TEXTURING
+    #ifdef PLUGIN_TEXSOURCE
         albedo *= pluginTexturing();
-    #else
-        #ifdef BASE_COLOR_MAP
-            albedo *= texture(baseColorTexture, vtex);
-        #endif
     #endif
 
     #ifdef PLUGIN_NORMAL

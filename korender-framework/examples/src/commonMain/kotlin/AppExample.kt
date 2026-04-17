@@ -39,7 +39,7 @@ import org.jetbrains.compose.resources.painterResource
 
 val pages = listOf(
 
-    Case("Texture arrays") { TextureArrayExample() },
+    Case("City demo") { InfiniteCity() },
 
     Case("Heightmap terrain") { HeightmapTerrainExample() },
     Case("Procedural terrain") { ProcTerrainExample() },
