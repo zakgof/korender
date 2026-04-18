@@ -93,6 +93,7 @@ internal class KrScene(val declaration: KrSceneDeclaration) : AutoCloseable {
         SceneModel.Attribute.POS -> MeshAttributes.POS
         SceneModel.Attribute.NORMAL -> MeshAttributes.NORMAL
         SceneModel.Attribute.TEX -> MeshAttributes.TEX
+        SceneModel.Attribute.COLOR -> MeshAttributes.COLOR
         SceneModel.Attribute.COLORTEXINDEX -> MeshAttributes.COLORTEXINDEX
     }
 

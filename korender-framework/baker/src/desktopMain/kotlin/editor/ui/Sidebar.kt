@@ -73,7 +73,6 @@ import com.zakgof.korender.math.Vec3
 import editor.model.BoundingBox
 import editor.model.Material
 import editor.model.Model
-import editor.model.TexId
 import editor.model.brush.CreatorShape
 import editor.state.State
 import editor.state.StateHolder
@@ -247,7 +246,7 @@ private fun shape(state: State, holder: StateHolder) {
                             val int = it.toIntOrNull()
                             int != null && int >= 3 && int <= 16
                         },
-                        onValueChange = { holder.setCreatorShape((state.creatorShape as CreatorShape.Sphere).copy(slices = it.toInt())) },
+                        onValueChange = { holder.setCreatorShape((state.creatorShape).copy(slices = it.toInt())) },
                         editorModifier = Modifier.width(32.dp),
                         textModifier = Modifier.width(24.dp),
                     )
@@ -256,7 +255,7 @@ private fun shape(state: State, holder: StateHolder) {
                         style = Theme.label
                     )
                     FancyClickToTextInput(
-                        value = "" + (state.creatorShape as CreatorShape.Sphere).sectors,
+                        value = "" + (state.creatorShape).sectors,
                         validator = {
                             val int = it.toIntOrNull()
                             int != null && int >= 4 && int <= 16
@@ -342,7 +341,7 @@ private fun materials(holder: StateHolder, state: State, model: Model) {
             IconButton(Res.drawable.material, "Edit Materials") { materialDialog() }
             IconButton(Res.drawable.newmaterial, "New textured Material") {
                 textureDialog(state, holder)?.let { file ->
-                    val material = Material(file.name, TexId(file.path))
+                    val material = Material(file.name, file.path)
                     holder.addMaterial(material)
                 }
             }

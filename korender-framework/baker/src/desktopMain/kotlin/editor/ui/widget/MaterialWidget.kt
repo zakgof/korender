@@ -43,7 +43,7 @@ fun MaterialWidget(material: Material, selected: Boolean, onClick: () -> Unit) {
         )
         material.colorTexture?.let {
             Image(
-                bitmap = TextureImageCache.compose(material.colorTexture.path),
+                bitmap = TextureImageCache.compose(material.colorTexture),
                 contentDescription = null,
                 colorFilter = ColorFilter.tint(
                     color = material.baseColor,

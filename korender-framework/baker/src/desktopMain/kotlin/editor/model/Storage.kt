@@ -140,7 +140,7 @@ data class BrushDto(
 @Serializable
 data class MaterialDto(
     val name: String,
-    val colorTexture: TexId? = null,
+    val colorTexture: String? = null,
     val baseColor: Int,
     val id: String,
 ) {

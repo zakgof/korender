@@ -8,11 +8,9 @@ import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.MenuBarScope
-import editor.ui.dialog.fileDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.util.nextSane
 import com.zakgof.korender.baker.editor.util.prevSane
-import editor.walk.walkerDialog
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
 import com.zakgof.korender.baker.resources.center
@@ -37,13 +35,14 @@ import com.zakgof.korender.baker.resources.ungroup
 import com.zakgof.korender.baker.resources.zoomin
 import com.zakgof.korender.baker.resources.zoomout
 import editor.model.Material
-import editor.model.TexId
 import editor.state.State
 import editor.state.StateHolder
 import editor.ui.dialog.MaterialsDialog
 import editor.ui.dialog.confirmDialog
+import editor.ui.dialog.fileDialog
 import editor.ui.dialog.okDialog
 import editor.ui.dialog.textureDialog
+import editor.walk.walkerDialog
 import org.jetbrains.compose.resources.painterResource
 import java.io.File
 
@@ -180,7 +179,7 @@ private fun MenuBarScope.material(holder: StateHolder) {
         }
         Item("New textured Material", painterResource(Res.drawable.newmaterial)) {
             textureDialog(state, holder)?.let { file ->
-                val material = Material(file.name, TexId(file.path))
+                val material = Material(file.name, file.path)
                 holder.addMaterial(material)
             }
         }

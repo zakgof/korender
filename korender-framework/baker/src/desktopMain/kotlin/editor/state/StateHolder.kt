@@ -311,7 +311,7 @@ class StateHolder {
 
     fun updateMaterial(material: Material) {
         val oldMaterial = model.value.materials[state.value.materialId]!!
-        TextureImageCache.dispose(oldMaterial.colorTexture?.path ?: "")
+        TextureImageCache.dispose(oldMaterial.colorTexture ?: "")
         _model.update {
             it.copy(materials = it.materials.put(material.id, material))
         }
@@ -319,7 +319,7 @@ class StateHolder {
 
     fun deleteMaterial() {
         val oldMaterial = model.value.materials[state.value.materialId]!!
-        TextureImageCache.dispose(oldMaterial.colorTexture?.path ?: "")
+        TextureImageCache.dispose(oldMaterial.colorTexture ?: "")
         // TODO : need to replace existing material references to Generic !
         _model.update {
             it.copy(materials = it.materials.remove(state.value.materialId))

@@ -1,6 +1,5 @@
 package editor.util
 
-import androidx.compose.ui.graphics.toArgb
 import com.zakgof.korender.baker.editor.util.toKorender
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.buffer.NativeFloatBuffer
@@ -8,24 +7,34 @@ import com.zakgof.korender.impl.buffer.toByteArray
 import com.zakgof.korender.impl.scene.SceneModel
 import com.zakgof.korender.impl.scene.SceneModel.Attribute
 import com.zakgof.korender.math.Mat4
+import editor.model.Material
 import editor.model.Model
 import editor.model.brush.BrushMesh
 import editor.model.brush.Face
 import java.io.File
 
+/**
+ *
+ */
 object ModelCompiler {
     fun compile(model: Model): SceneModel {
 
-        val textures = model.materials.values
+        val usedMaterialIds = model.brushes.values
+            .flatMap { it.faces }
+            .map { it.materialId }
+            .toSet()
+        val usedMaterials = model.materials.values
+            .filter { usedMaterialIds.contains(it.id) }
+
+        val textures = usedMaterials
             .filter { it.colorTexture != null }
-            .map { it.colorTexture!!.path }
+            .map { it.colorTexture!! }
             .distinct()
             .associateWith { texture(it) }
 
-        val texArrayGroups = model.materials.values
-            .filter { it.colorTexture != null && it.baseColor.toArgb() == -1 }
-            .groupBy({ sizeString(it.colorTexture!!.path) }, { it.id to it.colorTexture!!.path })
-            .filter { it.value.size > 1 }
+        val texArrayGroups = usedMaterials
+            .filter { it.colorTexture != null }
+            .groupBy({ tag(it) }, { it.id to it.colorTexture!! })
 
         val matIdGroupies = texArrayGroups
             .flatMap { tag -> tag.value.mapIndexed { index, idToPath -> idToPath.first to (tag.key to index) } }
@@ -40,39 +49,17 @@ object ModelCompiler {
             )
         }.toMap()
 
-        val materials = model.materials.values
-            .filter { !matIdGroupies.contains(it.id) }
-            .map {
-                SceneModel.Material(
-                    it.id,
-                    it.baseColor.toKorender().toLong(),
-                    it.colorTexture?.path,
-                    null
-                )
-            } + texArrayMaterials.values
+        val materials = texArrayMaterials.ifEmpty { mapOf("notex" to SceneModel.Material("notex")) }
+        val noTexMaterialId = materials.keys.first()
 
         val meshFaces = model.brushes.values.flatMap { brush -> brush.faces.map { brush.mesh to it } }
 
-        val simpleMaterialFaces = meshFaces
-            .filter { !matIdGroupies.containsKey(it.second.materialId) }
-            .groupBy { it.second.materialId }
-            .map { matToMeshFaces ->
-                SceneModel.Mesh(
-                    matToMeshFaces.key,
-                    matToMeshFaces.value.sumOf { it.first.faces[it.second]!!.size * 3 },
-                    0,
-                    mapOf(
-                        Attribute.POS to posBytes(matToMeshFaces.value),
-                        Attribute.NORMAL to normalBytes(matToMeshFaces.value),
-                        Attribute.TEX to texBytes(matToMeshFaces.value)
-                    ),
-                    null
-                )
-            }
-
-        val arrayMaterialFaces = meshFaces
-            .filter { matIdGroupies.containsKey(it.second.materialId) }
-            .groupBy({ matIdGroupies[it.second.materialId]!!.first }, { it to matIdGroupies[it.second.materialId]!!.second })
+        val meshes = meshFaces
+            .groupBy({
+                matIdGroupies[it.second.materialId]?.first ?: noTexMaterialId
+            }, {
+                it to (matIdGroupies[it.second.materialId]?.second ?: 255)
+            })
             .map { matToMeshFacesWithId ->
                 val faces = matToMeshFacesWithId.value.map { it.first }
                 SceneModel.Mesh(
@@ -83,17 +70,16 @@ object ModelCompiler {
                         Attribute.POS to posBytes(faces),
                         Attribute.NORMAL to normalBytes(faces),
                         Attribute.TEX to texBytes(faces),
+                        Attribute.COLOR to colorBytes(model.materials, matToMeshFacesWithId.value),
                         Attribute.COLORTEXINDEX to colorTexIndex(matToMeshFacesWithId.value)
                     ),
                     null
                 )
             }
 
-        val meshes = simpleMaterialFaces + arrayMaterialFaces
-
         return SceneModel(
             textures = textures,
-            materials = materials.associateBy { it.id },
+            materials = materials,
             meshes = meshes.associateBy { it.id },
             renderables = meshes.map {
                 SceneModel.Renderable(
@@ -150,6 +136,19 @@ object ModelCompiler {
         return nbb.toByteArray()
     }
 
+    private fun colorBytes(materials: Map<String, Material>, faces: List<Pair<Pair<BrushMesh, Face>, Int>>): ByteArray {
+        val colors = faces
+            .flatMap { pair -> List(pair.first.first.faces[pair.first.second]!!.size * 3) { materials[pair.first.second.materialId]!!.baseColor.toKorender() } }
+        val nbb = NativeByteBuffer(colors.size * 16)
+        colors.forEach {
+            nbb.put(it.r)
+            nbb.put(it.g)
+            nbb.put(it.b)
+            nbb.put(it.a)
+        }
+        return nbb.toByteArray()
+    }
+
 
     private fun texBytes(faces: List<Pair<BrushMesh, Face>>): ByteArray {
         val texes = faces
@@ -170,9 +169,9 @@ object ModelCompiler {
         return bytes
     }
 
-    private fun sizeString(path: String): String {
-        val img = TextureImageCache.compose(path)
-        return "${img.width}x${img.height}"
+    private fun tag(material: Material): String {
+        val img = TextureImageCache.compose(material.colorTexture!!)
+        return "${img.width}x${img.height}" + if (material.stochastic) "-stochastic" else ""
     }
 
 }

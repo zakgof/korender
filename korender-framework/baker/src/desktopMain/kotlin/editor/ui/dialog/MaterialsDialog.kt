@@ -52,7 +52,6 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import editor.model.Material
 import editor.model.Model
-import editor.model.TexId
 import editor.state.State
 import editor.state.StateHolder
 import editor.ui.Theme
@@ -187,14 +186,14 @@ fun RowScope.MaterialEditor(holder: StateHolder) {
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = material.colorTexture?.path?.let { File(it).name } ?: "-none-",
+                            text = material.colorTexture?.let { File(it).name } ?: "-none-",
                             style = Theme.label.copy(textDecoration = TextDecoration.Underline),
                             modifier = Modifier.weight(1f).clickable {
                                 val file = textureDialog(state, holder)
                                 file?.let {
                                     holder.updateMaterial(
                                         material.copy(
-                                            colorTexture = TexId(file.path),
+                                            colorTexture = file.path,
                                             name = file.name
                                         )
                                     )
