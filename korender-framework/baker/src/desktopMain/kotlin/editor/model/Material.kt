@@ -13,7 +13,9 @@ data class Material(
     val colorTexture: TexId? = null,
     val baseColor: Color = White,
     val id: String = Uuid.generateV7().toHexDashString(),
-    val fitToFace: Boolean = false
+    val fitToFace: Boolean = false,
+    val stochastic: Boolean = false,
+    val scale: Float = 1f
 ) {
     companion object {
         val generic: Material = Material("Generic", null, Blue, "generic")

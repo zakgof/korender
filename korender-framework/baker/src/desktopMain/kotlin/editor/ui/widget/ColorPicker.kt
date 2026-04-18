@@ -56,7 +56,7 @@ fun ColorPicker(
     onColorChanged: (ColorRGBA) -> Unit,
 ) {
 
-    Column(modifier.padding(12.dp).disabled(disabled)) {
+    Column(modifier.padding(6.dp).disabled(disabled)) {
 
         Row(
             modifier.fillMaxWidth(),

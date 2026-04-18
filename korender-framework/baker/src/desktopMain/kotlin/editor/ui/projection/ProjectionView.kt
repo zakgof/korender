@@ -130,7 +130,7 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
 private fun DrawScope.drawSelection(mapper: ProjectionMapper, state: State, model: Model) {
     mapper.rect(state.selection.map { model.brushes[it]!! })?.let { rect ->
         drawRect(
-            color = Color.Green,
+            color = Color.Red,
             topLeft = rect.topLeft,
             size = rect.size,
             style = Stroke(
@@ -225,12 +225,17 @@ private fun DrawScope.drawGroups(mapper: ProjectionMapper, state: State, model: 
 
 private fun DrawScope.drawBrush(brush: Brush, mapper: ProjectionMapper, state: State, model: Model) {
     val hidden = model.invisibleBrushes.contains(brush.id)
+    val selected = state.selection.contains(brush.id)
     brush.mesh.edges.forEach { edge ->
         drawLine(
-            color = if (hidden) Color.DarkGray else Color(brush.projectionColor),
+            color = when {
+                hidden -> Color.DarkGray
+                selected -> Color.Red
+                else -> Color(brush.projectionColor)
+            },
             start = mapper.wToV(brush.mesh.points[edge.first]),
             end = mapper.wToV(brush.mesh.points[edge.second]),
-            strokeWidth = if (state.selection.contains(brush.id)) 3f else 2f
+            strokeWidth = if (selected) 3f else 2f
         )
     }
 }

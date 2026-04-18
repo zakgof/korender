@@ -114,4 +114,5 @@ fun FrameScope.toBaseMM(material: Material, selected: Boolean): com.zakgof.koren
     base {
         color = if (selected) ColorRGBA.Red else material.baseColor.toKorender()
         colorTexture = material.colorTexture?.let { texture(it.path, TextureImageCache.korender(it.path)) }
+        stochasticSharpness = if (material.stochastic) 12f else null
     }

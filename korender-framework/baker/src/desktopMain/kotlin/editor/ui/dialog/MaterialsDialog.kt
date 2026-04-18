@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.material3.Checkbox
 import androidx.compose.runtime.Composable
@@ -26,6 +28,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
@@ -37,7 +41,6 @@ import com.zakgof.korender.baker.editor.util.toKorender
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.file
 import com.zakgof.korender.baker.resources.material
-import com.zakgof.korender.baker.resources.pen
 import com.zakgof.korender.baker.resources.trash
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.Quaternion
@@ -55,6 +58,7 @@ import editor.state.StateHolder
 import editor.ui.Theme
 import editor.ui.toBaseMM
 import editor.ui.widget.ColorPicker
+import editor.ui.widget.FancyClickToFloatInput
 import editor.ui.widget.FancyClickToTextInput
 import editor.ui.widget.FancyTextInput
 import editor.ui.widget.GroupBox
@@ -76,7 +80,7 @@ fun MaterialsDialog(holder: StateHolder): () -> Unit {
             title = "Materials",
             icon = painterResource(Res.drawable.material),
             onCloseRequest = { show = false },
-            state = rememberDialogState(size = DpSize(800.dp, 500.dp))
+            state = rememberDialogState(size = DpSize(800.dp, 630.dp))
         ) {
             val state by holder.state.collectAsState()
             val model by holder.model.collectAsState()
@@ -132,6 +136,7 @@ fun ColumnScope.MaterialSelector(model: Model, state: State, holder: StateHolder
     }
 
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun RowScope.MaterialEditor(holder: StateHolder) {
     val state by holder.state.collectAsState()
@@ -181,18 +186,23 @@ fun RowScope.MaterialEditor(holder: StateHolder) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text(material.colorTexture?.path?.let { File(it).name } ?: "-none-", style = Theme.label, modifier = Modifier.weight(1f))
-                        IconButton(Res.drawable.pen, "Select texture file") {
-                            val file = textureDialog(state, holder)
-                            file?.let {
-                                holder.updateMaterial(
-                                    material.copy(
-                                        colorTexture = TexId(file.path),
-                                        name = file.name
+                        Text(
+                            text = material.colorTexture?.path?.let { File(it).name } ?: "-none-",
+                            style = Theme.label.copy(textDecoration = TextDecoration.Underline),
+                            modifier = Modifier.weight(1f).clickable {
+                                val file = textureDialog(state, holder)
+                                file?.let {
+                                    holder.updateMaterial(
+                                        material.copy(
+                                            colorTexture = TexId(file.path),
+                                            name = file.name
+                                        )
                                     )
-                                )
-                            }
-                        }
+                                }
+                            },
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                         material.colorTexture?.let {
                             IconButton(icon = Res.drawable.trash, "Delete texture") {
                                 holder.updateMaterial(material.copy(colorTexture = null))
@@ -205,10 +215,30 @@ fun RowScope.MaterialEditor(holder: StateHolder) {
                         ) {
                             Text("Fit to face", style = Theme.label, modifier = Modifier.weight(1f))
                             Checkbox(
+                                modifier = Modifier.height(24.dp),
                                 checked = material.fitToFace,
                                 onCheckedChange = {
                                     holder.updateMaterial(material.copy(fitToFace = it))
                                 })
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Stochastic", style = Theme.label, modifier = Modifier.weight(1f))
+                                Checkbox(
+                                    modifier = Modifier.height(24.dp),
+                                    checked = material.stochastic,
+                                    onCheckedChange = {
+                                        holder.updateMaterial(material.copy(stochastic = it))
+                                    })
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Default scale", style = Theme.label, modifier = Modifier.weight(1f))
+                            FancyClickToFloatInput(value = material.scale, validator = { it in 1e-3f..1e3f }) {
+                                holder.updateMaterial(material.copy(scale = it))
+                            }
                         }
                     }
                 }
@@ -223,77 +253,77 @@ fun RowScope.MaterialPreview(holder: StateHolder) {
     val model by holder.model.collectAsState()
     Box(Modifier.weight(1.6f).fillMaxSize()) {
         Korender({ Res.readBytes(it) }, vSync = true) {
-            val fitToFaceMesh = customMesh("world", 24, 36, POS, NORMAL, TEX) {
-                pos(Vec3(-3f, -2f, 1f)).normal(1.z).tex(Vec2(0f, 1f))
-                pos(Vec3(3f, -2f, 1f)).normal(1.z).tex(Vec2(1f, 1f))
-                pos(Vec3(3f, 2f, 1f)).normal(1.z).tex(Vec2(1f, 0f))
-                pos(Vec3(-3f, 2f, 1f)).normal(1.z).tex(Vec2(0f, 0f))
-                pos(Vec3(3f, -2f, -1f)).normal((-1).z).tex(Vec2(0f, 1f))
-                pos(Vec3(-3f, -2f, -1f)).normal((-1).z).tex(Vec2(1f, 1f))
-                pos(Vec3(-3f, 2f, -1f)).normal((-1).z).tex(Vec2(1f, 0f))
-                pos(Vec3(3f, 2f, -1f)).normal((-1).z).tex(Vec2(0f, 0f))
-                pos(Vec3(-3f, -2f, -1f)).normal((-1).x).tex(Vec2(0f, 1f))
-                pos(Vec3(-3f, -2f, 1f)).normal((-1).x).tex(Vec2(1f, 1f))
-                pos(Vec3(-3f, 2f, 1f)).normal((-1).x).tex(Vec2(1f, 0f))
-                pos(Vec3(-3f, 2f, -1f)).normal((-1).x).tex(Vec2(0f, 0f))
-                pos(Vec3(3f, -2f, 1f)).normal(1.x).tex(Vec2(0f, 1f))
-                pos(Vec3(3f, -2f, -1f)).normal(1.x).tex(Vec2(1f, 1f))
-                pos(Vec3(3f, 2f, -1f)).normal(1.x).tex(Vec2(1f, 0f))
-                pos(Vec3(3f, 2f, 1f)).normal(1.x).tex(Vec2(0f, 0f))
-                pos(Vec3(-3f, 2f, 1f)).normal(1.y).tex(Vec2(0f, 0f))
-                pos(Vec3(3f, 2f, 1f)).normal(1.y).tex(Vec2(1f, 0f))
-                pos(Vec3(3f, 2f, -1f)).normal(1.y).tex(Vec2(1f, 1f))
-                pos(Vec3(-3f, 2f, -1f)).normal(1.y).tex(Vec2(0f, 1f))
-                pos(Vec3(-3f, -2f, -1f)).normal((-1).y).tex(Vec2(0f, 0f))
-                pos(Vec3(3f, -2f, -1f)).normal((-1).y).tex(Vec2(1f, 0f))
-                pos(Vec3(3f, -2f, 1f)).normal((-1).y).tex(Vec2(1f, 1f))
-                pos(Vec3(-3f, -2f, 1f)).normal((-1).y).tex(Vec2(0f, 1f))
-                index(
-                    0, 1, 2, 0, 2, 3,
-                    4, 5, 6, 4, 6, 7,
-                    8, 9, 10, 8, 10, 11,
-                    12, 13, 14, 12, 14, 15,
-                    16, 17, 18, 16, 18, 19,
-                    20, 21, 22, 20, 22, 23
-                )
-            }
-            val worldTexMesh = customMesh("fit", 24, 36, POS, NORMAL, TEX) {
-                val s = 1f
-                pos(Vec3(-3f, -2f, 1f)).normal(1.z).tex(Vec2(-3f * s, 2f * s))
-                pos(Vec3(3f, -2f, 1f)).normal(1.z).tex(Vec2(3f * s, 2f * s))
-                pos(Vec3(3f, 2f, 1f)).normal(1.z).tex(Vec2(3f * s, -2f * s))
-                pos(Vec3(-3f, 2f, 1f)).normal(1.z).tex(Vec2(-3f * s, -2f * s))
-                pos(Vec3(3f, -2f, -1f)).normal((-1).z).tex(Vec2(-3f * s, 2f * s))
-                pos(Vec3(-3f, -2f, -1f)).normal((-1).z).tex(Vec2(3f * s, 2f * s))
-                pos(Vec3(-3f, 2f, -1f)).normal((-1).z).tex(Vec2(3f * s, -2f * s))
-                pos(Vec3(3f, 2f, -1f)).normal((-1).z).tex(Vec2(-3f * s, -2f * s))
-                pos(Vec3(-3f, -2f, -1f)).normal((-1).x).tex(Vec2(-1f * s, 2f * s))
-                pos(Vec3(-3f, -2f, 1f)).normal((-1).x).tex(Vec2(1f * s, 2f * s))
-                pos(Vec3(-3f, 2f, 1f)).normal((-1).x).tex(Vec2(1f * s, -2f * s))
-                pos(Vec3(-3f, 2f, -1f)).normal((-1).x).tex(Vec2(-1f * s, -2f * s))
-                pos(Vec3(3f, -2f, 1f)).normal(1.x).tex(Vec2(-1f * s, 2f * s))
-                pos(Vec3(3f, -2f, -1f)).normal(1.x).tex(Vec2(1f * s, 2f * s))
-                pos(Vec3(3f, 2f, -1f)).normal(1.x).tex(Vec2(1f * s, -2f * s))
-                pos(Vec3(3f, 2f, 1f)).normal(1.x).tex(Vec2(-1f * s, -2f * s))
-                pos(Vec3(-3f, 2f, 1f)).normal(1.y).tex(Vec2(-3f * s, 1f * s))
-                pos(Vec3(3f, 2f, 1f)).normal(1.y).tex(Vec2(3f * s, 1f * s))
-                pos(Vec3(3f, 2f, -1f)).normal(1.y).tex(Vec2(3f * s, -1f * s))
-                pos(Vec3(-3f, 2f, -1f)).normal(1.y).tex(Vec2(-3f * s, -1f * s))
-                pos(Vec3(-3f, -2f, -1f)).normal((-1).y).tex(Vec2(-3f * s, 1f * s))
-                pos(Vec3(3f, -2f, -1f)).normal((-1).y).tex(Vec2(3f * s, 1f * s))
-                pos(Vec3(3f, -2f, 1f)).normal((-1).y).tex(Vec2(3f * s, -1f * s))
-                pos(Vec3(-3f, -2f, 1f)).normal((-1).y).tex(Vec2(-3f * s, -1f * s))
-                index(
-                    0, 1, 2, 0, 2, 3,
-                    4, 5, 6, 4, 6, 7,
-                    8, 9, 10, 8, 10, 11,
-                    12, 13, 14, 12, 14, 15,
-                    16, 17, 18, 16, 18, 19,
-                    20, 21, 22, 20, 22, 23
-                )
-            }
             Frame {
                 val mat = model.materials[state.materialId]!!
+                val fitToFaceMesh = customMesh("world", 24, 36, POS, NORMAL, TEX) {
+                    pos(Vec3(-3f, -2f, 1f)).normal(1.z).tex(Vec2(0f, 1f))
+                    pos(Vec3(3f, -2f, 1f)).normal(1.z).tex(Vec2(1f, 1f))
+                    pos(Vec3(3f, 2f, 1f)).normal(1.z).tex(Vec2(1f, 0f))
+                    pos(Vec3(-3f, 2f, 1f)).normal(1.z).tex(Vec2(0f, 0f))
+                    pos(Vec3(3f, -2f, -1f)).normal((-1).z).tex(Vec2(0f, 1f))
+                    pos(Vec3(-3f, -2f, -1f)).normal((-1).z).tex(Vec2(1f, 1f))
+                    pos(Vec3(-3f, 2f, -1f)).normal((-1).z).tex(Vec2(1f, 0f))
+                    pos(Vec3(3f, 2f, -1f)).normal((-1).z).tex(Vec2(0f, 0f))
+                    pos(Vec3(-3f, -2f, -1f)).normal((-1).x).tex(Vec2(0f, 1f))
+                    pos(Vec3(-3f, -2f, 1f)).normal((-1).x).tex(Vec2(1f, 1f))
+                    pos(Vec3(-3f, 2f, 1f)).normal((-1).x).tex(Vec2(1f, 0f))
+                    pos(Vec3(-3f, 2f, -1f)).normal((-1).x).tex(Vec2(0f, 0f))
+                    pos(Vec3(3f, -2f, 1f)).normal(1.x).tex(Vec2(0f, 1f))
+                    pos(Vec3(3f, -2f, -1f)).normal(1.x).tex(Vec2(1f, 1f))
+                    pos(Vec3(3f, 2f, -1f)).normal(1.x).tex(Vec2(1f, 0f))
+                    pos(Vec3(3f, 2f, 1f)).normal(1.x).tex(Vec2(0f, 0f))
+                    pos(Vec3(-3f, 2f, 1f)).normal(1.y).tex(Vec2(0f, 0f))
+                    pos(Vec3(3f, 2f, 1f)).normal(1.y).tex(Vec2(1f, 0f))
+                    pos(Vec3(3f, 2f, -1f)).normal(1.y).tex(Vec2(1f, 1f))
+                    pos(Vec3(-3f, 2f, -1f)).normal(1.y).tex(Vec2(0f, 1f))
+                    pos(Vec3(-3f, -2f, -1f)).normal((-1).y).tex(Vec2(0f, 0f))
+                    pos(Vec3(3f, -2f, -1f)).normal((-1).y).tex(Vec2(1f, 0f))
+                    pos(Vec3(3f, -2f, 1f)).normal((-1).y).tex(Vec2(1f, 1f))
+                    pos(Vec3(-3f, -2f, 1f)).normal((-1).y).tex(Vec2(0f, 1f))
+                    index(
+                        0, 1, 2, 0, 2, 3,
+                        4, 5, 6, 4, 6, 7,
+                        8, 9, 10, 8, 10, 11,
+                        12, 13, 14, 12, 14, 15,
+                        16, 17, 18, 16, 18, 19,
+                        20, 21, 22, 20, 22, 23
+                    )
+                }
+                val worldTexMesh = customMesh("fit", 24, 36, POS, NORMAL, TEX, dynamic = true) {
+                    val s = mat.scale
+                    pos(Vec3(-3f, -2f, 1f)).normal(1.z).tex(Vec2(-3f * s, 2f * s))
+                    pos(Vec3(3f, -2f, 1f)).normal(1.z).tex(Vec2(3f * s, 2f * s))
+                    pos(Vec3(3f, 2f, 1f)).normal(1.z).tex(Vec2(3f * s, -2f * s))
+                    pos(Vec3(-3f, 2f, 1f)).normal(1.z).tex(Vec2(-3f * s, -2f * s))
+                    pos(Vec3(3f, -2f, -1f)).normal((-1).z).tex(Vec2(-3f * s, 2f * s))
+                    pos(Vec3(-3f, -2f, -1f)).normal((-1).z).tex(Vec2(3f * s, 2f * s))
+                    pos(Vec3(-3f, 2f, -1f)).normal((-1).z).tex(Vec2(3f * s, -2f * s))
+                    pos(Vec3(3f, 2f, -1f)).normal((-1).z).tex(Vec2(-3f * s, -2f * s))
+                    pos(Vec3(-3f, -2f, -1f)).normal((-1).x).tex(Vec2(-1f * s, 2f * s))
+                    pos(Vec3(-3f, -2f, 1f)).normal((-1).x).tex(Vec2(1f * s, 2f * s))
+                    pos(Vec3(-3f, 2f, 1f)).normal((-1).x).tex(Vec2(1f * s, -2f * s))
+                    pos(Vec3(-3f, 2f, -1f)).normal((-1).x).tex(Vec2(-1f * s, -2f * s))
+                    pos(Vec3(3f, -2f, 1f)).normal(1.x).tex(Vec2(-1f * s, 2f * s))
+                    pos(Vec3(3f, -2f, -1f)).normal(1.x).tex(Vec2(1f * s, 2f * s))
+                    pos(Vec3(3f, 2f, -1f)).normal(1.x).tex(Vec2(1f * s, -2f * s))
+                    pos(Vec3(3f, 2f, 1f)).normal(1.x).tex(Vec2(-1f * s, -2f * s))
+                    pos(Vec3(-3f, 2f, 1f)).normal(1.y).tex(Vec2(-3f * s, 1f * s))
+                    pos(Vec3(3f, 2f, 1f)).normal(1.y).tex(Vec2(3f * s, 1f * s))
+                    pos(Vec3(3f, 2f, -1f)).normal(1.y).tex(Vec2(3f * s, -1f * s))
+                    pos(Vec3(-3f, 2f, -1f)).normal(1.y).tex(Vec2(-3f * s, -1f * s))
+                    pos(Vec3(-3f, -2f, -1f)).normal((-1).y).tex(Vec2(-3f * s, 1f * s))
+                    pos(Vec3(3f, -2f, -1f)).normal((-1).y).tex(Vec2(3f * s, 1f * s))
+                    pos(Vec3(3f, -2f, 1f)).normal((-1).y).tex(Vec2(3f * s, -1f * s))
+                    pos(Vec3(-3f, -2f, 1f)).normal((-1).y).tex(Vec2(-3f * s, -1f * s))
+                    index(
+                        0, 1, 2, 0, 2, 3,
+                        4, 5, 6, 4, 6, 7,
+                        8, 9, 10, 8, 10, 11,
+                        12, 13, 14, 12, 14, 15,
+                        16, 17, 18, 16, 18, 19,
+                        20, 21, 22, 20, 22, 23
+                    )
+                }
                 camera = camera(10.z, -1.z, 1.y)
                 projection = projection(width.toFloat() / height.toFloat(), 1f, 1f, 100f)
                 AmbientLight(white(0.5f))

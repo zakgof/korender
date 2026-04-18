@@ -331,7 +331,12 @@ class StateHolder {
 
     fun applyMaterialToSelection() {
         val materialId = state.value.materialId
-        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(materialId = materialId) }) }
+        val material = model.value.materials[materialId]!!
+        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(materialId = materialId, texturing = it.texturing.copy(
+            u = it.texturing.u.copy(scale = material.scale),
+            v = it.texturing.v.copy(scale = material.scale),
+            fitToFace = material.fitToFace
+        )) }) }
     }
 
     fun newProject() {
