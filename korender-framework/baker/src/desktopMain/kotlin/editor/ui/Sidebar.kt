@@ -260,7 +260,7 @@ private fun shape(state: State, holder: StateHolder) {
                             val int = it.toIntOrNull()
                             int != null && int >= 4 && int <= 16
                         },
-                        onValueChange = { holder.setCreatorShape((state.creatorShape as CreatorShape.Sphere).copy(sectors = it.toInt())) },
+                        onValueChange = { holder.setCreatorShape((state.creatorShape).copy(sectors = it.toInt())) },
                         editorModifier = Modifier.width(32.dp),
                         textModifier = Modifier.width(24.dp),
                     )
@@ -385,7 +385,7 @@ fun selection(holder: StateHolder, state: State, model: Model) {
                         if (state.selection.size == 1) {
                             val brush = model.brushes[state.selection.first()]!!
                             FancyClickToTextInput(brush.name) {
-                                holder.brushChanged(brush.copy(name = it))
+                                holder.brushChanged(brush.copy(name = it), true)
                             }
                         } else if (groups == 1 && independents == 0) {
                             val group = model.groups[model.brushGroups[state.selection.first()]!!]!!
@@ -425,7 +425,7 @@ fun selection(holder: StateHolder, state: State, model: Model) {
                         fun setCenter(x: Float, y: Float, z: Float) {
                             val newBB = bb.move(Vec3(x, y, z))
                             state.selection.forEach {
-                                holder.brushChanged(model.brushes[it]!!.scale(bb, newBB))
+                                holder.brushChanged(model.brushes[it]!!.scale(bb, newBB), true)
                             }
                         }
                         Text("Center", style = Theme.mediumLabel, modifier = Modifier.padding(vertical = 4.dp))
@@ -440,7 +440,7 @@ fun selection(holder: StateHolder, state: State, model: Model) {
                         fun setSize(x: Float, y: Float, z: Float) {
                             val newBB = bb.resize(Vec3(x, y, z))
                             state.selection.forEach {
-                                holder.brushChanged(model.brushes[it]!!.scale(bb, newBB))
+                                holder.brushChanged(model.brushes[it]!!.scale(bb, newBB), true)
                             }
                         }
                         Text("Dims", style = Theme.mediumLabel, modifier = Modifier.padding(vertical = 4.dp))

@@ -43,10 +43,10 @@ fun FancyFloatInput(value: Float?, modifier: Modifier = Modifier, validator: (Fl
         value = text,
         modifier = modifier.onFocusEvent {
             if (!it.isFocused) {
-                text = value.toString()
+                text = value?.sanity() ?: ""
             }
         },
-        onValueChange = {
+        onValueChange = {8
             text = it
             if (!isInvalid(it)) {
                 onValueChange(it.toFloat())
@@ -92,7 +92,7 @@ fun FancyClickToFloatInput(value: Float, textModifier: Modifier = Modifier,  edi
             }
         } else {
             Text(
-                "" + value,
+                "" + value.sanity(),
                 style = Theme.label.copy(textDecoration = TextDecoration.Underline),
                 modifier = textModifier
                     .clickable {

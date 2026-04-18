@@ -142,7 +142,7 @@ internal class SelectorMouseHandler(
                     val snapDelta = mapper.snapClosest(snapPoints)
                     val offset = mapper.deltaToW(shift + snapDelta)
                     state.selection.forEach {
-                        holder.brushChanged(d.originalBrushes[it]!!.translate(offset))
+                        holder.brushChanged(d.originalBrushes[it]!!.translate(offset), false)
                     }
                 }
 
@@ -155,7 +155,7 @@ internal class SelectorMouseHandler(
                     val newBB = mapper.toW(rect, oldBB)
                     state.selection.forEach {
                         val origBrush = d.originalBrushes[it]!!
-                        holder.brushChanged(origBrush.scale(oldBB, newBB))
+                        holder.brushChanged(origBrush.scale(oldBB, newBB), false)
                     }
                 }
 
@@ -180,7 +180,7 @@ internal class SelectorMouseHandler(
                     val da = if (abs(dAngle) < 0.15) dAngle else 0f
 
                     origBrushes.forEach {
-                        holder.brushChanged(it.rotate(center, lookAxis, angle + da))
+                        holder.brushChanged(it.rotate(center, lookAxis, angle + da), false)
                     }
                 }
 
@@ -215,6 +215,7 @@ internal class SelectorMouseHandler(
     }
 
     override fun onDragEnd() {
+        holder.pushHistory()
         now = null
         drag = null
     }

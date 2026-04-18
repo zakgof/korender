@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
@@ -28,36 +27,54 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import editor.ui.Theme
 
 @Composable
-fun FancyTextInput(value: String, modifier: Modifier = Modifier, validator: (String) -> Boolean = { true }, onValueChange: (String) -> Unit) {
+fun FancyTextInput(
+    value: String,
+    modifier: Modifier = Modifier,
+    validator: (String) -> Boolean = { true },
+    onValueChange: (String) -> Unit
+) {
+    var textState by remember {
+        mutableStateOf(TextFieldValue(text = value))
+    }
 
-    var text by remember(value) { mutableStateOf(value) }
-    val invalid by remember { derivedStateOf { !validator(text) } }
+    LaunchedEffect(value) {
+        if (value != textState.text) {
+            textState = TextFieldValue(value)
+        }
+    }
 
+    val invalid by remember { derivedStateOf { !validator(textState.text) } }
     val border = if (invalid) Color.Red else Theme.medium
+
     BasicTextField(
-        value = text,
-        cursorBrush = SolidColor(border),
-        modifier = modifier
-            .padding(0.dp)
-            .border(1.dp, border, RoundedCornerShape(4.dp))
-            .padding(2.dp)
-            .onFocusEvent {
-                if (!it.isFocused) {
-                    text = value
-                }
-            },
+        value = textState,
         onValueChange = {
-            text = it
-            if (validator(it)) {
-                onValueChange(it)
+            textState = it
+            if (validator(it.text)) {
+                onValueChange(it.text)
             }
         },
-        textStyle = Theme.label
+        cursorBrush = SolidColor(border),
+        textStyle = Theme.label,
+        modifier = modifier
+            .border(1.dp, border, RoundedCornerShape(4.dp))
+            .padding(2.dp)
+            .onFocusChanged {
+                if (it.isFocused) {
+                    textState = textState.copy(
+                        selection = TextRange(0, textState.text.length)
+                    )
+                } else if (!validator(textState.text)) {
+                    textState = TextFieldValue(value)
+                }
+            }
     )
 }
 

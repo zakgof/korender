@@ -143,18 +143,27 @@ data class MaterialDto(
     val colorTexture: String? = null,
     val baseColor: Int,
     val id: String,
+    val fitToFace: Boolean,
+    val stochastic: Boolean,
+    val scale: Float
 ) {
     constructor(material: Material) : this(
         name = material.name,
         colorTexture = material.colorTexture,
         baseColor = material.baseColor.toArgb(),
-        id = material.id
+        id = material.id,
+        fitToFace = material.fitToFace,
+        stochastic = material.stochastic,
+        scale = material.scale
     )
 
     fun toMaterial() = Material(
         name = name,
         colorTexture = colorTexture,
         baseColor = Color(baseColor),
-        id = id
+        id = id,
+        fitToFace = fitToFace,
+        stochastic = stochastic,
+        scale = scale
     )
 }

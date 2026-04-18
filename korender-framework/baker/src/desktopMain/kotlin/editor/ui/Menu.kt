@@ -166,6 +166,15 @@ private fun MenuBarScope.edit(holder: StateHolder) {
         Item("Delete", painterResource(Res.drawable.trash), shortcut = KeyShortcut(Key.Delete)) {
             deleteDialog()
         }
+        Separator()
+        // TODO icon
+        Item("Undo", painterResource(Res.drawable.plus), enabled = holder.canUndo(), shortcut = KeyShortcut(Key.Z, ctrl = true)) {
+            holder.undo()
+        }
+        // TODO icon
+        Item("Redo", painterResource(Res.drawable.minus), enabled = holder.canRedo(), shortcut = KeyShortcut(Key.Z, ctrl = true)) {
+            holder.redo()
+        }
     }
 }
 

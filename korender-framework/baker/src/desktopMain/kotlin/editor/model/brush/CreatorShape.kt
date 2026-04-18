@@ -15,7 +15,7 @@ sealed interface CreatorShape {
             Plane.cube(bb).map { Face(it, materialId, fitToFace) }
     }
 
-    data class Cylinder(val sides: Int = 8) : CreatorShape {
+    data class Cylinder(val sides: Int = 16) : CreatorShape {
         override fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean): List<Face> {
             val center = bb.center
             val size = bb.size

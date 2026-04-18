@@ -41,13 +41,21 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @Serializable
-data class PersistentState (
-    val lastDir: String?
+data class PersistentState(
+    val lastDir: String?,
 )
 
 
 @OptIn(ExperimentalSerializationApi::class)
 class StateHolder {
+
+    private val _model = MutableStateFlow(Model())
+    private val _state = MutableStateFlow(defaultState(MouseMode.CREATOR, System.identityHashCode(_model.value), persistentState = loadPersistentState()))
+
+    val state: StateFlow<State> = _state
+    val model: StateFlow<Model> = _model
+
+    private val history = History()
 
     private fun defaultState(mouseMode: MouseMode = MouseMode.CREATOR, modelHash: Int, savePath: String? = null, persistentState: PersistentState?) = State(
         projectionScale = 32f,
@@ -68,9 +76,6 @@ class StateHolder {
         )
     }
 
-    private val _model = MutableStateFlow(Model())
-    private val _state = MutableStateFlow(defaultState(MouseMode.CREATOR, System.identityHashCode(_model.value), persistentState = loadPersistentState()))
-
     private fun loadPersistentState(): PersistentState? {
         val userHome = System.getProperty("user.home")
         val file = File("$userHome/.korender/baker.options")
@@ -87,9 +92,6 @@ class StateHolder {
         val bytes = Cbor.encodeToByteArray<PersistentState>(state.value.persistentState)
         file.writeBytes(bytes)
     }
-
-    val state: StateFlow<State> = _state
-    val model: StateFlow<Model> = _model
 
     fun setMouseMode(newMode: State.MouseMode) {
         if (newMode == State.MouseMode.CREATOR) {
@@ -139,6 +141,7 @@ class StateHolder {
             state.value.materialId,
             model.value.materials[state.value.materialId]!!.fitToFace
         )
+        pushHistory()
         _model.update {
             it.copy(brushes = it.brushes.put(newBrush.id, newBrush))
         }
@@ -146,12 +149,17 @@ class StateHolder {
             it.copy(
                 creator = defaultCreator(state.value.viewCenter),
                 selection = setOf(newBrush.id),
-                mouseMode = State.MouseMode.SELECT
+                mouseMode = MouseMode.SELECT
             )
         }
     }
 
-    fun brushChanged(brush: Brush) {
+    fun pushHistory() = history.push(model.value)
+
+    fun brushChanged(brush: Brush, pushHistory: Boolean) {
+        if (pushHistory) {
+            pushHistory()
+        }
         _model.update {
             it.copy(brushes = it.brushes.put(brush.id, brush))
         }
@@ -202,6 +210,7 @@ class StateHolder {
 
     fun cut() {
         val brushes = selectedBrushes()
+        pushHistory()
         _model.update {
             it.copy(
                 brushes = it.brushes.removeAll(state.value.selection)
@@ -235,12 +244,14 @@ class StateHolder {
                 }
             )
         }
+        pushHistory()
         _model.update { it.copy(brushes = it.brushes.putAll(newBrushes.associateBy { nb -> nb.id })) }
         _state.update { it.copy(selection = newBrushes.map { nb -> nb.id }.toSet()) }
     }
 
     fun deleteSelected() {
         val groupIds = state.value.selection.mapNotNull { model.value.brushGroups[it] }
+        pushHistory()
         _model.update {
             it.copy(
                 brushes = it.brushes.removeAll(state.value.selection),
@@ -305,11 +316,13 @@ class StateHolder {
     }
 
     fun addMaterial(material: Material) {
+        pushHistory()
         _model.update { it.copy(materials = it.materials.put(material.id, material)) }
         selectMaterial(material)
     }
 
     fun updateMaterial(material: Material) {
+        pushHistory()
         val oldMaterial = model.value.materials[state.value.materialId]!!
         TextureImageCache.dispose(oldMaterial.colorTexture ?: "")
         _model.update {
@@ -318,6 +331,7 @@ class StateHolder {
     }
 
     fun deleteMaterial() {
+        pushHistory()
         val oldMaterial = model.value.materials[state.value.materialId]!!
         TextureImageCache.dispose(oldMaterial.colorTexture ?: "")
         // TODO : need to replace existing material references to Generic !
@@ -330,22 +344,31 @@ class StateHolder {
     }
 
     fun applyMaterialToSelection() {
+        pushHistory()
         val materialId = state.value.materialId
         val material = model.value.materials[materialId]!!
-        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(materialId = materialId, texturing = it.texturing.copy(
-            u = it.texturing.u.copy(scale = material.scale),
-            v = it.texturing.v.copy(scale = material.scale),
-            fitToFace = material.fitToFace
-        )) }) }
+        modifySelectedBrushes { brush ->
+            brush.copy(faces = brush.faces.map {
+                it.copy(
+                    materialId = materialId, texturing = it.texturing.copy(
+                        u = it.texturing.u.copy(scale = material.scale),
+                        v = it.texturing.v.copy(scale = material.scale),
+                        fitToFace = material.fitToFace
+                    )
+                )
+            })
+        }
     }
 
     fun newProject() {
+        history.clear()
         _model.update { Model() }
         _state.update { defaultState(State.MouseMode.CREATOR, System.identityHashCode(_model.value), persistentState = state.value.persistentState) }
     }
 
     @OptIn(ExperimentalSerializationApi::class)
     fun loadProject(file: File) {
+        history.clear()
         val bytes = file.readBytes()
         val modelDto: ModelDto = Cbor.decodeFromByteArray(bytes)
         _model.update { modelDto.toModel() }
@@ -369,22 +392,27 @@ class StateHolder {
     }
 
     fun applyTexturingUScaleToSelection(uScale: Float) {
+        pushHistory()
         modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(texturing = it.texturing.copy(u = it.texturing.u.copy(scale = uScale))) }) }
     }
 
     fun applyTexturingUOffsetToSelection(uOffset: Float) {
+        pushHistory()
         modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(texturing = it.texturing.copy(u = it.texturing.u.copy(offset = uOffset))) }) }
     }
 
     fun applyTexturingVScaleToSelection(vScale: Float) {
+        pushHistory()
         modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(texturing = it.texturing.copy(v = it.texturing.v.copy(scale = vScale))) }) }
     }
 
     fun applyTexturingVOffsetToSelection(vOffset: Float) {
+        pushHistory()
         modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(texturing = it.texturing.copy(v = it.texturing.v.copy(offset = vOffset))) }) }
     }
 
     fun applyTexturingFitToFaceToSelection(newValue: Boolean) {
+        pushHistory()
         modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(texturing = it.texturing.copy(fitToFace = newValue)) }) }
     }
 
@@ -440,7 +468,7 @@ class StateHolder {
                 brushGroups = brushGroups.putAll(newBrushIds.associateWith { newGroup.id })
             }
         }
-
+        pushHistory()
         _model.update {
             it.copy(
                 brushes = brushes,
@@ -454,7 +482,9 @@ class StateHolder {
 
     private fun modifySelectedBrushes(mutator: (Brush) -> Brush) {
         val selection = state.value.selection
-        if (selection.isEmpty()) return
+        if (selection.isEmpty())
+            return
+        pushHistory()
         _model.update { model ->
             var brushes = model.brushes
             model.brushes.forEach { (id, brush) ->
@@ -565,6 +595,7 @@ class StateHolder {
             .toSet()
         val newGroup = Group("Group", brushIds)
         val newBrushGroupMappings = brushIds.associateWith { newGroup.id }
+        pushHistory()
         _model.update {
             it.copy(
                 groups = it.groups.removeAll(existingGroupsIds).put(newGroup.id, newGroup),
@@ -576,6 +607,7 @@ class StateHolder {
     fun ungroupSelection() {
         val brushIds = state.value.selection
         val groupsIds = brushIds.mapNotNull { model.value.brushGroups[it] }
+        pushHistory()
         _model.update {
             it.copy(
                 groups = it.groups.removeAll(groupsIds),
@@ -585,15 +617,18 @@ class StateHolder {
     }
 
     fun renameGroup(groupId: String, newName: String) {
+        pushHistory()
         _model.update { it.copy(groups = it.groups.put(groupId, it.groups[groupId]!!.copy(name = newName))) }
     }
 
     fun hideSelection() {
+        pushHistory()
         _model.update { it.copy(invisibleBrushes = it.invisibleBrushes + state.value.selection) }
         clearSelection()
     }
 
     fun unhideSelection() {
+        pushHistory()
         _model.update { it.copy(invisibleBrushes = it.invisibleBrushes - state.value.selection) }
     }
 
@@ -605,6 +640,26 @@ class StateHolder {
 
     fun setCreatorShape(shape: CreatorShape) {
         _state.update { it.copy(creatorShape = shape) }
+    }
+
+    fun canUndo() = history.canUndo()
+
+    fun canRedo() = history.canRedo()
+
+    fun undo() {
+        history.undo()?.let { prev -> _model.update { prev } }
+        clearSelection()
+        if (!model.value.materials.keys.contains(state.value.materialId)) {
+            selectMaterial(Material.generic)
+        }
+    }
+
+    fun redo() {
+        history.redo()?.let { next -> _model.update { next } }
+        clearSelection()
+        if (!model.value.materials.keys.contains(state.value.materialId)) {
+            selectMaterial(Material.generic)
+        }
     }
 
 }
