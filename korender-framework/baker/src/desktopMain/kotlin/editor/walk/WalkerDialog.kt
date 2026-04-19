@@ -46,8 +46,8 @@ fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
                     AmbientLight(white(0.3f))
                     Sky(fastCloudSky())
                     DirectionalLight(Vec3(1f, -2f, -1f), white(2f)) {
-                        Cascade(1024, 0.1f, 13f, -0.2f to 20f, hardwarePcf(blurRadius = 1.3f))
-                        Cascade(1024, 10f, 60f, -0.2f to 20f, hardwarePcf())
+                        Cascade(1024, 0.1f, 13f, -0.2f to 20f, hardwarePcf(blurRadius = 1.3f, bias = 0.05f))
+                        Cascade(1024, 10f, 60f, -0.2f to 20f, hardwarePcf(bias = 0.05f))
                     }
                     DirectionalLight(Vec3(-1f, -2f, 1f), white(0.5f))
                     controller.update(frameInfo.dt, frameInfo.time)

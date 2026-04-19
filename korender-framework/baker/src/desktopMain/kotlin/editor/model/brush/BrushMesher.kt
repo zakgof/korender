@@ -24,22 +24,67 @@ object BrushMesher {
     const val EPS = 1e-3f
 
     fun collectPoints(brush: Brush): MutableList<Brush.Point> {
+        val planes = brush.faces.map { it.plane }
+        val samples = planes.flatMap { listOf(it.p0, it.pu, it.pv) }
+        val center = samples.reduce(Vec3::plus) / samples.size.toFloat()
+        val maxDist = samples.maxOf { (it - center).length() }
+        val R = maxDist * 2f + 1f
+
         val points = mutableListOf<Brush.Point>()
 
-        for (i in brush.faces.indices)
-            for (j in i + 1 until brush.faces.size)
-                for (k in j + 1 until brush.faces.size) {
+        for (plane in planes) {
+            val n = plane.normal
+            val u = n.anyPerpendicular().normalize()
+            val v = n.cross(u).normalize()
+            val origin = plane.p0
 
-                    val p = intersectThreePlanes(
-                        brush.faces[i].plane, brush.faces[j].plane, brush.faces[k].plane
-                    ) ?: continue
+            var poly = mutableListOf(
+                origin + u * R + v * R,
+                origin - u * R + v * R,
+                origin - u * R - v * R,
+                origin + u * R - v * R
+            )
 
-                    if (brush.faces.all { it.plane.distanceTo(p) <= EPS }) {
-                        if (points.none { (it.pos - p).lengthSquared() < EPS * EPS }) {
-                            points += Brush.Point(p, listOf(brush.faces[i].plane, brush.faces[j].plane, brush.faces[k].plane))
+            for (clip in planes) {
+                if (clip === plane) continue
+                if (poly.isEmpty()) break
+                val newPoly = mutableListOf<Vec3>()
+                for (i in poly.indices) {
+                    val s = poly[i]
+                    val e = poly[(i + 1) % poly.size]
+                    val ds = clip.distanceTo(s)
+                    val de = clip.distanceTo(e)
+                    val sIn = ds <= EPS
+                    val eIn = de <= EPS
+
+                    if (sIn && eIn) {
+                        newPoly += e
+                    } else if (sIn && !eIn) {
+                        val denom = ds - de
+                        if (abs(denom) > EPS) {
+                            val t = ds / denom
+                            newPoly += s + (e - s) * t
                         }
+                    } else if (!sIn && eIn) {
+                        val denom = ds - de
+                        if (abs(denom) > EPS) {
+                            val t = ds / denom
+                            newPoly += s + (e - s) * t
+                        }
+                        newPoly += e
                     }
                 }
+                poly = newPoly
+            }
+
+            for (vtx in poly) {
+                if (points.none { (it.pos - vtx).lengthSquared() < EPS * EPS }) {
+                    val hitPlanes = planes.filter { abs(it.distanceTo(vtx)) <= EPS }
+                    points += Brush.Point(vtx, hitPlanes)
+                }
+            }
+        }
+
         return points
     }
 
@@ -123,7 +168,7 @@ object BrushMesher {
             .normalize()
 
     private fun intersectThreePlanes(p1: Plane, p2: Plane, p3: Plane): Vec3? {
-        val eps = 1e-6f
+        val eps = EPS
         val n1 = p1.normal
         val n2 = p2.normal
         val n3 = p3.normal
