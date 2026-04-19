@@ -114,13 +114,13 @@ object ModelCompiler {
     private fun normalBytes(faces: List<Pair<BrushMesh, Face>>): ByteArray {
         val normals = faces
             .flatMap { it.first.faces[it.second]!! }
-            .map { it.normal }
+            .map { it.normals }
         val nbb = NativeFloatBuffer(normals.size * 3 * 3)
         normals.forEach { p ->
-            repeat(3) {
-                nbb.put(p.x)
-                nbb.put(p.y)
-                nbb.put(p.z)
+            p.forEach { n ->
+                nbb.put(n.x)
+                nbb.put(n.y)
+                nbb.put(n.z)
             }
         }
         return bytes(nbb)

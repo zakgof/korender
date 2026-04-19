@@ -4,6 +4,7 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.uuid.ExperimentalUuidApi
 
 class BrushMesh(
     val points: List<Vec3>,
@@ -13,20 +14,22 @@ class BrushMesh(
     class Tri(
         val points: List<Vec3>,
         val tex: List<Vec2>,
-        val normal: Vec3,
+        val normals: List<Vec3>,
     )
 }
+
+class Point(val pos: Vec3, val planes: List<Plane>)
 
 object BrushMesher {
 
     fun buildBrushMesh(brush: Brush): BrushMesh {
         val eps = 1e-2f
 
-        val points = mutableListOf<Vec3>()
+        val points = mutableListOf<Point>()
 
-        fun addPoint(p: Vec3): Int {
+        fun addPoint(p: Point): Int {
             for (i in points.indices) {
-                if ((points[i] - p).length() < eps) return i
+                if ((points[i].pos - p.pos).length() < eps) return i
             }
             points += p
             return points.lastIndex
@@ -42,7 +45,7 @@ object BrushMesher {
                     ) ?: continue
 
                     if (brush.faces.all { it.plane.distanceTo(p) <= eps }) {
-                        addPoint(p)
+                        addPoint(Point(p, listOf(brush.faces[i].plane, brush.faces[j].plane, brush.faces[k].plane)))
                     }
                 }
 
@@ -61,7 +64,7 @@ object BrushMesher {
             val plane = face.plane
 
             val indices = points.mapIndexedNotNull { i, p ->
-                if (abs(plane.distanceTo(p)) < eps) i else null
+                if (abs(plane.distanceTo(p.pos)) < eps) i else null
             }
 
             if (indices.size < 3) continue
@@ -71,11 +74,11 @@ object BrushMesher {
             val v = n.cross(u)
 
             val center = indices
-                .map { points[it] }
+                .map { points[it].pos }
                 .reduce(Vec3::plus) / indices.size.toFloat()
 
             val sorted = indices.sortedBy {
-                val d = points[it] - center
+                val d = points[it].pos - center
                 atan2(d.dot(v), d.dot(u))
             }
 
@@ -86,7 +89,7 @@ object BrushMesher {
                 )
             }
 
-            val texes1 = sorted.map { plane.tex(points[it], false) }
+            val texes1 = sorted.map { plane.tex(points[it].pos, false) }
             val texes2 = if (face.texturing.fitToFace) {
                 val minU = texes1.minOf { it.x }
                 val minV = texes1.minOf { it.y }
@@ -101,19 +104,28 @@ object BrushMesher {
                 )
             }
             for (i in 1 until sorted.size - 1) {
-                val pos = listOf(points[sorted[0]], points[sorted[i]], points[sorted[i + 1]])
+                val pos = listOf(points[sorted[0]].pos, points[sorted[i]].pos, points[sorted[i + 1]].pos)
                 val tex = listOf(texes[0], texes[i], texes[i + 1])
-                triangles += BrushMesh.Tri(pos, tex, n)
+                val normals = listOf(normal(plane, points[sorted[0]]), normal(plane, points[sorted[i]]), normal(plane, points[sorted[i + 1]]))
+                triangles += BrushMesh.Tri(pos, tex, normals)
             }
             faces[face] = triangles
         }
 
         return BrushMesh(
-            points = points,
+            points = points.map { it.pos },
             edges = edges.toList(),
             faces = faces
         )
     }
+
+    @OptIn(ExperimentalUuidApi::class)
+    private fun normal(plane: Plane, point: Point) =
+        point.planes
+            .filter { it.smoothId == plane.smoothId }
+            .map { it.normal }
+            .fold(Vec3.ZERO) { acc, r -> acc + r }
+            .normalize()
 
     private fun intersectThreePlanes(p1: Plane, p2: Plane, p3: Plane): Vec3? {
         val eps = 1e-6f

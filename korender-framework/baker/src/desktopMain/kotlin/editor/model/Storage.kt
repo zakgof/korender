@@ -11,6 +11,8 @@ import editor.model.brush.Texturing
 import editor.model.brush.Texturing.Axis
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.serialization.Serializable
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @Serializable
 class ModelDto(
@@ -47,22 +49,26 @@ data class Vec3Dto(
     fun toVec3() = Vec3(x, y, z)
 }
 
+@OptIn(ExperimentalUuidApi::class)
 @Serializable
 data class PlaneDto(
     val p0: Vec3Dto,
     val pu: Vec3Dto,
     val pv: Vec3Dto,
+    val smoothId: Uuid
 ) {
     constructor(plane: Plane) : this(
         Vec3Dto(plane.p0),
         Vec3Dto(plane.pu),
-        Vec3Dto(plane.pv)
+        Vec3Dto(plane.pv),
+        plane.smoothId
     )
 
     fun toPlane() = Plane(
         p0 = p0.toVec3(),
         pu = pu.toVec3(),
-        pv = pv.toVec3()
+        pv = pv.toVec3(),
+        smoothId = smoothId
     )
 }
 

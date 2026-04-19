@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package editor.model.brush
 
 import com.zakgof.korender.math.Vec3
@@ -5,6 +7,8 @@ import editor.model.BoundingBox
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 sealed interface CreatorShape {
 
@@ -115,6 +119,7 @@ sealed interface CreatorShape {
                 if (plane.normal dot (sample - center) < 0f) plane.invert() else plane
 
             // side faces
+            val smoothId = Uuid.generateV7()
             for (i in 0 until sides) {
                 val a = i * step
                 val b = (i + 1) * step
@@ -122,7 +127,7 @@ sealed interface CreatorShape {
                 val topA = ringPoint(maxY, a)
                 val bottomB = ringPoint(minY, b)
 
-                var plane = Plane(bottomA, topA, bottomB)
+                var plane = Plane(bottomA, topA, bottomB, smoothId)
                 val midAngle = (a + b) * 0.5f
                 val midPoint = ringPoint((minY + maxY) * 0.5f, midAngle)
                 plane = outward(plane, midPoint)
@@ -168,13 +173,14 @@ sealed interface CreatorShape {
             fun outward(plane: Plane, sample: Vec3): Plane =
                 if (plane.normal dot (sample - center) < 0f) plane.invert() else plane
 
+            val smoothId = Uuid.generateV7()
             for (i in 0 until sides) {
                 val a = i * step
                 val b = (i + 1) * step
                 val baseA = ringPoint(a)
                 val baseB = ringPoint(b)
 
-                var plane = Plane(apex, baseA, baseB)
+                var plane = Plane(apex, baseA, baseB, smoothId)
                 val midPoint = (apex + baseA + baseB) / 3f
                 plane = outward(plane, midPoint)
                 faces += Face(plane, materialId, fitToFace)
@@ -205,6 +211,8 @@ sealed interface CreatorShape {
             val latStep = PI.toFloat() / slices
             val lonStep = (2f * PI.toFloat()) / sectors
 
+            val smoothId = Uuid.generateV7()
+
             fun point(lat: Float, lon: Float) = Vec3(
                 center.x + rx * cos(lat) * cos(lon),
                 center.y + ry * sin(lat),
@@ -212,7 +220,7 @@ sealed interface CreatorShape {
             )
 
             fun addFace(p0: Vec3, p1: Vec3, p2: Vec3) {
-                var plane = Plane(p0, p1, p2)
+                var plane = Plane(p0, p1, p2, smoothId)
                 val midPoint = (p0 + p1 + p2) / 3f
                 if (plane.normal dot (midPoint - center) < 0f) plane = plane.invert()
                 faces += Face(plane, materialId, fitToFace)

@@ -163,12 +163,12 @@ data class Brush(
                     val front = currentPart.copy(
                         name = "$name*",
                         id = Uuid.generateV7().toHexDashString(),
-                        faces = currentPart.faces + Face(plane.invert(), materialId, fitToFace)
+                        faces = currentPart.faces + Face(plane.invert().copy(smoothId = Uuid.generateV7()), materialId, fitToFace)
                     ).filterFaces()
                     val back = currentPart.copy(
                         name = "$name*",
                         id = Uuid.generateV7().toHexDashString(),
-                        faces = currentPart.faces + Face(plane, materialId, fitToFace)
+                        faces = currentPart.faces + Face(plane.copy(smoothId = Uuid.generateV7()), materialId, fitToFace)
                     ).filterFaces()
                     results += front
                     currentPart = back

@@ -94,7 +94,7 @@ fun KorenderView(holder: StateHolder) {
                                     tris.forEach {tri ->
                                         pos(*tri.points.toTypedArray())
                                         tex(*tri.tex.toTypedArray())
-                                        normal(tri.normal, tri.normal, tri.normal)
+                                        normal(*tri.normals.toTypedArray())
                                     }
                                 }
                             )

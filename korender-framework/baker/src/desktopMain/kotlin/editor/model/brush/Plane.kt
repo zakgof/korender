@@ -5,11 +5,15 @@ import com.zakgof.korender.math.Vec3
 import editor.model.BoundingBox
 import editor.model.rotateVec
 import kotlin.math.sqrt
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
-class Plane(
+@OptIn(ExperimentalUuidApi::class)
+data class Plane(
     val p0: Vec3,
     val pu: Vec3,
     val pv: Vec3,
+    val smoothId: Uuid = Uuid.generateV7()
 ) {
 
     companion object {
@@ -38,7 +42,7 @@ class Plane(
     fun distanceTo(p: Vec3) = normal * p + d
 
     fun translate(offset: Vec3): Plane =
-        Plane (p0 = p0 + offset, pu = pu + offset, pv = pv + offset)
+        Plane (p0 = p0 + offset, pu = pu + offset, pv = pv + offset, smoothId)
 
     fun scale(oldBB: BoundingBox, newBB: BoundingBox): Plane {
         val scale = (newBB.max - newBB.min) divpercomp (oldBB.max - oldBB.min)
@@ -46,7 +50,8 @@ class Plane(
         return Plane(
             p0 = xform(p0),
             pu = xform(pu),
-            pv = xform(pv)
+            pv = xform(pv),
+            smoothId
         )
     }
 
@@ -55,7 +60,8 @@ class Plane(
         return Plane(
             p0 = xform(p0),
             pu = xform(pu),
-            pv = xform(pv)
+            pv = xform(pv),
+            smoothId
         )
     }
 
@@ -85,5 +91,5 @@ class Plane(
         }
     }
 
-    fun invert() = Plane(p0, pv, pu)
+    fun invert() = Plane(p0, pv, pu, smoothId)
 }
