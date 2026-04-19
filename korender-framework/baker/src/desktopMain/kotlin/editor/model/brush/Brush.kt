@@ -139,11 +139,40 @@ data class Brush(
     }
 
     companion object {
-        fun carve(target: Collection<Brush>, by: Brush, materialId: String, fitToFace: Boolean): Set<Pair<Brush, Collection<Brush>>> {
-            val planes = by.faces.map { it.plane }
-            return target.mapNotNull { brush ->
-                brush.carveBy(planes, materialId, fitToFace)?.let { brush to it }
-            }.toSet()
+        fun carve(target: Collection<Brush>, by: Set<Brush>, materialId: String, fitToFace: Boolean): Set<Pair<Brush, Collection<Brush>>> {
+            if (by.isEmpty()) return emptySet()
+
+            val originals = target.toList()
+            val partsMap = originals.associate { it.id to mutableListOf(it) }.toMutableMap()
+
+            for (tool in by) {
+                val planes = tool.faces.map { it.plane }
+                if (planes.isEmpty()) continue
+
+                val newPartsMap = mutableMapOf<String, MutableList<Brush>>()
+
+                for ((origId, parts) in partsMap) {
+                    val accum = mutableListOf<Brush>()
+                    for (part in parts) {
+                        val carved = part.carveBy(planes, materialId, fitToFace)
+                        if (carved == null) accum += part else accum += carved
+                    }
+                    newPartsMap[origId] = accum
+                }
+
+                partsMap.clear()
+                partsMap.putAll(newPartsMap)
+            }
+
+            val result = mutableSetOf<Pair<Brush, Collection<Brush>>>()
+            for (orig in originals) {
+                val finalParts = partsMap[orig.id] ?: listOf(orig)
+                if (!(finalParts.size == 1 && finalParts[0].id == orig.id)) {
+                    result += orig to finalParts
+                }
+            }
+
+            return result
         }
     }
 

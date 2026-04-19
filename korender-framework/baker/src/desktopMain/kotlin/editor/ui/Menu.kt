@@ -172,7 +172,7 @@ private fun MenuBarScope.edit(holder: StateHolder) {
             holder.undo()
         }
         // TODO icon
-        Item("Redo", painterResource(Res.drawable.minus), enabled = holder.canRedo(), shortcut = KeyShortcut(Key.Z, ctrl = true)) {
+        Item("Redo", painterResource(Res.drawable.minus), enabled = holder.canRedo(), shortcut = KeyShortcut(Key.Y, ctrl = true)) {
             holder.redo()
         }
     }
@@ -230,7 +230,7 @@ private fun MenuBarScope.selection(holder: StateHolder) {
         Separator()
         val noCarveDialog = okDialog("Carve", "Intersection objects not found")
         // TODO icon
-        Item("Carve", icon = painterResource(Res.drawable.minus), enabled = (state.selection.size == 1)) {
+        Item("Carve", icon = painterResource(Res.drawable.minus), enabled = (state.selection.isNotEmpty())) {
             if (!holder.carve()) {
                 noCarveDialog()
             }

@@ -445,7 +445,7 @@ class StateHolder {
     fun carve(): Boolean {
         val by = selectedBrushes()
         val target = model.value.brushes.values - by
-        val carving = Brush.carve(target, by.first(), state.value.materialId, model.value.materials[state.value.materialId]!!.fitToFace)
+        val carving = Brush.carve(target, by, state.value.materialId, model.value.materials[state.value.materialId]!!.fitToFace)
 
         if (carving.isEmpty())
             return false
