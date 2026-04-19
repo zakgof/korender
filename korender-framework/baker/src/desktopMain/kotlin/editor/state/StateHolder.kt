@@ -639,7 +639,7 @@ class StateHolder {
     }
 
     fun setCreatorShape(shape: CreatorShape) {
-        _state.update { it.copy(creatorShape = shape) }
+        _state.update { it.copy(creatorShape = shape, mouseMode = MouseMode.CREATOR) }
     }
 
     fun canUndo() = history.canUndo()

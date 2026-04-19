@@ -434,7 +434,7 @@ interface KorenderScope : ResourceScope {
      * @param bias shadow mapping bias: smaller values may cause acne artifact, larger values cause peter-panning
      * @return shadow algorithm declaration
      */
-    fun softwarePcf(samples: Int = 8, blurRadius: Float = 0.005f, bias: Float = 0.0005f): ShadowAlgorithmDeclaration
+    fun softwarePcf(samples: Int = 8, blurRadius: Float = 1.5f, bias: Float = 0.005f): ShadowAlgorithmDeclaration
 
     /**
      * Returns GPU-based percentage close filtering shadow algorithm declaration.
@@ -443,7 +443,7 @@ interface KorenderScope : ResourceScope {
      * @param bias shadow mapping bias: smaller values may cause acne artifact, larger values cause peter-panning
      * @return shadow algorithm declaration
      */
-    fun hardwarePcf(bias: Float = 0.005f): ShadowAlgorithmDeclaration
+    fun hardwarePcf(samples: Int = 8, blurRadius: Float = 1.5f, bias: Float = 0.005f): ShadowAlgorithmDeclaration
 
 
     /**

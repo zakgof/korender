@@ -186,6 +186,8 @@ private fun shape(state: State, holder: StateHolder) {
 
         val options = listOf(
             ShapeDef("Box", { it is CreatorShape.Box }, { CreatorShape.Box }),
+            ShapeDef("Right Wedge", { it is CreatorShape.RightWedge }, { CreatorShape.RightWedge }),
+            ShapeDef("Symmetric Wedge", { it is CreatorShape.SymmetricWedge }, { CreatorShape.SymmetricWedge }),
             ShapeDef("Cylinder", { it is CreatorShape.Cylinder }, { CreatorShape.Cylinder() }) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

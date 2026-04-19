@@ -200,7 +200,7 @@ void main() {
             color += dirLight(l, normal, look, albedo.rgb, metallic, roughness, occlusion);
         }
         for (int l=0; l<numPointLights; l++) {
-            color += pointLight(vpos, l, normal, look, albedo.rgb, metallic, roughness, occlusion);
+            color += pointLight(position, l, normal, look, albedo.rgb, metallic, roughness, occlusion);
         }
 
         vec3 F0 = mix(vec3(0.04), albedo.rgb, metallic);

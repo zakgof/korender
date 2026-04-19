@@ -72,11 +72,11 @@ private fun FrameScope.light() {
     AmbientLight(white(0.7f))
     DirectionalLight(Vec3(0.1f, -1f, -1f), white(2f)) {
         if (target == KorenderScope.TargetPlatform.Desktop) {
-            Cascade(1024, 0.3f, 2.0f, 0f to 60f, softwarePcf(6))
+            Cascade(1024, 0.3f, 2.0f, 0f to 60f, hardwarePcf(6, 1.5f, 0.00001f))
             Cascade(512, 1.7f, 12.0f, 0f to 60f, vsm())
             Cascade(512, 10.0f, 50.0f, 0f to 60f, vsm())
         } else {
-            Cascade(512, 0.3f, 2.0f, 0f to 60f, hardwarePcf(0.0003f))
+            Cascade(512, 0.3f, 2.0f, 0f to 60f, hardwarePcf(6, 1.5f,0.0001f))
             Cascade(512, 1.7f, 30.0f, 0f to 60f, vsm())
         }
     }

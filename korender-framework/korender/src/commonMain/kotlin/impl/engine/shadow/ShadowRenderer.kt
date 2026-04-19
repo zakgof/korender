@@ -121,14 +121,19 @@ internal fun Renderer.Scene.shadows(
         declaration.fixedYRange?.first ?: 0f,
         declaration.fixedYRange?.second ?: 0f,
         mode(declaration),
-        (declaration.algorithm as? InternalSoftwarePcfShadow)?.samples ?: 0,
         when (declaration.algorithm) {
-            is InternalSoftwarePcfShadow -> declaration.algorithm.blurRadius / shadowFrameMaterialModifier.frameContext.projection.width
-            is InternalHardwarePcfShadow -> declaration.algorithm.bias
+            is InternalSoftwarePcfShadow -> declaration.algorithm.samples
+            is InternalHardwarePcfShadow -> declaration.algorithm.samples
+            else -> 0
+        },
+        when (declaration.algorithm) {
+            is InternalSoftwarePcfShadow -> declaration.algorithm.blurRadius / shadowFrameMaterialModifier.frameContext.width
+            is InternalHardwarePcfShadow -> declaration.algorithm.blurRadius / shadowFrameMaterialModifier.frameContext.width
             else -> 0f
         },
         when (declaration.algorithm) {
             is InternalSoftwarePcfShadow -> declaration.algorithm.bias
+            is InternalHardwarePcfShadow -> declaration.algorithm.bias
             else -> 0f
         }
     )

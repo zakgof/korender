@@ -357,8 +357,8 @@ internal class Engine(
         override fun softwarePcf(samples: Int, blurRadius: Float, bias: Float): ShadowAlgorithmDeclaration =
             InternalSoftwarePcfShadow(samples, blurRadius, bias)
 
-        override fun hardwarePcf(bias: Float): ShadowAlgorithmDeclaration =
-            InternalHardwarePcfShadow(bias)
+        override fun hardwarePcf(samples: Int, blurRadius: Float, bias: Float): ShadowAlgorithmDeclaration =
+            InternalHardwarePcfShadow(samples, blurRadius, bias)
 
         override fun instancing(id: String, count: Int, dynamic: Boolean, vararg parameter: InstancingParameter, block: InstancingScope.() -> Unit) =
             InternalInstancingDeclaration(id, count, dynamic, parameter.toList()) {

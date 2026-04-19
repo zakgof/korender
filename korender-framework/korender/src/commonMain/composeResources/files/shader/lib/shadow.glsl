@@ -29,7 +29,7 @@ vec2 vogelDiskSample(int sampleIndex, int numSamples, float phi) {
     return vec2(cos(angle), sin(angle)) * sqrt(sampleVal + 0.5) / sqrt(float(numSamples));
 }
 
-float swPcf(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float penumbraWidth, float bias) {
+float swPcf(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float radius, float bias) {
 
     const float PHI = 1.61803398874989484820459;
     float phi = 0.;
@@ -39,7 +39,7 @@ float swPcf(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float penumb
     vec2 dx = dFdx(vshadow.xy);
     vec2 dy = dFdy(vshadow.xy);
     for (int s = 0; s < sampleCount; ++s) {
-        vec2 offset = vogelDiskSample(s, sampleCount, phi) * penumbraWidth;
+        vec2 offset = vogelDiskSample(s, sampleCount, phi) * radius;
         vec2 uv = vshadow.xy + offset;
         float shadowSample = textureGrad(shadowTexture, uv, dx, dy).r;
         // ignore samples outside the valid UV range
@@ -49,9 +49,9 @@ float swPcf(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float penumb
         }
         float diff = vshadow.z - bias - shadowSample;
         float val;
-        if (penumbraWidth > 0.0) {
+        if (radius > 0.0) {
             // smooth transition across penumbra region (centered)
-            float edge = penumbraWidth * 0.5;
+            float edge = radius * 0.5;
             val = smoothstep(-edge, edge, diff);
         } else {
             val = diff > 0.0 ? 1.0 : 0.0;
@@ -71,8 +71,14 @@ float hard(sampler2D shadowTexture, vec3 vshadow) {
         && vshadow.y > 0.001 && vshadow.y < 0.999) ? 1. : 0.;
 }
 
-float hwPcf(sampler2DShadow pcfTexture, vec3 vshadow, float bias) {
-    return 1. - texture(pcfTexture, vshadow - vec3(0., 0., bias));
+float hwPcf(sampler2DShadow pcfTexture, vec3 vshadow, int sampleCount, float radius, float bias) {
+    float phi = 0.;
+    float result = 0.;
+    for (int i = 0; i < sampleCount; i++) {
+        vec2 offset = vogelDiskSample(i, sampleCount, phi) * radius;
+        result += texture(pcfTexture, vec3(vshadow.xy + offset, vshadow.z - bias));
+    }
+    return 1.0 - (result / float(sampleCount));
 }
 
 float shadow(sampler2D shadowTexture, sampler2DShadow pcfTexture, int index, vec3 vshadow, int mode) {
@@ -81,7 +87,7 @@ float shadow(sampler2D shadowTexture, sampler2DShadow pcfTexture, int index, vec
           case 0: sh = hard(shadowTexture, vshadow); break;
           case 1: sh =  swPcf(shadowTexture, vshadow, i1[index], f1[index], f2[index]); break;
           case 2: sh =  vsm(shadowTexture, vshadow); break;
-          case 3: sh =  hwPcf(pcfTexture, vshadow, f1[index]); break;
+          case 3: sh =  hwPcf(pcfTexture, vshadow, i1[index], f1[index], f2[index]); break;
     }
     return sh;
 }
