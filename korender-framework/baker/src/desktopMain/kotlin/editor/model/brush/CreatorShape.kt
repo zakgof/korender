@@ -15,6 +15,89 @@ sealed interface CreatorShape {
             Plane.cube(bb).map { Face(it, materialId, fitToFace) }
     }
 
+    object RightWedge : CreatorShape {
+        override fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean): List<Face> {
+            val center = bb.center
+            val min = bb.min
+            val max = bb.max
+
+            val tr0 = Vec3(max.x, max.y, min.z)
+            val br0 = Vec3(max.x, min.y, min.z)
+            val bl0 = Vec3(min.x, min.y, min.z)
+
+            val tr1 = Vec3(max.x, max.y, max.z)
+            val br1 = Vec3(max.x, min.y, max.z)
+            val bl1 = Vec3(min.x, min.y, max.z)
+
+            val faces = mutableListOf<Face>()
+            fun outward(plane: Plane, sample: Vec3): Plane =
+                if (plane.normal dot (sample - center) < 0f) plane.invert() else plane
+
+            var plane = Plane(tr0, br0, bl0)
+            plane = outward(plane, (tr0 + br0 + bl0) / 3f)
+            faces += Face(plane, materialId, fitToFace)
+
+            plane = Plane(tr1, bl1, br1)
+            plane = outward(plane, (tr1 + bl1 + br1) / 3f)
+            faces += Face(plane, materialId, fitToFace)
+
+            plane = Plane(tr0, tr1, br1)
+            plane = outward(plane, (tr0 + tr1 + br1) / 3f)
+            faces += Face(plane, materialId, fitToFace)
+
+            plane = Plane(tr0, bl0, bl1)
+            plane = outward(plane, (tr0 + bl0 + bl1) / 3f)
+            faces += Face(plane, materialId, fitToFace)
+
+            plane = Plane(bl0, br0, br1)
+            plane = outward(plane, (bl0 + br0 + br1) / 3f)
+            faces += Face(plane, materialId, fitToFace)
+
+            return faces
+        }
+    }
+
+    object SymmetricWedge : CreatorShape {
+        override fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean): List<Face> {
+            val center = bb.center
+            val min = bb.min
+            val max = bb.max
+
+            val apex0 = Vec3(center.x, max.y, min.z)
+            val apex1 = Vec3(center.x, max.y, max.z)
+            val left0 = Vec3(min.x, min.y, min.z)
+            val right0 = Vec3(max.x, min.y, min.z)
+            val left1 = Vec3(min.x, min.y, max.z)
+            val right1 = Vec3(max.x, min.y, max.z)
+
+            val faces = mutableListOf<Face>()
+            fun outward(plane: Plane, sample: Vec3): Plane =
+                if (plane.normal dot (sample - center) < 0f) plane.invert() else plane
+
+            var plane = Plane(apex0, right0, left0)
+            plane = outward(plane, (apex0 + right0 + left0) / 3f)
+            faces += Face(plane, materialId, fitToFace)
+
+            plane = Plane(apex1, left1, right1)
+            plane = outward(plane, (apex1 + left1 + right1) / 3f)
+            faces += Face(plane, materialId, fitToFace)
+
+            plane = Plane(apex0, apex1, left1)
+            plane = outward(plane, (apex0 + apex1 + left1) / 3f)
+            faces += Face(plane, materialId, fitToFace)
+
+            plane = Plane(apex1, apex0, right0)
+            plane = outward(plane, (apex1 + apex0 + right0) / 3f)
+            faces += Face(plane, materialId, fitToFace)
+
+            plane = Plane(left0, right0, right1)
+            plane = outward(plane, (left0 + right0 + right1) / 3f)
+            faces += Face(plane, materialId, fitToFace)
+
+            return faces
+        }
+    }
+
     data class Cylinder(val sides: Int = 16) : CreatorShape {
         override fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean): List<Face> {
             val center = bb.center
@@ -68,7 +151,7 @@ sealed interface CreatorShape {
         }
     }
 
-    data class Cone(val sides: Int = 8) : CreatorShape {
+    data class Cone(val sides: Int = 16) : CreatorShape {
         override fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean): List<Face> {
             val center = bb.center
             val size = bb.size
