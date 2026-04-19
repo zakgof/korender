@@ -198,7 +198,7 @@ sealed interface CreatorShape {
         }
     }
 
-    data class Sphere(val slices: Int = 8, val sectors: Int = 8) : CreatorShape {
+    data class Sphere(val slices: Int = 12, val sectors: Int = 12) : CreatorShape {
         override fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean): List<Face> {
             val center = bb.center
             val size = bb.size

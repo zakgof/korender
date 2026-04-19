@@ -26,6 +26,8 @@ data class Brush(
     val id: String = Uuid.generateV7().toHexDashString(),
 ) {
 
+    class Point(val pos: Vec3, val planes: List<Plane>)
+
     constructor(
         name: String,
         projectionColor: Color,
@@ -35,16 +37,17 @@ data class Brush(
         fitToFace: Boolean,
     ) : this(name, projectionColor.toArgb(), shape.makeFaces(bb, materialId, fitToFace))
 
-    val mesh by lazy { BrushMesher.buildBrushMesh(this) }
+    val points = lazy { BrushMesher.collectPoints(this) }
+    val mesh by lazy { BrushMesher.buildBrushMesh(this, points.value) }
 
     val bb by lazy {
-        val vertices = mesh.points
-        val minX = vertices.minOf { it.x }
-        val minY = vertices.minOf { it.y }
-        val minZ = vertices.minOf { it.z }
-        val maxX = vertices.maxOf { it.x }
-        val maxY = vertices.maxOf { it.y }
-        val maxZ = vertices.maxOf { it.z }
+        val vertices = points.value
+        val minX = vertices.minOf { it.pos.x }
+        val minY = vertices.minOf { it.pos.y }
+        val minZ = vertices.minOf { it.pos.z }
+        val maxX = vertices.maxOf { it.pos.x }
+        val maxY = vertices.maxOf { it.pos.y }
+        val maxZ = vertices.maxOf { it.pos.z }
         BoundingBox(
             Vec3(minX, minY, minZ),
             Vec3(maxX, maxY, maxZ)

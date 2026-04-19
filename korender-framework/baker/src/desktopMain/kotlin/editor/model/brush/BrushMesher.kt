@@ -18,24 +18,14 @@ class BrushMesh(
     )
 }
 
-class Point(val pos: Vec3, val planes: List<Plane>)
 
 object BrushMesher {
 
-    fun buildBrushMesh(brush: Brush): BrushMesh {
-        val eps = 1e-2f
+    const val EPS = 1e-3f
 
-        val points = mutableListOf<Point>()
+    fun collectPoints(brush: Brush): MutableList<Brush.Point> {
+        val points = mutableListOf<Brush.Point>()
 
-        fun addPoint(p: Point): Int {
-            for (i in points.indices) {
-                if ((points[i].pos - p.pos).length() < eps) return i
-            }
-            points += p
-            return points.lastIndex
-        }
-
-        // ---------- 1. vertices ----------
         for (i in brush.faces.indices)
             for (j in i + 1 until brush.faces.size)
                 for (k in j + 1 until brush.faces.size) {
@@ -44,13 +34,18 @@ object BrushMesher {
                         brush.faces[i].plane, brush.faces[j].plane, brush.faces[k].plane
                     ) ?: continue
 
-                    if (brush.faces.all { it.plane.distanceTo(p) <= eps }) {
-                        addPoint(Point(p, listOf(brush.faces[i].plane, brush.faces[j].plane, brush.faces[k].plane)))
+                    if (brush.faces.all { it.plane.distanceTo(p) <= EPS }) {
+                        if (points.none { (it.pos - p).lengthSquared() < EPS * EPS }) {
+                            points += Brush.Point(p, listOf(brush.faces[i].plane, brush.faces[j].plane, brush.faces[k].plane))
+                        }
                     }
                 }
+        return points
+    }
+
+    fun buildBrushMesh(brush: Brush, points: List<Brush.Point>): BrushMesh {
 
         val edges = HashSet<Pair<Int, Int>>()
-
 
         fun edge(a: Int, b: Int): Pair<Int, Int> =
             if (a < b) a to b else b to a
@@ -64,7 +59,7 @@ object BrushMesher {
             val plane = face.plane
 
             val indices = points.mapIndexedNotNull { i, p ->
-                if (abs(plane.distanceTo(p.pos)) < eps) i else null
+                if (abs(plane.distanceTo(p.pos)) < EPS) i else null
             }
 
             if (indices.size < 3) continue
@@ -120,7 +115,7 @@ object BrushMesher {
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    private fun normal(plane: Plane, point: Point) =
+    private fun normal(plane: Plane, point: Brush.Point) =
         point.planes
             .filter { it.smoothId == plane.smoothId }
             .map { it.normal }
