@@ -17,7 +17,6 @@ data class Face(
             this(plane, materialId, Texturing(fitToFace = fitToFace))
 }
 
-
 @OptIn(ExperimentalUuidApi::class)
 data class Brush(
     val name: String,
@@ -37,11 +36,11 @@ data class Brush(
         fitToFace: Boolean,
     ) : this(name, projectionColor.toArgb(), shape.makeFaces(bb, materialId, fitToFace))
 
-    val points = lazy { BrushMesher.collectPoints(this) }
-    val mesh by lazy { BrushMesher.buildBrushMesh(this, points.value) }
+    val points by lazy { BrushMesher.collectPoints(this) }
+    val mesh by lazy { BrushMesher.buildBrushMesh(this, points) }
 
     val bb by lazy {
-        val vertices = points.value
+        val vertices = points
         val minX = vertices.minOf { it.pos.x }
         val minY = vertices.minOf { it.pos.y }
         val minZ = vertices.minOf { it.pos.z }
