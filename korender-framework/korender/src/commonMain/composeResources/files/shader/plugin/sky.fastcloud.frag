@@ -19,7 +19,7 @@ vec3 sky(vec3 look, float bias) {
               rippleamount * (fbm2(uv * scale * ripplescale, bias) - 0.5)) +
               density - 3.;
 
-    vec3 blue = mix(zenithcolor, horizoncolor, pow(1. - look.y, 6.)); // TODO light direction
+    vec3 blue = mix(zenithcolor, horizoncolor, pow(1. - max(look.y, 0.), 6.)); // TODO light direction
 
     float g = clamp(fbm2(uv * 0.6 - time * 0.003, bias) + 0.4, 0., 1.);
     float cloud = mix(cloudlight, clouddark, clamp(f * g * 0.3, 0., 1.));

@@ -48,8 +48,8 @@ object ModelCompiler {
                 colorTextureIds = it.value.map { p -> p.second },
                 stochasticSharpness = if (it.key.stochastic) 12f else null,
                 triplanarScale = it.key.triplanarScale,
-                metallic = 0.1f,
-                roughness = 1.0f
+                metallic = 0.2f,
+                roughness = 0.6f
             )
         }.toMap()
 
