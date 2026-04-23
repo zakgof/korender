@@ -292,12 +292,13 @@ class StateHolder {
             val result = if (allGroup) {
                 newSelection +
                         newSelection.mapNotNull { model.value.brushGroups[it] }
-                            .flatMap { model.value.groups[it]!!.brushIds }
+                            .flatMap { model.value.groups[it]!!.brushes }
+                            .map { it.id }
                             .toSet()
             } else {
                 newSelection -
                         newSelection.mapNotNull { model.value.brushGroups[it] }
-                            .map { model.value.groups[it]!!.brushIds }
+                            .map { model.value.groups[it]!!.brushes.map { brush -> brush.id } }
                             .filter { !newSelection.containsAll(it) }
                             .flatten()
                             .toSet()
@@ -460,10 +461,10 @@ class StateHolder {
             val oldGroupId = brushGroups[old.id]
             if (oldGroupId != null) {
                 val oldGroup = groups[oldGroupId]!!
-                groups = groups.put(oldGroupId, oldGroup.copy(brushIds = oldGroup.brushIds + newBrushIds - old.id))
+                groups = groups.put(oldGroupId, oldGroup.copy(brushes = oldGroup.brushes + new - old))
                 brushGroups = brushGroups.putAll(newBrushIds.associateWith { oldGroupId }).remove(old.id)
             } else {
-                val newGroup = Group(old.name, newBrushIds)
+                val newGroup = Group(old.name, newBrushIds.map{brushes[it]!!}.toSet())
                 groups = groups.put(newGroup.id, newGroup)
                 brushGroups = brushGroups.putAll(newBrushIds.associateWith { newGroup.id })
             }
@@ -591,9 +592,10 @@ class StateHolder {
         val existingGroupsIds = brushIds.mapNotNull { model.value.brushGroups[it] }
             .toSet()
         val existingGroupBrushIds = existingGroupsIds.mapNotNull { model.value.groups[it] }
-            .flatMap { it.brushIds }
+            .flatMap { it.brushes }
+            .map { it.id }
             .toSet()
-        val newGroup = Group("Group", brushIds)
+        val newGroup = Group("Group", brushIds.map { model.value.brushes[it]!! }.toSet())
         val newBrushGroupMappings = brushIds.associateWith { newGroup.id }
         pushHistory()
         _model.update {

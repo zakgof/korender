@@ -476,16 +476,16 @@ fun tree(model: Model, state: State, holder: StateHolder) {
             ) {
                 model.groups.values
                     .forEach { group ->
-                        val hidden = model.invisibleBrushes.containsAll(group.brushIds)
+                        val hidden = model.invisibleBrushes.containsAll(group.brushes.map { it.id })
                         Text(
-                            text = "${group.name} (${group.brushIds.size})",
+                            text = "${group.name} (${group.brushes.size})",
                             style = if (hidden) Theme.darkLabel else Theme.label,
                             modifier = Modifier
                                 .padding(2.dp)
                                 .onPointerEvent(PointerEventType.Press) { event ->
-                                    holder.selectBrushes(group.brushIds, event.keyboardModifiers.isCtrlPressed, true)
+                                    holder.selectBrushes(group.brushes.map { it.id }.toSet(), event.keyboardModifiers.isCtrlPressed, true)
                                 },
-                            fontWeight = if (state.selection.containsAll(group.brushIds)) FontWeight.Bold else FontWeight.Normal
+                            fontWeight = if (state.selection.containsAll(group.brushes.map { it.id })) FontWeight.Bold else FontWeight.Normal
                         )
                     }
                 model.brushes.values

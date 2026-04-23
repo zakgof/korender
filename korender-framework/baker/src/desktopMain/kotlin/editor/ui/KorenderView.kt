@@ -77,10 +77,9 @@ fun KorenderView(holder: StateHolder) {
 
             holder.frame(frameInfo.dt)
 
-            model.brushes.values
-                .filter { brush -> !model.invisibleBrushes.contains(brush.id) }
-                .forEach { brush ->
-                    brush.mesh.faces.entries
+
+            model.brushMeshes().forEach { mesh ->
+                    mesh.faces.entries
                         .forEachIndexed { i, faceToTris ->
                             val face = faceToTris.key
                             val tris = faceToTris.value
@@ -88,9 +87,9 @@ fun KorenderView(holder: StateHolder) {
                             Renderable(
                                 toBaseMM(
                                     model.materials[face.materialId]!!,
-                                    state.selection.contains(brush.id)
+                                    state.selection.contains(mesh.id) || state.selection.any {model.brushGroups[it] == mesh.id}
                                 ),
-                                mesh = customMesh(brush.id + "-" + i + "-" + vertexCount, vertexCount, 0, POS, NORMAL, TEX, dynamic = true) {
+                                mesh = customMesh(mesh.id + "-" + i + "-" + vertexCount, vertexCount, 0, POS, NORMAL, TEX, dynamic = true) {
                                     tris.forEach {tri ->
                                         pos(*tri.points.toTypedArray())
                                         tex(*tri.tex.toTypedArray())

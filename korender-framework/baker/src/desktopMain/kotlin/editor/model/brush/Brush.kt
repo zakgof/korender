@@ -37,11 +37,11 @@ data class Brush(
         fitToFace: Boolean,
     ) : this(name, projectionColor.toArgb(), shape.makeFaces(bb, materialId, fitToFace))
 
-    val points = lazy { BrushMesher.collectPoints(this) }
-    val mesh by lazy { BrushMesher.buildBrushMesh(this, points.value) }
+    val points by lazy { BrushMesher.collectPoints(this) }
+    val mesh by lazy { BrushMesher.buildBrushMesh(this) }
 
     val bb by lazy {
-        val vertices = points.value
+        val vertices = points
         val minX = vertices.minOf { it.pos.x }
         val minY = vertices.minOf { it.pos.y }
         val minZ = vertices.minOf { it.pos.z }

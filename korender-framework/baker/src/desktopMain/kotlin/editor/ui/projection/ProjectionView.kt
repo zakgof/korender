@@ -208,8 +208,8 @@ private fun DrawScope.drawBrushes(mapper: ProjectionMapper, state: State, model:
 
 private fun DrawScope.drawGroups(mapper: ProjectionMapper, state: State, model: Model) {
     model.groups.values.forEach { group ->
-        val hidden = model.invisibleBrushes.containsAll(group.brushIds)
-        val brushes = group.brushIds.map { model.brushes[it]!! }
+        val hidden = model.invisibleBrushes.containsAll(group.brushes.map{it.id})
+        val brushes = group.brushes
         val rect = mapper.rect(brushes)!!
         drawRect(
             color = if (hidden) Color.DarkGray else Color.Yellow,

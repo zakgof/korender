@@ -29,13 +29,16 @@ class ModelDto(
         model.materials.values.map { MaterialDto(it) }
     )
 
-    fun toModel() = Model(
-        brushes.map { it.toBrush() }.associateBy { it.id }.toPersistentMap(),
-        invisibleBrushes,
-        groups.map { it.toGroup() }.associateBy { it.id }.toPersistentMap(),
-        groups.flatMap { group -> group.brushIds.map { it to group.id } }.toMap().toPersistentMap(),
-        materials.map { it.toMaterial() }.associateBy { it.id }.toPersistentMap(),
-    )
+    fun toModel(): Model {
+        val brushes = brushes.map { it.toBrush() }.associateBy { it.id }.toPersistentMap()
+        return Model(
+            brushes,
+            invisibleBrushes,
+            groups.map { it.toGroup(brushes) }.associateBy { it.id }.toPersistentMap(),
+            groups.flatMap { group -> group.brushIds.map { it to group.id } }.toMap().toPersistentMap(),
+            materials.map { it.toMaterial() }.associateBy { it.id }.toPersistentMap(),
+        )
+    }
 }
 
 @Serializable
@@ -114,10 +117,10 @@ data class GroupDto(
     constructor(group: Group) : this(
         id = group.id,
         name = group.name,
-        brushIds = group.brushIds,
+        brushIds = group.brushes.map { it.id }.toSet(),
     )
 
-    fun toGroup() = Group(name, brushIds, id)
+    fun toGroup(brushes: Map<String, Brush>) = Group(name, brushIds.map { brushes[it]!! }.toSet(), id)
 }
 
 
