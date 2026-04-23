@@ -46,12 +46,12 @@ fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
                     AmbientLight(white(0.3f))
                     Sky(fastCloudSky())
                     DirectionalLight(Vec3(1f, -2f, -1f), white(2f)) {
-                        Cascade(1024, 0.1f, 13f, -0.2f to 20f, hardwarePcf(blurRadius = 1.3f, bias = 0.05f))
-                        Cascade(1024, 10f, 60f, -0.2f to 20f, hardwarePcf(bias = 0.05f))
+                        Cascade(1024, 0.5f, 35f, -0.2f to 20f, hardwarePcf(samples = 8, blurRadius = 1.5f, bias = 0.01f))
+                        // Cascade(1024, 0.5f, 35f, -0.2f to 20f, hard())
                     }
                     DirectionalLight(Vec3(-1f, -2f, 1f), white(0.5f))
                     controller.update(frameInfo.dt, frameInfo.time)
-                    projection = projection(0.2f * width / height, 0.2f, 0.2f, 1000f)
+                    projection = projection(0.5f * width / height, 0.5f, 0.5f, 1000f)
                     camera = controller.camera()
                     KrScene("scene/foobar") {}
                     Gltf(resource = "walk/swat-woman.glb", transform = controller.player())

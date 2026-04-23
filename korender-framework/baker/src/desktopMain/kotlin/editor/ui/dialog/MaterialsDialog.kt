@@ -234,6 +234,17 @@ fun RowScope.MaterialEditor(holder: StateHolder) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Text("Triplanar", style = Theme.label, modifier = Modifier.weight(1f))
+                            Checkbox(
+                                modifier = Modifier.height(24.dp),
+                                checked = material.triplanar,
+                                onCheckedChange = {
+                                    holder.updateMaterial(material.copy(triplanar = it))
+                                })
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text("Default scale", style = Theme.label, modifier = Modifier.weight(1f))
                             FancyClickToFloatInput(value = material.scale, validator = { it in 1e-3f..1e3f }) {
                                 holder.updateMaterial(material.copy(scale = it))

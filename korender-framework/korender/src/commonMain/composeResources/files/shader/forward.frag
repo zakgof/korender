@@ -116,14 +116,14 @@ void main() {
         position = vpos;
     #endif
 
-    #ifdef PLUGIN_TEXSOURCE
-        albedo *= pluginTexturing();
-    #endif
-
     #ifdef PLUGIN_NORMAL
         normal = pluginNormal();
     #else
         normal = normalize(vnormal);
+    #endif
+
+    #ifdef PLUGIN_TEXSOURCE
+        albedo *= pluginTexturing();
     #endif
 
     #ifdef PLUGIN_ALBEDO

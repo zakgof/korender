@@ -14,6 +14,7 @@ data class Material(
     val id: String = Uuid.generateV7().toHexDashString(),
     val fitToFace: Boolean = false,
     val stochastic: Boolean = false,
+    val triplanar: Boolean = false,
     val scale: Float = 1f
 ) {
     companion object {

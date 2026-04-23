@@ -151,6 +151,7 @@ data class MaterialDto(
     val id: String,
     val fitToFace: Boolean,
     val stochastic: Boolean,
+    val triplanar: Boolean,
     val scale: Float
 ) {
     constructor(material: Material) : this(
@@ -160,6 +161,7 @@ data class MaterialDto(
         id = material.id,
         fitToFace = material.fitToFace,
         stochastic = material.stochastic,
+        triplanar = material.triplanar,
         scale = material.scale
     )
 
@@ -170,6 +172,7 @@ data class MaterialDto(
         id = id,
         fitToFace = fitToFace,
         stochastic = stochastic,
+        triplanar = triplanar,
         scale = scale
     )
 }

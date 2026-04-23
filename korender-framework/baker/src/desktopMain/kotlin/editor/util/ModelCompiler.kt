@@ -42,10 +42,12 @@ object ModelCompiler {
 
         val texArrayMaterials = texArrayGroups.map {
             it.key to SceneModel.Material(
-                it.key,
+                it.key.toString(),
                 0xFFFFFFFF,
                 null,
-                it.value.map { p -> p.second }
+                it.value.map { p -> p.second },
+                if (it.key.stochastic) 12f else null,
+                it.key.triplanarScale
             )
         }.toMap()
 
@@ -63,7 +65,7 @@ object ModelCompiler {
             .map { matToMeshFacesWithId ->
                 val faces = matToMeshFacesWithId.value.map { it.first }
                 SceneModel.Mesh(
-                    matToMeshFacesWithId.key,
+                    matToMeshFacesWithId.key.toString(),
                     matToMeshFacesWithId.value.sumOf { it.first.first.faces[it.first.second]!!.size * 3 },
                     0,
                     mapOf(
@@ -79,7 +81,7 @@ object ModelCompiler {
 
         return SceneModel(
             textures = textures,
-            materials = materials,
+            materials = materials.mapKeys { it.key.toString() },
             meshes = meshes.associateBy { it.id },
             renderables = meshes.map {
                 SceneModel.Renderable(
@@ -169,10 +171,17 @@ object ModelCompiler {
         return bytes
     }
 
-    private fun tag(material: Material): String {
+    private fun tag(material: Material): Tag {
         val img = TextureImageCache.compose(material.colorTexture!!)
-        return "${img.width}x${img.height}" + if (material.stochastic) "-stochastic" else ""
+        return Tag(img.width, img.height, material.stochastic, if (material.triplanar) material.scale else null)
     }
+
+    data class Tag(
+        val width: Int,
+        val height: Int,
+        val stochastic: Boolean,
+        val triplanarScale: Float?
+    )
 
 }
 
