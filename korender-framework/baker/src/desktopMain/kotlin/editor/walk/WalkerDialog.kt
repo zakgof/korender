@@ -42,12 +42,17 @@ fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
                 val controller = Controller(data!!.second)
                 OnKey { controller.key(it) }
                 OnTouch { controller.touch(it) }
+                val sky = fastCloudSky()
                 Frame {
-                    AmbientLight(white(0.3f))
-                    Sky(fastCloudSky())
+                    DeferredShading {
+                        Shading {
+                            ibl = sky
+                        }
+                    }
+                    Sky(sky)
                     DirectionalLight(Vec3(1f, -2f, -1f), white(2f)) {
                         Cascade(1024, 0.5f, 35f, -0.2f to 20f, hardwarePcf(samples = 8, blurRadius = 1.5f, bias = 0.01f))
-                        // Cascade(1024, 0.5f, 35f, -0.2f to 20f, hard())
+                        Cascade(512, 30f, 100f, -0.2f to 20f, hardwarePcf(samples = 6, blurRadius = 2.5f, bias = 0.01f))
                     }
                     DirectionalLight(Vec3(-1f, -2f, 1f), white(0.5f))
                     controller.update(frameInfo.dt, frameInfo.time)

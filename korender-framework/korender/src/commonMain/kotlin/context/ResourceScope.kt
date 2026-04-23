@@ -202,7 +202,7 @@ interface ResourceScope {
      * @param block pipe segment declaration block
      * @return mesh declaration
      */
-    fun pipeMesh(id: String, segments: Int, dynamic: Boolean = false, block: PipeMeshContext.() -> Unit): MeshDeclaration
+    fun pipeMesh(id: String, segments: Int, dynamic: Boolean = false, block: PipeMeshScope.() -> Unit): MeshDeclaration
 
     /**
      * Creates a mesh declaration from a Mesh object.

@@ -21,6 +21,7 @@ import com.zakgof.korender.impl.glgpu.UniformPack
 import com.zakgof.korender.impl.material.InternalDecalMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
+import com.zakgof.korender.impl.material.InternalShadingMaterial
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
@@ -56,8 +57,9 @@ internal class SceneDeclaration {
 }
 
 internal class DeferredShadingDeclaration(val nodeContext: NodeContext) {
-    var postShadingEffects = mutableListOf<PostShadingEffect>()
-    var decals = mutableListOf<InternalDecalDeclaration>()
+    var shadingMaterial = InternalShadingMaterial()
+    val postShadingEffects = mutableListOf<PostShadingEffect>()
+    val decals = mutableListOf<InternalDecalDeclaration>()
 }
 
 internal class InternalDecalDeclaration(

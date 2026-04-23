@@ -134,7 +134,7 @@ class StateHolder {
     fun create() {
         val bb = state.value.creator
         val newBrush = Brush(
-            "Brush ${_model.value.brushes.size}",
+            generateBrushName(state.value.creatorShape.name),
             randomBrushColor(model.value.brushes.size),
             bb,
             state.value.creatorShape,

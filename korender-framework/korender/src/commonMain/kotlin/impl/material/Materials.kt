@@ -11,6 +11,7 @@ import com.zakgof.korender.PipeMaterial
 import com.zakgof.korender.PostProcessMaterialScope
 import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.ShaderPlugin
+import com.zakgof.korender.ShadingMaterialScope
 import com.zakgof.korender.SkyMaterial
 import com.zakgof.korender.SpecularGlossiness
 import com.zakgof.korender.TerrainMaterialScope
@@ -320,4 +321,14 @@ internal class InstancingMaterialModifier(val defs: Long) : InternalMaterialModi
 
     override fun collectDefs(accumulator: Long): Long =
         super.collectDefs(accumulator) or defs
+}
+
+internal class InternalShadingMaterial() :
+    InternalMaterial("!shader/screen.vert", "!shader/deferred/shading.frag"),
+    CompositeSupplier, ShadingMaterialScope {
+
+    override var ibl: SkyMaterial? = null
+
+    override val child
+        get() = ibl as? InternalMaterialModifier
 }

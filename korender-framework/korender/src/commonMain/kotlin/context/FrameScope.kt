@@ -92,7 +92,7 @@ interface FrameScope : KorenderScope {
      * @param color light color
      * @param block shadow cascades declaration block
      */
-    fun DirectionalLight(direction: Vec3, color: ColorRGB = ColorRGB.White, block: ShadowContext.() -> Unit = {})
+    fun DirectionalLight(direction: Vec3, color: ColorRGB = ColorRGB.White, block: ShadowScope.() -> Unit = {})
 
     /**
      * Adds a point light to the frame.
@@ -116,7 +116,7 @@ interface FrameScope : KorenderScope {
      *
      * @param block deferred shading pipeline configuration block
      */
-    fun DeferredShading(block: DeferredShadingContext.() -> Unit = {})
+    fun DeferredShading(block: DeferredShadingScope.() -> Unit = {})
 
     /**
      * Renders a scene into an environment probe.

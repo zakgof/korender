@@ -2,7 +2,7 @@ package com.zakgof.korender.context
 
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 
-interface ShadowContext {
+interface ShadowScope {
     /**
      * Defines a shadow mapping cascade.
      *

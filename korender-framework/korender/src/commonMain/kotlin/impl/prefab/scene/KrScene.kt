@@ -68,8 +68,10 @@ internal class KrScene(val declaration: KrSceneDeclaration) : AutoCloseable {
             colorTextures = material.colorTextureIds?.let {
                 textureArray(*it.map { t -> texturePrefix + t }.toTypedArray())
             }
-            stochasticSharpness = material.stochasticShaprness
+            stochasticSharpness = material.stochasticSharpness
             triplanarScale = material.triplanarScale
+            metallicFactor = material.metallic ?: metallicFactor
+            roughnessFactor = material.roughness ?: roughnessFactor
         }
 
     private fun NodeContext.mesh(id: String, mesh: SceneModel.Mesh) =

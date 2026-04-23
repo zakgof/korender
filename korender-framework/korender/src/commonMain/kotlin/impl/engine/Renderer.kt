@@ -258,9 +258,7 @@ internal class Renderer(
         }
 
         private fun renderDeferredShading(rk: ResultKeeper?) {
-            // TODO cache instance
-            val shadingMaterial = InternalMaterial("!shader/screen.vert", "!shader/deferred/shading.frag")
-            val shadingMaterialDeclaration = shadingMaterial.toDeclaration(true, sceneDeclaration.deferredShadingDeclaration!!.nodeContext, arrayOf(contextMaterialModifier, null, null))
+            val shadingMaterialDeclaration = sceneDeclaration.deferredShadingDeclaration!!.shadingMaterial.toDeclaration(true, sceneDeclaration.deferredShadingDeclaration!!.nodeContext, arrayOf(contextMaterialModifier, null, null))
             renderFullscreen(shadingMaterialDeclaration, rk = rk)
         }
 

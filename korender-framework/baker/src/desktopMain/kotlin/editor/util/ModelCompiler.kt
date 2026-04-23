@@ -42,12 +42,14 @@ object ModelCompiler {
 
         val texArrayMaterials = texArrayGroups.map {
             it.key to SceneModel.Material(
-                it.key.toString(),
-                0xFFFFFFFF,
-                null,
-                it.value.map { p -> p.second },
-                if (it.key.stochastic) 12f else null,
-                it.key.triplanarScale
+                id = it.key.toString(),
+                baseColor = 0xFFFFFFFF,
+                colorTextureId = null,
+                colorTextureIds = it.value.map { p -> p.second },
+                stochasticSharpness = if (it.key.stochastic) 12f else null,
+                triplanarScale = it.key.triplanarScale,
+                metallic = 0.1f,
+                roughness = 1.0f
             )
         }.toMap()
 

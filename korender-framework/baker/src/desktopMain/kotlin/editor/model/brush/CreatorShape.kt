@@ -12,14 +12,22 @@ import kotlin.uuid.Uuid
 
 sealed interface CreatorShape {
 
+    val name: String
+
     fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean): List<Face>
 
     object Box : CreatorShape {
+
+        override val name = "Box"
+
         override fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean) =
             Plane.cube(bb).map { Face(it, materialId, fitToFace) }
     }
 
     object RightWedge : CreatorShape {
+
+        override val name = "Wedge"
+
         override fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean): List<Face> {
             val center = bb.center
             val min = bb.min
@@ -62,6 +70,9 @@ sealed interface CreatorShape {
     }
 
     object SymmetricWedge : CreatorShape {
+
+        override val name = "SymWedge"
+
         override fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean): List<Face> {
             val center = bb.center
             val min = bb.min
@@ -103,6 +114,9 @@ sealed interface CreatorShape {
     }
 
     data class Cylinder(val sides: Int = 16) : CreatorShape {
+
+        override val name = "Cylinder"
+
         override fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean): List<Face> {
             val center = bb.center
             val size = bb.size
@@ -157,6 +171,9 @@ sealed interface CreatorShape {
     }
 
     data class Cone(val sides: Int = 16) : CreatorShape {
+
+        override val name = "Cone"
+
         override fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean): List<Face> {
             val center = bb.center
             val size = bb.size
@@ -199,6 +216,9 @@ sealed interface CreatorShape {
     }
 
     data class Sphere(val slices: Int = 12, val sectors: Int = 12) : CreatorShape {
+
+        override val name = "Sphere"
+
         override fun makeFaces(bb: BoundingBox, materialId: String, fitToFace: Boolean): List<Face> {
             val center = bb.center
             val size = bb.size

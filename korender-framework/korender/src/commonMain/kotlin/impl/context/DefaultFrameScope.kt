@@ -29,7 +29,7 @@ import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.context.BillboardInstancingDeclaration
-import com.zakgof.korender.context.DeferredShadingContext
+import com.zakgof.korender.context.DeferredShadingScope
 import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.context.GltfInstancingDeclaration
 import com.zakgof.korender.context.GuiContainerScope
@@ -37,9 +37,9 @@ import com.zakgof.korender.context.InstancingDeclaration
 import com.zakgof.korender.context.InstancingParameter
 import com.zakgof.korender.context.InstancingScope
 import com.zakgof.korender.context.KorenderScope
-import com.zakgof.korender.context.PipeMeshContext
+import com.zakgof.korender.context.PipeMeshScope
 import com.zakgof.korender.context.ResourceScope
-import com.zakgof.korender.context.ShadowContext
+import com.zakgof.korender.context.ShadowScope
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.engine.CaptureContext
@@ -176,7 +176,7 @@ internal class DefaultFrameScope(
     override fun mesh(id: String, mesh: Mesh): MeshDeclaration =
         nodeContext.mesh(id, mesh)
 
-    override fun pipeMesh(id: String, segments: Int, dynamic: Boolean, block: PipeMeshContext.() -> Unit): MeshDeclaration =
+    override fun pipeMesh(id: String, segments: Int, dynamic: Boolean, block: PipeMeshScope.() -> Unit): MeshDeclaration =
         nodeContext.pipeMesh(id, segments, dynamic, block)
 
     override fun ssr(
@@ -195,9 +195,9 @@ internal class DefaultFrameScope(
     override fun bloomWide(threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float): PostShadingEffect =
         nodeContext.bloomWide(threshold, amount, downsample, mips, offset, highResolutionRatio)
 
-    override fun DeferredShading(block: DeferredShadingContext.() -> Unit) {
+    override fun DeferredShading(block: DeferredShadingScope.() -> Unit) {
         sceneDeclaration.deferredShadingDeclaration = DeferredShadingDeclaration(nodeContext)
-        DefaultDeferredShadingContext(sceneDeclaration.deferredShadingDeclaration!!).apply(block)
+        DefaultDeferredShadingScope(sceneDeclaration.deferredShadingDeclaration!!).apply(block)
     }
 
     override fun Gltf(resource: String, transform: Transform, animation: Int?, instancing: GltfInstancingDeclaration?, onUpdate: (GltfUpdate) -> Unit, materialModifier: BaseMaterialScope.() -> Unit) {
@@ -251,7 +251,7 @@ internal class DefaultFrameScope(
         sceneDeclaration.guis += root
     }
 
-    override fun DirectionalLight(direction: Vec3, color: ColorRGB, block: ShadowContext.() -> Unit) {
+    override fun DirectionalLight(direction: Vec3, color: ColorRGB, block: ShadowScope.() -> Unit) {
         val shadowDeclaration = ShadowDeclaration()
         DefaultShadowContext(shadowDeclaration).apply(block)
         sceneDeclaration.directionalLights += DirectionalLightDeclaration(direction.normalize(), color, shadowDeclaration)

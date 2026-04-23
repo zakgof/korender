@@ -1,28 +1,28 @@
 package com.zakgof.korender.impl.context
 
-import com.zakgof.korender.context.PipeMeshContext
-import com.zakgof.korender.context.PipeMeshSequenceContext
+import com.zakgof.korender.context.PipeMeshScope
+import com.zakgof.korender.context.PipeMeshSequenceScope
 import com.zakgof.korender.math.Vec3
 
-internal class DefaultPipeMeshContext : PipeMeshContext {
+internal class DefaultPipeMeshScope : PipeMeshScope {
 
     val sequences = mutableListOf<List<PipeNode>>()
     val cycles = mutableListOf<List<PipeNode>>()
 
-    override fun sequence(block: PipeMeshSequenceContext.() -> Unit) {
-        val pipeMeshSequenceContext = DefaultPipeMeshSequenceContext()
+    override fun sequence(block: PipeMeshSequenceScope.() -> Unit) {
+        val pipeMeshSequenceContext = DefaultPipeMeshSequenceScope()
         block.invoke(pipeMeshSequenceContext)
         sequences += pipeMeshSequenceContext.nodes
     }
 
-    override fun cycle(block: PipeMeshSequenceContext.() -> Unit) {
-        val pipeMeshSequenceContext = DefaultPipeMeshSequenceContext()
+    override fun cycle(block: PipeMeshSequenceScope.() -> Unit) {
+        val pipeMeshSequenceContext = DefaultPipeMeshSequenceScope()
         block.invoke(pipeMeshSequenceContext)
         cycles += pipeMeshSequenceContext.nodes
     }
 }
 
-internal class DefaultPipeMeshSequenceContext : PipeMeshSequenceContext {
+internal class DefaultPipeMeshSequenceScope : PipeMeshSequenceScope {
 
     val nodes = mutableListOf<PipeNode>()
 

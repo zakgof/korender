@@ -20,7 +20,7 @@ import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.context.InstancingParameter
 import com.zakgof.korender.context.InstancingScope
-import com.zakgof.korender.context.PipeMeshContext
+import com.zakgof.korender.context.PipeMeshScope
 import com.zakgof.korender.context.ResourceScope
 import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.engine.createPipeMesh
@@ -204,7 +204,7 @@ internal class NodeContext(
     override fun loadMesh(meshDeclaration: MeshDeclaration): Deferred<Mesh> =
         Geometry.loadCpuMesh(meshDeclaration, resourceLoader)
 
-    override fun pipeMesh(id: String, segments: Int, dynamic: Boolean, block: PipeMeshContext.() -> Unit) =
+    override fun pipeMesh(id: String, segments: Int, dynamic: Boolean, block: PipeMeshScope.() -> Unit) =
         createPipeMesh(id, segments, dynamic, this, block)
 
     override fun blur(radius: Float) =

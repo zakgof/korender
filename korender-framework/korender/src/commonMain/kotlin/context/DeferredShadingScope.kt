@@ -2,17 +2,17 @@ package com.zakgof.korender.context
 
 import com.zakgof.korender.DecalMaterial
 import com.zakgof.korender.PostShadingEffect
+import com.zakgof.korender.ShadingMaterialScope
 import com.zakgof.korender.math.Vec3
 
-interface DeferredShadingContext {
+interface DeferredShadingScope {
 
     /**
      * Defines modifiers for the shading step.
      *
      * @param shadingModifiers shading material modifiers
      */
-    // TODO
-    // fun Shading(vararg shadingModifiers: MaterialModifier)
+    fun Shading(block: ShadingMaterialScope.() -> Unit = {})
 
     /**
      * Defines post shading effect modifiers.

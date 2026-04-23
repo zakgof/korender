@@ -163,3 +163,8 @@ interface PostProcessMaterialScope : MaterialScope
 interface PostShadingEffect
 
 interface PostProcessingEffect
+
+
+interface ShadingMaterialScope : MaterialScope {
+    var ibl: SkyMaterial?
+}

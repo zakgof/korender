@@ -23,8 +23,10 @@ class SceneModel(
         val baseColor: Long = -1,
         val colorTextureId: String? = null,
         val colorTextureIds: List<String>? = null,
-        val stochasticShaprness: Float? = null,
-        val triplanarScale: Float? = null
+        val stochasticSharpness: Float? = null,
+        val triplanarScale: Float? = null,
+        val metallic: Float? = null,
+        val roughness: Float? = null
     )
 
     @Serializable

@@ -63,9 +63,9 @@ void main() {
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
     vec3 diffFactor = albedo * (1.0 - metallic);
     vec3 specFactor = fresnelSchlick(max(dot(V, N), 0.1), F0);
-    color += ambientColor * (diffFactor + specFactor * 0.3);
+    color += ambientColor * (diffFactor + specFactor * 0.3); // TODO magic
     #ifdef PLUGIN_SKY
-        color += skyibl(N, V, roughness, diffFactor, specFactor);
+        color += skyibl(N, V, roughness, diffFactor * 0.1, specFactor); // TODO magic
     #endif
 
     fragColor = vec4(color, 1.);
