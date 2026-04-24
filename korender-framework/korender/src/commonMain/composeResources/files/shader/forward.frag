@@ -204,11 +204,13 @@ void main() {
         }
 
         vec3 F0 = mix(vec3(0.04), albedo.rgb, metallic);
-        vec3 diffFactor = albedo.rgb * (1.0 - metallic);
-        vec3 specFactor = fresnelSchlick(max(dot(look, normal), 0.0), F0);
-        color += ambientColor * diffFactor;
+        float NdotV = max(dot(look, normal), 0.0);
+        vec3 F = fresnelSchlick(NdotV, F0);
+        vec3 kD = (1.0 - F) * (1.0 - metallic);
+        color += kD * ambientColor * albedo.rgb;
+
         #ifdef PLUGIN_SKY
-            color += skyibl(normal, look, roughness, diffFactor, specFactor);
+            color += skyibl(normal, look, roughness, albedo.rgb, F, kD, NdotV);
         #endif
 
         #ifdef PLUGIN_OUTPUT
