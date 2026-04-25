@@ -184,6 +184,7 @@ internal enum class Defs {
     VERTEX_SCALE,
     VERTEX_OCCLUSION,
     SHADOW_CASTER,
+    SSAO,
     SSR,
     BLOOM,
     UPSAMPLE,

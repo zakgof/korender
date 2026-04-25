@@ -17,7 +17,6 @@ import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostProcessingMaterial
-import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.SkyMaterial
@@ -178,22 +177,6 @@ internal class DefaultFrameScope(
 
     override fun pipeMesh(id: String, segments: Int, dynamic: Boolean, block: PipeMeshScope.() -> Unit): MeshDeclaration =
         nodeContext.pipeMesh(id, segments, dynamic, block)
-
-    override fun ssr(
-        downsample: Int,
-        maxReflectionDistance: Float,
-        linearSteps: Int,
-        binarySteps: Int,
-        lastStepRatio: Float,
-        envTexture: CubeTextureDeclaration?,
-    ): PostShadingEffect =
-        nodeContext.ssr(downsample, maxReflectionDistance, linearSteps, binarySteps, lastStepRatio, envTexture)
-
-    override fun bloom(threshold: Float, amount: Float, radius: Float, downsample: Int): PostShadingEffect =
-        nodeContext.bloom(threshold, amount, radius, downsample)
-
-    override fun bloomWide(threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float): PostShadingEffect =
-        nodeContext.bloomWide(threshold, amount, downsample, mips, offset, highResolutionRatio)
 
     override fun DeferredShading(block: DeferredShadingScope.() -> Unit) {
         sceneDeclaration.deferredShadingDeclaration = DeferredShadingDeclaration(nodeContext)

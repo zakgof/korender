@@ -43,16 +43,9 @@ Screen-space reflections - applied according to the objects' surface properties 
     Frame {
         val cubeMap = ...
         DeferredShading {
-            PostShading(
-                ssr(
-                    width = width / 4,
-                    height = height / 4,
-                    fxaa = true,
-                    maxRayTravel = 12f,
-                    linearSteps = 120,
-                    binarySteps = 4,
-                    envTexture = cubeMap
-                )
+            Ssr(
+                downsample = 2,
+                envTexture = cubeMap
             )
         }
 ````
@@ -65,13 +58,22 @@ Screen-space bloom (glow) effect
     Frame {
         val cubeMap = ...
         DeferredShading {
-            PostShading(
-                bloom(
-                    width = width / 2,
-                    height = height / 2
-                )
+            Bloom(
+                amount = 3.0f
             )
         }
+````
+
+## Screen-space ambient occlusion
+
+Opt-in ambient occlusion pass for deferred rendering.
+
+````kotlin
+    Frame {
+        DeferredShading {
+            Ssao(blurRadius = 10f)
+        }
+    }
 ````
 
 ## Decals

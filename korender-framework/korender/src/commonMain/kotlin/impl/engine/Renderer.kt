@@ -46,10 +46,13 @@ import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
+import com.zakgof.korender.impl.material.SsaoBlurMaterial
+import com.zakgof.korender.impl.material.SsaoMaterial
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.scale
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -201,65 +204,116 @@ internal class Renderer(
 
         private fun renderSceneDeferred(rk: ResultKeeper?) {
 
-            renderDeferredOpaques(rk)
-
             val postShadingEffects = sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects.map { it as InternalPostShadingEffect }
             val hasPostShading = postShadingEffects.isNotEmpty()
             val hasPostProcessing = sceneDeclaration.filters.isNotEmpty()
+            val ssaoDeclaration = sceneDeclaration.deferredShadingDeclaration!!.ssaoDeclaration
+            val hasSsao = ssaoDeclaration != null
 
-            if (!hasPostShading && !hasPostProcessing) {
-                renderTo(finalFb) {
-                    renderDeferredShading(rk)
-                    renderBucket(sceneDeclaration.skies, true, rk)
-                    renderTransparents(rk = rk)
+            try {
+                renderDeferredOpaques(rk)
+                if (hasSsao) {
+                    renderSsao(rk, ssaoDeclaration!!.blurRadius)
                 }
-                return
-            }
 
-            if (!hasPostShading && hasPostProcessing) {
-                renderToReusableFb(FrameTarget.default, rk) {
-                    renderDeferredShading(rk)
-                    renderBucket(sceneDeclaration.skies, true, rk)
+                if (!hasPostShading && !hasPostProcessing) {
+                    renderTo(finalFb) {
+                        renderDeferredShading(rk, hasSsao)
+                        renderBucket(sceneDeclaration.skies, true, rk)
+                        renderTransparents(rk = rk)
+                    }
+                    return
                 }
-                renderPostProcessAndTransparents(rk)
-                return
-            }
 
-            if (hasPostShading && !hasPostProcessing) {
-                renderToReusableFb(FrameTarget.default, rk) {
-                    renderDeferredShading(rk)
+                if (!hasPostShading && hasPostProcessing) {
+                    renderToReusableFb(FrameTarget.default, rk) {
+                        renderDeferredShading(rk, hasSsao)
+                        renderBucket(sceneDeclaration.skies, true, rk)
+                    }
+                    renderPostProcessAndTransparents(rk)
+                    return
                 }
-                postShadingEffects.forEach {
-                    renderPostShadingEffect(it, rk)
-                }
-                renderTo(finalFb) {
-                    renderComposition(rk)
-                    renderBucket(sceneDeclaration.skies, true, rk)
-                    renderTransparents(rk = rk)
-                }
-                return
-            }
 
-            if (hasPostShading && hasPostProcessing) {
-                renderToReusableFb(FrameTarget.default, rk) {
-                    renderDeferredShading(rk);
+                if (hasPostShading && !hasPostProcessing) {
+                    renderToReusableFb(FrameTarget.default, rk) {
+                        renderDeferredShading(rk, hasSsao)
+                    }
+                    postShadingEffects.forEach {
+                        renderPostShadingEffect(it, rk)
+                    }
+                    renderTo(finalFb) {
+                        renderComposition(rk)
+                        renderBucket(sceneDeclaration.skies, true, rk)
+                        renderTransparents(rk = rk)
+                    }
+                    return
                 }
-                postShadingEffects.forEach {
-                    renderPostShadingEffect(it, rk)
+
+                if (hasPostShading && hasPostProcessing) {
+                    renderToReusableFb(FrameTarget.default, rk) {
+                        renderDeferredShading(rk, hasSsao)
+                    }
+                    postShadingEffects.forEach {
+                        renderPostShadingEffect(it, rk)
+                    }
+                    renderToReusableFb(FrameTarget.default, rk) {
+                        renderComposition(rk)
+                        renderBucket(sceneDeclaration.skies, true, rk)
+                    }
+                    postShadingEffects.flatMap { it.keepTextures }
+                        .forEach { reusableFrameBufferHolder.unlock(it) }
+                    renderPostProcessAndTransparents(rk)
                 }
-                renderToReusableFb(FrameTarget.default, rk) {
-                    renderComposition(rk)
-                    renderBucket(sceneDeclaration.skies, true, rk)
-                }
-                postShadingEffects.flatMap { it.keepTextures }
-                    .forEach { reusableFrameBufferHolder.unlock(it) }
-                renderPostProcessAndTransparents(rk)
+            } finally {
+                reusableFrameBufferHolder.unlock("ssaoTexture")
+                reusableFrameBufferHolder.unlock("ssaoDepth")
             }
         }
 
-        private fun renderDeferredShading(rk: ResultKeeper?) {
-            val shadingMaterialDeclaration = sceneDeclaration.deferredShadingDeclaration!!.shadingMaterial.toDeclaration(true, sceneDeclaration.deferredShadingDeclaration!!.nodeContext, arrayOf(contextMaterialModifier, null, null))
+        private fun renderDeferredShading(rk: ResultKeeper?, hasSsao: Boolean) {
+            val ssaoModifier = if (hasSsao) InternalMaterialModifier().also { it.customDefs = Defs.SSAO.bit } else null
+            val shadingMaterialDeclaration = sceneDeclaration.deferredShadingDeclaration!!.shadingMaterial.toDeclaration(
+                true,
+                sceneDeclaration.deferredShadingDeclaration!!.nodeContext,
+                arrayOf(contextMaterialModifier, ssaoModifier, null, null)
+            )
             renderFullscreen(shadingMaterialDeclaration, rk = rk)
+        }
+
+        private fun renderSsao(rk: ResultKeeper?, blurRadius: Float) {
+            val nodeContext = sceneDeclaration.deferredShadingDeclaration!!.nodeContext
+            try {
+                val ssaoMaterialDeclaration = SsaoMaterial().toDeclaration(true, nodeContext, arrayOf(contextMaterialModifier, null, null))
+                renderToReusableFb(FrameTarget("ssaoRawTexture", "ssaoRawDepth"), rk) {
+                    renderFullscreen(ssaoMaterialDeclaration, rk = rk)
+                }
+
+                val ssaoBlurVDeclaration = SsaoBlurMaterial(Vec2(0f, 1f), blurRadius).toDeclaration(
+                    true,
+                    nodeContext,
+                    arrayOf(contextMaterialModifier, null, null)
+                )
+                contextMaterialModifier.customTextureUniforms["aoInputTexture"] = contextMaterialModifier.customTextureUniforms["ssaoRawTexture"]!!
+                contextMaterialModifier.customTextureUniforms["depthInputTexture"] = contextMaterialModifier.customTextureUniforms["depthGeometryTexture"]!!
+                renderToReusableFb(FrameTarget("ssaoBlurTexture", "ssaoBlurDepth"), rk) {
+                    renderFullscreen(ssaoBlurVDeclaration, rk = rk)
+                }
+
+                val ssaoBlurHDeclaration = SsaoBlurMaterial(Vec2(1f, 0f), blurRadius).toDeclaration(
+                    true,
+                    nodeContext,
+                    arrayOf(contextMaterialModifier, null, null)
+                )
+                contextMaterialModifier.customTextureUniforms["aoInputTexture"] = contextMaterialModifier.customTextureUniforms["ssaoBlurTexture"]!!
+                renderToReusableFb(FrameTarget("ssaoTexture", "ssaoDepth"), rk) {
+                    renderFullscreen(ssaoBlurHDeclaration, rk = rk)
+                }
+            } finally {
+                reusableFrameBufferHolder.unlock("ssaoRawTexture")
+                reusableFrameBufferHolder.unlock("ssaoRawDepth")
+                reusableFrameBufferHolder.unlock("ssaoBlurTexture")
+                reusableFrameBufferHolder.unlock("ssaoBlurDepth")
+            }
         }
 
         private fun renderPostShadingEffect(effect: InternalPostShadingEffect, rk: ResultKeeper?) {

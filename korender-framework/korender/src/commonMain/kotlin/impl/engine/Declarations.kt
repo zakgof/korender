@@ -3,7 +3,6 @@ package com.zakgof.korender.impl.engine
 import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.PostProcessingEffect
-import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.TouchHandler
@@ -21,6 +20,7 @@ import com.zakgof.korender.impl.glgpu.UniformPack
 import com.zakgof.korender.impl.material.InternalDecalMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
+import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalShadingMaterial
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGB.Companion.white
@@ -58,9 +58,12 @@ internal class SceneDeclaration {
 
 internal class DeferredShadingDeclaration(val nodeContext: NodeContext) {
     var shadingMaterial = InternalShadingMaterial()
-    val postShadingEffects = mutableListOf<PostShadingEffect>()
+    var ssaoDeclaration: SsaoDeclaration? = null
+    val postShadingEffects = mutableListOf<InternalPostShadingEffect>()
     val decals = mutableListOf<InternalDecalDeclaration>()
 }
+
+internal data class SsaoDeclaration(val blurRadius: Float)
 
 internal class InternalDecalDeclaration(
     val position: Vec3,

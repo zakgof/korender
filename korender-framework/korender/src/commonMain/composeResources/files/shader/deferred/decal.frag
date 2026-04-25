@@ -32,8 +32,13 @@ float roughness;
 vec3 diffuse;
 vec3 f0;
 
-#ifdef PLUGIN_TEXTURING
-#import "$texturing"
+#ifdef PLUGIN_TEXSOURCE
+    #import "$texsource"
+    #ifndef PLUGIN_TEXTURING
+        #import "!shader/plugin/texturing.default.frag"
+    #else
+        #import "$texturing"
+    #endif
 #endif
 
 #ifdef PLUGIN_ALBEDO
@@ -70,7 +75,7 @@ void main() {
         albedo *= vcolor;
     #endif
 
-    #ifdef PLUGIN_TEXTURING
+    #ifdef PLUGIN_TEXSOURCE
         albedo *= pluginTexturing();
     #else
         #ifdef BASE_COLOR_MAP

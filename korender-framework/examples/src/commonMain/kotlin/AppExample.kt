@@ -39,6 +39,8 @@ import org.jetbrains.compose.resources.painterResource
 
 val pages = listOf(
 
+    Case("SSAO") { SsaoExample() },
+
     Case("Heightmap terrain") { HeightmapTerrainExample() },
     Case("Procedural terrain") { ProcTerrainExample() },
     Case("City demo") { InfiniteCity() },
@@ -57,6 +59,7 @@ val pages = listOf(
     Case("Decals") { DecalExample() },
     Case("Bloom") { BloomExample() },
     Case("SSR") { SsrExample() },
+    Case("SSAO") { SsaoExample() },
     Case("Texture arrays") { TextureArrayExample() },
     Case("Multiple viewports") { MultipleViewportsExample() },
     Case("Sky") { SkyExample() },

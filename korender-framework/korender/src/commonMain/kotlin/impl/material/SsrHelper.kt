@@ -1,7 +1,6 @@
 package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.CubeTextureDeclaration
-import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.FrameTarget
 import com.zakgof.korender.impl.engine.InternalPassDeclaration
@@ -17,7 +16,7 @@ internal fun ssrEffect(
     lastStepRatio: Float,
     envTexture: CubeTextureDeclaration?,
     nodeContext: NodeContext,
-): PostShadingEffect {
+): InternalPostShadingEffect {
     val nextStepRatio = lastStepRatio.pow(1f / (linearSteps + 1f))
     return InternalPostShadingEffect(
         effectPasses = listOf(

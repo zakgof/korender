@@ -25,9 +25,7 @@ fun SsrExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
         val iblSky = if (phase == 2) sky else null
         DeferredShading {
             if (phase == 1) {
-                PostShading(
-                    ssr(downsample = 2, envTexture = env)
-                )
+                Ssr(downsample = 2, envTexture = env)
             }
         }
 

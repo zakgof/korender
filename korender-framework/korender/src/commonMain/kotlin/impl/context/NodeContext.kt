@@ -53,10 +53,7 @@ import com.zakgof.korender.impl.material.ImageTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureArrayDeclaration
 import com.zakgof.korender.impl.material.ResourceTextureDeclaration
-import com.zakgof.korender.impl.material.bloomMipEffect
-import com.zakgof.korender.impl.material.bloomSimpleEffect
 import com.zakgof.korender.impl.material.simpleBlur
-import com.zakgof.korender.impl.material.ssrEffect
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
 import kotlinx.coroutines.CoroutineScope
@@ -209,20 +206,4 @@ internal class NodeContext(
 
     override fun blur(radius: Float) =
         simpleBlur(radius, this)
-
-    override fun ssr(
-        downsample: Int,
-        maxReflectionDistance: Float,
-        linearSteps: Int,
-        binarySteps: Int,
-        lastStepRatio: Float,
-        envTexture: CubeTextureDeclaration?,
-    ) =
-        ssrEffect(downsample, maxReflectionDistance, linearSteps, binarySteps, lastStepRatio, envTexture, this)
-
-    override fun bloom(threshold: Float, amount: Float, radius: Float, downsample: Int) =
-        bloomSimpleEffect(threshold, amount, radius, downsample, this)
-
-    override fun bloomWide(threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float) =
-        bloomMipEffect(threshold, amount, downsample, mips, offset, highResolutionRatio, this)
 }

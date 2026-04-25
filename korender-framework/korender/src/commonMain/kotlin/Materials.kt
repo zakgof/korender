@@ -160,8 +160,6 @@ interface TerrainMaterialScope : BaseMaterialScope {
 interface PostProcessMaterialScope : MaterialScope
 
 
-interface PostShadingEffect
-
 interface PostProcessingEffect
 
 

@@ -7,6 +7,7 @@ uniform sampler2D albedoGeometryTexture;
 uniform sampler2D normalGeometryTexture;
 uniform sampler2D emissionGeometryTexture;
 uniform sampler2D depthGeometryTexture;
+uniform sampler2D ssaoTexture;
 
 uniform sampler2D shadowTextures[5];
 uniform sampler2DShadow pcfTextures[5];
@@ -50,6 +51,11 @@ void main() {
 
     vec3 color = emissionTexel.rgb;
     float occlusion = emissionTexel.a;
+    float ssao = 1.0;
+
+    #ifdef SSAO
+        ssao = texture(ssaoTexture, vtex).r;
+    #endif
 
     float plane = dot((vpos - cameraPos), cameraDir);
     populateShadowRatios(plane, vpos);
@@ -62,12 +68,11 @@ void main() {
 
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
     float NdotV = max(dot(V, N), 0.0);
-    vec3 F = fresnelSchlick(NdotV, F0);
-    vec3 kD = (1.0 - F) * (1.0 - metallic);
-    color += kD * ambientColor * albedo;
+    vec3 diffFactor = albedo * (1.0 - metallic);
+    color += ambientColor * diffFactor * ssao;
 
     #ifdef PLUGIN_SKY
-        color += skyibl(N, V, roughness, albedo * (1.0 - metallic), F0, NdotV);
+        color += skyibl(N, V, roughness, diffFactor, F0, NdotV) * ssao;
     #endif
 
     fragColor = vec4(color, 1.);

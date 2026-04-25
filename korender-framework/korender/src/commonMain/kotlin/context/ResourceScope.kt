@@ -11,7 +11,6 @@ import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.PostProcessingEffect
-import com.zakgof.korender.PostShadingEffect
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureArrayDeclaration
@@ -273,41 +272,4 @@ interface ResourceScope {
     fun blur(radius: Float): PostProcessingEffect
 
 
-    /**
-     * Creates a screen space reflection post shading effect for deferred rendering pipeline.
-     * Experimental.
-     * @param downsample downsample factor for SSR framebuffer (normally 1, 2 or 4)
-     * @param maxReflectionDistance maximum distance a reflected ray is traced
-     * @param linearSteps number of forward raytracing steps
-     * @param binarySteps number of binary search steps after the forward tracing
-     * @param lastStepRatio factor to multiply forward raytracing step at maxReflectionDistance
-     * @param envTexture cube texture declaration for environment reflections
-     * @return post shading effect
-     */
-    fun ssr(downsample: Int = 2, maxReflectionDistance: Float = 10f, linearSteps: Int = 64, binarySteps: Int = 5, lastStepRatio: Float = 4f, envTexture: CubeTextureDeclaration? = null): PostShadingEffect
-
-    /**
-     * Creates a bloom (glow) post shading effect for deferred rendering pipeline.
-     * Experimental.
-     * @param threshold luminance threshold for pixels to glow
-     * @param amount bloom intensity factor
-     * @param radius bloom radius
-     * @param downsample downsample factor for bloom framebuffer (normally 1, 2 or 4)
-     * @return post shading effect
-     */
-    fun bloom(threshold: Float = 0.9f, amount: Float = 3.0f, radius: Float = 16f, downsample: Int = 2): PostShadingEffect
-
-    /**
-     * Creates a bloom (glow) post shading effect with Kawase blur for deferred rendering pipeline.
-     * Use this variant for wider bloom areas.
-     * Experimental.
-     * @param threshold luminance threshold for pixels to glow
-     * @param amount bloom intensity factor
-     * @param downsample downsample factor for bloom framebuffer (normally 1, 2 or 4)
-     * @param mips number of blur passes (normally 2-5)
-     * @param offset downsampling kernel size
-     * @param highResolutionRatio factor to include a higher-resolution buffer during the upsampling
-     * @return post shading effect
-     */
-    fun bloomWide(threshold: Float = 0.9f, amount: Float = 3.0f, downsample: Int = 2, mips: Int = 3, offset: Float = 1.0f, highResolutionRatio: Float = 0.2f): PostShadingEffect
 }
