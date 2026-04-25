@@ -47,9 +47,7 @@ object ModelCompiler {
                 colorTextureId = null,
                 colorTextureIds = it.value.map { p -> p.second },
                 stochasticSharpness = if (it.key.stochastic) 12f else null,
-                triplanarScale = it.key.triplanarScale,
-                metallic = 0.2f,
-                roughness = 0.6f
+                triplanarScale = it.key.triplanarScale
             )
         }.toMap()
 
@@ -75,7 +73,9 @@ object ModelCompiler {
                         Attribute.NORMAL to normalBytes(faces),
                         Attribute.TEX to texBytes(faces),
                         Attribute.COLOR to colorBytes(model.materials, matToMeshFacesWithId.value),
-                        Attribute.COLORTEXINDEX to colorTexIndex(matToMeshFacesWithId.value)
+                        Attribute.COLORTEXINDEX to colorTexIndex(matToMeshFacesWithId.value),
+                        Attribute.METALLIC to metallicBytes(model.materials, matToMeshFacesWithId.value),
+                        Attribute.ROUGHNESS to roughnessBytes(model.materials, matToMeshFacesWithId.value),
                     ),
                     null
                 )
@@ -149,6 +149,26 @@ object ModelCompiler {
             nbb.put(it.g)
             nbb.put(it.b)
             nbb.put(it.a)
+        }
+        return nbb.toByteArray()
+    }
+
+    private fun metallicBytes(materials: Map<String, Material>, faces: List<Pair<Pair<BrushMesh, Face>, Int>>): ByteArray {
+        val metallics = faces
+            .flatMap { pair -> List(pair.first.first.faces[pair.first.second]!!.size * 3) { materials[pair.first.second.materialId]!!.metallic } }
+        val nbb = NativeByteBuffer(metallics.size * 4)
+        metallics.forEach {
+            nbb.put(it)
+        }
+        return nbb.toByteArray()
+    }
+
+    private fun roughnessBytes(materials: Map<String, Material>, faces: List<Pair<Pair<BrushMesh, Face>, Int>>): ByteArray {
+        val roughness = faces
+            .flatMap { pair -> List(pair.first.first.faces[pair.first.second]!!.size * 3) { materials[pair.first.second.materialId]!!.roughness } }
+        val nbb = NativeByteBuffer(roughness.size * 4)
+        roughness.forEach {
+            nbb.put(it)
         }
         return nbb.toByteArray()
     }

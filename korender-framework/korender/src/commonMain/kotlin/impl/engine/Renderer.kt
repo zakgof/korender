@@ -10,6 +10,8 @@ import com.zakgof.korender.impl.geometry.Instanceable
 import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
 import com.zakgof.korender.impl.geometry.MeshAttributes.COLOR
 import com.zakgof.korender.impl.geometry.MeshAttributes.COLORTEXINDEX
+import com.zakgof.korender.impl.geometry.MeshAttributes.METALLIC
+import com.zakgof.korender.impl.geometry.MeshAttributes.ROUGHNESS
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.gl.GL.glClear
 import com.zakgof.korender.impl.gl.GL.glViewport
@@ -46,13 +48,11 @@ import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
-import com.zakgof.korender.impl.material.SsaoBlurMaterial
-import com.zakgof.korender.impl.material.SsaoMaterial
+import com.zakgof.korender.impl.material.renderSsao
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.scale
-import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -211,7 +211,19 @@ internal class Renderer(
 
             try {
                 renderDeferredOpaques(rk)
-                renderSsao(rk, ssaoDeclaration)
+                ssaoDeclaration?.let {
+                    renderSsao(
+                        sceneDeclaration.deferredShadingDeclaration!!.nodeContext,
+                        frameContext.width,
+                        frameContext.height,
+                        contextMaterialModifier,
+                        it,
+                        rk,
+                        this::renderFullscreen,
+                        this::renderToReusableFb,
+                        reusableFrameBufferHolder::unlock
+                    )
+                }
 
                 if (!hasPostShading && !hasPostProcessing) {
                     renderTo(finalFb) {
@@ -275,50 +287,6 @@ internal class Renderer(
                 arrayOf(contextMaterialModifier, ssaoModifier, null, null)
             )
             renderFullscreen(shadingMaterialDeclaration, rk = rk)
-        }
-
-        private fun renderSsao(rk: ResultKeeper?, ssaoDeclaration: SsaoDeclaration) {
-            val nodeContext = sceneDeclaration.deferredShadingDeclaration!!.nodeContext
-            val downsample = ssaoDeclaration.downsample.coerceAtLeast(1)
-            val ssaoWidth = maxOf(1, frameContext.width / downsample)
-            val ssaoHeight = maxOf(1, frameContext.height / downsample)
-            try {
-                val ssaoMaterialDeclaration = SsaoMaterial(
-                    ssaoDeclaration.sampleCount,
-                    ssaoDeclaration.radius,
-                    ssaoDeclaration.bias,
-                    ssaoDeclaration.intensity
-                ).toDeclaration(true, nodeContext, arrayOf(contextMaterialModifier, null, null))
-                renderToReusableFb(FrameTarget("ssaoRawTexture", "ssaoRawDepth", downsample), rk) {
-                    renderFullscreen(ssaoMaterialDeclaration, ssaoWidth, ssaoHeight, rk)
-                }
-
-                val ssaoBlurVDeclaration = SsaoBlurMaterial(Vec2(0f, 1f), downsample, ssaoDeclaration.blurRadius).toDeclaration(
-                    true,
-                    nodeContext,
-                    arrayOf(contextMaterialModifier, null, null)
-                )
-                contextMaterialModifier.customTextureUniforms["aoInputTexture"] = contextMaterialModifier.customTextureUniforms["ssaoRawTexture"]!!
-                contextMaterialModifier.customTextureUniforms["depthInputTexture"] = contextMaterialModifier.customTextureUniforms["depthGeometryTexture"]!!
-                renderToReusableFb(FrameTarget("ssaoBlurTexture", "ssaoBlurDepth", downsample), rk) {
-                    renderFullscreen(ssaoBlurVDeclaration, ssaoWidth, ssaoHeight, rk)
-                }
-
-                val ssaoBlurHDeclaration = SsaoBlurMaterial(Vec2(1f, 0f), downsample, ssaoDeclaration.blurRadius).toDeclaration(
-                    true,
-                    nodeContext,
-                    arrayOf(contextMaterialModifier, null, null)
-                )
-                contextMaterialModifier.customTextureUniforms["aoInputTexture"] = contextMaterialModifier.customTextureUniforms["ssaoBlurTexture"]!!
-                renderToReusableFb(FrameTarget("ssaoTexture", "ssaoDepth", downsample), rk) {
-                    renderFullscreen(ssaoBlurHDeclaration, ssaoWidth, ssaoHeight, rk)
-                }
-            } finally {
-                reusableFrameBufferHolder.unlock("ssaoRawTexture")
-                reusableFrameBufferHolder.unlock("ssaoRawDepth")
-                reusableFrameBufferHolder.unlock("ssaoBlurTexture")
-                reusableFrameBufferHolder.unlock("ssaoBlurDepth")
-            }
         }
 
         private fun renderPostShadingEffect(effect: InternalPostShadingEffect, rk: ResultKeeper?) {
@@ -629,6 +597,12 @@ internal class Renderer(
             }
             if (meshLink.cpuMesh.attrMap.containsKey(COLOR)) {
                 declaration.material.customDefs = declaration.material.customDefs or Defs.VERTEX_COLOR.bit
+            }
+            if (meshLink.cpuMesh.attrMap.containsKey(METALLIC)) {
+                declaration.material.customDefs = declaration.material.customDefs or Defs.VERTEX_METALLIC.bit
+            }
+            if (meshLink.cpuMesh.attrMap.containsKey(ROUGHNESS)) {
+                declaration.material.customDefs = declaration.material.customDefs or Defs.VERTEX_ROUGHNESS.bit
             }
 
             val instancingMaterialModifier = (declaration.mesh as? Instanceable)?.instancing(meshLink, reverseZ, camera, inventory)

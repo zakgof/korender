@@ -39,10 +39,10 @@ fun SsaoExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
             Ssao(
                 downsample = 1,
                 sampleCount = 24,
-                radius = 2.0f,
+                radius = 0.4f,
                 bias = 0.025f,
                 intensity = 1.15f,
-                blurRadius = 10f
+                blurRadius = 5f
             )
         }
         AmbientLight(white(0.85f))

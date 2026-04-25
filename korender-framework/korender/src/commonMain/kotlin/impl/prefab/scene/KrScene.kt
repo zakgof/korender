@@ -99,6 +99,8 @@ internal class KrScene(val declaration: KrSceneDeclaration) : AutoCloseable {
         SceneModel.Attribute.TEX -> MeshAttributes.TEX
         SceneModel.Attribute.COLOR -> MeshAttributes.COLOR
         SceneModel.Attribute.COLORTEXINDEX -> MeshAttributes.COLORTEXINDEX
+        SceneModel.Attribute.METALLIC -> MeshAttributes.METALLIC
+        SceneModel.Attribute.ROUGHNESS -> MeshAttributes.ROUGHNESS
     }
 
     override fun close() {

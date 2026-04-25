@@ -74,7 +74,7 @@ void main() {
         vmetallic = metallic;
     #endif
     #ifdef VERTEX_ROUGHNESS
-        vroughness = rouhgness;
+        vroughness = roughness;
     #endif
     #ifdef VERTEX_COLORTEXINDEX
         vcolortexindex = colortexindex;

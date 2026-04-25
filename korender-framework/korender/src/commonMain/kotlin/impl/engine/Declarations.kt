@@ -58,7 +58,7 @@ internal class SceneDeclaration {
 
 internal class DeferredShadingDeclaration(val nodeContext: NodeContext) {
     var shadingMaterial = InternalShadingMaterial()
-    var ssaoDeclaration: SsaoDeclaration = SsaoDeclaration()
+    var ssaoDeclaration: SsaoDeclaration? = null
     val postShadingEffects = mutableListOf<InternalPostShadingEffect>()
     val decals = mutableListOf<InternalDecalDeclaration>()
 }

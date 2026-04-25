@@ -73,6 +73,9 @@ void main() {
 
     #ifdef PLUGIN_SKY
         color += skyibl(N, V, roughness, diffFactor, F0, NdotV) * ssao;
+    #else
+        // Fallback for ambient-only setups: keep metallic surfaces from going black without IBL.
+        color += ambientColor * F0 * metallic * ssao;
     #endif
 
     fragColor = vec4(color, 1.);

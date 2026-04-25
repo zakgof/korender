@@ -210,6 +210,9 @@ void main() {
 
         #ifdef PLUGIN_SKY
             color += skyibl(normal, look, roughness, diffFactor, F0, NdotV);
+        #else
+            // Fallback for ambient-only setups: keep metallic surfaces from going black without IBL.
+            color += ambientColor * F0 * metallic;
         #endif
 
         #ifdef PLUGIN_OUTPUT

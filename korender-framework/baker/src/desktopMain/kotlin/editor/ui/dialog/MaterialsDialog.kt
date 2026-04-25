@@ -250,6 +250,22 @@ fun RowScope.MaterialEditor(holder: StateHolder) {
                                 holder.updateMaterial(material.copy(scale = it))
                             }
                         }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Metallic", style = Theme.label, modifier = Modifier.weight(1f))
+                            FancyClickToFloatInput(value = material.metallic, validator = { it in 0f..1f }) {
+                                holder.updateMaterial(material.copy(metallic = it))
+                            }
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Roughness", style = Theme.label, modifier = Modifier.weight(1f))
+                            FancyClickToFloatInput(value = material.roughness, validator = { it in 0f..1f }) {
+                                holder.updateMaterial(material.copy(roughness = it))
+                            }
+                        }
                     }
                 }
             }
@@ -264,6 +280,7 @@ fun RowScope.MaterialPreview(holder: StateHolder) {
     Box(Modifier.weight(1.6f).fillMaxSize()) {
         Korender({ Res.readBytes(it) }, vSync = true) {
             Frame {
+                AmbientLight(white(0.6f))
                 val mat = model.materials[state.materialId]!!
                 val fitToFaceMesh = customMesh("world", 24, 36, POS, NORMAL, TEX) {
                     pos(Vec3(-3f, -2f, 1f)).normal(1.z).tex(Vec2(0f, 1f))

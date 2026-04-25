@@ -40,7 +40,7 @@ class SceneModel(
 
     @Serializable
     enum class Attribute {
-        POS, NORMAL, TEX, COLOR, COLORTEXINDEX
+        POS, NORMAL, TEX, COLOR, COLORTEXINDEX, METALLIC, ROUGHNESS
     }
     @Serializable
     class Renderable(

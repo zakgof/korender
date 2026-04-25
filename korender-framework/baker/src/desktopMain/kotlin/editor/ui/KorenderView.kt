@@ -116,6 +116,6 @@ fun FrameScope.toBaseMM(material: Material, selected: Boolean): com.zakgof.koren
         colorTexture = material.colorTexture?.let { texture(it, TextureImageCache.korender(it)) }
         stochasticSharpness = if (material.stochastic) 12f else null
         triplanarScale = if (material.triplanar) material.scale else null
-        metallicFactor = 0.1f
-        roughnessFactor = 1f
+        metallicFactor = material.metallic
+        roughnessFactor = material.roughness
     }

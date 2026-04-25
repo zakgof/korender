@@ -15,7 +15,9 @@ data class Material(
     val fitToFace: Boolean = false,
     val stochastic: Boolean = false,
     val triplanar: Boolean = false,
-    val scale: Float = 1f
+    val scale: Float = 1f,
+    val metallic: Float = 0f,
+    val roughness: Float = 0.8f
 ) {
     companion object {
         val generic: Material = Material("Generic", null, Blue, "generic")
