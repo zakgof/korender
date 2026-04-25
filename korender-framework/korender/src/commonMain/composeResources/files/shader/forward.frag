@@ -210,7 +210,7 @@ void main() {
         color += kD * ambientColor * albedo.rgb;
 
         #ifdef PLUGIN_SKY
-            color += skyibl(normal, look, roughness, albedo.rgb, F, kD, NdotV);
+            color += skyibl(normal, look, roughness, albedo.rgb * (1.0 - metallic), F0, NdotV);
         #endif
 
         #ifdef PLUGIN_OUTPUT

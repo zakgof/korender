@@ -61,11 +61,13 @@ void main() {
         color += pointLight(vpos, l, N, V, albedo, metallic, roughness, occlusion);
 
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
-    vec3 diffFactor = albedo * (1.0 - metallic);
-    vec3 specFactor = fresnelSchlick(max(dot(V, N), 0.0), F0);
-    color += ambientColor * diffFactor;
+    float NdotV = max(dot(V, N), 0.0);
+    vec3 F = fresnelSchlick(NdotV, F0);
+    vec3 kD = (1.0 - F) * (1.0 - metallic);
+    color += kD * ambientColor * albedo;
+
     #ifdef PLUGIN_SKY
-        color += skyibl(N, V, roughness, diffFactor, specFactor);
+        color += skyibl(N, V, roughness, albedo * (1.0 - metallic), F0, NdotV);
     #endif
 
     fragColor = vec4(color, 1.);

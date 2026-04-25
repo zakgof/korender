@@ -1,5 +1,7 @@
 package com.zakgof.korender.impl.engine
 
+import com.zakgof.korender.TextureFilter
+import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.glgpu.Color3ListGetter
 import com.zakgof.korender.impl.glgpu.Color4ListGetter
@@ -75,8 +77,9 @@ internal class LightMaterialModifier(sc: SceneDeclaration) : InternalMaterialMod
 
 internal class ContextMaterialModifier(private val frameContext: FrameContext, rootNodeContext: NodeContext) : InternalMaterialModifier() {
 
-    val noiseTex = ResourceTextureDeclaration("!noise.png", nodeContext = rootNodeContext)
-    val fbmTex = ResourceTextureDeclaration("!fbm.png", nodeContext = rootNodeContext)
+    val noiseTex = ResourceTextureDeclaration("!texture/noise.png", nodeContext = rootNodeContext)
+    val fbmTex = ResourceTextureDeclaration("!texture/fbm.png", nodeContext = rootNodeContext)
+    private val brdfLut = ResourceTextureDeclaration("!texture/brdfLUT.png", wrap = TextureWrap.ClampToEdge, filter = TextureFilter.Linear, nodeContext = rootNodeContext)
 
     var shadowTextures = GlGpuTextureList(List(5) { null }, 5)
     var pcfTextures = GlGpuShadowTextureList(List(5) { null }, 5)
@@ -85,6 +88,7 @@ internal class ContextMaterialModifier(private val frameContext: FrameContext, r
         when (name) {
             "noiseTexture" -> TextureGetter<ContextMaterialModifier> { it.noiseTex }
             "fbmTexture" -> TextureGetter<ContextMaterialModifier> { it.fbmTex }
+            "brdfLut" -> TextureGetter<ContextMaterialModifier> { it.brdfLut }
             "shadowTextures[0]" -> TextureListGetter<ContextMaterialModifier> { it.shadowTextures }
             "pcfTextures[0]" -> ShadowTextureListGetter<ContextMaterialModifier> { it.pcfTextures }
             else -> super.uniform(name)

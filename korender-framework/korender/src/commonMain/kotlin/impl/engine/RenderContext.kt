@@ -8,11 +8,9 @@ import com.zakgof.korender.impl.glgpu.FloatGetter
 import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.Mat4Getter
-import com.zakgof.korender.impl.glgpu.TextureGetter
 import com.zakgof.korender.impl.glgpu.UniformGetter
 import com.zakgof.korender.impl.glgpu.Vec3Getter
 import com.zakgof.korender.impl.material.InternalMaterialModifier
-import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGBA
@@ -69,13 +67,15 @@ internal class CustomFrameContext(
 
 internal class FrameMaterialModifier(val frameContext: FrameContext, val nodeContext: NodeContext) : InternalMaterialModifier() {
 
-    private val noiseTex = ResourceTextureDeclaration("!noise.png", nodeContext = nodeContext)
-    private val fbmTex = ResourceTextureDeclaration("!fbm.png", nodeContext = nodeContext)
+//    private val noiseTex = ResourceTextureDeclaration("!texture/noise.png", nodeContext = nodeContext)
+//    private val fbmTex = ResourceTextureDeclaration("!texture/fbm.png", nodeContext = nodeContext)
+//    private val brdfLut = ResourceTextureDeclaration("!texture/brdfLUT.png", wrap = TextureWrap.ClampToEdge, filter = TextureFilter.Linear, nodeContext = nodeContext)
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
-            "noiseTexture" -> TextureGetter<FrameMaterialModifier> { it.noiseTex }
-            "fbmTexture" -> TextureGetter<FrameMaterialModifier> { it.fbmTex }
+//            "noiseTexture" -> TextureGetter<FrameMaterialModifier> { it.noiseTex }
+//            "fbmTexture" -> TextureGetter<FrameMaterialModifier> { it.fbmTex }
+//            "brdfLut" -> TextureGetter<FrameMaterialModifier> { it.brdfLut }
             "view" -> Mat4Getter<FrameMaterialModifier> { it.frameContext.camera.mat4 }
             "projectionWidth" -> FloatGetter<FrameMaterialModifier> { it.frameContext.projection.width }
             "projectionHeight" -> FloatGetter<FrameMaterialModifier> { it.frameContext.projection.height }
