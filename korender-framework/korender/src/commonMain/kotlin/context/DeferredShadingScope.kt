@@ -56,9 +56,19 @@ interface DeferredShadingScope {
      * Enables screen-space ambient occlusion for deferred rendering pipeline.
      * Experimental.
      *
+     * @param sampleCount number of AO samples
+     * @param radius AO sampling radius in view-space units
+     * @param bias depth bias to reduce self-occlusion
+     * @param intensity overall darkness multiplier
      * @param blurRadius blur radius used by the SSAO smoothing pass
      */
-    fun Ssao(blurRadius: Float = 20f)
+    fun Ssao(
+        sampleCount: Int = 16,
+        radius: Float = 0.75f,
+        bias: Float = 0.03f,
+        intensity: Float = 1.0f,
+        blurRadius: Float = 5f
+    )
 
     /**
      * Creates a decal.

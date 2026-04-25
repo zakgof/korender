@@ -6,17 +6,20 @@ in vec2 vtex;
 uniform sampler2D normalGeometryTexture;
 uniform sampler2D depthGeometryTexture;
 
+#uniform int sampleCount;
+#uniform float radius;
+#uniform float bias;
+#uniform float intensity;
+
 #uniforms
 
 out vec4 fragColor;
 
 #import "!shader/lib/space.glsl"
 
-const int SSAO_SAMPLES = 16;
-const float SSAO_RADIUS = 0.75;
-const float SSAO_BIAS = 0.03;
+const int SSAO_MAX_SAMPLES = 32;
 
-const vec3 ssaoKernel[SSAO_SAMPLES] = vec3[](
+const vec3 ssaoKernel[SSAO_MAX_SAMPLES] = vec3[](
     vec3(0.5381, 0.1856, 0.4319),
     vec3(0.1379, 0.2486, 0.4430),
     vec3(0.3371, 0.5679, 0.0057),
@@ -32,7 +35,23 @@ const vec3 ssaoKernel[SSAO_SAMPLES] = vec3[](
     vec3(0.4974, 0.4171, 0.3525),
     vec3(0.1754, 0.0783, 0.5596),
     vec3(0.0125, 0.0425, 0.1856),
-    vec3(0.1681, 0.2887, 0.0064)
+    vec3(0.1681, 0.2887, 0.0064),
+    vec3(0.7020, 0.1250, 0.2110),
+    vec3(0.2440, 0.6210, 0.1320),
+    vec3(0.8910, 0.2740, 0.0440),
+    vec3(0.1160, 0.7130, 0.4270),
+    vec3(0.4430, 0.0820, 0.6940),
+    vec3(0.0570, 0.3340, 0.8230),
+    vec3(0.8210, 0.5710, 0.1180),
+    vec3(0.3080, 0.9030, 0.0610),
+    vec3(0.6140, 0.2190, 0.5170),
+    vec3(0.1670, 0.4980, 0.7590),
+    vec3(0.9620, 0.3610, 0.2050),
+    vec3(0.0820, 0.8330, 0.2980),
+    vec3(0.3980, 0.1570, 0.8730),
+    vec3(0.7410, 0.4420, 0.2910),
+    vec3(0.2300, 0.6920, 0.5540),
+    vec3(0.5140, 0.0640, 0.4380)
 );
 
 float hash12(vec2 p) {
@@ -68,10 +87,15 @@ void main() {
     vec3 bitangent = normalize(cross(normal, tangent));
     mat3 tbn = mat3(tangent, bitangent, normal);
 
+    int samples = clamp(sampleCount, 1, SSAO_MAX_SAMPLES);
     float occlusion = 0.0;
-    for (int i = 0; i < SSAO_SAMPLES; i++) {
-        float scale = mix(0.15, 1.0, pow(float(i) / float(SSAO_SAMPLES - 1), 2.0));
-        vec3 samplePos = viewPos + tbn * ssaoKernel[i] * (SSAO_RADIUS * scale);
+    for (int i = 0; i < SSAO_MAX_SAMPLES; i++) {
+        if (i >= samples) {
+            break;
+        }
+
+        float scale = mix(0.15, 1.0, pow(float(i) / max(float(samples - 1), 1.0), 2.0));
+        vec3 samplePos = viewPos + tbn * ssaoKernel[i] * (radius * scale);
         vec4 sampleClip = pluginVProjection(samplePos);
         if (sampleClip.w <= 0.0) {
             continue;
@@ -89,11 +113,11 @@ void main() {
 
         vec3 sampleViewPos = screenToViewSpace(sampleUv, sampleDepth).xyz;
         float diff = sampleViewPos.z - samplePos.z;
-        float rangeCheck = smoothstep(0.0, 1.0, SSAO_RADIUS / (abs(diff) + 1e-4));
-        occlusion += step(SSAO_BIAS, diff) * rangeCheck;
+        float rangeCheck = smoothstep(0.0, 1.0, radius / (abs(diff) + 1e-4));
+        occlusion += step(bias, diff) * rangeCheck;
     }
 
-    float ao = 1.0 - occlusion / float(SSAO_SAMPLES);
+    float ao = 1.0 - (occlusion / float(samples)) * intensity;
     ao = clamp(pow(ao, 1.35), 0.0, 1.0);
     fragColor = vec4(vec3(ao), 1.0);
     gl_FragDepth = depth;

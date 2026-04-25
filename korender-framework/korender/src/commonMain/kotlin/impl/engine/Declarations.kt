@@ -58,12 +58,18 @@ internal class SceneDeclaration {
 
 internal class DeferredShadingDeclaration(val nodeContext: NodeContext) {
     var shadingMaterial = InternalShadingMaterial()
-    var ssaoDeclaration: SsaoDeclaration? = null
+    var ssaoDeclaration: SsaoDeclaration = SsaoDeclaration()
     val postShadingEffects = mutableListOf<InternalPostShadingEffect>()
     val decals = mutableListOf<InternalDecalDeclaration>()
 }
 
-internal data class SsaoDeclaration(val blurRadius: Float)
+internal data class SsaoDeclaration(
+    val sampleCount: Int = 16,
+    val radius: Float = 0.75f,
+    val bias: Float = 0.03f,
+    val intensity: Float = 1.0f,
+    val blurRadius: Float = 5f,
+)
 
 internal class InternalDecalDeclaration(
     val position: Vec3,

@@ -61,8 +61,8 @@ internal class DefaultDeferredShadingScope(private var deferredShadingDeclaratio
         )
     }
 
-    override fun Ssao(blurRadius: Float) {
-        deferredShadingDeclaration.ssaoDeclaration = SsaoDeclaration(blurRadius)
+    override fun Ssao(sampleCount: Int, radius: Float, bias: Float, intensity: Float, blurRadius: Float) {
+        deferredShadingDeclaration.ssaoDeclaration = SsaoDeclaration(sampleCount, radius, bias, intensity, blurRadius)
     }
 
     override fun Decal(material: DecalMaterial, position: Vec3, look: Vec3, up: Vec3, size: Float) {

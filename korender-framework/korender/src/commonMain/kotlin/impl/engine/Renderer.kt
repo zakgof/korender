@@ -208,17 +208,14 @@ internal class Renderer(
             val hasPostShading = postShadingEffects.isNotEmpty()
             val hasPostProcessing = sceneDeclaration.filters.isNotEmpty()
             val ssaoDeclaration = sceneDeclaration.deferredShadingDeclaration!!.ssaoDeclaration
-            val hasSsao = ssaoDeclaration != null
 
             try {
                 renderDeferredOpaques(rk)
-                if (hasSsao) {
-                    renderSsao(rk, ssaoDeclaration!!.blurRadius)
-                }
+                renderSsao(rk, ssaoDeclaration)
 
                 if (!hasPostShading && !hasPostProcessing) {
                     renderTo(finalFb) {
-                        renderDeferredShading(rk, hasSsao)
+                        renderDeferredShading(rk, ssaoDeclaration)
                         renderBucket(sceneDeclaration.skies, true, rk)
                         renderTransparents(rk = rk)
                     }
@@ -227,7 +224,7 @@ internal class Renderer(
 
                 if (!hasPostShading && hasPostProcessing) {
                     renderToReusableFb(FrameTarget.default, rk) {
-                        renderDeferredShading(rk, hasSsao)
+                        renderDeferredShading(rk, ssaoDeclaration)
                         renderBucket(sceneDeclaration.skies, true, rk)
                     }
                     renderPostProcessAndTransparents(rk)
@@ -236,7 +233,7 @@ internal class Renderer(
 
                 if (hasPostShading && !hasPostProcessing) {
                     renderToReusableFb(FrameTarget.default, rk) {
-                        renderDeferredShading(rk, hasSsao)
+                        renderDeferredShading(rk, ssaoDeclaration)
                     }
                     postShadingEffects.forEach {
                         renderPostShadingEffect(it, rk)
@@ -251,7 +248,7 @@ internal class Renderer(
 
                 if (hasPostShading && hasPostProcessing) {
                     renderToReusableFb(FrameTarget.default, rk) {
-                        renderDeferredShading(rk, hasSsao)
+                        renderDeferredShading(rk, ssaoDeclaration)
                     }
                     postShadingEffects.forEach {
                         renderPostShadingEffect(it, rk)
@@ -270,8 +267,8 @@ internal class Renderer(
             }
         }
 
-        private fun renderDeferredShading(rk: ResultKeeper?, hasSsao: Boolean) {
-            val ssaoModifier = if (hasSsao) InternalMaterialModifier().also { it.customDefs = Defs.SSAO.bit } else null
+        private fun renderDeferredShading(rk: ResultKeeper?, ssaoDeclaration: SsaoDeclaration) {
+            val ssaoModifier = InternalMaterialModifier().also { it.customDefs = Defs.SSAO.bit }
             val shadingMaterialDeclaration = sceneDeclaration.deferredShadingDeclaration!!.shadingMaterial.toDeclaration(
                 true,
                 sceneDeclaration.deferredShadingDeclaration!!.nodeContext,
@@ -280,15 +277,20 @@ internal class Renderer(
             renderFullscreen(shadingMaterialDeclaration, rk = rk)
         }
 
-        private fun renderSsao(rk: ResultKeeper?, blurRadius: Float) {
+        private fun renderSsao(rk: ResultKeeper?, ssaoDeclaration: SsaoDeclaration) {
             val nodeContext = sceneDeclaration.deferredShadingDeclaration!!.nodeContext
             try {
-                val ssaoMaterialDeclaration = SsaoMaterial().toDeclaration(true, nodeContext, arrayOf(contextMaterialModifier, null, null))
+                val ssaoMaterialDeclaration = SsaoMaterial(
+                    ssaoDeclaration.sampleCount,
+                    ssaoDeclaration.radius,
+                    ssaoDeclaration.bias,
+                    ssaoDeclaration.intensity
+                ).toDeclaration(true, nodeContext, arrayOf(contextMaterialModifier, null, null))
                 renderToReusableFb(FrameTarget("ssaoRawTexture", "ssaoRawDepth"), rk) {
                     renderFullscreen(ssaoMaterialDeclaration, rk = rk)
                 }
 
-                val ssaoBlurVDeclaration = SsaoBlurMaterial(Vec2(0f, 1f), blurRadius).toDeclaration(
+                val ssaoBlurVDeclaration = SsaoBlurMaterial(Vec2(0f, 1f), ssaoDeclaration.blurRadius).toDeclaration(
                     true,
                     nodeContext,
                     arrayOf(contextMaterialModifier, null, null)
@@ -299,7 +301,7 @@ internal class Renderer(
                     renderFullscreen(ssaoBlurVDeclaration, rk = rk)
                 }
 
-                val ssaoBlurHDeclaration = SsaoBlurMaterial(Vec2(1f, 0f), blurRadius).toDeclaration(
+                val ssaoBlurHDeclaration = SsaoBlurMaterial(Vec2(1f, 0f), ssaoDeclaration.blurRadius).toDeclaration(
                     true,
                     nodeContext,
                     arrayOf(contextMaterialModifier, null, null)

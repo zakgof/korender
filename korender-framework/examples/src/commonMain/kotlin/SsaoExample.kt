@@ -36,7 +36,13 @@ fun SsaoExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
     Frame {
         TestExchange.report(frameInfo)
         DeferredShading {
-            Ssao()
+            Ssao(
+                sampleCount = 24,
+                radius = 0.9f,
+                bias = 0.025f,
+                intensity = 1.15f,
+                blurRadius = 20f
+            )
         }
         AmbientLight(white(0.85f))
         camera = orbitCamera.run { camera() }
