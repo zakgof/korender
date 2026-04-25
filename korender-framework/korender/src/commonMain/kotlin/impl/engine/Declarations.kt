@@ -64,6 +64,7 @@ internal class DeferredShadingDeclaration(val nodeContext: NodeContext) {
 }
 
 internal data class SsaoDeclaration(
+    val downsample: Int = 2,
     val sampleCount: Int = 16,
     val radius: Float = 0.75f,
     val bias: Float = 0.03f,

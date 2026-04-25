@@ -20,9 +20,11 @@ internal class SsaoMaterial(
 
 internal class SsaoBlurMaterial(
     val direction: Vec2,
+    val downsample: Int,
     val radius: Float,
 ) : InternalPostProcessingMaterial(
     "!shader/effect/ssao_blur.frag",
     "direction" to Vec2Getter<SsaoBlurMaterial> { it.direction },
+    "downsample" to IntGetter<SsaoBlurMaterial> { it.downsample },
     "radius" to FloatGetter<SsaoBlurMaterial> { it.radius },
 )

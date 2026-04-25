@@ -54,7 +54,7 @@ void main() {
     float ssao = 1.0;
 
     #ifdef SSAO
-        ssao = texture(ssaoTexture, vtex).r;
+        ssao = textureLod(ssaoTexture, vtex, 0.0).r;
     #endif
 
     float plane = dot((vpos - cameraPos), cameraDir);
