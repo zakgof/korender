@@ -32,7 +32,7 @@ fun MetallicRoughnessExample() = Korender(resourceLoader = { Res.readBytes("file
                         color = ColorRGBA(0x80A0FFFF)
                         metallicFactor = r / 4.0f
                         roughnessFactor = max(m / 4.0f, 0.05f)
-                        ibl = sky
+                        this.env = sky
                     },
                     mesh = sphere(0.8f),
                     transform = translate((m - 2) * 1.7f, (r - 2) * 1.7f, 8f)

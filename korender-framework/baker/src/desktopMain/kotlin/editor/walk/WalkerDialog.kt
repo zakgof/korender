@@ -46,7 +46,7 @@ fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
                 Frame {
                     DeferredShading {
                         Shading {
-                            ibl = sky
+                            env = sky
                         }
                     }
                     Sky(sky)

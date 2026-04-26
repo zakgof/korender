@@ -120,7 +120,7 @@ interface BaseMaterialScope : MaterialScope {
      */
     var occlusionTexture: TextureDeclaration?
 
-    var ibl: SkyMaterial?
+    var env: SkyMaterial?
 }
 
 interface BillboardMaterialScope : BaseMaterialScope {
@@ -164,5 +164,5 @@ interface PostProcessingEffect
 
 
 interface ShadingMaterialScope : MaterialScope {
-    var ibl: SkyMaterial?
+    var env: SkyMaterial?
 }

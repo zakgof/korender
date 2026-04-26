@@ -37,7 +37,7 @@ fun SsrExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
                 color = ColorRGBA.Red
                 metallicFactor = 0f
                 roughnessFactor = 0.2f
-                ibl = iblSky
+                this.env = iblSky
             },
             mesh = sphere(),
             transform = translate(-2f, -1f, -4f),
@@ -48,7 +48,7 @@ fun SsrExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
                 color = ColorRGBA.Green
                 metallicFactor = 0f
                 roughnessFactor = 0.2f
-                ibl = iblSky
+                this.env = iblSky
             },
             mesh = sphere(),
             transform = translate(2f, -1f, -4f)
@@ -59,7 +59,7 @@ fun SsrExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
                 metallicFactor = 0.3f
                 roughnessFactor = 0.2f
                 triplanarScale = 0.4f
-                ibl = iblSky
+                this.env = iblSky
             },
             mesh = cube(6f),
             transform = translate(-8.y)

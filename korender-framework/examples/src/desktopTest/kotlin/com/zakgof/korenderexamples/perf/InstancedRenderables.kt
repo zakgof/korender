@@ -34,7 +34,7 @@ fun InstancedRenderables(dynamic: Boolean) = Korender(resourceLoader = { Res.rea
                 color = ColorRGBA(0x80A0FFFF)
                 metallicFactor = 0.5f
                 roughnessFactor = 0.5f
-                ibl = sky
+                this.env = sky
             },
             mesh = sphere(4f / w, 8, 8),
             instancing = instancing("10K", w * h, dynamic) {

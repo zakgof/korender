@@ -158,7 +158,7 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
     override var specularGlossinessTexture: TextureDeclaration? = null
     override var emissionTexture: TextureDeclaration? = null
     override var occlusionTexture: TextureDeclaration? = null
-    override var ibl: SkyMaterial? = null
+    override var env: SkyMaterial? = null
     var jntMatrices: List<Mat4>? = null
     var model: Mat4 = Mat4.IDENTITY
 
@@ -201,7 +201,7 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
     override fun collectPlugins2(accumulator: Long) = super.collectPlugins2(accumulator)
 
     override val child
-        get() = ibl as? InternalMaterialModifier
+        get() = env as? InternalMaterialModifier
 }
 
 internal class InternalBillboardMaterial : InternalBaseMaterial("!shader/billboard.vert"),
@@ -327,8 +327,8 @@ internal class InternalShadingMaterial() :
     InternalMaterial("!shader/screen.vert", "!shader/deferred/shading.frag"),
     CompositeSupplier, ShadingMaterialScope {
 
-    override var ibl: SkyMaterial? = null
+    override var env: SkyMaterial? = null
 
     override val child
-        get() = ibl as? InternalMaterialModifier
+        get() = env as? InternalMaterialModifier
 }
