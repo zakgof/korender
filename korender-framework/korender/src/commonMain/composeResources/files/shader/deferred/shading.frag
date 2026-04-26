@@ -7,7 +7,10 @@ uniform sampler2D albedoGeometryTexture;
 uniform sampler2D normalGeometryTexture;
 uniform sampler2D emissionGeometryTexture;
 uniform sampler2D depthGeometryTexture;
-uniform sampler2D ssaoTexture;
+
+#ifdef SSAO
+    uniform sampler2D ssaoTexture;
+#endif
 
 uniform sampler2D shadowTextures[5];
 uniform sampler2DShadow pcfTextures[5];

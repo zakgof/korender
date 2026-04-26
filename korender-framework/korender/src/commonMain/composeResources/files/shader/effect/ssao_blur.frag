@@ -4,7 +4,7 @@
 in vec2 vtex;
 
 uniform sampler2D aoInputTexture;
-uniform sampler2D depthInputTexture;
+uniform sampler2D depthGeometryTexture;
 uniform sampler2D normalGeometryTexture;
 
 #uniform vec2 direction;
@@ -24,7 +24,7 @@ float bilateralWeight(float depthCenter, float depthSample, vec3 normalCenter, v
 }
 
 void main() {
-    float centerDepth = textureLod(depthInputTexture, vtex, 0.0).r;
+    float centerDepth = textureLod(depthGeometryTexture, vtex, 0.0).r;
     vec3 centerNormal = textureLod(normalGeometryTexture, vtex, 0.0).rgb * 2.0 - 1.0;
     centerNormal = normalize(centerNormal);
     vec2 step = direction * float(downsample) / vec2(screenWidth, screenHeight);
@@ -37,7 +37,7 @@ void main() {
         vec2 uv2 = vtex - step * i;
 
         if (uv1.x >= 0.0 && uv1.x <= 1.0 && uv1.y >= 0.0 && uv1.y <= 1.0) {
-            float depth1 = textureLod(depthInputTexture, uv1, 0.0).r;
+            float depth1 = textureLod(depthGeometryTexture, uv1, 0.0).r;
             vec3 normal1 = normalize(textureLod(normalGeometryTexture, uv1, 0.0).rgb * 2.0 - 1.0);
             float w1 = bilateralWeight(centerDepth, depth1, centerNormal, normal1, i);
             ao += textureLod(aoInputTexture, uv1, 0.0).r * w1;
@@ -45,7 +45,7 @@ void main() {
         }
 
         if (uv2.x >= 0.0 && uv2.x <= 1.0 && uv2.y >= 0.0 && uv2.y <= 1.0) {
-            float depth2 = textureLod(depthInputTexture, uv2, 0.0).r;
+            float depth2 = textureLod(depthGeometryTexture, uv2, 0.0).r;
             vec3 normal2 = normalize(textureLod(normalGeometryTexture, uv2, 0.0).rgb * 2.0 - 1.0);
             float w2 = bilateralWeight(centerDepth, depth2, centerNormal, normal2, i);
             ao += textureLod(aoInputTexture, uv2, 0.0).r * w2;

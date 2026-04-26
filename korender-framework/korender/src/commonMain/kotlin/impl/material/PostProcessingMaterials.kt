@@ -4,6 +4,7 @@ import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.FrameTarget
 import com.zakgof.korender.impl.engine.InternalFilterDeclaration
 import com.zakgof.korender.impl.engine.InternalPassDeclaration
+import com.zakgof.korender.impl.engine.NodeKeeper
 import com.zakgof.korender.impl.engine.SceneDeclaration
 import com.zakgof.korender.impl.glgpu.ColorRGBGetter
 import com.zakgof.korender.impl.glgpu.CompositeSupplier
@@ -80,3 +81,10 @@ internal class FogMaterial(
     "fogColor" to ColorRGBGetter<FogMaterial> { it.fogColor },
     "density" to FloatGetter<FogMaterial> { it.density },
 )
+
+internal class InternalMultiPassEffect(
+    val effectPasses: List<InternalPassDeclaration>,
+    val keepTextures: Set<String>,
+    val finalMaterialModifier: InternalMaterialModifier,
+    override val nodeContext: NodeContext
+) : NodeKeeper

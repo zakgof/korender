@@ -42,13 +42,12 @@ import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
 import com.zakgof.korender.impl.material.InternalBaseMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalMaterialModifier
-import com.zakgof.korender.impl.material.InternalPostShadingEffect
+import com.zakgof.korender.impl.material.InternalMultiPassEffect
 import com.zakgof.korender.impl.material.InternalTexture
 import com.zakgof.korender.impl.material.NotYetLoadedTexture
 import com.zakgof.korender.impl.material.ProbeCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ProbeTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
-import com.zakgof.korender.impl.material.renderSsao
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform
@@ -204,92 +203,85 @@ internal class Renderer(
 
         private fun renderSceneDeferred(rk: ResultKeeper?) {
 
+            val shadingEffects =  sceneDeclaration.deferredShadingDeclaration!!.shadingEffects
             val postShadingEffects = sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects
             val hasPostShading = postShadingEffects.isNotEmpty()
             val hasPostProcessing = sceneDeclaration.filters.isNotEmpty()
-            val ssaoDeclaration = sceneDeclaration.deferredShadingDeclaration!!.ssaoDeclaration
 
-            try {
-                renderDeferredOpaques(rk)
-                ssaoDeclaration?.let {
-                    renderSsao(
-                        sceneDeclaration.deferredShadingDeclaration!!.nodeContext,
-                        frameContext.width,
-                        frameContext.height,
-                        contextMaterialModifier,
-                        it,
-                        rk,
-                        this::renderFullscreen,
-                        this::renderToReusableFb,
-                        reusableFrameBufferHolder::unlock
-                    )
-                }
+            renderDeferredOpaques(rk)
 
-                if (!hasPostShading && !hasPostProcessing) {
-                    renderTo(finalFb) {
-                        renderDeferredShading(rk)
-                        renderBucket(sceneDeclaration.skies, true, rk)
-                        renderTransparents(rk = rk)
-                    }
-                    return
-                }
+            shadingEffects.forEach {
+                renderMultipass(it, rk)
+            }
 
-                if (!hasPostShading && hasPostProcessing) {
-                    renderToReusableFb(FrameTarget.default, rk) {
-                        renderDeferredShading(rk)
-                        renderBucket(sceneDeclaration.skies, true, rk)
-                    }
-                    renderPostProcessAndTransparents(rk)
-                    return
+            if (!hasPostShading && !hasPostProcessing) {
+                renderTo(finalFb) {
+                    renderDeferredShading(rk)
+                    renderBucket(sceneDeclaration.skies, true, rk)
+                    renderTransparents(rk = rk)
                 }
+                return
+            }
 
-                if (hasPostShading && !hasPostProcessing) {
-                    renderToReusableFb(FrameTarget.default, rk) {
-                        renderDeferredShading(rk)
-                    }
-                    postShadingEffects.forEach {
-                        renderPostShadingEffect(it, rk)
-                    }
-                    renderTo(finalFb) {
-                        renderComposition(rk)
-                        renderBucket(sceneDeclaration.skies, true, rk)
-                        renderTransparents(rk = rk)
-                    }
-                    return
+            if (!hasPostShading && hasPostProcessing) {
+                renderToReusableFb(FrameTarget.default, rk) {
+                    renderDeferredShading(rk)
+                    renderBucket(sceneDeclaration.skies, true, rk)
                 }
+                renderPostProcessAndTransparents(rk)
+                return
+            }
 
-                if (hasPostShading && hasPostProcessing) {
-                    renderToReusableFb(FrameTarget.default, rk) {
-                        renderDeferredShading(rk)
-                    }
-                    postShadingEffects.forEach {
-                        renderPostShadingEffect(it, rk)
-                    }
-                    renderToReusableFb(FrameTarget.default, rk) {
-                        renderComposition(rk)
-                        renderBucket(sceneDeclaration.skies, true, rk)
-                    }
-                    postShadingEffects.flatMap { it.keepTextures }
-                        .forEach { reusableFrameBufferHolder.unlock(it) }
-                    renderPostProcessAndTransparents(rk)
+            if (hasPostShading && !hasPostProcessing) {
+                renderToReusableFb(FrameTarget.default, rk) {
+                    renderDeferredShading(rk)
                 }
-            } finally {
-                reusableFrameBufferHolder.unlock("ssaoTexture")
-                reusableFrameBufferHolder.unlock("ssaoDepth")
+                postShadingEffects.forEach {
+                    renderMultipass(it, rk)
+                }
+                renderTo(finalFb) {
+                    renderComposition(rk)
+                    renderBucket(sceneDeclaration.skies, true, rk)
+                    renderTransparents(rk = rk)
+                }
+                return
+            }
+
+            if (hasPostShading && hasPostProcessing) {
+                renderToReusableFb(FrameTarget.default, rk) {
+                    renderDeferredShading(rk)
+                }
+                postShadingEffects.forEach {
+                    renderMultipass(it, rk)
+                }
+                renderToReusableFb(FrameTarget.default, rk) {
+                    renderComposition(rk)
+                    renderBucket(sceneDeclaration.skies, true, rk)
+                }
+                postShadingEffects.flatMap { it.keepTextures }
+                    .forEach { reusableFrameBufferHolder.unlock(it) }
+                renderPostProcessAndTransparents(rk)
             }
         }
 
         private fun renderDeferredShading(rk: ResultKeeper?) {
-            val ssaoModifier = InternalMaterialModifier().also { it.customDefs = Defs.SSAO.bit }
+            val shadingEffects = sceneDeclaration.deferredShadingDeclaration!!.shadingEffects
+            val shadingMaterialModifiers = Array<UniformSupplier?>(shadingEffects.size + 3) {
+                when(it) {
+                    0 -> contextMaterialModifier
+                    in 1..shadingEffects.size -> shadingEffects[it-1].finalMaterialModifier
+                    else -> null
+                }
+            }
             val shadingMaterialDeclaration = sceneDeclaration.deferredShadingDeclaration!!.shadingMaterial.toDeclaration(
                 true,
                 sceneDeclaration.deferredShadingDeclaration!!.nodeContext,
-                arrayOf(contextMaterialModifier, ssaoModifier, null, null)
+                shadingMaterialModifiers
             )
             renderFullscreen(shadingMaterialDeclaration, rk = rk)
         }
 
-        private fun renderPostShadingEffect(effect: InternalPostShadingEffect, rk: ResultKeeper?) {
+        private fun renderMultipass(effect: InternalMultiPassEffect, rk: ResultKeeper?) {
             effect.effectPasses.forEach { pass ->
                 renderToReusableFb(pass.target, rk) {
                     pass.mapping.forEach {
@@ -311,7 +303,7 @@ internal class Renderer(
         private fun renderComposition(rk: ResultKeeper?) {
             // TODO: rewrite
             val compositionModifiers = listOf(contextMaterialModifier) + sceneDeclaration.deferredShadingDeclaration!!.postShadingEffects
-                .map { it.compositionMaterialModifier } + listOf(null, null)
+                .map { it.finalMaterialModifier } + listOf(null, null)
             val compositionMaterial = InternalMaterial("!shader/screen.vert", "!shader/deferred/composition.frag")
             val compositionMaterialDeclaration = compositionMaterial.toDeclaration(true, sceneDeclaration.deferredShadingDeclaration!!.nodeContext, compositionModifiers.toTypedArray())
             renderFullscreen(compositionMaterialDeclaration, rk = rk)

@@ -19,8 +19,8 @@ import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.UniformPack
 import com.zakgof.korender.impl.material.InternalDecalMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
+import com.zakgof.korender.impl.material.InternalMultiPassEffect
 import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
-import com.zakgof.korender.impl.material.InternalPostShadingEffect
 import com.zakgof.korender.impl.material.InternalShadingMaterial
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGB.Companion.white
@@ -58,8 +58,8 @@ internal class SceneDeclaration {
 
 internal class DeferredShadingDeclaration(val nodeContext: NodeContext) {
     var shadingMaterial = InternalShadingMaterial()
-    var ssaoDeclaration: SsaoDeclaration? = null
-    val postShadingEffects = mutableListOf<InternalPostShadingEffect>()
+    var shadingEffects =  mutableListOf<InternalMultiPassEffect>()
+    val postShadingEffects = mutableListOf<InternalMultiPassEffect>()
     val decals = mutableListOf<InternalDecalDeclaration>()
 }
 

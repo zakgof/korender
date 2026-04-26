@@ -7,25 +7,25 @@ import com.zakgof.korender.impl.glgpu.FloatGetter
 
 internal fun bloomMipEffect(
     threshold: Float, amount: Float, downsample: Int, mips: Int, offset: Float, highResolutionRatio: Float, nodeContext: NodeContext,
-) = InternalPostShadingEffect(
+) = InternalMultiPassEffect(
     effectPasses = listOf(bloomBrightnessPass(nodeContext, downsample, threshold)) +
             bloomDownsamplePasses(nodeContext, downsample, mips, offset) +
             bloomUpsamplePasses(nodeContext, downsample, mips, offset, highResolutionRatio),
     keepTextures = setOf("bloomTexture", "bloomDepth"),
-    compositionMaterialModifier = BloomCompositionMaterialModifier(amount),
+    finalMaterialModifier = BloomCompositionMaterialModifier(amount),
     nodeContext
 )
 
 internal fun bloomSimpleEffect(
     threshold: Float, amount: Float, radius: Float, downsample: Int, nodeContext: NodeContext,
-) = InternalPostShadingEffect(
+) = InternalMultiPassEffect(
     effectPasses = listOf(
         bloomBrightnessPass(nodeContext, downsample, threshold),
         bloomVerticalBlur(nodeContext, downsample, radius),
         bloomHorizontalBlur(nodeContext, downsample, radius)
     ),
     keepTextures = setOf("bloomTexture", "bloomDepth"),
-    compositionMaterialModifier = BloomCompositionMaterialModifier(amount),
+    finalMaterialModifier = BloomCompositionMaterialModifier(amount),
     nodeContext
 )
 

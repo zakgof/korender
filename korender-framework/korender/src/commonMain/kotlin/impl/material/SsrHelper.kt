@@ -16,9 +16,9 @@ internal fun ssrEffect(
     lastStepRatio: Float,
     envTexture: CubeTextureDeclaration?,
     nodeContext: NodeContext,
-): InternalPostShadingEffect {
+): InternalMultiPassEffect{
     val nextStepRatio = lastStepRatio.pow(1f / (linearSteps + 1f))
-    return InternalPostShadingEffect(
+    return InternalMultiPassEffect(
         effectPasses = listOf(
             InternalPassDeclaration(
                 mapOf("colorInputTexture" to "colorTexture"),
@@ -33,7 +33,7 @@ internal fun ssrEffect(
             )
         ),
         keepTextures = setOf("ssrTexture"),
-        compositionMaterialModifier = SsrCompositionMaterialModifier(envTexture),
+        finalMaterialModifier = SsrCompositionMaterialModifier(envTexture),
         nodeContext = nodeContext
     )
 }
