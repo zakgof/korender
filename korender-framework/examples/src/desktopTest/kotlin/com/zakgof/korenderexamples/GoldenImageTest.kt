@@ -27,7 +27,7 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.math.roundToInt
 
 
-class GolderImageCase(
+class GoldenImageCase(
     val title: String,
     val init: KorenderScope.() -> Unit,
     val frame: FrameScope.() -> Unit,
@@ -38,7 +38,7 @@ class GoldenImageTest {
     @OptIn(ExperimentalAtomicApi::class, ExperimentalCoroutinesApi::class)
     @ParameterizedTest
     @MethodSource("goldenImageCases")
-    fun testGoldenImage(case: GolderImageCase) {
+    fun testGoldenImage(case: GoldenImageCase) {
 
         TestExchange.screenshot(null)
 
@@ -53,7 +53,7 @@ class GoldenImageTest {
                     }
                     Frame {
                         if (captured.isCompleted) {
-                            // TestExchange.screenshot(captured.getCompleted())
+                            TestExchange.screenshot(captured.getCompleted())
                         }
                         camera = camera(10.z + 3.y, -1.z, 1.y)
                         projection = projection(2f, 2f, 1f, 200f, frustum())

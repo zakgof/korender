@@ -10,21 +10,20 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
-import com.zakgof.korenderexamples.GolderImageCase
+import com.zakgof.korenderexamples.GoldenImageCase
 import kotlin.math.floor
 import kotlin.random.Random
 
-val allInOne = GolderImageCase(
+val allInOne = GoldenImageCase(
     title = "All in one",
     init = {
     },
     frame = {
         Node(time = 0f) {
-            DeferredShading()
             setupLight()
-            fireDemo()
-            smokeDemo()
-            fireballDemo()
+            //fireDemo()
+            // smokeDemo()
+            //fireballDemo()
             instancedBillboardsDemo()
             objDemo()
             waterDemo()
@@ -71,7 +70,7 @@ private fun FrameScope.floor() =
     )
 
 private fun FrameScope.setupLight() {
-    // DeferredShading()
+    DeferredShading()
     AmbientLight(white(0.5f))
     DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(1f)) {
 //        Cascade(512, 1f, 3f, 0f to 10f, hardwarePcf())
@@ -130,7 +129,8 @@ private fun FrameScope.instancedBillboardsDemo() = Billboard(
     instancing = billboardInstancing(
         id = "particles",
         count = 100,
-        dynamic = false
+        dynamic = false,
+        POSITION_BILLBOARD_INSTANCING, SCALE_BILLBOARD_INSTANCING
     ) {
         val r = Random(0)
         repeat(100) {

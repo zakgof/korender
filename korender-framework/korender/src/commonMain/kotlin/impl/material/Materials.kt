@@ -165,7 +165,7 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
             "baseColor" -> ColorRGBAGetter<InternalBaseMaterial> { it.color }
-            "colorTexture" -> TextureGetter<InternalBaseMaterial> { it.colorTexture }
+            "albedoTexture" -> TextureGetter<InternalBaseMaterial> { it.colorTexture }
             "metallicFactor" -> FloatGetter<InternalBaseMaterial> { it.metallicFactor }
             "roughnessFactor" -> FloatGetter<InternalBaseMaterial> { it.roughnessFactor }
             "alphaCutoff" -> FloatGetter<InternalBaseMaterial> { it.alphaCutoff }
