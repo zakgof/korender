@@ -183,6 +183,7 @@ internal enum class Defs {
     VERTEX_ROT,
     VERTEX_SCALE,
     VERTEX_OCCLUSION,
+    TRIPLANAR,
     SHADOW_CASTER,
     SSAO,
     SSR,

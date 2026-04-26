@@ -198,7 +198,8 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
         .pluginOverride1IfNotNull(occlusionTexture, Plugins.OCCLUSION_TEXTURE)
         .pluginOverride1IfNotNull(emissionTexture, Plugins.EMISSION_TEXTURE)
 
-    override fun collectPlugins2(accumulator: Long) = super.collectPlugins2(accumulator)
+    override fun collectDefs(accumulator: Long) = super.collectDefs(accumulator)
+        .combineDefsIfNotNull(triplanarScale, Defs.TRIPLANAR)
 
     override val child
         get() = env as? InternalMaterialModifier

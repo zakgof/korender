@@ -31,6 +31,10 @@ layout(location = 2) in vec2 tex;
 out vec3 vpos;
 out vec3 vnormal;
 out vec2 vtex;
+#ifdef TRIPLANAR
+    out vec3 vtriplanarpos;
+    out vec3 vtriplanarnormal;
+#endif
 
 #uniform mat4 model;
 #uniforms
@@ -65,6 +69,16 @@ void main() {
         vnormal = pluginVNormal();
     #else
         vnormal = mat3(transpose(inverse(totalModel))) * normal;
+    #endif
+
+    #ifdef TRIPLANAR
+        vec3 scale = vec3(
+            length(totalModel[0].xyz),
+            length(totalModel[1].xyz),
+            length(totalModel[2].xyz)
+        );
+        vtriplanarpos = pos * scale;
+        vtriplanarnormal = normalize(normal / scale);
     #endif
 
     #ifdef VERTEX_COLOR
