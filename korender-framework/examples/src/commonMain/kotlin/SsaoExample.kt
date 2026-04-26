@@ -37,12 +37,12 @@ fun SsaoExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
         TestExchange.report(frameInfo)
         DeferredShading {
             Ssao(
-                downsample = 1,
+                downsample = 2,
                 sampleCount = 24,
-                radius = 0.4f,
+                radius = 0.8f,
                 bias = 0.025f,
                 intensity = 1.15f,
-                blurRadius = 5f
+                blurRadius = 20f
             )
         }
         AmbientLight(white(0.85f))
