@@ -46,11 +46,9 @@ class GoldenImageTest {
             window.setContent {
                 Korender(resourceLoader = { Res.readBytes("files/$it") }) {
                     case.init.invoke(this)
-                    val captured = captureFrame(
-                        1024, 1024,
-                        camera = camera(10.z + 3.y, -1.z, 1.y),
+                    val captured = captureFrame(1024, 1024) {
+                        camera = camera(10.z + 3.y, -1.z, 1.y)
                         projection = projection(2f, 2f, 1f, 200f, frustum())
-                    ) {
                         case.frame.invoke(this)
                     }
                     Frame {
@@ -89,9 +87,11 @@ class GoldenImageTest {
 
         val goldenImage = ImageIO.read(baselineFile)
         if (!imagesMatch(actualImage, goldenImage)) {
-            fail<Unit>("Golden image mismatch for '${case.title}' \n" +
-                    "Actual: ${actualFile.toURI()}\n" +
-                    "Golden: ${baselineFile.toURI()}")
+            fail<Unit>(
+                "Golden image mismatch for '${case.title}' \n" +
+                        "Actual: ${actualFile.toURI()}\n" +
+                        "Golden: ${baselineFile.toURI()}"
+            )
         }
     }
 

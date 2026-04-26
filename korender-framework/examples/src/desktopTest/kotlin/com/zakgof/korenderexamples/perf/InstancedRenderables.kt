@@ -37,7 +37,7 @@ fun InstancedRenderables(dynamic: Boolean) = Korender(resourceLoader = { Res.rea
                 this.env = sky
             },
             mesh = sphere(4f / w, 8, 8),
-            instancing = instancing("10K", w * h, dynamic) {
+            instancing = instancing("10K", w * h, dynamic, TRANSFORM_INSTANCING) {
                 for (m in 0 until w) {
                     for (r in 0 until h) {
                         Instance(

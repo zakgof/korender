@@ -1,7 +1,5 @@
 package com.zakgof.korenderexamples.golden
 
-import com.zakgof.korender.Prefab
-import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.math.ColorRGB.Companion.white
@@ -16,12 +14,9 @@ import com.zakgof.korenderexamples.GolderImageCase
 import kotlin.math.floor
 import kotlin.random.Random
 
-private lateinit var terrain: Prefab<TerrainMaterialScope>
-
 val allInOne = GolderImageCase(
     title = "All in one",
     init = {
-        terrain = clipmapTerrain("terrain", 0.016f, 10, 6)
     },
     frame = {
         Node(time = 0f) {
@@ -39,7 +34,7 @@ val allInOne = GolderImageCase(
 )
 
 private fun FrameScope.terrainDemo() {
-    Prefab(terrain) {
+    HeightField("terrain", 0.016f, 10, 6) {
         colorTexture = texture("terrain/terrain-albedo.jpg", wrap = TextureWrap.ClampToEdge)
         metallicFactor = 0.0f
         heightTexture(
