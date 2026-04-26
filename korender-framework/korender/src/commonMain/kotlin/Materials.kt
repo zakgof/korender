@@ -5,31 +5,103 @@ import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
+/**
+ * Base material interface for all material types.
+ * Materials define how objects are rendered, including lighting, texturing, and shader effects.
+ */
 interface Material
 
+/**
+ * Material for camera-facing quadrilateral billboards (sprites).
+ * Billboards automatically rotate to face the camera, useful for particles, trees, etc.
+ */
 interface BillboardMaterial : Material
 
+/**
+ * Material for decal rendering on surfaces.
+ * Decals are projected onto existing geometry without affecting the underlying mesh.
+ */
 interface DecalMaterial : Material
 
+/**
+ * Material for pipe meshes with custom rendering.
+ * Typically used for deferred rendering pipelines.
+ */
 interface PipeMaterial : Material
 
+/**
+ * Material for post-processing effects applied to the final frame.
+ * Post-processing shaders operate on the rendered frame buffer.
+ */
 interface PostProcessingMaterial : Material
 
+/**
+ * Material for sky rendering (background environment).
+ * Can be procedural or texture-based (skybox, skydome).
+ */
 interface SkyMaterial : Material
 
+/**
+ * Specular-glossiness PBR model factors.
+ * Used as an alternative to metallic-roughness PBR model.
+ *
+ * @param specularFactor RGB color representing specular reflection
+ * @param glossinessFactor glossiness factor (0.0 = rough, 1.0 = mirror-like)
+ */
 data class SpecularGlossiness(
     val specularFactor: ColorRGB,
     val glossinessFactor: Float,
 )
 
+/**
+ * Effect applied to billboard rendering (e.g., particle effects).
+ */
 interface BillboardEffect
 
+/**
+ * Base interface for modifying material properties during rendering.
+ * Provides access to set custom uniforms and shader plugins.
+ */
 interface MaterialScope {
+    /**
+     * Adds a custom shader plugin to this material.
+     * @param plugin custom shader plugin
+     */
     fun plugin(plugin: ShaderPlugin)
+
+    /**
+     * Sets a custom float uniform.
+     * @param key uniform name
+     * @param value uniform value
+     */
     fun float(key: String, value: Float)
+
+    /**
+     * Sets a custom integer uniform.
+     * @param key uniform name
+     * @param value uniform value
+     */
     fun int(key: String, value: Int)
+
+    /**
+     * Sets a custom 2D vector uniform.
+     * @param key uniform name
+     * @param value uniform value
+     */
     fun vec2(key: String, value: Vec2)
+
+    /**
+     * Sets a custom 3D vector uniform.
+     * @param key uniform name
+     * @param value uniform value
+     */
     fun vec3(key: String, value: Vec3)
+
+    /**
+     * Sets a custom texture uniform.
+     * @param key uniform name
+     * @param value texture declaration
+     */
     fun texture(key: String, value: TextureDeclaration)
 }
 

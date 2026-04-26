@@ -4,29 +4,64 @@ import com.zakgof.korender.context.GuiContainerScope
 import com.zakgof.korender.math.ColorRGBA
 import kotlin.math.sqrt
 
+/**
+ * Text rendering style configuration.
+ * @param fontResource path to font file (default: built-in Anta font)
+ * @param color text color with alpha
+ * @param height font height in pixels
+ */
 data class TextStyle(
     val fontResource: String = "!font/anta.ttf",
     val color: ColorRGBA = ColorRGBA(0x66FF55A0),
     val height: Int = 32
 )
 
+/**
+ * Checkbox GUI widget state.
+ * @param initialState initial checked state
+ */
 class CheckboxState(initialState: Boolean = false) {
     var state = initialState
 }
 
+/**
+ * Joystick/analog stick GUI widget state.
+ * Tracks 2D input from a joystick control.
+ */
 class JoystickState {
+    /** X axis position (-1.0 to 1.0) */
     var x: Float = 0f
+
+    /** Y axis position (-1.0 to 1.0) */
     var y: Float = 0f
+
     internal var downEvent: TouchEvent? = null
     internal var touchX: Float = 0f
     internal var touchY: Float = 0f
 }
 
+/**
+ * Slider GUI widget state.
+ * Tracks the position of a value slider.
+ *
+ * @param position current slider position (between min and max)
+ * @param min minimum slider value
+ * @param max maximum slider value
+ */
 class SliderState(var position: Float = 0.5f, val min: Float = 0f, val max: Float = 1f) {
     internal var dragStartX: Float? = null
     internal var dragStartPos: Float? = null
 }
 
+/**
+ * Checkbox GUI component.
+ * Renders a checkbox with optional label and state change callback.
+ *
+ * @param id unique identifier for the widget
+ * @param state checkbox state
+ * @param text optional label text
+ * @param onChange callback when checkbox state changes
+ */
 fun GuiContainerScope.Checkbox(id: String, state: CheckboxState, text: String? = null, onChange: (Boolean) -> Unit = {}) =
     Row {
         val clickHandler: (TouchEvent) -> Unit = {
@@ -41,6 +76,15 @@ fun GuiContainerScope.Checkbox(id: String, state: CheckboxState, text: String? =
         Image(id = "checkbox.image.$id.${state.state}", imageResource = if (state.state) "!gui/checkbox.checked.png" else "!gui/checkbox.unchecked.png", width = 48, height = 48, marginLeft = 8, onTouch = clickHandler)
     }
 
+/**
+ * Progress bar GUI component.
+ * Displays a horizontal progress bar showing a value from 0.0 to 1.0.
+ *
+ * @param id unique identifier for the widget
+ * @param width bar width in pixels
+ * @param height bar height in pixels (default: 48)
+ * @param value progress value (0.0 = empty, 1.0 = full)
+ */
 fun GuiContainerScope.ProgressBar(id: String, width: Int, height: Int = 48, value: Float) =
     Row {
         Image(id = "progressbar.left.$id", imageResource = "!gui/progressbar.filled.png", width = 8, height = height, marginLeft = 8)
@@ -49,6 +93,16 @@ fun GuiContainerScope.ProgressBar(id: String, width: Int, height: Int = 48, valu
         Image(id = "progressbar.right.$id", imageResource = "!gui/progressbar.filled.png", width = 8, height = height)
     }
 
+/**
+ * Slider GUI component.
+ * Horizontal slider control for selecting a value within a range.
+ *
+ * @param id unique identifier for the widget
+ * @param width slider width in pixels
+ * @param height slider height in pixels (default: 48)
+ * @param state slider state
+ * @param onChange callback when slider position changes
+ */
 fun GuiContainerScope.Slider(id: String, width: Int, height: Int = 48, state: SliderState, onChange: (Float) -> Unit = {}) =
     Row {
         val setPosition = { p: Float ->
