@@ -48,6 +48,14 @@ fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
                         Shading {
                             env = sky
                         }
+                        Ssao(
+                            downsample = 2,
+                            sampleCount = 12,
+                            radius = 0.6f,
+                            bias = 0.025f,
+                            intensity = 1.15f,
+                            blurRadius = 16f
+                        )
                     }
                     Sky(sky)
                     PostProcess(fxaa())
