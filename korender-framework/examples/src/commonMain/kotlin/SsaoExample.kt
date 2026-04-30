@@ -17,19 +17,9 @@ fun SsaoExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
     val orbitCamera = OrbitCamera(14.z + 1.5f.y, 0.8f.y)
     OnTouch { orbitCamera.touch(it) }
 
-    val sphereMaterial = base {
+    val material = base {
         color = ColorRGBA(0.88f, 0.88f, 0.92f, 1f)
         roughnessFactor = 0.95f
-        metallicFactor = 0f
-    }
-    val accentMaterial = base {
-        color = ColorRGBA(0.72f, 0.78f, 0.98f, 1f)
-        roughnessFactor = 0.9f
-        metallicFactor = 0f
-    }
-    val floorMaterial = base {
-        color = ColorRGBA(0.16f, 0.16f, 0.18f, 1f)
-        roughnessFactor = 1f
         metallicFactor = 0f
     }
 
@@ -38,30 +28,30 @@ fun SsaoExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
         DeferredShading {
             Ssao(
                 downsample = 2,
-                sampleCount = 24,
-                radius = 0.8f,
+                sampleCount = 12,
+                radius = 0.6f,
                 bias = 0.025f,
                 intensity = 1.15f,
-                blurRadius = 20f
+                blurRadius = 16f
             )
         }
         AmbientLight(white(0.85f))
         camera = orbitCamera.run { camera() }
 
         Renderable(
-            floorMaterial,
+            material,
             mesh = cube(1f),
             transform = scale(18f, 0.18f, 18f).translate(0f, -3.1f, 0f)
         )
 
         val mergedSpheres = listOf(
-            Triple(Vec3(0f, -1.2f, 0f), 1.65f, sphereMaterial),
-            Triple(Vec3(-1.15f, -0.95f, 0.15f), 1.0f, accentMaterial),
-            Triple(Vec3(1.05f, -0.8f, -0.2f), 0.95f, sphereMaterial),
-            Triple(Vec3(0.15f, 0.3f, 0.7f), 0.9f, accentMaterial),
-            Triple(Vec3(0.75f, -0.1f, 1.0f), 0.85f, sphereMaterial),
-            Triple(Vec3(-0.8f, -0.15f, -0.9f), 0.85f, accentMaterial),
-            Triple(Vec3(0.0f, 0.95f, -0.25f), 0.75f, sphereMaterial),
+            Triple(Vec3(0f, -1.2f, 0f), 1.65f, material),
+            Triple(Vec3(-1.15f, -0.95f, 0.15f), 1.0f, material),
+            Triple(Vec3(1.05f, -0.8f, -0.2f), 0.95f, material),
+            Triple(Vec3(0.15f, 0.3f, 0.7f), 0.9f, material),
+            Triple(Vec3(0.75f, -0.1f, 1.0f), 0.85f, material),
+            Triple(Vec3(-0.8f, -0.15f, -0.9f), 0.85f, material),
+            Triple(Vec3(0.0f, 0.95f, -0.25f), 0.75f, material),
         )
         mergedSpheres.forEach { (position, radius, material) ->
             Renderable(

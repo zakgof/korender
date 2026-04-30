@@ -8,10 +8,6 @@ uniform sampler2D normalGeometryTexture;
 uniform sampler2D emissionGeometryTexture;
 uniform sampler2D depthGeometryTexture;
 
-#ifdef SSAO
-    uniform sampler2D ssaoTexture;
-#endif
-
 uniform sampler2D shadowTextures[5];
 uniform sampler2DShadow pcfTextures[5];
 
@@ -33,6 +29,11 @@ float shadowRatios[5] = float[5](0., 0., 0., 0., 0.);
     #import "!shader/lib/sky.glsl"
     #import "$sky"
     #import "!shader/lib/skyibl.glsl"
+#endif
+
+
+#ifdef SSAO
+    #import "!shader/deferred/shading-ssao.glsl"
 #endif
 
 void main() {
@@ -57,7 +58,7 @@ void main() {
     float ssao = 1.0;
 
     #ifdef SSAO
-        ssao = textureLod(ssaoTexture, vtex, 0.0).r;
+        ssao = sampleSsao();
     #endif
 
     float plane = dot((vpos - cameraPos), cameraDir);

@@ -16,6 +16,28 @@ uniform sampler2D normalGeometryTexture;
 
 out vec4 fragColor;
 
+vec2 blurPoint(vec2 tex, float dim, float centerDepth, vec3 centerNormal) {
+    float depth = texture(depthGeometryTexture, tex).r;
+    vec3 normal = normalize(texture(normalGeometryTexture, tex).rgb);
+    float normalWeight = max(0.0, dot(centerNormal, normal));
+    float w = dim * exp(-abs(depth - centerDepth) * 4.) * pow(normalWeight, 16.0);
+    return vec2(texture(aoInputTexture, tex).r * w, w);
+}
+
 void main() {
-    fragColor = vec4(blur(aoInputTexture, vtex, radius, direction, screenWidth), 1.);
+    float occlusion = texture(aoInputTexture, vtex).r;
+    float w = 1.;
+    vec2 step = direction / screenWidth; // TODO
+
+    float centerDepth = texture(depthGeometryTexture, vtex).r;
+    vec3 centerNormal = normalize(texture(normalGeometryTexture, vtex).rgb);
+
+    for (float i = 1.0; i <= radius; i++) {
+        float dim = exp(- i * i / (radius * radius));
+        vec2 p1 = blurPoint(vtex + step * i, dim, centerDepth, centerNormal);
+        vec2 p2 = blurPoint(vtex - step * i, dim, centerDepth, centerNormal);
+        occlusion += p1.x + p2.x;
+        w += p1.y + p2.y;
+    }
+    fragColor = vec4(occlusion / w, centerDepth, 0.0, 1.0);
 }
