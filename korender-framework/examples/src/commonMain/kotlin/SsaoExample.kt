@@ -3,6 +3,8 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
+import com.zakgof.korender.Slider
+import com.zakgof.korender.SliderState
 import com.zakgof.korender.examples.camera.OrbitCamera
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
@@ -22,17 +24,20 @@ fun SsaoExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
         roughnessFactor = 0.95f
         metallicFactor = 0f
     }
+    val samples = SliderState(24f, 2f, 128f)
+    val radius = SliderState(1.0f, 0.05f, 10f)
+    val bradius = SliderState(18f, 1f, 64f)
 
     Frame {
         TestExchange.report(frameInfo)
         DeferredShading {
             Ssao(
                 downsample = 2,
-                sampleCount = 12,
-                radius = 0.6f,
+                sampleCount = samples.position.toInt(),
+                radius = radius.position,
                 bias = 0.025f,
                 intensity = 1.15f,
-                blurRadius = 16f
+                blurRadius = bradius.position
             )
         }
         AmbientLight(white(0.85f))
@@ -62,9 +67,30 @@ fun SsaoExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
         }
 
         Gui {
-            Column {
+            Row {
+                Column {
+                    Filler()
+                    Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
+                }
                 Filler()
-                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
+                Column {
+                    Row {
+                        Filler()
+                        Text(id = "samples1", height = 24, text = "Samples ${samples.position.toInt()} ")
+                        Slider("samples2", width / 3, 32, samples)
+                    }
+                    Row {
+                        Filler()
+                        val r = "%.1f".format(radius.position)
+                        Text(id = "radius1", height = 24, text = "Radius $r ")
+                        Slider("radius2", width / 3, 32, radius)
+                    }
+                    Row {
+                        Filler()
+                        Text(id = "bradius1", height = 24, text = "Blur Radius ${bradius.position.toInt()} ")
+                        Slider("bradius2", width / 3, 32, bradius)
+                    }
+                }
             }
         }
     }
