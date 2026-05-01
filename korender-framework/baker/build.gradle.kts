@@ -43,9 +43,28 @@ kotlin {
 
 compose.desktop {
     application {
+        jvmArgs += listOf(
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+            "--add-exports=java.base/sun.misc=ALL-UNNAMED",
+            "--add-exports=java.desktop/sun.awt=ALL-UNNAMED"
+        )
         mainClass = "com.zakgof.korender.baker.MainKt"
-        jvmArgs("--add-exports", "java.desktop/sun.awt=ALL-UNNAMED", "-DprojectRoot=${project.projectDir.absolutePath}")
         nativeApplication {
+        }
+        nativeDistributions {
+            jvmArgs += listOf(
+                "--add-opens=java.base/java.lang=ALL-UNNAMED",
+                "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+                "--add-exports=java.base/sun.misc=ALL-UNNAMED",
+                "--add-exports=java.desktop/sun.awt=ALL-UNNAMED"
+            )
+            windows {
+                includeAllModules = true
+            }
+        }
+        buildTypes.release.proguard {
+            isEnabled = false
         }
     }
 }
