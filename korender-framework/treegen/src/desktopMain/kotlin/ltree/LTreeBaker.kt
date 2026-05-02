@@ -44,10 +44,13 @@ fun LTreeBaker() {
         val cards = lClusteredTree.clusters.mapIndexed { index, cluster ->
             captureCard(cluster, index, "ltree/oak.png", scope)
         }.sequence(scope)
-        val atlas = cards.flatMap(scope) {loadImage(saveCards(it), "png")}
+        val atlas = cards.flatMap(scope) { loadImage(saveCards(it), "png") }
 
         Frame {
-            this.background = ColorRGBA.Transparent
+            // this.background = ColorRGBA.Transparent
+            DeferredShading {
+                Hbao()
+            }
             AmbientLight(white(0.6f))
             DirectionalLight(Vec3(3f, 0f, 1f), white(2.5f))
             projection = projection(5f * width / height, 5f, 5f, 2000f)
@@ -110,7 +113,10 @@ fun FrameScope.renderLTree(lTree: LTree, postfix: String, leafTexture: String, t
 
 private fun FrameScope.renderFoliage(postfix: String, lTree: LTree, leafTexture: String, translation: Vec3) {
     Renderable(
-        base { colorTexture = texture(leafTexture) },
+        base {
+            colorTexture = texture(leafTexture)
+            alphaCutoff = 0.5f
+        },
         mesh = biQuad(),
         instancing = instancing("leaves$postfix", lTree.leaves.size, dynamic = true, TRANSFORM_INSTANCING) {
             lTree.leaves.map { leaf ->
@@ -121,7 +127,8 @@ private fun FrameScope.renderFoliage(postfix: String, lTree: LTree, leafTexture:
             }.forEach { Instance(it) }
         },
         transform = rotate(1.y, frameInfo.time * 0.1f)
-            .translate(translation)
+            .translate(translation),
+        transparent = true
     )
 }
 
@@ -131,7 +138,7 @@ private fun FrameScope.renderTrunk(lTree: LTree, postfix: String, translation: V
             pipe { color = ColorRGBA(0x553311FF) },
             mesh = pipeMesh("trunk$postfix", lTree.branches.size) {
                 lTree.branches
-                    .filter { branch -> branch.raidusAtHead > 0.004f }
+                    .filter { branch -> branch.raidusAtHead > 0.01f }
                     .forEach { branch ->
                         sequence {
                             val fixedTail = branch.head + (branch.tail - branch.head) * 1.06f
@@ -249,10 +256,13 @@ private fun FrameScope.renderTrunkForest(lTree: LTree) {
 
 private fun FrameScope.renderCardFoliage(cards: List<Card>, atlas: Image, position: Vec3 = 0.x) {
     Renderable(
-        base { colorTexture = texture("atlas", atlas) },
+        base {
+            colorTexture = texture("atlas", atlas)
+            alphaCutoff = 0.9f
+        },
         mesh = customMesh(
             "foliage", cards.size * 8, cards.size * 12,
-            POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3, dynamic = false
+            POS, NORMAL, TEX, dynamic = false
         ) {
             var indexBase = 0
             cards.forEachIndexed { index, card ->
@@ -277,7 +287,8 @@ private fun FrameScope.renderCardFoliage(cards: List<Card>, atlas: Image, positi
             }
         },
         transform = rotate(1.y, frameInfo.time * 0.1f)
-            .translate(position)
+            .translate(position),
+        transparent = true
     )
 }
 
