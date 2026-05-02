@@ -30,12 +30,12 @@ internal class DefaultContainerScope(
         declaration.add(stack)
     }
 
-    override fun Text(id: String, text: String, style: TextStyle?, fontResource: String?, height: Int?, color: ColorRGBA?, static: Boolean, onTouch: TouchHandler) {
+    override fun Text(id: String, text: String, style: TextStyle?, fontResource: String?, height: Float?, color: ColorRGBA?, static: Boolean, onTouch: TouchHandler) {
         declaration.add(
             ElementDeclaration.Text(
                 id,
                 fontResource ?: style?.fontResource ?: "!font/anta.ttf",
-                height ?: style?.height ?: 32,
+                height ?: style?.height?.toFloat() ?: 32f,
                 text,
                 color ?: style?.color ?: ColorRGBA(0x66FF55A0),
                 static,
@@ -49,7 +49,7 @@ internal class DefaultContainerScope(
         declaration.add(ElementDeclaration.Filler())
     }
 
-    override fun Image(id: String, imageResource: String, width: Int, height: Int, marginTop: Int, marginBottom: Int, marginLeft: Int, marginRight: Int, onTouch: TouchHandler) {
+    override fun Image(id: String, imageResource: String, width: Float, height: Float, marginTop: Float, marginBottom: Float, marginLeft: Float, marginRight: Float, onTouch: TouchHandler) {
         declaration.add(ElementDeclaration.Image(id, imageResource, width, height, marginTop, marginBottom, marginLeft, marginRight, onTouch, frameContext.nodeContext))
     }
 }

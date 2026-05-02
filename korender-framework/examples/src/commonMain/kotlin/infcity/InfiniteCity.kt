@@ -46,7 +46,7 @@ private fun FrameScope.loader() =
             Filler()
             Row {
                 Filler()
-                Text(id = "loader", text = "loading...", static = true, height = 40)
+                Text(id = "loader", text = "loading...", static = true, height = 40f)
                 Filler()
             }
             Filler()
@@ -193,7 +193,7 @@ private fun FrameScope.gui() =
     Gui {
         Column {
             Filler()
-            Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40, color = ColorRGBA(0x66FF55A0))
+            Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40f, color = ColorRGBA(0x66FF55A0))
         }
     }
 

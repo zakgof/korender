@@ -78,31 +78,31 @@ fun SsaoExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
                 Column {
                     Row {
                         Filler()
-                        Text(id = "samples1", height = 24, text = "Samples ${samples.position.toInt()} ")
-                        Slider("samples2", width / 3, 32, samples)
+                        Text(id = "samples1", height = 24f, text = "Samples ${samples.position.toInt()} ")
+                        Slider("samples2", width / 3f, 32f, samples)
                     }
                     Row {
                         Filler()
                         val r = "%.1f".format(radius.position)
-                        Text(id = "radius1", height = 24, text = "Radius $r ")
-                        Slider("radius2", width / 3, 32, radius)
+                        Text(id = "radius1", height = 24f, text = "Radius $r ")
+                        Slider("radius2", width / 3f, 32f, radius)
                     }
                     Row {
                         Filler()
                         val b = "%.3f".format(bias.position)
-                        Text(id = "bias1", height = 24, text = "Bias $b ")
-                        Slider("bias2", width / 3, 32, bias)
+                        Text(id = "bias1", height = 24f, text = "Bias $b ")
+                        Slider("bias2", width / 3f, 32f, bias)
                     }
                     Row {
                         Filler()
                         val i = "%.2f".format(intensity.position)
-                        Text(id = "intensity1", height = 24, text = "Intensity $i ")
-                        Slider("intensity2", width / 3, 32, intensity)
+                        Text(id = "intensity1", height = 24f, text = "Intensity $i ")
+                        Slider("intensity2", width / 3f, 32f, intensity)
                     }
                     Row {
                         Filler()
-                        Text(id = "bradius1", height = 24, text = "Blur Radius ${bradius.position.toInt()} ")
-                        Slider("bradius2", width / 3, 32, bradius)
+                        Text(id = "bradius1", height = 24f, text = "Blur Radius ${bradius.position.toInt()} ")
+                        Slider("bradius2", width / 3f, 32f, bradius)
                     }
                 }
             }

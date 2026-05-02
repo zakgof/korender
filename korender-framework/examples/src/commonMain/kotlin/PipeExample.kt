@@ -46,7 +46,7 @@ fun PipeExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
         Gui {
             Column {
                 Filler()
-                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40, color = ColorRGBA(0x66FF55A0))
+                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40f, color = ColorRGBA(0x66FF55A0))
             }
         }
     }

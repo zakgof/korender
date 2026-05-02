@@ -75,7 +75,7 @@ fun GltfLibraryExample() = Row {
                     Gui {
                         Column {
                             Filler()
-                            Text(id = "loading", text = "Loading ${selectedModel?.folder ?: "metadata"}...", height = 40, color = ColorRGBA(0x66FF55A0))
+                            Text(id = "loading", text = "Loading ${selectedModel?.folder ?: "metadata"}...", height = 40f, color = ColorRGBA(0x66FF55A0))
                         }
                     }
                 }
@@ -100,7 +100,7 @@ fun GltfLibraryExample() = Row {
                 Gui {
                     Column {
                         Filler()
-                        Text(id = "fps", text = "${selectedModel?.folder ?: ""}: FPS ${frameInfo.avgFps.toInt()}", height = 40, color = ColorRGBA(0x66FF55A0))
+                        Text(id = "fps", text = "${selectedModel?.folder ?: ""}: FPS ${frameInfo.avgFps.toInt()}", height = 40f, color = ColorRGBA(0x66FF55A0))
                     }
                 }
             }

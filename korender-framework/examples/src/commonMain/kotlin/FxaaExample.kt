@@ -19,7 +19,7 @@ fun FxaaExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
         val doFxaa = (frameInfo.time.toInt() % 6 < 3)
         Gui {
             val text = if (doFxaa) "FXAA ON" else "FXAA OFF"
-            Text(text = text, fontResource = "font/orbitron.ttf", height = 50, color = Red, id = "fxaa")
+            Text(text = text, fontResource = "font/orbitron.ttf", height = 50f, color = Red, id = "fxaa")
         }
 
         if (doFxaa) {

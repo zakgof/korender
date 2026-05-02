@@ -141,7 +141,7 @@ internal sealed interface ElementDeclaration {
     class Text(
         val id: String,
         val fontResource: String,
-        val height: Int,
+        val height: Float,
         val text: String,
         val color: ColorRGBA,
         val static: Boolean,
@@ -152,12 +152,12 @@ internal sealed interface ElementDeclaration {
     class Image(
         val id: String,
         val imageResource: String,
-        val width: Int,
-        val height: Int,
-        val marginTop: Int,
-        val marginBottom: Int,
-        val marginLeft: Int,
-        val marginRight: Int,
+        val width: Float,
+        val height: Float,
+        val marginTop: Float,
+        val marginBottom: Float,
+        val marginLeft: Float,
+        val marginRight: Float,
         val onTouch: TouchHandler,
         override val nodeContext: NodeContext,
     ) : ElementDeclaration, NodeKeeper {

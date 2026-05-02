@@ -209,7 +209,7 @@ internal class FontMesh(
         val mesh = meshLink.cpuMesh
         if (!declaration.static || !mesh.instancesInitialized) {
             mesh.updateMesh {
-                val h = declaration.height.toFloat() / height
+                val h = declaration.height / height
                 val aspect = height / width
                 val x = xoffset / width
                 val y = 1.0f - yoffset / height

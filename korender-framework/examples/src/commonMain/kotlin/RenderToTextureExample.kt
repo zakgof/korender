@@ -27,7 +27,7 @@ fun RenderToTextureExample() = Korender(resourceLoader = { Res.readBytes("files/
                     Filler()
                     Row {
                         Filler()
-                        Text(id = "countdown", text = "${99 - frameInfo.time.toInt().coerceAtMost(99)}", height = 200, color = ColorRGBA.Red)
+                        Text(id = "countdown", text = "${99 - frameInfo.time.toInt().coerceAtMost(99)}", height = 200f, color = ColorRGBA.Red)
                         Filler()
                     }
                     Filler()

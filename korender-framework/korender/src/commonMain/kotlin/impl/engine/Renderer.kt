@@ -472,7 +472,7 @@ internal class Renderer(
             inventory.shaderServices.uboHolder.flush(rk)
 
             val guiRenderers = sceneDeclaration.guis.map {
-                GuiRenderer(inventory, frameContext.width, frameContext.height, it)
+                GuiRenderer(inventory, frameContext.width.toFloat(), frameContext.height.toFloat(), it)
             }
             touchBoxes += guiRenderers.flatMap { it.touchBoxes }
             guiRenderers.flatMap { it.renderableDeclarations }

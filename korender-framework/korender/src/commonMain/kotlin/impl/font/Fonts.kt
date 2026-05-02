@@ -24,11 +24,10 @@ internal class Font(val gpuTexture: GlGpuTexture, val widths: FloatArray) : Auto
 
     override fun close() = gpuTexture.close()
 
-    fun textWidth(height: Int, text: String): Int =
+    fun textWidth(height: Float, text: String): Float =
         text.toCharArray()
             .map { widths[it.code] * height }
             .sum()
-            .toInt()
 }
 
 internal class InternalFontDeclaration(val resource: String, override val nodeContext: NodeContext) : NodeKeeper {

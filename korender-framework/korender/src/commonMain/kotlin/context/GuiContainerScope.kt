@@ -39,7 +39,7 @@ interface GuiContainerScope : FrameScope {
      *  @param static set to true for optimization if text string never changes
      *  @param onTouch touch event handler for the text
      */
-    fun Text(id: String, text: String, style: TextStyle? = null, fontResource: String? = null, height: Int? = null, color: ColorRGBA? = null, static: Boolean = false, onTouch: TouchHandler = {})
+    fun Text(id: String, text: String, style: TextStyle? = null, fontResource: String? = null, height: Float? = null, color: ColorRGBA? = null, static: Boolean = false, onTouch: TouchHandler = {})
 
     /**
      * Adds spacing filling all the available space in a row/column.
@@ -59,5 +59,5 @@ interface GuiContainerScope : FrameScope {
      *  @param marginRight margin to add to the right to the image
      *  @param onTouch touch event handler for the text
      */
-    fun Image(id: String, imageResource: String, width: Int, height: Int, marginTop: Int = 0, marginBottom: Int = 0, marginLeft: Int = 0, marginRight: Int = 0, onTouch: TouchHandler = {})
+    fun Image(id: String, imageResource: String, width: Float, height: Float, marginTop: Float = 0f, marginBottom: Float = 0f, marginLeft: Float = 0f, marginRight: Float = 0f, onTouch: TouchHandler = {})
 }

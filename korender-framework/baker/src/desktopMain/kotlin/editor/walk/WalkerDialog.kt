@@ -48,12 +48,12 @@ fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
                         Shading {
                             env = sky
                         }
-                        Ssao(
+                        Hbao(
                             downsample = 2,
                             sampleCount = 12,
-                            radius = 0.6f,
-                            bias = 0.025f,
-                            intensity = 1.15f,
+                            radius = 3.0f,
+                            bias = 0.1f,
+                            intensity = 0.4f,
                             blurRadius = 16f
                         )
                     }
