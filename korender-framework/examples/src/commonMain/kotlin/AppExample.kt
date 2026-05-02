@@ -41,8 +41,9 @@ val pages = listOf(
 
 
     Case("HBAO") { HbaoExample() },
-    Case("PipeExample") { PipeExample() },
     Case("SSAO") { SsaoExample() },
+    Case("PipeExample") { PipeExample() },
+
 
 
     Case("Heightmap terrain") { HeightmapTerrainExample() },

@@ -4,13 +4,6 @@ float linearize(float d) {
     return d; // TODO
 }
 
-//vec2 vogelDiskSample(int sampleIndex, int numSamples, float phi) {
-//    float goldenAngle = 2.39996323;
-//    float sampleVal = float(sampleIndex);
-//    float angle = sampleVal * goldenAngle + phi;
-//    return vec2(cos(angle), sin(angle)) * sqrt(sampleVal + 0.5) / sqrt(float(numSamples));
-//}
-
 float sampleSsao() {
 
     float refDepth = linearize(texture(depthGeometryTexture, vtex).r);
@@ -27,7 +20,7 @@ float sampleSsao() {
         float ssao = ssaoSmpl.r;
 
         float depthDiff = abs(refDepth - sampleDepth);
-        float weight = exp(-depthDiff * 8.0); // tune depthSigma
+        float weight = exp(-depthDiff * 32.); // tune depthSigma
 
         result      += ssao * weight;
         totalWeight += weight;
