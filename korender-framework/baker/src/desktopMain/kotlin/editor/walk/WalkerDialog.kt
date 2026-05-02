@@ -53,7 +53,7 @@ fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
                             sampleCount = 12,
                             radius = 3.0f,
                             bias = 0.1f,
-                            intensity = 0.4f,
+                            intensity = 1.4f,
                             blurRadius = 16f
                         )
                     }

@@ -94,15 +94,17 @@ void main() {
             }
 
             float horizonAngle = atan(height, radial);
+            float distanceWeight = exp(-length(delta) / max(radius * 0.55, 1e-4));
+            horizonAngle *= distanceWeight;
             horizon = max(horizon, horizonAngle);
         }
 
-        float localOcclusion = smoothstep(bias, 1.35, horizon);
-        localOcclusion *= 1.0 - float(d) / float(max(directions - 1, 1));
+        float localOcclusion = clamp((horizon - bias) / 0.35, 0.0, 1.0);
+        localOcclusion *= localOcclusion;
         occlusion += localOcclusion;
     }
 
-    float ao = 1.0 - (occlusion / float(directions)) * intensity;
+    float ao = 1.0 - (occlusion / max(float(directions) * 0.75, 1.0)) * intensity;
     ao = clamp(pow(ao, 1.35), 0.0, 1.0);
     fragColor = vec4(vec3(ao), 1.0);
     gl_FragDepth = depth;
