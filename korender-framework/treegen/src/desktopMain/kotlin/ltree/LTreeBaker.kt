@@ -1,9 +1,9 @@
 package ltree
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import com.zakgof.korender.Image
 import com.zakgof.korender.Korender
-import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.context.KorenderScope
 import com.zakgof.korender.math.ColorRGB.Companion.White
@@ -16,7 +16,12 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import kotlinx.coroutines.runBlocking
+import com.zakgof.korender.treegen.resources.Res
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import ltree.clusterizer.ClusteredTree
 import ltree.clusterizer.clusterizeTree
 import ltree.generator.LTree
@@ -26,51 +31,50 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.random.Random
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
-fun LTreeBaker() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
+fun LTreeBaker() {
+    val scope = rememberCoroutineScope()
+    Korender(resourceLoader = { Res.readBytes("files/$it") }) {
+        val spruce = SpruceTreeGenerator().generateTree()
+        val oak = OakTreeGenerator().generateTree()
+        saveBranches(oak.branches)
 
-    val spruce = SpruceTreeGenerator().generateTree()
-    val oak = OakTreeGenerator().generateTree()
+        val lClusteredTree = clusterizeTree(oak)
+        val cards = lClusteredTree.clusters.mapIndexed { index, cluster ->
+            captureCard(cluster, index, "ltree/oak.png", scope)
+        }.sequence(scope)
+        val atlas = cards.flatMap(scope) {loadImage(saveCards(it), "png")}
 
-//    val images3d = volumize(oak)
-//    val albedo3d = texture3D("oak-volume", images3d.first, wrap = TextureWrap.ClampToEdge)
-//    val normal3d = texture3D("oak-normal", images3d.second, wrap = TextureWrap.ClampToEdge)
+        Frame {
+            this.background = ColorRGBA.Transparent
+            AmbientLight(white(0.6f))
+            DirectionalLight(Vec3(3f, 0f, 1f), white(2.5f))
+            projection = projection(5f * width / height, 5f, 5f, 2000f)
+            camera = camera(-20.z, 1.z, 1.y)
 
-    val lClusteredTree = clusterizeTree(oak)
-    val cards = lClusteredTree.clusters.mapIndexed { index, cluster ->
-        captureCard(cluster, index, "ltree/oak.png")
-    }
-    val atlas = runBlocking { loadImage(saveCards(cards), "png").await() }
-    saveBranches(oak.branches)
+            renderLTree(spruce, "spruce", "ltree/spruce.png", 10.x)
+            renderLTree(oak, "oak", "ltree/oak.png", 0.x)
 
-    Frame {
-        this.background = ColorRGBA.Transparent
-        AmbientLight(white(0.6f))
-        DirectionalLight(Vec3(3f, 0f, 1f), white(2.5f))
-        projection = projection(5f * width / height, 5f, 5f, 2000f)
-        camera = camera(-20.z, 1.z, 1.y)
+            renderTrunk(oak, "trunk", -10.x)
+            if (cards.isCompleted && atlas.isCompleted) {
+                renderCardFoliage(cards.getCompleted(), atlas.getCompleted(), -10.x)
+            }
 
-        renderLTree(spruce, "spruce", "ltree/spruce.png", 10.x)
-        renderLTree(oak, "oak", "ltree/oak.png", 0.x)
+            // renderTrunkForest(lTree)
+            // renderCardForest(cards, atlas)
 
-        // renderVolume(albedo3d, normal3d, -10.x)
-
-        renderTrunk(oak, "trunk", -10.x)
-        renderCardFoliage(cards, atlas, -10.x)
-
-        // renderTrunkForest(lTree)
-        // renderCardForest(cards, atlas)
-
-        Gui {
-            Column {
-                Filler()
-                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
+            Gui {
+                Column {
+                    Filler()
+                    Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
+                }
             }
         }
     }
 }
 
-private fun KorenderScope.captureCard(cluster: ClusteredTree.Cluster, index: Int, leafTexture: String): Card {
+private fun KorenderScope.captureCard(cluster: ClusteredTree.Cluster, index: Int, leafTexture: String, scope: CoroutineScope): Deferred<Card> {
     val right = (cluster.plane.normal % 1.y).normalize()
     val up = (right % cluster.plane.normal).normalize()
 
@@ -84,23 +88,21 @@ private fun KorenderScope.captureCard(cluster: ClusteredTree.Cluster, index: Int
     ) * 1.1f
     val camera = camera(cluster.plane.center - cluster.plane.normal * 200f, cluster.plane.normal, up)
     val projection = projection(size, size, 100f, 300f, ortho())
-    val image = runBlocking {
-        captureFrame(1024, 1024) {
-            this.camera = camera
-            this.projection = projection
-            AmbientLight(White)
-            renderLTree(cluster.lTree, "$index", leafTexture)
-        }.await()
+    val image = captureFrame(1024, 1024) {
+        this.camera = camera
+        this.projection = projection
+        AmbientLight(White)
+        renderLTree(cluster.lTree, "$index", leafTexture)
     }
-    // saveImage(image, "png", "D:/kot/dev/test$index.png")
-
-    return Card(
-        center = cluster.plane.center,
-        normal = cluster.plane.normal,
-        up = up,
-        size = size,
-        image = image
-    )
+    return image.map(scope) {
+        Card(
+            center = cluster.plane.center,
+            normal = cluster.plane.normal,
+            up = up,
+            size = size,
+            image = it
+        )
+    }
 }
 
 fun FrameScope.renderLTree(lTree: LTree, postfix: String, leafTexture: String, translation: Vec3 = 0.x) {
@@ -112,7 +114,7 @@ private fun FrameScope.renderFoliage(postfix: String, lTree: LTree, leafTexture:
     Renderable(
         base { colorTexture = texture(leafTexture) },
         mesh = biQuad(),
-        instancing = instancing("leaves$postfix", lTree.leaves.size, dynamic = true) {
+        instancing = instancing("leaves$postfix", lTree.leaves.size, dynamic = true, TRANSFORM_INSTANCING) {
             lTree.leaves.map { leaf ->
                 translate(0.5f.y)
                     .scale(leaf.width, leaf.blade.length(), 1.0f)
@@ -280,19 +282,17 @@ private fun FrameScope.renderCardFoliage(cards: List<Card>, atlas: Image, positi
             .translate(position)
     )
 }
-//
-//private fun FrameScope.renderVolume(albedo3d: Texture3DDeclaration, normal3d: Texture3DDeclaration, offset: Vec3) {
-//
-//    Billboard(
-//        billboard {
-//            position = offset
-//            scale = Vec2(11f, 9f))
-//            plugin("albedo", "ltree/albedo.volume.frag")
-//            plugin("normal", "ltree/normal.volume.frag")
-//            uniforms("volumeAlbedoTexture" to albedo3d)
-//            uniforms("volumeNormalTexture" to normal3d)
-//        }
-//    )
-//
-//}
 
+fun <T, R> Deferred<T>.map(scope: CoroutineScope, f: (T) -> R): Deferred<R> =
+    scope.async {
+        f(this@map.await())
+    }
+
+fun <T, R> Deferred<T>.flatMap(scope: CoroutineScope, f: (T) -> Deferred<R>): Deferred<R> =
+    scope.async {
+        f(this@flatMap.await()).await()
+    }
+
+fun <T> Collection<Deferred<T>>.sequence(scope: CoroutineScope): Deferred<List<T>> = scope.async {
+    awaitAll()
+}

@@ -39,6 +39,7 @@ import org.jetbrains.compose.resources.painterResource
 
 val pages = listOf(
 
+    Case("PipeExample") { PipeExample() },
     Case("SSAO") { SsaoExample() },
 
     Case("Heightmap terrain") { HeightmapTerrainExample() },

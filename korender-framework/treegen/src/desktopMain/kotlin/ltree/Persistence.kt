@@ -7,13 +7,13 @@ import java.io.File
 import java.io.FileOutputStream
 import javax.imageio.ImageIO
 
-val root = File(System.getProperty("projectRoot"))
-val islandRoot = File(root, "../examples/src/commonMain/composeResources/files/island")
+val root = File("C:\\Users\\gvs\\.korender")
+val islandRoot = File(root, "island")
 
 fun saveBranches(branches: List<LTree.Branch>) {
+    islandRoot.mkdirs()
     val file = File(islandRoot, "tree/branches.bin")
     val fos = FileOutputStream(file)
-    islandRoot.mkdirs()
     fos.use {
         it.push(branches.size)
         branches.forEach { branch ->

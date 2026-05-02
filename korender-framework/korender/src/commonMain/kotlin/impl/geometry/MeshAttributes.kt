@@ -33,7 +33,7 @@ internal object MeshAttributes {
     val B2 = InternalMeshAttribute<Byte>("b2", 1, AttributeType.SignedByte, 6, ByteBufferAccessor)
     val B3 = InternalMeshAttribute<Byte>("b3", 1, AttributeType.SignedByte, 7, ByteBufferAccessor)
 
-    val SCALE = InternalMeshAttribute<Vec2>("scale", 6, AttributeType.Float, 6, Vec2BufferAccessor, false)
+    val SCALE = InternalMeshAttribute<Vec2>("scale", 2, AttributeType.Float, 6, Vec2BufferAccessor, false)
 
     val INSTPOS = InternalMeshAttribute<Vec3>("instpos", 3, AttributeType.Float, 5, Vec3BufferAccessor, true)
     val INSTSCALE = InternalMeshAttribute<Vec2>("instscale", 2, AttributeType.Float, 6, Vec2BufferAccessor, true)

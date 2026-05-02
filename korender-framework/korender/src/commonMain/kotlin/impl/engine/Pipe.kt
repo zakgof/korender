@@ -6,10 +6,6 @@ import com.zakgof.korender.impl.context.DefaultPipeMeshScope
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.context.PipeNode
 import com.zakgof.korender.impl.geometry.CustomMesh
-import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL0
-import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL1
-import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL2
-import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL3
 import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
 import com.zakgof.korender.impl.geometry.MeshAttributes.POS
 import com.zakgof.korender.impl.geometry.MeshAttributes.SCALE
@@ -19,7 +15,7 @@ import com.zakgof.korender.math.Vec3
 import kotlin.math.sqrt
 
 internal fun createPipeMesh(id: String, segments: Int, dynamic: Boolean, nodeContext: NodeContext, block: PipeMeshScope.() -> Unit) =
-    CustomMesh(id, segments * 4, segments * 6, listOf(POS, NORMAL, TEX, SCALE, MODEL0, MODEL1, MODEL2, MODEL3), dynamic, indexType = null, nodeContext) {
+    CustomMesh(id, segments * 4, segments * 6, listOf(POS, NORMAL, TEX, SCALE), dynamic, indexType = null, nodeContext) {
         val pipeMeshContext = DefaultPipeMeshScope()
         block.invoke(pipeMeshContext)
         var segmentIndex = 0
