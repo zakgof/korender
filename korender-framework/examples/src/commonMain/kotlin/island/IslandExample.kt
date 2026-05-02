@@ -11,6 +11,7 @@ import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
 import island.island
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
@@ -50,6 +51,8 @@ private fun FrameScope.gameFrame(game: Game, loader: Loader) {
     projection = projection(2f, 2f * height / width, 2f, 32000f, log())
     camera = camera(game.cameraPos, game.cameraDir, game.cameraUp)
 
+    camera = camera(Vec3(0f, 10000f, -10000f), 1.z - 1.y, 1.z + 1.y)
+
     island(loader.heightMapLoading.getCompleted(), loader.runwaySeedLoading.getCompleted())
     atmosphere()
     buildings(loader.deferredBuildings.getCompleted())
@@ -67,12 +70,14 @@ private fun FrameScope.plane(position: Vec3, look: Vec3, up: Vec3) = Gltf(
 )
 
 private fun FrameScope.atmosphere() {
+    DeferredShading()
     AmbientLight(ColorRGB.white(0.5f))
     DirectionalLight(Vec3(3.0f, -3.0f, 1.0f), ColorRGB.white(3.5f)) {
         Cascade(512, 2f, 5000f, 0f to 4000f, hardwarePcf())
         Cascade(512, 2500f, 12000f, 0f to 4000f, hardwarePcf(bias = 0.006f))
     }
     PostProcess(water(waveScale = 3000.0f, transparency = 0.05f, sky = fastCloudSky()))
+    PostProcess(fxaa())
     PostProcess(fog(color = ColorRGB(0xB8CAE9), density = 0.00003f)) {
         Sky(fastCloudSky())
     }

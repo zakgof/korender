@@ -83,8 +83,10 @@ vec3 look;
     #import "$output"
 #endif
 
-#ifdef PLUGIN_DEPTH
-    #import "$depth"
+#ifndef SHADOW_CASTER
+    #ifdef PLUGIN_DEPTH
+        #import "$depth"
+    #endif
 #endif
 
 #ifdef PLUGIN_OCCLUSION
@@ -220,9 +222,10 @@ void main() {
         #else
             fragColor = vec4(color * albedo.a, albedo.a);
         #endif
-    #endif
 
-    #ifdef PLUGIN_DEPTH
-        gl_FragDepth = pluginDepth();
+        #ifdef PLUGIN_DEPTH
+            gl_FragDepth = pluginDepth();
+        #endif
+
     #endif
 }

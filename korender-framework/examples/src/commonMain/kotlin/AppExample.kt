@@ -34,15 +34,13 @@ import com.zakgof.app.resources.korender32
 import com.zakgof.app.resources.menu
 import com.zakgof.korender.examples.gltfviewer.GltfLibraryExample
 import com.zakgof.korender.examples.infcity.InfiniteCity
+import com.zakgof.korender.examples.island.IslandExample
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 val pages = listOf(
 
-
-    Case("HBAO") { HbaoExample() },
-    Case("SSAO") { SsaoExample() },
-    Case("PipeExample") { PipeExample() },
+    Case("Island") { IslandExample() },
 
 
 

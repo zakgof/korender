@@ -115,7 +115,7 @@ private fun FrameScope.renderFoliage(postfix: String, lTree: LTree, leafTexture:
     Renderable(
         base {
             colorTexture = texture(leafTexture)
-            alphaCutoff = 0.5f
+            alphaCutoff = 0.01f
         },
         mesh = biQuad(),
         instancing = instancing("leaves$postfix", lTree.leaves.size, dynamic = true, TRANSFORM_INSTANCING) {
@@ -258,7 +258,7 @@ private fun FrameScope.renderCardFoliage(cards: List<Card>, atlas: Image, positi
     Renderable(
         base {
             colorTexture = texture("atlas", atlas)
-            alphaCutoff = 0.9f
+            alphaCutoff = 0.01f
         },
         mesh = customMesh(
             "foliage", cards.size * 8, cards.size * 12,

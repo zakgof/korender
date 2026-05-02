@@ -21,7 +21,7 @@ fun FrameScope.island(heightMap: Image, rwSeeds: Pair<Vec2, Vec2>) {
         plugin(normalTerrainPlugin)
         plugin(terrainHeightPlugin)
         plugin(albedoTerrainPlugin)
-        texture("heightTexture", texture("base-terrain", heightMap))
+        texture("heightMapTexture", texture("base-terrain", heightMap))
         texture("patchTexture", texture("island/terrain/color.png"))
         texture("sdf", texture("island/terrain/sdf.png", TextureFilter.Linear))
         texture("road", texture("infcity/road.jpg"))

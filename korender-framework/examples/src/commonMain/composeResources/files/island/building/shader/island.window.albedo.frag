@@ -13,5 +13,5 @@ vec4 pluginAlbedo() {
     if (vpos.y < 130.0)
         wndratio = 0.;
 
-    return mix(texture(baseColorTexture, vtex), vec4(0.0, 0.0, 0.0, 1.0), wndratio);
+    return mix(texture(albedoTexture, vtex), vec4(0.0, 0.0, 0.0, 1.0), wndratio);
 }

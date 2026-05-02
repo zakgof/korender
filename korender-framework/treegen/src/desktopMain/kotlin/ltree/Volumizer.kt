@@ -10,7 +10,7 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import kotlinx.coroutines.runBlocking
 import ltree.generator.LTree
-import tree.saveImage
+import com.zakgof.korender.baker.ltree.saveImage
 
 
 fun KorenderScope.volumize(lTree: LTree): Pair<Image3D, Image3D> {
