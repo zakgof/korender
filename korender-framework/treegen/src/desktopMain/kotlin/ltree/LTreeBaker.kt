@@ -86,11 +86,9 @@ private fun KorenderScope.captureCard(cluster: ClusteredTree.Cluster, index: Int
         pts.maxOf { abs(it.x) },
         pts.maxOf { abs(it.y) }
     ) * 1.1f
-    val camera = camera(cluster.plane.center - cluster.plane.normal * 200f, cluster.plane.normal, up)
-    val projection = projection(size, size, 100f, 300f, ortho())
     val image = captureFrame(1024, 1024) {
-        this.camera = camera
-        this.projection = projection
+        this.camera = camera(cluster.plane.center - cluster.plane.normal * 200f, cluster.plane.normal, up)
+        this.projection = projection(size * 2f, size * 2f, 100f, 300f, ortho())
         AmbientLight(White)
         renderLTree(cluster.lTree, "$index", leafTexture)
     }
@@ -133,7 +131,7 @@ private fun FrameScope.renderTrunk(lTree: LTree, postfix: String, translation: V
             pipe { color = ColorRGBA(0x553311FF) },
             mesh = pipeMesh("trunk$postfix", lTree.branches.size) {
                 lTree.branches
-                    .filter { branch -> branch.raidusAtHead > 0.04f }
+                    .filter { branch -> branch.raidusAtHead > 0.004f }
                     .forEach { branch ->
                         sequence {
                             val fixedTail = branch.head + (branch.tail - branch.head) * 1.06f

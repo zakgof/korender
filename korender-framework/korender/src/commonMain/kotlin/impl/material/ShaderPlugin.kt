@@ -186,6 +186,7 @@ internal enum class Defs {
     TRIPLANAR,
     SHADOW_CASTER,
     SSAO,
+    HBAO,
     SSR,
     BLOOM,
     UPSAMPLE,

@@ -36,6 +36,10 @@ float shadowRatios[5] = float[5](0., 0., 0., 0., 0.);
     #import "!shader/deferred/shading-ssao.glsl"
 #endif
 
+#ifdef HBAO
+    #import "!shader/deferred/shading-hbao.glsl"
+#endif
+
 void main() {
 
     float depth = texture(depthGeometryTexture, vtex).r;
@@ -56,10 +60,17 @@ void main() {
     vec3 color = emissionTexel.rgb;
     float occlusion = emissionTexel.a;
     float ssao = 1.0;
+    float hbao = 1.0;
 
     #ifdef SSAO
         ssao = sampleSsao();
     #endif
+
+    #ifdef HBAO
+        hbao = sampleHbao();
+    #endif
+
+    float ambientOcclusion = ssao * hbao;
 
     float plane = dot((vpos - cameraPos), cameraDir);
     populateShadowRatios(plane, vpos);
@@ -73,13 +84,13 @@ void main() {
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
     float NdotV = max(dot(V, N), 0.0);
     vec3 diffFactor = albedo * (1.0 - metallic);
-    color += ambientColor * diffFactor * ssao;
+    color += ambientColor * diffFactor * ambientOcclusion;
 
     #ifdef PLUGIN_SKY
-        color += skyibl(N, V, roughness, diffFactor, F0, NdotV) * ssao;
+        color += skyibl(N, V, roughness, diffFactor, F0, NdotV) * ambientOcclusion;
     #else
         // Fallback for ambient-only setups: keep metallic surfaces from going black without IBL.
-        color += ambientColor * F0 * metallic * ssao;
+        color += ambientColor * F0 * metallic * ambientOcclusion;
     #endif
 
     fragColor = vec4(color, 1.);

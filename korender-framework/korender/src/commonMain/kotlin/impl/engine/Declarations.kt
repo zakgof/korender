@@ -72,6 +72,15 @@ internal data class SsaoDeclaration(
     val blurRadius: Float = 5f,
 )
 
+internal data class HbaoDeclaration(
+    val downsample: Int = 2,
+    val sampleCount: Int = 16,
+    val radius: Float = 0.75f,
+    val bias: Float = 0.02f,
+    val intensity: Float = 1.0f,
+    val blurRadius: Float = 5f,
+)
+
 internal class InternalDecalDeclaration(
     val position: Vec3,
     val look: Vec3,

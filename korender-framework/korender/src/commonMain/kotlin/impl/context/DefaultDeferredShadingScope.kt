@@ -10,6 +10,7 @@ import com.zakgof.korender.impl.material.InternalDecalMaterial
 import com.zakgof.korender.impl.material.InternalShadingMaterial
 import com.zakgof.korender.impl.material.bloomMipEffect
 import com.zakgof.korender.impl.material.bloomSimpleEffect
+import com.zakgof.korender.impl.material.hbaoEffect
 import com.zakgof.korender.impl.material.ssaoEffect
 import com.zakgof.korender.impl.material.ssrEffect
 import com.zakgof.korender.math.Vec3
@@ -63,6 +64,10 @@ internal class DefaultDeferredShadingScope(private var deferredShadingDeclaratio
 
     override fun Ssao(downsample: Int, sampleCount: Int, radius: Float, bias: Float, intensity: Float, blurRadius: Float) {
         deferredShadingDeclaration.shadingEffects += ssaoEffect(downsample, sampleCount, radius, bias, intensity, blurRadius, deferredShadingDeclaration.nodeContext)
+    }
+
+    override fun Hbao(downsample: Int, sampleCount: Int, radius: Float, bias: Float, intensity: Float, blurRadius: Float) {
+        deferredShadingDeclaration.shadingEffects += hbaoEffect(downsample, sampleCount, radius, bias, intensity, blurRadius, deferredShadingDeclaration.nodeContext)
     }
 
     override fun Decal(material: DecalMaterial, position: Vec3, look: Vec3, up: Vec3, size: Float) {

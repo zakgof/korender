@@ -15,7 +15,7 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 @Composable
-fun SsaoExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
+fun HbaoExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
     val orbitCamera = OrbitCamera(14.z + 1.5f.y, 0.8f.y)
     OnTouch { orbitCamera.touch(it) }
 
@@ -24,16 +24,16 @@ fun SsaoExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
         roughnessFactor = 0.95f
         metallicFactor = 0f
     }
-    val samples = SliderState(24f, 2f, 128f)
-    val radius = SliderState(1.0f, 0.05f, 10f)
+    val samples = SliderState(20f, 2f, 128f)
+    val radius = SliderState(0.9f, 0.05f, 10f)
     val bias = SliderState(0.025f, 0.0f, 0.25f)
     val intensity = SliderState(1.15f, 0.1f, 3.0f)
-    val bradius = SliderState(18f, 1f, 64f)
+    val bradius = SliderState(16f, 1f, 64f)
 
     Frame {
         TestExchange.report(frameInfo)
         DeferredShading {
-            Ssao(
+            Hbao(
                 downsample = 2,
                 sampleCount = samples.position.toInt(),
                 radius = radius.position,

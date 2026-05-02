@@ -73,6 +73,26 @@ interface DeferredShadingScope {
     )
 
     /**
+     * Enables horizon-based ambient occlusion for deferred rendering pipeline.
+     * Experimental.
+     *
+     * @param downsample downsample factor for the HBAO framebuffer (normally 1 or 2)
+     * @param sampleCount number of horizon samples
+     * @param radius AO sampling radius in view-space units
+     * @param bias horizon bias to reduce self-occlusion
+     * @param intensity overall darkness multiplier
+     * @param blurRadius blur radius used by the HBAO smoothing pass
+     */
+    fun Hbao(
+        downsample: Int = 2,
+        sampleCount: Int = 16,
+        radius: Float = 0.75f,
+        bias: Float = 0.02f,
+        intensity: Float = 1.0f,
+        blurRadius: Float = 5f
+    )
+
+    /**
      * Creates a decal.
      *
      * @param materialModifiers material modifiers
