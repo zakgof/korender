@@ -42,6 +42,8 @@ vec4 pluginAlbedo() {
     vec4 materialSample = texture(patchTexture, vtex + vec2(-0.005 + 0.01 * fbm(vtex * 64.), -0.005 + 0.01 * fbm(vtex.yx * 63.)));
     vec3 color = vec3(0.);
 
+    color += materialSample.rgb;
+
     color += colorAtIndex(0, vtex) * materialSample.r;
     color += colorAtIndex(1, vtex) * materialSample.g;
     color += colorAtIndex(2, vtex) * materialSample.b;

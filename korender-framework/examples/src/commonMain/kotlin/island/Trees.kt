@@ -69,7 +69,7 @@ fun FrameScope.renderBranches(branches: List<Branch>, seeds: List<Vec3>) {
     Renderable(
         pipe {
             color = ColorRGBA(0x553311FF)
-            // defs("NO_SHADOW_CAST")
+            flags(NO_SHADOW_CAST)
         },
         mesh = pipeMesh("trunk-forest", branches.size * seeds.size, true) {
             val r = Random(0)
@@ -78,7 +78,7 @@ fun FrameScope.renderBranches(branches: List<Branch>, seeds: List<Vec3>) {
                     scale(treeScale)
                         .rotate(1.y, r.nextFloat() * 2f * PI)
                         .translate(seed)
-                val threshold = (seed - camera.position).length() * 3e-4f
+                val threshold = (seed - camera.position).length() * 9e-4f
                 branches.forEach { branch ->
                     if (branch.radiusAtHead * 50.0f > threshold) {
                         sequence {
@@ -99,8 +99,10 @@ fun FrameScope.renderCards(cards: List<Card>, seeds: List<Vec3>) {
             colorTexture = texture("island/tree/atlas.png")
             metallicFactor = 0.4f
             roughnessFactor = 0.6f
+            alphaCutoff = 0.1f
             // TODO plugin("discard", "island/tree/shader/island.foliage.discard.frag")
         },
+        transparent = true,
         mesh = customMesh(
             "foliage", cards.size * seeds.size * 8, cards.size * seeds.size * 12,
             POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3, dynamic = false

@@ -140,8 +140,7 @@ enum class ShaderPluginId {
     /** Vertex position in world space */
     VPOSITION,
     /** View projection matrix transformation */
-    VPROJECTION;
-
-    val id = ordinal
-    val key = toString().lowercase()
+    VPROJECTION
 }
+
+interface ShaderFlag

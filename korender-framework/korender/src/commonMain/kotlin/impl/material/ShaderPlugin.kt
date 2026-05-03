@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.material
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.ShaderFlag
 import com.zakgof.korender.ShaderPlugin
 import com.zakgof.korender.ShaderPluginId
 import com.zakgof.korender.impl.engine.ShaderDeclaration
@@ -74,8 +75,8 @@ internal enum class Plugins(
     VPROJECTION_ORTHO(ShaderPluginId.VPROJECTION, 4, "!shader/plugin/vprojection.ortho.vert"),
     ;
 
-    override val id = pluginId.id
-    override val key = pluginId.key
+    override val id = pluginId.ordinal
+    override val key = pluginId.toString().lowercase()
     
     override fun apply1(accumulator: Long): Long {
         if (value == 0 || id !in 0..15) return accumulator
@@ -122,17 +123,17 @@ internal class ShaderPluginRegistry {
     private val customByIdFile = mutableMapOf<Pair<Int, String>, CustomPlugin>()
 
     fun registerCustom(id: ShaderPluginId, file: String): ShaderPlugin {
-        val key = id.key
-        val mapKey = id.id to file
+        val key = id.toString().lowercase()
+        val mapKey = id.ordinal to file
         customByIdFile[mapKey]?.let { return it }
 
-        val usedValues = Plugins.entries.filter { it.id == id.id }.map { it.value }.toMutableSet()
-        usedValues += customByIdValue.keys.filter { it.first == id.id }.map { it.second }
+        val usedValues = Plugins.entries.filter { it.id == id.ordinal }.map { it.value }.toMutableSet()
+        usedValues += customByIdValue.keys.filter { it.first == id.ordinal }.map { it.second }
         val value = (1..15).firstOrNull { it !in usedValues }
             ?: throw KorenderException("No available plugin values for id=${id.name}")
 
-        val plugin = CustomPlugin(id.id, value, key, file)
-        customByIdValue[id.id to value] = plugin
+        val plugin = CustomPlugin(id.ordinal, value, key, file)
+        customByIdValue[id.ordinal to value] = plugin
         customByIdFile[mapKey] = plugin
         return plugin
     }
@@ -172,7 +173,7 @@ internal class ShaderPluginRegistry {
 }
 
 // TODO just use toString
-internal enum class Defs {
+internal enum class Defs : ShaderFlag {
 
     VERTEX_TRANSFORM,
     VERTEX_COLOR,

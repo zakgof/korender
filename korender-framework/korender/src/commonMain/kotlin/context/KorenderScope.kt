@@ -22,6 +22,7 @@ import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.ProjectionMode
 import com.zakgof.korender.RetentionPolicy
+import com.zakgof.korender.ShaderFlag
 import com.zakgof.korender.ShaderPlugin
 import com.zakgof.korender.ShaderPluginId
 import com.zakgof.korender.ShadowAlgorithmDeclaration
@@ -606,6 +607,8 @@ interface KorenderScope : ResourceScope {
     val COLOR_BILLBOARD_INSTANCING: BillboardInstancingParameter
 
     val COLOR_TEXTURE_INDEX_BILLBOARD_INSTANCING: BillboardInstancingParameter
+
+    val NO_SHADOW_CAST: ShaderFlag
 
 }
 

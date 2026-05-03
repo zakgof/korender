@@ -7,6 +7,7 @@ import com.zakgof.korender.ShaderPlugin
 import com.zakgof.korender.ShaderPluginId
 import com.zakgof.korender.context.FrameScope
 import com.zakgof.korender.examples.TestExchange
+import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec3
@@ -24,6 +25,8 @@ internal lateinit var albedoTerrainPlugin: ShaderPlugin
 fun IslandExample() =
     Korender(resourceLoader = { Res.readBytes("files/$it") }) {
 
+        val freeCamera = FreeCamera(this, Vec3(0f, 6000f, -6000f), 1.z - 1.y )
+
         normalTerrainPlugin = shaderPlugin(ShaderPluginId.NORMAL, "!shader/plugin/normal.terrain.frag")
         terrainHeightPlugin = shaderPlugin(ShaderPluginId.TERRAIN, "island/terrain/shader/height.glsl")
         albedoTerrainPlugin = shaderPlugin(ShaderPluginId.ALBEDO, "island/terrain/shader/albedo.glsl")
@@ -34,12 +37,15 @@ fun IslandExample() =
         OnTouch { game.touch(it) }
         OnKey { game.key(it) }
 
+        OnTouch {freeCamera.touch(it) }
+        OnKey { freeCamera.handle(it) }
+
         Frame {
 
             TestExchange.report(frameInfo)
             if (loader.loaded()) {
                 game.frame(frameInfo.dt)
-                gameFrame(game, loader)
+                gameFrame(game, loader, freeCamera)
             } else {
                 loadingScreen(loader.percent())
             }
@@ -47,14 +53,14 @@ fun IslandExample() =
     }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-private fun FrameScope.gameFrame(game: Game, loader: Loader) {
+private fun FrameScope.gameFrame(game: Game, loader: Loader, freeCamera: FreeCamera) {
     projection = projection(2f, 2f * height / width, 2f, 32000f, log())
     camera = camera(game.cameraPos, game.cameraDir, game.cameraUp)
 
-    camera = camera(Vec3(0f, 10000f, -10000f), 1.z - 1.y, 1.z + 1.y)
+    camera = freeCamera.camera(projection, width, height, frameInfo.dt * 1000f)
 
-    island(loader.heightMapLoading.getCompleted(), loader.runwaySeedLoading.getCompleted())
     atmosphere()
+    island(loader.heightMapLoading.getCompleted(), loader.runwaySeedLoading.getCompleted())
     buildings(loader.deferredBuildings.getCompleted())
     trees(loader.deferredBranches.getCompleted(), loader.deferredCards.getCompleted(), loader.deferredTreeSeeds.getCompleted())
     plane(game.plane.position, game.plane.look, game.plane.up)
@@ -70,11 +76,15 @@ private fun FrameScope.plane(position: Vec3, look: Vec3, up: Vec3) = Gltf(
 )
 
 private fun FrameScope.atmosphere() {
-    DeferredShading()
-    AmbientLight(ColorRGB.white(0.5f))
-    DirectionalLight(Vec3(3.0f, -3.0f, 1.0f), ColorRGB.white(3.5f)) {
+    DeferredShading {
+        Shading {
+            env = fastCloudSky()
+        }
+    }
+    // AmbientLight(ColorRGB.white(0.5f))
+    DirectionalLight(Vec3(3.0f, -3.0f, 1.0f), ColorRGB.white(1.5f)) {
         Cascade(512, 2f, 5000f, 0f to 4000f, hardwarePcf())
-        Cascade(512, 2500f, 12000f, 0f to 4000f, hardwarePcf(bias = 0.006f))
+        Cascade(512, 2500f, 12000f, 0f to 4000f, hardwarePcf())
     }
     PostProcess(water(waveScale = 3000.0f, transparency = 0.05f, sky = fastCloudSky()))
     PostProcess(fxaa())

@@ -575,6 +575,8 @@ internal class Renderer(
             shadowCasterModifier: InternalMaterialModifier? = null,
             rk: ResultKeeper?,
         ) {
+            if ((declaration.material.customDefs and Defs.NO_SHADOW_CAST.bit) != 0L && shadowCasterModifier != null)
+                return
             val meshLink = inventory.mesh(declaration.mesh as InternalMeshDeclaration)
             if (meshLink == null) {
                 rk?.fail()

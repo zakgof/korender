@@ -63,6 +63,13 @@ interface BillboardEffect
  * Provides access to set custom uniforms and shader plugins.
  */
 interface MaterialScope {
+
+    /**
+     * Adds shader flags to this material.
+     * @param flags custom shader plugin
+     */
+    fun flags(vararg flags: ShaderFlag)
+
     /**
      * Adds a custom shader plugin to this material.
      * @param plugin custom shader plugin

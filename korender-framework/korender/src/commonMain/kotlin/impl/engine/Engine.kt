@@ -59,6 +59,7 @@ import com.zakgof.korender.impl.load
 import com.zakgof.korender.impl.material.AdjustmentMaterial
 import com.zakgof.korender.impl.material.BlurMaterial
 import com.zakgof.korender.impl.material.CubeSkyMaterial
+import com.zakgof.korender.impl.material.Defs
 import com.zakgof.korender.impl.material.FastCloudSkyMaterial
 import com.zakgof.korender.impl.material.FireEffect
 import com.zakgof.korender.impl.material.FireballEffect
@@ -476,6 +477,8 @@ internal class Engine(
         override val COLOR_BILLBOARD_INSTANCING: BillboardInstancingParameter = InternalBillboardInstancingParameter.COLOR_BILLBOARD_INSTANCING
 
         override val COLOR_TEXTURE_INDEX_BILLBOARD_INSTANCING: BillboardInstancingParameter = InternalBillboardInstancingParameter.COLOR_TEXTURE_INDEX_BILLBOARD_INSTANCING
+
+        override val NO_SHADOW_CAST = Defs.NO_SHADOW_CAST
     }
 
     init {

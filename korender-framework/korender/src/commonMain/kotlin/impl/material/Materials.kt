@@ -10,6 +10,7 @@ import com.zakgof.korender.MaterialScope
 import com.zakgof.korender.PipeMaterial
 import com.zakgof.korender.PostProcessMaterialScope
 import com.zakgof.korender.PostProcessingMaterial
+import com.zakgof.korender.ShaderFlag
 import com.zakgof.korender.ShaderPlugin
 import com.zakgof.korender.ShadingMaterialScope
 import com.zakgof.korender.SkyMaterial
@@ -57,6 +58,10 @@ internal open class InternalMaterialModifier(vararg getters: Pair<String, Unifor
 
     open fun collectPlugins1(accumulator: Long): Long = accumulator.pluginOverride(customPlugins1)
     open fun collectPlugins2(accumulator: Long): Long = accumulator.pluginOverride(customPlugins2)
+
+    override fun flags(vararg flags: ShaderFlag) {
+        customDefs = flags.fold(0L) { acc, f -> acc.or((f as Defs).bit) }
+    }
 
     override fun plugin(plugin: ShaderPlugin) {
         plugin as AppliedPlugin

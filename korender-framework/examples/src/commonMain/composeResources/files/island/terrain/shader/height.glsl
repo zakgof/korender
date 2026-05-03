@@ -17,6 +17,7 @@ float pluginTerrainHeight(vec2 uv) {
 
     vec4 samp = texture(heightMapTexture, uv);
 
+    // TODO
     float base = (samp.g * 255.0 + samp.r) * 16.0 - 256.0 * 16.0 * 0.1;
 
 

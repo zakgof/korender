@@ -49,12 +49,14 @@ fun LTreeBaker() {
         Frame {
             // this.background = ColorRGBA.Transparent
             DeferredShading {
-                Hbao()
+                // Hbao()
             }
             AmbientLight(white(0.6f))
             DirectionalLight(Vec3(3f, 0f, 1f), white(2.5f))
             projection = projection(5f * width / height, 5f, 5f, 2000f)
             camera = camera(-20.z, 1.z, 1.y)
+
+            Sky(fastCloudSky())
 
             renderLTree(spruce, "spruce", "ltree/spruce.png", 10.x)
             renderLTree(oak, "oak", "ltree/oak.png", 0.x)
@@ -258,7 +260,7 @@ private fun FrameScope.renderCardFoliage(cards: List<Card>, atlas: Image, positi
     Renderable(
         base {
             colorTexture = texture("atlas", atlas)
-            alphaCutoff = 0.01f
+            alphaCutoff = 0.1f
         },
         mesh = customMesh(
             "foliage", cards.size * 8, cards.size * 12,
