@@ -1,4 +1,4 @@
-vec4 pluginAlbedo() {
+vec2 pluginMetallicRoughness() {
 
     vec2 f = fract(vtex);
 
@@ -13,5 +13,5 @@ vec4 pluginAlbedo() {
     if (vpos.y < 130.0)
         wndratio = 0.;
 
-    return mix(texture(albedoTexture, vtex), vec4(0.5, 0.5, 0.5, 1.0), wndratio);
+    return vec2(wndratio, (1.0 - wndratio) * 0.7);
 }

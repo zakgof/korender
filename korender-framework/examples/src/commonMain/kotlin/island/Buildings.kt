@@ -11,9 +11,11 @@ import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 
 private lateinit var buildingsAlbedoPlugin: ShaderPlugin
+private lateinit var buildingsMetallicPlugin: ShaderPlugin
 
 fun KorenderScope.loadBuildings(bytes: ByteArray): CityGenerator {
     buildingsAlbedoPlugin = shaderPlugin(ShaderPluginId.ALBEDO, "island/building/shader/island.window.albedo.frag")
+    buildingsMetallicPlugin = shaderPlugin(ShaderPluginId.METALLIC_ROUGHNESS, "island/building/shader/island.window.metallic.frag")
     return loadBinary(bytes) {
         val cityGenerator = CityGenerator(this@loadBuildings)
         val size = bytes.size / (2 * 3 * 4)
@@ -51,6 +53,7 @@ fun FrameScope.buildings(cityGenerator: CityGenerator) {
         metallicFactor = 0f
         roughnessFactor = 1f
         plugin(buildingsAlbedoPlugin)
+        plugin(buildingsMetallicPlugin)
     }
 
     Renderable(
