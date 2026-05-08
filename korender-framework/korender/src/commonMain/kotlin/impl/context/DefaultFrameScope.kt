@@ -55,6 +55,7 @@ import com.zakgof.korender.impl.engine.InternalGltfInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalPassDeclaration
 import com.zakgof.korender.impl.engine.KrSceneDeclaration
+import com.zakgof.korender.impl.engine.ObjDeclaration
 import com.zakgof.korender.impl.engine.PointLightDeclaration
 import com.zakgof.korender.impl.engine.RegularFrameContext
 import com.zakgof.korender.impl.engine.RenderableDeclaration
@@ -310,5 +311,9 @@ internal class DefaultFrameScope(
 
     override fun KrScene(resource: String, transform: Transform, block: BaseMaterialScope.() -> Unit) {
         sceneDeclaration.krscenes += KrSceneDeclaration(resource, transform, block, nodeContext)
+    }
+
+    override fun Obj(resource: String, transform: Transform, materialModifier: BaseMaterialScope.() -> Unit) {
+        sceneDeclaration.objs += ObjDeclaration(resource, transform, materialModifier, nodeContext)
     }
 }

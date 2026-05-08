@@ -173,5 +173,9 @@ interface FrameScope : KorenderScope {
     fun HeightField(id: String, cellSize: Float, hg: Int, rings: Int, block: TerrainMaterialScope.() -> Unit)
 
     fun KrScene(resource: String, transform: Transform = Transform.IDENTITY, block: BaseMaterialScope.()-> Unit = {})
+
+    fun Obj(resource: String, transform: Transform = Transform.IDENTITY, materialModifier: BaseMaterialScope.() -> Unit = {})
+
+
 }
 

@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.zakgof.korender.context.KorenderScope
@@ -41,6 +42,116 @@ import org.w3c.dom.events.MouseEvent
 import org.w3c.dom.get
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+
+private class WebKeyMapping(val key: String, val composeKey: Key)
+
+private val WEB_KEY_MAPPING: Map<String, WebKeyMapping> = mapOf(
+    "KeyA" to WebKeyMapping("A", Key.A),
+    "KeyB" to WebKeyMapping("B", Key.B),
+    "KeyC" to WebKeyMapping("C", Key.C),
+    "KeyD" to WebKeyMapping("D", Key.D),
+    "KeyE" to WebKeyMapping("E", Key.E),
+    "KeyF" to WebKeyMapping("F", Key.F),
+    "KeyG" to WebKeyMapping("G", Key.G),
+    "KeyH" to WebKeyMapping("H", Key.H),
+    "KeyI" to WebKeyMapping("I", Key.I),
+    "KeyJ" to WebKeyMapping("J", Key.J),
+    "KeyK" to WebKeyMapping("K", Key.K),
+    "KeyL" to WebKeyMapping("L", Key.L),
+    "KeyM" to WebKeyMapping("M", Key.M),
+    "KeyN" to WebKeyMapping("N", Key.N),
+    "KeyO" to WebKeyMapping("O", Key.O),
+    "KeyP" to WebKeyMapping("P", Key.P),
+    "KeyQ" to WebKeyMapping("Q", Key.Q),
+    "KeyR" to WebKeyMapping("R", Key.R),
+    "KeyS" to WebKeyMapping("S", Key.S),
+    "KeyT" to WebKeyMapping("T", Key.T),
+    "KeyU" to WebKeyMapping("U", Key.U),
+    "KeyV" to WebKeyMapping("V", Key.V),
+    "KeyW" to WebKeyMapping("W", Key.W),
+    "KeyX" to WebKeyMapping("X", Key.X),
+    "KeyY" to WebKeyMapping("Y", Key.Y),
+    "KeyZ" to WebKeyMapping("Z", Key.Z),
+
+    "Digit0" to WebKeyMapping("0", Key.Zero),
+    "Digit1" to WebKeyMapping("1", Key.One),
+    "Digit2" to WebKeyMapping("2", Key.Two),
+    "Digit3" to WebKeyMapping("3", Key.Three),
+    "Digit4" to WebKeyMapping("4", Key.Four),
+    "Digit5" to WebKeyMapping("5", Key.Five),
+    "Digit6" to WebKeyMapping("6", Key.Six),
+    "Digit7" to WebKeyMapping("7", Key.Seven),
+    "Digit8" to WebKeyMapping("8", Key.Eight),
+    "Digit9" to WebKeyMapping("9", Key.Nine),
+
+    "F1" to WebKeyMapping("F1", Key.F1),
+    "F2" to WebKeyMapping("F2", Key.F2),
+    "F3" to WebKeyMapping("F3", Key.F3),
+    "F4" to WebKeyMapping("F4", Key.F4),
+    "F5" to WebKeyMapping("F5", Key.F5),
+    "F6" to WebKeyMapping("F6", Key.F6),
+    "F7" to WebKeyMapping("F7", Key.F7),
+    "F8" to WebKeyMapping("F8", Key.F8),
+    "F9" to WebKeyMapping("F9", Key.F9),
+    "F10" to WebKeyMapping("F10", Key.F10),
+    "F11" to WebKeyMapping("F11", Key.F11),
+    "F12" to WebKeyMapping("F12", Key.F12),
+
+    "Enter" to WebKeyMapping("ENTER", Key.Enter),
+    "Escape" to WebKeyMapping("ESCAPE", Key.Escape),
+    "Backspace" to WebKeyMapping("BACKSPACE", Key.Backspace),
+    "Tab" to WebKeyMapping("TAB", Key.Tab),
+    "Space" to WebKeyMapping("SPACE", Key.Spacebar),
+    "Insert" to WebKeyMapping("INSERT", Key.Insert),
+    "Delete" to WebKeyMapping("DELETE", Key.Delete),
+    "Home" to WebKeyMapping("HOME", Key.Home),
+    "PageUp" to WebKeyMapping("PAGEUP", Key.PageUp),
+    "PageDown" to WebKeyMapping("PAGEDOWN", Key.PageDown),
+
+    "ArrowLeft" to WebKeyMapping("LEFT", Key.DirectionLeft),
+    "ArrowRight" to WebKeyMapping("RIGHT", Key.DirectionRight),
+    "ArrowUp" to WebKeyMapping("UP", Key.DirectionUp),
+    "ArrowDown" to WebKeyMapping("DOWN", Key.DirectionDown),
+
+    "ShiftLeft" to WebKeyMapping("SHIFT", Key.ShiftLeft),
+    "ShiftRight" to WebKeyMapping("SHIFT", Key.ShiftRight),
+    "ControlLeft" to WebKeyMapping("CONTROL", Key.CtrlLeft),
+    "ControlRight" to WebKeyMapping("CONTROL", Key.CtrlRight),
+    "AltLeft" to WebKeyMapping("ALT", Key.AltLeft),
+    "AltRight" to WebKeyMapping("ALT", Key.AltRight),
+    "MetaLeft" to WebKeyMapping("META", Key.MetaLeft),
+    "MetaRight" to WebKeyMapping("META", Key.MetaRight),
+    "CapsLock" to WebKeyMapping("CAPSLOCK", Key.CapsLock),
+    "NumLock" to WebKeyMapping("NUMLOCK", Key.NumLock),
+    "ScrollLock" to WebKeyMapping("SCROLLLOCK", Key.ScrollLock),
+
+    "Numpad0" to WebKeyMapping("NUMPAD0", Key.NumPad0),
+    "Numpad1" to WebKeyMapping("NUMPAD1", Key.NumPad1),
+    "Numpad2" to WebKeyMapping("NUMPAD2", Key.NumPad2),
+    "Numpad3" to WebKeyMapping("NUMPAD3", Key.NumPad3),
+    "Numpad4" to WebKeyMapping("NUMPAD4", Key.NumPad4),
+    "Numpad5" to WebKeyMapping("NUMPAD5", Key.NumPad5),
+    "Numpad6" to WebKeyMapping("NUMPAD6", Key.NumPad6),
+    "Numpad7" to WebKeyMapping("NUMPAD7", Key.NumPad7),
+    "Numpad8" to WebKeyMapping("NUMPAD8", Key.NumPad8),
+    "Numpad9" to WebKeyMapping("NUMPAD9", Key.NumPad9),
+    "NumpadAdd" to WebKeyMapping("NUMPADADD", Key.NumPadAdd),
+    "NumpadSubtract" to WebKeyMapping("NUMPADSUBTRACT", Key.NumPadSubtract),
+    "NumpadMultiply" to WebKeyMapping("NUMPADMULTIPLY", Key.NumPadMultiply),
+    "NumpadDivide" to WebKeyMapping("NUMPADDIVIDE", Key.NumPadDivide),
+
+    "Comma" to WebKeyMapping(",", Key.Comma),
+    "Period" to WebKeyMapping(".", Key.Period),
+    "Slash" to WebKeyMapping("/", Key.Slash),
+    "Backslash" to WebKeyMapping("\\", Key.Backslash),
+    "Semicolon" to WebKeyMapping(";", Key.Semicolon),
+    "Equal" to WebKeyMapping("=", Key.Equals),
+    "Minus" to WebKeyMapping("-", Key.Minus),
+    "BracketLeft" to WebKeyMapping("[", Key.LeftBracket),
+    "BracketRight" to WebKeyMapping("]", Key.RightBracket),
+    "Quote" to WebKeyMapping("'", Key.Apostrophe),
+    "Backquote" to WebKeyMapping("BACKTICK", Key.Grave),
+)
 
 @OptIn(ExperimentalWasmJsInterop::class)
 internal actual object Platform {
@@ -146,6 +257,7 @@ internal actual object Platform {
 @Composable
 actual fun Korender(
     resourceLoader: ResourceLoader,
+    vSync: Boolean,
     block: KorenderScope.() -> Unit
 ) {
     var engine: Engine? by remember { mutableStateOf(null) }
@@ -230,6 +342,12 @@ actual fun Korender(
             else -> TouchEvent.Button.NONE
         }
 
+        fun keyboardModifiers(event: MouseEvent) =
+            KeyboardModifiers(event.shiftKey, event.ctrlKey, event.altKey, event.metaKey)
+
+        fun keyboardModifiers(event: org.w3c.dom.events.KeyboardEvent) =
+            KeyboardModifiers(event.shiftKey, event.ctrlKey, event.altKey, event.metaKey)
+
         canvas.addEventListener("webglcontextlost") {
             it.preventDefault()
             println("WebGL context lost !")
@@ -240,7 +358,7 @@ actual fun Korender(
             val x = me.pageX - canvas.offsetLeft
             val y = me.pageY - canvas.offsetTop
             GlobalScope.launch {
-                engine?.pushTouch(TouchEvent(type, me.button.toButton(), x.toFloat(), y.toFloat()))
+                engine?.pushTouch(TouchEvent(type, me.button.toButton(), x.toFloat(), y.toFloat(), keyboardModifiers(me)))
             }
         }
 
@@ -250,7 +368,7 @@ actual fun Korender(
                 val x = touch.pageX - canvas.offsetLeft
                 val y = touch.pageY - canvas.offsetTop
                 GlobalScope.launch {
-                    engine?.pushTouch(TouchEvent(type, TouchEvent.Button.LEFT, x.toFloat(), y.toFloat()))
+                    engine?.pushTouch(TouchEvent(type, TouchEvent.Button.LEFT, x.toFloat(), y.toFloat(), KeyboardModifiers()))
                 }
             }
             // TODO improve this POC
@@ -259,7 +377,7 @@ actual fun Korender(
                     val x = touch.pageX - canvas.offsetLeft
                     val y = touch.pageY - canvas.offsetTop
                     GlobalScope.launch {
-                        engine?.pushTouch(TouchEvent(type, TouchEvent.Button.LEFT, x.toFloat(), y.toFloat()))
+                        engine?.pushTouch(TouchEvent(type, TouchEvent.Button.LEFT, x.toFloat(), y.toFloat(), KeyboardModifiers()))
                     }
                 }
             }
@@ -267,8 +385,9 @@ actual fun Korender(
 
         fun sendKey(type: KeyEvent.Type, event: Event) {
             val ke = event as org.w3c.dom.events.KeyboardEvent
+            val mapping = WEB_KEY_MAPPING[ke.code] ?: WebKeyMapping(ke.key, Key.Unknown)
             GlobalScope.launch {
-                engine?.pushKey(KeyEvent(type, ke.key))
+                engine?.pushKey(KeyEvent(type, mapping.key, mapping.composeKey, keyboardModifiers(ke)))
             }
         }
 

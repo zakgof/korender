@@ -149,6 +149,11 @@ internal class Renderer(
                     krscene.build(sceneDeclaration)
                 }
             }
+            sceneDeclaration.objs.forEach {
+                inventory.obj(it)?.let { obj ->
+                    obj.build(sceneDeclaration)
+                }
+            }
         }
 
         fun render(rk: ResultKeeper?) {

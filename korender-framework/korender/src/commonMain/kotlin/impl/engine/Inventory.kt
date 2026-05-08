@@ -27,6 +27,7 @@ import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.impl.material.TextureLinkDeclaration
 import com.zakgof.korender.impl.material.Texturing
 import com.zakgof.korender.impl.material.UniformBufferHolder
+import com.zakgof.korender.impl.prefab.obj.ObjScene
 import com.zakgof.korender.impl.prefab.scene.KrScene
 import com.zakgof.korender.impl.prefab.terrain.Clipmaps
 
@@ -56,8 +57,9 @@ internal class Inventory(private val loader: Loader) {
     private val gltfs = Registry<GltfDeclaration, GltfCache> { GltfLoader.load(it, loader) }
     private val heightFields = Registry<HeightFieldDeclaration, Clipmaps> { Clipmaps(it) }
     private val krscenes = Registry<KrSceneDeclaration, KrScene> { KrScene(it) }
+    private val objs = Registry<ObjDeclaration, ObjScene> { ObjScene(it) }
 
-    private val registries = listOf(meshes, shaders, textures, textures3D, textureLinks, resourceCubeTextures, imageCubeTextures, fonts, frameBuffers, cubeFrameBuffers, gltfs, heightFields, krscenes)
+    private val registries = listOf(meshes, shaders, textures, textures3D, textureLinks, resourceCubeTextures, imageCubeTextures, fonts, frameBuffers, cubeFrameBuffers, gltfs, heightFields, krscenes, objs)
 
     fun go(time: Float, generation: Int, block: Inventory.() -> Boolean) {
         registries.forEach { it.begin() }
@@ -82,6 +84,7 @@ internal class Inventory(private val loader: Loader) {
     fun gltf(decl: GltfDeclaration): GltfCache? = gltfs[decl]
     fun heightField(decl: HeightFieldDeclaration): Clipmaps? = heightFields[decl]
     fun krscene(decl: KrSceneDeclaration): KrScene? = krscenes[decl]
+    fun obj(decl: ObjDeclaration): ObjScene? = objs[decl]
 
     fun shaderPlugin(id: ShaderPluginId, file: String): ShaderPlugin =
         shaderServices.shaderPluginRegistry.registerCustom(id, file)

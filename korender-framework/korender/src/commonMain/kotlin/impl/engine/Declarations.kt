@@ -42,6 +42,7 @@ internal class SceneDeclaration {
     val guis = mutableListOf<ElementDeclaration.Container>()
     val gltfs = mutableListOf<GltfDeclaration>()
     val krscenes = mutableListOf<KrSceneDeclaration>()
+    val objs = mutableListOf<ObjDeclaration>()
     val heightFields = mutableListOf<HeightFieldDeclaration>()
     var filters = mutableListOf<InternalFilterDeclaration>()
     var deferredShadingDeclaration: DeferredShadingDeclaration? = null
@@ -228,6 +229,16 @@ internal class KrSceneDeclaration(
     override val nodeContext: NodeContext,
 ) : NodeKeeper {
     override fun equals(other: Any?): Boolean = (other is KrSceneDeclaration && other.resource == resource)
+    override fun hashCode(): Int = resource.hashCode()
+}
+
+internal class ObjDeclaration(
+    val resource: String,
+    val transform: Transform,
+    val materialModifier: BaseMaterialScope.() -> Unit,
+    override val nodeContext: NodeContext,
+) : NodeKeeper {
+    override fun equals(other: Any?): Boolean = (other is ObjDeclaration && other.resource == resource)
     override fun hashCode(): Int = resource.hashCode()
 }
 

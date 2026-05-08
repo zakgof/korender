@@ -83,19 +83,19 @@ fun HbaoExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
                     }
                     Row {
                         Filler()
-                        val r = "%.1f".format(radius.position)
+                        val r = radius.position.fixedDecimals(1)
                         Text(id = "radius1", height = 24f, text = "Radius $r ")
                         Slider("radius2", width / 3f, 32f, radius)
                     }
                     Row {
                         Filler()
-                        val b = "%.3f".format(bias.position)
+                        val b = bias.position.fixedDecimals(3)
                         Text(id = "bias1", height = 24f, text = "Bias $b ")
                         Slider("bias2", width / 3f, 32f, bias)
                     }
                     Row {
                         Filler()
-                        val i = "%.2f".format(intensity.position)
+                        val i = intensity.position.fixedDecimals(2)
                         Text(id = "intensity1", height = 24f, text = "Intensity $i ")
                         Slider("intensity2", width / 3f, 32f, intensity)
                     }
