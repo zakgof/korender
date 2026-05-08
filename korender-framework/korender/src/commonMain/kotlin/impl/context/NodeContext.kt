@@ -18,10 +18,10 @@ import com.zakgof.korender.TextureArrayDeclaration
 import com.zakgof.korender.TextureArrayImages
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
-import com.zakgof.korender.context.InstancingParameter
-import com.zakgof.korender.context.InstancingScope
-import com.zakgof.korender.context.PipeMeshScope
-import com.zakgof.korender.context.ResourceScope
+import com.zakgof.korender.scope.InstancingParameter
+import com.zakgof.korender.scope.InstancingScope
+import com.zakgof.korender.scope.PipeMeshScope
+import com.zakgof.korender.scope.ResourceScope
 import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.engine.createPipeMesh
 import com.zakgof.korender.impl.geometry.BiQuad

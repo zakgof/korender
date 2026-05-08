@@ -2,7 +2,7 @@ package island
 
 import com.zakgof.korender.Image
 import com.zakgof.korender.TextureFilter
-import com.zakgof.korender.context.FrameScope
+import com.zakgof.korender.scope.FrameScope
 import com.zakgof.korender.examples.island.albedoTerrainPlugin
 import com.zakgof.korender.examples.island.loadBinary
 import com.zakgof.korender.examples.island.normalTerrainPlugin

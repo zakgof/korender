@@ -1,8 +1,8 @@
 package com.zakgof.korender.impl.context
 
-import com.zakgof.korender.context.BillboardInstancingScope
-import com.zakgof.korender.context.GltfInstancingScope
-import com.zakgof.korender.context.InstancingScope
+import com.zakgof.korender.scope.BillboardInstancingScope
+import com.zakgof.korender.scope.GltfInstancingScope
+import com.zakgof.korender.scope.InstancingScope
 import com.zakgof.korender.impl.engine.BillboardInstance
 import com.zakgof.korender.impl.engine.GltfInstance
 import com.zakgof.korender.impl.engine.MeshInstance

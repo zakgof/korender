@@ -1,4 +1,4 @@
-package com.zakgof.korender.context
+package com.zakgof.korender.scope
 
 import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.BillboardEffect

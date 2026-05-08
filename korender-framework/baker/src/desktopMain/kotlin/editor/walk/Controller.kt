@@ -4,7 +4,7 @@ import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.TouchEvent
-import com.zakgof.korender.context.KorenderScope
+import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.scale

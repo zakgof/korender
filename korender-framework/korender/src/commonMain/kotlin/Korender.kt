@@ -1,7 +1,7 @@
 package com.zakgof.korender
 
 import androidx.compose.runtime.Composable
-import com.zakgof.korender.context.KorenderScope
+import com.zakgof.korender.scope.KorenderScope
 
 /**
  * Creates a 3D Korender viewport for integration into Compose Multiplatform UI.

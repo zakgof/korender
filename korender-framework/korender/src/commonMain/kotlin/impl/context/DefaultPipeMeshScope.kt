@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.context
 
-import com.zakgof.korender.context.PipeMeshScope
-import com.zakgof.korender.context.PipeMeshSequenceScope
+import com.zakgof.korender.scope.PipeMeshScope
+import com.zakgof.korender.scope.PipeMeshSequenceScope
 import com.zakgof.korender.math.Vec3
 
 internal class DefaultPipeMeshScope : PipeMeshScope {

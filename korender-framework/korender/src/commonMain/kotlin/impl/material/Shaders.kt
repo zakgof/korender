@@ -4,7 +4,7 @@ import androidx.compose.runtime.CompositionServices
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Platform
 import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.context.KorenderScope
+import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.engine.ShaderDeclaration
 import com.zakgof.korender.impl.engine.ShaderServices

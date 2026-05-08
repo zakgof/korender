@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.MeshInitializer
-import com.zakgof.korender.context.PipeMeshScope
+import com.zakgof.korender.scope.PipeMeshScope
 import com.zakgof.korender.impl.context.DefaultPipeMeshScope
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.context.PipeNode

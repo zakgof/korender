@@ -1,7 +1,7 @@
 package com.zakgof.korenderexamples.golden
 
 import com.zakgof.korender.TextureWrap
-import com.zakgof.korender.context.FrameScope
+import com.zakgof.korender.scope.FrameScope
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.FloatMath.PIdiv2

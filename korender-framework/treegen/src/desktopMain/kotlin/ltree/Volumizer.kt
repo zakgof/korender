@@ -2,7 +2,7 @@ package ltree
 
 import com.zakgof.korender.Image3D
 import com.zakgof.korender.PixelFormat
-import com.zakgof.korender.context.KorenderScope
+import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.math.ColorRGB.Companion.White
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec3

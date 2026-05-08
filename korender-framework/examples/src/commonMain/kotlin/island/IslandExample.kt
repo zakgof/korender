@@ -5,7 +5,7 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.ShaderPlugin
 import com.zakgof.korender.ShaderPluginId
-import com.zakgof.korender.context.FrameScope
+import com.zakgof.korender.scope.FrameScope
 import com.zakgof.korender.examples.TestExchange
 import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.math.ColorRGB

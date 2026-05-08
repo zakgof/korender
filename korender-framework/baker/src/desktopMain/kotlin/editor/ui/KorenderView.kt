@@ -8,8 +8,8 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.baker.editor.util.toKorender
 import com.zakgof.korender.baker.resources.Res
-import com.zakgof.korender.context.FrameScope
-import com.zakgof.korender.context.KorenderScope
+import com.zakgof.korender.scope.FrameScope
+import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Quaternion

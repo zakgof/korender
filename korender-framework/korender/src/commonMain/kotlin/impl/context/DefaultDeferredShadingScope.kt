@@ -3,7 +3,7 @@ package com.zakgof.korender.impl.context
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.DecalMaterial
 import com.zakgof.korender.ShadingMaterialScope
-import com.zakgof.korender.context.DeferredShadingScope
+import com.zakgof.korender.scope.DeferredShadingScope
 import com.zakgof.korender.impl.engine.DeferredShadingDeclaration
 import com.zakgof.korender.impl.engine.InternalDecalDeclaration
 import com.zakgof.korender.impl.material.InternalDecalMaterial

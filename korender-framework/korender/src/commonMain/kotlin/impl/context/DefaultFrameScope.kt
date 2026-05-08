@@ -27,18 +27,18 @@ import com.zakgof.korender.TextureArrayImages
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
-import com.zakgof.korender.context.BillboardInstancingDeclaration
-import com.zakgof.korender.context.DeferredShadingScope
-import com.zakgof.korender.context.FrameScope
-import com.zakgof.korender.context.GltfInstancingDeclaration
-import com.zakgof.korender.context.GuiContainerScope
-import com.zakgof.korender.context.InstancingDeclaration
-import com.zakgof.korender.context.InstancingParameter
-import com.zakgof.korender.context.InstancingScope
-import com.zakgof.korender.context.KorenderScope
-import com.zakgof.korender.context.PipeMeshScope
-import com.zakgof.korender.context.ResourceScope
-import com.zakgof.korender.context.ShadowScope
+import com.zakgof.korender.scope.BillboardInstancingDeclaration
+import com.zakgof.korender.scope.DeferredShadingScope
+import com.zakgof.korender.scope.FrameScope
+import com.zakgof.korender.scope.GltfInstancingDeclaration
+import com.zakgof.korender.scope.GuiContainerScope
+import com.zakgof.korender.scope.InstancingDeclaration
+import com.zakgof.korender.scope.InstancingParameter
+import com.zakgof.korender.scope.InstancingScope
+import com.zakgof.korender.scope.KorenderScope
+import com.zakgof.korender.scope.PipeMeshScope
+import com.zakgof.korender.scope.ResourceScope
+import com.zakgof.korender.scope.ShadowScope
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.engine.CaptureContext
@@ -75,6 +75,7 @@ import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.IDENTITY
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.obj.ObjInfo
 
 internal class DefaultFrameScope(
     val korenderContext: Engine.KorenderScopeImpl,
@@ -313,7 +314,7 @@ internal class DefaultFrameScope(
         sceneDeclaration.krscenes += KrSceneDeclaration(resource, transform, block, nodeContext)
     }
 
-    override fun Obj(resource: String, transform: Transform, materialModifier: BaseMaterialScope.() -> Unit) {
-        sceneDeclaration.objs += ObjDeclaration(resource, transform, materialModifier, nodeContext)
+    override fun Obj(resource: String, transform: Transform, onLoad: (ObjInfo) -> Unit, materialModifier: BaseMaterialScope.() -> Unit) {
+        sceneDeclaration.objs += ObjDeclaration(resource, transform, onLoad, materialModifier, nodeContext)
     }
 }

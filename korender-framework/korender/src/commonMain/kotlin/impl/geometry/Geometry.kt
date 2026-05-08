@@ -5,8 +5,8 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.context.BillboardInstancingParameter
-import com.zakgof.korender.context.InstancingParameter
+import com.zakgof.korender.scope.BillboardInstancingParameter
+import com.zakgof.korender.scope.InstancingParameter
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.geometry.MeshAttributes.COLOR

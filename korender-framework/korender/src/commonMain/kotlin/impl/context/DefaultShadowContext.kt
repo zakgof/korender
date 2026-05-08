@@ -1,7 +1,7 @@
 package com.zakgof.korender.impl.context
 
 import com.zakgof.korender.ShadowAlgorithmDeclaration
-import com.zakgof.korender.context.ShadowScope
+import com.zakgof.korender.scope.ShadowScope
 import com.zakgof.korender.impl.engine.CascadeDeclaration
 import com.zakgof.korender.impl.engine.ShadowDeclaration
 

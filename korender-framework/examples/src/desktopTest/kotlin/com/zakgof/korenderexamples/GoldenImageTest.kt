@@ -1,11 +1,11 @@
-﻿package com.zakgof.korenderexamples
+package com.zakgof.korenderexamples
 
 import androidx.compose.ui.awt.ComposeWindow
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Image
 import com.zakgof.korender.Korender
-import com.zakgof.korender.context.FrameScope
-import com.zakgof.korender.context.KorenderScope
+import com.zakgof.korender.scope.FrameScope
+import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.examples.TestExchange
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z

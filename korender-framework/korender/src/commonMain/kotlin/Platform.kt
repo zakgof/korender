@@ -1,6 +1,6 @@
 package com.zakgof.korender
 
-import com.zakgof.korender.context.KorenderScope
+import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.image.InternalImage
 import kotlinx.coroutines.Deferred

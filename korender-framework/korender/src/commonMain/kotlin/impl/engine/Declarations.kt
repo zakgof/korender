@@ -6,11 +6,11 @@ import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.context.BillboardInstancingDeclaration
-import com.zakgof.korender.context.BillboardInstancingParameter
-import com.zakgof.korender.context.GltfInstancingDeclaration
-import com.zakgof.korender.context.InstancingDeclaration
-import com.zakgof.korender.context.InstancingParameter
+import com.zakgof.korender.scope.BillboardInstancingDeclaration
+import com.zakgof.korender.scope.BillboardInstancingParameter
+import com.zakgof.korender.scope.GltfInstancingDeclaration
+import com.zakgof.korender.scope.InstancingDeclaration
+import com.zakgof.korender.scope.InstancingParameter
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.context.DefaultFrameScope
 import com.zakgof.korender.impl.context.Direction
@@ -29,6 +29,7 @@ import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.obj.ObjInfo
 
 internal class SceneDeclaration {
     val pointLights = mutableListOf<PointLightDeclaration>()
@@ -235,6 +236,7 @@ internal class KrSceneDeclaration(
 internal class ObjDeclaration(
     val resource: String,
     val transform: Transform,
+    val onLoad: (ObjInfo) -> Unit,
     val materialModifier: BaseMaterialScope.() -> Unit,
     override val nodeContext: NodeContext,
 ) : NodeKeeper {

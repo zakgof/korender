@@ -1,6 +1,6 @@
 package com.zakgof.korender.examples.island
 
-import com.zakgof.korender.context.FrameScope
+import com.zakgof.korender.scope.FrameScope
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Transform.Companion.rotate

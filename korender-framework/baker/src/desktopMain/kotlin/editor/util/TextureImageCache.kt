@@ -2,7 +2,7 @@ package editor.util
 
 import androidx.compose.ui.graphics.ImageBitmap
 import com.zakgof.korender.Image
-import com.zakgof.korender.context.KorenderScope
+import com.zakgof.korender.scope.KorenderScope
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.decodeToImageBitmap
 import java.io.File

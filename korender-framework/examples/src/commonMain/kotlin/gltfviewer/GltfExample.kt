@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.Korender
-import com.zakgof.korender.context.KorenderScope
+import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.examples.TestExchange
 import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.math.ColorRGB.Companion.white

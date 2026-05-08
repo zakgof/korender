@@ -1,4 +1,4 @@
-package com.zakgof.korender.context
+package com.zakgof.korender.scope
 
 import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.BillboardMaterial
@@ -15,6 +15,7 @@ import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.obj.ObjInfo
 
 interface FrameScope : KorenderScope {
 
@@ -45,6 +46,12 @@ interface FrameScope : KorenderScope {
      * @param materialModifier material modifiers block
      */
     fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, animation: Int? = null, instancing: GltfInstancingDeclaration? = null, onUpdate: (GltfUpdate) -> Unit = {}, materialModifier: BaseMaterialScope.() -> Unit = {})
+
+    fun KrScene(resource: String, transform: Transform = Transform.IDENTITY, block: BaseMaterialScope.()-> Unit = {})
+
+    fun Obj(resource: String, transform: Transform = Transform.IDENTITY, onLoad: (ObjInfo) -> Unit, materialModifier: BaseMaterialScope.() -> Unit = {})
+
+
 
     /**
      * Renders a billboard - camera facing quad.
@@ -171,11 +178,5 @@ interface FrameScope : KorenderScope {
      * @param block block of rendering parameters
      */
     fun HeightField(id: String, cellSize: Float, hg: Int, rings: Int, block: TerrainMaterialScope.() -> Unit)
-
-    fun KrScene(resource: String, transform: Transform = Transform.IDENTITY, block: BaseMaterialScope.()-> Unit = {})
-
-    fun Obj(resource: String, transform: Transform = Transform.IDENTITY, materialModifier: BaseMaterialScope.() -> Unit = {})
-
-
 }
 

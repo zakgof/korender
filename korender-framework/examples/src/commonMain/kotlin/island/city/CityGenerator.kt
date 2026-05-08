@@ -1,7 +1,7 @@
 package com.zakgof.korender.examples.island.city
 
 import com.zakgof.korender.MutableMesh
-import com.zakgof.korender.context.KorenderScope
+import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x

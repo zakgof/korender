@@ -4,7 +4,7 @@ import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.TouchEvent
-import com.zakgof.korender.context.KorenderScope
+import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 

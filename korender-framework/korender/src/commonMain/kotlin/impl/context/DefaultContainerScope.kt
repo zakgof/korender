@@ -2,8 +2,8 @@ package com.zakgof.korender.impl.context
 
 import com.zakgof.korender.TextStyle
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.context.FrameScope
-import com.zakgof.korender.context.GuiContainerScope
+import com.zakgof.korender.scope.FrameScope
+import com.zakgof.korender.scope.GuiContainerScope
 import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.math.ColorRGBA
 

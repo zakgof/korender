@@ -1,6 +1,6 @@
 package com.zakgof.korender
 
-import com.zakgof.korender.context.GuiContainerScope
+import com.zakgof.korender.scope.GuiContainerScope
 import com.zakgof.korender.math.ColorRGBA
 import kotlin.math.sqrt
 
