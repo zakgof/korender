@@ -1,7 +1,6 @@
 package editor.state
 
 import androidx.compose.ui.input.key.Key
-import editor.model.brush.CreatorShape
 import com.zakgof.korender.impl.scene.SceneModel
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Vec3
@@ -10,6 +9,7 @@ import com.zakgof.korender.math.z
 import editor.model.BoundingBox
 import editor.model.Material
 import editor.model.brush.Brush
+import editor.model.brush.CreatorShape
 
 data class State(
     val mouseMode: MouseMode = MouseMode.CREATOR,
@@ -26,6 +26,7 @@ data class State(
     val camera: Camera = Camera(20.z, -1.z, 1.y),
 
     val materialId: String = Material.generic.id,
+    val entityModelId: String? = null,
 
     val pressedKeys: Set<Key> = setOf(),
 

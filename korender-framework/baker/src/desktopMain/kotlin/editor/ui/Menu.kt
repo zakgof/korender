@@ -8,6 +8,7 @@ import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.MenuBarScope
+import com.zakgof.korender.baker.editor.ui.dialog.EntitiesDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.util.nextSane
 import com.zakgof.korender.baker.editor.util.prevSane
@@ -53,7 +54,8 @@ fun FrameWindowScope.Menu(holder: StateHolder) =
         file(holder)
         view(holder)
         edit(holder)
-        material(holder)
+        materials(holder)
+        models(holder)
         if (state.selection.isNotEmpty()) {
             selection(holder)
         }
@@ -179,10 +181,10 @@ private fun MenuBarScope.edit(holder: StateHolder) {
 }
 
 @Composable
-private fun MenuBarScope.material(holder: StateHolder) {
+private fun MenuBarScope.materials(holder: StateHolder) {
     val state by holder.state.collectAsState()
     val materialDialog = MaterialsDialog(holder)
-    Menu("Material") {
+    Menu("Materials") {
         Item("Edit Materials", icon = painterResource(Res.drawable.material)) {
             materialDialog()
         }
@@ -191,6 +193,24 @@ private fun MenuBarScope.material(holder: StateHolder) {
                 val material = Material(file.name, file.path)
                 holder.addMaterial(material)
             }
+        }
+    }
+}
+
+@Composable
+private fun MenuBarScope.models(holder: StateHolder) {
+    val state by holder.state.collectAsState()
+    val entitiesDialog = EntitiesDialog(holder)
+    Menu("Models") {
+        // TODO: icon
+        Item("Edit Models", icon = painterResource(Res.drawable.material)) {
+            entitiesDialog()
+        }
+        // TODO: icon
+        Item("New Model", painterResource(Res.drawable.newmaterial)) {
+//            entitiesDialog(state, holder)?.let { entityModel ->
+//                holder.instantiateEntity(entityModel)
+//            }
         }
     }
 }

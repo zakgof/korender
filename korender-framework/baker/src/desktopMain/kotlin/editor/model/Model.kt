@@ -1,6 +1,8 @@
 package editor.model
 
 import com.zakgof.korender.baker.editor.model.Group
+import com.zakgof.korender.baker.editor.model.entity.EntityInstance
+import com.zakgof.korender.baker.editor.model.entity.EntityModel
 import editor.model.brush.Brush
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentMapOf
@@ -10,5 +12,7 @@ data class Model(
     val invisibleBrushes: Set<String> = setOf(),
     val groups: PersistentMap<String, Group> = persistentMapOf(),
     val brushGroups: PersistentMap<String, String> = persistentMapOf(),
-    val materials: PersistentMap<String, Material> = persistentMapOf(Material.generic.id to Material.generic)
+    val materials: PersistentMap<String, Material> = persistentMapOf(Material.generic.id to Material.generic),
+    val entityInstances: PersistentMap<String, EntityInstance> = persistentMapOf(),
+    val entityModels: PersistentMap<String, EntityModel> = persistentMapOf(),
 )

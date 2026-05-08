@@ -21,7 +21,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class ObjScene(private val declaration: ObjDeclaration) : AutoCloseable {
+internal class ObjScene(declaration: ObjDeclaration) : AutoCloseable {
 
     private val prefix = "obj[${declaration.resource}]"
     private var loadNotified = false
@@ -40,7 +40,7 @@ internal class ObjScene(private val declaration: ObjDeclaration) : AutoCloseable
         LoadedObjScene(parsed.meshes, materials, ObjInfoImpl(parsed.meshes))
     }
 
-    fun build(sceneDeclaration: SceneDeclaration) {
+    fun build(declaration: ObjDeclaration, sceneDeclaration: SceneDeclaration) {
         if (!sceneDeferred.isCompleted)
             return
 

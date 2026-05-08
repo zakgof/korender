@@ -6,6 +6,7 @@ import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.baker.editor.collision.BvhCompiler
 import com.zakgof.korender.baker.editor.collision.CollisionSerialModel
 import com.zakgof.korender.baker.editor.model.Group
+import com.zakgof.korender.baker.editor.model.entity.EntityModel
 import com.zakgof.korender.baker.editor.util.floor2
 import com.zakgof.korender.baker.editor.util.floorSig
 import com.zakgof.korender.baker.editor.util.roundSane
@@ -659,6 +660,30 @@ class StateHolder {
         clearSelection()
         if (!model.value.materials.keys.contains(state.value.materialId)) {
             selectMaterial(Material.generic)
+        }
+    }
+
+    fun selectEntityModel(entityModel: EntityModel?) {
+        _state.update { it.copy(entityModelId = entityModel?.id) }
+    }
+
+    fun addEntityModel(entityModel: EntityModel) {
+        pushHistory()
+        _model.update { it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel)) }
+        selectEntityModel(entityModel)
+    }
+
+    fun updateEntityModelName(entityModel: EntityModel, newName: String) {
+        pushHistory()
+        _model.update {
+            it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel.copy(name = newName)))
+        }
+    }
+
+    fun updateEntityModelScale(entityModel: EntityModel, newScale: Float) {
+        pushHistory()
+        _model.update {
+            it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel.copy(defaultScale = newScale)))
         }
     }
 

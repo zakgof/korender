@@ -149,9 +149,9 @@ internal class Renderer(
                     krscene.build(sceneDeclaration)
                 }
             }
-            sceneDeclaration.objs.forEach {
-                inventory.obj(it)?.let { obj ->
-                    obj.build(sceneDeclaration)
+            sceneDeclaration.objs.forEach { declaration ->
+                inventory.obj(declaration)?.let { obj ->
+                    obj.build(declaration, sceneDeclaration)
                 }
             }
         }
