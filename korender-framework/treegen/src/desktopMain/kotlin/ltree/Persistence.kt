@@ -7,12 +7,14 @@ import java.io.File
 import java.io.FileOutputStream
 import javax.imageio.ImageIO
 
-val root = File("C:\\Users\\gvs\\.korender")
+val root = File(System.getProperty("user.home"), ".korender")
 val islandRoot = File(root, "island")
 
 fun saveBranches(branches: List<LTree.Branch>) {
-    islandRoot.mkdirs()
-    val file = File(islandRoot, "tree/branches.bin")
+
+    val folder = File(islandRoot, "tree")
+    folder.mkdirs()
+    val file = File(folder, "branches.bin")
     val fos = FileOutputStream(file)
     fos.use {
         it.push(branches.size)

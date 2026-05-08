@@ -49,7 +49,7 @@ interface FrameScope : KorenderScope {
 
     fun KrScene(resource: String, transform: Transform = Transform.IDENTITY, block: BaseMaterialScope.()-> Unit = {})
 
-    fun Obj(resource: String, transform: Transform = Transform.IDENTITY, onLoad: (ObjInfo) -> Unit, materialModifier: BaseMaterialScope.() -> Unit = {})
+    fun Obj(resource: String, transform: Transform = Transform.IDENTITY, onLoad: (ObjInfo) -> Unit = {}, materialModifier: BaseMaterialScope.() -> Unit = {})
 
 
 

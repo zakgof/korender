@@ -26,9 +26,13 @@ val random = Random(seed)
 
 fun main() {
 
-    val root = File(System.getProperty("projectRoot") ?: "D:\\kot\\dev\\korender\\korender-framework\\baker")
-    val islandRoot = File(root, "../examples/src/commonMain/composeResources/files/island")
-
+    val root = File(System.getProperty("user.home"), ".korender")
+    val islandRoot = File(root, "island")
+    val terrainRoot = File(islandRoot, "terrain")
+    val buildingRoot = File(islandRoot, "building")
+    islandRoot.mkdirs()
+    terrainRoot.mkdirs()
+    buildingRoot.mkdirs()
     val heightMap = Float2PixelMap(512)
     val colorMap = ChannelMap(512)
     val sdf = Sdf(256)
