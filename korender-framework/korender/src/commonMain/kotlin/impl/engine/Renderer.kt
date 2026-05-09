@@ -147,7 +147,9 @@ internal class Renderer(
                 inventory.krscene(it)?.build(sceneDeclaration) ?: initRk.fail()
             }
             sceneDeclaration.objs.forEach { declaration ->
-                inventory.obj(declaration)?.build(declaration, sceneDeclaration) ?: initRk.fail()
+                val obj = inventory.obj(declaration)
+                if (obj == null || !obj.build(declaration, sceneDeclaration))
+                    initRk.fail()
             }
         }
 

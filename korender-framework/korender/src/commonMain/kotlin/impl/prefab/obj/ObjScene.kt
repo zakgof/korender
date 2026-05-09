@@ -3,10 +3,10 @@ package com.zakgof.korender.impl.prefab.obj
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
+import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.ObjDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.SceneDeclaration
-import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
 import com.zakgof.korender.impl.geometry.MeshAttributes.POS
 import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
@@ -40,9 +40,9 @@ internal class ObjScene(declaration: ObjDeclaration) : AutoCloseable {
         LoadedObjScene(parsed.meshes, materials, ObjInfoImpl(parsed.meshes))
     }
 
-    fun build(declaration: ObjDeclaration, sceneDeclaration: SceneDeclaration) {
+    fun build(declaration: ObjDeclaration, sceneDeclaration: SceneDeclaration): Boolean {
         if (!sceneDeferred.isCompleted)
-            return
+            return false
 
         val scene = sceneDeferred.getCompleted()
         if (!loadNotified) {
@@ -80,6 +80,7 @@ internal class ObjScene(declaration: ObjDeclaration) : AutoCloseable {
                 )
             )
         }
+        return true
     }
 
     override fun close() {

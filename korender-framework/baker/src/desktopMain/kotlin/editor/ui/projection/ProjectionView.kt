@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -74,7 +73,7 @@ class Axes(val name: String, val xAxis: Vec3, val yAxis: Vec3, val lookAxis: Vec
 fun ProjectionView(axes: Axes, holder: StateHolder) {
     val state by holder.state.collectAsState()
     val model by holder.model.collectAsState()
-    var mouseHandler: MouseHandler by remember { mutableStateOf(NoOpMouseHandler) }
+    var mouseHandler: MouseHandler = NoOpMouseHandler
     val focusRequester = remember { FocusRequester() }
     var redrawTick by remember { mutableIntStateOf(0) }
 
@@ -126,8 +125,9 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
                         }
                     }
                 }
-            }
+        }
     ) {
+        redrawTick
         val mapper = ProjectionMapper(axes, state, size)
         mouseHandler = mouseHandler(mapper, state, model, holder)
         drawGrid(mapper, state)
@@ -266,9 +266,7 @@ private fun DrawScope.drawEntityInstance(entityInstance: EntityInstance, mapper:
     val bb = entityInstance.bb
     val rect = mapper.rect(bb)
     val deferredImage: Deferred<ImageBitmap> = EntitySnapCache.image(entityInstance, model.entityModels[entityInstance.modelId]!!, mapper.axes)
-    deferredImage.invokeOnCompletion {
-        requestRedraw()
-    }
+
     if (deferredImage.isCompleted) {
         drawImage(
             image = deferredImage.getCompleted(),
@@ -281,6 +279,11 @@ private fun DrawScope.drawEntityInstance(entityInstance: EntityInstance, mapper:
                 rect.height.toInt()
             )
         )
+    } else {
+        deferredImage.invokeOnCompletion {
+            println("Image ready - redraw requested")
+            requestRedraw()
+        }
     }
     drawRect(
         color = Color.Red,

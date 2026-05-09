@@ -25,27 +25,29 @@ object EntitySnapCache {
     val toCapture = mutableListOf<Job>()
 
     fun image(entityInstance: EntityInstance, model: EntityModel, axes: Axes): Deferred<ImageBitmap> {
-        val existing = jobs[entityInstance.toString() + axes.name]
-        if (existing != null)
-            return existing.deferred
-        else {
+        val key = "${entityInstance.hashCode()}_${axes.name}"
+        println("Request snap image: $key")
+        return jobs.computeIfAbsent(key) {
+            println("Snap image cache miss: $key")
             val job = Job(entityInstance, model, axes)
-            jobs[entityInstance.toString() + axes.name] = job
             toCapture += job
-            return job.deferred
-        }
+            job
+        }.deferred
     }
 
     context(fs: FrameScope)
     fun frame() = with(fs) {
 
+        if (toCapture.isNotEmpty())
+            println("Snap image job queue has: ${toCapture.size} jobs")
         toCapture.forEach { job ->
+            println("Capture snap image: ${job.instance.hashCode()}_${job.axes.name}")
             val deferredKorenderImage = captureFrame(256, 256) {
                 val depth = abs(job.instance.bb.size dot job.axes.lookAxis)
                 camera = camera(
                     job.instance.bb.center - job.axes.lookAxis * (depth * 0.5f + 2f),
                     job.axes.lookAxis,
-                    job.axes.yAxis
+                    -job.axes.yAxis
                 )
                 projection = projection(
                     abs(job.instance.bb.size dot job.axes.xAxis),
@@ -54,12 +56,12 @@ object EntitySnapCache {
                     2f + depth,
                     ortho()
                 )
-                Sky(fastCloudSky())
                 Node(resourceLoader = { File(it).readBytes() }) {
                     Obj(job.model.filename, job.instance.transform)
                 }
             }
             deferredKorenderImage.invokeOnCompletion {
+                println("Capture snap image DONE: ${job.instance.hashCode()}_${job.axes.name}")
                 val imageBitmap = deferredKorenderImage.getCompleted().toCompose()
                 job.deferred.complete(imageBitmap)
             }

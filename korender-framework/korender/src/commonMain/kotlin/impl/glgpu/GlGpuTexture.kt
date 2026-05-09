@@ -204,6 +204,7 @@ internal class GlGpuTexture(private val width: Int, private val height: Int, fil
 
         val img = Platform.createImage(width, height, format!!)
         glReadPixels(0, 0, width, height, glFormat.format, glFormat.type, img.bytes)
+        flipRows(img.bytes, width, height, format!!.bytes)
 
         glBindFramebuffer(GL_FRAMEBUFFER, null)
         glDeleteFramebuffers(fb)
@@ -277,6 +278,27 @@ internal class GlGpuTexture(private val width: Int, private val height: Int, fil
         fun zeroShadowTex() = GlGpuTexture(1, 1, TextureFilter.Linear).also {
             it.enablePcfMode()
             it.uploadData(null, GlFormat(GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT))
+        }
+    }
+}
+
+private fun flipRows(buffer: NativeByteBuffer, width: Int, height: Int, bytesPerPixel: Int) {
+    val rowSize = width * bytesPerPixel
+    val topRow = ByteArray(rowSize)
+    val bottomRow = ByteArray(rowSize)
+
+    for (y in 0 until height / 2) {
+        val topOffset = y * rowSize
+        val bottomOffset = (height - 1 - y) * rowSize
+
+        for (i in 0 until rowSize) {
+            topRow[i] = buffer.byte(topOffset + i)
+            bottomRow[i] = buffer.byte(bottomOffset + i)
+        }
+
+        for (i in 0 until rowSize) {
+            buffer[topOffset + i] = bottomRow[i]
+            buffer[bottomOffset + i] = topRow[i]
         }
     }
 }
