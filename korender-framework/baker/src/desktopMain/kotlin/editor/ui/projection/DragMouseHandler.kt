@@ -22,13 +22,15 @@ internal class DragMouseHandler(
         originalCenter = state.viewCenter
     }
 
-    override fun onDrag(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) {
+    override fun onDrag(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) : Boolean {
         originalOffset?.let { oo ->
             val shift = current - oo
             holder.setViewCenter(originalCenter!! -
                     mapper.axes.xAxis * (shift.x / state.projectionScale) -
                     mapper.axes.yAxis * (shift.y / state.projectionScale))
+            return true
         }
+        return false
     }
 
 }

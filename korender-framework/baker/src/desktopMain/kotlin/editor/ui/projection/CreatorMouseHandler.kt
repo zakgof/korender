@@ -60,7 +60,7 @@ internal class CreatorMouseHandler(
         }
     }
 
-    override fun onDrag(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) {
+    override fun onDrag(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) : Boolean {
         val d = drag
         if (buttons.isPrimaryPressed) {
             when (d) {
@@ -89,5 +89,6 @@ internal class CreatorMouseHandler(
                         mapper.axes.yAxis * (shift.y / state.projectionScale)
             )
         }
+        return true
     }
 }

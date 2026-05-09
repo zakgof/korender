@@ -157,7 +157,7 @@ internal class SelectorMouseHandler(
 
     private fun pick(handleHalfSize: Int, a: Offset, b: Offset) = abs(a.x - b.x) < handleHalfSize && abs(a.y - b.y) < handleHalfSize
 
-    override fun onDrag(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) {
+    override fun onDrag(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) : Boolean {
         val d = drag
         if (buttons.isPrimaryPressed) {
             now = current
@@ -258,6 +258,7 @@ internal class SelectorMouseHandler(
                 )
             }
         }
+        return true
     }
 
     override fun onDragEnd() {
@@ -272,7 +273,7 @@ internal class SelectorMouseHandler(
     )
 
 
-    override fun draw(drawScope: DrawScope): Boolean {
+    override fun draw(drawScope: DrawScope) {
         if (drag is SelectorDrag && now != null) {
             val rect = unirect((drag as SelectorDrag).start, now!!)
             with(drawScope) {
@@ -286,9 +287,7 @@ internal class SelectorMouseHandler(
                     )
                 )
             }
-            return true
         }
-        return false
     }
 
     infix fun Offset.angleTo(that: Offset): Float {

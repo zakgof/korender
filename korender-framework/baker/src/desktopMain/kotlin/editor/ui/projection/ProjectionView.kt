@@ -53,9 +53,9 @@ import kotlin.math.abs
 internal interface MouseHandler {
     fun onClick(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) {}
     fun onDragStart(start: Offset, buttons: PointerButtons) {}
-    fun onDrag(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) {}
+    fun onDrag(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean): Boolean = false
     fun onDragEnd() {}
-    fun draw(drawScope: DrawScope): Boolean = false
+    fun draw(drawScope: DrawScope) {}
 }
 
 object NoOpMouseHandler : MouseHandler
@@ -105,23 +105,28 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
                             isDrag = true
                             change.consume()
                             mouseHandler.onDragStart(down.position, event.buttons)
+                            requestRedraw()
                         }
                         if (isDrag && dragStart != null) {
                             drag(dragStart.id) { change ->
                                 change.consume()
-                                mouseHandler.onDrag(
+                                if (mouseHandler.onDrag(
                                     change.position,
                                     currentEvent.buttons,
                                     currentEvent.keyboardModifiers.isCtrlPressed
-                                )
+                                )) {
+                                    requestRedraw()
+                                }
                             }
                             mouseHandler.onDragEnd()
+                            requestRedraw()
                         } else {
                             mouseHandler.onClick(
                                 down.position,
                                 event.buttons,
                                 event.keyboardModifiers.isCtrlPressed
                             )
+                            requestRedraw()
                         }
                     }
                 }
@@ -138,9 +143,7 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
         drawGroups(mapper, state, model)
         drawSelection(mapper, state, model)
         drawEntityInstances(mapper, state, model, ::requestRedraw)
-        if (mouseHandler.draw(this)) {
-            requestRedraw()
-        }
+        mouseHandler.draw(this)
     }
 }
 
