@@ -6,24 +6,26 @@ import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.baker.editor.collision.BvhCompiler
 import com.zakgof.korender.baker.editor.collision.CollisionSerialModel
 import com.zakgof.korender.baker.editor.model.Group
-import com.zakgof.korender.baker.editor.model.entity.EntityModel
 import com.zakgof.korender.baker.editor.util.floor2
 import com.zakgof.korender.baker.editor.util.floorSig
 import com.zakgof.korender.baker.editor.util.roundSane
 import com.zakgof.korender.impl.scene.SceneModel
+import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import editor.cache.TextureImageCache
 import editor.model.BoundingBox
 import editor.model.Material
 import editor.model.Model
 import editor.model.ModelDto
 import editor.model.brush.Brush
 import editor.model.brush.CreatorShape
+import editor.model.entity.EntityInstance
+import editor.model.entity.EntityModel
 import editor.model.snap
 import editor.state.State.MouseMode
 import editor.util.ModelCompiler
-import editor.util.TextureImageCache
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -149,7 +151,7 @@ class StateHolder {
         _state.update {
             it.copy(
                 creator = defaultCreator(state.value.viewCenter),
-                selection = setOf(newBrush.id),
+                brushSelection = setOf(newBrush.id),
                 mouseMode = MouseMode.SELECT
             )
         }
@@ -214,18 +216,18 @@ class StateHolder {
         pushHistory()
         _model.update {
             it.copy(
-                brushes = it.brushes.removeAll(state.value.selection)
+                brushes = it.brushes.removeAll(state.value.brushSelection)
             )
         }
         _state.update {
             it.copy(
                 clipboard = brushes,
-                selection = setOf()
+                brushSelection = setOf()
             )
         }
     }
 
-    private fun selectedBrushes(): Set<Brush> = model.value.brushes.values.filter { brush -> state.value.selection.contains(brush.id) }.toSet()
+    private fun selectedBrushes(): Set<Brush> = model.value.brushes.values.filter { brush -> state.value.brushSelection.contains(brush.id) }.toSet()
 
     @OptIn(ExperimentalUuidApi::class)
     fun paste() {
@@ -247,21 +249,21 @@ class StateHolder {
         }
         pushHistory()
         _model.update { it.copy(brushes = it.brushes.putAll(newBrushes.associateBy { nb -> nb.id })) }
-        _state.update { it.copy(selection = newBrushes.map { nb -> nb.id }.toSet()) }
+        _state.update { it.copy(brushSelection = newBrushes.map { nb -> nb.id }.toSet()) }
     }
 
     fun deleteSelected() {
-        val groupIds = state.value.selection.mapNotNull { model.value.brushGroups[it] }
+        val groupIds = state.value.brushSelection.mapNotNull { model.value.brushGroups[it] }
         pushHistory()
         _model.update {
             it.copy(
-                brushes = it.brushes.removeAll(state.value.selection),
-                brushGroups = it.brushGroups.removeAll(state.value.selection),
+                brushes = it.brushes.removeAll(state.value.brushSelection),
+                brushGroups = it.brushGroups.removeAll(state.value.brushSelection),
                 groups = it.groups.removeAll(groupIds)
             )
         }
         _state.update {
-            it.copy(selection = setOf())
+            it.copy(brushSelection = setOf())
         }
     }
 
@@ -273,15 +275,15 @@ class StateHolder {
     }
 
     fun clearSelection() {
-        _state.update { it.copy(selection = setOf()) }
+        _state.update { it.copy(brushSelection = setOf()) }
     }
 
     fun selectBrushes(brushIds: Set<String>, flip: Boolean, allGroup: Boolean) {
         _state.update { state ->
             val newSelection = if (flip) {
-                val s = LinkedHashSet(state.selection)
+                val s = LinkedHashSet(state.brushSelection)
                 for (brushId in brushIds) {
-                    if (brushId in state.selection)
+                    if (brushId in state.brushSelection)
                         s -= brushId
                     else
                         s += brushId
@@ -303,7 +305,7 @@ class StateHolder {
                             .flatten()
                             .toSet()
             }
-            state.copy(selection = result)
+            state.copy(brushSelection = result)
         }
     }
 
@@ -423,7 +425,7 @@ class StateHolder {
     }
 
     fun zoomOnSelection() {
-        if (state.value.selection.isNotEmpty()) {
+        if (state.value.brushSelection.isNotEmpty()) {
             val bb = selectedBrushes()
                 .map { it.bb }
                 .reduce(BoundingBox::merge)
@@ -482,7 +484,7 @@ class StateHolder {
 
 
     private fun modifySelectedBrushes(mutator: (Brush) -> Brush) {
-        val selection = state.value.selection
+        val selection = state.value.brushSelection
         if (selection.isEmpty())
             return
         pushHistory()
@@ -506,12 +508,18 @@ class StateHolder {
         return "Material $i"
     }
 
-    private fun generateBrushName(name: String): String {
+    private fun generateEntityInstanceName(name: String) =
+        generateUniqueName(name, model.value.entityInstances.values.map { it.name })
+
+    private fun generateBrushName(name: String) =
+        generateUniqueName(name, model.value.brushes.values.map { it.name })
+
+    private fun generateUniqueName(name: String, allExisting: List<String>): String {
         val parts = Regex("^(.*?) (\\d+)$").matchEntire(name)?.groupValues
         val base = parts?.get(1) ?: name
         val num = parts?.get(2)?.toInt() ?: 0
 
-        val existing = model.value.brushes.values.map { it.name }
+        val existing = allExisting
             .filter { it.startsWith(base) }
             .toSet()
         var i = num
@@ -527,7 +535,7 @@ class StateHolder {
     }
 
     fun selectAll() {
-        _state.update { it.copy(selection = model.value.brushes.keys) }
+        _state.update { it.copy(brushSelection = model.value.brushes.keys) }
     }
 
     fun setCamera(position: Vec3, direction: Vec3, up: Vec3) {
@@ -588,7 +596,7 @@ class StateHolder {
     }
 
     fun groupSelection() {
-        val brushIds = state.value.selection
+        val brushIds = state.value.brushSelection
         val existingGroupsIds = brushIds.mapNotNull { model.value.brushGroups[it] }
             .toSet()
         val existingGroupBrushIds = existingGroupsIds.mapNotNull { model.value.groups[it] }
@@ -606,7 +614,7 @@ class StateHolder {
     }
 
     fun ungroupSelection() {
-        val brushIds = state.value.selection
+        val brushIds = state.value.brushSelection
         val groupsIds = brushIds.mapNotNull { model.value.brushGroups[it] }
         pushHistory()
         _model.update {
@@ -624,13 +632,13 @@ class StateHolder {
 
     fun hideSelection() {
         pushHistory()
-        _model.update { it.copy(invisibleBrushes = it.invisibleBrushes + state.value.selection) }
+        _model.update { it.copy(invisibleBrushes = it.invisibleBrushes + state.value.brushSelection) }
         clearSelection()
     }
 
     fun unhideSelection() {
         pushHistory()
-        _model.update { it.copy(invisibleBrushes = it.invisibleBrushes - state.value.selection) }
+        _model.update { it.copy(invisibleBrushes = it.invisibleBrushes - state.value.brushSelection) }
     }
 
     fun compileToFile(path: String) {
@@ -684,6 +692,22 @@ class StateHolder {
         pushHistory()
         _model.update {
             it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel.copy(defaultScale = newScale)))
+        }
+    }
+
+    fun createEntityInstance() {
+        pushHistory()
+        val entityModel = model.value.entityModels[state.value.entityModelId]!!
+        val instance = EntityInstance(generateEntityInstanceName(entityModel.name), entityModel, scale(entityModel.defaultScale))
+        _model.update {
+            it.copy(entityInstances = it.entityInstances.put(instance.id, instance))
+        }
+        selectEntityInstances(setOf(instance.id))
+    }
+
+    private fun selectEntityInstances(entityInstanceIds: Set<String>) {
+        _state.update {
+            it.copy(brushSelection = setOf(), entityInstanceSelection = entityInstanceIds)
         }
     }
 

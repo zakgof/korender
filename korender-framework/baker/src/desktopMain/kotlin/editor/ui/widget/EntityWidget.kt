@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import editor.model.Material
 import editor.ui.Theme
-import editor.util.TextureImageCache
+import editor.cache.TextureImageCache
 
 @Composable
 fun MaterialWidget(material: Material, selected: Boolean, onClick: () -> Unit) {

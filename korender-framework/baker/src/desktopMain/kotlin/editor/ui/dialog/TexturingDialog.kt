@@ -40,7 +40,7 @@ fun texturingDialog(holder: StateHolder): () -> Unit {
             onCloseRequest = { show = false },
             state = rememberDialogState(size = DpSize(Dp.Unspecified, Dp.Unspecified))
         ) {
-            val texturings = state.selection.map { model.brushes[it]!! }.flatMap { it.faces }.map { it.texturing }
+            val texturings = state.brushSelection.map { model.brushes[it]!! }.flatMap { it.faces }.map { it.texturing }
             val uscale = texturings.map { it.u.scale }.sameOrNull()
             val vscale = texturings.map { it.v.scale }.sameOrNull()
             val uoffset = texturings.map { it.u.offset }.sameOrNull()
@@ -52,7 +52,7 @@ fun texturingDialog(holder: StateHolder): () -> Unit {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val texturings = state.selection.map { model.brushes[it]!! }.flatMap { it.faces }.map { it.texturing }
+                    val texturings = state.brushSelection.map { model.brushes[it]!! }.flatMap { it.faces }.map { it.texturing }
                     val fitToFace = texturings.map { it.fitToFace }.sameOrNull()
                     Text("Fit to face", style = Theme.label, modifier = Modifier.weight(1f))
                     TriStateCheckbox(

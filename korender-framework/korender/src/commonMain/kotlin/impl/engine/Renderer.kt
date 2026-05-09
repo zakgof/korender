@@ -123,6 +123,7 @@ internal class Renderer(
         private val sceneDeclaration: SceneDeclaration,
         val frameContext: FrameContext,
         val finalFb: GlRenderableFrameBuffer? = null,
+        val initRk: ResultKeeper = ResultKeeper()
     ) {
         private val deferredShading = sceneDeclaration.deferredShadingDeclaration != null
         private val reusableFrameBufferHolder = ReusableFrameBufferHolder()
@@ -137,26 +138,22 @@ internal class Renderer(
             sceneDeclaration.gltfs.forEach {
                 inventory.gltf(it)?.let { gltfLoaded ->
                     GltfSceneBuilder(it, gltfLoaded).build().forEach { rd -> sceneDeclaration.append(rd) }
-                }
+                } ?: initRk.fail()
             }
             sceneDeclaration.heightFields.forEach {
-                inventory.heightField(it)?.let { clipmaps ->
-                    clipmaps.build(sceneDeclaration)
-                }
+                inventory.heightField(it)?.build(sceneDeclaration) ?: initRk.fail()
             }
             sceneDeclaration.krscenes.forEach {
-                inventory.krscene(it)?.let { krscene ->
-                    krscene.build(sceneDeclaration)
-                }
+                inventory.krscene(it)?.build(sceneDeclaration) ?: initRk.fail()
             }
             sceneDeclaration.objs.forEach { declaration ->
-                inventory.obj(declaration)?.let { obj ->
-                    obj.build(declaration, sceneDeclaration)
-                }
+                inventory.obj(declaration)?.build(declaration, sceneDeclaration) ?: initRk.fail()
             }
         }
 
         fun render(rk: ResultKeeper?) {
+
+            if (!initRk.success) rk?.fail()
 
             renderEnvProbes(rk)
             renderFrameProbes(rk)

@@ -1,5 +1,6 @@
 package com.zakgof.korender
 
+import androidx.compose.ui.graphics.ImageBitmap
 import com.zakgof.korender.math.ColorRGBA
 
 /**
@@ -58,6 +59,11 @@ interface Image {
      * @return raw pixel data in the image's pixel format
      */
     fun toRaw(): ByteArray
+
+    /**
+     * Converts this image into a Compose [ImageBitmap].
+     */
+    fun toCompose(): ImageBitmap
 }
 
 /**

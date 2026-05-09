@@ -31,12 +31,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import com.zakgof.korender.Korender
-import com.zakgof.korender.baker.editor.model.entity.EntityModel
 import com.zakgof.korender.baker.editor.ui.widget.EntityWidget
 import com.zakgof.korender.baker.editor.util.BoundingSphere
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.file
 import com.zakgof.korender.baker.resources.material
+import com.zakgof.korender.baker.resources.plus
 import com.zakgof.korender.baker.resources.trash
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.Transform
@@ -44,6 +44,7 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import editor.model.Model
+import editor.model.entity.EntityModel
 import editor.state.State
 import editor.state.StateHolder
 import editor.ui.Theme
@@ -148,6 +149,9 @@ fun RowScope.EntityEditor(holder: StateHolder) {
                     IconButton(Res.drawable.trash, "Delete Model") {
                         holder.deleteMaterial()
                     }
+                    IconButton(Res.drawable.plus, "Insert into Scene") {
+                        holder.createEntityInstance()
+                    }
                 }
             }
         }
@@ -197,17 +201,16 @@ fun RowScope.EntityPreview(holder: StateHolder) {
                 state.entityModelId?.let {
                     AmbientLight(white(0.6f))
                     val entityModel = model.entityModels[state.entityModelId]!!
-                    camera = camera(-10.z, 1.z, 1.y)
+                    camera = camera(-5.z, 1.z, 1.y)
                     projection = projection(width.toFloat() / height.toFloat(), 1f, 1f, 300f)
                     AmbientLight(white(0.5f))
                     DirectionalLight(Vec3(1f, -1f, -1f), white(0.5f))
                     Obj(entityModel.filename, transform = transform, onLoad = { objInfo ->
-                        val bss = objInfo.parts.map { part ->
-                            BoundingSphere.fromPoints(part.mesh.vertices.map { v ->
-                                v.pos!!
-                            })
+                        val points = objInfo.parts.flatMap {  part -> part.mesh.vertices.map { v -> v.pos!!}}
+                        if (entityModel.points.isEmpty()) {
+                            entityModel.points += points
                         }
-                        val bs = BoundingSphere.merge(bss)
+                        val bs = BoundingSphere.fromPoints(points)
                         if (bs.radius > 0f) {
                             transform = Transform.translate(-bs.center).scale(1f / bs.radius)
                         }

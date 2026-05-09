@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.image
 
+import androidx.compose.ui.graphics.ImageBitmap
 import com.zakgof.korender.Image
 import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
@@ -77,5 +78,8 @@ internal class InternalImage(
     override fun toTga(): ByteArray = Tga.encode(width, height, format, bytes)
 
     override fun toRaw(): ByteArray = ByteArray(bytes.size()) { bytes.byte(it) }
+
+    override fun toCompose(): ImageBitmap =
+        composeImageFromArgbPixels(width, height, toArgbPixels())
 
 }

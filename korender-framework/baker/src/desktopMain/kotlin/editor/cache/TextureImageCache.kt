@@ -1,4 +1,4 @@
-package editor.util
+package editor.cache
 
 import androidx.compose.ui.graphics.ImageBitmap
 import com.zakgof.korender.Image
@@ -18,7 +18,6 @@ object TextureImageCache {
             val file = File(path)
             val bytes = file.readBytes()
             runBlocking { context.loadImage(bytes, file.extension).await() }
-
         }
 
     fun compose(path: String): ImageBitmap =

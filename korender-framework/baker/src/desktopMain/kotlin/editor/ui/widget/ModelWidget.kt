@@ -11,7 +11,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.zakgof.korender.baker.editor.model.entity.EntityModel
+import editor.model.entity.EntityModel
 import editor.ui.Theme
 
 @Composable

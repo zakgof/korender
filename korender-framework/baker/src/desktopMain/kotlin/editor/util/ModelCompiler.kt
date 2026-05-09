@@ -7,6 +7,7 @@ import com.zakgof.korender.impl.buffer.toByteArray
 import com.zakgof.korender.impl.scene.SceneModel
 import com.zakgof.korender.impl.scene.SceneModel.Attribute
 import com.zakgof.korender.math.Mat4
+import editor.cache.TextureImageCache
 import editor.model.Material
 import editor.model.Model
 import editor.model.brush.BrushMesh

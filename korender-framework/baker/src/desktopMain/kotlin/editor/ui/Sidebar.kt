@@ -362,7 +362,7 @@ fun selection(holder: StateHolder, state: State, model: Model) {
         Column(
 
         ) {
-            if (state.selection.isEmpty()) {
+            if (state.brushSelection.isEmpty()) {
                 Text("No selection", style = Theme.label)
             } else {
                 Row(
@@ -377,29 +377,29 @@ fun selection(holder: StateHolder, state: State, model: Model) {
                         texturingDialog()
                     }
                 }
-                val groups = state.selection.mapNotNull { model.brushGroups[it] }.distinct().count()
-                val independents = state.selection.count { model.brushGroups[it] == null }
+                val groups = state.brushSelection.mapNotNull { model.brushGroups[it] }.distinct().count()
+                val independents = state.brushSelection.count { model.brushGroups[it] == null }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
                     Box(modifier = Modifier.weight(1f).padding(4.dp)) {
-                        if (state.selection.size == 1) {
-                            val brush = model.brushes[state.selection.first()]!!
+                        if (state.brushSelection.size == 1) {
+                            val brush = model.brushes[state.brushSelection.first()]!!
                             FancyClickToTextInput(brush.name) {
                                 holder.brushChanged(brush.copy(name = it), true)
                             }
                         } else if (groups == 1 && independents == 0) {
-                            val group = model.groups[model.brushGroups[state.selection.first()]!!]!!
+                            val group = model.groups[model.brushGroups[state.brushSelection.first()]!!]!!
                             FancyClickToTextInput(group.name) {
                                 holder.renameGroup(group.id, it)
                             }
-                        } else if (state.selection.size > 1) {
+                        } else if (state.brushSelection.size > 1) {
                             Box(
                                 modifier = Modifier.height(32.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("${state.selection.size} objects", style = Theme.label)
+                                Text("${state.brushSelection.size} objects", style = Theme.label)
                             }
                         }
                     }
@@ -415,7 +415,7 @@ fun selection(holder: StateHolder, state: State, model: Model) {
                         }
                     }
                 }
-                val bb = state.selection.map { model.brushes[it]!!.bb }
+                val bb = state.brushSelection.map { model.brushes[it]!!.bb }
                     .reduce(BoundingBox::merge)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -426,7 +426,7 @@ fun selection(holder: StateHolder, state: State, model: Model) {
                     ) {
                         fun setCenter(x: Float, y: Float, z: Float) {
                             val newBB = bb.move(Vec3(x, y, z))
-                            state.selection.forEach {
+                            state.brushSelection.forEach {
                                 holder.brushChanged(model.brushes[it]!!.scale(bb, newBB), true)
                             }
                         }
@@ -441,7 +441,7 @@ fun selection(holder: StateHolder, state: State, model: Model) {
                     ) {
                         fun setSize(x: Float, y: Float, z: Float) {
                             val newBB = bb.resize(Vec3(x, y, z))
-                            state.selection.forEach {
+                            state.brushSelection.forEach {
                                 holder.brushChanged(model.brushes[it]!!.scale(bb, newBB), true)
                             }
                         }
@@ -485,7 +485,7 @@ fun tree(model: Model, state: State, holder: StateHolder) {
                                 .onPointerEvent(PointerEventType.Press) { event ->
                                     holder.selectBrushes(group.brushIds, event.keyboardModifiers.isCtrlPressed, true)
                                 },
-                            fontWeight = if (state.selection.containsAll(group.brushIds)) FontWeight.Bold else FontWeight.Normal
+                            fontWeight = if (state.brushSelection.containsAll(group.brushIds)) FontWeight.Bold else FontWeight.Normal
                         )
                     }
                 model.brushes.values
@@ -500,7 +500,7 @@ fun tree(model: Model, state: State, holder: StateHolder) {
                                 .onPointerEvent(PointerEventType.Press) { event ->
                                     holder.selectBrushes(setOf(brush.id), event.keyboardModifiers.isCtrlPressed, true)
                                 },
-                            fontWeight = if (state.selection.contains(brush.id)) FontWeight.Bold else FontWeight.Normal
+                            fontWeight = if (state.brushSelection.contains(brush.id)) FontWeight.Bold else FontWeight.Normal
                         )
                     }
             }

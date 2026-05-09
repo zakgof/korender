@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -22,6 +23,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -32,15 +34,21 @@ import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import com.zakgof.korender.baker.editor.util.advanceSig
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import editor.cache.EntitySnapCache
 import editor.model.Model
 import editor.model.brush.Brush
+import editor.model.entity.EntityInstance
 import editor.state.State
 import editor.state.StateHolder
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.math.abs
 
 internal interface MouseHandler {
@@ -68,6 +76,12 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
     val model by holder.model.collectAsState()
     var mouseHandler: MouseHandler by remember { mutableStateOf(NoOpMouseHandler) }
     val focusRequester = remember { FocusRequester() }
+    var redrawTick by remember { mutableIntStateOf(0) }
+
+    fun requestRedraw() {
+        redrawTick++
+    }
+
     Canvas(
         Modifier
             .onSizeChanged { size -> holder.viewResized(axes.name, size.width, size.height) }
@@ -123,12 +137,13 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
         drawBrushes(mapper, state, model)
         drawGroups(mapper, state, model)
         drawSelection(mapper, state, model)
+        drawEntityInstances(mapper, state, model, ::requestRedraw)
         mouseHandler.draw(this)
     }
 }
 
 private fun DrawScope.drawSelection(mapper: ProjectionMapper, state: State, model: Model) {
-    mapper.rect(state.selection.map { model.brushes[it]!! })?.let { rect ->
+    mapper.rect(state.brushSelection.map { model.brushes[it]!! })?.let { rect ->
         drawRect(
             color = Color.Red,
             topLeft = rect.topLeft,
@@ -183,7 +198,7 @@ private fun DrawScope.drawCreator(mapper: ProjectionMapper, state: State) {
 
 private fun DrawScope.drawGrid(mapper: ProjectionMapper, state: State) {
     val zeroX: Float = mapper.zeroGridX()
-    mapper.gridXs().forEach {  gridX ->
+    mapper.gridXs().forEach { gridX ->
         drawLine(
             color = Color.DarkGray,
             start = Offset(gridX, 0f),
@@ -192,7 +207,7 @@ private fun DrawScope.drawGrid(mapper: ProjectionMapper, state: State) {
         )
     }
     val zeroY: Float = mapper.zeroGridY()
-    mapper.gridYs().forEach {  gridY ->
+    mapper.gridYs().forEach { gridY ->
         drawLine(
             color = Color.DarkGray,
             start = Offset(0f, gridY),
@@ -225,7 +240,7 @@ private fun DrawScope.drawGroups(mapper: ProjectionMapper, state: State, model: 
 
 private fun DrawScope.drawBrush(brush: Brush, mapper: ProjectionMapper, state: State, model: Model) {
     val hidden = model.invisibleBrushes.contains(brush.id)
-    val selected = state.selection.contains(brush.id)
+    val selected = state.brushSelection.contains(brush.id)
     brush.mesh.edges.forEach { edge ->
         drawLine(
             color = when {
@@ -238,6 +253,44 @@ private fun DrawScope.drawBrush(brush: Brush, mapper: ProjectionMapper, state: S
             strokeWidth = if (selected) 3f else 2f
         )
     }
+}
+
+private fun DrawScope.drawEntityInstances(mapper: ProjectionMapper, state: State, model: Model, requestRedraw: () -> Unit) {
+    model.entityInstances.values.forEach { entityInstance -> drawEntityInstance(entityInstance, mapper, state, model, requestRedraw) }
+}
+
+@OptIn(ExperimentalCoroutinesApi::class)
+private fun DrawScope.drawEntityInstance(entityInstance: EntityInstance, mapper: ProjectionMapper, state: State, model: Model, requestRedraw: () -> Unit) {
+    // val hidden = model.invisibleBrushes.contains(brush.id)
+    val selected = state.entityInstanceSelection.contains(entityInstance.id)
+    val bb = entityInstance.bb
+    val rect = mapper.rect(bb)
+    val deferredImage: Deferred<ImageBitmap> = EntitySnapCache.image(entityInstance, model.entityModels[entityInstance.modelId]!!, mapper.axes)
+    deferredImage.invokeOnCompletion {
+        requestRedraw()
+    }
+    if (deferredImage.isCompleted) {
+        drawImage(
+            image = deferredImage.getCompleted(),
+            dstOffset = IntOffset(
+                rect.left.toInt(),
+                rect.top.toInt()
+            ),
+            dstSize = IntSize(
+                rect.width.toInt(),
+                rect.height.toInt()
+            )
+        )
+    }
+    drawRect(
+        color = Color.Red,
+        topLeft = rect.topLeft,
+        size = rect.size,
+        style = Stroke(
+            width = 2f,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(3f, 9f))
+        )
+    )
 }
 
 private fun mouseHandler(mapper: ProjectionMapper, state: State, model: Model, holder: StateHolder): MouseHandler = when (state.mouseMode) {

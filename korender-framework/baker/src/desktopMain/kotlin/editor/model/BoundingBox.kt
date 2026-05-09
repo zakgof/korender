@@ -62,5 +62,21 @@ class BoundingBox(val min: Vec3, val max: Vec3) {
                 Vec3(min(c1.x, c2.x), min(c1.y, c2.y), min(c1.z, c2.z)),
                 Vec3(max(c1.x, c2.x), max(c1.y, c2.y), max(c1.z, c2.z))
             )
+
+        fun from(points: Collection<Vec3>) =
+            require(points.isNotEmpty()) { "Cannot build BoundingBox from an empty collection" }.let {
+                BoundingBox(
+                    Vec3(
+                        points.minOf { p -> p.x },
+                        points.minOf { p -> p.y },
+                        points.minOf { p -> p.z }
+                    ),
+                    Vec3(
+                        points.maxOf { p -> p.x },
+                        points.maxOf { p -> p.y },
+                        points.maxOf { p -> p.z }
+                    )
+                )
+            }
     }
 }

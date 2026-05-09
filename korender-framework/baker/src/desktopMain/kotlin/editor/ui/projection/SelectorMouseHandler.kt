@@ -70,7 +70,7 @@ internal class SelectorMouseHandler(
 
     override fun onClick(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) {
         if (buttons.isPrimaryPressed) {
-            val selectionRect = mapper.rect(model.brushes.values.filter { state.selection.contains(it.id) })
+            val selectionRect = mapper.rect(model.brushes.values.filter { state.brushSelection.contains(it.id) })
             if (selectionRect != null && selectionRect.contains(current) && !isCtrlDown) {
                 holder.rotateSelectionModes()
             } else {
@@ -100,10 +100,10 @@ internal class SelectorMouseHandler(
 
     override fun onDragStart(start: Offset, buttons: PointerButtons) {
         if (buttons.isPrimaryPressed) {
-            val selectionRect = mapper.rect(model.brushes.values.filter { state.selection.contains(it.id) })
+            val selectionRect = mapper.rect(model.brushes.values.filter { state.brushSelection.contains(it.id) })
             drag = selectionRect?.let {
                 getDragStruct(it, start)
-            } ?: SelectorDrag(start, state.selection)
+            } ?: SelectorDrag(start, state.brushSelection)
         } else if (buttons.isSecondaryPressed) {
             drag = GridDrag(start, state.viewCenter)
         }
@@ -114,16 +114,16 @@ internal class SelectorMouseHandler(
         when (state.selectionMode) {
             State.SelectionMode.RESIZE -> corners.forEach { corner ->
                 if (pick(handleHalfSize, corner.opposite(selectionRect), start))
-                    return ResizeDrag(state.selection.associateWith { model.brushes[it]!! }, corner, corner.corner(selectionRect))
+                    return ResizeDrag(state.brushSelection.associateWith { model.brushes[it]!! }, corner, corner.corner(selectionRect))
             }
 
             State.SelectionMode.ROTATE -> corners.forEach { corner ->
                 if (pick(handleHalfSize, corner.corner(selectionRect), start))
-                    return RotateDrag(state.selection.associateWith { model.brushes[it]!! }, corner.corner(selectionRect))
+                    return RotateDrag(state.brushSelection.associateWith { model.brushes[it]!! }, corner.corner(selectionRect))
             }
         }
         if (selectionRect.contains(start)) {
-            return MoveDrag(state.selection.associateWith { model.brushes[it]!! }, start)
+            return MoveDrag(state.brushSelection.associateWith { model.brushes[it]!! }, start)
         }
         return null
     }
@@ -141,7 +141,7 @@ internal class SelectorMouseHandler(
                     val snapPoints = listOf(rect.topLeft + shift, rect.bottomRight + shift)
                     val snapDelta = mapper.snapClosest(snapPoints)
                     val offset = mapper.deltaToW(shift + snapDelta)
-                    state.selection.forEach {
+                    state.brushSelection.forEach {
                         holder.brushChanged(d.originalBrushes[it]!!.translate(offset), false)
                     }
                 }
@@ -153,7 +153,7 @@ internal class SelectorMouseHandler(
                     val rect = safeRect(d.frozenCorner, current, d.corner)
 
                     val newBB = mapper.toW(rect, oldBB)
-                    state.selection.forEach {
+                    state.brushSelection.forEach {
                         val origBrush = d.originalBrushes[it]!!
                         holder.brushChanged(origBrush.scale(oldBB, newBB), false)
                     }
@@ -166,7 +166,7 @@ internal class SelectorMouseHandler(
                     val center = oldBB.center
                     val screenCenter = mapper.wToV(center)
                     val angle = -((current - screenCenter) angleTo (d.start - screenCenter))
-                    val origBrushes = state.selection.map { d.originalBrushes[it]!! }
+                    val origBrushes = state.brushSelection.map { d.originalBrushes[it]!! }
                     val lookAxis = mapper.axes.lookAxis
 
                     val rotation = Quaternion.fromAxisAngle(lookAxis, angle)

@@ -17,7 +17,8 @@ data class State(
     val projectionScale: Float,            // pixels per world unit
     val gridScale: Float,                  // world units per cell
 
-    val selection: Set<String> = setOf(),
+    val brushSelection: Set<String> = setOf(),
+    val entityInstanceSelection: Set<String> = setOf(),
     val selectionMode: SelectionMode = SelectionMode.RESIZE,
     val clipboard: Set<Brush> = setOf(),
     val creator: BoundingBox,

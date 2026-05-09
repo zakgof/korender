@@ -1,8 +1,8 @@
 package editor.model
 
 import com.zakgof.korender.baker.editor.model.Group
-import com.zakgof.korender.baker.editor.model.entity.EntityInstance
-import com.zakgof.korender.baker.editor.model.entity.EntityModel
+import editor.model.entity.EntityInstance
+import editor.model.entity.EntityModel
 import editor.model.brush.Brush
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentMapOf

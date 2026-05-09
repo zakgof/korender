@@ -56,7 +56,7 @@ fun FrameWindowScope.Menu(holder: StateHolder) =
         edit(holder)
         materials(holder)
         models(holder)
-        if (state.selection.isNotEmpty()) {
+        if (state.brushSelection.isNotEmpty()) {
             selection(holder)
         }
     }
@@ -158,7 +158,7 @@ private fun MenuBarScope.edit(holder: StateHolder) {
         Item("Cut", painterResource(Res.drawable.cut), shortcut = KeyShortcut(Key.X, ctrl = true)) {
             holder.cut()
         }
-        Item("Paste", painterResource(Res.drawable.paste), enabled = (state.selection.isNotEmpty()), shortcut = KeyShortcut(Key.V, ctrl = true)) {
+        Item("Paste", painterResource(Res.drawable.paste), enabled = (state.brushSelection.isNotEmpty()), shortcut = KeyShortcut(Key.V, ctrl = true)) {
             holder.paste()
         }
         Item("Select All", enabled = (model.brushes.isNotEmpty()), shortcut = KeyShortcut(Key.A, ctrl = true)) {
@@ -228,29 +228,29 @@ private fun MenuBarScope.selection(holder: StateHolder) {
             texturingDialog()
         }
         Separator()
-        val groupable = state.selection.size > 1 &&
-                (state.selection.any { model.brushGroups[it] == null } ||
-                        state.selection.mapNotNull { model.brushGroups[it] }.toSet().size > 1)
+        val groupable = state.brushSelection.size > 1 &&
+                (state.brushSelection.any { model.brushGroups[it] == null } ||
+                        state.brushSelection.mapNotNull { model.brushGroups[it] }.toSet().size > 1)
         Item("Group", icon = painterResource(Res.drawable.group), enabled = groupable) {
             holder.groupSelection()
         }
-        val anyGroups = state.selection.any { model.brushGroups[it] != null }
+        val anyGroups = state.brushSelection.any { model.brushGroups[it] != null }
         Item("Ungroup", icon = painterResource(Res.drawable.ungroup), enabled = anyGroups) {
             holder.ungroupSelection()
         }
         Separator()
-        val hidable = !model.invisibleBrushes.containsAll(state.selection)
+        val hidable = !model.invisibleBrushes.containsAll(state.brushSelection)
         Item("Hide", icon = painterResource(Res.drawable.noeye), enabled = hidable) {
             holder.hideSelection()
         }
-        val showable = state.selection.any { model.invisibleBrushes.contains(it) }
+        val showable = state.brushSelection.any { model.invisibleBrushes.contains(it) }
         Item("Unhide", icon = painterResource(Res.drawable.eye), enabled = showable) {
             holder.unhideSelection()
         }
         Separator()
         val noCarveDialog = okDialog("Carve", "Intersection objects not found")
         // TODO icon
-        Item("Carve", icon = painterResource(Res.drawable.minus), enabled = (state.selection.isNotEmpty())) {
+        Item("Carve", icon = painterResource(Res.drawable.minus), enabled = (state.brushSelection.isNotEmpty())) {
             if (!holder.carve()) {
                 noCarveDialog()
             }

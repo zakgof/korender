@@ -8,18 +8,20 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.baker.editor.util.toKorender
 import com.zakgof.korender.baker.resources.Res
-import com.zakgof.korender.scope.FrameScope
-import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
+import com.zakgof.korender.scope.FrameScope
+import com.zakgof.korender.scope.KorenderScope
+import editor.cache.EntitySnapCache
+import editor.cache.TextureImageCache
 import editor.model.Material
 import editor.state.State
 import editor.state.StateHolder
 import editor.ui.TouchHandler.touch
-import editor.util.TextureImageCache
+import java.io.File
 
 object TouchHandler {
 
@@ -69,6 +71,7 @@ fun KorenderView(holder: StateHolder) {
         }
         OnTouch { touch(it, holder) }
         Frame {
+            EntitySnapCache.frame()
             AmbientLight(white(0.6f))
             DirectionalLight(Vec3(1f, -1f, -1f), white(1.5f))
             PointLight(20.y, white(4.5f))
@@ -88,10 +91,10 @@ fun KorenderView(holder: StateHolder) {
                             Renderable(
                                 toBaseMM(
                                     model.materials[face.materialId]!!,
-                                    state.selection.contains(brush.id)
+                                    state.brushSelection.contains(brush.id)
                                 ),
                                 mesh = customMesh(brush.id + "-" + i + "-" + vertexCount, vertexCount, 0, POS, NORMAL, TEX, dynamic = true) {
-                                    tris.forEach {tri ->
+                                    tris.forEach { tri ->
                                         pos(*tri.points.toTypedArray())
                                         tex(*tri.tex.toTypedArray())
                                         normal(*tri.normals.toTypedArray())
@@ -100,6 +103,13 @@ fun KorenderView(holder: StateHolder) {
                             )
                         }
                 }
+            Node(resourceLoader = { File(it).readBytes() }) {
+                model.entityInstances.values
+                    .forEach { entityInstance ->
+                        val entityModel = model.entityModels[entityInstance.modelId]!!
+                        Obj(entityModel.filename, entityInstance.transform)
+                    }
+            }
             Gui {
                 Column {
                     Filler()
