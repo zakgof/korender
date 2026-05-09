@@ -2,6 +2,7 @@ package editor.model.brush
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import com.zakgof.korender.baker.editor.model.Boundable
 import com.zakgof.korender.math.Vec3
 import editor.model.BoundingBox
 import kotlin.math.abs
@@ -23,7 +24,7 @@ data class Brush(
     val projectionColor: Int,
     val faces: List<Face>,
     val id: String = Uuid.generateV7().toHexDashString(),
-) {
+) : Boundable {
 
     class Point(val pos: Vec3, val planes: List<Plane>)
 
@@ -39,7 +40,7 @@ data class Brush(
     val points by lazy { BrushMesher.collectPoints(this) }
     val mesh by lazy { BrushMesher.buildBrushMesh(this, points) }
 
-    val bb by lazy {
+    override val bb by lazy {
         val vertices = points
         val minX = vertices.minOf { it.pos.x }
         val minY = vertices.minOf { it.pos.y }

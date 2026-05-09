@@ -1,6 +1,7 @@
 package editor.cache
 
 import androidx.compose.ui.graphics.ImageBitmap
+import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.scope.FrameScope
 import editor.model.entity.EntityInstance
 import editor.model.entity.EntityModel
@@ -56,6 +57,7 @@ object EntitySnapCache {
                     2f + depth,
                     ortho()
                 )
+                AmbientLight(white(1f))
                 Node(resourceLoader = { File(it).readBytes() }) {
                     Obj(job.model.filename, job.instance.transform)
                 }

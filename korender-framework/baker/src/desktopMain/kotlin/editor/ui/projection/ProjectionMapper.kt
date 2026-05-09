@@ -3,9 +3,9 @@ package editor.ui.projection
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import com.zakgof.korender.baker.editor.model.Boundable
 import com.zakgof.korender.math.Vec3
 import editor.model.BoundingBox
-import editor.model.brush.Brush
 import editor.state.State
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -66,10 +66,10 @@ class ProjectionMapper(val axes: Axes, val state: State, val size: Size) {
         )
     }
 
-    fun rect(brush: Brush) = rect(brush.bb)
+    fun rect(boundable: Boundable) = rect(boundable.bb)
 
-    fun rect(brushes: Collection<Brush>): Rect? =
-        brushes.map { rect(it) }.reduceOrNull { a, b -> a merge b }
+    fun rect(boundables: Collection<Boundable>): Rect? =
+        boundables.map { rect(it) }.reduceOrNull { a, b -> a merge b }
 
     infix fun Rect.merge(b: Rect) = Rect(
         topLeft = Offset(min(this.left, b.left), min(this.top, b.top)),

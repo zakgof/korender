@@ -14,6 +14,7 @@ import com.zakgof.korender.math.Vec3
 import editor.model.BoundingBox
 import editor.model.Model
 import editor.model.brush.Brush
+import editor.model.entity.EntityInstance
 import editor.state.State
 import editor.state.StateHolder
 import kotlin.math.abs
@@ -37,30 +38,38 @@ internal class SelectorMouseHandler(
     private val holder: StateHolder,
 ) : MouseHandler {
 
+    private inner class SelectionMap(
+        val originalBrushSelection: Map<String, Brush>,
+        val originalEntityInstanceSelection: Map<String, EntityInstance>,
+    ) {
+        fun rect() = mapper.rect(originalBrushSelection.values + originalEntityInstanceSelection.values)
+        fun bb() = (originalBrushSelection.values + originalEntityInstanceSelection.values).map { it.bb }.reduce(BoundingBox::merge)
+    }
+
     private class SelectorDrag(
+        val selectionMap: SelectionMap,
         val start: Offset,
-        val originalSelection: Set<String>
     )
 
     private class MoveDrag(
-        val originalBrushes: Map<String, Brush>,
+        val selectionMap: SelectionMap,
         val start: Offset,
     )
 
     private class ResizeDrag(
-        val originalBrushes: Map<String, Brush>,
+        val selectionMap: SelectionMap,
         val corner: Corner,
         val frozenCorner: Offset,
     )
 
     private class RotateDrag(
-        val originalBrushes: Map<String, Brush>,
+        val selectionMap: SelectionMap,
         val start: Offset,
     )
 
     private class GridDrag(
         val originalOffset: Offset,
-        val originalCenter: Vec3
+        val originalCenter: Vec3,
     )
 
     companion object {
@@ -70,25 +79,37 @@ internal class SelectorMouseHandler(
 
     override fun onClick(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) {
         if (buttons.isPrimaryPressed) {
-            val selectionRect = mapper.rect(model.brushes.values.filter { state.brushSelection.contains(it.id) })
+            val boundables = selectedBrushes() + selectedEntityInstances()
+
+            val selectionRect = mapper.rect(boundables)
             if (selectionRect != null && selectionRect.contains(current) && !isCtrlDown) {
                 holder.rotateSelectionModes()
             } else {
-                val brushId = model.brushes.values
-                    .filter { brush -> !model.invisibleBrushes.contains(brush.id) }
-                    .filter { brush -> mapper.rect(brush).contains(current) }
-                    .minByOrNull { brush -> brush.bb.center * mapper.axes.lookAxis }?.id
-                brushId?.let { holder.selectBrushes(setOf(it), isCtrlDown, true) }
-                if (brushId == null && !isCtrlDown) holder.clearSelection()
+                val topBoundable = (model.brushes.values
+                    .filter { brush -> !model.invisibleBrushes.contains(brush.id) } +
+                        model.entityInstances.values)
+                    .filter { boundable -> mapper.rect(boundable).contains(current) }
+                    .minByOrNull { boundable -> boundable.bb.center * mapper.axes.lookAxis }
+                when (topBoundable) {
+                    is Brush -> holder.selectBrushes(setOf(topBoundable.id), isCtrlDown, true)
+                    is EntityInstance -> holder.selectEntityInstance(setOf(topBoundable.id), isCtrlDown)
+                    else -> if (!isCtrlDown) {
+                        holder.clearSelection()
+                    }
+                }
             }
         }
     }
+
+    private fun selectedEntityInstances(): List<EntityInstance> = model.entityInstances.values.filter { state.entityInstanceSelection.contains(it.id) }
+
+    private fun selectedBrushes(): List<Brush> = model.brushes.values.filter { state.brushSelection.contains(it.id) }
 
     private class Corner(
         val corner: (Rect) -> Offset,
         val opposite: (Rect) -> Offset,
         val xSign: Int,
-        val ySign: Int
+        val ySign: Int,
     )
 
     private val corners = listOf(
@@ -100,10 +121,10 @@ internal class SelectorMouseHandler(
 
     override fun onDragStart(start: Offset, buttons: PointerButtons) {
         if (buttons.isPrimaryPressed) {
-            val selectionRect = mapper.rect(model.brushes.values.filter { state.brushSelection.contains(it.id) })
+            val selectionRect = mapper.rect(selectedBrushes() + selectedEntityInstances())
             drag = selectionRect?.let {
                 getDragStruct(it, start)
-            } ?: SelectorDrag(start, state.brushSelection)
+            } ?: SelectorDrag(selectionMap(), start)
         } else if (buttons.isSecondaryPressed) {
             drag = GridDrag(start, state.viewCenter)
         }
@@ -114,19 +135,25 @@ internal class SelectorMouseHandler(
         when (state.selectionMode) {
             State.SelectionMode.RESIZE -> corners.forEach { corner ->
                 if (pick(handleHalfSize, corner.opposite(selectionRect), start))
-                    return ResizeDrag(state.brushSelection.associateWith { model.brushes[it]!! }, corner, corner.corner(selectionRect))
+                    return ResizeDrag(selectionMap(), corner, corner.corner(selectionRect))
             }
 
             State.SelectionMode.ROTATE -> corners.forEach { corner ->
                 if (pick(handleHalfSize, corner.corner(selectionRect), start))
-                    return RotateDrag(state.brushSelection.associateWith { model.brushes[it]!! }, corner.corner(selectionRect))
+                    return RotateDrag(selectionMap(), corner.corner(selectionRect))
             }
         }
         if (selectionRect.contains(start)) {
-            return MoveDrag(state.brushSelection.associateWith { model.brushes[it]!! }, start)
+            return MoveDrag(selectionMap(), start)
         }
         return null
     }
+
+    private fun selectionMap(): SelectionMap =
+        SelectionMap(
+            state.brushSelection.associateWith { model.brushes[it]!! },
+            state.entityInstanceSelection.associateWith { model.entityInstances[it]!! }
+        )
 
     private fun pick(handleHalfSize: Int, a: Offset, b: Offset) = abs(a.x - b.x) < handleHalfSize && abs(a.y - b.y) < handleHalfSize
 
@@ -137,36 +164,39 @@ internal class SelectorMouseHandler(
             when (d) {
                 is MoveDrag -> {
                     val shift = current - d.start
-                    val rect = mapper.rect(d.originalBrushes.values)!!
+                    val rect = d.selectionMap.rect()!!
                     val snapPoints = listOf(rect.topLeft + shift, rect.bottomRight + shift)
                     val snapDelta = mapper.snapClosest(snapPoints)
                     val offset = mapper.deltaToW(shift + snapDelta)
                     state.brushSelection.forEach {
-                        holder.brushChanged(d.originalBrushes[it]!!.translate(offset), false)
+                        holder.brushChanged(d.selectionMap.originalBrushSelection[it]!!.translate(offset), false)
+                    }
+                    state.entityInstanceSelection.forEach {
+                        holder.translateEntityInstance(d.selectionMap.originalEntityInstanceSelection[it]!!, offset, false)
                     }
                 }
 
                 is ResizeDrag -> {
-                    val oldBB = d.originalBrushes.values
-                        .map { it.bb }
-                        .reduce(BoundingBox::merge)
+                    val oldBB = d.selectionMap.bb()
                     val rect = safeRect(d.frozenCorner, current, d.corner)
 
                     val newBB = mapper.toW(rect, oldBB)
                     state.brushSelection.forEach {
-                        val origBrush = d.originalBrushes[it]!!
+                        val origBrush = d.selectionMap.originalBrushSelection[it]!!
                         holder.brushChanged(origBrush.scale(oldBB, newBB), false)
+                    }
+                    state.entityInstanceSelection.forEach {
+                        val origEntityInstance = d.selectionMap.originalEntityInstanceSelection[it]!!
+                        holder.scaleEntityInstance(origEntityInstance, oldBB, newBB, false)
                     }
                 }
 
                 is RotateDrag -> {
-                    val oldBB = d.originalBrushes.values
-                        .map { it.bb }
-                        .reduce(BoundingBox::merge)
+                    val oldBB = d.selectionMap.bb()
                     val center = oldBB.center
                     val screenCenter = mapper.wToV(center)
                     val angle = -((current - screenCenter) angleTo (d.start - screenCenter))
-                    val origBrushes = state.brushSelection.map { d.originalBrushes[it]!! }
+                    val origBrushes = state.brushSelection.map { d.selectionMap.originalBrushSelection[it]!! }
                     val lookAxis = mapper.axes.lookAxis
 
                     val rotation = Quaternion.fromAxisAngle(lookAxis, angle)
@@ -182,11 +212,14 @@ internal class SelectorMouseHandler(
                     origBrushes.forEach {
                         holder.brushChanged(it.rotate(center, lookAxis, angle + da), false)
                     }
+                    d.selectionMap.originalEntityInstanceSelection.values.forEach {
+                        holder.rotateEntityInstance(it, center, lookAxis, angle + da, false)
+                    }
                 }
 
                 is SelectorDrag -> {
                     val rect = unirect(d.start, current)
-                    var selection = d.originalSelection
+                    var brushSelection = d.selectionMap.originalBrushSelection.keys
                     model.brushes.values
                         .filter { !model.invisibleBrushes.contains(it.id) }
                         .filter {
@@ -194,12 +227,25 @@ internal class SelectorMouseHandler(
                             rect.contains(brushRect.topLeft) && rect.contains(brushRect.bottomRight) && rect.contains(brushRect.topRight) && rect.contains(brushRect.bottomLeft)
                         }.forEach {
                             if (isCtrlDown)
-                                selection = if (selection.contains(it.id)) selection - it.id else selection + it.id
+                                brushSelection = if (brushSelection.contains(it.id)) brushSelection - it.id else brushSelection + it.id
                             else
-                                selection = selection + it.id
+                                brushSelection += it.id
+                        }
+                    var entityInstanceSelection = d.selectionMap.originalEntityInstanceSelection.keys
+                    model.entityInstances.values
+                        .filter {
+                            val entityInstanceRect = mapper.rect(it)
+                            rect.contains(entityInstanceRect.topLeft) && rect.contains(entityInstanceRect.bottomRight) && rect.contains(entityInstanceRect.topRight) && rect.contains(entityInstanceRect.bottomLeft)
+                        }.forEach {
+                            if (isCtrlDown)
+                                entityInstanceSelection = if (entityInstanceSelection.contains(it.id)) entityInstanceSelection - it.id else entityInstanceSelection + it.id
+                            else
+                                entityInstanceSelection += it.id
                         }
 
-                    holder.selectBrushes(selection, false, false)
+                    holder.clearSelection()
+                    holder.selectBrushes(brushSelection, true, false)
+                    holder.selectEntityInstance(entityInstanceSelection, true)
                 }
             }
         } else if (buttons.isSecondaryPressed) {
@@ -226,7 +272,7 @@ internal class SelectorMouseHandler(
     )
 
 
-    override fun draw(drawScope: DrawScope) {
+    override fun draw(drawScope: DrawScope): Boolean {
         if (drag is SelectorDrag && now != null) {
             val rect = unirect((drag as SelectorDrag).start, now!!)
             with(drawScope) {
@@ -240,7 +286,9 @@ internal class SelectorMouseHandler(
                     )
                 )
             }
+            return true
         }
+        return false
     }
 
     infix fun Offset.angleTo(that: Offset): Float {

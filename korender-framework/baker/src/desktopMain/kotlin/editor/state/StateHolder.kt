@@ -10,6 +10,7 @@ import com.zakgof.korender.baker.editor.util.floor2
 import com.zakgof.korender.baker.editor.util.floorSig
 import com.zakgof.korender.baker.editor.util.roundSane
 import com.zakgof.korender.impl.scene.SceneModel
+import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -275,7 +276,7 @@ class StateHolder {
     }
 
     fun clearSelection() {
-        _state.update { it.copy(brushSelection = setOf()) }
+        _state.update { it.copy(brushSelection = setOf(), entityInstanceSelection = setOf()) }
     }
 
     fun selectBrushes(brushIds: Set<String>, flip: Boolean, allGroup: Boolean) {
@@ -305,7 +306,8 @@ class StateHolder {
                             .flatten()
                             .toSet()
             }
-            state.copy(brushSelection = result)
+            val newEntityInstanceSelection = if (flip) state.entityInstanceSelection else setOf()
+            state.copy(brushSelection = result, entityInstanceSelection = newEntityInstanceSelection)
         }
     }
 
@@ -711,6 +713,58 @@ class StateHolder {
         }
     }
 
+    fun selectEntityInstance(entityInstanceIds: Set<String>, flip: Boolean) {
+        _state.update { state ->
+            val newSelection = if (flip) {
+                val s = LinkedHashSet(state.entityInstanceSelection)
+                for (entityInstanceId in entityInstanceIds) {
+                    if (entityInstanceId in state.entityInstanceSelection)
+                        s -= entityInstanceId
+                    else
+                        s += entityInstanceId
+                }
+                s
+            } else {
+                entityInstanceIds
+            }
+            val newBrushSelection = if (flip) state.brushSelection else setOf()
+            state.copy(entityInstanceSelection = newSelection, brushSelection = newBrushSelection)
+        }
+    }
+
+    fun translateEntityInstance(instance: EntityInstance, offset: Vec3, pushHistory: Boolean) {
+        if (pushHistory) {
+            pushHistory()
+        }
+        val newInstance = instance.copy(transform = instance.transform.translate(offset))
+        _model.update {
+            it.copy(entityInstances = it.entityInstances.put(instance.id, newInstance))
+        }
+    }
+
+    fun scaleEntityInstance(instance: EntityInstance, oldBB: BoundingBox, newBB: BoundingBox, pushHistory: Boolean) {
+        if (pushHistory) {
+            pushHistory()
+        }
+        val scale = newBB.size divpercomp oldBB.size
+        val translate = newBB.center - (oldBB.center multpercomp scale)
+        val newInstance = instance.copy(transform = instance.transform.scale(scale.x, scale.y, scale.z).translate(translate))
+        _model.update {
+            it.copy(entityInstances = it.entityInstances.put(instance.id, newInstance))
+        }
+    }
+
+    fun rotateEntityInstance(instance: EntityInstance, center: Vec3, axis: Vec3, angle: Float, pushHistory: Boolean) {
+        if (pushHistory) {
+            pushHistory()
+        }
+        val shift = center - instance.bb.center
+        val quaternion = Quaternion.fromAxisAngle(axis, angle)
+        val newInstance = instance.copy(transform = instance.transform.translate(shift).rotate(quaternion).translate(-shift))
+        _model.update {
+            it.copy(entityInstances = it.entityInstances.put(instance.id, newInstance))
+        }
+    }
 }
 
 fun <K, V> PersistentMap<K, V>.removeAll(keys: Collection<K>): PersistentMap<K, V> {

@@ -55,7 +55,7 @@ internal interface MouseHandler {
     fun onDragStart(start: Offset, buttons: PointerButtons) {}
     fun onDrag(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) {}
     fun onDragEnd() {}
-    fun draw(drawScope: DrawScope) {}
+    fun draw(drawScope: DrawScope): Boolean = false
 }
 
 object NoOpMouseHandler : MouseHandler
@@ -125,7 +125,7 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
                         }
                     }
                 }
-        }
+            }
     ) {
         redrawTick
         val mapper = ProjectionMapper(axes, state, size)
@@ -138,12 +138,15 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
         drawGroups(mapper, state, model)
         drawSelection(mapper, state, model)
         drawEntityInstances(mapper, state, model, ::requestRedraw)
-        mouseHandler.draw(this)
+        if (mouseHandler.draw(this)) {
+            requestRedraw()
+        }
     }
 }
 
 private fun DrawScope.drawSelection(mapper: ProjectionMapper, state: State, model: Model) {
-    mapper.rect(state.brushSelection.map { model.brushes[it]!! })?.let { rect ->
+    val boundables = state.brushSelection.map { model.brushes[it]!! } + state.entityInstanceSelection.map { model.entityInstances[it]!! }
+    mapper.rect(boundables)?.let { rect ->
         drawRect(
             color = Color.Red,
             topLeft = rect.topLeft,
