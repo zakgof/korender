@@ -200,14 +200,15 @@ internal class SelectorMouseHandler(
                     val lookAxis = mapper.axes.lookAxis
 
                     val rotation = Quaternion.fromAxisAngle(lookAxis, angle)
-                    val dAngle = origBrushes.flatMap { it.faces }
+                    // TODO: add entity orientation snapping
+                    val da = origBrushes.flatMap { it.faces }
                         .map { rotation * it.plane.normal }
                         .filter { it.dot(lookAxis) < 0.95f }
                         .filter { it.dot(lookAxis) > -0.95f }
                         .flatMap { n -> mapper.gridDirs().map { n to it } }
                         .map { mapper.projAngle(it.first, it.second) }
-                        .minBy { abs(it) }
-                    val da = if (abs(dAngle) < 0.15) dAngle else 0f
+                        .minByOrNull { abs(it) }
+                        ?.let { if (abs(it) < 0.15) it else 0f } ?: 0f
 
                     origBrushes.forEach {
                         holder.brushChanged(it.rotate(center, lookAxis, angle + da), false)

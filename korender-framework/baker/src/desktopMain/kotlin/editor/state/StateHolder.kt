@@ -760,7 +760,8 @@ class StateHolder {
         }
         val shift = center - instance.bb.center
         val quaternion = Quaternion.fromAxisAngle(axis, angle)
-        val newInstance = instance.copy(transform = instance.transform.translate(shift).rotate(quaternion).translate(-shift))
+        val transform = instance.transform.translate(-shift).rotate(quaternion).translate(shift)
+        val newInstance = instance.copy(transform = transform)
         _model.update {
             it.copy(entityInstances = it.entityInstances.put(instance.id, newInstance))
         }

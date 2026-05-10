@@ -49,7 +49,6 @@ import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
@@ -458,12 +457,6 @@ fun selection(holder: StateHolder, state: State, model: Model) {
     }
 }
 
-@Composable
-fun LabeledFloatEditor(x0: String, x1: Dp, x2: Float, x3: (Float) -> Boolean, content: @Composable () -> Unit) {
-    TODO("Not yet implemented")
-}
-
-
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun tree(model: Model, state: State, holder: StateHolder) {
@@ -501,6 +494,19 @@ fun tree(model: Model, state: State, holder: StateHolder) {
                                     holder.selectBrushes(setOf(brush.id), event.keyboardModifiers.isCtrlPressed, true)
                                 },
                             fontWeight = if (state.brushSelection.contains(brush.id)) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                model.entityInstances.values
+                    .forEach { entityInstance ->
+                        Text(
+                            text = entityInstance.name,
+                            style = Theme.label,
+                            modifier = Modifier
+                                .padding(2.dp)
+                                .onPointerEvent(PointerEventType.Press) { event ->
+                                    holder.selectEntityInstance(setOf(entityInstance.id), event.keyboardModifiers.isCtrlPressed)
+                                },
+                            fontWeight = if (state.entityInstanceSelection.contains(entityInstance.id)) FontWeight.Bold else FontWeight.Normal
                         )
                     }
             }
