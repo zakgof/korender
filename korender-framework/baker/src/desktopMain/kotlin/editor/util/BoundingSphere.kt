@@ -1,4 +1,4 @@
-package com.zakgof.korender.baker.editor.util
+package editor.util
 
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.Mesh

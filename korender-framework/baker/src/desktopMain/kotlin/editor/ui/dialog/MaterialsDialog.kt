@@ -36,8 +36,8 @@ import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import com.zakgof.korender.Korender
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
-import com.zakgof.korender.baker.editor.util.toCompose
-import com.zakgof.korender.baker.editor.util.toKorender
+import editor.util.toCompose
+import editor.util.toKorender
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.file
 import com.zakgof.korender.baker.resources.material

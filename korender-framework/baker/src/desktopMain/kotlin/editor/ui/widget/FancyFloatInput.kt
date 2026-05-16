@@ -27,7 +27,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.zakgof.korender.baker.editor.util.sanity
+import editor.util.sanity
 import editor.ui.Theme
 
 @Composable

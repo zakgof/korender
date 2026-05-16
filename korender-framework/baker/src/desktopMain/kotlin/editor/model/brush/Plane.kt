@@ -3,7 +3,7 @@ package editor.model.brush
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import editor.model.BoundingBox
-import editor.model.rotateVec
+import editor.util.rotateVec
 import kotlin.math.sqrt
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid

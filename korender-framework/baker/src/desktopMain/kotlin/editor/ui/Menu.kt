@@ -10,8 +10,8 @@ import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.MenuBarScope
 import com.zakgof.korender.baker.editor.ui.dialog.EntitiesDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
-import com.zakgof.korender.baker.editor.util.nextSane
-import com.zakgof.korender.baker.editor.util.prevSane
+import editor.util.nextSane
+import editor.util.prevSane
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
 import com.zakgof.korender.baker.resources.center

@@ -1,9 +1,9 @@
 package editor.model
 
-import com.zakgof.korender.baker.editor.model.Group
+import editor.model.brush.Brush
+import editor.model.brush.Group
 import editor.model.entity.EntityInstance
 import editor.model.entity.EntityModel
-import editor.model.brush.Brush
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentMapOf
 

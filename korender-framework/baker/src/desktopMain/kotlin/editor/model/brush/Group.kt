@@ -1,4 +1,4 @@
-package com.zakgof.korender.baker.editor.model
+package editor.model.brush
 
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid

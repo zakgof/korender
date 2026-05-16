@@ -2,11 +2,11 @@ package editor.model
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import com.zakgof.korender.baker.editor.model.Group
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import editor.model.brush.Brush
 import editor.model.brush.Face
+import editor.model.brush.Group
 import editor.model.brush.Plane
 import editor.model.brush.Texturing
 import editor.model.brush.Texturing.Axis
@@ -204,6 +204,16 @@ data class TransformDto(
     constructor(transform: Transform) : this(transform.mat4.asArray())
 
     fun toTransform() = Transform(com.zakgof.korender.math.Mat4(matrix))
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        other as TransformDto
+        return matrix.contentEquals(other.matrix)
+    }
+
+    override fun hashCode(): Int {
+        return matrix.contentHashCode()
+    }
 }
 
 @Serializable

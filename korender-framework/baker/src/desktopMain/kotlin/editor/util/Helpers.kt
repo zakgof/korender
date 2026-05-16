@@ -1,4 +1,4 @@
-package com.zakgof.korender.baker.editor.util
+package editor.util
 
 import androidx.compose.ui.graphics.Color
 import com.zakgof.korender.math.ColorRGBA

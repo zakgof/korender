@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.zakgof.korender.baker.editor.util.toCompose
+import editor.util.toCompose
 import com.zakgof.korender.math.ColorRGBA
 import editor.ui.Theme
 import kotlin.math.roundToInt

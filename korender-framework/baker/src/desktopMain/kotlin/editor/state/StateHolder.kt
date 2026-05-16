@@ -5,10 +5,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.baker.editor.collision.BvhCompiler
 import com.zakgof.korender.baker.editor.collision.CollisionSerialModel
-import com.zakgof.korender.baker.editor.model.Group
-import com.zakgof.korender.baker.editor.util.floor2
-import com.zakgof.korender.baker.editor.util.floorSig
-import com.zakgof.korender.baker.editor.util.roundSane
 import com.zakgof.korender.impl.scene.SceneModel
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
@@ -22,17 +18,20 @@ import editor.model.Model
 import editor.model.ModelDto
 import editor.model.brush.Brush
 import editor.model.brush.CreatorShape
+import editor.model.brush.Group
 import editor.model.entity.EntityInstance
 import editor.model.entity.EntityModel
-import editor.model.snap
 import editor.state.State.MouseMode
 import editor.util.ModelCompiler
+import editor.util.floor2
+import editor.util.floorSig
+import editor.util.roundSane
+import editor.util.snap
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
@@ -43,11 +42,6 @@ import kotlin.math.tan
 import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-
-@Serializable
-data class PersistentState(
-    val lastDir: String?,
-)
 
 
 @OptIn(ExperimentalSerializationApi::class)

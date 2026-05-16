@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import com.zakgof.korender.baker.editor.ui.widget.FancyColumn
-import com.zakgof.korender.baker.editor.util.sameOrNull
+import editor.util.sameOrNull
 import editor.state.StateHolder
 import editor.ui.Theme
 import editor.ui.widget.FancyFloatInput

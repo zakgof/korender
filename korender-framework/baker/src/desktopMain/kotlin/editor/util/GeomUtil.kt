@@ -1,11 +1,13 @@
-package editor.model
+package editor.util
 
 import com.zakgof.korender.math.Vec3
+import kotlin.math.cos
 import kotlin.math.round
+import kotlin.math.sin
 
 fun rotateVec(v: Vec3, axis: Vec3, angle: Float): Vec3 {
-    val cos = kotlin.math.cos(angle)
-    val sin = kotlin.math.sin(angle)
+    val cos = cos(angle)
+    val sin = sin(angle)
 
     return v * cos +
             axis.cross(v) * sin +

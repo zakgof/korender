@@ -32,7 +32,6 @@ import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import com.zakgof.korender.Korender
 import com.zakgof.korender.baker.editor.ui.widget.EntityWidget
-import com.zakgof.korender.baker.editor.util.BoundingSphere
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.file
 import com.zakgof.korender.baker.resources.material
@@ -54,6 +53,7 @@ import editor.ui.widget.FancyClickToTextInput
 import editor.ui.widget.FancyTextInput
 import editor.ui.widget.GroupBox
 import editor.ui.widget.IconButton
+import editor.util.BoundingSphere
 import org.jetbrains.compose.resources.painterResource
 import java.io.File
 

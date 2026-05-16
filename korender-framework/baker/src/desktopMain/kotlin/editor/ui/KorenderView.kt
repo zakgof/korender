@@ -6,7 +6,7 @@ import androidx.compose.runtime.getValue
 import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.Korender
 import com.zakgof.korender.TouchEvent
-import com.zakgof.korender.baker.editor.util.toKorender
+import editor.util.toKorender
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
