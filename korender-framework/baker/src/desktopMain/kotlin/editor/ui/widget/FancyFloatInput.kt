@@ -104,15 +104,19 @@ fun FancyClickToFloatInput(value: Float, textModifier: Modifier = Modifier,  edi
 }
 
 @Composable
-fun LabeledFloatInput(label: String, labelW: Dp, value: Float, validator: (Float) -> Boolean, onValueChanged: (Float) -> Unit) =
+fun LabeledFloatInput(label: String, labelW: Dp, value: Float?, validator: (Float) -> Boolean, onValueChanged: (Float) -> Unit) =
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(label, style = Theme.label, modifier = Modifier.width(labelW).wrapContentHeight(Alignment.CenterVertically))
-        FancyClickToFloatInput(value,
-            validator  = validator,
-            editorModifier = Modifier.width(48.dp),
-            textModifier = Modifier.width(36.dp),
-            onValueChange = onValueChanged)
+        value?.let {
+            FancyClickToFloatInput(
+                value,
+                validator = validator,
+                editorModifier = Modifier.width(48.dp),
+                textModifier = Modifier.width(36.dp),
+                onValueChange = onValueChanged
+            )
+        } ?: Box(modifier = Modifier.height(22.dp))
     }
 

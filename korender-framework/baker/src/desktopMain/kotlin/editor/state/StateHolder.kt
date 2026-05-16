@@ -153,6 +153,7 @@ class StateHolder {
             it.copy(
                 creator = defaultCreator(state.value.viewCenter),
                 brushSelection = setOf(newBrush.id),
+                entityInstanceSelection = setOf(),
                 mouseMode = MouseMode.SELECT
             )
         }
@@ -742,6 +743,13 @@ class StateHolder {
         }
     }
 
+    fun renameEntityInstance(instance: EntityInstance, newName: String) {
+        pushHistory()
+        _model.update {
+            it.copy(entityInstances = it.entityInstances.put(instance.id, instance.copy(name = newName)))
+        }
+    }
+
     fun scaleEntityInstance(instance: EntityInstance, oldBB: BoundingBox, newBB: BoundingBox, pushHistory: Boolean) {
         if (pushHistory) {
             pushHistory()
@@ -766,6 +774,12 @@ class StateHolder {
             it.copy(entityInstances = it.entityInstances.put(instance.id, newInstance))
         }
     }
+
+    fun selectionBB() = (state.value.brushSelection.map { model.value.brushes[it]!!.bb } +
+            state.value.entityInstanceSelection.map { model.value.entityInstances[it]!!.bb })
+        .reduceOrNull(BoundingBox::merge)
+
+
 }
 
 fun <K, V> PersistentMap<K, V>.removeAll(keys: Collection<K>): PersistentMap<K, V> {

@@ -37,7 +37,6 @@ data class State(
 
     val persistentState: PersistentState
 ) {
-
     companion object {
         val STATE_KEYS = setOf(Key.W, Key.A, Key.S, Key.D, Key.DirectionLeft, Key.DirectionRight, Key.DirectionDown, Key.DirectionUp)
     }

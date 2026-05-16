@@ -20,8 +20,7 @@ fun EntityWidget(entityModel: EntityModel, selected: Boolean, onClick: () -> Uni
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.clickable {
             onClick()
-        }
-            .padding(1.dp)
+        }.padding(1.dp)
     )
     {
         Text(

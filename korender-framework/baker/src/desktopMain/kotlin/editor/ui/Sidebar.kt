@@ -50,7 +50,9 @@ import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.zakgof.korender.baker.editor.ui.dialog.EntitiesDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
+import com.zakgof.korender.baker.editor.ui.widget.EntityWidget
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
 import com.zakgof.korender.baker.editor.util.nextSane
 import com.zakgof.korender.baker.editor.util.prevSane
@@ -58,9 +60,7 @@ import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
 import com.zakgof.korender.baker.resources.drag
 import com.zakgof.korender.baker.resources.group
-import com.zakgof.korender.baker.resources.material
 import com.zakgof.korender.baker.resources.minus
-import com.zakgof.korender.baker.resources.newmaterial
 import com.zakgof.korender.baker.resources.pen
 import com.zakgof.korender.baker.resources.plus
 import com.zakgof.korender.baker.resources.pointer
@@ -69,14 +69,11 @@ import com.zakgof.korender.baker.resources.ungroup
 import com.zakgof.korender.baker.resources.zoomin
 import com.zakgof.korender.baker.resources.zoomout
 import com.zakgof.korender.math.Vec3
-import editor.model.BoundingBox
-import editor.model.Material
 import editor.model.Model
 import editor.model.brush.CreatorShape
 import editor.state.State
 import editor.state.StateHolder
 import editor.ui.dialog.MaterialsDialog
-import editor.ui.dialog.textureDialog
 import editor.ui.widget.FancyClickToFloatInput
 import editor.ui.widget.FancyClickToTextInput
 import editor.ui.widget.GroupBox
@@ -91,7 +88,7 @@ fun Sidebar(holder: StateHolder) {
     val focusManager = LocalFocusManager.current
     Column(
         Modifier.background(Theme.background)
-            .width(160.dp)
+            .width(200.dp)
             .fillMaxHeight()
             .focusable()
             .clickable(
@@ -106,6 +103,7 @@ fun Sidebar(holder: StateHolder) {
         shape(state, holder)
         grid(holder, state)
         scale(holder, state)
+        models(holder, state, model)
         materials(holder, state, model)
         selection(holder, state, model)
         tree(model, state, holder)
@@ -159,7 +157,7 @@ private fun modes(state: State, holder: StateHolder) {
     GroupBox("Mode") {
         RadioButtonRow(
             listOf(
-                Res.drawable.pen to "Draw Objects",
+                Res.drawable.pen to "Draw Brushes",
                 Res.drawable.pointer to "Select Objects",
                 Res.drawable.drag to "Drag Grid"
             ),
@@ -174,7 +172,7 @@ private fun modes(state: State, holder: StateHolder) {
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun shape(state: State, holder: StateHolder) {
-    GroupBox("Shape") {
+    GroupBox("Brush Shape") {
 
         class ShapeDef(
             val title: String,
@@ -333,22 +331,32 @@ private fun shape(state: State, holder: StateHolder) {
 }
 
 @Composable
+private fun models(holder: StateHolder, state: State, model: Model) {
+    GroupBox("Model") {
+        val entitiesDialog = EntitiesDialog(holder)
+        state.entityModelId?.let {
+            Row {
+                Box(modifier = Modifier.weight(1f)) {
+                    EntityWidget(model.entityModels[it]!!, true) {
+                        entitiesDialog()
+                    }
+                }
+                IconButton(Res.drawable.plus, "Insert") {
+                    holder.createEntityInstance()
+                }
+            }
+        } ?: Text(" -- none --", style = Theme.label, modifier = Modifier.fillMaxWidth().clickable {
+            entitiesDialog()
+        })
+    }
+}
+
+@Composable
 private fun materials(holder: StateHolder, state: State, model: Model) {
     GroupBox("Material") {
         val materialDialog = MaterialsDialog(holder)
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            IconButton(Res.drawable.material, "Edit Materials") { materialDialog() }
-            IconButton(Res.drawable.newmaterial, "New textured Material") {
-                textureDialog(state, holder)?.let { file ->
-                    val material = Material(file.name, file.path)
-                    holder.addMaterial(material)
-                }
-            }
-        }
         val material = model.materials[state.materialId]!!
-        MaterialWidget(material, false) {
+        MaterialWidget(material, true) {
             materialDialog()
         }
     }
@@ -358,101 +366,138 @@ private fun materials(holder: StateHolder, state: State, model: Model) {
 fun selection(holder: StateHolder, state: State, model: Model) {
 
     GroupBox("Selection") {
-        Column(
-
-        ) {
-            if (state.brushSelection.isEmpty()) {
-                Text("No selection", style = Theme.label)
+        Column {
+            val creator = state.mouseMode == State.MouseMode.CREATOR
+            if (state.brushSelection.isEmpty() && state.entityInstanceSelection.isEmpty() || creator) {
+                Box(
+                    modifier = Modifier.height(32.dp).fillMaxWidth(),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Text(if (creator) "Brush painter" else "No selection", style = Theme.label)
+                }
             } else {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(bottom = 4.dp)
-                ) {
-                    IconButton(Res.drawable.applymat, "Apply current material") {
-                        holder.applyMaterialToSelection()
-                    }
-                    val texturingDialog = texturingDialog(holder)
-                    IconButton(Res.drawable.texsetup, "Texture adjustment") {
-                        texturingDialog()
-                    }
-                }
-                val groups = state.brushSelection.mapNotNull { model.brushGroups[it] }.distinct().count()
-                val independents = state.brushSelection.count { model.brushGroups[it] == null }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(3.dp)
-                ) {
-                    Box(modifier = Modifier.weight(1f).padding(4.dp)) {
-                        if (state.brushSelection.size == 1) {
-                            val brush = model.brushes[state.brushSelection.first()]!!
-                            FancyClickToTextInput(brush.name) {
-                                holder.brushChanged(brush.copy(name = it), true)
-                            }
-                        } else if (groups == 1 && independents == 0) {
-                            val group = model.groups[model.brushGroups[state.brushSelection.first()]!!]!!
-                            FancyClickToTextInput(group.name) {
-                                holder.renameGroup(group.id, it)
-                            }
-                        } else if (state.brushSelection.size > 1) {
-                            Box(
-                                modifier = Modifier.height(32.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("${state.brushSelection.size} objects", style = Theme.label)
-                            }
-                        }
-                    }
-
-                    if (groups > 0) {
-                        IconButton(Res.drawable.ungroup, "Ungroup") {
-                            holder.ungroupSelection()
-                        }
-                    }
-                    if (independents + groups > 1) {
-                        IconButton(Res.drawable.group, "Group") {
-                            holder.groupSelection()
-                        }
-                    }
-                }
-                val bb = state.brushSelection.map { model.brushes[it]!!.bb }
-                    .reduce(BoundingBox::merge)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f)
+                if (state.entityInstanceSelection.isEmpty()) {
+                    brushSelection(holder, state, model)
+                } else if (state.brushSelection.isEmpty()) {
+                    entitySelection(holder, state, model)
+                } else {
+                    val count = state.brushSelection.size + state.entityInstanceSelection.size
+                    Box(
+                        modifier = Modifier.height(32.dp).fillMaxWidth(),
+                        contentAlignment = Alignment.CenterStart
                     ) {
-                        fun setCenter(x: Float, y: Float, z: Float) {
-                            val newBB = bb.move(Vec3(x, y, z))
-                            state.brushSelection.forEach {
-                                holder.brushChanged(model.brushes[it]!!.scale(bb, newBB), true)
-                            }
-                        }
-                        Text("Center", style = Theme.mediumLabel, modifier = Modifier.padding(vertical = 4.dp))
-                        val coordValidator = { it: Float -> it in -1e6..1e6 }
-                        LabeledFloatInput("x:", 12.dp, bb.center.x, coordValidator) { setCenter(it, bb.center.y, bb.center.z) }
-                        LabeledFloatInput("y:", 12.dp, bb.center.y, coordValidator) { setCenter(bb.center.x, it, bb.center.z) }
-                        LabeledFloatInput("z:", 12.dp, bb.center.z, coordValidator) { setCenter(bb.center.x, bb.center.y, it) }
-                    }
-                    Column(
-                        modifier = Modifier.weight(1.4f)
-                    ) {
-                        fun setSize(x: Float, y: Float, z: Float) {
-                            val newBB = bb.resize(Vec3(x, y, z))
-                            state.brushSelection.forEach {
-                                holder.brushChanged(model.brushes[it]!!.scale(bb, newBB), true)
-                            }
-                        }
-                        Text("Dims", style = Theme.mediumLabel, modifier = Modifier.padding(vertical = 4.dp))
-                        val dimValidator = { it: Float -> it in 1e-3..1e6 }
-                        LabeledFloatInput("width:", 40.dp, bb.size.x, dimValidator) { setSize(it, bb.size.y, bb.size.z) }
-                        LabeledFloatInput("height:", 40.dp, bb.size.y, dimValidator) { setSize(bb.size.x, it, bb.size.z) }
-                        LabeledFloatInput("depth:", 40.dp, bb.size.z, dimValidator) { setSize(bb.size.x, bb.size.y, it) }
+                        Text("$count objects", style = Theme.label)
                     }
                 }
-
             }
+            selectionDimension(state, model, holder)
+        }
+    }
+}
+
+@Composable
+fun brushSelection(holder: StateHolder, state: State, model: Model) {
+    val groups = state.brushSelection.mapNotNull { model.brushGroups[it] }.distinct().count()
+    val independents = state.brushSelection.count { model.brushGroups[it] == null }
+    Row(
+        modifier = Modifier.height(32.dp).fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(modifier = Modifier.weight(1f).padding(4.dp)) {
+            if (state.brushSelection.size == 1) {
+                val brush = model.brushes[state.brushSelection.first()]!!
+                FancyClickToTextInput(brush.name) {
+                    holder.brushChanged(brush.copy(name = it), true)
+                }
+            } else if (groups == 1 && independents == 0) {
+                val group = model.groups[model.brushGroups[state.brushSelection.first()]!!]!!
+                FancyClickToTextInput(group.name) {
+                    holder.renameGroup(group.id, it)
+                }
+            } else if (state.brushSelection.size > 1) {
+                Box(
+                    modifier = Modifier.height(22.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("${state.brushSelection.size} brushes", style = Theme.label)
+                }
+            }
+        }
+
+        if (groups > 0) {
+            IconButton(Res.drawable.ungroup, "Ungroup") {
+                holder.ungroupSelection()
+            }
+        }
+        if (independents + groups > 1) {
+            IconButton(Res.drawable.group, "Group") {
+                holder.groupSelection()
+            }
+        }
+        IconButton(Res.drawable.applymat, "Apply current material") {
+            holder.applyMaterialToSelection()
+        }
+        val texturingDialog = texturingDialog(holder)
+        IconButton(Res.drawable.texsetup, "Texture adjustment") {
+            texturingDialog()
+        }
+    }
+}
+
+@Composable
+fun entitySelection(holder: StateHolder, state: State, model: Model) {
+    Box(
+        modifier = Modifier.height(32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        if (state.entityInstanceSelection.size == 1) {
+            val entityInstance = model.entityInstances[state.entityInstanceSelection.first()]!!
+            FancyClickToTextInput(entityInstance.name) {
+                holder.renameEntityInstance(entityInstance, it)
+            }
+        } else {
+            Text("${state.entityInstanceSelection.size} models", style = Theme.label)
+        }
+    }
+}
+
+@Composable
+private fun selectionDimension(state: State, model: Model, holder: StateHolder) {
+    val bb = if (state.mouseMode == State.MouseMode.CREATOR) state.creator else holder.selectionBB()
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            fun setCenter(x: Float, y: Float, z: Float) {
+                val newBB = bb!!.move(Vec3(x, y, z))
+                state.brushSelection.forEach {
+                    holder.brushChanged(model.brushes[it]!!.scale(bb, newBB), true)
+                }
+            }
+            Text("Center", style = Theme.mediumLabel, modifier = Modifier.padding(vertical = 4.dp))
+            val coordValidator = { it: Float -> it in -1e6..1e6 }
+            LabeledFloatInput("x:", 12.dp, bb?.center?.x, coordValidator) { setCenter(it, bb!!.center.y, bb.center.z) }
+            LabeledFloatInput("y:", 12.dp, bb?.center?.y, coordValidator) { setCenter(bb!!.center.x, it, bb.center.z) }
+            LabeledFloatInput("z:", 12.dp, bb?.center?.z, coordValidator) { setCenter(bb!!.center.x, bb.center.y, it) }
+        }
+        Column(
+            modifier = Modifier.weight(1.4f)
+        ) {
+            fun setSize(x: Float, y: Float, z: Float) {
+                val newBB = bb!!.resize(Vec3(x, y, z))
+                state.brushSelection.forEach {
+                    holder.brushChanged(model.brushes[it]!!.scale(bb, newBB), true)
+                }
+            }
+            Text("Dims", style = Theme.mediumLabel, modifier = Modifier.padding(vertical = 4.dp))
+            val dimValidator = { it: Float -> it in 1e-3..1e6 }
+            LabeledFloatInput("width:", 40.dp, bb?.size?.x, dimValidator) { setSize(it, bb!!.size.y, bb.size.z) }
+            LabeledFloatInput("height:", 40.dp, bb?.size?.y, dimValidator) { setSize(bb!!.size.x, it, bb.size.z) }
+            LabeledFloatInput("depth:", 40.dp, bb?.size?.z, dimValidator) { setSize(bb!!.size.x, bb.size.y, it) }
         }
     }
 }
