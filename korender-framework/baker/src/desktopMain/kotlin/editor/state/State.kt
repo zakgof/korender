@@ -10,6 +10,7 @@ import editor.model.BoundingBox
 import editor.model.Material
 import editor.model.brush.Brush
 import editor.model.brush.CreatorShape
+import editor.model.entity.EntityInstance
 
 data class State(
     val mouseMode: MouseMode = MouseMode.CREATOR,
@@ -20,7 +21,10 @@ data class State(
     val brushSelection: Set<String> = setOf(),
     val entityInstanceSelection: Set<String> = setOf(),
     val selectionMode: SelectionMode = SelectionMode.RESIZE,
-    val clipboard: Set<Brush> = setOf(),
+
+    val clipboardBrushes: Set<Brush> = setOf(),
+    val clipboardEntityInstances: Set<EntityInstance> = setOf(),
+
     val creator: BoundingBox,
     val creatorShape: CreatorShape = CreatorShape.Box,
 

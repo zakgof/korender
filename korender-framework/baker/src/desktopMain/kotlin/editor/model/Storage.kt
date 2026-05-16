@@ -3,12 +3,15 @@ package editor.model
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import com.zakgof.korender.baker.editor.model.Group
+import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import editor.model.brush.Brush
 import editor.model.brush.Face
 import editor.model.brush.Plane
 import editor.model.brush.Texturing
 import editor.model.brush.Texturing.Axis
+import editor.model.entity.EntityInstance
+import editor.model.entity.EntityModel
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
@@ -20,13 +23,17 @@ class ModelDto(
     val invisibleBrushes: Set<String>,
     val groups: List<GroupDto>,
     val materials: List<MaterialDto>,
-    val version: Int = 1,
+    val entityModels: List<EntityModelDto> = emptyList(),
+    val entityInstances: List<EntityInstanceDto> = emptyList(),
+    val version: Int = 2,
 ) {
     constructor(model: Model) : this(
         model.brushes.values.map { BrushDto(it) },
         model.invisibleBrushes,
         model.groups.values.map { GroupDto(it) },
-        model.materials.values.map { MaterialDto(it) }
+        model.materials.values.map { MaterialDto(it) },
+        model.entityModels.values.map { EntityModelDto(it) },
+        model.entityInstances.values.map { EntityInstanceDto(it) }
     )
 
     fun toModel() = Model(
@@ -35,6 +42,8 @@ class ModelDto(
         groups.map { it.toGroup() }.associateBy { it.id }.toPersistentMap(),
         groups.flatMap { group -> group.brushIds.map { it to group.id } }.toMap().toPersistentMap(),
         materials.map { it.toMaterial() }.associateBy { it.id }.toPersistentMap(),
+        entityInstances.map { it.toEntityInstance() }.associateBy { it.id }.toPersistentMap(),
+        entityModels.map { it.toEntityModel() }.associateBy { it.id }.toPersistentMap(),
     )
 }
 
@@ -180,5 +189,70 @@ data class MaterialDto(
         scale = scale,
         metallic = metallic,
         roughness = roughness
+    )
+}
+
+@Serializable
+data class TransformDto(
+    val matrix: FloatArray = floatArrayOf(
+        1f, 0f, 0f, 0f,
+        0f, 1f, 0f, 0f,
+        0f, 0f, 1f, 0f,
+        0f, 0f, 0f, 1f,
+    ),
+) {
+    constructor(transform: Transform) : this(transform.mat4.asArray())
+
+    fun toTransform() = Transform(com.zakgof.korender.math.Mat4(matrix))
+}
+
+@Serializable
+data class EntityModelDto(
+    val id: String,
+    val name: String,
+    val filename: String,
+    val defaultScale: Float,
+    val points: List<Vec3Dto> = emptyList(),
+) {
+    constructor(entityModel: EntityModel) : this(
+        id = entityModel.id,
+        name = entityModel.name,
+        filename = entityModel.filename,
+        defaultScale = entityModel.defaultScale,
+        points = entityModel.points.map { Vec3Dto(it) },
+    )
+
+    fun toEntityModel() = EntityModel(
+        name = name,
+        filename = filename,
+        defaultScale = defaultScale,
+        id = id,
+    ).also { entityModel ->
+        entityModel.points.addAll(points.map { it.toVec3() })
+    }
+}
+
+@Serializable
+data class EntityInstanceDto(
+    val id: String,
+    val name: String,
+    val modelId: String,
+    val points: List<Vec3Dto> = emptyList(),
+    val transform: TransformDto = TransformDto(),
+) {
+    constructor(entityInstance: EntityInstance) : this(
+        id = entityInstance.id,
+        name = entityInstance.name,
+        modelId = entityInstance.modelId,
+        points = entityInstance.points.map { Vec3Dto(it) },
+        transform = TransformDto(entityInstance.transform),
+    )
+
+    fun toEntityInstance() = EntityInstance(
+        name = name,
+        modelId = modelId,
+        points = points.map { it.toVec3() },
+        transform = transform.toTransform(),
+        id = id,
     )
 }

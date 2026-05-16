@@ -158,7 +158,7 @@ private fun MenuBarScope.edit(holder: StateHolder) {
         Item("Cut", painterResource(Res.drawable.cut), shortcut = KeyShortcut(Key.X, ctrl = true)) {
             holder.cut()
         }
-        Item("Paste", painterResource(Res.drawable.paste), enabled = (state.brushSelection.isNotEmpty()), shortcut = KeyShortcut(Key.V, ctrl = true)) {
+        Item("Paste", painterResource(Res.drawable.paste), enabled = (state.brushSelection.isNotEmpty() && state.entityInstanceSelection.isNotEmpty()), shortcut = KeyShortcut(Key.V, ctrl = true)) {
             holder.paste()
         }
         Item("Select All", enabled = (model.brushes.isNotEmpty()), shortcut = KeyShortcut(Key.A, ctrl = true)) {

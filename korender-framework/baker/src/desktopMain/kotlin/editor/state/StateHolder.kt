@@ -210,36 +210,43 @@ class StateHolder {
     }
 
     fun copy() {
-        _state.update { it.copy(clipboard = selectedBrushes()) }
+        _state.update {
+            it.copy(
+                clipboardBrushes = selectedBrushes(),
+                clipboardEntityInstances = selectedEntityInstances()
+            )
+        }
     }
 
     fun cut() {
         val brushes = selectedBrushes()
+        val entityInstances = selectedEntityInstances()
         pushHistory()
         _model.update {
             it.copy(
-                brushes = it.brushes.removeAll(state.value.brushSelection)
+                brushes = it.brushes.removeAll(state.value.brushSelection),
+                entityInstances = it.entityInstances.removeAll(state.value.entityInstanceSelection),
             )
         }
         _state.update {
             it.copy(
-                clipboard = brushes,
-                brushSelection = setOf()
+                clipboardBrushes = brushes,
+                brushSelection = setOf(),
+                clipboardEntityInstances = entityInstances,
+                entityInstanceSelection = setOf()
             )
         }
     }
 
-    private fun selectedBrushes(): Set<Brush> = model.value.brushes.values.filter { brush -> state.value.brushSelection.contains(brush.id) }.toSet()
-
     @OptIn(ExperimentalUuidApi::class)
     fun paste() {
-        if (state.value.clipboard.isEmpty())
+        if (state.value.clipboardBrushes.isEmpty() && state.value.clipboardEntityInstances.isEmpty())
             return
-        val clipboardBoundingBox = state.value.clipboard
+        val clipboardBoundingBox = (state.value.clipboardBrushes + state.value.clipboardEntityInstances)
             .map { it.bb }
             .reduce(BoundingBox::merge)
         val offset = state.value.viewCenter - clipboardBoundingBox.center
-        val newBrushes = state.value.clipboard.mapIndexed { index, brush ->
+        val newBrushes = state.value.clipboardBrushes.mapIndexed { index, brush ->
             brush.copy(
                 name = generateBrushName(brush.name),
                 id = Uuid.generateV7().toHexDashString(),
@@ -249,9 +256,26 @@ class StateHolder {
                 }
             )
         }
+        val newEntityInstances = state.value.clipboardEntityInstances.map { entityInstance ->
+            entityInstance.copy(
+                name = generateEntityInstanceName(entityInstance.name),
+                id = Uuid.generateV7().toHexDashString(),
+                transform = entityInstance.transform.translate(offset)
+            )
+        }
         pushHistory()
-        _model.update { it.copy(brushes = it.brushes.putAll(newBrushes.associateBy { nb -> nb.id })) }
-        _state.update { it.copy(brushSelection = newBrushes.map { nb -> nb.id }.toSet()) }
+        _model.update {
+            it.copy(
+                brushes = it.brushes.putAll(newBrushes.associateBy { nb -> nb.id }),
+                entityInstances = it.entityInstances.putAll(newEntityInstances.associateBy { nei -> nei.id })
+            )
+        }
+        _state.update {
+            it.copy(
+                brushSelection = newBrushes.map { nb -> nb.id }.toSet(),
+                entityInstanceSelection = newEntityInstances.map { nei -> nei.id }.toSet(),
+            )
+        }
     }
 
     fun deleteSelected() {
@@ -261,7 +285,8 @@ class StateHolder {
             it.copy(
                 brushes = it.brushes.removeAll(state.value.brushSelection),
                 brushGroups = it.brushGroups.removeAll(state.value.brushSelection),
-                groups = it.groups.removeAll(groupIds)
+                groups = it.groups.removeAll(groupIds),
+                entityInstances = it.entityInstances.removeAll(state.value.entityInstanceSelection)
             )
         }
         _state.update {
@@ -775,10 +800,19 @@ class StateHolder {
         }
     }
 
-    fun selectionBB() = (state.value.brushSelection.map { model.value.brushes[it]!!.bb } +
-            state.value.entityInstanceSelection.map { model.value.entityInstances[it]!!.bb })
-        .reduceOrNull(BoundingBox::merge)
+    fun selectedBrushes() =
+        model.value.brushes.values
+            .filter { brush -> state.value.brushSelection.contains(brush.id) }
+            .toSet()
 
+    fun selectedEntityInstances() =
+        model.value.entityInstances.values
+            .filter { ei -> state.value.entityInstanceSelection.contains(ei.id) }
+            .toSet()
+
+    fun selectionBB() = (selectedBrushes() + selectedEntityInstances())
+        .map {it.bb}
+        .reduceOrNull(BoundingBox::merge)
 
 }
 
