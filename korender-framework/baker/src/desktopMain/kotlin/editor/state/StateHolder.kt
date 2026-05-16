@@ -798,6 +798,7 @@ class StateHolder {
         if (pushHistory) {
             pushHistory()
         }
+        EntitySnapCache.dispose(instance)
         val shift = center - instance.bb.center
         val quaternion = Quaternion.fromAxisAngle(axis, angle)
         val transform = instance.transform.translate(-shift).rotate(quaternion).translate(shift)

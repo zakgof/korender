@@ -6,7 +6,6 @@ import com.zakgof.korender.scope.FrameScope
 import editor.model.entity.EntityInstance
 import editor.model.entity.EntityModel
 import editor.ui.projection.Axes
-import editor.ui.projection.Axes.Companion.AllAxes
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,6 +19,7 @@ object EntitySnapCache {
         val instance: EntityInstance,
         val model: EntityModel,
         val axes: Axes,
+        val signature: String,
         val deferred: CompletableDeferred<ImageBitmap> = CompletableDeferred<ImageBitmap>(),
     )
 
@@ -27,21 +27,37 @@ object EntitySnapCache {
     val toCapture = mutableListOf<Job>()
 
     fun dispose(entityInstance: EntityInstance) {
-        AllAxes.forEach { axes ->
-            val key = "${entityInstance.rotateHash()}_${axes.name}"
-            jobs.remove(key)?.let { toCapture.remove(it) }
-        }
+        removeCachedImage(entityInstance.id, null)
     }
 
     fun image(entityInstance: EntityInstance, model: EntityModel, axes: Axes): Deferred<ImageBitmap> {
-        val key = "${entityInstance.rotateHash()}_${axes.name}"
+        val key = cacheKey(entityInstance.id, axes)
+        val signature = entityInstance.rotateHash()
+        jobs[key]?.let { cached ->
+            if (cached.signature == signature) {
+                return cached.deferred
+            }
+            jobs.remove(key)?.let { toCapture.remove(it) }
+        }
         println("Request snap image: $key, total snap images: ${jobs.size}")
         return jobs.computeIfAbsent(key) {
             println("Snap image cache miss: $key")
-            val job = Job(entityInstance, model, axes)
+            val job = Job(entityInstance, model, axes, signature)
             toCapture += job
             job
         }.deferred
+    }
+
+    private fun cacheKey(entityInstanceId: String, axes: Axes) = "${entityInstanceId}_${axes.name}"
+
+    private fun removeCachedImage(entityInstanceId: String, axes: Axes?) {
+        if (axes == null) {
+            jobs.entries.removeAll { (_, job) -> job.instance.id == entityInstanceId }
+            toCapture.removeAll { job -> job.instance.id == entityInstanceId }
+            return
+        }
+        val key = cacheKey(entityInstanceId, axes)
+        jobs.remove(key)?.let { toCapture.remove(it) }
     }
 
     context(fs: FrameScope)

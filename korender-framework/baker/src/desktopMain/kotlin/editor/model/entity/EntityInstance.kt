@@ -1,6 +1,7 @@
 package editor.model.entity
 
 import com.zakgof.korender.baker.editor.model.Boundable
+import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import editor.model.BoundingBox
@@ -25,17 +26,14 @@ data class EntityInstance(
 
     override val bb by lazy { BoundingBox.from(points.map { transform * it }) }
 
-    fun rotateHash(): String {
-        val rotationSignature = transform.mat4.rotationSignature()
-
-        return buildString {
-            append(modelId)
-            append('_')
-            append(rotationSignature)
-        }
+    fun rotateHash() = buildString {
+        append(modelId)
+        append('_')
+        append(transform.mat4.rotationSignature())
     }
 
-    private fun com.zakgof.korender.math.Mat4.rotationSignature(): String {
+    private fun Mat4.rotationSignature(): String {
+
         val c0 = Vec3(m00, m10, m20).normalizedOrZero()
         val c1 = Vec3(m01, m11, m21).normalizedOrZero()
         val c2 = Vec3(m02, m12, m22).normalizedOrZero()
@@ -53,5 +51,4 @@ data class EntityInstance(
         return (this / HASH_TOLERANCE).roundToInt()
     }
 }
-
 
