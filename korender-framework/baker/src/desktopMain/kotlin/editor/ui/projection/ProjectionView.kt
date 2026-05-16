@@ -65,6 +65,7 @@ class Axes(val name: String, val xAxis: Vec3, val yAxis: Vec3, val lookAxis: Vec
         val Left = Axes("left", 1.z, -1.y, 1.x)
         val Top = Axes("top", 1.x, 1.z, -1.y)
         val Front = Axes("front", 1.x, -1.y, -1.z)
+        val AllAxes = listOf(Left, Top, Front)
     }
 }
 

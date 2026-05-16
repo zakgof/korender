@@ -6,6 +6,7 @@ import com.zakgof.korender.scope.FrameScope
 import editor.model.entity.EntityInstance
 import editor.model.entity.EntityModel
 import editor.ui.projection.Axes
+import editor.ui.projection.Axes.Companion.AllAxes
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,9 +26,16 @@ object EntitySnapCache {
     val jobs = mutableMapOf<String, Job>()
     val toCapture = mutableListOf<Job>()
 
+    fun dispose(entityInstance: EntityInstance) {
+        AllAxes.forEach { axes ->
+            val key = "${entityInstance.rotateHash()}_${axes.name}"
+            jobs.remove(key)?.let { toCapture.remove(it) }
+        }
+    }
+
     fun image(entityInstance: EntityInstance, model: EntityModel, axes: Axes): Deferred<ImageBitmap> {
-        val key = "${entityInstance.hashCode()}_${axes.name}"
-        println("Request snap image: $key")
+        val key = "${entityInstance.rotateHash()}_${axes.name}"
+        println("Request snap image: $key, total snap images: ${jobs.size}")
         return jobs.computeIfAbsent(key) {
             println("Snap image cache miss: $key")
             val job = Job(entityInstance, model, axes)

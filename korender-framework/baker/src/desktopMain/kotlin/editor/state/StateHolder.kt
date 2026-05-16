@@ -15,6 +15,7 @@ import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import editor.cache.EntitySnapCache
 import editor.cache.TextureImageCache
 import editor.model.BoundingBox
 import editor.model.Material
@@ -228,6 +229,7 @@ class StateHolder {
                 entityInstances = it.entityInstances.removeAll(state.value.entityInstanceSelection),
             )
         }
+        selectedEntityInstances().forEach { EntitySnapCache.dispose(it) }
         _state.update {
             it.copy(
                 clipboardBrushes = brushes,
@@ -289,8 +291,9 @@ class StateHolder {
                 entityInstances = it.entityInstances.removeAll(state.value.entityInstanceSelection)
             )
         }
+        selectedEntityInstances().forEach { EntitySnapCache.dispose(it) }
         _state.update {
-            it.copy(brushSelection = setOf())
+            it.copy(brushSelection = setOf(), entityInstanceSelection = setOf())
         }
     }
 
@@ -726,9 +729,13 @@ class StateHolder {
     fun createEntityInstance() {
         pushHistory()
         val entityModel = model.value.entityModels[state.value.entityModelId]!!
-        val instance = EntityInstance(generateEntityInstanceName(entityModel.name), entityModel, scale(entityModel.defaultScale))
+        val transform = scale(entityModel.defaultScale).translate(state.value.viewCenter)
+        val instance = EntityInstance(generateEntityInstanceName(entityModel.name), entityModel, transform)
         _model.update {
             it.copy(entityInstances = it.entityInstances.put(instance.id, instance))
+        }
+        _state.update {
+            it.copy(mouseMode = MouseMode.SELECT)
         }
         selectEntityInstances(setOf(instance.id))
     }
@@ -811,7 +818,7 @@ class StateHolder {
             .toSet()
 
     fun selectionBB() = (selectedBrushes() + selectedEntityInstances())
-        .map {it.bb}
+        .map { it.bb }
         .reduceOrNull(BoundingBox::merge)
 
 }
