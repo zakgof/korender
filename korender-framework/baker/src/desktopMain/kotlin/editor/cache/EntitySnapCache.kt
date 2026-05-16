@@ -27,7 +27,7 @@ object EntitySnapCache {
     val toCapture = mutableListOf<Job>()
 
     fun dispose(entityInstance: EntityInstance) {
-        removeCachedImage(entityInstance.id, null)
+        removeCachedImages(entityInstance.id)
     }
 
     fun image(entityInstance: EntityInstance, model: EntityModel, axes: Axes): Deferred<ImageBitmap> {
@@ -40,6 +40,7 @@ object EntitySnapCache {
             jobs.remove(key)?.let { toCapture.remove(it) }
         }
         println("Request snap image: $key, total snap images: ${jobs.size}")
+        removeCachedImage(entityInstance.id, axes)
         return jobs.computeIfAbsent(key) {
             println("Snap image cache miss: $key")
             val job = Job(entityInstance, model, axes, signature)
@@ -50,12 +51,12 @@ object EntitySnapCache {
 
     private fun cacheKey(entityInstanceId: String, axes: Axes) = "${entityInstanceId}_${axes.name}"
 
-    private fun removeCachedImage(entityInstanceId: String, axes: Axes?) {
-        if (axes == null) {
-            jobs.entries.removeAll { (_, job) -> job.instance.id == entityInstanceId }
-            toCapture.removeAll { job -> job.instance.id == entityInstanceId }
-            return
-        }
+    private fun removeCachedImages(entityInstanceId: String) {
+        jobs.entries.removeAll { (_, job) -> job.instance.id == entityInstanceId }
+        toCapture.removeAll { job -> job.instance.id == entityInstanceId }
+    }
+
+    private fun removeCachedImage(entityInstanceId: String, axes: Axes) {
         val key = cacheKey(entityInstanceId, axes)
         jobs.remove(key)?.let { toCapture.remove(it) }
     }

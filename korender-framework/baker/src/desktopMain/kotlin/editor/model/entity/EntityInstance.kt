@@ -33,11 +33,10 @@ data class EntityInstance(
     }
 
     private fun Mat4.rotationSignature(): String {
-
-        val c0 = Vec3(m00, m10, m20).normalizedOrZero()
-        val c1 = Vec3(m01, m11, m21).normalizedOrZero()
-        val c2 = Vec3(m02, m12, m22).normalizedOrZero()
-        return listOf(c0, c1, c2)
+        val r0 = Vec3(m00, m01, m02).normalizedOrZero()
+        val r1 = Vec3(m10, m11, m12).normalizedOrZero()
+        val r2 = Vec3(m20, m21, m22).normalizedOrZero()
+        return listOf(r0, r1, r2)
             .flatMap { listOf(it.x, it.y, it.z) }
             .joinToString(",") { it.quantizedHashBucket().toString() }
     }
@@ -51,4 +50,3 @@ data class EntityInstance(
         return (this / HASH_TOLERANCE).roundToInt()
     }
 }
-

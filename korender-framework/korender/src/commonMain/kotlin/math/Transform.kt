@@ -79,7 +79,7 @@ class Transform(val mat4: Mat4 = Mat4.IDENTITY) {
                 r10, r11, r12, ty,
                 r20, r21, r22, tz,
                 0f, 0f, 0f, 1f
-            )
+            ) * mat4
         )
     }
 

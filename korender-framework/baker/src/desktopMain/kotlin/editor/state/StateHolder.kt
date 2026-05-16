@@ -10,7 +10,6 @@ import com.zakgof.korender.baker.editor.util.floor2
 import com.zakgof.korender.baker.editor.util.floorSig
 import com.zakgof.korender.baker.editor.util.roundSane
 import com.zakgof.korender.impl.scene.SceneModel
-import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -799,9 +798,7 @@ class StateHolder {
             pushHistory()
         }
         EntitySnapCache.dispose(instance)
-        val shift = center - instance.bb.center
-        val quaternion = Quaternion.fromAxisAngle(axis, angle)
-        val transform = instance.transform.translate(-shift).rotate(quaternion).translate(shift)
+        val transform = instance.transform.rotate(center, axis, angle)
         val newInstance = instance.copy(transform = transform)
         _model.update {
             it.copy(entityInstances = it.entityInstances.put(instance.id, newInstance))
