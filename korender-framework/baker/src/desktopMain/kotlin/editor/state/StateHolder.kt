@@ -399,7 +399,8 @@ class StateHolder {
         val bytes = file.readBytes()
         val modelDto: ModelDto = Cbor.decodeFromByteArray(bytes)
         _model.update { modelDto.toModel() }
-        _state.update { defaultState(MouseMode.SELECT, System.identityHashCode(_model.value), savePath = file.path, persistentState = state.value.persistentState.copy(lastDir = file.parentFile.path)) }
+        val newRecentProjects = addToRecentProjects(state.value.persistentState.recentProjects, file.path)
+        _state.update { defaultState(MouseMode.SELECT, System.identityHashCode(_model.value), savePath = file.path, persistentState = state.value.persistentState.copy(lastDir = file.parentFile.path, recentProjects = newRecentProjects)) }
         resetViews()
         savePersistentState()
     }
@@ -408,14 +409,20 @@ class StateHolder {
     fun saveProject(file: File) {
         val bytes = Cbor.encodeToByteArray(ModelDto(model.value))
         file.writeBytes(bytes)
+        val newRecentProjects = addToRecentProjects(state.value.persistentState.recentProjects, file.path)
         _state.update {
             it.copy(
                 savePath = file.path,
                 lastSavedModelHash = System.identityHashCode(model.value),
-                persistentState = it.persistentState.copy(lastDir = file.parentFile.path)
+                persistentState = it.persistentState.copy(lastDir = file.parentFile.path, recentProjects = newRecentProjects)
             )
         }
         savePersistentState()
+    }
+
+    private fun addToRecentProjects(current: List<String>, newProject: String): List<String> {
+        val updated = (listOf(newProject) + current.filter { it != newProject }).take(10)
+        return updated
     }
 
     fun applyTexturingUScaleToSelection(uScale: Float) {

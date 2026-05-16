@@ -10,8 +10,6 @@ import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.MenuBarScope
 import com.zakgof.korender.baker.editor.ui.dialog.EntitiesDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
-import editor.util.nextSane
-import editor.util.prevSane
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
 import com.zakgof.korender.baker.resources.center
@@ -43,6 +41,8 @@ import editor.ui.dialog.confirmDialog
 import editor.ui.dialog.fileDialog
 import editor.ui.dialog.okDialog
 import editor.ui.dialog.textureDialog
+import editor.util.nextSane
+import editor.util.prevSane
 import editor.walk.walkerDialog
 import org.jetbrains.compose.resources.painterResource
 import java.io.File
@@ -98,6 +98,22 @@ private fun MenuBarScope.file(holder: StateHolder) {
             }
         }
         Separator()
+        
+        val recentProjects = state.persistentState.recentProjects
+        if (recentProjects.isNotEmpty()) {
+            recentProjects.forEach { projectPath ->
+                val projectFile = File(projectPath)
+                val projectName = projectFile.nameWithoutExtension
+                val loadProjectConfirmDialog = confirmDialog("Load Project", "Discard changes and load a project ?") {
+                    holder.loadProject(projectFile)
+                }
+                Item(projectName) {
+                    if (modified) loadProjectConfirmDialog() else holder.loadProject(projectFile)
+                }
+            }
+            Separator()
+        }
+        
         val walkDialog = walkerDialog()
         Item("Dry-Run", painterResource(Res.drawable.play)) {
             walkDialog(holder.dryRun())
