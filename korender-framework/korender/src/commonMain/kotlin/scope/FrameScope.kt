@@ -5,17 +5,16 @@ import com.zakgof.korender.BillboardMaterial
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.Material
 import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.SkyMaterial
 import com.zakgof.korender.TerrainMaterialScope
-import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.obj.ObjInfo
 
 interface FrameScope : KorenderScope {
 
@@ -45,12 +44,8 @@ interface FrameScope : KorenderScope {
      * @param onUpdate callback with runtime Gltf details
      * @param materialModifier material modifiers block
      */
-    fun Gltf(resource: String, transform: Transform = Transform.IDENTITY, animation: Int? = null, instancing: GltfInstancingDeclaration? = null, onUpdate: (GltfUpdate) -> Unit = {}, materialModifier: BaseMaterialScope.() -> Unit = {})
 
-    fun KrScene(resource: String, transform: Transform = Transform.IDENTITY, block: BaseMaterialScope.()-> Unit = {})
-
-    fun Obj(resource: String, transform: Transform = Transform.IDENTITY, onLoad: (ObjInfo) -> Unit = {}, materialModifier: BaseMaterialScope.() -> Unit = {})
-
+    fun Model(resource: String, transform: Transform = Transform.IDENTITY, instancing: ModelInstancingDeclaration? = null, animation: Int? = null, onUpdate: (ModelInfo) -> Unit = {}, materialModifier: BaseMaterialScope.() -> Unit = {})
 
 
     /**

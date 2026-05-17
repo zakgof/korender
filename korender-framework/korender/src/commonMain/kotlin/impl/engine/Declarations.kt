@@ -2,16 +2,11 @@ package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.ShadowAlgorithmDeclaration
 import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.scope.BillboardInstancingDeclaration
-import com.zakgof.korender.scope.BillboardInstancingParameter
-import com.zakgof.korender.scope.GltfInstancingDeclaration
-import com.zakgof.korender.scope.InstancingDeclaration
-import com.zakgof.korender.scope.InstancingParameter
-import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.context.DefaultFrameScope
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.context.NodeContext
@@ -30,6 +25,11 @@ import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.obj.ObjInfo
+import com.zakgof.korender.scope.BillboardInstancingDeclaration
+import com.zakgof.korender.scope.BillboardInstancingParameter
+import com.zakgof.korender.scope.GltfInstancingDeclaration
+import com.zakgof.korender.scope.InstancingDeclaration
+import com.zakgof.korender.scope.InstancingParameter
 
 internal class SceneDeclaration {
     val pointLights = mutableListOf<PointLightDeclaration>()
@@ -41,9 +41,7 @@ internal class SceneDeclaration {
     val skies = mutableListOf<RenderableDeclaration>()
 
     val guis = mutableListOf<ElementDeclaration.Container>()
-    val gltfs = mutableListOf<GltfDeclaration>()
-    val krscenes = mutableListOf<KrSceneDeclaration>()
-    val objs = mutableListOf<ObjDeclaration>()
+    val models = mutableListOf<ModelDeclaration>()
     val heightFields = mutableListOf<HeightFieldDeclaration>()
     var filters = mutableListOf<InternalFilterDeclaration>()
     var deferredShadingDeclaration: DeferredShadingDeclaration? = null
@@ -196,17 +194,17 @@ internal class ShadowDeclaration {
 
 internal data class CascadeDeclaration(val mapSize: Int, val near: Float, val far: Float, val fixedYRange: Pair<Float, Float>?, val algorithm: ShadowAlgorithmDeclaration)
 
-internal class GltfDeclaration(
+internal class ModelDeclaration(
     val resource: String,
-    val onUpdate: (GltfUpdate) -> Unit,
     val transform: Transform,
+    val instancingDeclaration: InternalModelInstancingDeclaration?,
     val time: Float,
     val animation: Int,
-    val instancingDeclaration: InternalGltfInstancingDeclaration?,
+    val onUpdate: (ModelInfo) -> Unit,
     val materialModifier: BaseMaterialScope.() -> Unit,
     override val nodeContext: NodeContext,
 ) : NodeKeeper {
-    override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.resource == resource)
+    override fun equals(other: Any?): Boolean = (other is ModelDeclaration && other.resource == resource)
     override fun hashCode(): Int = resource.hashCode()
 }
 
@@ -252,7 +250,7 @@ internal class DirectionalLightDeclaration(val direction: Vec3, val color: Color
 
 internal class InternalInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val parameters: List<InstancingParameter>, val instancer: () -> List<MeshInstance>) : InstancingDeclaration
 
-internal class InternalGltfInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<GltfInstance>) : GltfInstancingDeclaration
+internal class InternalModelInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<GltfInstance>) : GltfInstancingDeclaration
 
 internal class InternalBillboardInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val parameters: List<BillboardInstancingParameter>, val instancer: () -> List<BillboardInstance>) : BillboardInstancingDeclaration
 

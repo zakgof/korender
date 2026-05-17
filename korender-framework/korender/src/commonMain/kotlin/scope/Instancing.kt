@@ -11,6 +11,8 @@ interface BillboardInstancingDeclaration
 
 interface GltfInstancingDeclaration
 
+interface ModelInstancingDeclaration
+
 interface InstancingScope {
     fun Instance(
         transform: Transform? = null,
@@ -32,6 +34,14 @@ interface BillboardInstancingScope {
 }
 
 interface GltfInstancingScope {
+    fun Instance(
+        transform: Transform,
+        time: Float? = null,
+        animation: Int? = null,
+    )
+}
+
+interface ModelInstancingScope {
     fun Instance(
         transform: Transform,
         time: Float? = null,

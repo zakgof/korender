@@ -15,8 +15,6 @@ import com.zakgof.korender.impl.glgpu.GlGpuFrameBuffer
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture3D
-import com.zakgof.korender.impl.gltf.GltfCache
-import com.zakgof.korender.impl.gltf.GltfLoader
 import com.zakgof.korender.impl.material.GpuTextureLink
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
@@ -27,8 +25,8 @@ import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.impl.material.TextureLinkDeclaration
 import com.zakgof.korender.impl.material.Texturing
 import com.zakgof.korender.impl.material.UniformBufferHolder
-import com.zakgof.korender.impl.prefab.obj.ObjScene
-import com.zakgof.korender.impl.prefab.scene.KrScene
+import com.zakgof.korender.impl.prefab.InternalModel
+import com.zakgof.korender.impl.prefab.ModelFactory
 import com.zakgof.korender.impl.prefab.terrain.Clipmaps
 
 internal class ShaderServices(
@@ -54,12 +52,10 @@ internal class Inventory(private val loader: Loader) {
     private val fonts = Registry<InternalFontDeclaration, Font> { Fonts.load(it.resource, loader, it.nodeContext) }
     private val frameBuffers = Registry<FrameBufferDeclaration, GlGpuFrameBuffer> { GlGpuFrameBuffer(it.id, it.width, it.height, it.colorTexturePresets, it.withDepth) }
     private val cubeFrameBuffers = Registry<CubeFrameBufferDeclaration, GlGpuCubeFrameBuffer> { GlGpuCubeFrameBuffer(it.id, it.width, it.height, it.withDepth) }
-    private val gltfs = Registry<GltfDeclaration, GltfCache> { GltfLoader.load(it, loader) }
     private val heightFields = Registry<HeightFieldDeclaration, Clipmaps> { Clipmaps(it) }
-    private val krscenes = Registry<KrSceneDeclaration, KrScene> { KrScene(it) }
-    private val objs = Registry<ObjDeclaration, ObjScene> { ObjScene(it) }
+    private val models = Registry<ModelDeclaration, InternalModel> { ModelFactory.load(it, loader) }
 
-    private val registries = listOf(meshes, shaders, textures, textures3D, textureLinks, resourceCubeTextures, imageCubeTextures, fonts, frameBuffers, cubeFrameBuffers, gltfs, heightFields, krscenes, objs)
+    private val registries = listOf(meshes, shaders, textures, textures3D, textureLinks, resourceCubeTextures, imageCubeTextures, fonts, frameBuffers, cubeFrameBuffers, heightFields, models)
 
     fun go(time: Float, generation: Int, block: Inventory.() -> Boolean) {
         registries.forEach { it.begin() }
@@ -81,10 +77,8 @@ internal class Inventory(private val loader: Loader) {
     fun font(decl: InternalFontDeclaration): Font? = fonts[decl]
     fun frameBuffer(decl: FrameBufferDeclaration): GlGpuFrameBuffer? = frameBuffers[decl]
     fun cubeFrameBuffer(decl: CubeFrameBufferDeclaration): GlGpuCubeFrameBuffer? = cubeFrameBuffers[decl]
-    fun gltf(decl: GltfDeclaration): GltfCache? = gltfs[decl]
     fun heightField(decl: HeightFieldDeclaration): Clipmaps? = heightFields[decl]
-    fun krscene(decl: KrSceneDeclaration): KrScene? = krscenes[decl]
-    fun obj(decl: ObjDeclaration): ObjScene? = objs[decl]
+    fun model(decl: ModelDeclaration) : InternalModel? = models[decl]
 
     fun shaderPlugin(id: ShaderPluginId, file: String): ShaderPlugin =
         shaderServices.shaderPluginRegistry.registerCustom(id, file)

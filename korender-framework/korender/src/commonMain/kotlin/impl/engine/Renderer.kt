@@ -135,13 +135,17 @@ internal class Renderer(
         val touchBoxes = mutableListOf<TouchBox>()
 
         init {
+
+            sceneDeclaration.models.forEach { modelDeclaration ->
+                inventory.model(modelDeclaration)?.let { model ->
+                    model.build(sceneDeclaration, initRk)
+                } ?: initRk.fail()
+            }
+
             sceneDeclaration.gltfs.forEach {
                 inventory.gltf(it)?.let { gltfLoaded ->
                     GltfSceneBuilder(it, gltfLoaded).build().forEach { rd -> sceneDeclaration.append(rd) }
                 } ?: initRk.fail()
-            }
-            sceneDeclaration.heightFields.forEach {
-                inventory.heightField(it)?.build(sceneDeclaration) ?: initRk.fail()
             }
             sceneDeclaration.krscenes.forEach {
                 inventory.krscene(it)?.build(sceneDeclaration) ?: initRk.fail()
@@ -150,6 +154,9 @@ internal class Renderer(
                 val obj = inventory.obj(declaration)
                 if (obj == null || !obj.build(declaration, sceneDeclaration))
                     initRk.fail()
+            }
+            sceneDeclaration.heightFields.forEach {
+                inventory.heightField(it)?.build(sceneDeclaration) ?: initRk.fail()
             }
         }
 

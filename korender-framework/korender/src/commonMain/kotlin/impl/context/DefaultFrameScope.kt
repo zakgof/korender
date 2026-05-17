@@ -15,6 +15,7 @@ import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
+import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.ProjectionDeclaration
@@ -27,19 +28,6 @@ import com.zakgof.korender.TextureArrayImages
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
-import com.zakgof.korender.scope.BillboardInstancingDeclaration
-import com.zakgof.korender.scope.DeferredShadingScope
-import com.zakgof.korender.scope.FrameScope
-import com.zakgof.korender.scope.GltfInstancingDeclaration
-import com.zakgof.korender.scope.GuiContainerScope
-import com.zakgof.korender.scope.InstancingDeclaration
-import com.zakgof.korender.scope.InstancingParameter
-import com.zakgof.korender.scope.InstancingScope
-import com.zakgof.korender.scope.KorenderScope
-import com.zakgof.korender.scope.PipeMeshScope
-import com.zakgof.korender.scope.ResourceScope
-import com.zakgof.korender.scope.ShadowScope
-import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.engine.CaptureContext
 import com.zakgof.korender.impl.engine.DeferredShadingDeclaration
@@ -47,15 +35,13 @@ import com.zakgof.korender.impl.engine.DirectionalLightDeclaration
 import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.engine.FrameTarget
-import com.zakgof.korender.impl.engine.GltfDeclaration
 import com.zakgof.korender.impl.engine.HeightFieldDeclaration
 import com.zakgof.korender.impl.engine.InternalBillboardInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalFilterDeclaration
-import com.zakgof.korender.impl.engine.InternalGltfInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalInstancingDeclaration
+import com.zakgof.korender.impl.engine.InternalModelInstancingDeclaration
 import com.zakgof.korender.impl.engine.InternalPassDeclaration
-import com.zakgof.korender.impl.engine.KrSceneDeclaration
-import com.zakgof.korender.impl.engine.ObjDeclaration
+import com.zakgof.korender.impl.engine.ModelDeclaration
 import com.zakgof.korender.impl.engine.PointLightDeclaration
 import com.zakgof.korender.impl.engine.RegularFrameContext
 import com.zakgof.korender.impl.engine.RenderableDeclaration
@@ -75,7 +61,18 @@ import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.IDENTITY
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.obj.ObjInfo
+import com.zakgof.korender.scope.BillboardInstancingDeclaration
+import com.zakgof.korender.scope.DeferredShadingScope
+import com.zakgof.korender.scope.FrameScope
+import com.zakgof.korender.scope.GuiContainerScope
+import com.zakgof.korender.scope.InstancingDeclaration
+import com.zakgof.korender.scope.InstancingParameter
+import com.zakgof.korender.scope.InstancingScope
+import com.zakgof.korender.scope.KorenderScope
+import com.zakgof.korender.scope.ModelInstancingDeclaration
+import com.zakgof.korender.scope.PipeMeshScope
+import com.zakgof.korender.scope.ResourceScope
+import com.zakgof.korender.scope.ShadowScope
 
 internal class DefaultFrameScope(
     val korenderContext: Engine.KorenderScopeImpl,
@@ -185,14 +182,14 @@ internal class DefaultFrameScope(
         DefaultDeferredShadingScope(sceneDeclaration.deferredShadingDeclaration!!).apply(block)
     }
 
-    override fun Gltf(resource: String, transform: Transform, animation: Int?, instancing: GltfInstancingDeclaration?, onUpdate: (GltfUpdate) -> Unit, materialModifier: BaseMaterialScope.() -> Unit) {
-        sceneDeclaration.gltfs += GltfDeclaration(
+    override fun Model(resource: String, transform: Transform, instancing: ModelInstancingDeclaration?, animation: Int?, onUpdate: (ModelInfo) -> Unit, materialModifier: BaseMaterialScope.() -> Unit) {
+        sceneDeclaration.models += ModelDeclaration(
             resource,
-            onUpdate,
             transform,
+            instancing as InternalModelInstancingDeclaration?,
             nodeContext.time ?: frameInfo.time,
             animation ?: 0,
-            instancing as InternalGltfInstancingDeclaration?,
+            onUpdate,
             materialModifier,
             nodeContext
         )
@@ -308,13 +305,5 @@ internal class DefaultFrameScope(
 
     override fun HeightField(id: String, cellSize: Float, hg: Int, rings: Int, block: TerrainMaterialScope.() -> Unit) {
         sceneDeclaration.heightFields += HeightFieldDeclaration(id, cellSize, hg, rings, block, this)
-    }
-
-    override fun KrScene(resource: String, transform: Transform, block: BaseMaterialScope.() -> Unit) {
-        sceneDeclaration.krscenes += KrSceneDeclaration(resource, transform, block, nodeContext)
-    }
-
-    override fun Obj(resource: String, transform: Transform, onLoad: (ObjInfo) -> Unit, materialModifier: BaseMaterialScope.() -> Unit) {
-        sceneDeclaration.objs += ObjDeclaration(resource, transform, onLoad, materialModifier, nodeContext)
     }
 }
