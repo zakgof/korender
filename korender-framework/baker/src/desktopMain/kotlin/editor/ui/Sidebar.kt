@@ -23,11 +23,7 @@ import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType.Companion.PrimaryNotEditable
@@ -54,8 +50,6 @@ import com.zakgof.korender.baker.editor.ui.dialog.EntitiesDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.ui.widget.EntityWidget
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
-import editor.util.nextSane
-import editor.util.prevSane
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
 import com.zakgof.korender.baker.resources.drag
@@ -80,6 +74,8 @@ import editor.ui.widget.GroupBox
 import editor.ui.widget.IconButton
 import editor.ui.widget.LabeledFloatInput
 import editor.ui.widget.RadioButtonRow
+import editor.util.nextSane
+import editor.util.prevSane
 
 @Composable
 fun Sidebar(holder: StateHolder) {
@@ -288,11 +284,11 @@ private fun shape(state: State, holder: StateHolder) {
                         .padding(1.dp)
                 )
                 Spacer(Modifier.width(4.dp))
-                Icon(
-                    imageVector = if (expanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
-                    contentDescription = null,
-                    tint = Theme.medium
-                )
+//                Icon(
+//                    imageVector = if (expanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+//                    contentDescription = null,
+//                    tint = Theme.medium
+//                )
             }
 
             CompositionLocalProvider(

@@ -54,14 +54,11 @@ internal actual object Platform {
         val byteBuffer = ByteBuffer.allocateDirect(size).order(ByteOrder.nativeOrder())
         bitmap.copyPixelsToBuffer(byteBuffer)
         val format = bitmap.config
-        val gpuFormat = when (format) {
-            Bitmap.Config.ARGB_8888 -> PixelFormat.RGBA
-            else -> throw KorenderException("Unsupported image format $format")
+        if (format != Bitmap.Config.ARGB_8888) {
+            throw KorenderException("Unsupported image format $format")
         }
-        val gpuBytes = when (format) {
-            Bitmap.Config.ARGB_8888 -> ARGBtoRGBA(byteBuffer) // TODO: how come ?
-            else -> throw KorenderException("Unsupported image format $format")
-        }
+        val gpuFormat = PixelFormat.RGBA
+        val gpuBytes = ARGBtoRGBA(byteBuffer) // TODO: how come ?
         return InternalImage(
             bitmap.width,
             bitmap.height,
@@ -117,7 +114,11 @@ internal actual object Platform {
 
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
-actual fun Korender(resourceLoader: ResourceLoader, block: KorenderScope.() -> Unit) {
+actual fun Korender(
+    resourceLoader: ResourceLoader,
+    vSync: Boolean,
+    block: KorenderScope.() -> Unit
+) {
 
     var engine: Engine? by remember { mutableStateOf(null) }
 
@@ -161,13 +162,37 @@ actual fun Korender(resourceLoader: ResourceLoader, block: KorenderScope.() -> U
                 event.changes.forEach {
                     val position = it.position
                     if (event.type == PointerEventType.Press && it.pressed && !it.previousPressed) {
-                        touch(TouchEvent(TouchEvent.Type.DOWN, TouchEvent.Button.LEFT, position.x, position.y))
+                        touch(
+                            TouchEvent(
+                                TouchEvent.Type.DOWN,
+                                TouchEvent.Button.LEFT,
+                                position.x,
+                                position.y,
+                                KeyboardModifiers()
+                            )
+                        )
                     }
                     if (event.type == PointerEventType.Release && !it.pressed && it.previousPressed) {
-                        touch(TouchEvent(TouchEvent.Type.UP, TouchEvent.Button.LEFT, position.x, position.y))
+                        touch(
+                            TouchEvent(
+                                TouchEvent.Type.UP,
+                                TouchEvent.Button.LEFT,
+                                position.x,
+                                position.y,
+                                KeyboardModifiers()
+                            )
+                        )
                     }
                     if (event.type == PointerEventType.Move) {
-                        touch(TouchEvent(TouchEvent.Type.MOVE, TouchEvent.Button.LEFT, position.x, position.y))
+                        touch(
+                            TouchEvent(
+                                TouchEvent.Type.MOVE,
+                                TouchEvent.Button.LEFT,
+                                position.x,
+                                position.y,
+                                KeyboardModifiers()
+                            )
+                        )
                     }
                 }
             }

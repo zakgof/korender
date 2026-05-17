@@ -15,6 +15,10 @@ kotlin {
 
     jvm("desktop")
 
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+
     compilerOptions {
         freeCompilerArgs.addAll("-Xcontext-parameters")
     }
@@ -24,16 +28,14 @@ kotlin {
 
         commonMain.dependencies {
             implementation(project(":korender"))
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.material3)
+            implementation(libs.compose.ui)
+            implementation(libs.compose.components.resources)
             implementation(libs.commons.math3)
-            implementation("com.github.haifengl:smile-core:4.4.0")
             implementation(libs.kotlinxcollections.immutable)
             implementation(libs.kotlinx.serialization.cbor)
-            implementation(compose.materialIconsExtended)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -46,18 +48,14 @@ compose.desktop {
         jvmArgs += listOf(
             "--add-opens=java.base/java.lang=ALL-UNNAMED",
             "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
-            "--add-exports=java.base/sun.misc=ALL-UNNAMED",
-            "--add-exports=java.desktop/sun.awt=ALL-UNNAMED"
+            "--add-opens=java.desktop/sun.awt=ALL-UNNAMED"
         )
         mainClass = "com.zakgof.korender.baker.MainKt"
-        nativeApplication {
-        }
         nativeDistributions {
             jvmArgs += listOf(
                 "--add-opens=java.base/java.lang=ALL-UNNAMED",
                 "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
-                "--add-exports=java.base/sun.misc=ALL-UNNAMED",
-                "--add-exports=java.desktop/sun.awt=ALL-UNNAMED"
+                "--add-opens=java.desktop/sun.awt=ALL-UNNAMED"
             )
             windows {
                 includeAllModules = true

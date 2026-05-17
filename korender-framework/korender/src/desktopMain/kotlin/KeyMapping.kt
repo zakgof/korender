@@ -70,7 +70,7 @@ internal val KEY_MAPPING: Map<Int, KeyMapping> = mapOf(
 
     VK_INSERT to KeyMapping("INSERT", Key.Insert),
     VK_DELETE to KeyMapping("DELETE", Key.Delete),
-    VK_HOME to KeyMapping("HOME", Key.Home),
+    VK_HOME to KeyMapping("HOME", Key.MoveHome),
     // VK_END to KeyMapping("END", Key.End), // TODO
     VK_PAGE_UP to KeyMapping("PAGEUP", Key.PageUp),
     VK_PAGE_DOWN to KeyMapping("PAGEDOWN", Key.PageDown),

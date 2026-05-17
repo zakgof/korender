@@ -104,7 +104,7 @@ private val WEB_KEY_MAPPING: Map<String, WebKeyMapping> = mapOf(
     "Space" to WebKeyMapping("SPACE", Key.Spacebar),
     "Insert" to WebKeyMapping("INSERT", Key.Insert),
     "Delete" to WebKeyMapping("DELETE", Key.Delete),
-    "Home" to WebKeyMapping("HOME", Key.Home),
+    "Home" to WebKeyMapping("HOME", Key.MoveHome),
     "PageUp" to WebKeyMapping("PAGEUP", Key.PageUp),
     "PageDown" to WebKeyMapping("PAGEDOWN", Key.PageDown),
 
