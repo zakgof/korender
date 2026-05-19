@@ -70,10 +70,6 @@ internal class Loader() {
 
     fun pending(): Int = loadingMap.size + waitingMap.size + syncyMap.size
 
-    fun onWaitUpdate(block: () -> Unit) {
-        updaters += block
-    }
-
     private fun fireUpdaters() {
         val fire = updaters.toList()
         updaters.clear()

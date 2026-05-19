@@ -478,7 +478,7 @@ interface KorenderScope : ResourceScope {
      * @param block instances declaration block
      * @return GLTF object instancing declaration
      */
-    fun gltfInstancing(id: String, count: Int, dynamic: Boolean, block: GltfInstancingScope.() -> Unit): GltfInstancingDeclaration
+    fun modelInstancing(id: String, count: Int, dynamic: Boolean, block: ModelInstancingScope.() -> Unit): ModelInstancingDeclaration
 
 
     /**

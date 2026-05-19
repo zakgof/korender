@@ -13,15 +13,15 @@ import androidx.compose.ui.Modifier
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.Korender
-import com.zakgof.korender.scope.KorenderScope
+import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.examples.TestExchange
-import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
+import com.zakgof.korender.scope.KorenderScope
 
 private const val AUTO_CAMERA = "Auto Camera"
 
@@ -41,20 +41,20 @@ fun GltfLibraryExample() = Row {
         selectedModel = models.find { it.folder == "Avocado" }
     }
 
-    fun KorenderScope.updateCameraAndAnimations(update: GltfUpdate) {
-        animations = update.animations.mapIndexed { i, v -> v.name ?: "Animation $i" }
+    fun KorenderScope.updateCameraAndAnimations(update: ModelInfo) {
+        animations = update.animations?.mapIndexed { i, v -> v.name ?: "Animation $i" } ?: listOf()
         if (animations.isNotEmpty() && !animations.contains(selectedAnimation)) {
             selectedAnimation = animations.first()
         }
         if (currentGltf != selectedModel?.file) {
-            bs = boundingSphere(update.instances.first().rootNode)
+            bs = boundingSphere(update.instances.first())
             currentGltf = selectedModel!!.file
         }
-        cameras = listOf(AUTO_CAMERA) + update.cameras.mapIndexed { index, cam -> cam.name ?: "Gltf camera $index" }
+        cameras = listOf(AUTO_CAMERA) + (update.cameras?.mapIndexed { index, cam -> cam.name ?: "Gltf camera $index" } ?: listOf())
         if (!cameras.contains(selectedCamera)) {
             selectedCamera = cameras.first()
         }
-        val c = update.cameras.filterIndexed { index, cam -> selectedCamera == (cam.name ?: "Gltf camera $index") }.firstOrNull()
+        val c = update.cameras?.filterIndexed { index, cam -> selectedCamera == (cam.name ?: "Gltf camera $index") }?.firstOrNull()
         if (c != null) {
             camera = c.camera
             projection = c.projection
@@ -86,7 +86,7 @@ fun GltfLibraryExample() = Row {
                         resourceLoader = { GltfDownloader.load(model.folder, model.format, it) },
                         transform = if (selectedCamera == AUTO_CAMERA) rotate(bs.center, 1.y, frameInfo.time * 0.3f) else Transform.IDENTITY,
                     ) {
-                        Gltf(
+                        Model(
                             resource = model.file,
                             animation = animations.indexOf(selectedAnimation),
                             materialModifier = {

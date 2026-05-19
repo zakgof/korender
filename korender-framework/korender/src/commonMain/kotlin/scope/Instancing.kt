@@ -9,8 +9,6 @@ interface InstancingDeclaration
 
 interface BillboardInstancingDeclaration
 
-interface GltfInstancingDeclaration
-
 interface ModelInstancingDeclaration
 
 interface InstancingScope {

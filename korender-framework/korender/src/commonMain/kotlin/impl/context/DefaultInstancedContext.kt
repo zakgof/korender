@@ -1,15 +1,15 @@
 package com.zakgof.korender.impl.context
 
-import com.zakgof.korender.scope.BillboardInstancingScope
-import com.zakgof.korender.scope.GltfInstancingScope
-import com.zakgof.korender.scope.InstancingScope
 import com.zakgof.korender.impl.engine.BillboardInstance
-import com.zakgof.korender.impl.engine.GltfInstance
 import com.zakgof.korender.impl.engine.MeshInstance
+import com.zakgof.korender.impl.engine.ModelInstance
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.scope.BillboardInstancingScope
+import com.zakgof.korender.scope.InstancingScope
+import com.zakgof.korender.scope.ModelInstancingScope
 
 internal class DefaultBillboardInstancingScope internal constructor(private val instances: MutableList<BillboardInstance>) : BillboardInstancingScope {
     override fun Instance(pos: Vec3?, scale: Vec2?, rotation: Float?, color: ColorRGBA?, colorTextureIndex: Int?) {
@@ -23,8 +23,8 @@ internal class DefaultInstancingScope internal constructor(private val instances
     }
 }
 
-internal class DefaultGltfInstancingScope internal constructor(private val instances: MutableList<GltfInstance>) : GltfInstancingScope {
+internal class DefaultModelInstancingScope internal constructor(private val instances: MutableList<ModelInstance>) : ModelInstancingScope {
     override fun Instance(transform: Transform, time: Float?, animation: Int?) {
-        instances.add(GltfInstance(transform, time, animation))
+        instances.add(ModelInstance(transform, time, animation))
     }
 }

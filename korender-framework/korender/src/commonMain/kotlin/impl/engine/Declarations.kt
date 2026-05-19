@@ -24,12 +24,11 @@ import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.obj.ObjInfo
 import com.zakgof.korender.scope.BillboardInstancingDeclaration
 import com.zakgof.korender.scope.BillboardInstancingParameter
-import com.zakgof.korender.scope.GltfInstancingDeclaration
 import com.zakgof.korender.scope.InstancingDeclaration
 import com.zakgof.korender.scope.InstancingParameter
+import com.zakgof.korender.scope.ModelInstancingDeclaration
 
 internal class SceneDeclaration {
     val pointLights = mutableListOf<PointLightDeclaration>()
@@ -221,28 +220,7 @@ internal class HeightFieldDeclaration(
     override fun hashCode(): Int = id.hashCode()
 }
 
-internal class KrSceneDeclaration(
-    val resource: String,
-    val transform: Transform,
-    val block: BaseMaterialScope.() -> Unit,
-    override val nodeContext: NodeContext,
-) : NodeKeeper {
-    override fun equals(other: Any?): Boolean = (other is KrSceneDeclaration && other.resource == resource)
-    override fun hashCode(): Int = resource.hashCode()
-}
-
-internal class ObjDeclaration(
-    val resource: String,
-    val transform: Transform,
-    val onLoad: (ObjInfo) -> Unit,
-    val materialModifier: BaseMaterialScope.() -> Unit,
-    override val nodeContext: NodeContext,
-) : NodeKeeper {
-    override fun equals(other: Any?): Boolean = (other is ObjDeclaration && other.resource == resource)
-    override fun hashCode(): Int = resource.hashCode()
-}
-
-internal class GltfInstance(val transform: Transform, val time: Float?, val animation: Int?)
+internal class ModelInstance(val transform: Transform, val time: Float?, val animation: Int?)
 
 internal class PointLightDeclaration(val position: Vec3, val color: ColorRGB, val attenuation: Vec3)
 
@@ -250,7 +228,7 @@ internal class DirectionalLightDeclaration(val direction: Vec3, val color: Color
 
 internal class InternalInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val parameters: List<InstancingParameter>, val instancer: () -> List<MeshInstance>) : InstancingDeclaration
 
-internal class InternalModelInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<GltfInstance>) : GltfInstancingDeclaration
+internal class InternalModelInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<ModelInstance>) : ModelInstancingDeclaration
 
 internal class InternalBillboardInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val parameters: List<BillboardInstancingParameter>, val instancer: () -> List<BillboardInstance>) : BillboardInstancingDeclaration
 

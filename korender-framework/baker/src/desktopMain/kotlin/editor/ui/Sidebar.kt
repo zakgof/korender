@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,15 +41,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogWindow
+import androidx.compose.ui.window.rememberDialogState
 import com.zakgof.korender.baker.editor.ui.dialog.EntitiesDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.ui.widget.EntityWidget
+import com.zakgof.korender.baker.editor.ui.widget.FancyButton
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
@@ -350,7 +356,51 @@ private fun models(holder: StateHolder, state: State, model: Model) {
 @Composable
 private fun materials(holder: StateHolder, state: State, model: Model) {
     GroupBox("Material") {
+        var expanded by remember { mutableStateOf(false) }
+        Box(
+            modifier = Modifier
+                .align(Alignment.End)
+                .wrapContentSize(Alignment.TopStart)
+                .border(3.dp, Red)
+        ) {
+            FancyButton("…", Modifier.width(24.dp).height(16.dp)) { expanded = true }
+            DialogWindow(
+                undecorated = true,
+                visible = expanded,
+                onCloseRequest = { expanded = false },
+                focusable = true,
+                alwaysOnTop = true,
+                state = rememberDialogState(width = Dp.Unspecified, height = Dp.Unspecified)
+            ) {
+                Column {
+                    Row {
+                        Text("Edit Materials")
+                    }
+                }
+            }
+//            Item("Edit Materials", icon = painterResource(Res.drawable.material)) {
+//                materialDialog()
+//            }
+//            Item("New textured Material", painterResource(Res.drawable.newmaterial)) {
+//                textureDialog(state, holder)?.let { file ->
+//                    val material = Material(file.name, file.path)
+//                    holder.addMaterial(material)
+//                }
+//            }
+        }
+
         val materialDialog = MaterialsDialog(holder)
+//        Row(
+//            horizontalArrangement = Arrangement.spacedBy(8.dp)
+//        ) {
+//            IconButton(Res.drawable.material, "Edit Materials") { materialDialog() }
+//            IconButton(Res.drawable.newmaterial, "New textured Material") {
+//                textureDialog(state, holder)?.let { file ->
+//                    val material = Material(file.name, file.path)
+//                    holder.addMaterial(material)
+//                }
+//            }
+//        }
         val material = model.materials[state.materialId]!!
         MaterialWidget(material, true) {
             materialDialog()

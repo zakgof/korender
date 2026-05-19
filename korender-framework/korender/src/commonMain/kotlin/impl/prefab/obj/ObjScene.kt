@@ -4,24 +4,27 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.impl.context.NodeContext
-import com.zakgof.korender.impl.engine.ObjDeclaration
+import com.zakgof.korender.impl.engine.ModelDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
+import com.zakgof.korender.impl.engine.ResultKeeper
 import com.zakgof.korender.impl.engine.SceneDeclaration
+import com.zakgof.korender.impl.geometry.CMesh
 import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
 import com.zakgof.korender.impl.geometry.MeshAttributes.POS
 import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
 import com.zakgof.korender.impl.material.InternalBaseMaterial
+import com.zakgof.korender.impl.prefab.InternalModel
+import com.zakgof.korender.impl.prefab.InternalModelInfo
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
-import com.zakgof.korender.obj.ObjInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class ObjScene(declaration: ObjDeclaration) : AutoCloseable {
+internal class ObjScene(private val declaration: ModelDeclaration) : InternalModel {
 
     private val prefix = "obj[${declaration.resource}]"
     private var loadNotified = false
@@ -29,7 +32,7 @@ internal class ObjScene(declaration: ObjDeclaration) : AutoCloseable {
     private val sceneDeferred = CoroutineScope(Dispatchers.Default).async {
         val objBytes = declaration.nodeContext.resourceLoader(declaration.resource)
         val parsed = ObjSceneLoader.load(declaration.resource, objBytes)
-        val materials = parsed.materialLibraries
+        val materialMap = parsed.materialLibraries
             .flatMap { materialResource ->
                 ObjSceneLoader.loadMaterials(
                     materialResource,
@@ -37,39 +40,45 @@ internal class ObjScene(declaration: ObjDeclaration) : AutoCloseable {
                 )
             }
             .associateBy { it.name }
-        LoadedObjScene(parsed.meshes, materials, ObjInfoImpl(parsed.meshes))
+        val preparedMeshes = parsed.meshes.map {
+            PreparedMesh(it.name, toCMesh(it), materialMap[it.materialName])
+        }
+        LoadedObjScene(preparedMeshes)
     }
 
-    fun build(declaration: ObjDeclaration, sceneDeclaration: SceneDeclaration): Boolean {
-        if (!sceneDeferred.isCompleted)
-            return false
+    private fun toCMesh(mesh: ObjSceneMesh) = CMesh(
+        vertexCount = mesh.vertices.size,
+        indexCount = mesh.indices.size,
+        instanceCount = declaration.instancingDeclaration?.count ?: -1,
+        POS, NORMAL, TEX,
+    ) {
+        mesh.vertices.forEach {
+            pos(it.pos).normal(it.normal).tex(it.tex)
+        }
+        index(*mesh.indices.toIntArray())
+    }
+
+    override fun build(sceneDeclaration: SceneDeclaration, rk: ResultKeeper?) {
+
+        if (!sceneDeferred.isCompleted) {
+            rk?.fail()
+            return
+        }
 
         val scene = sceneDeferred.getCompleted()
         if (!loadNotified) {
             loadNotified = true
-            declaration.onLoad(scene.info)
+            declaration.onUpdate(scene.modelInfo())
         }
-        scene.meshes.forEachIndexed { index, mesh ->
-            if (mesh.indices.isEmpty())
-                return@forEachIndexed
-
-            val materialInfo = mesh.materialName?.let { scene.materials[it] }
+        scene.meshes.forEachIndexed { index, preparedMesh ->
             val material = InternalBaseMaterial().apply {
-                materialInfo?.applyTo(this, declaration.nodeContext)
+                preparedMesh.material?.applyTo(this, declaration.nodeContext)
                 declaration.materialModifier(this)
             }
-            val meshDeclaration = declaration.nodeContext.customMesh(
-                id = "$prefix.mesh.$index.${mesh.name}",
-                vertexCount = mesh.vertices.size,
-                indexCount = mesh.indices.size,
-                POS, NORMAL, TEX,
-                dynamic = false
-            ) {
-                mesh.vertices.forEach {
-                    pos(it.pos).normal(it.normal).tex(it.tex)
-                }
-                index(*mesh.indices.toIntArray())
-            }
+            val meshDeclaration = declaration.nodeContext.mesh(
+                id = "$prefix.mesh.$index.${preparedMesh.name}",
+                mesh = preparedMesh.cmesh
+            )
             sceneDeclaration.append(
                 RenderableDeclaration(
                     material = material,
@@ -80,17 +89,24 @@ internal class ObjScene(declaration: ObjDeclaration) : AutoCloseable {
                 )
             )
         }
-        return true
-    }
-
-    override fun close() {
     }
 }
 
 private data class LoadedObjScene(
-    val meshes: List<ObjSceneMesh>,
-    val materials: Map<String, ObjSceneMaterial>,
-    val info: ObjInfo,
+    val meshes: List<PreparedMesh>,
+) {
+    fun modelInfo() =
+        InternalModelInfo(
+            meshes.map { InternalModelInfo.Node(null, null, it.name, it.cmesh) },
+            null,
+            null
+        )
+}
+
+private data class PreparedMesh(
+    val name: String?,
+    val cmesh: CMesh,
+    val material: ObjSceneMaterial?
 )
 
 private data class ObjSceneMesh(
@@ -114,20 +130,6 @@ private data class ObjSceneVertex(
             else -> null
         } as T?
 }
-
-private class ObjInfoImpl(meshes: List<ObjSceneMesh>) : ObjInfo {
-    override val parts = meshes.map { ObjInfoPart(it.name, ObjInfoMesh(it.vertices, it.indices)) }
-}
-
-private class ObjInfoPart(
-    override val name: String?,
-    override val mesh: Mesh,
-) : ObjInfo.Part
-
-private class ObjInfoMesh(
-    override val vertices: List<ObjSceneVertex>,
-    override val indices: List<Int>,
-) : Mesh
 
 private data class ObjSceneMaterial(
     val name: String,
@@ -178,6 +180,7 @@ private object ObjSceneLoader {
                 "mtllib" -> materialLibraries += body.split(Regex("\\s+"))
                     .filter { it.isNotBlank() }
                     .map { base + it.replace('\\', '/') }
+
                 "o", "g" -> meshName = body.ifBlank { "default" }
                 "usemtl" -> materialName = body.ifBlank { null }
                 "v" -> positions += parse3(body, "Obj v expects 3 coordinates")

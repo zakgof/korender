@@ -5,8 +5,6 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.scope.BillboardInstancingParameter
-import com.zakgof.korender.scope.InstancingParameter
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.geometry.MeshAttributes.COLOR
@@ -37,6 +35,8 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import com.zakgof.korender.scope.BillboardInstancingParameter
+import com.zakgof.korender.scope.InstancingParameter
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -121,11 +121,14 @@ internal object Geometry {
         return when (simpleMeshDeclaration) {
             is ObjMesh -> loader.safeBytes(simpleMeshDeclaration.objFile, resourceLoader) { obj(it, count) }
             is CustomCpuMesh -> toCMesh(simpleMeshDeclaration.mesh, count, instancingAttributes)
-            is CustomMesh -> CMesh(simpleMeshDeclaration.vertexCount, simpleMeshDeclaration.indexCount, count, attributes = simpleMeshDeclaration.attributes.toTypedArray(), simpleMeshDeclaration.indexType, simpleMeshDeclaration.block)
+            is CustomMesh -> customMeshFromDeclaration(simpleMeshDeclaration, count)
             is FontMesh -> font(count)
             else -> createMeshSync(simpleMeshDeclaration, count, instancingAttributes)
         }
     }
+
+    fun customMeshFromDeclaration(simpleMeshDeclaration: CustomMesh, count: Int): CMesh =
+        CMesh(simpleMeshDeclaration.vertexCount, simpleMeshDeclaration.indexCount, count, attributes = simpleMeshDeclaration.attributes.toTypedArray(), simpleMeshDeclaration.indexType, simpleMeshDeclaration.block)
 
     private fun instancingAttributes(meshDeclaration: MeshDeclaration): Array<InternalMeshAttribute<*>> =
         when (meshDeclaration) {

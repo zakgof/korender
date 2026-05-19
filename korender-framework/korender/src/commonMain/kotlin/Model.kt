@@ -4,17 +4,14 @@ import com.zakgof.korender.math.Transform
 
 interface ModelInfo {
 
-    val instances: List<Instance>
-    val animations: List<Animation>
-    val cameras: List<Camera>
-
-    interface Instance {
-        val rootNode: Node
-    }
+    val instances: List<Node>
+    val animations: List<Animation>?
+    val cameras: List<Camera>?
 
     interface Node {
-        val transform: Transform
-        val children: List<Node>
+        val transform: Transform?
+        val children: List<Node>?
+        val name: String?
         val mesh: Mesh?
     }
 

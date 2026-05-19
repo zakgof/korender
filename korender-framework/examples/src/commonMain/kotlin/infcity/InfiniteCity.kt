@@ -5,8 +5,6 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.ShaderPlugin
 import com.zakgof.korender.ShaderPluginId
-import com.zakgof.korender.scope.FrameScope
-import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.examples.TestExchange
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
@@ -19,6 +17,8 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import com.zakgof.korender.scope.FrameScope
+import com.zakgof.korender.scope.KorenderScope
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.floor
@@ -83,7 +83,7 @@ private fun FrameScope.light() {
 }
 
 private fun FrameScope.character(z: Float) {
-    Gltf(
+    Model(
         resource = "infcity/swat-woman.glb",
         animation = 2,
         transform = scale(0.002f).translate(z.z + 0.1f.x)
@@ -110,7 +110,7 @@ private fun FrameScope.cityChunk(startZ: Float) {
 }
 
 private fun FrameScope.tree(z: Float, x: Float) {
-    Gltf(
+    Model(
         resource = "infcity/tree.glb",
         transform = rotate(1.y, z + x).translate(x, 0.95f, z)
     )

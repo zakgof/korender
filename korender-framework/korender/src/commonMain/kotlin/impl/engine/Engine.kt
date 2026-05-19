@@ -27,21 +27,13 @@ import com.zakgof.korender.SkyMaterial
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.scope.BillboardInstancingParameter
-import com.zakgof.korender.scope.BillboardInstancingScope
-import com.zakgof.korender.scope.FrameScope
-import com.zakgof.korender.scope.GltfInstancingScope
-import com.zakgof.korender.scope.InstancingParameter
-import com.zakgof.korender.scope.InstancingScope
-import com.zakgof.korender.scope.KorenderScope
-import com.zakgof.korender.scope.ResourceScope
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.camera.Camera
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.context.DefaultBillboardInstancingScope
 import com.zakgof.korender.impl.context.DefaultFrameScope
-import com.zakgof.korender.impl.context.DefaultGltfInstancingScope
 import com.zakgof.korender.impl.context.DefaultInstancingScope
+import com.zakgof.korender.impl.context.DefaultModelInstancingScope
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.shadow.InternalHardShadow
 import com.zakgof.korender.impl.engine.shadow.InternalHardwarePcfShadow
@@ -85,6 +77,14 @@ import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.scope.BillboardInstancingParameter
+import com.zakgof.korender.scope.BillboardInstancingScope
+import com.zakgof.korender.scope.FrameScope
+import com.zakgof.korender.scope.InstancingParameter
+import com.zakgof.korender.scope.InstancingScope
+import com.zakgof.korender.scope.KorenderScope
+import com.zakgof.korender.scope.ModelInstancingScope
+import com.zakgof.korender.scope.ResourceScope
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -377,10 +377,10 @@ internal class Engine(
                 instances
             }
 
-        override fun gltfInstancing(id: String, count: Int, dynamic: Boolean, block: GltfInstancingScope.() -> Unit) =
-            InternalGltfInstancingDeclaration(id, count, dynamic) {
-                val instances = mutableListOf<GltfInstance>()
-                val context = DefaultGltfInstancingScope(instances)
+        override fun modelInstancing(id: String, count: Int, dynamic: Boolean, block: ModelInstancingScope.() -> Unit) =
+            InternalModelInstancingDeclaration(id, count, dynamic) {
+                val instances = mutableListOf<ModelInstance>()
+                val context = DefaultModelInstancingScope(instances)
                 block.invoke(context)
                 instances
             }

@@ -3,11 +3,13 @@ package com.zakgof.korender.impl.prefab.scene
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.impl.context.NodeContext
-import com.zakgof.korender.impl.engine.KrSceneDeclaration
+import com.zakgof.korender.impl.engine.ModelDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
+import com.zakgof.korender.impl.engine.ResultKeeper
 import com.zakgof.korender.impl.engine.SceneDeclaration
 import com.zakgof.korender.impl.geometry.MeshAttributes
 import com.zakgof.korender.impl.material.InternalBaseMaterial
+import com.zakgof.korender.impl.prefab.InternalModel
 import com.zakgof.korender.impl.scene.SceneModel
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
@@ -18,7 +20,7 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 
 @OptIn(ExperimentalSerializationApi::class, ExperimentalCoroutinesApi::class)
-internal class KrScene(val declaration: KrSceneDeclaration) : AutoCloseable {
+internal class KrScene(val declaration: ModelDeclaration) : InternalModel {
 
     private val prefix = "scene[${declaration.resource}]"
     private val texturePrefix = "$prefix.texture."
@@ -35,8 +37,7 @@ internal class KrScene(val declaration: KrSceneDeclaration) : AutoCloseable {
             parent(resource)
         }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    fun build(sceneDeclaration: SceneDeclaration) {
+    override fun build(sceneDeclaration: SceneDeclaration, rk: ResultKeeper?) {
         if (sceneModelDeferred.isCompleted) {
             val sceneModel = sceneModelDeferred.getCompleted()
             val childNodeContext = NodeContext(
@@ -56,7 +57,7 @@ internal class KrScene(val declaration: KrSceneDeclaration) : AutoCloseable {
                     )
                 )
             }
-        }
+        } else rk?.fail()
     }
 
     private fun NodeContext.material(material: SceneModel.Material) =

@@ -5,7 +5,6 @@ import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
 import com.zakgof.korender.ShaderPlugin
 import com.zakgof.korender.ShaderPluginId
-import com.zakgof.korender.scope.FrameScope
 import com.zakgof.korender.examples.TestExchange
 import com.zakgof.korender.examples.camera.FreeCamera
 import com.zakgof.korender.math.ColorRGB
@@ -13,6 +12,7 @@ import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import com.zakgof.korender.scope.FrameScope
 import island.island
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
@@ -68,7 +68,7 @@ private fun FrameScope.gameFrame(game: Game, loader: Loader, freeCamera: FreeCam
 }
 
 
-private fun FrameScope.plane(position: Vec3, look: Vec3, up: Vec3) = Gltf(
+private fun FrameScope.plane(position: Vec3, look: Vec3, up: Vec3) = Model(
     resource = "island/models/plane.glb",
     transform = rotate(look, up)
         .scale(100.0f)
