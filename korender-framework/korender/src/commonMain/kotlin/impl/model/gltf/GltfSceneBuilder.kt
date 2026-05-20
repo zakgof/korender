@@ -1,4 +1,4 @@
-package com.zakgof.korender.impl.gltf
+package com.zakgof.korender.impl.model.gltf
 
 import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.KorenderException
@@ -7,7 +7,6 @@ import com.zakgof.korender.SpecularGlossiness
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
-import com.zakgof.korender.gltf.GltfModel
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.engine.ModelDeclaration
@@ -21,7 +20,7 @@ import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
 import com.zakgof.korender.impl.material.InternalBaseMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.Plugins
-import com.zakgof.korender.impl.prefab.InternalModelInfo
+import com.zakgof.korender.impl.model.InternalModelInfo
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
 import com.zakgof.korender.impl.projection.OrthoProjectionMode
 import com.zakgof.korender.impl.projection.Projection
@@ -56,7 +55,7 @@ internal class NodeAnimation(
     }
 }
 
-internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel, private val declaration: ModelDeclaration) {
+internal class GltfSceneBuilder(private val cache: GltfCache, private val declaration: ModelDeclaration) {
     private val cameraTransforms = MutableList(cache.model.cameras?.size ?: 0) { Transform() }
     private val meshNodes = mutableListOf<Pair<Int, Int>>()
     private val instances = declaration.instancingDeclaration?.instancer?.invoke() ?: listOf(ModelInstance(Transform.IDENTITY, declaration.time, declaration.animation))
@@ -111,12 +110,12 @@ internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel, priv
         }
     }
 
-    private fun getSamplerValue(sampler: InternalGltfModel.Animation.AnimationSampler, currentTime: Float): List<Float> {
+    private fun getSamplerValue(sampler: InternalGltfFileModel.Animation.AnimationSampler, currentTime: Float): List<Float> {
 
         // TODO validate float input and output
         // TODO support other types of samplers
-        val inputFloats = cache.floatAccessors[sampler.input]!!
-        val outputValues = cache.floatArrayAccessors[sampler.output] ?: return listOf(0f) // TODO this is ugly fallback
+        val inputFloats = cache.accessors.floats[sampler.input]!!
+        val outputValues = cache.accessors.floatArrays[sampler.output] ?: return listOf(0f) // TODO this is ugly fallback
 
         // TODO validate same lengths
         val max = inputFloats.last()
@@ -139,7 +138,7 @@ internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel, priv
         }
     }
 
-    private fun processNode(instanceData: InstanceData, parentTransform: Transform, nodeIndex: Int, node: InternalGltfModel.Node): InternalModelInfo.Node {
+    private fun processNode(instanceData: InstanceData, parentTransform: Transform, nodeIndex: Int, node: InternalGltfFileModel.Node): InternalModelInfo.Node {
 
         var transform = parentTransform
 
@@ -195,7 +194,7 @@ internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel, priv
         }
 
     private fun createMaterial(
-        primitive: InternalGltfModel.Mesh.Primitive,
+        primitive: InternalGltfFileModel.Mesh.Primitive,
         skinIndex: Int?,
         jointMatrices: List<Mat4>?,
         materialModifier: BaseMaterialScope.() -> Unit,
@@ -205,7 +204,7 @@ internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel, priv
         val material = primitive.material?.let { cache.model.materials!![it] }
         val matPbr = material?.pbrMetallicRoughness
         val matSpecularGlossiness = material?.extensions?.get("KHR_materials_pbrSpecularGlossiness")
-                as? InternalGltfModel.KHRMaterialsPbrSpecularGlossiness
+                as? InternalGltfFileModel.KHRMaterialsPbrSpecularGlossiness
 
         // TODO: Precreate all except jointMatrices
         val mat = InternalBaseMaterial()
@@ -272,11 +271,11 @@ internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel, priv
     }
 
     // TODO: redesign; uri is to big for key
-    private fun getBufferBytes(buffer: InternalGltfModel.Buffer): ByteArray {
+    private fun getBufferBytes(buffer: InternalGltfFileModel.Buffer): ByteArray {
         return cache.loadedUris[buffer.uri ?: ""]!!
     }
 
-    private fun getBufferViewBytes(bufferView: InternalGltfModel.BufferView): ByteArray {
+    private fun getBufferViewBytes(bufferView: InternalGltfFileModel.BufferView): ByteArray {
         val buffer = cache.model.buffers!![bufferView.buffer]
         val bufferBytes = getBufferBytes(buffer)
         return bufferBytes.copyOfRange(
@@ -285,7 +284,7 @@ internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel, priv
         )
     }
 
-    private fun getTexture(ti: GltfModel.TextureIndexProvider): TextureDeclaration? {
+    private fun getTexture(ti: GltfFileModel.TextureIndexProvider): TextureDeclaration? {
         val image = cache.model.textures?.get(ti.index)?.source
             ?.let { src -> cache.model.images!![src] }
 
@@ -302,7 +301,7 @@ internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel, priv
         }
     }
 
-    private fun getImageBytes(image: InternalGltfModel.Image): ByteArray {
+    private fun getImageBytes(image: InternalGltfFileModel.Image): ByteArray {
         if (image.uri != null)
             return cache.loadedUris[image.uri]!!
         if (image.bufferView != null) {
@@ -313,7 +312,7 @@ internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel, priv
     }
 }
 
-private fun InternalGltfModel.Camera.toProjection(): ProjectionDeclaration =
+private fun InternalGltfFileModel.Camera.toProjection(): ProjectionDeclaration =
     when (type) {
         "perspective" -> {
             val near = perspective!!.znear

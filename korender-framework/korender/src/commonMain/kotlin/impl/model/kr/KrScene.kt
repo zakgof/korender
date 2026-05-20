@@ -1,4 +1,4 @@
-package com.zakgof.korender.impl.prefab.scene
+package com.zakgof.korender.impl.model.kr
 
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.ResourceLoader
@@ -9,7 +9,7 @@ import com.zakgof.korender.impl.engine.ResultKeeper
 import com.zakgof.korender.impl.engine.SceneDeclaration
 import com.zakgof.korender.impl.geometry.MeshAttributes
 import com.zakgof.korender.impl.material.InternalBaseMaterial
-import com.zakgof.korender.impl.prefab.InternalModel
+import com.zakgof.korender.impl.model.InternalModel
 import com.zakgof.korender.impl.scene.SceneModel
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4

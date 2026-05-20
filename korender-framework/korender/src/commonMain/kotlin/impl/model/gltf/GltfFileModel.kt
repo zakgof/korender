@@ -1,6 +1,5 @@
-package com.zakgof.korender.impl.gltf
+package com.zakgof.korender.impl.model.gltf
 
-import com.zakgof.korender.gltf.GltfModel
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -19,7 +18,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 
 @Serializable
-internal class InternalGltfModel(
+internal class InternalGltfFileModel(
     override val scene: Int,
     override val asset: Asset,
     override val accessors: List<Accessor>? = null,
@@ -35,7 +34,7 @@ internal class InternalGltfModel(
     override val scenes: List<Scene>? = null,
     override val skins: List<Skin>? = null,
     override val textures: List<Texture>? = null,
-) : GltfModel {
+) : GltfFileModel {
 
     @Serializable
     data class Asset(
@@ -43,33 +42,33 @@ internal class InternalGltfModel(
         override val generator: String? = null,
         override val version: String,
         override val minVersion: String? = null,
-    ) : GltfModel.Asset
+    ) : GltfFileModel.Asset
 
     @Serializable
     data class Animation(
         override val channels: List<AnimationChannel>,
         override val samplers: List<AnimationSampler>,
         override val name: String? = null,
-    ) : GltfModel.Animation {
+    ) : GltfFileModel.Animation {
 
         @Serializable
         data class AnimationChannel(
             override val sampler: Int,
             override val target: AnimationChannelTarget,
-        ) : GltfModel.Animation.AnimationChannel
+        ) : GltfFileModel.Animation.AnimationChannel
 
         @Serializable
         data class AnimationSampler(
             override val input: Int,
             override val interpolation: String? = null,
             override val output: Int,
-        ) : GltfModel.Animation.AnimationSampler
+        ) : GltfFileModel.Animation.AnimationSampler
 
         @Serializable
         data class AnimationChannelTarget(
             override val node: Int? = null,
             override val path: String,
-        ) : GltfModel.Animation.AnimationChannelTarget
+        ) : GltfFileModel.Animation.AnimationChannelTarget
     }
 
     @Serializable
@@ -84,27 +83,27 @@ internal class InternalGltfModel(
         override val min: List<Double>? = null,
         override val sparse: Sparse? = null,
         override val name: String? = null,
-    ) : GltfModel.Accessor {
+    ) : GltfFileModel.Accessor {
 
         @Serializable
         data class Sparse(
             override val count: Int,
             override val indices: SparseIndices,
             override val values: SparseValues,
-        ) : GltfModel.Accessor.Sparse
+        ) : GltfFileModel.Accessor.Sparse
 
         @Serializable
         data class SparseIndices(
             override val bufferView: Int,
             override val byteOffset: Int = 0,
             override val componentType: Int,
-        ) : GltfModel.Accessor.SparseIndices
+        ) : GltfFileModel.Accessor.SparseIndices
 
         @Serializable
         data class SparseValues(
             override val bufferView: Int,
             override val byteOffset: Int = 0,
-        ) : GltfModel.Accessor.SparseValues
+        ) : GltfFileModel.Accessor.SparseValues
     }
 
     @Serializable
@@ -112,7 +111,7 @@ internal class InternalGltfModel(
         override val uri: String? = null,
         override val byteLength: Int,
         override val name: String? = null,
-    ) : GltfModel.Buffer
+    ) : GltfFileModel.Buffer
 
     @Serializable
     data class BufferView(
@@ -122,7 +121,7 @@ internal class InternalGltfModel(
         override val byteStride: Int? = null,
         override val target: Int? = null,
         override val name: String? = null,
-    ) : GltfModel.BufferView
+    ) : GltfFileModel.BufferView
 
     @Serializable
     data class Camera(
@@ -130,7 +129,7 @@ internal class InternalGltfModel(
         override val perspective: Perspective? = null,
         override val type: String,
         override val name: String? = null,
-    ) : GltfModel.Camera {
+    ) : GltfFileModel.Camera {
 
         @Serializable
         data class Orthographic(
@@ -138,7 +137,7 @@ internal class InternalGltfModel(
             override val ymag: Float,
             override val znear: Float,
             override val zfar: Float,
-        ) : GltfModel.Camera.Orthographic
+        ) : GltfFileModel.Camera.Orthographic
 
         @Serializable
         data class Perspective(
@@ -146,7 +145,7 @@ internal class InternalGltfModel(
             override val yfov: Float,
             override val znear: Float,
             override val zfar: Float? = null,
-        ) : GltfModel.Camera.Perspective
+        ) : GltfFileModel.Camera.Perspective
     }
 
     @Serializable
@@ -155,7 +154,7 @@ internal class InternalGltfModel(
         override val mimeType: String? = null,
         override val bufferView: Int? = null,
         override val name: String? = null,
-    ) : GltfModel.Image
+    ) : GltfFileModel.Image
 
     @Serializable
     data class Material(
@@ -170,7 +169,7 @@ internal class InternalGltfModel(
         override val doubleSided: Boolean? = false,
         @Serializable(with = ExtensionsDeserializer::class)
         override val extensions: Map<String, @Contextual Any>? = null,
-    ) : GltfModel.Material {
+    ) : GltfFileModel.Material {
 
         @Serializable
         data class PbrMetallicRoughness(
@@ -179,21 +178,21 @@ internal class InternalGltfModel(
             override val metallicFactor: Float = 1.0f,
             override val roughnessFactor: Float = 1.0f,
             override val metallicRoughnessTexture: TextureInfo? = null,
-        ) : GltfModel.Material.PbrMetallicRoughness
+        ) : GltfFileModel.Material.PbrMetallicRoughness
 
         @Serializable
         data class NormalTextureInfo(
             override val index: Int,
             override val texCoord: Int? = null,
             override val scale: Float = 1.0f,
-        ) : GltfModel.Material.NormalTextureInfo
+        ) : GltfFileModel.Material.NormalTextureInfo
 
         @Serializable
         data class OcclusionTextureInfo(
             override val index: Int,
             override val texCoord: Int? = null,
             override val strength: Float = 1.0f,
-        ) : GltfModel.Material.OcclusionTextureInfo
+        ) : GltfFileModel.Material.OcclusionTextureInfo
     }
 
     @Serializable
@@ -201,7 +200,7 @@ internal class InternalGltfModel(
         override val name: String? = null,
         override val primitives: List<Primitive>,
         override val weights: List<Float>? = null,
-    ) : GltfModel.Mesh {
+    ) : GltfFileModel.Mesh {
 
         @Serializable
         data class Primitive(
@@ -210,7 +209,7 @@ internal class InternalGltfModel(
             override val material: Int? = null,
             override val mode: Int = 4,
             override val targets: List<Map<String, Int>>? = null,
-        ) : GltfModel.Mesh.Primitive
+        ) : GltfFileModel.Mesh.Primitive
     }
 
     @Serializable
@@ -225,7 +224,7 @@ internal class InternalGltfModel(
         override val translation: List<Float>? = null,
         override val weights: List<Float>? = null,
         override val name: String? = null,
-    ) : GltfModel.Node
+    ) : GltfFileModel.Node
 
     @Serializable
     data class Sampler(
@@ -234,13 +233,13 @@ internal class InternalGltfModel(
         override val wrapS: Int? = 10497,
         override val wrapT: Int? = 10497,
         override val name: String? = null,
-    ) : GltfModel.Sampler
+    ) : GltfFileModel.Sampler
 
     @Serializable
     data class Scene(
         override val nodes: List<Int>,
         override val name: String? = null,
-    ) : GltfModel.Scene
+    ) : GltfFileModel.Scene
 
     @Serializable
     data class Skin(
@@ -248,22 +247,22 @@ internal class InternalGltfModel(
         override val skeleton: Int? = null,
         override val joints: List<Int>,
         override val name: String? = null,
-    ) : GltfModel.Skin
+    ) : GltfFileModel.Skin
 
     @Serializable
     data class Texture(
         override val sampler: Int? = null,
         override val source: Int? = null,
         override val name: String? = null,
-    ) : GltfModel.Texture
+    ) : GltfFileModel.Texture
 
     @Serializable
     data class TextureInfo(
         override val index: Int,
         override val texCoord: Int = 0,
-    ) : GltfModel.TextureInfo, GltfModel.TextureIndexProvider
+    ) : GltfFileModel.TextureInfo, GltfFileModel.TextureIndexProvider
 
-    interface TextureIndexProvider : GltfModel.TextureIndexProvider
+    interface TextureIndexProvider : GltfFileModel.TextureIndexProvider
 
     @Serializable
     data class KHRMaterialsPbrSpecularGlossiness(
@@ -291,7 +290,7 @@ object ExtensionsDeserializer : KSerializer<Map<String, Any>> {
         jsonObject.forEach { (key, value) ->
             result[key] = when (key) {
                 "KHR_materials_pbrSpecularGlossiness" ->
-                    Json.decodeFromJsonElement<InternalGltfModel.KHRMaterialsPbrSpecularGlossiness>(value)
+                    Json.decodeFromJsonElement<InternalGltfFileModel.KHRMaterialsPbrSpecularGlossiness>(value)
 
                 else -> value
             }
@@ -301,5 +300,217 @@ object ExtensionsDeserializer : KSerializer<Map<String, Any>> {
 
     override fun serialize(encoder: Encoder, value: Map<String, Any>) {
         throw SerializationException("Serialization is not supported for extensions")
+    }
+}
+
+interface GltfFileModel {
+    val scene: Int
+    val asset: Asset
+    val accessors: List<Accessor>?
+    val animations: List<Animation>?
+    val buffers: List<Buffer>?
+    val bufferViews: List<BufferView>?
+    val cameras: List<Camera>?
+    val images: List<Image>?
+    val materials: List<Material>?
+    val meshes: List<Mesh>?
+    val nodes: List<Node>?
+    val samplers: List<Sampler>?
+    val scenes: List<Scene>?
+    val skins: List<Skin>?
+    val textures: List<Texture>?
+
+    interface Asset {
+        val copyright: String?
+        val generator: String?
+        val version: String
+        val minVersion: String?
+    }
+
+    interface Animation {
+        val channels: List<AnimationChannel>
+        val samplers: List<AnimationSampler>
+        val name: String?
+
+        interface AnimationChannel {
+            val sampler: Int
+            val target: AnimationChannelTarget
+        }
+
+        interface AnimationSampler {
+            val input: Int
+            val interpolation: String?
+            val output: Int
+        }
+
+        interface AnimationChannelTarget {
+            val node: Int?
+            val path: String
+        }
+    }
+
+    interface Accessor {
+        val bufferView: Int?
+        val byteOffset: Int?
+        val componentType: Int
+        val normalized: Boolean
+        val count: Int
+        val type: String
+        val max: List<Double>?
+        val min: List<Double>?
+        val sparse: Sparse?
+        val name: String?
+
+        interface Sparse {
+            val count: Int
+            val indices: SparseIndices
+            val values: SparseValues
+        }
+
+        interface SparseIndices {
+            val bufferView: Int
+            val byteOffset: Int
+            val componentType: Int
+        }
+
+        interface SparseValues {
+            val bufferView: Int
+            val byteOffset: Int
+        }
+    }
+
+    interface Buffer {
+        val uri: String?
+        val byteLength: Int
+        val name: String?
+    }
+
+    interface BufferView {
+        val buffer: Int
+        val byteOffset: Int
+        val byteLength: Int
+        val byteStride: Int?
+        val target: Int?
+        val name: String?
+    }
+
+    interface Camera {
+        val orthographic: Orthographic?
+        val perspective: Perspective?
+        val type: String
+        val name: String?
+
+        interface Orthographic {
+            val xmag: Float
+            val ymag: Float
+            val znear: Float
+            val zfar: Float
+        }
+
+        interface Perspective {
+            val aspectRatio: Float?
+            val yfov: Float
+            val znear: Float
+            val zfar: Float?
+        }
+    }
+
+    interface Image {
+        val uri: String?
+        val mimeType: String?
+        val bufferView: Int?
+        val name: String?
+    }
+
+    interface Material {
+        val name: String?
+        val pbrMetallicRoughness: PbrMetallicRoughness?
+        val normalTexture: NormalTextureInfo?
+        val occlusionTexture: OcclusionTextureInfo?
+        val emissiveTexture: TextureInfo?
+        val emissiveFactor: List<Float>?
+        val alphaMode: String?
+        val alphaCutoff: Float?
+        val doubleSided: Boolean?
+        val extensions: Map<String, Any>?
+
+        interface PbrMetallicRoughness {
+            val baseColorFactor: List<Float>
+            val baseColorTexture: TextureInfo?
+            val metallicFactor: Float
+            val roughnessFactor: Float
+            val metallicRoughnessTexture: TextureInfo?
+        }
+
+        interface NormalTextureInfo : TextureIndexProvider {
+            val texCoord: Int?
+            val scale: Float
+        }
+
+        interface OcclusionTextureInfo : TextureIndexProvider {
+            val texCoord: Int?
+            val strength: Float
+        }
+    }
+
+    interface Mesh {
+        val name: String?
+        val primitives: List<Primitive>
+        val weights: List<Float>?
+
+        interface Primitive {
+            val attributes: Map<String, Int>
+            val indices: Int?
+            val material: Int?
+            val mode: Int
+            val targets: List<Map<String, Int>>?
+        }
+    }
+
+    interface Node {
+        val camera: Int?
+        val children: List<Int>?
+        val skin: Int?
+        val matrix: List<Float>?
+        val mesh: Int?
+        val rotation: List<Float>?
+        val scale: List<Float>?
+        val translation: List<Float>?
+        val weights: List<Float>?
+        val name: String?
+    }
+
+    interface Sampler {
+        val magFilter: Int?
+        val minFilter: Int?
+        val wrapS: Int?
+        val wrapT: Int?
+        val name: String?
+    }
+
+    interface Scene {
+        val nodes: List<Int>
+        val name: String?
+    }
+
+    interface Skin {
+        val inverseBindMatrices: Int?
+        val skeleton: Int?
+        val joints: List<Int>
+        val name: String?
+    }
+
+    interface Texture {
+        val sampler: Int?
+        val source: Int?
+        val name: String?
+    }
+
+    interface TextureInfo : TextureIndexProvider {
+        val texCoord: Int
+    }
+
+    interface TextureIndexProvider {
+        val index: Int
     }
 }

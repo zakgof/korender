@@ -1,4 +1,4 @@
-package com.zakgof.korender.impl.prefab
+package com.zakgof.korender.impl.model
 
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.Mesh

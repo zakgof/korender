@@ -1,11 +1,10 @@
-package com.zakgof.korender.impl.gltf
+package com.zakgof.korender.impl.model.gltf
 
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.impl.absolutizeResource
-import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.engine.ModelDeclaration
 import com.zakgof.korender.impl.engine.ResultKeeper
 import com.zakgof.korender.impl.engine.SceneDeclaration
@@ -24,48 +23,54 @@ import com.zakgof.korender.impl.geometry.MeshAttributes.WEIGHTS
 import com.zakgof.korender.impl.gl.GLConstants
 import com.zakgof.korender.impl.glgpu.toGL
 import com.zakgof.korender.impl.load
-import com.zakgof.korender.impl.prefab.InternalModel
+import com.zakgof.korender.impl.model.InternalModel
 import com.zakgof.korender.math.Mat4
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.serialization.json.Json
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
+internal class GltfCache(
+    val model: InternalGltfFileModel,
+    val loadedUris: Map<String, ByteArray>,
+    val accessors: Accessors,
+    val loadedSkins: Map<Int, List<Mat4>>,
+    val loadedMeshes: Map<Pair<Int, Int>, CMesh>
+) {
+    class Accessors(
+        val all: Map<Int, ByteArray>,
+        val floats: Map<Int, FloatArray>,
+        val floatArrays: Map<Int, Array<List<Float>>>
+    )
+}
 
 internal class InternalLoadedGltfModel(private val declaration: ModelDeclaration) : InternalModel {
 
-    var loaded = false
-    // TODO: this is poor, need a deferred
-    lateinit var model: InternalGltfModel
-    lateinit var loadedUris: Map<String, ByteArray>
-    lateinit var allAccessors: Map<Int, ByteArray>
-    lateinit var floatAccessors: Map<Int, FloatArray>
-    lateinit var floatArrayAccessors: Map<Int, Array<List<Float>>>
-    lateinit var loadedSkins: Map<Int, List<Mat4>>
-    lateinit var loadedMeshes: Map<Pair<Int, Int>, CMesh>
+    val cacheDeferred: Deferred<GltfCache>
 
     private val json = Json {
         ignoreUnknownKeys = true
     }
 
-    constructor(declaration: ModelDeclaration, loader: Loader) : this(declaration) {
-        CoroutineScope(Dispatchers.Default).launch {
+    init {
+        cacheDeferred = CoroutineScope(Dispatchers.Default).async {
             load(declaration)
         }
     }
 
-    suspend fun load(declaration: ModelDeclaration) {
+    suspend fun load(declaration: ModelDeclaration): GltfCache {
         val extension = declaration.resource.split(".").last().lowercase() // TODO: autodetect
         val resourceBytes = declaration.nodeContext.resourceLoader.load(declaration.resource)
-        when (extension) {
+        return when (extension) {
             // TODO: autodetect
             "gltf" -> loadGltf(resourceBytes, null, declaration)
             "glb" -> loadGlb(resourceBytes, declaration)
             else -> throw KorenderException("Unknown extension of gltf/glb resource: $extension")
         }
-        loaded = true
     }
 
     enum class ChunkType(val value: Int) {
@@ -76,10 +81,7 @@ internal class InternalLoadedGltfModel(private val declaration: ModelDeclaration
 
     class GlbChunk(val type: ChunkType, val data: ByteArray)
 
-    private suspend fun loadGlb(
-        resourceBytes: ByteArray,
-        declaration: ModelDeclaration,
-    ) {
+    private suspend fun loadGlb(resourceBytes: ByteArray, declaration: ModelDeclaration): GltfCache {
         val reader = ByteArrayReader(resourceBytes)
 
         readGlbHeader(reader, resourceBytes)
@@ -102,7 +104,7 @@ internal class InternalLoadedGltfModel(private val declaration: ModelDeclaration
 
         val binData = chunks.find { it.type == ChunkType.BIN }?.data
 
-        loadGltf(jsonChunk.data, binData, declaration)
+        return loadGltf(jsonChunk.data, binData, declaration)
     }
 
     private fun readGlbHeader(reader: ByteArrayReader, resourceBytes: ByteArray) {
@@ -122,36 +124,33 @@ internal class InternalLoadedGltfModel(private val declaration: ModelDeclaration
         }
     }
 
-    private suspend fun loadGltf(resourceBytes: ByteArray, binData: ByteArray?, declaration: ModelDeclaration) {
+    private suspend fun loadGltf(resourceBytes: ByteArray, binData: ByteArray?, declaration: ModelDeclaration): GltfCache {
         val gltfCode = resourceBytes.decodeToString()
-        this.model = json.decodeFromString<InternalGltfModel>(gltfCode)
-        preloadUris(declaration.nodeContext.resourceLoader, declaration.resource, binData)
-        preloadAccessors()
-        preloadSkins()
-        preloadMeshes()
+        val model = json.decodeFromString<InternalGltfFileModel>(gltfCode)
+        val loadedUris = preloadUris(model, declaration.nodeContext.resourceLoader, declaration.resource, binData)
+        val loadedAccessors = preloadAccessors(model, loadedUris)
+        val loadedSkins = preloadSkins(model, loadedAccessors)
+        val loadedMeshes = preloadMeshes(model, loadedAccessors, declaration)
+        return GltfCache(model, loadedUris, loadedAccessors, loadedSkins, loadedMeshes)
     }
 
-    private suspend fun preloadUris(appResourceLoader: ResourceLoader, gltfResource: String, binData: ByteArray?) {
-        loadedUris =
-            listOfNotNull(
-                model.buffers?.mapNotNull { it.uri },
-                model.images?.mapNotNull { it.uri }
-            )
-                .flatten()
-                .associateWith { loadUriBytes(appResourceLoader, absolutizeResource(it, gltfResource)) }
-                .toMutableMap()
-                .apply {
-                    binData?.let { this[""] = it }
-                }
-    }
+    private suspend fun preloadUris(model: InternalGltfFileModel, appResourceLoader: ResourceLoader, gltfResource: String, binData: ByteArray?) =
+        listOfNotNull(
+            model.buffers?.mapNotNull { it.uri },
+            model.images?.mapNotNull { it.uri }
+        )
+            .flatten()
+            .associateWith { loadUriBytes(appResourceLoader, absolutizeResource(it, gltfResource)) }
+            .toMutableMap()
+            .apply { binData?.let { this[""] = it } }
 
-    private fun preloadAccessors() {
+    private fun preloadAccessors(model: InternalGltfFileModel, loadedUris: Map<String, ByteArray>): GltfCache.Accessors {
         val all = mutableMapOf<Int, ByteArray>()
         val floats = mutableMapOf<Int, FloatArray>()
         val floatArrays = mutableMapOf<Int, Array<List<Float>>>()
 
         model.accessors?.forEachIndexed { index, accessor ->
-            val raw = getAccessorBytes(accessor)
+            val raw = getAccessorBytes(model, accessor, loadedUris)
             if (accessor.componentType == GLConstants.GL_FLOAT) {
                 val floatArray = raw.asNativeFloatArray()
                 when (accessor.type) {
@@ -162,12 +161,10 @@ internal class InternalLoadedGltfModel(private val declaration: ModelDeclaration
             }
             all[index] = raw
         }
-        allAccessors = all
-        floatAccessors = floats
-        floatArrayAccessors = floatArrays
+        return GltfCache.Accessors(all, floats, floatArrays)
     }
 
-    private fun getAccessorBytes(accessor: InternalGltfModel.Accessor): ByteArray {
+    private fun getAccessorBytes(model: InternalGltfFileModel, accessor: InternalGltfFileModel.Accessor, loadedUris: Map<String, ByteArray>): ByteArray {
 
         val componentBytes = accessor.componentByteSize()
         val elementComponents = accessor.elementComponentSize()
@@ -198,12 +195,12 @@ internal class InternalLoadedGltfModel(private val declaration: ModelDeclaration
         }
     }
 
-    private fun preloadSkins() {
-        loadedSkins = model.skins?.mapIndexed { index, skin ->
+    private fun preloadSkins(model: InternalGltfFileModel, loadedAccessors: GltfCache.Accessors) =
+        model.skins?.mapIndexed { index, skin ->
             // TODO validate accessor type map4
-            index to floatAccessors[skin.inverseBindMatrices!!]!!.asNativeMat4List()
+            index to loadedAccessors.floats[skin.inverseBindMatrices!!]!!.asNativeMat4List()
         }?.toMap() ?: mapOf()
-    }
+
 
     @OptIn(ExperimentalEncodingApi::class)
     private suspend fun loadUriBytes(appResourceLoader: ResourceLoader, resourceUri: String): ByteArray {
@@ -220,50 +217,37 @@ internal class InternalLoadedGltfModel(private val declaration: ModelDeclaration
         return appResourceLoader.load(resourceUri)
     }
 
-    private fun preloadMeshes() {
-
-        loadedMeshes =
-            model.meshes?.flatMapIndexed { meshIndex, mesh ->
-                mesh.primitives.mapIndexed { primitiveIndex, primitive ->
-                    val indicesAccessor = primitive.indices?.let { model.accessors!![it] }
-                    val verticesAttributeAccessors = primitive.attributes.mapNotNull { p ->
-                        val accessor = model.accessors!![p.value]
-                        attributeForAccessor(p.key, accessor)?.let { it to p.value }
-                    }
-                    val attributes = verticesAttributeAccessors.map { it.first }.toMutableList()
-                    if (declaration.instancingDeclaration != null) {
-                        attributes += listOf(MODEL0, MODEL1, MODEL2, MODEL3)
-                    }
-
-                    val cMesh = CMesh(
-                        model.accessors!![verticesAttributeAccessors.first().second].count,
-                        indicesAccessor?.count ?: 0,
-                        declaration.instancingDeclaration?.count ?: -1,
-                        *attributes.toTypedArray(),
-                        indexType = accessorComponentTypeToIndexType(indicesAccessor?.componentType)
-                    ) {
-                        indicesAccessor?.let { indexBytes(allAccessors[primitive.indices]!!) }
-                        verticesAttributeAccessors.forEach {
-                            attrBytes(it.first, allAccessors[it.second]!!)
-                        }
-                    }
-                    (meshIndex to primitiveIndex) to cMesh
+    private fun preloadMeshes(model: InternalGltfFileModel, loadedAccessors: GltfCache.Accessors, declaration: ModelDeclaration): Map<Pair<Int, Int>, CMesh> =
+        model.meshes?.flatMapIndexed { meshIndex, mesh ->
+            mesh.primitives.mapIndexed { primitiveIndex, primitive ->
+                val indicesAccessor = primitive.indices?.let { model.accessors!![it] }
+                val verticesAttributeAccessors = primitive.attributes.mapNotNull { p ->
+                    val accessor = model.accessors!![p.value]
+                    attributeForAccessor(p.key, accessor)?.let { it to p.value }
                 }
-            }?.toMap() ?: mapOf()
-    }
+                val attributes = verticesAttributeAccessors.map { it.first }.toMutableList()
+                if (declaration.instancingDeclaration != null) {
+                    attributes += listOf(MODEL0, MODEL1, MODEL2, MODEL3)
+                }
 
-    override fun build(modelDeclaration: ModelDeclaration, sceneDeclaration: SceneDeclaration, rk: ResultKeeper?) {
-        if (!loaded) {
-            rk?.fail()
-            return
-        }
+                val cMesh = CMesh(
+                    model.accessors!![verticesAttributeAccessors.first().second].count,
+                    indicesAccessor?.count ?: 0,
+                    declaration.instancingDeclaration?.count ?: -1,
+                    *attributes.toTypedArray(),
+                    indexType = accessorComponentTypeToIndexType(indicesAccessor?.componentType)
+                ) {
+                    indicesAccessor?.let { indexBytes(loadedAccessors.all[primitive.indices]!!) }
+                    verticesAttributeAccessors.forEach {
+                        attrBytes(it.first, loadedAccessors.all[it.second]!!)
+                    }
+                }
+                (meshIndex to primitiveIndex) to cMesh
+            }
+        }?.toMap() ?: mapOf()
 
-        GltfSceneBuilder(this, modelDeclaration)
-            .build()
-            .forEach { rd -> sceneDeclaration.append(rd) }
-    }
 
-    private fun attributeForAccessor(key: String, accessor: InternalGltfModel.Accessor): MeshAttribute<*>? {
+    private fun attributeForAccessor(key: String, accessor: InternalGltfFileModel.Accessor): MeshAttribute<*>? {
         val candidates = when (key) {
             "POSITION" -> listOf(POS)
             "NORMAL" -> listOf(NORMAL)
@@ -286,9 +270,21 @@ internal class InternalLoadedGltfModel(private val declaration: ModelDeclaration
             GLConstants.GL_UNSIGNED_INT -> IndexType.Int
             else -> throw KorenderException("GLTF: Unsupported componentType for index: $componentType")
         }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun build(modelDeclaration: ModelDeclaration, sceneDeclaration: SceneDeclaration, rk: ResultKeeper?) {
+        if (!cacheDeferred.isCompleted) {
+            rk?.fail()
+            return
+        }
+
+        GltfSceneBuilder(cacheDeferred.getCompleted(), modelDeclaration)
+            .build()
+            .forEach { rd -> sceneDeclaration.append(rd) }
+    }
 }
 
-internal fun InternalGltfModel.Accessor.componentByteSize(): Int =
+internal fun InternalGltfFileModel.Accessor.componentByteSize(): Int =
     when (componentType) {
         GLConstants.GL_UNSIGNED_BYTE -> 1
         GLConstants.GL_UNSIGNED_SHORT -> 2
@@ -297,7 +293,7 @@ internal fun InternalGltfModel.Accessor.componentByteSize(): Int =
         else -> throw KorenderException("GLTF: Not supported accessor componentType $componentType")
     }
 
-internal fun InternalGltfModel.Accessor.elementComponentSize(): Int =
+internal fun InternalGltfFileModel.Accessor.elementComponentSize(): Int =
     // TODO enums
     when (type) {
         "SCALAR" -> 1
@@ -326,3 +322,5 @@ internal fun ByteArray.asNativeFloatArray() =
                     ((this[it * 4 + 3].toInt() and 0xFF) shl 24)
         )
     }
+
+

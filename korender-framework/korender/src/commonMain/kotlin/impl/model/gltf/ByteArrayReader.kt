@@ -1,4 +1,4 @@
-package com.zakgof.korender.impl.gltf
+package com.zakgof.korender.impl.model.gltf
 
 import com.zakgof.korender.KorenderException
 

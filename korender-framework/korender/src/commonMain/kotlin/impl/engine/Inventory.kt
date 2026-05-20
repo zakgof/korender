@@ -25,9 +25,9 @@ import com.zakgof.korender.impl.material.Shaders
 import com.zakgof.korender.impl.material.TextureLinkDeclaration
 import com.zakgof.korender.impl.material.Texturing
 import com.zakgof.korender.impl.material.UniformBufferHolder
-import com.zakgof.korender.impl.prefab.InternalModel
-import com.zakgof.korender.impl.prefab.ModelFactory
-import com.zakgof.korender.impl.prefab.terrain.Clipmaps
+import com.zakgof.korender.impl.model.InternalModel
+import com.zakgof.korender.impl.model.ModelFactory
+import com.zakgof.korender.impl.model.terrain.Clipmaps
 
 internal class ShaderServices(
     val zeroTex: GlGpuTexture = GlGpuTexture.zeroTex(),

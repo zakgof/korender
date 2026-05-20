@@ -1,4 +1,4 @@
-package com.zakgof.korender.impl.prefab.obj
+package com.zakgof.korender.impl.model.obj
 
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Mesh
@@ -14,8 +14,8 @@ import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
 import com.zakgof.korender.impl.geometry.MeshAttributes.POS
 import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
 import com.zakgof.korender.impl.material.InternalBaseMaterial
-import com.zakgof.korender.impl.prefab.InternalModel
-import com.zakgof.korender.impl.prefab.InternalModelInfo
+import com.zakgof.korender.impl.model.InternalModel
+import com.zakgof.korender.impl.model.InternalModelInfo
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3

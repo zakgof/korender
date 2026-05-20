@@ -34,7 +34,7 @@ import com.zakgof.korender.impl.glgpu.UniformPack
 import com.zakgof.korender.impl.glgpu.UniformSupplier
 import com.zakgof.korender.impl.glgpu.Vec2Getter
 import com.zakgof.korender.impl.glgpu.Vec3Getter
-import com.zakgof.korender.impl.prefab.terrain.TerrainMaterialModifier
+import com.zakgof.korender.impl.model.terrain.TerrainMaterialModifier
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4

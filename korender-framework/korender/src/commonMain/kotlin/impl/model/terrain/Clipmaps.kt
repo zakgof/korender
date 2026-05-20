@@ -1,4 +1,4 @@
-package com.zakgof.korender.impl.prefab.terrain
+package com.zakgof.korender.impl.model.terrain
 
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
