@@ -135,7 +135,7 @@ internal class Renderer(
 
         init {
             sceneDeclaration.models.forEach { modelDeclaration ->
-                inventory.model(modelDeclaration)?.build(sceneDeclaration, initRk) ?: initRk.fail()
+                inventory.model(modelDeclaration)?.build(modelDeclaration, sceneDeclaration, initRk) ?: initRk.fail()
             }
             sceneDeclaration.heightFields.forEach {
                 inventory.heightField(it)?.build(sceneDeclaration) ?: initRk.fail()

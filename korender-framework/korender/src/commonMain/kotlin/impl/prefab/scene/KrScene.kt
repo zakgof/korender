@@ -20,7 +20,7 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 
 @OptIn(ExperimentalSerializationApi::class, ExperimentalCoroutinesApi::class)
-internal class KrScene(val declaration: ModelDeclaration) : InternalModel {
+internal class KrScene(declaration: ModelDeclaration) : InternalModel {
 
     private val prefix = "scene[${declaration.resource}]"
     private val texturePrefix = "$prefix.texture."
@@ -37,14 +37,14 @@ internal class KrScene(val declaration: ModelDeclaration) : InternalModel {
             parent(resource)
         }
 
-    override fun build(sceneDeclaration: SceneDeclaration, rk: ResultKeeper?) {
+    override fun build(modelDeclaration: ModelDeclaration, sceneDeclaration: SceneDeclaration, rk: ResultKeeper?) {
         if (sceneModelDeferred.isCompleted) {
             val sceneModel = sceneModelDeferred.getCompleted()
             val childNodeContext = NodeContext(
-                { loadResource(it, declaration.nodeContext.resourceLoader) },
-                declaration.nodeContext.transform,
-                declaration.nodeContext.retentionPolicy,
-                declaration.nodeContext.time
+                { loadResource(it, modelDeclaration.nodeContext.resourceLoader) },
+                modelDeclaration.nodeContext.transform,
+                modelDeclaration.nodeContext.retentionPolicy,
+                modelDeclaration.nodeContext.time
             )
             sceneModel.renderables.forEach { re ->
                 sceneDeclaration.append(

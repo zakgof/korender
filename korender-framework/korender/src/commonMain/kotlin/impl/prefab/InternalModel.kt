@@ -10,7 +10,7 @@ import com.zakgof.korender.impl.prefab.obj.ObjScene
 import com.zakgof.korender.impl.prefab.scene.KrScene
 
 internal fun interface InternalModel : AutoCloseable {
-    fun build(sceneDeclaration: SceneDeclaration, rk: ResultKeeper?)
+    fun build(modelDeclaration: ModelDeclaration, sceneDeclaration: SceneDeclaration, rk: ResultKeeper?)
     override fun close() {}
 }
 

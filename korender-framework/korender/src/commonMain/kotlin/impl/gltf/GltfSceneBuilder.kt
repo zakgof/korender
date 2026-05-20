@@ -10,6 +10,7 @@ import com.zakgof.korender.TextureWrap
 import com.zakgof.korender.gltf.GltfModel
 import com.zakgof.korender.impl.camera.DefaultCamera
 import com.zakgof.korender.impl.engine.MeshInstance
+import com.zakgof.korender.impl.engine.ModelDeclaration
 import com.zakgof.korender.impl.engine.ModelInstance
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.geometry.CustomCpuMesh
@@ -55,10 +56,10 @@ internal class NodeAnimation(
     }
 }
 
-internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel) {
+internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel, private val declaration: ModelDeclaration) {
     private val cameraTransforms = MutableList(cache.model.cameras?.size ?: 0) { Transform() }
     private val meshNodes = mutableListOf<Pair<Int, Int>>()
-    private val instances = cache.declaration.instancingDeclaration?.instancer?.invoke() ?: listOf(ModelInstance(Transform.IDENTITY, cache.declaration.time, cache.declaration.animation))
+    private val instances = declaration.instancingDeclaration?.instancer?.invoke() ?: listOf(ModelInstance(Transform.IDENTITY, declaration.time, declaration.animation))
     private val instanceData: Array<InstanceData> = Array(instances.size) { InstanceData(cache.model.nodes?.size ?: 0) }
 
     fun build(): List<RenderableDeclaration> {
@@ -81,7 +82,7 @@ internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel) {
         val renderables = meshNodes.flatMap {
             createRenderables(it.first, cache.model.nodes!![it.second].skin, it.second)
         }
-        cache.declaration.onUpdate(calculateUpdate(instancesUpdateDate))
+        declaration.onUpdate(calculateUpdate(instancesUpdateDate))
         return renderables
     }
 
@@ -99,11 +100,11 @@ internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel) {
     private fun calculateInstanceData(instanceIndex: Int, instanceData: InstanceData) {
         if (cache.model.animations?.isNotEmpty() == true) {
             val instanceDeclaration = instances[instanceIndex]
-            val animationIndex = (instanceDeclaration.animation ?: cache.declaration.animation).coerceIn(0, cache.model.animations!!.size - 1)
+            val animationIndex = (instanceDeclaration.animation ?: declaration.animation).coerceIn(0, cache.model.animations!!.size - 1)
             val animation = cache.model.animations!![animationIndex]
             animation.channels.forEach { channel ->
                 channel.target.node?.let {
-                    val samplerValue = getSamplerValue(animation.samplers[channel.sampler], instanceDeclaration.time ?: cache.declaration.time)
+                    val samplerValue = getSamplerValue(animation.samplers[channel.sampler], instanceDeclaration.time ?: declaration.time)
                     instanceData.nodeAnimations[channel.target.node].populate(channel.target.path, samplerValue)
                 }
             }
@@ -177,19 +178,19 @@ internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel) {
         cache.model.meshes!![meshIndex].primitives.mapIndexed { primitiveIndex, primitive ->
             val meshDeclaration = createMeshDeclaration(meshIndex, primitiveIndex, skinIndex)
             val jointMatrices = skinIndex?.let {
-                if (cache.declaration.instancingDeclaration == null) instanceData[0].jointMatrices[it] else null
+                if (declaration.instancingDeclaration == null) instanceData[0].jointMatrices[it] else null
             }
-            val transparencyToMaterial = createMaterial(primitive, skinIndex, jointMatrices, cache.declaration.materialModifier)
+            val transparencyToMaterial = createMaterial(primitive, skinIndex, jointMatrices, declaration.materialModifier)
 
             // TODO why this works
             val meshTransform = if (skinIndex == null) instanceData[0].nodeMatrices[nodeIndex].mat4 else Mat4.IDENTITY
-            val transform = cache.declaration.transform * Transform(meshTransform)
+            val transform = declaration.transform * Transform(meshTransform)
             RenderableDeclaration(
                 transparencyToMaterial.second,
                 mesh = meshDeclaration,
                 transform = transform,
                 transparent = transparencyToMaterial.first,
-                nodeContext = cache.declaration.nodeContext,
+                nodeContext = declaration.nodeContext,
             )
         }
 
@@ -212,7 +213,7 @@ internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel) {
         if (skinIndex != null) {
             mat.plugin(Plugins.VPOSITION_SKINNING)
             mat.plugin(Plugins.VNORMAL_SKINNING)
-            if (cache.declaration.instancingDeclaration == null && jointMatrices != null) {
+            if (declaration.instancingDeclaration == null && jointMatrices != null) {
                 val jointMatrixList = jointMatrices.mapIndexed { ind, jm ->
                     jm * cache.loadedSkins[skinIndex]!![ind]
                 }
@@ -253,16 +254,16 @@ internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel) {
         val cpuMesh = cache.loadedMeshes[meshIndex to primitiveIndex]!!
 
         val meshDeclaration = CustomCpuMesh(
-            "${cache.declaration.resource}:$meshIndex:$primitiveIndex",
+            "${declaration.resource}:$meshIndex:$primitiveIndex",
             cpuMesh,
-            cache.declaration.nodeContext
+            declaration.nodeContext
         )
 
-        if (cache.declaration.instancingDeclaration == null)
+        if (declaration.instancingDeclaration == null)
             return meshDeclaration
 
-        return InstancedMesh(cache.declaration.resource, cache.declaration.instancingDeclaration.count, meshDeclaration, !cache.declaration.instancingDeclaration.dynamic, false, cache.declaration.nodeContext, listOf(InternalInstancingParameter.TRANSFORM_INSTANCING)) {
-            cache.declaration.instancingDeclaration.instancer().mapIndexed { i, it ->
+        return InstancedMesh(declaration.resource, declaration.instancingDeclaration.count, meshDeclaration, !declaration.instancingDeclaration.dynamic, false, declaration.nodeContext, listOf(InternalInstancingParameter.TRANSFORM_INSTANCING)) {
+            declaration.instancingDeclaration.instancer().mapIndexed { i, it ->
                 MeshInstance(it.transform, skinIndex?.let {
                     instanceData[i].jointMatrices[skinIndex].mapIndexed { ind, jm -> jm * cache.loadedSkins[skinIndex]!![ind] }
                 }, null, null, null, null)
@@ -290,13 +291,13 @@ internal class GltfSceneBuilder(private val cache: InternalLoadedGltfModel) {
 
         return image?.let { img ->
             ByteArrayTextureDeclaration(
-                img.uri ?: "${cache.declaration.resource} ${ti.index}", // TODO !!!
+                img.uri ?: "${declaration.resource} ${ti.index}", // TODO !!!
                 TextureFilter.MipMap,
                 TextureWrap.Repeat,
                 1024,
                 { getImageBytes(img) },
                 img.mimeType?.split("/")?.last() ?: img.uri?.split(".")?.last() ?: "unknown",
-                cache.declaration.nodeContext
+                declaration.nodeContext
             )
         }
     }

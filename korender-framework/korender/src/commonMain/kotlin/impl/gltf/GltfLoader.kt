@@ -34,7 +34,7 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 
-internal class InternalLoadedGltfModel(val declaration: ModelDeclaration) : InternalModel {
+internal class InternalLoadedGltfModel(private val declaration: ModelDeclaration) : InternalModel {
 
     var loaded = false
     // TODO: this is poor, need a deferred
@@ -252,13 +252,13 @@ internal class InternalLoadedGltfModel(val declaration: ModelDeclaration) : Inte
             }?.toMap() ?: mapOf()
     }
 
-    override fun build(sceneDeclaration: SceneDeclaration, rk: ResultKeeper?) {
+    override fun build(modelDeclaration: ModelDeclaration, sceneDeclaration: SceneDeclaration, rk: ResultKeeper?) {
         if (!loaded) {
             rk?.fail()
             return
         }
 
-        GltfSceneBuilder(this)
+        GltfSceneBuilder(this, modelDeclaration)
             .build()
             .forEach { rd -> sceneDeclaration.append(rd) }
     }

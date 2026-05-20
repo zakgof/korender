@@ -4,6 +4,7 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.impl.context.NodeContext
+import com.zakgof.korender.impl.engine.InternalModelInstancingDeclaration
 import com.zakgof.korender.impl.engine.ModelDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.ResultKeeper
@@ -24,7 +25,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class ObjScene(private val declaration: ModelDeclaration) : InternalModel {
+internal class ObjScene(declaration: ModelDeclaration) : InternalModel {
 
     private val prefix = "obj[${declaration.resource}]"
     private var loadNotified = false
@@ -41,15 +42,15 @@ internal class ObjScene(private val declaration: ModelDeclaration) : InternalMod
             }
             .associateBy { it.name }
         val preparedMeshes = parsed.meshes.map {
-            PreparedMesh(it.name, toCMesh(it), materialMap[it.materialName])
+            PreparedMesh(it.name, toCMesh(it, declaration.instancingDeclaration), materialMap[it.materialName])
         }
         LoadedObjScene(preparedMeshes)
     }
 
-    private fun toCMesh(mesh: ObjSceneMesh) = CMesh(
+    private fun toCMesh(mesh: ObjSceneMesh, instancingDeclaration: InternalModelInstancingDeclaration?) = CMesh(
         vertexCount = mesh.vertices.size,
         indexCount = mesh.indices.size,
-        instanceCount = declaration.instancingDeclaration?.count ?: -1,
+        instanceCount = instancingDeclaration?.count ?: -1,
         POS, NORMAL, TEX,
     ) {
         mesh.vertices.forEach {
@@ -58,7 +59,7 @@ internal class ObjScene(private val declaration: ModelDeclaration) : InternalMod
         index(*mesh.indices.toIntArray())
     }
 
-    override fun build(sceneDeclaration: SceneDeclaration, rk: ResultKeeper?) {
+    override fun build(modelDeclaration: ModelDeclaration, sceneDeclaration: SceneDeclaration, rk: ResultKeeper?) {
 
         if (!sceneDeferred.isCompleted) {
             rk?.fail()
@@ -68,14 +69,14 @@ internal class ObjScene(private val declaration: ModelDeclaration) : InternalMod
         val scene = sceneDeferred.getCompleted()
         if (!loadNotified) {
             loadNotified = true
-            declaration.onUpdate(scene.modelInfo())
+            modelDeclaration.onUpdate(scene.modelInfo())
         }
         scene.meshes.forEachIndexed { index, preparedMesh ->
             val material = InternalBaseMaterial().apply {
-                preparedMesh.material?.applyTo(this, declaration.nodeContext)
-                declaration.materialModifier(this)
+                preparedMesh.material?.applyTo(this, modelDeclaration.nodeContext)
+                modelDeclaration.materialModifier(this)
             }
-            val meshDeclaration = declaration.nodeContext.mesh(
+            val meshDeclaration = modelDeclaration.nodeContext.mesh(
                 id = "$prefix.mesh.$index.${preparedMesh.name}",
                 mesh = preparedMesh.cmesh
             )
@@ -83,9 +84,9 @@ internal class ObjScene(private val declaration: ModelDeclaration) : InternalMod
                 RenderableDeclaration(
                     material = material,
                     mesh = meshDeclaration,
-                    transform = declaration.transform,
+                    transform = modelDeclaration.transform,
                     transparent = material.color.a < 1f,
-                    nodeContext = declaration.nodeContext
+                    nodeContext = modelDeclaration.nodeContext
                 )
             )
         }
