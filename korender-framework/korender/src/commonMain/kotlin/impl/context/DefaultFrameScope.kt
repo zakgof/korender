@@ -287,8 +287,9 @@ internal class DefaultFrameScope(
         sceneDeclaration.frameCaptures[frameProbeName] = captureContext
     }
 
-    override fun OnLoading(block: FrameScope.() -> Unit) {
+    override fun OnLoading(force: Boolean, block: FrameScope.() -> Unit) {
         sceneDeclaration.loaderSceneDeclaration = SceneDeclaration()
+        sceneDeclaration.loaderForced = force
         DefaultFrameScope(korenderContext, korenderContext.regularFrameContext, sceneDeclaration.loaderSceneDeclaration!!, frameInfo, nodeContext).apply(block)
     }
 

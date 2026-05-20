@@ -509,7 +509,7 @@ internal class Engine(
             } else {
                 val scene = renderer.Scene(rootNodeContext, sd, regularFrameContext)
                 val success = ResultKeeper().also(scene::render).success
-                if (loaderScene != null && (!loaderComplete || inventory.pending() > 0)) {
+                if (loaderScene != null && (!loaderComplete || inventory.pending() > 0 || sd.loaderForced)) {
                     loaderScene.render(null)
                 }
                 touchBoxes = scene.touchBoxes

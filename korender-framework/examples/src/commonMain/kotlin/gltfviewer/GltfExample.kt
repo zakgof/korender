@@ -71,7 +71,7 @@ fun GltfLibraryExample() = Row {
             val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/sea/${it.toString().lowercase()}.jpg" })
             Frame {
                 TestExchange.report(frameInfo)
-                OnLoading {
+                OnLoading(force = GltfDownloader.isLoading) {
                     Gui {
                         Column {
                             Filler()

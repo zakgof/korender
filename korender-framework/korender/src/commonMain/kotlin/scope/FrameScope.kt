@@ -144,7 +144,7 @@ interface FrameScope : KorenderScope {
      *
      * @param block loader scene
      */
-    fun OnLoading(block: FrameScope.() -> Unit)
+    fun OnLoading(force: Boolean = false, block: FrameScope.() -> Unit)
 
     /**
      * Creates a child node for hierarchical scene composition.

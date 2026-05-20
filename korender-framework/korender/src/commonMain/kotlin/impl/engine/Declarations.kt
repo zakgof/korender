@@ -47,6 +47,7 @@ internal class SceneDeclaration {
     val envCaptures = mutableMapOf<String, CaptureContext>()
     val frameCaptures = mutableMapOf<String, CaptureContext>()
     var loaderSceneDeclaration: SceneDeclaration? = null
+    var loaderForced = false
 
     fun append(renderableDeclaration: RenderableDeclaration) =
         if (renderableDeclaration.transparent)
