@@ -75,7 +75,7 @@ private fun MenuBarScope.file(holder: StateHolder) {
         }
 
         fun load() {
-            fileDialog("Open Project", false, state.persistentState.lastDir, "Korender maps", "krmap") {
+            fileDialog("Open Project", false, state.persistentState.lastDir, "Korender maps", listOf("krmap")) {
                 holder.loadProject(it)
             }
         }
@@ -93,7 +93,7 @@ private fun MenuBarScope.file(holder: StateHolder) {
             }
         }
         Item("Save Project as...", painterResource(Res.drawable.save)) {
-            fileDialog("Save Project", true, state.persistentState.lastDir, "Korender maps", "krmap") {
+            fileDialog("Save Project", true, state.persistentState.lastDir, "Korender maps", listOf("krmap")) {
                 holder.saveProject(it)
             }
         }
@@ -119,7 +119,7 @@ private fun MenuBarScope.file(holder: StateHolder) {
             walkDialog(holder.dryRun())
         }
         Item("Export Scene", painterResource(Res.drawable.export)) {
-            fileDialog("Export Scene", true, state.persistentState.lastDir,"Korender scene files", "krscene") {
+            fileDialog("Export Scene", true, state.persistentState.lastDir,"Korender model files", listOf("kr")) {
                 holder.compileToFile(it.path)
             }
         }

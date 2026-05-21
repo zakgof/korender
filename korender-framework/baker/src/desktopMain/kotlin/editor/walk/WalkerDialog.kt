@@ -67,8 +67,8 @@ fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
                     controller.update(frameInfo.dt, frameInfo.time)
                     projection = projection(0.5f * width / height, 0.5f, 0.5f, 1000f)
                     camera = controller.camera()
-                    KrScene("scene/foobar") {}
-                    Gltf(resource = "walk/swat-woman.glb", transform = controller.player())
+                    Model("scene/foobar") {}
+                    Model(resource = "walk/swat-woman.glb", transform = controller.player())
                     Gui {
                         Column {
                             Filler()

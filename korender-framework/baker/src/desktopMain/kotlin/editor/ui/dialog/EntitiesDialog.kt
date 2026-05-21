@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import com.zakgof.korender.Korender
+import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.baker.editor.ui.widget.EntityWidget
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.file
@@ -38,6 +39,7 @@ import com.zakgof.korender.baker.resources.material
 import com.zakgof.korender.baker.resources.plus
 import com.zakgof.korender.baker.resources.trash
 import com.zakgof.korender.math.ColorRGB.Companion.white
+import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -205,14 +207,14 @@ fun RowScope.EntityPreview(holder: StateHolder) {
                     projection = projection(width.toFloat() / height.toFloat(), 1f, 1f, 300f)
                     AmbientLight(white(0.5f))
                     DirectionalLight(Vec3(1f, -1f, -1f), white(0.5f))
-                    Obj(entityModel.filename, transform = transform, onLoad = { objInfo ->
-                        val points = objInfo.parts.flatMap {  part -> part.mesh.vertices.map { v -> v.pos!!}}
+                    Model(entityModel.filename, transform = transform, onUpdate = { objInfo ->
                         if (entityModel.points.isEmpty()) {
+                            val points = collectModelPoints(objInfo)
                             entityModel.points += points
-                        }
-                        val bs = BoundingSphere.fromPoints(points)
-                        if (bs.radius > 0f) {
-                            transform = Transform.translate(-bs.center).scale(1f / bs.radius)
+                            val bs = BoundingSphere.fromPoints(points)
+                            if (bs.radius > 0f) {
+                                transform = Transform.translate(-bs.center).scale(1f / bs.radius)
+                            }
                         }
                     })
                 }
@@ -224,8 +226,17 @@ fun RowScope.EntityPreview(holder: StateHolder) {
 fun modelFileDialog(state: State, holder: StateHolder, handler: (File) -> Unit) =
     fileDialog(
         "Select 3d model file", false, state.persistentState.lastDir, "3D model files",
-        "obj"
+        listOf("obj", "gltf", "glb", "kr")
     ) {
         handler(it)
         holder.setLastTextureDir(it.parentFile)
     }
+
+fun collectModelPoints(modelInfo: ModelInfo): List<Vec3> {
+    fun collect(node: ModelInfo.Node, parent: Mat4 = Mat4.IDENTITY): List<Vec3> {
+        val transform = parent * (node.transform?.mat4 ?: Mat4.IDENTITY)
+        return (node.mesh?.vertices?.mapNotNull { it.pos?.let { pt -> transform * pt } } ?: emptyList()) +
+                (node.children?.flatMap { collect(it, transform) } ?: emptyList())
+    }
+    return modelInfo.instances.flatMap(::collect)
+}

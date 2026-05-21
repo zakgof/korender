@@ -6,7 +6,6 @@ import androidx.compose.runtime.getValue
 import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.Korender
 import com.zakgof.korender.TouchEvent
-import editor.util.toKorender
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
@@ -21,6 +20,7 @@ import editor.model.Material
 import editor.state.State
 import editor.state.StateHolder
 import editor.ui.TouchHandler.touch
+import editor.util.toKorender
 import java.io.File
 
 object TouchHandler {
@@ -107,7 +107,7 @@ fun KorenderView(holder: StateHolder) {
                 model.entityInstances.values
                     .forEach { entityInstance ->
                         val entityModel = model.entityModels[entityInstance.modelId]!!
-                        Obj(entityModel.filename, entityInstance.transform)
+                        Model(entityModel.filename, entityInstance.transform)
                     }
             }
             Gui {

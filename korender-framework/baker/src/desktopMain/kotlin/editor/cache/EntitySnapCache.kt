@@ -84,7 +84,7 @@ object EntitySnapCache {
                 )
                 AmbientLight(white(1f))
                 Node(resourceLoader = { File(it).readBytes() }) {
-                    Obj(job.model.filename, job.instance.transform)
+                    Model(job.model.filename, job.instance.transform)
                 }
             }
             deferredKorenderImage.invokeOnCompletion {

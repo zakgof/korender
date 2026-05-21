@@ -2,6 +2,7 @@ package editor.util
 
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.Mesh
+import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec3
@@ -73,12 +74,32 @@ class BoundingSphere(val center: Vec3, val radius: Float) {
     )
 }
 
-fun boundingSphere(node: GltfUpdate.Node): BoundingSphere {
-    val meshSpheres = node.mesh?.let { mesh ->
-        mesh.primitives.map { boundingSphere(it).transform(node.transform.mat4) }
+fun boundingSphere(modelInfo: ModelInfo): BoundingSphere {
+
+    fun spheres(node: ModelInfo.Node, parent: Mat4 = Mat4.IDENTITY): List<BoundingSphere> {
+        val transform = parent * (node.transform?.mat4 ?: Mat4.IDENTITY)
+
+        val own = node.mesh
+            ?.vertices
+            ?.mapNotNull { it.pos }
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { listOf(BoundingSphere.fromPoints(it).transform(transform)) }
+            ?: emptyList()
+
+        return own + (node.children?.flatMap { spheres(it, transform) } ?: emptyList())
+    }
+
+    return BoundingSphere.merge(modelInfo.instances.flatMap { spheres(it) })
+}
+
+fun boundingSphere(node: ModelInfo.Node): BoundingSphere {
+    val meshSphere = node.mesh?.let { mesh ->
+        boundingSphere(mesh).transform(node.transform?.mat4 ?: Mat4.IDENTITY)
+    }
+    val childrenSpheres = node.children?.map {
+        boundingSphere(it).transform(node.transform?.mat4 ?: Mat4.IDENTITY)
     } ?: listOf()
-    val childrenSpheres = node.children.map { boundingSphere(it) }
-    return BoundingSphere.merge(meshSpheres + childrenSpheres)
+    return BoundingSphere.merge(listOfNotNull(meshSphere) + childrenSpheres)
 }
 
 fun boundingSphere(mesh: Mesh) = BoundingSphere.fromPoints(mesh.vertices.map { it.pos!! })
