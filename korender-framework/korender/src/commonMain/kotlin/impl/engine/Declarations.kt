@@ -58,7 +58,7 @@ internal class SceneDeclaration {
 
 internal class DeferredShadingDeclaration(val nodeContext: NodeContext) {
     var shadingMaterial = InternalShadingMaterial()
-    var shadingEffects =  mutableListOf<InternalMultiPassEffect>()
+    var shadingEffects = mutableListOf<InternalMultiPassEffect>()
     val postShadingEffects = mutableListOf<InternalMultiPassEffect>()
     val decals = mutableListOf<InternalDecalDeclaration>()
 }
@@ -98,12 +98,12 @@ internal class BillboardInstance(
 )
 
 internal class MeshInstance(
-    val transform: Transform?,
-    val jointMatrices: List<Mat4>?,
-    val color: ColorRGBA?,
-    val metallic: Float?,
-    val roughness: Float?,
-    val colorTextureIndex: Int?
+    val transform: Transform? = null,
+    val jointMatrices: List<Mat4>? = null,
+    val color: ColorRGBA? = null,
+    val metallic: Float? = null,
+    val roughness: Float? = null,
+    val colorTextureIndex: Int? = null,
 )
 
 internal data class ShaderDeclaration(

@@ -5,11 +5,14 @@ import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.InternalModelInstancingDeclaration
+import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.engine.ModelDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.ResultKeeper
 import com.zakgof.korender.impl.engine.SceneDeclaration
 import com.zakgof.korender.impl.geometry.CMesh
+import com.zakgof.korender.impl.geometry.InstancedMesh
+import com.zakgof.korender.impl.geometry.InternalInstancingParameter
 import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
 import com.zakgof.korender.impl.geometry.MeshAttributes.POS
 import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
@@ -47,17 +50,21 @@ internal class ObjScene(declaration: ModelDeclaration) : InternalModel {
         LoadedObjScene(preparedMeshes)
     }
 
-    private fun toCMesh(mesh: ObjSceneMesh, instancingDeclaration: InternalModelInstancingDeclaration?) = CMesh(
-        vertexCount = mesh.vertices.size,
-        indexCount = mesh.indices.size,
-        instanceCount = instancingDeclaration?.count ?: -1,
-        POS, NORMAL, TEX,
-    ) {
-        mesh.vertices.forEach {
-            pos(it.pos).normal(it.normal).tex(it.tex)
+    private fun toCMesh(mesh: ObjSceneMesh, instancingDeclaration: InternalModelInstancingDeclaration?): CMesh {
+        val instancingAttributes = instancingDeclaration?.let {InternalInstancingParameter.TRANSFORM_INSTANCING.instanceMeshAttributes.toTypedArray()} ?: arrayOf()
+        return CMesh(
+            vertexCount = mesh.vertices.size,
+            indexCount = mesh.indices.size,
+            instanceCount = instancingDeclaration?.count ?: -1,
+            POS, NORMAL, TEX, *instancingAttributes
+        ) {
+            mesh.vertices.forEach {
+                pos(it.pos).normal(it.normal).tex(it.tex)
+            }
+            index(*mesh.indices.toIntArray())
         }
-        index(*mesh.indices.toIntArray())
     }
+
 
     override fun build(modelDeclaration: ModelDeclaration, sceneDeclaration: SceneDeclaration, rk: ResultKeeper?) {
 
@@ -76,17 +83,35 @@ internal class ObjScene(declaration: ModelDeclaration) : InternalModel {
                 preparedMesh.material?.applyTo(this, modelDeclaration.nodeContext)
                 modelDeclaration.materialModifier(this)
             }
-            val meshDeclaration = modelDeclaration.nodeContext.mesh(
+            val singleMeshDeclaration = modelDeclaration.nodeContext.mesh(
                 id = "$prefix.mesh.$index.${preparedMesh.name}",
                 mesh = preparedMesh.cmesh
             )
+
+            // TODO transparency support
+            val meshDeclaration = modelDeclaration.instancingDeclaration?.let { instancing ->
+                InstancedMesh(
+                    instancing.id,
+                    instancing.count,
+                    singleMeshDeclaration,
+                    !instancing.dynamic,
+                    false,
+                    modelDeclaration.nodeContext,
+                    listOf(InternalInstancingParameter.TRANSFORM_INSTANCING),
+                ) {
+                    instancing.instancer.invoke().map { modelInstance ->
+                        MeshInstance(transform = modelInstance.transform)
+                    }
+                }
+            } ?: singleMeshDeclaration
+
             sceneDeclaration.append(
                 RenderableDeclaration(
                     material = material,
                     mesh = meshDeclaration,
                     transform = modelDeclaration.transform,
                     transparent = material.color.a < 1f,
-                    nodeContext = modelDeclaration.nodeContext
+                    nodeContext = modelDeclaration.nodeContext,
                 )
             )
         }

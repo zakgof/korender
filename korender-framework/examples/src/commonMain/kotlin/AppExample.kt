@@ -40,6 +40,8 @@ import org.jetbrains.compose.resources.painterResource
 
 val pages = listOf(
 
+    Case("Obj") { ObjModelExample() },
+
     Case("Island") { IslandExample() },
 
 
@@ -48,7 +50,7 @@ val pages = listOf(
     Case("Procedural terrain") { ProcTerrainExample() },
     Case("City demo") { InfiniteCity() },
     Case("PBR materials") { MetallicRoughnessExample() },
-    Case("OBJ mesh") { ObjFileExample() },
+    Case("OBJ mesh") { ObjMeshExample() },
     Case("GLTF crowd") { GltfCrowdExample() },
     Case("GLTF library") { GltfLibraryExample() },
     Case("Shadows") { ShadowExample() },

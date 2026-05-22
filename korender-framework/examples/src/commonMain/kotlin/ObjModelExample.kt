@@ -9,25 +9,24 @@ import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.FloatMath.PIdiv2
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 @Composable
-fun ObjFileExample() {
+fun ObjModelExample() {
     Korender(resourceLoader = { Res.readBytes("files/$it") }) {
         val orbitCamera = OrbitCamera(20.z, 0.z)
         OnTouch { orbitCamera.touch(it) }
         Frame {
             DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(3f))
             camera = orbitCamera.run { camera() }
-            Renderable(
-                base {
-                    colorTexture = texture("model/head.jpg")
-                    metallicFactor = 0.3f
-                    roughnessFactor = 0.5f
+            Model(
+                resource = "model/head.obj",
+                instancing = modelInstancing("2", 2, false) {
+                    Instance(transform = scale(1.0f).rotate(1.y, -PIdiv2).translate(-2.x))
+                    Instance(transform = scale(1.0f).rotate(1.y, -PIdiv2).translate(2.x))
                 },
-                mesh = obj("model/head.obj"),
-                transform = scale(7.0f).rotate(1.y, -PIdiv2)
             )
             Gui {
                 Column {
