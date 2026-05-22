@@ -40,7 +40,6 @@ import com.zakgof.korender.baker.resources.plus
 import com.zakgof.korender.baker.resources.trash
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.Mat4
-import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
@@ -192,7 +191,7 @@ fun RowScope.EntityEditor(holder: StateHolder) {
 fun RowScope.EntityPreview(holder: StateHolder) {
     val state by holder.state.collectAsState()
     val model by holder.model.collectAsState()
-    var transform by remember(state.entityModelId) { mutableStateOf(Transform.IDENTITY) }
+    var bs by remember(state.entityModelId) { mutableStateOf(BoundingSphere(0.y, 1f)) }
     Box(Modifier.weight(1.6f).fillMaxSize()) {
         Korender(
             resourceLoader = {
@@ -203,18 +202,15 @@ fun RowScope.EntityPreview(holder: StateHolder) {
                 state.entityModelId?.let {
                     AmbientLight(white(0.6f))
                     val entityModel = model.entityModels[state.entityModelId]!!
-                    camera = camera(-5.z, 1.z, 1.y)
-                    projection = projection(width.toFloat() / height.toFloat(), 1f, 1f, 300f)
+                    camera = camera(bs.center + (-bs.radius * 3f).z, 1.z, 1.y)
+                    projection = projection(bs.radius * 2f * width.toFloat() / height.toFloat(), bs.radius * 2f, bs.radius, bs.radius * 6f)
                     AmbientLight(white(0.5f))
                     DirectionalLight(Vec3(1f, -1f, -1f), white(0.5f))
-                    Model(entityModel.filename, transform = transform, onUpdate = { objInfo ->
+                    Model(entityModel.filename, onUpdate = { objInfo ->
                         if (entityModel.points.isEmpty()) {
                             val points = collectModelPoints(objInfo)
                             entityModel.points += points
-                            val bs = BoundingSphere.fromPoints(points)
-                            if (bs.radius > 0f) {
-                                transform = Transform.translate(-bs.center).scale(1f / bs.radius)
-                            }
+                            bs = BoundingSphere.fromPoints(points)
                         }
                     })
                 }

@@ -99,8 +99,8 @@ internal class GltfSceneBuilder(private val cache: GltfCache, private val declar
     private fun calculateInstanceData(instanceIndex: Int, instanceData: InstanceData) {
         if (cache.model.animations?.isNotEmpty() == true) {
             val instanceDeclaration = instances[instanceIndex]
-            val animationIndex = (instanceDeclaration.animation ?: declaration.animation).coerceIn(0, cache.model.animations!!.size - 1)
-            val animation = cache.model.animations!![animationIndex]
+            val animationIndex = (instanceDeclaration.animation ?: declaration.animation).coerceIn(0, cache.model.animations.size - 1)
+            val animation = cache.model.animations[animationIndex]
             animation.channels.forEach { channel ->
                 channel.target.node?.let {
                     val samplerValue = getSamplerValue(animation.samplers[channel.sampler], instanceDeclaration.time ?: declaration.time)
@@ -140,7 +140,8 @@ internal class GltfSceneBuilder(private val cache: GltfCache, private val declar
 
     private fun processNode(instanceData: InstanceData, parentTransform: Transform, nodeIndex: Int, node: InternalGltfFileModel.Node): InternalModelInfo.Node {
 
-        var transform = parentTransform
+
+        var localTransform = Transform.IDENTITY
 
         val na = instanceData.nodeAnimations[nodeIndex]
 
@@ -148,10 +149,12 @@ internal class GltfSceneBuilder(private val cache: GltfCache, private val declar
         val rotation = na.rotation ?: node.rotation
         val scale = na.scale ?: node.scale
 
-        translation?.let { transform *= translate(Vec3(it[0], it[1], it[2])) }
-        rotation?.let { transform *= rotate(Quaternion(it[3], Vec3(it[0], it[1], it[2]))) }
-        scale?.let { transform *= scale(it[0], it[1], it[2]) }
-        node.matrix?.let { transform *= Transform(Mat4(it.toFloatArray())) }
+        translation?.let { localTransform *= translate(Vec3(it[0], it[1], it[2])) }
+        rotation?.let { localTransform *= rotate(Quaternion(it[3], Vec3(it[0], it[1], it[2]))) }
+        scale?.let { localTransform *= scale(it[0], it[1], it[2]) }
+        node.matrix?.let { localTransform *= Transform(Mat4(it.toFloatArray())) }
+
+        val transform = parentTransform * localTransform
 
         node.camera?.let {
             cameraTransforms[it] = transform
@@ -170,7 +173,7 @@ internal class GltfSceneBuilder(private val cache: GltfCache, private val declar
             }
         }
         val allChildren = listOfNotNull(nodeChildren, meshChildren).flatten()
-        return InternalModelInfo.Node(transform, allChildren, null, null)
+        return InternalModelInfo.Node(localTransform, allChildren, null, null)
     }
 
     private fun createRenderables(meshIndex: Int, skinIndex: Int?, nodeIndex: Int): List<RenderableDeclaration> =

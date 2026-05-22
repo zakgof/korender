@@ -21,7 +21,8 @@ internal suspend fun ResourceLoader.load(resource: String): ByteArray {
 internal fun absolutizeResource(resource: String, referrer: String): String {
     if (resource.startsWith("data:"))
         return resource;
-    return referrer.split("/").dropLast(1).joinToString("/") + "/" + resource;
+    return referrer.replace("\\", "/").split("/").dropLast(1).joinToString("/") + "/" + resource;
+
 }
 
 internal fun ignoringGlError(block: () -> Unit) {
