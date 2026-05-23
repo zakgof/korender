@@ -56,6 +56,19 @@ class BoundingBox(val min: Vec3, val max: Vec3) {
             max + newCenter - center
         )
 
+    fun corners(): List<Vec3> {
+        return listOf(
+            Vec3(min.x, min.y, min.z),
+            Vec3(max.x, min.y, min.z),
+            Vec3(min.x, max.y, min.z),
+            Vec3(max.x, max.y, min.z),
+            Vec3(min.x, min.y, max.z),
+            Vec3(max.x, min.y, max.z),
+            Vec3(min.x, max.y, max.z),
+            Vec3(max.x, max.y, max.z)
+        )
+    }
+
     companion object {
         fun from(c1: Vec3, c2: Vec3) =
             BoundingBox(

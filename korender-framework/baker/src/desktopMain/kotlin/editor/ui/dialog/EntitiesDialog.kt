@@ -43,6 +43,7 @@ import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import editor.model.BoundingBox
 import editor.model.Model
 import editor.model.entity.EntityModel
 import editor.state.State
@@ -194,9 +195,8 @@ fun RowScope.EntityPreview(holder: StateHolder) {
     var bs by remember(state.entityModelId) { mutableStateOf(BoundingSphere(0.y, 1f)) }
     Box(Modifier.weight(1.6f).fillMaxSize()) {
         Korender(
-            resourceLoader = {
-                File(it).readBytes()
-            }, vSync = true
+            resourceLoader = { File(it).readBytes() },
+            vSync = true
         ) {
             Frame {
                 state.entityModelId?.let {
@@ -234,5 +234,6 @@ fun collectModelPoints(modelInfo: ModelInfo): List<Vec3> {
         return (node.mesh?.vertices?.mapNotNull { it.pos?.let { pt -> transform * pt } } ?: emptyList()) +
                 (node.children?.flatMap { collect(it, transform) } ?: emptyList())
     }
-    return modelInfo.instances.flatMap(::collect)
+    val allPoints = modelInfo.instances.flatMap(::collect)
+    return BoundingBox.from(allPoints).corners()
 }
