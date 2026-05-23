@@ -14,6 +14,8 @@ import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
 import com.zakgof.korender.baker.resources.center
 import com.zakgof.korender.baker.resources.copy
+import com.zakgof.korender.baker.resources.cube
+import com.zakgof.korender.baker.resources.cubeplus
 import com.zakgof.korender.baker.resources.cut
 import com.zakgof.korender.baker.resources.export
 import com.zakgof.korender.baker.resources.eye
@@ -201,7 +203,7 @@ private fun MenuBarScope.materials(holder: StateHolder) {
     val state by holder.state.collectAsState()
     val materialDialog = MaterialsDialog(holder)
     Menu("Materials") {
-        Item("Edit Materials", icon = painterResource(Res.drawable.material)) {
+        Item("Materials Library", icon = painterResource(Res.drawable.material)) {
             materialDialog()
         }
         Item("New textured Material", painterResource(Res.drawable.newmaterial)) {
@@ -218,12 +220,11 @@ private fun MenuBarScope.models(holder: StateHolder) {
     val state by holder.state.collectAsState()
     val entitiesDialog = EntitiesDialog(holder)
     Menu("Models") {
-        // TODO: icon
-        Item("Edit Models", icon = painterResource(Res.drawable.material)) {
+        Item("Models Library", icon = painterResource(Res.drawable.cube)) {
             entitiesDialog()
         }
         // TODO: icon
-        Item("New Model", painterResource(Res.drawable.newmaterial)) {
+        Item("Quick insert model", painterResource(Res.drawable.cubeplus)) {
 //            entitiesDialog(state, holder)?.let { entityModel ->
 //                holder.instantiateEntity(entityModel)
 //            }

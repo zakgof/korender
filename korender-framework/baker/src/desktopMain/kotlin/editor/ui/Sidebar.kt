@@ -54,7 +54,6 @@ import androidx.compose.ui.window.rememberDialogState
 import com.zakgof.korender.baker.editor.ui.dialog.EntitiesDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.ui.widget.EntityWidget
-import com.zakgof.korender.baker.editor.ui.widget.FancyButton
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
@@ -363,7 +362,6 @@ private fun materials(holder: StateHolder, state: State, model: Model) {
                 .wrapContentSize(Alignment.TopStart)
                 .border(3.dp, Red)
         ) {
-            FancyButton("…", Modifier.width(24.dp).height(16.dp)) { expanded = true }
             DialogWindow(
                 undecorated = true,
                 visible = expanded,
@@ -374,33 +372,13 @@ private fun materials(holder: StateHolder, state: State, model: Model) {
             ) {
                 Column {
                     Row {
-                        Text("Edit Materials")
+                        Text("Materials Library")
                     }
                 }
             }
-//            Item("Edit Materials", icon = painterResource(Res.drawable.material)) {
-//                materialDialog()
-//            }
-//            Item("New textured Material", painterResource(Res.drawable.newmaterial)) {
-//                textureDialog(state, holder)?.let { file ->
-//                    val material = Material(file.name, file.path)
-//                    holder.addMaterial(material)
-//                }
-//            }
         }
 
         val materialDialog = MaterialsDialog(holder)
-//        Row(
-//            horizontalArrangement = Arrangement.spacedBy(8.dp)
-//        ) {
-//            IconButton(Res.drawable.material, "Edit Materials") { materialDialog() }
-//            IconButton(Res.drawable.newmaterial, "New textured Material") {
-//                textureDialog(state, holder)?.let { file ->
-//                    val material = Material(file.name, file.path)
-//                    holder.addMaterial(material)
-//                }
-//            }
-//        }
         val material = model.materials[state.materialId]!!
         MaterialWidget(material, true) {
             materialDialog()
