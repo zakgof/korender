@@ -1,7 +1,5 @@
 package editor.model.brush
 
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import com.zakgof.korender.baker.editor.model.Boundable
 import com.zakgof.korender.math.Vec3
 import editor.model.BoundingBox
@@ -21,7 +19,6 @@ data class Face(
 @OptIn(ExperimentalUuidApi::class)
 data class Brush(
     val name: String,
-    val projectionColor: Int,
     val faces: List<Face>,
     val id: String = Uuid.generateV7().toHexDashString(),
 ) : Boundable {
@@ -30,12 +27,11 @@ data class Brush(
 
     constructor(
         name: String,
-        projectionColor: Color,
         bb: BoundingBox,
         shape: CreatorShape,
         materialId: String,
         fitToFace: Boolean,
-    ) : this(name, projectionColor.toArgb(), shape.makeFaces(bb, materialId, fitToFace))
+    ) : this(name,shape.makeFaces(bb, materialId, fitToFace))
 
     val points by lazy { BrushMesher.collectPoints(this) }
     val mesh by lazy { BrushMesher.buildBrushMesh(this, points) }

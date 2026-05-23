@@ -35,7 +35,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
-import editor.util.advanceSig
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
@@ -46,6 +45,8 @@ import editor.model.brush.Brush
 import editor.model.entity.EntityInstance
 import editor.state.State
 import editor.state.StateHolder
+import editor.util.advanceSig
+import editor.util.color
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.math.abs
@@ -157,7 +158,7 @@ private fun DrawScope.drawSelection(mapper: ProjectionMapper, state: State, mode
             size = rect.size,
             style = Stroke(
                 width = 2f,
-                pathEffect = PathEffect.dashPathEffect(floatArrayOf(3f, 9f))
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 4f))
             )
         )
         when (state.selectionMode) {
@@ -197,7 +198,7 @@ private fun DrawScope.drawCreator(mapper: ProjectionMapper, state: State) {
         size = rect.size,
         style = Stroke(
             width = 2f,
-            pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 4f))
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 2f))
         )
     )
 }
@@ -253,7 +254,7 @@ private fun DrawScope.drawBrush(brush: Brush, mapper: ProjectionMapper, state: S
             color = when {
                 hidden -> Color.DarkGray
                 selected -> Color.Red
-                else -> Color(brush.projectionColor)
+                else -> brush.color()
             },
             start = mapper.wToV(brush.mesh.points[edge.first]),
             end = mapper.wToV(brush.mesh.points[edge.second]),
@@ -293,13 +294,10 @@ private fun DrawScope.drawEntityInstance(entityInstance: EntityInstance, mapper:
         }
     }
     drawRect(
-        color = Color.Red,
+        color =  if (selected) Color.Red else entityInstance.color(),
         topLeft = rect.topLeft,
         size = rect.size,
-        style = Stroke(
-            width = 2f,
-            pathEffect = PathEffect.dashPathEffect(floatArrayOf(3f, 9f))
-        )
+        style = Stroke(width = if (selected) 3f else 2f)
     )
 }
 

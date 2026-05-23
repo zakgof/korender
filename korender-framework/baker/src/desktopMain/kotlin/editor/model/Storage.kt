@@ -134,19 +134,16 @@ data class GroupDto(
 data class BrushDto(
     val id: String,
     val name: String,
-    val projectionColor: Int,
     val planes: List<FaceDto>,
 ) {
     constructor(brush: Brush) : this(
         name = brush.name,
-        projectionColor = brush.projectionColor,
         planes = brush.faces.map { FaceDto(it) },
         id = brush.id
     )
 
     fun toBrush() = Brush(
         name = name,
-        projectionColor = projectionColor,
         faces = planes.map { it.toFace() },
         id = id
     )

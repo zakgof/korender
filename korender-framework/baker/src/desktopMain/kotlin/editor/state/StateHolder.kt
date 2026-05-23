@@ -124,16 +124,10 @@ class StateHolder {
         it.copy(creator = defaultCreator(state.value.viewCenter, state.value.gridScale))
     }
 
-    private fun randomBrushColor(seed: Int): Color {
-        val r = Random(seed)
-        return Color(128 + r.nextInt(127), 128 + r.nextInt(127), 128 + r.nextInt(127))
-    }
-
     fun create() {
         val bb = state.value.creator
         val newBrush = Brush(
             generateBrushName(state.value.creatorShape.name),
-            randomBrushColor(model.value.brushes.size),
             bb,
             state.value.creatorShape,
             state.value.materialId,
@@ -245,7 +239,6 @@ class StateHolder {
             brush.copy(
                 name = generateBrushName(brush.name),
                 id = Uuid.generateV7().toHexDashString(),
-                projectionColor = randomBrushColor(model.value.brushes.size + index).toArgb(),
                 faces = brush.faces.map {
                     it.copy(plane = it.plane.translate(offset))
                 }
