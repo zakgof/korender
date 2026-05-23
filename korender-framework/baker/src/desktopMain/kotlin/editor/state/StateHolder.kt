@@ -820,6 +820,28 @@ class StateHolder {
         .map { it.bb }
         .reduceOrNull(BoundingBox::merge)
 
+    fun deleteEntityModel() {
+        if (state.value.entityModelId != null) {
+            pushHistory()
+            val entityInstancesToRemove = model.value.entityInstances.entries
+                .filter { ei -> ei.value.modelId == state.value.entityModelId }
+                .map { it.key }
+                .toSet()
+            _model.update {
+                it.copy(
+                    entityInstances = it.entityInstances.removeAll(entityInstancesToRemove),
+                    entityModels = it.entityModels.remove(state.value.entityModelId!!)
+                )
+            }
+            _state.update {
+                it.copy(
+                    entityModelId = null,
+                    entityInstanceSelection = it.entityInstanceSelection - entityInstancesToRemove
+                )
+            }
+        }
+    }
+
 }
 
 fun <K, V> PersistentMap<K, V>.removeAll(keys: Collection<K>): PersistentMap<K, V> {
@@ -827,5 +849,14 @@ fun <K, V> PersistentMap<K, V>.removeAll(keys: Collection<K>): PersistentMap<K, 
     keys.forEach {
         res = res.remove(it)
     }
+    return res
+}
+
+fun <K, V> PersistentMap<K, V>.remove(condition: (V) -> Boolean): PersistentMap<K, V> {
+    var res = this
+    this.entries.filter { condition(it.value) }
+        .forEach {
+            res = res.remove(it.key)
+        }
     return res
 }

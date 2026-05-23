@@ -34,9 +34,9 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.baker.editor.ui.widget.EntityWidget
 import com.zakgof.korender.baker.resources.Res
+import com.zakgof.korender.baker.resources.adddiamond
 import com.zakgof.korender.baker.resources.file
 import com.zakgof.korender.baker.resources.material
-import com.zakgof.korender.baker.resources.plus
 import com.zakgof.korender.baker.resources.trash
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.Mat4
@@ -49,6 +49,7 @@ import editor.model.entity.EntityModel
 import editor.state.State
 import editor.state.StateHolder
 import editor.ui.Theme
+import editor.ui.dialog.confirmDialog
 import editor.ui.dialog.fileDialog
 import editor.ui.widget.FancyClickToFloatInput
 import editor.ui.widget.FancyClickToTextInput
@@ -147,11 +148,18 @@ fun RowScope.EntityEditor(holder: StateHolder) {
                         holder.addEntityModel(entityModel)
                     }
                 }
+
                 if (state.entityModelId != null) {
-                    IconButton(Res.drawable.trash, "Delete Model") {
-                        holder.deleteMaterial()
+                    val existing = model.entityInstances.values.count { it.modelId == state.entityModelId!! }
+                    val configDlg = confirmDialog("Delete model", "Scene contains $existing instances of this model. Delete all ?") {
+                        holder.deleteEntityModel()
                     }
-                    IconButton(Res.drawable.plus, "Insert into Scene") {
+                    IconButton(Res.drawable.trash, "Delete Model") {
+                        if (existing > 0) {
+                            configDlg()
+                        }
+                    }
+                    IconButton(Res.drawable.adddiamond, "Add to scene") {
                         holder.createEntityInstance()
                     }
                 }
@@ -234,6 +242,7 @@ fun collectModelPoints(modelInfo: ModelInfo): List<Vec3> {
         return (node.mesh?.vertices?.mapNotNull { it.pos?.let { pt -> transform * pt } } ?: emptyList()) +
                 (node.children?.flatMap { collect(it, transform) } ?: emptyList())
     }
+
     val allPoints = modelInfo.instances.flatMap(::collect)
     return BoundingBox.from(allPoints).corners()
 }

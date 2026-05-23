@@ -1,5 +1,6 @@
 package editor.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,8 +18,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,25 +42,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogWindow
-import androidx.compose.ui.window.rememberDialogState
 import com.zakgof.korender.baker.editor.ui.dialog.EntitiesDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.ui.widget.EntityWidget
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
 import com.zakgof.korender.baker.resources.Res
+import com.zakgof.korender.baker.resources.adddiamond
 import com.zakgof.korender.baker.resources.applymat
+import com.zakgof.korender.baker.resources.arrowdown
+import com.zakgof.korender.baker.resources.arrowup
 import com.zakgof.korender.baker.resources.drag
 import com.zakgof.korender.baker.resources.group
 import com.zakgof.korender.baker.resources.minus
+import com.zakgof.korender.baker.resources.paint
 import com.zakgof.korender.baker.resources.pen
 import com.zakgof.korender.baker.resources.plus
 import com.zakgof.korender.baker.resources.pointer
@@ -81,6 +82,7 @@ import editor.ui.widget.LabeledFloatInput
 import editor.ui.widget.RadioButtonRow
 import editor.util.nextSane
 import editor.util.prevSane
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun Sidebar(holder: StateHolder) {
@@ -289,12 +291,13 @@ private fun shape(state: State, holder: StateHolder) {
                         .padding(1.dp)
                 )
                 Spacer(Modifier.width(4.dp))
-//                Icon(
-//                    imageVector = if (expanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
-//                    contentDescription = null,
-//                    tint = Theme.medium
-//                )
+                Image(
+                    painterResource(if (expanded) Res.drawable.arrowup else Res.drawable.arrowdown),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
             }
+
 
             CompositionLocalProvider(
                 LocalMinimumInteractiveComponentSize provides 0.dp
@@ -336,13 +339,17 @@ private fun models(holder: StateHolder, state: State, model: Model) {
     GroupBox("Model") {
         val entitiesDialog = EntitiesDialog(holder)
         state.entityModelId?.let {
-            Row {
+            Row(
+                modifier = Modifier.height(32.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Box(modifier = Modifier.weight(1f)) {
                     EntityWidget(model.entityModels[it]!!, true) {
                         entitiesDialog()
                     }
                 }
-                IconButton(Res.drawable.plus, "Insert") {
+                IconButton(Res.drawable.adddiamond, "Add to scene") {
                     holder.createEntityInstance()
                 }
             }
@@ -355,34 +362,23 @@ private fun models(holder: StateHolder, state: State, model: Model) {
 @Composable
 private fun materials(holder: StateHolder, state: State, model: Model) {
     GroupBox("Material") {
-        var expanded by remember { mutableStateOf(false) }
-        Box(
-            modifier = Modifier
-                .align(Alignment.End)
-                .wrapContentSize(Alignment.TopStart)
-                .border(3.dp, Red)
+        val materialDialog = MaterialsDialog(holder)
+        val material = model.materials[state.materialId]!!
+        Row(
+            modifier = Modifier.height(32.dp).fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            DialogWindow(
-                undecorated = true,
-                visible = expanded,
-                onCloseRequest = { expanded = false },
-                focusable = true,
-                alwaysOnTop = true,
-                state = rememberDialogState(width = Dp.Unspecified, height = Dp.Unspecified)
-            ) {
-                Column {
-                    Row {
-                        Text("Materials Library")
-                    }
+            Box(modifier = Modifier.weight(1f)) {
+                MaterialWidget(material, false) {
+                    materialDialog()
                 }
+            }
+            IconButton(Res.drawable.paint, "Apply to selection") {
+                holder.applyMaterialToSelection()
             }
         }
 
-        val materialDialog = MaterialsDialog(holder)
-        val material = model.materials[state.materialId]!!
-        MaterialWidget(material, true) {
-            materialDialog()
-        }
     }
 }
 

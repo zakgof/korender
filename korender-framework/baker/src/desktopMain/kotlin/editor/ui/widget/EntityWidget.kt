@@ -17,9 +17,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import editor.cache.TextureImageCache
 import editor.model.Material
 import editor.ui.Theme
-import editor.cache.TextureImageCache
 
 @Composable
 fun MaterialWidget(material: Material, selected: Boolean, onClick: () -> Unit) {
@@ -31,16 +31,6 @@ fun MaterialWidget(material: Material, selected: Boolean, onClick: () -> Unit) {
             .padding(1.dp)
     )
     {
-        Text(
-            modifier = Modifier.weight(1f)
-                .align(Alignment.CenterVertically),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            text = material.name,
-            fontSize = 14.sp,
-            color = Theme.light,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-        )
         material.colorTexture?.let {
             Image(
                 bitmap = TextureImageCache.compose(material.colorTexture),
@@ -54,6 +44,17 @@ fun MaterialWidget(material: Material, selected: Boolean, onClick: () -> Unit) {
         } ?: Box(
             modifier = Modifier.size(36.dp, 36.dp)
                 .background(material.baseColor)
+        )
+        Text(
+            modifier = Modifier.weight(1f)
+                .padding(start = 4.dp)
+                .align(Alignment.CenterVertically),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            text = material.name,
+            fontSize = 14.sp,
+            color = Theme.light,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
         )
 
     }
