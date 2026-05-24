@@ -1,7 +1,5 @@
 package editor.state
 
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.baker.editor.collision.BvhCompiler
 import com.zakgof.korender.baker.editor.collision.CollisionSerialModel
@@ -28,9 +26,11 @@ import editor.util.floorSig
 import editor.util.roundSane
 import editor.util.snap
 import kotlinx.collections.immutable.PersistentMap
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
@@ -39,7 +39,6 @@ import java.io.File
 import kotlin.math.atan
 import kotlin.math.min
 import kotlin.math.tan
-import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -699,12 +698,6 @@ class StateHolder {
         _state.update { it.copy(entityModelId = entityModel?.id) }
     }
 
-    fun addEntityModel(entityModel: EntityModel) {
-        pushHistory()
-        _model.update { it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel)) }
-        selectEntityModel(entityModel)
-    }
-
     fun updateEntityModelName(entityModel: EntityModel, newName: String) {
         pushHistory()
         _model.update {
@@ -833,6 +826,17 @@ class StateHolder {
                 )
             }
         }
+    }
+
+    suspend fun createEntityModel(name: String, filename: String) : EntityModel {
+        val pts = EntitySnapCache.entityPoints(filename).await()
+        val entityModel = EntityModel(name, filename, pts)
+        withContext(Dispatchers.Main) {
+            pushHistory()
+            _model.update { it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel)) }
+            selectEntityModel(entityModel)
+        }
+        return entityModel
     }
 
 }

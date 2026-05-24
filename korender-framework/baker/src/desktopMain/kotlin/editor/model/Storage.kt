@@ -233,10 +233,10 @@ data class EntityModelDto(
         name = name,
         filename = filename,
         defaultScale = defaultScale,
+        points = points.map { it.toVec3() },
         id = id,
-    ).also { entityModel ->
-        entityModel.points.addAll(points.map { it.toVec3() })
-    }
+    )
+
 }
 
 @Serializable

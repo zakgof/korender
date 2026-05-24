@@ -8,8 +8,7 @@ import kotlin.uuid.Uuid
 data class EntityModel(
     val name: String,
     val filename: String,
+    val points: List<Vec3>,
     val defaultScale: Float = 1f,
     val id: String = Uuid.generateV7().toHexDashString(),
-) {
-    val points: MutableList<Vec3> = mutableListOf()
-}
+)

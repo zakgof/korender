@@ -273,7 +273,7 @@ private fun DrawScope.drawEntityInstance(entityInstance: EntityInstance, mapper:
     val selected = state.entityInstanceSelection.contains(entityInstance.id)
     val bb = entityInstance.bb
     val rect = mapper.rect(bb)
-    val deferredImage: Deferred<ImageBitmap> = EntitySnapCache.image(entityInstance, model.entityModels[entityInstance.modelId]!!, mapper.axes)
+    val deferredImage: Deferred<ImageBitmap> = EntitySnapCache.instanceSnap(entityInstance, model.entityModels[entityInstance.modelId]!!, mapper.axes)
 
     if (deferredImage.isCompleted) {
         drawImage(

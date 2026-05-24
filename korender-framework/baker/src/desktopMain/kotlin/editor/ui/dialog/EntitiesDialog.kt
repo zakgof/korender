@@ -22,6 +22,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,8 +36,8 @@ import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.baker.editor.ui.widget.EntityWidget
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.adddiamond
+import com.zakgof.korender.baker.resources.cube
 import com.zakgof.korender.baker.resources.file
-import com.zakgof.korender.baker.resources.material
 import com.zakgof.korender.baker.resources.trash
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.Mat4
@@ -45,7 +46,6 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import editor.model.BoundingBox
 import editor.model.Model
-import editor.model.entity.EntityModel
 import editor.state.State
 import editor.state.StateHolder
 import editor.ui.Theme
@@ -57,6 +57,7 @@ import editor.ui.widget.FancyTextInput
 import editor.ui.widget.GroupBox
 import editor.ui.widget.IconButton
 import editor.util.BoundingSphere
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import java.io.File
 
@@ -69,7 +70,7 @@ fun EntitiesDialog(holder: StateHolder): () -> Unit {
     if (show) {
         DialogWindow(
             title = "Models",
-            icon = painterResource(Res.drawable.material), // TODO
+            icon = painterResource(Res.drawable.cube), // TODO
             onCloseRequest = { show = false },
             state = rememberDialogState(size = DpSize(800.dp, 630.dp))
         ) {
@@ -133,6 +134,7 @@ fun RowScope.EntityEditor(holder: StateHolder) {
     val state by holder.state.collectAsState()
     val model by holder.model.collectAsState()
     val entityModel = model.entityModels[state.entityModelId]
+    val coroutineScope = rememberCoroutineScope()
     Column(
         Modifier.weight(1f).padding(8.dp)
     ) {
@@ -144,8 +146,9 @@ fun RowScope.EntityEditor(holder: StateHolder) {
                     modelFileDialog(state, holder) {
                         val name = it.nameWithoutExtension
                         val filename = it.absolutePath
-                        val entityModel = EntityModel(name, filename)
-                        holder.addEntityModel(entityModel)
+                        coroutineScope.launch {
+                            holder.createEntityModel(name, filename)
+                        }
                     }
                 }
 
@@ -217,7 +220,6 @@ fun RowScope.EntityPreview(holder: StateHolder) {
                     Model(entityModel.filename, onUpdate = { objInfo ->
                         if (entityModel.points.isEmpty()) {
                             val points = collectModelPoints(objInfo)
-                            entityModel.points += points
                             bs = BoundingSphere.fromPoints(points)
                         }
                     })
