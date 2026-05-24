@@ -5,12 +5,15 @@ import com.zakgof.korender.DecalMaterial
 import com.zakgof.korender.ShadingMaterialScope
 import com.zakgof.korender.math.Vec3
 
+/**
+ * Scope for configuring deferred shading post-processing effects and decals.
+ */
 interface DeferredShadingScope {
 
     /**
      * Defines modifiers for the shading step.
      *
-     * @param shadingModifiers shading material modifiers
+     * @param block shading material modifiers block
      */
     fun Shading(block: ShadingMaterialScope.() -> Unit = {})
 
@@ -95,7 +98,7 @@ interface DeferredShadingScope {
     /**
      * Creates a decal.
      *
-     * @param materialModifiers material modifiers
+     * @param material decal material
      * @param position decal application position
      * @param look decal application direction
      * @param up up direction for decal application (corresponds to y axis of decal texture)

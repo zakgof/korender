@@ -35,6 +35,9 @@ import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import kotlinx.coroutines.Deferred
 
+/**
+ * Main scope interface for Korender, providing configuration for cameras, projections, materials, post-processing, and instancing.
+ */
 interface KorenderScope : ResourceScope {
 
     /**
@@ -441,6 +444,8 @@ interface KorenderScope : ResourceScope {
      * Returns GPU-based percentage close filtering shadow algorithm declaration.
      * GPU PCF provides faster shadow softening.
      *
+     * @param samples number of softening samples
+     * @param blurRadius filtering kernel size
      * @param bias shadow mapping bias: smaller values may cause acne artifact, larger values cause peter-panning
      * @return shadow algorithm declaration
      */
@@ -453,6 +458,7 @@ interface KorenderScope : ResourceScope {
      * @param id unique declaration id
      * @param count maximum number of instances
      * @param dynamic set to true to update instances each frame
+     * @param parameter instancing parameters defining which attributes are enabled
      * @param block instances declaration block
      * @return mesh instancing declaration
      */
@@ -464,6 +470,7 @@ interface KorenderScope : ResourceScope {
      * @param id unique declaration id
      * @param count maximum number of instances
      * @param dynamic set to true to update instances each frame
+     * @param parameter billboard instancing parameters defining which attributes are enabled
      * @param block instances declaration block
      * @return billboard instancing declaration
      */
@@ -587,27 +594,38 @@ interface KorenderScope : ResourceScope {
     val INSTSCREEN: MeshAttribute<FloatArray>
 
 
+    /** Instancing parameter for transform. */
     val TRANSFORM_INSTANCING: InstancingParameter
 
+    /** Instancing parameter for color. */
     val COLOR_INSTANCING: InstancingParameter
 
+    /** Instancing parameter for metallic property. */
     val METALLIC_INSTANCING: InstancingParameter
 
+    /** Instancing parameter for roughness property. */
     val ROUGHNESS_INSTANCING: InstancingParameter
 
+    /** Instancing parameter for color texture index. */
     val COLOR_TEXTURE_INDEX_INSTANCING: InstancingParameter
 
 
+    /** Billboard instancing parameter for position. */
     val POSITION_BILLBOARD_INSTANCING: BillboardInstancingParameter
 
+    /** Billboard instancing parameter for scale. */
     val SCALE_BILLBOARD_INSTANCING: BillboardInstancingParameter
 
+    /** Billboard instancing parameter for rotation. */
     val ROTATION_BILLBOARD_INSTANCING: BillboardInstancingParameter
 
+    /** Billboard instancing parameter for color. */
     val COLOR_BILLBOARD_INSTANCING: BillboardInstancingParameter
 
+    /** Billboard instancing parameter for color texture index. */
     val COLOR_TEXTURE_INDEX_BILLBOARD_INSTANCING: BillboardInstancingParameter
 
+    /** Shader flag to disable shadow casting for a renderable. */
     val NO_SHADOW_CAST: ShaderFlag
 
 }

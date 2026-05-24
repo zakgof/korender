@@ -20,6 +20,9 @@ import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
 import kotlinx.coroutines.Deferred
 
+/**
+ * Scope for declaring and loading GPU resources such as textures, meshes, and materials.
+ */
 interface ResourceScope {
 
     /** Current object retention policy. */
@@ -234,6 +237,18 @@ interface ResourceScope {
         block: MeshInitializer.() -> Unit,
     ): MeshDeclaration
 
+    /**
+     * Creates a composite mesh declaration by combining multiple prototype meshes,
+     * where each prototype is instanced a specified number of times.
+     *
+     * @param id unique declaration id
+     * @param prototypeMeshes list of pairs mapping each prototype Mesh to its maximum instance count
+     * @param attributes mesh vertex attributes to be included in the composite mesh
+     * @param instancingParameters set of instancing parameters defining which attributes are enabled
+     * @param dynamic set to true if the instance attributes can change frame to frame
+     * @param block configuration block to define the instances of the prototypes sequentially
+     * @return composite mesh declaration
+     */
     fun compositeMesh(
         id: String,
         prototypeMeshes: List<Pair<Mesh, Int>>,

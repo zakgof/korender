@@ -4,6 +4,9 @@ import com.zakgof.korender.TextStyle
 import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.math.ColorRGBA
 
+/**
+ * Scope for declaring GUI layouts (rows, columns, stacks) and drawing widgets like text or images.
+ */
 interface GuiContainerScope : FrameScope {
 
     /**
@@ -52,12 +55,12 @@ interface GuiContainerScope : FrameScope {
      *  @param id unique declaration id
      *  @param imageResource image resource file name
      *  @param width image width, in screen pixels
-     *  @param width image height, in screen pixels
+     *  @param height image height, in screen pixels
      *  @param marginTop margin to add above the image
      *  @param marginBottom margin to add below the image
      *  @param marginLeft margin to add to the left to the image
      *  @param marginRight margin to add to the right to the image
-     *  @param onTouch touch event handler for the text
+     *  @param onTouch touch event handler for the image
      */
     fun Image(id: String, imageResource: String, width: Float, height: Float, marginTop: Float = 0f, marginBottom: Float = 0f, marginLeft: Float = 0f, marginRight: Float = 0f, onTouch: TouchHandler = {})
 }

@@ -16,6 +16,9 @@ import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 
+/**
+ * Scope for declaring a single frame's renderable elements, post-processing filters, lights, and layout hierarchies.
+ */
 interface FrameScope : KorenderScope {
 
     /**
@@ -39,8 +42,8 @@ interface FrameScope : KorenderScope {
      *
      * @param resource resource file
      * @param transform model space transform
-     * @param animation index of animation to apply
      * @param instancing instancing declaration to render multiple objects in a batch
+     * @param animation index of animation to apply
      * @param onUpdate callback with runtime Gltf details
      * @param materialModifier material modifiers block
      */
@@ -142,6 +145,7 @@ interface FrameScope : KorenderScope {
     /**
      * Sets a loader scene to display while the resources are being loaded.
      *
+     * @param force force displaying the loading screen
      * @param block loader scene
      */
     fun OnLoading(force: Boolean = false, block: FrameScope.() -> Unit)
