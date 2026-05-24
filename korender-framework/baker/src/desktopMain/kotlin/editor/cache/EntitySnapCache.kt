@@ -4,13 +4,18 @@ import androidx.compose.ui.graphics.ImageBitmap
 import com.zakgof.korender.baker.editor.ui.dialog.collectModelPoints
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
 import com.zakgof.korender.scope.FrameScope
 import editor.model.entity.EntityInstance
 import editor.model.entity.EntityModel
 import editor.ui.projection.Axes
+import editor.util.BoundingSphere
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import java.io.File
 import kotlin.math.abs
 import kotlin.uuid.ExperimentalUuidApi
@@ -36,9 +41,21 @@ object EntitySnapCache {
         val uniqueName: String = "$uuid#$filename"
     }
 
+    @OptIn(ExperimentalUuidApi::class)
+    private data class ModelSnapJob(
+        val entityModel: EntityModel,
+        val uuid: Uuid = Uuid.generateV7(),
+        val deferred: CompletableDeferred<ImageBitmap> = CompletableDeferred(),
+    ) {
+        val uniqueName: String = "$uuid#${entityModel.filename}"
+    }
+
+    private val modelSnaps = mutableMapOf<String, MutableStateFlow<ImageBitmap?>>()
+
     private val jobs = mutableMapOf<String, InstanceSnapJob>()
     private val snapsToCapture = mutableListOf<InstanceSnapJob>()
     private val pointsToCapture = mutableListOf<PointsJob>()
+    private val modelsToCapture = mutableListOf<ModelSnapJob>()
 
     fun dispose(entityInstance: EntityInstance) {
         removeCachedImages(entityInstance.id)
@@ -70,6 +87,22 @@ object EntitySnapCache {
         return job.deferred
     }
 
+    @OptIn(ExperimentalUuidApi::class)
+    fun modelCompose(entityModel: EntityModel): Deferred<ImageBitmap> {
+        val job = ModelSnapJob(entityModel)
+        modelsToCapture += job
+        return job.deferred
+    }
+
+
+    fun entityImage(entityModel: EntityModel): StateFlow<ImageBitmap?> =
+        modelSnaps.getOrPut(entityModel.id) {
+            MutableStateFlow<ImageBitmap?>(ImageState.Loading).also {
+                load(id, it)
+            }
+        }
+
+
     private fun cacheKey(entityInstanceId: String, axes: Axes) = "${entityInstanceId}_${axes.name}"
 
     private fun removeCachedImages(entityInstanceId: String) {
@@ -86,6 +119,7 @@ object EntitySnapCache {
     fun frame() = with(fs) {
         renderSnaps()
         renderPoints()
+        renderModels()
     }
 
     private fun FrameScope.renderSnaps() {
@@ -134,5 +168,39 @@ object EntitySnapCache {
 
         }
     }
+
+    private fun FrameScope.renderModels() {
+        modelsToCapture.forEach { job ->
+            println("Capture model: ${job.entityModel.filename}")
+            val bs = BoundingSphere.fromPoints(job.entityModel.points)
+            val deferredKorenderImage = captureFrame(256, 256) {
+                camera = camera(
+                    bs.center - (bs.radius + 1f).z,
+                    1.z,
+                    1.y
+                )
+                projection = projection(
+                    bs.radius * 2f,
+                    bs.radius * 2f,
+                    0.5f,
+                    2f + bs.radius * 2f,
+                    ortho()
+                )
+                AmbientLight(white(1f))
+                Node(resourceLoader = { File(it.split("#")[1]).readBytes() }) {
+                    Model(job.uniqueName)
+                }
+
+            }
+            deferredKorenderImage.invokeOnCompletion {
+                println("Capture model image DONE: ${job.entityModel.filename}")
+                val imageBitmap = deferredKorenderImage.getCompleted().toCompose()
+                job.deferred.complete(imageBitmap)
+            }
+        }
+        modelsToCapture.clear()
+    }
+
+
 
 }

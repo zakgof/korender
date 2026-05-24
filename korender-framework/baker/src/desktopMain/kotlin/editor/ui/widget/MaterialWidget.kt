@@ -1,55 +1,62 @@
 package com.zakgof.korender.baker.editor.ui.widget
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.zakgof.korender.baker.resources.Res
-import com.zakgof.korender.baker.resources.cube
-import editor.cache.EntitySnapCache
-import editor.model.entity.EntityModel
-import editor.state.StateHolder
+import editor.cache.TextureImageCache
+import editor.model.Material
 import editor.ui.Theme
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import org.jetbrains.compose.resources.imageResource
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
-fun EntityWidget(holder: StateHolder, entityModel: EntityModel, selected: Boolean, onClick: () -> Unit) {
+fun MaterialWidget(material: Material, selected: Boolean, onClick: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .clickable { onClick() }
+        modifier = Modifier.clickable {
+            onClick()
+        }
             .padding(1.dp)
     )
     {
-        val image by EntitySnapCache.entityImage(entityModel).collectAsState()
-        Image(
-            bitmap = if (image != null) image else imageResource(Res.drawable.cube),
-            contentDescription = null,
+        material.colorTexture?.let {
+            Image(
+                bitmap = TextureImageCache.compose(material.colorTexture),
+                contentDescription = null,
+                colorFilter = ColorFilter.tint(
+                    color = material.baseColor,
+                    blendMode = BlendMode.Modulate
+                ),
+                modifier = Modifier.size(36.dp, 36.dp)
+            )
+        } ?: Box(
             modifier = Modifier.size(36.dp, 36.dp)
+                .background(material.baseColor)
         )
         Text(
             modifier = Modifier.weight(1f)
+                .padding(start = 4.dp)
                 .align(Alignment.CenterVertically),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            text = entityModel.name,
+            text = material.name,
             fontSize = 14.sp,
             color = Theme.light,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
         )
+
     }
 
 }

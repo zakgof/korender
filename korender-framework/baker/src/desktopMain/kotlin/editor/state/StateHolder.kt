@@ -1,5 +1,6 @@
 package editor.state
 
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.baker.editor.collision.BvhCompiler
 import com.zakgof.korender.baker.editor.collision.CollisionSerialModel
@@ -838,7 +839,6 @@ class StateHolder {
         }
         return entityModel
     }
-
 }
 
 fun <K, V> PersistentMap<K, V>.removeAll(keys: Collection<K>): PersistentMap<K, V> {
