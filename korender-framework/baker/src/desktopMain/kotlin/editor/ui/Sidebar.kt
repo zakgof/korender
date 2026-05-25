@@ -48,9 +48,7 @@ import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.zakgof.korender.baker.editor.ui.dialog.EntitiesDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
-import com.zakgof.korender.baker.editor.ui.widget.EntityWidget
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.adddiamond
@@ -73,7 +71,9 @@ import editor.model.Model
 import editor.model.brush.CreatorShape
 import editor.state.State
 import editor.state.StateHolder
+import editor.ui.dialog.EntitiesDialog
 import editor.ui.dialog.MaterialsDialog
+import editor.ui.widget.EntityWidget
 import editor.ui.widget.FancyClickToFloatInput
 import editor.ui.widget.FancyClickToTextInput
 import editor.ui.widget.GroupBox

@@ -8,7 +8,7 @@ import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.MenuBarScope
-import com.zakgof.korender.baker.editor.ui.dialog.EntitiesDialog
+import editor.ui.dialog.EntitiesDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat

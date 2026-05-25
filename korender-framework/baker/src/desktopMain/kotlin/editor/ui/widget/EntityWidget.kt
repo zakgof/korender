@@ -1,4 +1,4 @@
-package com.zakgof.korender.baker.editor.ui.widget
+package editor.ui.widget
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -11,22 +11,22 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.cube
-import editor.cache.EntitySnapCache
+import editor.cache.KorenderCache
 import editor.model.entity.EntityModel
-import editor.state.StateHolder
 import editor.ui.Theme
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import org.jetbrains.compose.resources.imageResource
+import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
-fun EntityWidget(holder: StateHolder, entityModel: EntityModel, selected: Boolean, onClick: () -> Unit) {
+fun EntityWidget(entityModel: EntityModel, selected: Boolean, onClick: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -34,9 +34,9 @@ fun EntityWidget(holder: StateHolder, entityModel: EntityModel, selected: Boolea
             .padding(1.dp)
     )
     {
-        val image by EntitySnapCache.entityImage(entityModel).collectAsState()
+        val image by KorenderCache.modelSnap(entityModel).collectAsState()
         Image(
-            bitmap = if (image != null) image else imageResource(Res.drawable.cube),
+            painter = image?.let { BitmapPainter(it) } ?: painterResource(Res.drawable.cube),
             contentDescription = null,
             modifier = Modifier.size(36.dp, 36.dp)
         )

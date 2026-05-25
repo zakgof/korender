@@ -1,4 +1,4 @@
-package com.zakgof.korender.baker.editor.ui.dialog
+package editor.ui.dialog
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,7 +33,6 @@ import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import com.zakgof.korender.Korender
 import com.zakgof.korender.ModelInfo
-import com.zakgof.korender.baker.editor.ui.widget.EntityWidget
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.adddiamond
 import com.zakgof.korender.baker.resources.cube
@@ -49,8 +48,7 @@ import editor.model.Model
 import editor.state.State
 import editor.state.StateHolder
 import editor.ui.Theme
-import editor.ui.dialog.confirmDialog
-import editor.ui.dialog.fileDialog
+import editor.ui.widget.EntityWidget
 import editor.ui.widget.FancyClickToFloatInput
 import editor.ui.widget.FancyClickToTextInput
 import editor.ui.widget.FancyTextInput
@@ -213,7 +211,7 @@ fun RowScope.EntityPreview(holder: StateHolder) {
                 state.entityModelId?.let {
                     AmbientLight(white(0.6f))
                     val entityModel = model.entityModels[state.entityModelId]!!
-                    camera = camera(bs.center + (-bs.radius * 3f).z, 1.z, 1.y)
+                    camera = camera(bs.center + (-bs.radius * 2f).z, 1.z, 1.y)
                     projection = projection(bs.radius * 2f * width.toFloat() / height.toFloat(), bs.radius * 2f, bs.radius, bs.radius * 6f)
                     AmbientLight(white(0.5f))
                     DirectionalLight(Vec3(1f, -1f, -1f), white(0.5f))

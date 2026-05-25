@@ -1,7 +1,6 @@
 package editor.cache
 
 import androidx.compose.ui.graphics.ImageBitmap
-import com.zakgof.korender.baker.editor.ui.dialog.collectModelPoints
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -9,13 +8,13 @@ import com.zakgof.korender.math.z
 import com.zakgof.korender.scope.FrameScope
 import editor.model.entity.EntityInstance
 import editor.model.entity.EntityModel
+import editor.ui.dialog.collectModelPoints
 import editor.ui.projection.Axes
 import editor.util.BoundingSphere
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import java.io.File
 import kotlin.math.abs
 import kotlin.uuid.ExperimentalUuidApi
@@ -86,22 +85,6 @@ object EntitySnapCache {
         pointsToCapture += job
         return job.deferred
     }
-
-    @OptIn(ExperimentalUuidApi::class)
-    fun modelCompose(entityModel: EntityModel): Deferred<ImageBitmap> {
-        val job = ModelSnapJob(entityModel)
-        modelsToCapture += job
-        return job.deferred
-    }
-
-
-    fun entityImage(entityModel: EntityModel): StateFlow<ImageBitmap?> =
-        modelSnaps.getOrPut(entityModel.id) {
-            MutableStateFlow<ImageBitmap?>(ImageState.Loading).also {
-                load(id, it)
-            }
-        }
-
 
     private fun cacheKey(entityInstanceId: String, axes: Axes) = "${entityInstanceId}_${axes.name}"
 
