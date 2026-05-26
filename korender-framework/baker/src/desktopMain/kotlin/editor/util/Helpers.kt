@@ -2,6 +2,11 @@ package editor.util
 
 import androidx.compose.ui.graphics.Color
 import com.zakgof.korender.math.ColorRGBA
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import java.math.BigDecimal
 import kotlin.math.abs
 import kotlin.math.floor
@@ -84,3 +89,15 @@ fun Float.sanity(): String {
 fun Color.toKorender() = ColorRGBA(red, green, blue, alpha)
 
 fun ColorRGBA.toCompose() = Color(r, g, b, a)
+
+inline fun <reified T> List<StateFlow<T>>.combineStates(
+    scope: CoroutineScope
+): StateFlow<List<T>> {
+    return combine(this) { array ->
+        array.toList()
+    }.stateIn(
+        scope = scope,
+        started = SharingStarted.Eagerly,
+        initialValue = map { it.value }
+    )
+}

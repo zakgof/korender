@@ -1,6 +1,5 @@
 package editor.state
 
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.baker.editor.collision.BvhCompiler
 import com.zakgof.korender.baker.editor.collision.CollisionSerialModel
@@ -9,7 +8,8 @@ import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import editor.cache.EntitySnapCache
+import editor.cache.EntitySnapCachexx
+import editor.cache.KorenderCache
 import editor.cache.TextureImageCache
 import editor.model.BoundingBox
 import editor.model.Material
@@ -216,7 +216,7 @@ class StateHolder {
                 entityInstances = it.entityInstances.removeAll(state.value.entityInstanceSelection),
             )
         }
-        selectedEntityInstances().forEach { EntitySnapCache.dispose(it) }
+        selectedEntityInstances().forEach { KorenderCache.remove(it) }
         _state.update {
             it.copy(
                 clipboardBrushes = brushes,
@@ -277,7 +277,7 @@ class StateHolder {
                 entityInstances = it.entityInstances.removeAll(state.value.entityInstanceSelection)
             )
         }
-        selectedEntityInstances().forEach { EntitySnapCache.dispose(it) }
+        selectedEntityInstances().forEach { KorenderCache.remove(it) }
         _state.update {
             it.copy(brushSelection = setOf(), entityInstanceSelection = setOf())
         }
@@ -785,7 +785,7 @@ class StateHolder {
         if (pushHistory) {
             pushHistory()
         }
-        EntitySnapCache.dispose(instance)
+        KorenderCache.remove(instance)
         val transform = instance.transform.rotate(center, axis, angle)
         val newInstance = instance.copy(transform = transform)
         _model.update {
@@ -830,7 +830,7 @@ class StateHolder {
     }
 
     suspend fun createEntityModel(name: String, filename: String) : EntityModel {
-        val pts = EntitySnapCache.entityPoints(filename).await()
+        val pts = EntitySnapCachexx.entityPoints(filename).await()
         val entityModel = EntityModel(name, filename, pts)
         withContext(Dispatchers.Main) {
             pushHistory()

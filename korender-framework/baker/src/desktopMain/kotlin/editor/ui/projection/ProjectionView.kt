@@ -22,7 +22,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -39,7 +38,7 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import editor.cache.EntitySnapCache
+import editor.cache.KorenderCache
 import editor.model.Model
 import editor.model.brush.Brush
 import editor.model.entity.EntityInstance
@@ -47,8 +46,11 @@ import editor.state.State
 import editor.state.StateHolder
 import editor.util.advanceSig
 import editor.util.color
-import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlin.math.abs
 
 internal interface MouseHandler {
@@ -273,11 +275,14 @@ private fun DrawScope.drawEntityInstance(entityInstance: EntityInstance, mapper:
     val selected = state.entityInstanceSelection.contains(entityInstance.id)
     val bb = entityInstance.bb
     val rect = mapper.rect(bb)
-    val deferredImage: Deferred<ImageBitmap> = EntitySnapCache.instanceSnap(entityInstance, model.entityModels[entityInstance.modelId]!!, mapper.axes)
+    val snapFlow = KorenderCache.instanceSnap(entityInstance, model.entityModels[entityInstance.modelId]!!, mapper.axes)
 
-    if (deferredImage.isCompleted) {
+    snapFlow.onEach { requestRedraw() }
+        .launchIn(CoroutineScope(Dispatchers.Main))
+
+    snapFlow.value?.let {
         drawImage(
-            image = deferredImage.getCompleted(),
+            image = it,
             dstOffset = IntOffset(
                 rect.left.toInt(),
                 rect.top.toInt()
@@ -287,11 +292,6 @@ private fun DrawScope.drawEntityInstance(entityInstance: EntityInstance, mapper:
                 rect.height.toInt()
             )
         )
-    } else {
-        deferredImage.invokeOnCompletion {
-            println("Image ready - redraw requested")
-            requestRedraw()
-        }
     }
     drawRect(
         color =  if (selected) Color.Red else entityInstance.color(),

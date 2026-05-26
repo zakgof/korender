@@ -21,7 +21,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalCoroutinesApi::class)
-object EntitySnapCache {
+object EntitySnapCachexx {
 
     private data class InstanceSnapJob(
         val instance: EntityInstance,
