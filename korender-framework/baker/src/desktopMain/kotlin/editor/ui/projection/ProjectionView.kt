@@ -115,10 +115,11 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
                             drag(dragStart.id) { change ->
                                 change.consume()
                                 if (mouseHandler.onDrag(
-                                    change.position,
-                                    currentEvent.buttons,
-                                    currentEvent.keyboardModifiers.isCtrlPressed
-                                )) {
+                                        change.position,
+                                        currentEvent.buttons,
+                                        currentEvent.keyboardModifiers.isCtrlPressed
+                                    )
+                                ) {
                                     requestRedraw()
                                 }
                             }
@@ -270,7 +271,6 @@ private fun DrawScope.drawEntityInstances(mapper: ProjectionMapper, state: State
 
 @OptIn(ExperimentalCoroutinesApi::class)
 private fun DrawScope.drawEntityInstance(entityInstance: EntityInstance, mapper: ProjectionMapper, state: State, model: Model, requestRedraw: () -> Unit) {
-    // val hidden = model.invisibleBrushes.contains(brush.id)
     val selected = state.entityInstanceSelection.contains(entityInstance.id)
     val bb = entityInstance.bb
     val rect = mapper.rect(bb)
@@ -292,12 +292,25 @@ private fun DrawScope.drawEntityInstance(entityInstance: EntityInstance, mapper:
             )
         )
     }
-    drawRect(
-        color =  if (selected) Color.Red else entityInstance.color(),
-        topLeft = rect.topLeft,
-        size = rect.size,
-        style = Stroke(width = if (selected) 3f else 2f)
+    listOf(
+        0 to 1, 1 to 3, 3 to 2, 2 to 0,
+        4 to 5, 5 to 7, 7 to 6, 6 to 4,
+        0 to 4, 1 to 5, 2 to 6, 3 to 7
     )
+        .forEach { edge ->
+            drawLine(
+                color = if (selected) Color.Red else entityInstance.color(),
+                start = mapper.wToV(entityInstance.transform * entityInstance.points[edge.first]),
+                end = mapper.wToV(entityInstance.transform * entityInstance.points[edge.second]),
+                strokeWidth = if (selected) 3f else 2f
+            )
+        }
+//    drawRect(
+//        color =  if (selected) Color.Red else entityInstance.color(),
+//        topLeft = rect.topLeft,
+//        size = rect.size,
+//        style = Stroke(width = if (selected) 3f else 2f)
+//    )
 }
 
 private fun mouseHandler(mapper: ProjectionMapper, state: State, model: Model, holder: StateHolder): MouseHandler = when (state.mouseMode) {
