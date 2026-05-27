@@ -216,10 +216,8 @@ fun RowScope.EntityPreview(holder: StateHolder) {
                     AmbientLight(white(0.5f))
                     DirectionalLight(Vec3(1f, -1f, -1f), white(0.5f))
                     Model(entityModel.filename, onUpdate = { objInfo ->
-                        if (entityModel.points.isEmpty()) {
-                            val points = collectModelPoints(objInfo)
-                            bs = BoundingSphere.fromPoints(points)
-                        }
+                        val points = collectModelPoints(objInfo)
+                        bs = BoundingSphere.fromPoints(points)
                     })
                 }
             }

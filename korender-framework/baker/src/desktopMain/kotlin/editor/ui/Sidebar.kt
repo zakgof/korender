@@ -1,6 +1,5 @@
 package editor.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
@@ -82,7 +80,6 @@ import editor.ui.widget.LabeledFloatInput
 import editor.ui.widget.RadioButtonRow
 import editor.util.nextSane
 import editor.util.prevSane
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun Sidebar(holder: StateHolder) {
@@ -291,11 +288,10 @@ private fun shape(state: State, holder: StateHolder) {
                         .padding(1.dp)
                 )
                 Spacer(Modifier.width(4.dp))
-                Image(
-                    painterResource(if (expanded) Res.drawable.arrowup else Res.drawable.arrowdown),
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
+                IconButton(
+                    icon = if (expanded) Res.drawable.arrowup else Res.drawable.arrowdown,
+                    tooltip = "",
+                ) {}
             }
 
 
@@ -340,12 +336,12 @@ private fun models(holder: StateHolder, state: State, model: Model) {
         val entitiesDialog = EntitiesDialog(holder)
         state.entityModelId?.let {
             Row(
-                modifier = Modifier.height(32.dp).fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                modifier = Modifier.height(36.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(modifier = Modifier.weight(1f)) {
-                    EntityWidget(model.entityModels[it]!!, true) {
+                    EntityWidget(model.entityModels[it]!!, false) {
                         entitiesDialog()
                     }
                 }
@@ -353,9 +349,14 @@ private fun models(holder: StateHolder, state: State, model: Model) {
                     holder.createEntityInstance()
                 }
             }
-        } ?: Text(" -- none --", style = Theme.label, modifier = Modifier.fillMaxWidth().clickable {
-            entitiesDialog()
-        })
+        } ?: Text(
+            " -- none --", style = Theme.label, modifier = Modifier
+                .fillMaxWidth()
+                .height(36.dp)
+                .padding(start = 40.dp)
+                .clickable {
+                    entitiesDialog()
+                })
     }
 }
 
@@ -365,8 +366,8 @@ private fun materials(holder: StateHolder, state: State, model: Model) {
         val materialDialog = MaterialsDialog(holder)
         val material = model.materials[state.materialId]!!
         Row(
-            modifier = Modifier.height(32.dp).fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(3.dp),
+            modifier = Modifier.height(36.dp).fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(modifier = Modifier.weight(1f)) {
@@ -378,7 +379,6 @@ private fun materials(holder: StateHolder, state: State, model: Model) {
                 holder.applyMaterialToSelection()
             }
         }
-
     }
 }
 

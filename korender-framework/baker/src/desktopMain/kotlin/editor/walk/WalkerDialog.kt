@@ -37,7 +37,7 @@ fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
             state = rememberDialogState(size = DpSize(800.dp, 600.dp))
         ) {
             Korender({
-                if (it == "scene/foobar") Cbor.encodeToByteArray(data!!.first) else Res.readBytes("files/$it")
+                if (it == "scene/foobar.kr") Cbor.encodeToByteArray(data!!.first) else Res.readBytes("files/$it")
             }) {
                 val controller = Controller(data!!.second)
                 OnKey { controller.key(it) }
@@ -67,7 +67,7 @@ fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
                     controller.update(frameInfo.dt, frameInfo.time)
                     projection = projection(0.5f * width / height, 0.5f, 0.5f, 1000f)
                     camera = controller.camera()
-                    Model("scene/foobar") {}
+                    Model("scene/foobar.kr") {}
                     Model(resource = "walk/swat-woman.glb", transform = controller.player())
                     Gui {
                         Column {
