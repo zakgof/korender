@@ -8,7 +8,6 @@ import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import editor.cache.EntitySnapCachexx
 import editor.cache.KorenderCache
 import editor.cache.TextureImageCache
 import editor.model.BoundingBox
@@ -814,6 +813,7 @@ class StateHolder {
                 .filter { ei -> ei.value.modelId == state.value.entityModelId }
                 .map { it.key }
                 .toSet()
+            KorenderCache.remove(model.value.entityModels[state.value.entityModelId]!!)
             _model.update {
                 it.copy(
                     entityInstances = it.entityInstances.removeAll(entityInstancesToRemove),
@@ -830,7 +830,7 @@ class StateHolder {
     }
 
     suspend fun createEntityModel(name: String, filename: String) : EntityModel {
-        val pts = EntitySnapCachexx.entityPoints(filename).await()
+        val pts = KorenderCache.entityPoints(filename)
         val entityModel = EntityModel(name, filename, pts)
         withContext(Dispatchers.Main) {
             pushHistory()

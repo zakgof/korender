@@ -205,7 +205,6 @@ private fun DrawScope.drawCreator(mapper: ProjectionMapper, state: State) {
     )
 }
 
-
 private fun DrawScope.drawGrid(mapper: ProjectionMapper, state: State) {
     val zeroX: Float = mapper.zeroGridX()
     mapper.gridXs().forEach { gridX ->

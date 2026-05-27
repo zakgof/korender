@@ -14,7 +14,6 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.scope.FrameScope
 import com.zakgof.korender.scope.KorenderScope
-import editor.cache.EntitySnapCachexx
 import editor.cache.KorenderCache
 import editor.cache.TextureImageCache
 import editor.model.Material
@@ -73,7 +72,6 @@ fun KorenderView(holder: StateHolder) {
         OnTouch { touch(it, holder) }
         Frame {
             KorenderCache.frame()
-            EntitySnapCachexx.frame()
             AmbientLight(white(0.6f))
             DirectionalLight(Vec3(1f, -1f, -1f), white(1.5f))
             PointLight(20.y, white(4.5f))

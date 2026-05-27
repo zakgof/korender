@@ -211,7 +211,7 @@ fun RowScope.EntityPreview(holder: StateHolder) {
                 state.entityModelId?.let {
                     AmbientLight(white(0.6f))
                     val entityModel = model.entityModels[state.entityModelId]!!
-                    camera = camera(bs.center + (-bs.radius * 2f).z, 1.z, 1.y)
+                    camera = camera(bs.center + (bs.radius * 2f).z, -1.z, 1.y)
                     projection = projection(bs.radius * 2f * width.toFloat() / height.toFloat(), bs.radius * 2f, bs.radius, bs.radius * 6f)
                     AmbientLight(white(0.5f))
                     DirectionalLight(Vec3(1f, -1f, -1f), white(0.5f))

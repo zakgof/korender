@@ -2,34 +2,40 @@ package editor.cache
 
 import androidx.compose.ui.graphics.ImageBitmap
 import com.zakgof.korender.math.ColorRGB.Companion.white
+import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import com.zakgof.korender.scope.FrameScope
 import com.zakgof.korender.scope.KorenderScope
 import editor.model.entity.EntityInstance
 import editor.model.entity.EntityModel
+import editor.ui.dialog.collectModelPoints
 import editor.ui.projection.Axes
 import editor.util.BoundingSphere
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.function.Consumer
 import kotlin.math.abs
 
 @OptIn(ExperimentalCoroutinesApi::class)
 object KorenderCache {
 
+    private val pointsFetcher = PointsFetcher()
     private val modelSnapCache = KorenderCacheHolder<EntityModel, ImageBitmap> { entityModel, first, consumer ->
         if (first) {
             println("Capture model snap started: ${entityModel.filename}")
             val bs = BoundingSphere.fromPoints(entityModel.points)
             val deferredKorenderImage = captureFrame(256, 256) {
                 camera = camera(
-                    bs.center - (bs.radius + 1f).z,
-                    1.z,
+                    bs.center + (bs.radius + 1f).z,
+                    -1.z,
                     1.y
                 )
                 projection = projection(
@@ -90,6 +96,9 @@ object KorenderCache {
         return instanceSnapCache[EntityInstanceEntry(entityInstance, model, axes)]
     }
 
+    suspend fun entityPoints(filename: String): List<Vec3> =
+        pointsFetcher.push(filename).await()
+
     fun remove(entityModel: EntityModel) {
         modelSnapCache.remove(entityModel)
     }
@@ -102,9 +111,7 @@ object KorenderCache {
     fun frame() {
         modelSnapCache.frame()
         instanceSnapCache.frame()
-//
-//        println("Model cache: $modelSnapCache")
-//        println("Instance cache: $instanceSnapCache")
+        pointsFetcher.frame()
     }
 }
 
@@ -116,6 +123,36 @@ private class EntityInstanceEntry(
     override fun toString() = "${instance.rotateHash()}_${axes.name}"
     override fun hashCode() = toString().hashCode()
     override fun equals(other: Any?) = toString() == other.toString()
+}
+
+private class PointsFetcher {
+
+    class PointsJob(
+        val filename: String,
+        val deferred: CompletableDeferred<List<Vec3>> = CompletableDeferred()
+    )
+
+    val jobs = ConcurrentLinkedQueue<PointsJob>()
+
+    fun push(filename: String): Deferred<List<Vec3>> {
+        val job = PointsJob(filename)
+        jobs.add(job)
+        return job.deferred
+    }
+
+    context(fs: FrameScope)
+    fun frame() = with(fs) {
+            jobs.peek()?.let { job ->
+            println("Capture points: ${job.filename}")
+            Node(resourceLoader = { File(it.split("#")[1]).readBytes() }) {
+                Model("${System.identityHashCode(job)}#${job.filename}", onUpdate = {
+                    println("Capture points done: ${job.filename}")
+                    job.deferred.complete(collectModelPoints(it))
+                    jobs.remove(job)
+                })
+            }
+        }
+    }
 }
 
 private class KorenderCacheHolder<K, V>(val loader: KorenderScope.(K, Boolean, Consumer<V>) -> Unit) {
