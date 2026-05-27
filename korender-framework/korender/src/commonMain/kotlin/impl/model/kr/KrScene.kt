@@ -10,7 +10,7 @@ import com.zakgof.korender.impl.engine.SceneDeclaration
 import com.zakgof.korender.impl.geometry.MeshAttributes
 import com.zakgof.korender.impl.material.InternalBaseMaterial
 import com.zakgof.korender.impl.model.InternalModel
-import com.zakgof.korender.impl.scene.SceneModel
+import com.zakgof.korender.impl.scene.KrModel
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform
@@ -26,7 +26,7 @@ internal class KrScene(declaration: ModelDeclaration) : InternalModel {
     private val texturePrefix = "$prefix.texture."
 
     private val sceneModelDeferred = declaration.nodeContext.load(declaration.resource) {
-        Cbor.decodeFromByteArray<SceneModel>(it)
+        Cbor.decodeFromByteArray<KrModel>(it)
     }
 
     private suspend fun loadResource(resource: String, parent: ResourceLoader): ByteArray =
@@ -60,7 +60,7 @@ internal class KrScene(declaration: ModelDeclaration) : InternalModel {
         } else rk?.fail()
     }
 
-    private fun NodeContext.material(material: SceneModel.Material) =
+    private fun NodeContext.material(material: KrModel.Material) =
         InternalBaseMaterial().apply {
             color = ColorRGBA(material.baseColor)
             colorTexture = material.colorTextureId?.let {
@@ -75,7 +75,7 @@ internal class KrScene(declaration: ModelDeclaration) : InternalModel {
             roughnessFactor = material.roughness ?: roughnessFactor
         }
 
-    private fun NodeContext.mesh(id: String, mesh: SceneModel.Mesh) =
+    private fun NodeContext.mesh(id: String, mesh: KrModel.Mesh) =
         customMesh(
             id = "$prefix.mesh.$id",
             vertexCount = mesh.vertices,
@@ -91,17 +91,17 @@ internal class KrScene(declaration: ModelDeclaration) : InternalModel {
             }
         }
 
-    private fun attributes(attributes: Set<SceneModel.Attribute>) =
+    private fun attributes(attributes: Set<KrModel.Attribute>) =
         attributes.map { attribute(it) }.toTypedArray()
 
-    private fun attribute(attribute: SceneModel.Attribute): MeshAttribute<out Any> = when (attribute) {
-        SceneModel.Attribute.POS -> MeshAttributes.POS
-        SceneModel.Attribute.NORMAL -> MeshAttributes.NORMAL
-        SceneModel.Attribute.TEX -> MeshAttributes.TEX
-        SceneModel.Attribute.COLOR -> MeshAttributes.COLOR
-        SceneModel.Attribute.COLORTEXINDEX -> MeshAttributes.COLORTEXINDEX
-        SceneModel.Attribute.METALLIC -> MeshAttributes.METALLIC
-        SceneModel.Attribute.ROUGHNESS -> MeshAttributes.ROUGHNESS
+    private fun attribute(attribute: KrModel.Attribute): MeshAttribute<out Any> = when (attribute) {
+        KrModel.Attribute.POS -> MeshAttributes.POS
+        KrModel.Attribute.NORMAL -> MeshAttributes.NORMAL
+        KrModel.Attribute.TEX -> MeshAttributes.TEX
+        KrModel.Attribute.COLOR -> MeshAttributes.COLOR
+        KrModel.Attribute.COLORTEXINDEX -> MeshAttributes.COLORTEXINDEX
+        KrModel.Attribute.METALLIC -> MeshAttributes.METALLIC
+        KrModel.Attribute.ROUGHNESS -> MeshAttributes.ROUGHNESS
     }
 
     override fun close() {

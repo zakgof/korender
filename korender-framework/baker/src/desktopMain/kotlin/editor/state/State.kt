@@ -1,7 +1,7 @@
 package editor.state
 
 import androidx.compose.ui.input.key.Key
-import com.zakgof.korender.impl.scene.SceneModel
+import com.zakgof.korender.impl.scene.KrModel
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -36,7 +36,7 @@ data class State(
     val pressedKeys: Set<Key> = setOf(),
 
     val savePath: String? = null,
-    val lastCompiledSceneModel: SceneModel? = null,
+    val lastCompiledSceneModel: KrModel? = null,
     val lastSavedModelHash: Int = 0,
 
     val persistentState: PersistentState

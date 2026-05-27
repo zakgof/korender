@@ -12,7 +12,7 @@ import androidx.compose.ui.window.rememberDialogState
 import com.zakgof.korender.Korender
 import com.zakgof.korender.baker.editor.walk.Controller
 import com.zakgof.korender.baker.resources.Res
-import com.zakgof.korender.impl.scene.SceneModel
+import com.zakgof.korender.impl.scene.KrModel
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.Vec3
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -21,11 +21,11 @@ import kotlinx.serialization.encodeToByteArray
 
 @OptIn(ExperimentalSerializationApi::class)
 @Composable
-fun walkerDialog(): (Pair<SceneModel, ByteArray>) -> Unit {
+fun walkerDialog(): (Pair<KrModel, ByteArray>) -> Unit {
 
     var show by remember { mutableStateOf(false) }
-    var data by remember { mutableStateOf<Pair<SceneModel, ByteArray>?>(null) }
-    val openDialog = { data1: Pair<SceneModel, ByteArray> ->
+    var data by remember { mutableStateOf<Pair<KrModel, ByteArray>?>(null) }
+    val openDialog = { data1: Pair<KrModel, ByteArray> ->
         show = true
         data = data1
     }

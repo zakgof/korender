@@ -3,7 +3,7 @@ package com.zakgof.korender.impl.scene
 import kotlinx.serialization.Serializable
 
 @Serializable
-class SceneModel(
+class KrModel(
     val textures: Map<String, Texture>,
     val materials: Map<String, Material>,
     val meshes: Map<String, Mesh>,

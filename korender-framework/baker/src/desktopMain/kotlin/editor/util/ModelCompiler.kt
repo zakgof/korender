@@ -3,8 +3,8 @@ package editor.util
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.buffer.NativeFloatBuffer
 import com.zakgof.korender.impl.buffer.toByteArray
-import com.zakgof.korender.impl.scene.SceneModel
-import com.zakgof.korender.impl.scene.SceneModel.Attribute
+import com.zakgof.korender.impl.scene.KrModel
+import com.zakgof.korender.impl.scene.KrModel.Attribute
 import com.zakgof.korender.math.Mat4
 import editor.cache.TextureImageCache
 import editor.model.Material
@@ -17,7 +17,7 @@ import java.io.File
  *
  */
 object ModelCompiler {
-    fun compile(model: Model): SceneModel {
+    fun compile(model: Model): KrModel {
 
         val usedMaterialIds = model.brushes.values
             .flatMap { it.faces }
@@ -41,7 +41,7 @@ object ModelCompiler {
             .toMap()
 
         val texArrayMaterials = texArrayGroups.map {
-            it.key to SceneModel.Material(
+            it.key to KrModel.Material(
                 id = it.key.toString(),
                 baseColor = 0xFFFFFFFF,
                 colorTextureId = null,
@@ -51,7 +51,7 @@ object ModelCompiler {
             )
         }.toMap()
 
-        val materials = texArrayMaterials.ifEmpty { mapOf("notex" to SceneModel.Material("notex")) }
+        val materials = texArrayMaterials.ifEmpty { mapOf("notex" to KrModel.Material("notex")) }
         val noTexMaterialId = materials.keys.first()
 
         val meshFaces = model.brushes.values.flatMap { brush -> brush.faces.map { brush.mesh to it } }
@@ -64,7 +64,7 @@ object ModelCompiler {
             })
             .map { matToMeshFacesWithId ->
                 val faces = matToMeshFacesWithId.value.map { it.first }
-                SceneModel.Mesh(
+                KrModel.Mesh(
                     matToMeshFacesWithId.key.toString(),
                     matToMeshFacesWithId.value.sumOf { it.first.first.faces[it.first.second]!!.size * 3 },
                     0,
@@ -81,12 +81,12 @@ object ModelCompiler {
                 )
             }
 
-        return SceneModel(
+        return KrModel(
             textures = textures,
             materials = materials.mapKeys { it.key.toString() },
             meshes = meshes.associateBy { it.id },
             renderables = meshes.map {
-                SceneModel.Renderable(
+                KrModel.Renderable(
                     it.id,
                     it.id,
                     it.id,
@@ -96,10 +96,10 @@ object ModelCompiler {
         )
     }
 
-    private fun texture(path: String): SceneModel.Texture {
+    private fun texture(path: String): KrModel.Texture {
         val file = File(path)
         val image = file.readBytes()
-        return SceneModel.Texture(file.name, file.extension, image)
+        return KrModel.Texture(file.name, file.extension, image)
     }
 
     private fun posBytes(faces: List<Pair<BrushMesh, Face>>): ByteArray {

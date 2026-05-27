@@ -3,7 +3,7 @@ package editor.state
 import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.baker.editor.collision.BvhCompiler
 import com.zakgof.korender.baker.editor.collision.CollisionSerialModel
-import com.zakgof.korender.impl.scene.SceneModel
+import com.zakgof.korender.impl.scene.KrModel
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -552,7 +552,7 @@ class StateHolder {
         return "$base $i"
     }
 
-    fun dryRun(): Pair<SceneModel, ByteArray> {
+    fun dryRun(): Pair<KrModel, ByteArray> {
         return ModelCompiler.compile(model.value) to Cbor.encodeToByteArray(CollisionSerialModel.BvhNode(BvhCompiler.compile(model.value.brushes.values)))
         // _state.update { it.copy(lastCompiledSceneModel = sceneModel) }
     }
