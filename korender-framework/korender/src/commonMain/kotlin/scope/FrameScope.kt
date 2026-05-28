@@ -48,7 +48,7 @@ interface FrameScope : KorenderScope {
      * @param materialModifier material modifiers block
      */
 
-    fun Model(resource: String, transform: Transform = Transform.IDENTITY, instancing: ModelInstancingDeclaration? = null, animation: Int? = null, onUpdate: (ModelInfo) -> Unit = {}, materialModifier: BaseMaterialScope.() -> Unit = {})
+    fun Model(resource: String, transform: Transform = Transform.IDENTITY, instancing: ModelInstancingDeclaration? = null, animation: Int? = null, onUpdate: ((ModelInfo) -> Unit)? = null, materialModifier: BaseMaterialScope.() -> Unit = {})
 
 
     /**

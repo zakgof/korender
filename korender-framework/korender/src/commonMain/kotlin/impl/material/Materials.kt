@@ -34,6 +34,7 @@ import com.zakgof.korender.impl.glgpu.UniformPack
 import com.zakgof.korender.impl.glgpu.UniformSupplier
 import com.zakgof.korender.impl.glgpu.Vec2Getter
 import com.zakgof.korender.impl.glgpu.Vec3Getter
+import com.zakgof.korender.impl.model.InternalModelInfo
 import com.zakgof.korender.impl.model.terrain.TerrainMaterialModifier
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
@@ -208,6 +209,21 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
 
     override val child
         get() = env as? InternalMaterialModifier
+
+    fun toMaterialInfo() = InternalModelInfo.Material(
+        color = this.color,
+        colorTextureResource = (colorTexture as? ResourceTextureDeclaration)?.textureResource,
+        metallicFactor = metallicFactor,
+        roughnessFactor = roughnessFactor,
+        alphaCutoff = alphaCutoff,
+        triplanarScale = triplanarScale,
+        stochasticSharpness = stochasticSharpness,
+        normalTextureResource = (normalTexture as? ResourceTextureDeclaration)?.textureResource,
+        emission = emission,
+        metallicRoughnessTextureResource = (metallicRoughnessTexture as? ResourceTextureDeclaration)?.textureResource,
+        emissionTextureResource = (emissionTexture as? ResourceTextureDeclaration)?.textureResource,
+        occlusionTextureResource = (occlusionTexture as? ResourceTextureDeclaration)?.textureResource
+    )
 }
 
 internal class InternalBillboardMaterial : InternalBaseMaterial("!shader/billboard.vert"),

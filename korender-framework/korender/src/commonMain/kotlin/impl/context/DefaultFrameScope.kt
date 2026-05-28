@@ -51,6 +51,7 @@ import com.zakgof.korender.impl.geometry.InstancedBillboard
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.InternalBillboardInstancingParameter
 import com.zakgof.korender.impl.geometry.InternalInstancingParameter
+import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
 import com.zakgof.korender.impl.geometry.ScreenQuad
 import com.zakgof.korender.impl.material.InternalBillboardMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
@@ -182,7 +183,7 @@ internal class DefaultFrameScope(
         DefaultDeferredShadingScope(sceneDeclaration.deferredShadingDeclaration!!).apply(block)
     }
 
-    override fun Model(resource: String, transform: Transform, instancing: ModelInstancingDeclaration?, animation: Int?, onUpdate: (ModelInfo) -> Unit, materialModifier: BaseMaterialScope.() -> Unit) {
+    override fun Model(resource: String, transform: Transform, instancing: ModelInstancingDeclaration?, animation: Int?, onUpdate: ((ModelInfo) -> Unit)?, materialModifier: BaseMaterialScope.() -> Unit) {
         sceneDeclaration.models += ModelDeclaration(
             resource,
             transform,
@@ -200,7 +201,7 @@ internal class DefaultFrameScope(
         val meshDeclaration = (instancing as? InternalInstancingDeclaration)?.let {
             InstancedMesh(instancing.id, instancing.count, mesh, !instancing.dynamic, transparent, nodeContext, instancing.parameters as List<InternalInstancingParameter>, instancing.instancer)
         } ?: mesh
-        val rd = RenderableDeclaration(material as InternalMaterial, meshDeclaration, transform, transparent, nodeContext)
+        val rd = RenderableDeclaration(material as InternalMaterial, meshDeclaration as InternalMeshDeclaration, transform, transparent, nodeContext)
         sceneDeclaration.append(rd)
     }
 

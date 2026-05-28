@@ -1,7 +1,6 @@
 package com.zakgof.korender.impl.engine
 
 import com.zakgof.korender.BaseMaterialScope
-import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.ShadowAlgorithmDeclaration
@@ -10,6 +9,7 @@ import com.zakgof.korender.TouchHandler
 import com.zakgof.korender.impl.context.DefaultFrameScope
 import com.zakgof.korender.impl.context.Direction
 import com.zakgof.korender.impl.context.NodeContext
+import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.UniformPack
 import com.zakgof.korender.impl.material.InternalDecalMaterial
@@ -128,7 +128,7 @@ internal data class ShaderDeclaration(
 
 internal class RenderableDeclaration(
     val material: InternalMaterial,
-    val mesh: MeshDeclaration,
+    val mesh: InternalMeshDeclaration,
     val transform: Transform = Transform.IDENTITY,
     val transparent: Boolean,
     override val nodeContext: NodeContext,
@@ -200,7 +200,7 @@ internal class ModelDeclaration(
     val instancingDeclaration: InternalModelInstancingDeclaration?,
     val time: Float,
     val animation: Int,
-    val onUpdate: (ModelInfo) -> Unit,
+    val onUpdate: ((ModelInfo) -> Unit)?,
     val materialModifier: BaseMaterialScope.() -> Unit,
     override val nodeContext: NodeContext,
 ) : NodeKeeper {

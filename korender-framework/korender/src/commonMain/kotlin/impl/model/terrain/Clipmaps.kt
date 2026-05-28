@@ -1,10 +1,10 @@
 package com.zakgof.korender.impl.model.terrain
 
-import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.impl.engine.HeightFieldDeclaration
 import com.zakgof.korender.impl.engine.RenderableDeclaration
 import com.zakgof.korender.impl.engine.SceneDeclaration
+import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
 import com.zakgof.korender.impl.geometry.MeshAttributes.B1
 import com.zakgof.korender.impl.geometry.MeshAttributes.B2
 import com.zakgof.korender.impl.glgpu.FloatGetter
@@ -17,8 +17,8 @@ import kotlin.math.floor
 
 internal class Clipmaps(val declaration: HeightFieldDeclaration) : AutoCloseable {
 
-    private val center: MeshDeclaration
-    private val ring = mutableMapOf<Offset, MeshDeclaration>()
+    private val center: InternalMeshDeclaration
+    private val ring = mutableMapOf<Offset, InternalMeshDeclaration>()
     private val inner = 2 * declaration.hg + 3
 
     init {
@@ -137,7 +137,7 @@ internal class Clipmaps(val declaration: HeightFieldDeclaration) : AutoCloseable
 
     private data class Offset(val x: Int, val z: Int)
 
-    class Me(val mesh: MeshDeclaration, val offsetAndScale: Vec3, val antipop: Vec3)
+    class Me(val mesh: InternalMeshDeclaration, val offsetAndScale: Vec3, val antipop: Vec3)
 }
 
 internal class TerrainMaterialModifier(

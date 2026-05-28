@@ -1,6 +1,5 @@
 package com.zakgof.korender.impl.context
 
-import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureResources
 import com.zakgof.korender.Image
@@ -18,10 +17,6 @@ import com.zakgof.korender.TextureArrayDeclaration
 import com.zakgof.korender.TextureArrayImages
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
-import com.zakgof.korender.scope.InstancingParameter
-import com.zakgof.korender.scope.InstancingScope
-import com.zakgof.korender.scope.PipeMeshScope
-import com.zakgof.korender.scope.ResourceScope
 import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.engine.createPipeMesh
 import com.zakgof.korender.impl.geometry.BiQuad
@@ -34,6 +29,7 @@ import com.zakgof.korender.impl.geometry.Disk
 import com.zakgof.korender.impl.geometry.Geometry
 import com.zakgof.korender.impl.geometry.HeightField
 import com.zakgof.korender.impl.geometry.InternalInstancingParameter
+import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
 import com.zakgof.korender.impl.geometry.MeshAttributes.COLOR
 import com.zakgof.korender.impl.geometry.MeshAttributes.COLORTEXINDEX
 import com.zakgof.korender.impl.geometry.MeshAttributes.METALLIC
@@ -56,6 +52,10 @@ import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.material.simpleBlur
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
+import com.zakgof.korender.scope.InstancingParameter
+import com.zakgof.korender.scope.InstancingScope
+import com.zakgof.korender.scope.PipeMeshScope
+import com.zakgof.korender.scope.ResourceScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -114,7 +114,7 @@ internal class NodeContext(
         dynamic: Boolean,
         indexType: IndexType?,
         block: MeshInitializer.() -> Unit,
-    ): MeshDeclaration =
+    ): InternalMeshDeclaration =
         CustomMesh(id, vertexCount, indexCount, attributes.asList(), dynamic, indexType, this, block)
 
     @Suppress("UNCHECKED_CAST")

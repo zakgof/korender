@@ -76,7 +76,7 @@ internal class ObjScene(declaration: ModelDeclaration) : InternalModel {
         val scene = sceneDeferred.getCompleted()
         if (!loadNotified) {
             loadNotified = true
-            modelDeclaration.onUpdate(scene.modelInfo())
+            modelDeclaration.onUpdate?.invoke(scene.modelInfo())
         }
         scene.meshes.forEachIndexed { index, preparedMesh ->
             val material = InternalBaseMaterial().apply {
@@ -118,15 +118,18 @@ internal class ObjScene(declaration: ModelDeclaration) : InternalModel {
     }
 }
 
-private data class LoadedObjScene(
-    val meshes: List<PreparedMesh>,
-) {
-    fun modelInfo() =
-        InternalModelInfo(
-            meshes.map { InternalModelInfo.Node(null, null, it.name, it.cmesh) },
+private data class LoadedObjScene(val meshes: List<PreparedMesh>) {
+    fun modelInfo() : InternalModelInfo {
+        val renderables = meshes.map {
+            InternalModelInfo.Renderable(null, it.cmesh, it.material?.toMaterialInfo())
+        }
+        val instance = InternalModelInfo.Node("instances", null, null, renderables)
+        return InternalModelInfo(
+            listOf(instance),
             null,
             null
         )
+    }
 }
 
 private data class PreparedMesh(
@@ -176,6 +179,14 @@ private data class ObjSceneMaterial(
             material.roughnessFactor = it
         }
     }
+
+    fun toMaterialInfo() = InternalModelInfo.Material (
+        name = name,
+        color = color,
+        colorTextureResource = colorTexture,
+        metallicFactor = metallic ?: 0.1f,
+        roughnessFactor = roughness ?: 0.5f
+    )
 }
 
 private object ObjSceneLoader {

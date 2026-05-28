@@ -1,7 +1,6 @@
 package editor.util
 
 import com.zakgof.korender.CameraDeclaration
-import com.zakgof.korender.Mesh
 import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.math.Mat4
@@ -79,8 +78,7 @@ fun boundingSphere(modelInfo: ModelInfo): BoundingSphere {
     fun spheres(node: ModelInfo.Node, parent: Mat4 = Mat4.IDENTITY): List<BoundingSphere> {
         val transform = parent * (node.transform?.mat4 ?: Mat4.IDENTITY)
 
-        val own = node.mesh
-            ?.vertices
+        val own = node.renderables?.flatMap { r -> r.mesh.vertices }
             ?.mapNotNull { it.pos }
             ?.takeIf { it.isNotEmpty() }
             ?.let { listOf(BoundingSphere.fromPoints(it).transform(transform)) }
@@ -91,18 +89,6 @@ fun boundingSphere(modelInfo: ModelInfo): BoundingSphere {
 
     return BoundingSphere.merge(modelInfo.instances.flatMap { spheres(it) })
 }
-
-fun boundingSphere(node: ModelInfo.Node): BoundingSphere {
-    val meshSphere = node.mesh?.let { mesh ->
-        boundingSphere(mesh).transform(node.transform?.mat4 ?: Mat4.IDENTITY)
-    }
-    val childrenSpheres = node.children?.map {
-        boundingSphere(it).transform(node.transform?.mat4 ?: Mat4.IDENTITY)
-    } ?: listOf()
-    return BoundingSphere.merge(listOfNotNull(meshSphere) + childrenSpheres)
-}
-
-fun boundingSphere(mesh: Mesh) = BoundingSphere.fromPoints(mesh.vertices.map { it.pos!! })
 
 fun KorenderScope.cameraFor(bs: BoundingSphere): CameraDeclaration {
     val look = Vec3(0f, -1f, -2f).normalize()

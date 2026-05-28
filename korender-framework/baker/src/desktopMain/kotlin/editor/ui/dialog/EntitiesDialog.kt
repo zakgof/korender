@@ -237,7 +237,7 @@ fun modelFileDialog(state: State, holder: StateHolder, handler: (File) -> Unit) 
 fun collectModelPoints(modelInfo: ModelInfo): List<Vec3> {
     fun collect(node: ModelInfo.Node, parent: Mat4 = Mat4.IDENTITY): List<Vec3> {
         val transform = parent * (node.transform?.mat4 ?: Mat4.IDENTITY)
-        return (node.mesh?.vertices?.mapNotNull { it.pos?.let { pt -> transform * pt } } ?: emptyList()) +
+        return (node.renderables?.flatMap { r -> r.mesh.vertices.mapNotNull { it.pos?.let { pt -> transform * pt }} } ?: emptyList()) +
                 (node.children?.flatMap { collect(it, transform) } ?: emptyList())
     }
 

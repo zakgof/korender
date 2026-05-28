@@ -12,6 +12,7 @@ import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.engine.ModelDeclaration
 import com.zakgof.korender.impl.engine.ModelInstance
 import com.zakgof.korender.impl.engine.RenderableDeclaration
+import com.zakgof.korender.impl.geometry.CMesh
 import com.zakgof.korender.impl.geometry.CustomCpuMesh
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.InternalInstancingParameter
@@ -38,6 +39,7 @@ import kotlin.math.tan
 
 internal class InstanceData(nodes: Int) {
     val nodeMatrices = Array(nodes) { Transform.IDENTITY }
+    val nodeLocalMatrices = Array(nodes) { Transform.IDENTITY }
     val nodeAnimations = Array(nodes) { NodeAnimation(null, null, null) }
     val jointMatrices = mutableListOf<List<Mat4>>()
 }
@@ -68,33 +70,58 @@ internal class GltfSceneBuilder(private val cache: GltfCache, private val declar
 
         scene.nodes.forEach { collectMeshesFromNode(it) }
 
-        val instancesUpdateDate = instanceData.mapIndexed { index, instanceData ->
+        instanceData.mapIndexed { index, instanceData ->
             calculateInstanceData(index, instanceData)
-            val nodeUpdateData = scene.nodes.map { nodeIndex ->
+            scene.nodes.forEach { nodeIndex ->
                 processNode(instanceData, Transform.IDENTITY, nodeIndex, model.nodes!![nodeIndex])
             }
             instanceData.jointMatrices += model.skins?.map { skin ->
                 skin.joints.map { instanceData.nodeMatrices[it].mat4 }
             } ?: listOf() // TODO optimize
-            InternalModelInfo.Node(null, nodeUpdateData, null,null)
         }
-        val renderables = meshNodes.flatMap {
-            createRenderables(it.first, cache.model.nodes!![it.second].skin, it.second)
+        val meshIndexToRenderables = meshNodes.map {
+            it.first to createRenderables(it.first, cache.model.nodes!![it.second].skin, it.second)
         }
-        declaration.onUpdate(calculateUpdate(instancesUpdateDate))
-        return renderables
+        declaration.onUpdate?.invoke(calculateModelInfo(scene, meshIndexToRenderables.toMap()))
+        return meshIndexToRenderables.flatMap { it.second }
     }
 
-    private fun calculateUpdate(instancesUpdateData: List<InternalModelInfo.Node>) = InternalModelInfo(
-        instancesUpdateData,
-        cache.model.animations?.map { InternalModelInfo.Animation(it.name) } ?: listOf(),
-        cache.model.cameras?.mapIndexed { index, cam ->
-            InternalModelInfo.Camera(
-                cam.name,
-                DefaultCamera(cameraTransforms[index].mat4),
-                cam.toProjection()
-            )
-        } ?: listOf())
+    private fun calculateModelInfo(scene: InternalGltfFileModel.Scene, meshIndexToRenderables: Map<Int, List<RenderableDeclaration>>): InternalModelInfo {
+        val instances: List<InternalModelInfo.Node> = instanceData.map { instanceData ->
+            val instanceNodes = scene.nodes.map { nodeIndex ->
+                calculateNodeInfo(instanceData, nodeIndex, meshIndexToRenderables)
+            }
+            InternalModelInfo.Node("instances", null, instanceNodes, null)
+        }
+        return InternalModelInfo(
+            instances,
+            cache.model.animations?.map { InternalModelInfo.Animation(it.name) },
+            cache.model.cameras?.mapIndexed { index, cam ->
+                InternalModelInfo.Camera(
+                    cam.name,
+                    DefaultCamera(cameraTransforms[index].mat4),
+                    cam.toProjection()
+                )
+            })
+    }
+
+    private fun calculateNodeInfo(instanceData: InstanceData, nodeIndex: Int, meshIndexToRenderables: Map<Int, List<RenderableDeclaration>>): InternalModelInfo.Node {
+        val node: InternalGltfFileModel.Node = cache.model.nodes!![nodeIndex]
+        val childNodes = node.children?.map { childNodeIndex ->
+            calculateNodeInfo(instanceData, childNodeIndex, meshIndexToRenderables)
+        }
+        val renderables = node.mesh?.let { meshIndex: Int ->
+            val mesh = cache.model.meshes!![meshIndex]
+            meshIndexToRenderables[meshIndex]!!.map { renderable ->
+                InternalModelInfo.Renderable(
+                    mesh.name,
+                    (renderable.mesh as CustomCpuMesh).mesh as CMesh,
+                    (renderable.material as InternalBaseMaterial).toMaterialInfo()
+                )
+            }
+        }
+        return InternalModelInfo.Node(null, instanceData.nodeLocalMatrices[nodeIndex], childNodes, renderables)
+    }
 
     private fun calculateInstanceData(instanceIndex: Int, instanceData: InstanceData) {
         if (cache.model.animations?.isNotEmpty() == true) {
@@ -138,8 +165,7 @@ internal class GltfSceneBuilder(private val cache: GltfCache, private val declar
         }
     }
 
-    private fun processNode(instanceData: InstanceData, parentTransform: Transform, nodeIndex: Int, node: InternalGltfFileModel.Node): InternalModelInfo.Node {
-
+    private fun processNode(instanceData: InstanceData, parentTransform: Transform, nodeIndex: Int, node: InternalGltfFileModel.Node) {
 
         var localTransform = Transform.IDENTITY
 
@@ -160,20 +186,12 @@ internal class GltfSceneBuilder(private val cache: GltfCache, private val declar
             cameraTransforms[it] = transform
         }
 
+        instanceData.nodeLocalMatrices[nodeIndex] = localTransform
         instanceData.nodeMatrices[nodeIndex] = transform
 
-        val nodeChildren = node.children?.map { childNodeIndex ->
+        node.children?.forEach { childNodeIndex ->
             processNode(instanceData, transform, childNodeIndex, cache.model.nodes!![childNodeIndex])
         }
-        val meshChildren = node.mesh?.let { meshIndex: Int ->
-            val mesh = cache.model.meshes!![meshIndex]
-            mesh.primitives.indices.map { primitiveIndex ->
-                val cmesh = cache.loadedMeshes[meshIndex to primitiveIndex]!!
-                InternalModelInfo.Node(null, null, mesh.name, cmesh)
-            }
-        }
-        val allChildren = listOfNotNull(nodeChildren, meshChildren).flatten()
-        return InternalModelInfo.Node(localTransform, allChildren, null, null)
     }
 
     private fun createRenderables(meshIndex: Int, skinIndex: Int?, nodeIndex: Int): List<RenderableDeclaration> =

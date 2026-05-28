@@ -4,6 +4,8 @@ import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.math.ColorRGB
+import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
 
 class InternalModelInfo(
@@ -13,10 +15,10 @@ class InternalModelInfo(
 ) : ModelInfo {
 
     class Node(
+        override val name: String?,
         override val transform: Transform?,
         override val children: List<ModelInfo.Node>?,
-        override val name: String?,
-        override val mesh: Mesh?
+        override val renderables: List<Renderable>?
     ) : ModelInfo.Node
 
     class Animation(override val name: String?) : ModelInfo.Animation
@@ -26,4 +28,26 @@ class InternalModelInfo(
         override val camera: CameraDeclaration,
         override val projection: ProjectionDeclaration
     ) : ModelInfo.Camera
+
+    class Renderable(
+        override val name: String?,
+        override val mesh: Mesh,
+        override val material: Material?
+    ) : ModelInfo.Renderable
+
+    class Material(
+        override val name: String? = null,
+        override val color: ColorRGBA = ColorRGBA.White,
+        override val colorTextureResource: String? = null,
+        override val metallicFactor: Float = 0.1f,
+        override val roughnessFactor: Float = 0.5f,
+        override val alphaCutoff: Float = 0.01f,
+        override val triplanarScale: Float? = null,
+        override val stochasticSharpness: Float? = null,
+        override val normalTextureResource: String? = null,
+        override val emission: ColorRGB? = null,
+        override val metallicRoughnessTextureResource: String? = null,
+        override val emissionTextureResource: String? = null,
+        override val occlusionTextureResource: String? = null,
+    ) : ModelInfo.Material
 }
