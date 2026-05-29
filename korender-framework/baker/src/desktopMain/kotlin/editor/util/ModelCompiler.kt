@@ -13,9 +13,6 @@ import editor.model.brush.BrushMesh
 import editor.model.brush.Face
 import java.io.File
 
-/**
- *
- */
 object ModelCompiler {
     fun compile(model: Model): KrModel {
 

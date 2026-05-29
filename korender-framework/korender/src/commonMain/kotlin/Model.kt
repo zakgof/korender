@@ -36,16 +36,16 @@ interface ModelInfo {
     interface Material {
         val name: String?
         val color: ColorRGBA
-        val colorTextureResource: String?
+        val colorTextureResource: TextureDeclaration?
         val metallicFactor: Float
         val roughnessFactor: Float
         val alphaCutoff: Float
         val triplanarScale: Float?
         val stochasticSharpness: Float?
-        val normalTextureResource: String?
+        val normalTextureResource: TextureDeclaration?
         val emission: ColorRGB?
-        val metallicRoughnessTextureResource: String?
-        val emissionTextureResource: String?
-        val occlusionTextureResource: String?
+        val metallicRoughnessTextureResource: TextureDeclaration?
+        val emissionTextureResource: TextureDeclaration?
+        val occlusionTextureResource: TextureDeclaration?
     }
 }

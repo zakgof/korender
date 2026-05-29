@@ -212,17 +212,17 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
 
     fun toMaterialInfo() = InternalModelInfo.Material(
         color = this.color,
-        colorTextureResource = (colorTexture as? ResourceTextureDeclaration)?.textureResource,
+        colorTextureResource = colorTexture,
         metallicFactor = metallicFactor,
         roughnessFactor = roughnessFactor,
         alphaCutoff = alphaCutoff,
         triplanarScale = triplanarScale,
         stochasticSharpness = stochasticSharpness,
-        normalTextureResource = (normalTexture as? ResourceTextureDeclaration)?.textureResource,
+        normalTextureResource = normalTexture,
         emission = emission,
-        metallicRoughnessTextureResource = (metallicRoughnessTexture as? ResourceTextureDeclaration)?.textureResource,
-        emissionTextureResource = (emissionTexture as? ResourceTextureDeclaration)?.textureResource,
-        occlusionTextureResource = (occlusionTexture as? ResourceTextureDeclaration)?.textureResource
+        metallicRoughnessTextureResource = metallicRoughnessTexture,
+        emissionTextureResource = emissionTexture,
+        occlusionTextureResource = occlusionTexture
     )
 }
 

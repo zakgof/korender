@@ -17,6 +17,7 @@ import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
 import com.zakgof.korender.impl.geometry.MeshAttributes.POS
 import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
 import com.zakgof.korender.impl.material.InternalBaseMaterial
+import com.zakgof.korender.impl.material.ResourceTextureDeclaration
 import com.zakgof.korender.impl.model.InternalModel
 import com.zakgof.korender.impl.model.InternalModelInfo
 import com.zakgof.korender.math.ColorRGBA
@@ -51,7 +52,7 @@ internal class ObjScene(declaration: ModelDeclaration) : InternalModel {
     }
 
     private fun toCMesh(mesh: ObjSceneMesh, instancingDeclaration: InternalModelInstancingDeclaration?): CMesh {
-        val instancingAttributes = instancingDeclaration?.let {InternalInstancingParameter.TRANSFORM_INSTANCING.instanceMeshAttributes.toTypedArray()} ?: arrayOf()
+        val instancingAttributes = instancingDeclaration?.let { InternalInstancingParameter.TRANSFORM_INSTANCING.instanceMeshAttributes.toTypedArray() } ?: arrayOf()
         return CMesh(
             vertexCount = mesh.vertices.size,
             indexCount = mesh.indices.size,
@@ -76,7 +77,7 @@ internal class ObjScene(declaration: ModelDeclaration) : InternalModel {
         val scene = sceneDeferred.getCompleted()
         if (!loadNotified) {
             loadNotified = true
-            modelDeclaration.onUpdate?.invoke(scene.modelInfo())
+            modelDeclaration.onUpdate?.invoke(scene.modelInfo(modelDeclaration.nodeContext))
         }
         scene.meshes.forEachIndexed { index, preparedMesh ->
             val material = InternalBaseMaterial().apply {
@@ -119,9 +120,9 @@ internal class ObjScene(declaration: ModelDeclaration) : InternalModel {
 }
 
 private data class LoadedObjScene(val meshes: List<PreparedMesh>) {
-    fun modelInfo() : InternalModelInfo {
+    fun modelInfo(nodeContext: NodeContext): InternalModelInfo {
         val renderables = meshes.map {
-            InternalModelInfo.Renderable(null, it.cmesh, it.material?.toMaterialInfo())
+            InternalModelInfo.Renderable(null, it.cmesh, it.material?.toMaterialInfo(nodeContext))
         }
         val instance = InternalModelInfo.Node("instances", null, null, renderables)
         return InternalModelInfo(
@@ -180,10 +181,10 @@ private data class ObjSceneMaterial(
         }
     }
 
-    fun toMaterialInfo() = InternalModelInfo.Material (
+    fun toMaterialInfo(nodeContext: NodeContext) = InternalModelInfo.Material(
         name = name,
         color = color,
-        colorTextureResource = colorTexture,
+        colorTextureResource = colorTexture?.let { ResourceTextureDeclaration(it, nodeContext = nodeContext) },
         metallicFactor = metallic ?: 0.1f,
         roughnessFactor = roughness ?: 0.5f
     )

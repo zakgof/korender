@@ -4,6 +4,7 @@ import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
@@ -38,16 +39,16 @@ class InternalModelInfo(
     class Material(
         override val name: String? = null,
         override val color: ColorRGBA = ColorRGBA.White,
-        override val colorTextureResource: String? = null,
+        override val colorTextureResource: TextureDeclaration? = null,
         override val metallicFactor: Float = 0.1f,
         override val roughnessFactor: Float = 0.5f,
         override val alphaCutoff: Float = 0.01f,
         override val triplanarScale: Float? = null,
         override val stochasticSharpness: Float? = null,
-        override val normalTextureResource: String? = null,
+        override val normalTextureResource: TextureDeclaration? = null,
         override val emission: ColorRGB? = null,
-        override val metallicRoughnessTextureResource: String? = null,
-        override val emissionTextureResource: String? = null,
-        override val occlusionTextureResource: String? = null,
+        override val metallicRoughnessTextureResource: TextureDeclaration? = null,
+        override val emissionTextureResource: TextureDeclaration? = null,
+        override val occlusionTextureResource: TextureDeclaration? = null,
     ) : ModelInfo.Material
 }
