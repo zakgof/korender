@@ -3,12 +3,12 @@ package editor.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.MenuBarScope
-import editor.ui.dialog.EntitiesDialog
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.applymat
@@ -38,14 +38,19 @@ import com.zakgof.korender.baker.resources.zoomout
 import editor.model.Material
 import editor.state.State
 import editor.state.StateHolder
+import editor.ui.dialog.EntitiesDialog
 import editor.ui.dialog.MaterialsDialog
 import editor.ui.dialog.confirmDialog
 import editor.ui.dialog.fileDialog
+import editor.ui.dialog.modelFileDialog
 import editor.ui.dialog.okDialog
 import editor.ui.dialog.textureDialog
 import editor.util.nextSane
 import editor.util.prevSane
 import editor.walk.walkerDialog
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.painterResource
 import java.io.File
 
@@ -219,15 +224,22 @@ private fun MenuBarScope.materials(holder: StateHolder) {
 private fun MenuBarScope.models(holder: StateHolder) {
     val state by holder.state.collectAsState()
     val entitiesDialog = EntitiesDialog(holder)
+    val coroutineScope = rememberCoroutineScope ()
     Menu("Models") {
         Item("Models Library", icon = painterResource(Res.drawable.cube)) {
             entitiesDialog()
         }
-        // TODO: icon
         Item("Quick insert model", painterResource(Res.drawable.cubeplus)) {
-//            entitiesDialog(state, holder)?.let { entityModel ->
-//                holder.instantiateEntity(entityModel)
-//            }
+            modelFileDialog(state, holder) {
+                val name = it.nameWithoutExtension
+                val filename = it.absolutePath
+                coroutineScope.launch {
+                    holder.createEntityModel(name, filename)
+                    withContext(Dispatchers.Main) {
+                        holder.createEntityInstance()
+                    }
+                }
+            }
         }
     }
 }

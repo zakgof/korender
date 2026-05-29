@@ -20,6 +20,7 @@ import editor.model.brush.Group
 import editor.model.entity.EntityInstance
 import editor.model.entity.EntityModel
 import editor.state.State.MouseMode
+import editor.ui.dialog.collectModelPoints
 import editor.util.ModelCompiler
 import editor.util.floor2
 import editor.util.floorSig
@@ -830,7 +831,7 @@ class StateHolder {
     }
 
     suspend fun createEntityModel(name: String, filename: String) : EntityModel {
-        val pts = KorenderCache.entityPoints(filename)
+        val pts = collectModelPoints(KorenderCache.entityModelInfo(filename))
         val entityModel = EntityModel(name, filename, pts)
         withContext(Dispatchers.Main) {
             pushHistory()

@@ -1,15 +1,14 @@
 package editor.cache
 
 import androidx.compose.ui.graphics.ImageBitmap
+import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.math.ColorRGB.Companion.white
-import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import com.zakgof.korender.scope.FrameScope
 import com.zakgof.korender.scope.KorenderScope
 import editor.model.entity.EntityInstance
 import editor.model.entity.EntityModel
-import editor.ui.dialog.collectModelPoints
 import editor.ui.projection.Axes
 import editor.util.BoundingSphere
 import kotlinx.coroutines.CompletableDeferred
@@ -27,7 +26,7 @@ import kotlin.math.abs
 @OptIn(ExperimentalCoroutinesApi::class)
 object KorenderCache {
 
-    private val pointsFetcher = PointsFetcher()
+    private val modelInfoFetcher = ModelInfoFetcher()
     private val modelSnapCache = KorenderCacheHolder<EntityModel, ImageBitmap> { entityModel, first, consumer ->
         if (first) {
             println("Capture model snap started: ${entityModel.filename}")
@@ -96,8 +95,8 @@ object KorenderCache {
         return instanceSnapCache[EntityInstanceEntry(entityInstance, model, axes)]
     }
 
-    suspend fun entityPoints(filename: String): List<Vec3> =
-        pointsFetcher.push(filename).await()
+    suspend fun entityModelInfo(filename: String): ModelInfo =
+        modelInfoFetcher.push(filename).await()
 
     fun remove(entityModel: EntityModel) {
         modelSnapCache.remove(entityModel)
@@ -111,8 +110,10 @@ object KorenderCache {
     fun frame() {
         modelSnapCache.frame()
         instanceSnapCache.frame()
-        pointsFetcher.frame()
+        modelInfoFetcher.frame()
     }
+
+
 }
 
 private class EntityInstanceEntry(
@@ -125,16 +126,16 @@ private class EntityInstanceEntry(
     override fun equals(other: Any?) = toString() == other.toString()
 }
 
-private class PointsFetcher {
+private class ModelInfoFetcher {
 
     class PointsJob(
         val filename: String,
-        val deferred: CompletableDeferred<List<Vec3>> = CompletableDeferred()
+        val deferred: CompletableDeferred<ModelInfo> = CompletableDeferred()
     )
 
     val jobs = ConcurrentLinkedQueue<PointsJob>()
 
-    fun push(filename: String): Deferred<List<Vec3>> {
+    fun push(filename: String): Deferred<ModelInfo> {
         val job = PointsJob(filename)
         jobs.add(job)
         return job.deferred
@@ -147,7 +148,7 @@ private class PointsFetcher {
             Node(resourceLoader = { File(it.split("#")[1]).readBytes() }) {
                 Model("${System.identityHashCode(job)}#${job.filename}", onUpdate = {
                     println("Capture points done: ${job.filename}")
-                    job.deferred.complete(collectModelPoints(it))
+                    job.deferred.complete(it)
                     jobs.remove(job)
                 })
             }

@@ -16,6 +16,11 @@ import java.io.File
 object ModelCompiler {
     fun compile(model: Model): KrModel {
 
+//        val entityModelInfos = model.entityModels.entries
+//            .associate { it.key to runBlocking { KorenderCache.entityModelInfo(it.value.filename) } }
+//
+//        val entityMaterials = entityModelInfos.entries.flatMap { it.value.instances.map }
+
         val usedMaterialIds = model.brushes.values
             .flatMap { it.faces }
             .map { it.materialId }
