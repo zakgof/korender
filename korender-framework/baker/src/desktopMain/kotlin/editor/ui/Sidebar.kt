@@ -50,7 +50,6 @@ import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.adddiamond
-import com.zakgof.korender.baker.resources.applymat
 import com.zakgof.korender.baker.resources.arrowdown
 import com.zakgof.korender.baker.resources.arrowup
 import com.zakgof.korender.baker.resources.drag
@@ -455,9 +454,6 @@ fun brushSelection(holder: StateHolder, state: State, model: Model) {
                 holder.groupSelection()
             }
         }
-        IconButton(Res.drawable.applymat, "Apply current material") {
-            holder.applyMaterialToSelection()
-        }
         val texturingDialog = texturingDialog(holder)
         IconButton(Res.drawable.texsetup, "Texture adjustment") {
             texturingDialog()
@@ -493,9 +489,11 @@ private fun selectionDimension(state: State, model: Model, holder: StateHolder) 
             modifier = Modifier.weight(1f)
         ) {
             fun setCenter(x: Float, y: Float, z: Float) {
-                val newBB = bb!!.move(Vec3(x, y, z))
-                state.brushSelection.forEach {
-                    holder.brushChanged(model.brushes[it]!!.scale(bb, newBB), true)
+                if (state.mouseMode == State.MouseMode.CREATOR) {
+                    val newCreator = state.creator.move(Vec3(x, y, z))
+                    holder.setCreator(newCreator.min, newCreator.max)
+                } else {
+                    holder.moveSelection(Vec3(x, y, z) - bb!!.center, true)
                 }
             }
             Text("Center", style = Theme.mediumLabel, modifier = Modifier.padding(vertical = 4.dp))
@@ -509,8 +507,10 @@ private fun selectionDimension(state: State, model: Model, holder: StateHolder) 
         ) {
             fun setSize(x: Float, y: Float, z: Float) {
                 val newBB = bb!!.resize(Vec3(x, y, z))
-                state.brushSelection.forEach {
-                    holder.brushChanged(model.brushes[it]!!.scale(bb, newBB), true)
+                if (state.mouseMode == State.MouseMode.CREATOR) {
+                    holder.setCreator(newBB.min, newBB.max)
+                } else {
+                    holder.scaleSelection(bb, newBB)
                 }
             }
             Text("Dims", style = Theme.mediumLabel, modifier = Modifier.padding(vertical = 4.dp))

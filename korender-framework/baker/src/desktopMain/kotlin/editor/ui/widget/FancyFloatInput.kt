@@ -25,10 +25,11 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import editor.util.sanity
 import editor.ui.Theme
+import editor.util.sanity
 
 @Composable
 fun FancyFloatInput(value: Float?, modifier: Modifier = Modifier, validator: (Float) -> Boolean = { true }, onValueChange: (Float) -> Unit) {
@@ -94,6 +95,8 @@ fun FancyClickToFloatInput(value: Float, textModifier: Modifier = Modifier,  edi
             Text(
                 "" + value.sanity(),
                 style = Theme.label.copy(textDecoration = TextDecoration.Underline),
+                maxLines = 1,
+                overflow = TextOverflow.Clip,
                 modifier = textModifier
                     .clickable {
                         editing = true

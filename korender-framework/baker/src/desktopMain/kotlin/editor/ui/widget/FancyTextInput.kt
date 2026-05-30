@@ -30,8 +30,13 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import editor.ui.Theme
+
+private val stdNameValidator: (String) -> Boolean = {
+    it.length in 1..<24
+}
 
 @Composable
 fun FancyTextInput(
@@ -79,7 +84,7 @@ fun FancyTextInput(
 }
 
 @Composable
-fun FancyClickToTextInput(value: String, textModifier: Modifier = Modifier, editorModifier: Modifier = Modifier, validator: (String) -> Boolean = { true }, onValueChange: (String) -> Unit) {
+fun FancyClickToTextInput(value: String, textModifier: Modifier = Modifier, editorModifier: Modifier = Modifier, validator: (String) -> Boolean = stdNameValidator, onValueChange: (String) -> Unit) {
     val focusRequester = remember { FocusRequester() }
     var editing by remember { mutableStateOf(false) }
     var editorWasActive by remember { mutableStateOf(false) }
@@ -116,6 +121,8 @@ fun FancyClickToTextInput(value: String, textModifier: Modifier = Modifier, edit
             Text(
                 value,
                 style = Theme.label.copy(textDecoration = TextDecoration.Underline),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = textModifier.clickable {
                     editing = true
                 })

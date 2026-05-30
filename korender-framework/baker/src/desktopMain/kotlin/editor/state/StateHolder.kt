@@ -845,6 +845,36 @@ class StateHolder {
         }
         return entityModel
     }
+
+    fun moveSelection(offset: Vec3, pushHistory: Boolean) {
+        if (pushHistory) {
+            pushHistory()
+        }
+        val newBrushes = selectedBrushes().map { it.translate(offset) }.associateBy { it.id }
+        val newEntityInstances = selectedEntityInstances().map { it.copy(transform = it.transform.translate(offset)) }.associateBy { it.id }
+        _model.update {
+            it.copy(
+                brushes = it.brushes.putAll(newBrushes),
+                entityInstances = it.entityInstances.putAll(newEntityInstances)
+            )
+        }
+    }
+
+    fun scaleSelection(oldBB: BoundingBox, newBB: BoundingBox) {
+        pushHistory()
+        val newBrushes = selectedBrushes().map { it.scale(oldBB, newBB) }.associateBy { it.id }
+        val scale = newBB.size divpercomp oldBB.size
+        val translate = newBB.center - (oldBB.center multpercomp scale)
+        val newEntityInstances = selectedEntityInstances().map {
+            it.copy(transform = it.transform.scale(scale.x, scale.y, scale.z).translate(translate))
+        }.associateBy { it.id }
+        _model.update {
+            it.copy(
+                brushes = it.brushes.putAll(newBrushes),
+                entityInstances = it.entityInstances.putAll(newEntityInstances)
+            )
+        }
+    }
 }
 
 fun <K, V> PersistentMap<K, V>.removeAll(keys: Collection<K>): PersistentMap<K, V> {

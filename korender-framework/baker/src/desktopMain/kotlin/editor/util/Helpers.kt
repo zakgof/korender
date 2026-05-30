@@ -76,7 +76,7 @@ fun Float.floor2(): Float {
 fun Float.sanity(): String {
     val v = this.toDouble()
     val a = abs(v)
-    if (a < 1e-3) return "0"
+    if (a < 1e-2) return "0"
 
     val p = floor(log10(a)).toInt()
     val scale = 10.0.pow(3 - p)              // ~0.1% precision

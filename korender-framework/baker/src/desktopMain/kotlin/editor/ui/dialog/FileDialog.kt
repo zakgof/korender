@@ -16,7 +16,7 @@ fun fileDialog(title: String, save: Boolean, lastDir: String?, typeTitle: String
     val res = if (save) chooser.showSaveDialog(null) else chooser.showOpenDialog(null)
     if (res == JFileChooser.APPROVE_OPTION) {
         var file = chooser.selectedFile
-        if (save && typeExtensions.size == 1 && !file.endsWith(".${typeExtensions[0]}"))
+        if (save && typeExtensions.size == 1 && !file.name.endsWith(".${typeExtensions[0]}"))
             file = File(file.parentFile, file.name + "." + typeExtensions[0])
         handler(file)
     }
