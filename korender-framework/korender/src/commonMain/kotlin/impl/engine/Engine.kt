@@ -12,6 +12,7 @@ import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.KeyHandler
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.MaterialScope
+import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MutableMesh
 import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.Platform
@@ -217,8 +218,8 @@ internal class Engine(
             return image
         }
 
-        override fun mutableMesh(): MutableMesh =
-            InternalMutableMesh()
+        override fun mutableMesh(vararg attributes: MeshAttribute<*>): MutableMesh =
+            InternalMutableMesh(attributes.toList())
 
         override fun customMaterial(vertShaderFile: String, fragShaderFile: String, block: MaterialScope.() -> Unit) =
             InternalMaterial(vertShaderFile, fragShaderFile).also { block.invoke(it) }

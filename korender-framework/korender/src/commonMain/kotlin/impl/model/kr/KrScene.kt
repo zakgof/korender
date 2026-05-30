@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.model.kr
 
+import com.zakgof.korender.IndexType
 import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.ResourceLoader
 import com.zakgof.korender.impl.context.NodeContext
@@ -81,6 +82,7 @@ internal class KrScene(declaration: ModelDeclaration) : InternalModel {
             vertexCount = mesh.vertices,
             indexCount = mesh.indices,
             attributes = attributes(mesh.attrBytes.keys),
+            indexType = IndexType.Int,
             dynamic = false
         ) {
             mesh.attrBytes.forEach {

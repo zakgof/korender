@@ -17,10 +17,15 @@ enum class IndexType {
 }
 
 /**
- * Marker interface for custom mesh attributes (e.g., tangents, colors, custom vertex data).
- * @param T the type of the attribute value
+ * Describes a custom per-vertex mesh attribute.
+ * Implementations define the attribute name and its binary size in the mesh buffer.
+ *
+ * @param T attribute value type
  */
-interface MeshAttribute<T>
+interface MeshAttribute<T> {
+    val name: String
+    val structSize: Int
+}
 
 /**
  * Immutable mesh declaration for use in rendering.
@@ -108,6 +113,8 @@ interface MeshInitializer {
  * Contains vertex data and optional triangle indices.
  */
 interface Mesh {
+
+    val attributes: List<MeshAttribute<*>>
 
     /**
      * List of mesh vertices. Accessible via indices if they exist.

@@ -17,7 +17,7 @@ import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
 import com.zakgof.korender.impl.geometry.MeshAttributes.POS
 import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
 import com.zakgof.korender.impl.material.InternalBaseMaterial
-import com.zakgof.korender.impl.material.ResourceTextureDeclaration
+import com.zakgof.korender.impl.material.InternalResourceTextureDeclaration
 import com.zakgof.korender.impl.model.InternalModel
 import com.zakgof.korender.impl.model.InternalModelInfo
 import com.zakgof.korender.math.ColorRGBA
@@ -184,7 +184,7 @@ private data class ObjSceneMaterial(
     fun toMaterialInfo(nodeContext: NodeContext) = InternalModelInfo.Material(
         name = name,
         color = color,
-        colorTextureResource = colorTexture?.let { ResourceTextureDeclaration(it, nodeContext = nodeContext) },
+        colorTextureResource = colorTexture?.let { InternalResourceTextureDeclaration(it, nodeContext = nodeContext) },
         metallicFactor = metallic ?: 0.1f,
         roughnessFactor = roughness ?: 0.5f
     )

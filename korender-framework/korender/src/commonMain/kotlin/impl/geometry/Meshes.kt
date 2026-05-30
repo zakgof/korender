@@ -28,8 +28,8 @@ internal interface BufferAccessor<T> {
 }
 
 internal class InternalMeshAttribute<T>(
-    val name: String,
-    val structSize: Int,
+    override val name: String,
+    override val structSize: Int,
     val primitiveType: AttributeType,
     val location: Int,
     val bufferAccessor: BufferAccessor<T>,

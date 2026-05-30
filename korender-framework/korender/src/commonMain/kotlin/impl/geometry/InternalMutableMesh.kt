@@ -5,7 +5,7 @@ import com.zakgof.korender.MutableMesh
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
-internal class InternalMutableMesh : MutableMesh {
+internal class InternalMutableMesh(override val attributes: List<MeshAttribute<*>>) : MutableMesh {
 
     override val vertices = mutableListOf<MutableMesh.MutableVertex>()
     override val indices = mutableListOf<Int>()

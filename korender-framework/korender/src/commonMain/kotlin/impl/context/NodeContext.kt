@@ -44,11 +44,11 @@ import com.zakgof.korender.impl.image.impl.image.InternalImage3D
 import com.zakgof.korender.impl.load
 import com.zakgof.korender.impl.material.ImageCubeTextureDeclaration
 import com.zakgof.korender.impl.material.ImageTexture3DDeclaration
-import com.zakgof.korender.impl.material.ImageTextureArrayDeclaration
-import com.zakgof.korender.impl.material.ImageTextureDeclaration
+import com.zakgof.korender.impl.material.InternalImageTextureArrayDeclaration
+import com.zakgof.korender.impl.material.InternalImageTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
-import com.zakgof.korender.impl.material.ResourceTextureArrayDeclaration
-import com.zakgof.korender.impl.material.ResourceTextureDeclaration
+import com.zakgof.korender.impl.material.InternalResourceTextureArrayDeclaration
+import com.zakgof.korender.impl.material.InternalResourceTextureDeclaration
 import com.zakgof.korender.impl.material.simpleBlur
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
@@ -72,19 +72,19 @@ internal class NodeContext(
     override fun equals(other: Any?) = true
 
     override fun texture(textureResource: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int) =
-        ResourceTextureDeclaration(textureResource, filter, wrap, aniso, this)
+        InternalResourceTextureDeclaration(textureResource, filter, wrap, aniso, this)
 
     override fun texture(id: String, image: Image, filter: TextureFilter, wrap: TextureWrap, aniso: Int) =
-        ImageTextureDeclaration(id, image as InternalImage, filter, wrap, aniso, this)
+        InternalImageTextureDeclaration(id, image as InternalImage, filter, wrap, aniso, this)
 
     override fun texture3D(id: String, image: Image3D, filter: TextureFilter, wrap: TextureWrap, aniso: Int): Texture3DDeclaration =
         ImageTexture3DDeclaration(id, image as InternalImage3D, filter, wrap, aniso, this)
 
     override fun textureArray(vararg textureResources: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureArrayDeclaration =
-        ResourceTextureArrayDeclaration(textureResources.toList(), filter, wrap, aniso, this)
+        InternalResourceTextureArrayDeclaration(textureResources.toList(), filter, wrap, aniso, this)
 
     override fun textureArray(id: String, images: TextureArrayImages, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureArrayDeclaration =
-        ImageTextureArrayDeclaration(id, images, filter, wrap, aniso, this)
+        InternalImageTextureArrayDeclaration(id, images, filter, wrap, aniso, this)
 
     override fun cubeTexture(resources: CubeTextureResources) = ResourceCubeTextureDeclaration(resources, this)
 

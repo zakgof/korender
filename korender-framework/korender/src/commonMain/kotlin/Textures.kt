@@ -7,6 +7,23 @@ package com.zakgof.korender
 interface TextureDeclaration
 
 /**
+ * Texture declaration backed by a named resource path.
+ * The resource is resolved by the active resource loader.
+ */
+interface ResourceTextureDeclaration : TextureDeclaration {
+    val textureResource: String
+}
+
+/**
+ * Texture declaration backed by image bytes loaded at runtime.
+ * The bytes are expected to contain an image in the format identified by [extension].
+ */
+interface ByteArrayTextureDeclaration : TextureDeclaration {
+    val fileBytesLoader: () -> ByteArray
+    val extension: String
+}
+
+/**
  * Marker interface for a texture array declaration.
  * Texture arrays allow indexed access to multiple textures of the same size.
  */

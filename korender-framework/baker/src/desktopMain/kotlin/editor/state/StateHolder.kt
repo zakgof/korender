@@ -27,10 +27,12 @@ import editor.util.floorSig
 import editor.util.roundSane
 import editor.util.snap
 import kotlinx.collections.immutable.PersistentMap
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
@@ -553,9 +555,8 @@ class StateHolder {
         return "$base $i"
     }
 
-    fun dryRun(): Pair<KrModel, ByteArray> {
+    suspend fun dryRun(): Pair<KrModel, ByteArray> {
         return ModelCompiler.compile(model.value) to Cbor.encodeToByteArray(CollisionSerialModel.BvhNode(BvhCompiler.compile(model.value.brushes.values)))
-        // _state.update { it.copy(lastCompiledSceneModel = sceneModel) }
     }
 
     fun selectAll() {
@@ -666,9 +667,13 @@ class StateHolder {
     }
 
     fun compileToFile(path: String) {
-        val sceneModel = ModelCompiler.compile(model.value)
-        val bytes = Cbor.encodeToByteArray(sceneModel)
-        File(path).writeBytes(bytes)
+        CoroutineScope(Dispatchers.Default).launch {
+            val sceneModel = ModelCompiler.compile(model.value)
+            withContext(Dispatchers.Main) {
+                val bytes = Cbor.encodeToByteArray(sceneModel)
+                File(path).writeBytes(bytes)
+            }
+        }
     }
 
     fun setCreatorShape(shape: CreatorShape) {
@@ -830,7 +835,7 @@ class StateHolder {
         }
     }
 
-    suspend fun createEntityModel(name: String, filename: String) : EntityModel {
+    suspend fun createEntityModel(name: String, filename: String): EntityModel {
         val pts = collectModelPoints(KorenderCache.entityModelInfo(filename))
         val entityModel = EntityModel(name, filename, pts)
         withContext(Dispatchers.Main) {

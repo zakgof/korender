@@ -9,34 +9,34 @@ import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
 
-class InternalModelInfo(
+internal data class InternalModelInfo(
     override val instances: List<Node>,
     override val animations: List<Animation>?,
     override val cameras: List<Camera>?
 ) : ModelInfo {
 
-    class Node(
+    data class Node(
         override val name: String?,
         override val transform: Transform?,
         override val children: List<ModelInfo.Node>?,
         override val renderables: List<Renderable>?
     ) : ModelInfo.Node
 
-    class Animation(override val name: String?) : ModelInfo.Animation
+    data class Animation(override val name: String?) : ModelInfo.Animation
 
-    class Camera(
+    data class Camera(
         override val name: String?,
         override val camera: CameraDeclaration,
         override val projection: ProjectionDeclaration
     ) : ModelInfo.Camera
 
-    class Renderable(
+    data class Renderable(
         override val name: String?,
         override val mesh: Mesh,
         override val material: Material?
     ) : ModelInfo.Renderable
 
-    class Material(
+    data class Material(
         override val name: String? = null,
         override val color: ColorRGBA = ColorRGBA.White,
         override val colorTextureResource: TextureDeclaration? = null,

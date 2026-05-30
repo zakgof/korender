@@ -23,7 +23,7 @@ internal open class CMesh(
 
     var instancesInitialized: Boolean = false
 
-    val attributes = attrs.filter { !it.instance || instanceCount > 0 }
+    override val attributes = attrs.filter { !it.instance || instanceCount > 0 }
 
     val attributeBuffers: List<NativeByteBuffer> = attributes
         .map {

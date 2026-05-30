@@ -19,7 +19,7 @@ import com.zakgof.korender.impl.glgpu.UniformGetter
 import com.zakgof.korender.impl.glgpu.Vec3ListGetter
 import com.zakgof.korender.impl.material.InternalMaterialModifier
 import com.zakgof.korender.impl.material.Plugins
-import com.zakgof.korender.impl.material.ResourceTextureDeclaration
+import com.zakgof.korender.impl.material.InternalResourceTextureDeclaration
 import com.zakgof.korender.impl.material.pluginOverride1
 import com.zakgof.korender.impl.material.pluginOverride2IfNotNull
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
@@ -77,9 +77,9 @@ internal class LightMaterialModifier(sc: SceneDeclaration) : InternalMaterialMod
 
 internal class ContextMaterialModifier(private val frameContext: FrameContext, rootNodeContext: NodeContext) : InternalMaterialModifier() {
 
-    val noiseTex = ResourceTextureDeclaration("!texture/noise.png", nodeContext = rootNodeContext)
-    val fbmTex = ResourceTextureDeclaration("!texture/fbm.png", nodeContext = rootNodeContext)
-    private val brdfLut = ResourceTextureDeclaration("!texture/brdfLUT.png", wrap = TextureWrap.ClampToEdge, filter = TextureFilter.Linear, nodeContext = rootNodeContext)
+    val noiseTex = InternalResourceTextureDeclaration("!texture/noise.png", nodeContext = rootNodeContext)
+    val fbmTex = InternalResourceTextureDeclaration("!texture/fbm.png", nodeContext = rootNodeContext)
+    private val brdfLut = InternalResourceTextureDeclaration("!texture/brdfLUT.png", wrap = TextureWrap.ClampToEdge, filter = TextureFilter.Linear, nodeContext = rootNodeContext)
 
     var shadowTextures = GlGpuTextureList(List(5) { null }, 5)
     var pcfTextures = GlGpuShadowTextureList(List(5) { null }, 5)

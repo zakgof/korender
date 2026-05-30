@@ -73,27 +73,26 @@ private fun MenuBarScope.file(holder: StateHolder) {
     val state by holder.state.collectAsState()
     val model by holder.model.collectAsState()
     val modified = state.lastSavedModelHash != System.identityHashCode(model)
-    Menu("File") {
-        val newProjectConfirmDialog = confirmDialog("New project", "Discard changes and start a new project ?") {
-            holder.newProject()
+    val newProjectConfirmDialog = confirmDialog("New project", "Discard changes and start a new project ?") {
+        holder.newProject()
+    }
+    fun load() {
+        fileDialog("Open Project", false, state.persistentState.lastDir, "Korender maps", listOf("krmap")) {
+            holder.loadProject(it)
         }
+    }
+    val loadProjectConfirmDialog = confirmDialog("Load Project", "Discard changes and load a project ?") {
+        load()
+    }
+    val coroutineScope = rememberCoroutineScope()
+
+    Menu("File") {
         Item("New", icon = painterResource(Res.drawable.file)) {
             if (modified) newProjectConfirmDialog() else holder.newProject()
-        }
-
-        fun load() {
-            fileDialog("Open Project", false, state.persistentState.lastDir, "Korender maps", listOf("krmap")) {
-                holder.loadProject(it)
-            }
-        }
-
-        val loadProjectConfirmDialog = confirmDialog("Load Project", "Discard changes and load a project ?") {
-            load()
         }
         Item("Open Project", painterResource(Res.drawable.load), shortcut = KeyShortcut(Key.O, ctrl = true)) {
             if (modified) loadProjectConfirmDialog() else load()
         }
-
         state.savePath?.let {
             Item("Save Project", painterResource(Res.drawable.save), shortcut = KeyShortcut(Key.S, ctrl = true)) {
                 holder.saveProject(File(state.savePath!!))
@@ -123,7 +122,12 @@ private fun MenuBarScope.file(holder: StateHolder) {
         
         val walkDialog = walkerDialog()
         Item("Dry-Run", painterResource(Res.drawable.play)) {
-            walkDialog(holder.dryRun())
+            coroutineScope.launch {
+                val pair = holder.dryRun()
+                withContext(Dispatchers.Main) {
+                    walkDialog(pair)
+                }
+            }
         }
         Item("Export Scene", painterResource(Res.drawable.export)) {
             fileDialog("Export Scene", true, state.persistentState.lastDir,"Korender model files", listOf("kr")) {

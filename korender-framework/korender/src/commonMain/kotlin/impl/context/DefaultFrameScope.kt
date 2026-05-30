@@ -19,6 +19,7 @@ import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.PostProcessingEffect
 import com.zakgof.korender.PostProcessingMaterial
 import com.zakgof.korender.ProjectionDeclaration
+import com.zakgof.korender.ResourceTextureDeclaration
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.SkyMaterial
 import com.zakgof.korender.TerrainMaterialScope
@@ -103,7 +104,7 @@ internal class DefaultFrameScope(
             frameContext.projection = value as Projection
         }
 
-    override fun texture(textureResource: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureDeclaration =
+    override fun texture(textureResource: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int): ResourceTextureDeclaration =
         nodeContext.texture(textureResource, filter, wrap, aniso)
 
     override fun texture(id: String, image: Image, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureDeclaration =

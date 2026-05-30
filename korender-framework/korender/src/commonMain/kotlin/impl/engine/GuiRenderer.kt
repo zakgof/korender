@@ -11,7 +11,7 @@ import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.TextureGetter
 import com.zakgof.korender.impl.glgpu.Vec2Getter
 import com.zakgof.korender.impl.material.InternalMaterial
-import com.zakgof.korender.impl.material.ResourceTextureDeclaration
+import com.zakgof.korender.impl.material.InternalResourceTextureDeclaration
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
@@ -107,7 +107,7 @@ internal class GuiRenderer(
                 declaration.width / width,
                 declaration.height / height
             ),
-            imageTexture = ResourceTextureDeclaration(declaration.imageResource, nodeContext = declaration.nodeContext, wrap = TextureWrap.MirroredRepeat)
+            imageTexture = InternalResourceTextureDeclaration(declaration.imageResource, nodeContext = declaration.nodeContext, wrap = TextureWrap.MirroredRepeat)
         )
         renderableDeclarations += RenderableDeclaration(
             imageMaterial,

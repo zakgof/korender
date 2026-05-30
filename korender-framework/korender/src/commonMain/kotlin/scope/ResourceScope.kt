@@ -11,6 +11,7 @@ import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.MeshDeclaration
 import com.zakgof.korender.MeshInitializer
 import com.zakgof.korender.PostProcessingEffect
+import com.zakgof.korender.ResourceTextureDeclaration
 import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureArrayDeclaration
@@ -46,7 +47,7 @@ interface ResourceScope {
      * @param aniso anisotropy factor
      * @return texture declaration
      */
-    fun texture(textureResource: String, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): TextureDeclaration
+    fun texture(textureResource: String, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): ResourceTextureDeclaration
 
     /**
      * Creates a texture declaration from an Image object.

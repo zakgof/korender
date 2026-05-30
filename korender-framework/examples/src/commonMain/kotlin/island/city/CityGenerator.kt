@@ -1,12 +1,12 @@
 package com.zakgof.korender.examples.island.city
 
 import com.zakgof.korender.MutableMesh
-import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import com.zakgof.korender.scope.KorenderScope
 
 private fun cube(x: Int, y: Int, z: Int) = x or (y shl 8) or (z shl 16)
 
@@ -28,8 +28,8 @@ private val Int.cz: Int
 
 class CityGenerator(kc: KorenderScope) {
 
-    val lightWindow = kc.mutableMesh()
-    val roof = kc.mutableMesh()
+    val lightWindow = kc.mutableMesh(kc.POS, kc.NORMAL, kc.TEX)
+    val roof = kc.mutableMesh(kc.POS, kc.NORMAL, kc.TEX)
 
     fun building(xoffset: Int, yoffset: Int, xsize: Int, ysize: Int, height: Int, block: Context.() -> Unit): CityGenerator {
         val cubes = collectCubes(xsize, ysize, height, block)

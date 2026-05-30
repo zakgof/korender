@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.material
 
+import com.zakgof.korender.ByteArrayTextureDeclaration
 import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureResources
@@ -7,6 +8,7 @@ import com.zakgof.korender.CubeTextureSide
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Platform
 import com.zakgof.korender.ResourceLoader
+import com.zakgof.korender.ResourceTextureDeclaration
 import com.zakgof.korender.Texture3DDeclaration
 import com.zakgof.korender.TextureArrayDeclaration
 import com.zakgof.korender.TextureArrayImages
@@ -88,15 +90,15 @@ internal interface InternalTexture : NodeKeeper {
     fun generateGpuTexture(loader: Loader): GlBindableTexture?
 }
 
-internal class ResourceTextureDeclaration(
-    val textureResource: String,
+internal class InternalResourceTextureDeclaration(
+    override val textureResource: String,
     val filter: TextureFilter = TextureFilter.MipMap,
     private val wrap: TextureWrap = TextureWrap.Repeat,
     private val aniso: Int = 1024,
     override val nodeContext: NodeContext
-) : TextureDeclaration, InternalTexture {
+) : ResourceTextureDeclaration, InternalTexture {
     override fun equals(other: Any?): Boolean =
-        (other is ResourceTextureDeclaration && other.textureResource == textureResource)
+        (other is InternalResourceTextureDeclaration && other.textureResource == textureResource)
 
     override fun hashCode(): Int = textureResource.hashCode()
 
@@ -106,7 +108,7 @@ internal class ResourceTextureDeclaration(
         }
 }
 
-internal class ImageTextureDeclaration(
+internal class InternalImageTextureDeclaration(
     val id: String,
     val image: InternalImage,
     val filter: TextureFilter,
@@ -115,7 +117,7 @@ internal class ImageTextureDeclaration(
     override val nodeContext: NodeContext
 ) : TextureDeclaration, InternalTexture {
     override fun equals(other: Any?): Boolean =
-        (other is ImageTextureDeclaration && other.id == id)
+        (other is InternalImageTextureDeclaration && other.id == id)
 
     override fun hashCode(): Int = id.hashCode()
 
@@ -123,7 +125,7 @@ internal class ImageTextureDeclaration(
         GlGpuTexture(image, filter, wrap, aniso)
 }
 
-internal class ResourceTextureArrayDeclaration(
+internal class InternalResourceTextureArrayDeclaration(
     val textureResources: TextureArrayResources,
     val filter: TextureFilter = TextureFilter.MipMap,
     private val wrap: TextureWrap = TextureWrap.Repeat,
@@ -131,7 +133,7 @@ internal class ResourceTextureArrayDeclaration(
     override val nodeContext: NodeContext
 ) : TextureArrayDeclaration, InternalTexture {
     override fun equals(other: Any?): Boolean =
-        (other is ResourceTextureArrayDeclaration && other.textureResources == textureResources)
+        (other is InternalResourceTextureArrayDeclaration && other.textureResources == textureResources)
 
     override fun hashCode(): Int = textureResources.hashCode()
 
@@ -142,7 +144,7 @@ internal class ResourceTextureArrayDeclaration(
     }
 }
 
-internal class ImageTextureArrayDeclaration(
+internal class InternalImageTextureArrayDeclaration(
     val id: String,
     val images: TextureArrayImages,
     val filter: TextureFilter,
@@ -151,7 +153,7 @@ internal class ImageTextureArrayDeclaration(
     override val nodeContext: NodeContext
 ) : TextureArrayDeclaration, InternalTexture {
     override fun equals(other: Any?): Boolean =
-        (other is ImageTextureArrayDeclaration && other.id == id)
+        (other is InternalImageTextureArrayDeclaration && other.id == id)
 
     override fun hashCode(): Int = id.hashCode()
 
@@ -176,18 +178,18 @@ internal class ImageTexture3DDeclaration(
         GlGpuTexture3D(image, filter, wrap, aniso)
 }
 
-internal class ByteArrayTextureDeclaration(
+internal class InternalByteArrayTextureDeclaration(
     private val id: String,
     val filter: TextureFilter,
     val wrap: TextureWrap,
     val aniso: Int,
-    val fileBytesLoader: () -> ByteArray,
-    val extension: String,
+    override val fileBytesLoader: () -> ByteArray,
+    override val extension: String,
     override val nodeContext: NodeContext
-) : TextureDeclaration, InternalTexture {
+) : ByteArrayTextureDeclaration, InternalTexture {
 
     override fun equals(other: Any?): Boolean =
-        (other is ByteArrayTextureDeclaration && other.id == id)
+        (other is InternalByteArrayTextureDeclaration && other.id == id)
 
     override fun hashCode(): Int = id.hashCode()
 

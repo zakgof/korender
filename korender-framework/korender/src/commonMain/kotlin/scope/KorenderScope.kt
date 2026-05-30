@@ -131,11 +131,12 @@ interface KorenderScope : ResourceScope {
     fun captureFrame(width: Int, height: Int, block: FrameScope.() -> Unit): Deferred<Image>
 
     /**
-     * Creates an empty mutable mesh object.
+     * Creates an empty mutable mesh with the specified attribute layout.
      *
+     * @param attributes mesh attributes to include in the mesh definition
      * @return mutable mesh
      */
-    fun mutableMesh(): MutableMesh
+    fun mutableMesh(vararg attributes: MeshAttribute<*>): MutableMesh
 
     /**
      * Creates a material that applies custom vertex and fragment shaders.

@@ -17,7 +17,7 @@ import com.zakgof.korender.impl.geometry.CustomCpuMesh
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.InternalInstancingParameter
 import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
-import com.zakgof.korender.impl.material.ByteArrayTextureDeclaration
+import com.zakgof.korender.impl.material.InternalByteArrayTextureDeclaration
 import com.zakgof.korender.impl.material.InternalBaseMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.Plugins
@@ -310,7 +310,7 @@ internal class GltfSceneBuilder(private val cache: GltfCache, private val declar
             ?.let { src -> cache.model.images!![src] }
 
         return image?.let { img ->
-            ByteArrayTextureDeclaration(
+            InternalByteArrayTextureDeclaration(
                 img.uri ?: "${declaration.resource} ${ti.index}", // TODO !!!
                 TextureFilter.MipMap,
                 TextureWrap.Repeat,

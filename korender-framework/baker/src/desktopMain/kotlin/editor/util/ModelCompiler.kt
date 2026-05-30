@@ -1,25 +1,72 @@
 package editor.util
 
+import com.zakgof.korender.ByteArrayTextureDeclaration
+import com.zakgof.korender.KorenderException
+import com.zakgof.korender.Mesh
+import com.zakgof.korender.MeshAttribute
+import com.zakgof.korender.ModelInfo
+import com.zakgof.korender.ResourceTextureDeclaration
+import com.zakgof.korender.TextureDeclaration
+import com.zakgof.korender.impl.buffer.NativeBuffer
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.buffer.NativeFloatBuffer
 import com.zakgof.korender.impl.buffer.toByteArray
 import com.zakgof.korender.impl.scene.KrModel
 import com.zakgof.korender.impl.scene.KrModel.Attribute
 import com.zakgof.korender.math.Mat4
+import com.zakgof.korender.math.Transform
+import com.zakgof.korender.math.Vec2
+import com.zakgof.korender.math.Vec3
+import editor.cache.KorenderCache
 import editor.cache.TextureImageCache
 import editor.model.Material
 import editor.model.Model
 import editor.model.brush.BrushMesh
 import editor.model.brush.Face
 import java.io.File
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 object ModelCompiler {
-    fun compile(model: Model): KrModel {
+    @OptIn(ExperimentalUuidApi::class)
+    suspend fun compile(model: Model): KrModel {
 
-//        val entityModelInfos = model.entityModels.entries
-//            .associate { it.key to runBlocking { KorenderCache.entityModelInfo(it.value.filename) } }
-//
-//        val entityMaterials = entityModelInfos.entries.flatMap { it.value.instances.map }
+        val entityRenderables = model.entityInstances.values.flatMap { entityInstance ->
+            val entityModel = model.entityModels[entityInstance.modelId]!!
+            val modelInfo = KorenderCache.entityModelInfo(entityModel.filename)
+            modelInfo.renderables(entityInstance.transform)
+        }
+
+        val entityMaterialToIdMap = entityRenderables.mapNotNull { it.first.material }.toSet()
+            .associateWith { "em-" + Uuid.random() }
+
+        val entityTextureToIdMap = entityMaterialToIdMap.keys.mapNotNull { it.colorTextureResource }.toSet()
+            .associateWith { "et-" + Uuid.random() }
+
+        val eTextures = entityTextureToIdMap.entries.map { it.key.toKrTexture(it.value) }
+            .associateBy{ it.id }
+        val eMaterials = entityMaterialToIdMap.entries.map { it.key.toKrMaterial(it.value, entityTextureToIdMap[it.key.colorTextureResource]) }
+            .associateBy { it.id }
+        val eMeshes = entityRenderables.mapIndexed { index, pair ->
+            val mesh = pair.first.mesh
+            KrModel.Mesh(
+                "emesh-$index",
+                mesh.vertices.size,
+                mesh.indices?.size ?: 0,
+                mesh.attrBytes(),
+                mesh.indexBytes()
+            )
+        }
+        val eRenderables = entityRenderables.mapIndexed { index, pair ->
+            KrModel.Renderable(
+                "er-$index",
+                "emesh-$index",
+                entityMaterialToIdMap[pair.first.material]!!,
+                pair.second.mat4.asArray()
+            )
+        }
+
+        /////
 
         val usedMaterialIds = model.brushes.values
             .flatMap { it.faces }
@@ -84,9 +131,9 @@ object ModelCompiler {
             }
 
         return KrModel(
-            textures = textures,
-            materials = materials.mapKeys { it.key.toString() },
-            meshes = meshes.associateBy { it.id },
+            textures = textures + eTextures,
+            materials = materials.mapKeys { it.key.toString() } + eMaterials,
+            meshes = meshes.associateBy { it.id } + eMeshes.associateBy { it.id },
             renderables = meshes.map {
                 KrModel.Renderable(
                     it.id,
@@ -94,7 +141,7 @@ object ModelCompiler {
                     it.id,
                     Mat4.IDENTITY.asArray()
                 )
-            }.associateBy { it.id }
+            }.associateBy { it.id } + eRenderables.associateBy { it.id }
         )
     }
 
@@ -188,7 +235,7 @@ object ModelCompiler {
         return bytes(nbb)
     }
 
-    private fun bytes(nbb: NativeFloatBuffer): ByteArray {
+    private fun bytes(nbb: NativeBuffer): ByteArray {
         nbb.byteBuffer.rewind()
         val bytes = ByteArray(nbb.byteBuffer.remaining())
         nbb.byteBuffer.get(bytes)
@@ -204,8 +251,69 @@ object ModelCompiler {
         val width: Int,
         val height: Int,
         val stochastic: Boolean,
-        val triplanarScale: Float?
+        val triplanarScale: Float?,
     )
+
+    private fun ModelInfo.Node.renderables(transform: Transform): List<Pair<ModelInfo.Renderable, Transform>> {
+        val childTransform = transform * (this.transform ?: Transform.IDENTITY)
+        return (this.renderables?.map { it to transform } ?: listOf()) +
+                (this.children?.flatMap { it.renderables(childTransform) } ?: listOf())
+    }
+
+    private fun ModelInfo.renderables(transform: Transform) = this.instances.flatMap { it.renderables(transform) }
+
+    private fun TextureDeclaration.toKrTexture(id: String): KrModel.Texture = when (this) {
+        is ResourceTextureDeclaration -> {
+            val file = File(this.textureResource.split("#")[1])
+            KrModel.Texture(id, file.extension, file.readBytes())
+        }
+        is ByteArrayTextureDeclaration -> KrModel.Texture(id, this.extension, this.fileBytesLoader())
+        else -> throw KorenderException("Unsupported TextureDeclaration")
+    }
+
+    private fun ModelInfo.Material.toKrMaterial(id: String, texId: String?) = KrModel.Material(
+        id = id,
+        baseColor = color.toLong(),
+        colorTextureId = texId,
+        metallic = metallicFactor,
+        roughness = roughnessFactor
+    )
+
+    private fun <T> MeshAttribute<T>.toKrAttribute() =
+        when (name) {
+            "pos" -> KrModel.Attribute.POS
+            "normal" -> KrModel.Attribute.NORMAL
+            "tex" -> KrModel.Attribute.TEX
+            else -> throw KorenderException("Unknown attibute $name")
+        }
+
+
+    private fun Mesh.attrBytes(): Map<Attribute, ByteArray> =
+        attributes.associate { attr ->
+            val nbb = NativeFloatBuffer(vertices.size * attr.structSize)
+            vertices.forEach {
+                when(attr.name) {
+                    "tex" -> {
+                        val v = it[attr] as Vec2
+                        nbb.put(v.x)
+                        nbb.put(v.y)
+                    }
+                    "pos", "normal" -> {
+                        val v = it[attr] as Vec3
+                        nbb.put(v.x)
+                        nbb.put(v.y)
+                        nbb.put(v.z)
+                    }
+                }
+            }
+            attr.toKrAttribute() to bytes(nbb)
+        }
+
+    private fun Mesh.indexBytes() = indices?.let {
+        val nbb = NativeByteBuffer(indices!!.size * 4)
+        indices!!.forEach { nbb.put(it) }
+        bytes(nbb)
+    }
 
 }
 

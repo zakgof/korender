@@ -74,11 +74,11 @@ class BoundingSphere(val center: Vec3, val radius: Float) {
 }
 
 fun boundingSphere(node: ModelInfo.Node): BoundingSphere {
-    val meshSphere = node.mesh?.let { mesh ->
-        boundingSphere(mesh).transform(node.transform?.mat4 ?: Mat4.IDENTITY)
-    }
-    val childrenSpheres = node.children?.map { boundingSphere(it) }
-    return BoundingSphere.merge(listOfNotNull(meshSphere) + (childrenSpheres ?: listOf()))
+    val renderablesSpheres = node.renderables?.map { renderable ->
+        boundingSphere(renderable.mesh).transform(node.transform?.mat4 ?: Mat4.IDENTITY)
+    } ?: listOf()
+    val childrenSpheres = node.children?.map { boundingSphere(it) } ?: listOf()
+    return BoundingSphere.merge(renderablesSpheres + childrenSpheres)
 }
 
 fun boundingSphere(mesh: Mesh) = BoundingSphere.fromPoints(mesh.vertices.map { it.pos!! })
