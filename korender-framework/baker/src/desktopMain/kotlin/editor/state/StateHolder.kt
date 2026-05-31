@@ -865,7 +865,7 @@ class StateHolder {
     private fun fixScale(requestedScale: Vec3, modelId: String): Vec3 {
         val keepProportions = model.value.entityModels[modelId]!!.keepProportions
         return if (keepProportions) {
-            val max = maxOf(requestedScale.x, requestedScale.y, requestedScale.z)
+            val max = minOf(requestedScale.x, requestedScale.y, requestedScale.z)
             Vec3(max, max, max)
         } else {
             requestedScale

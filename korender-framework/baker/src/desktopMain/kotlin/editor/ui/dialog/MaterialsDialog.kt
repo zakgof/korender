@@ -18,7 +18,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -36,8 +38,6 @@ import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import com.zakgof.korender.Korender
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
-import editor.util.toCompose
-import editor.util.toKorender
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.file
 import com.zakgof.korender.baker.resources.material
@@ -63,6 +63,8 @@ import editor.ui.widget.FancyTextInput
 import editor.ui.widget.GroupBox
 import editor.ui.widget.IconButton
 import editor.ui.widget.disabled
+import editor.util.toCompose
+import editor.util.toKorender
 import org.jetbrains.compose.resources.painterResource
 import java.awt.FileDialog
 import java.awt.Frame
@@ -209,38 +211,42 @@ fun RowScope.MaterialEditor(holder: StateHolder) {
                         }
                     }
                     material.colorTexture?.let {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
+                        CompositionLocalProvider(
+                            LocalMinimumInteractiveComponentSize provides 0.dp
                         ) {
-                            Text("Fit to face", style = Theme.label, modifier = Modifier.weight(1f))
-                            Checkbox(
-                                modifier = Modifier.height(24.dp),
-                                checked = material.fitToFace,
-                                onCheckedChange = {
-                                    holder.updateMaterial(material.copy(fitToFace = it))
-                                })
-                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("Stochastic", style = Theme.label, modifier = Modifier.weight(1f))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Fit to face", style = Theme.label, modifier = Modifier.weight(1f))
+                                Checkbox(
+                                    modifier = Modifier.height(24.dp),
+                                    checked = material.fitToFace,
+                                    onCheckedChange = {
+                                        holder.updateMaterial(material.copy(fitToFace = it))
+                                    })
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Stochastic", style = Theme.label, modifier = Modifier.weight(1f))
                                 Checkbox(
                                     modifier = Modifier.height(24.dp),
                                     checked = material.stochastic,
                                     onCheckedChange = {
                                         holder.updateMaterial(material.copy(stochastic = it))
                                     })
-                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("Triplanar", style = Theme.label, modifier = Modifier.weight(1f))
-                            Checkbox(
-                                modifier = Modifier.height(24.dp),
-                                checked = material.triplanar,
-                                onCheckedChange = {
-                                    holder.updateMaterial(material.copy(triplanar = it))
-                                })
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Triplanar", style = Theme.label, modifier = Modifier.weight(1f))
+                                Checkbox(
+                                    modifier = Modifier.height(24.dp),
+                                    checked = material.triplanar,
+                                    onCheckedChange = {
+                                        holder.updateMaterial(material.copy(triplanar = it))
+                                    })
+                            }
                         }
                         Row(
                             verticalAlignment = Alignment.CenterVertically

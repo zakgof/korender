@@ -111,7 +111,7 @@ fun LabeledFloatInput(label: String, labelW: Dp, value: Float?, validator: (Floa
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(label, style = Theme.label, modifier = Modifier.width(labelW).wrapContentHeight(Alignment.CenterVertically))
+        Text(label, style = Theme.label, modifier = Modifier.weight(1f).wrapContentHeight(Alignment.CenterVertically))
         value?.let {
             FancyClickToFloatInput(
                 value,

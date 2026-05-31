@@ -18,7 +18,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -129,7 +132,7 @@ fun ColumnScope.EntitySelector(model: Model, state: State, holder: StateHolder) 
     }
 
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun RowScope.EntityEditor(holder: StateHolder) {
     val state by holder.state.collectAsState()
@@ -193,27 +196,28 @@ fun RowScope.EntityEditor(holder: StateHolder) {
                             holder.updateEntityModelScale(entityModel, it)
                         }
                     }
-
-                    val dims = BoundingBox.from(entityModel!!.points).size * entityModel.defaultScale
-
-                    Text("Dims", style = Theme.mediumLabel, modifier = Modifier.padding(vertical = 4.dp))
-                    val dimValidator = { it: Float -> it in 1e-3..1e6 }
-                    LabeledFloatInput("width:", 40.dp, dims.x, dimValidator) { holder.updateEntityModelScale(entityModel, it * entityModel.defaultScale / dims.x) }
-                    LabeledFloatInput("height:", 40.dp, dims.y, dimValidator) { holder.updateEntityModelScale(entityModel, it * entityModel.defaultScale / dims.y) }
-                    LabeledFloatInput("depth:", 40.dp, dims.z, dimValidator) { holder.updateEntityModelScale(entityModel, it * entityModel.defaultScale / dims.z) }
-
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text("Keep proportions", style = Theme.label, modifier = Modifier.weight(1f))
-                        Checkbox(
-                            modifier = Modifier.height(24.dp),
-                            checked = entityModel.keepProportions,
-                            onCheckedChange = {
-                                holder.updateEntityModelKeepProportions(entityModel, it)
-                            })
+                        CompositionLocalProvider(
+                            LocalMinimumInteractiveComponentSize provides 0.dp
+                        ) {
+                            Checkbox(
+                                modifier = Modifier.height(24.dp).padding(0.dp),
+                                checked = entityModel!!.keepProportions,
+                                onCheckedChange = {
+                                    holder.updateEntityModelKeepProportions(entityModel, it)
+                                })
+                        }
                     }
-
+                }
+                GroupBox("Dimensions") {
+                    val dims = BoundingBox.from(entityModel!!.points).size * entityModel.defaultScale
+                    val dimValidator = { it: Float -> it in 1e-3..1e6 }
+                    LabeledFloatInput("width:", 40.dp, dims.x, dimValidator) { holder.updateEntityModelScale(entityModel, it * entityModel.defaultScale / dims.x) }
+                    LabeledFloatInput("height:", 40.dp, dims.y, dimValidator) { holder.updateEntityModelScale(entityModel, it * entityModel.defaultScale / dims.y) }
+                    LabeledFloatInput("depth:", 40.dp, dims.z, dimValidator) { holder.updateEntityModelScale(entityModel, it * entityModel.defaultScale / dims.z) }
                 }
             }
         }
