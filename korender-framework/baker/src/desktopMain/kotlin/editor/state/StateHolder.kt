@@ -715,6 +715,13 @@ class StateHolder {
         }
     }
 
+    fun updateEntityModelKeepProportions(entityModel: EntityModel, keepProportions: Boolean) {
+        pushHistory()
+        _model.update {
+            it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel.copy(keepProportions = keepProportions)))
+        }
+    }
+
     fun updateEntityModelScale(entityModel: EntityModel, newScale: Float) {
         pushHistory()
         _model.update {
@@ -782,7 +789,10 @@ class StateHolder {
         if (pushHistory) {
             pushHistory()
         }
-        val scale = newBB.size divpercomp oldBB.size
+
+        val requestedScale = newBB.size divpercomp oldBB.size
+
+        val scale = fixScale(requestedScale, instance.modelId)
         val translate = newBB.center - (oldBB.center multpercomp scale)
         val newInstance = instance.copy(transform = instance.transform.scale(scale.x, scale.y, scale.z).translate(translate))
         _model.update {
@@ -852,14 +862,25 @@ class StateHolder {
         }
     }
 
+    private fun fixScale(requestedScale: Vec3, modelId: String): Vec3 {
+        val keepProportions = model.value.entityModels[modelId]!!.keepProportions
+        return if (keepProportions) {
+            val max = maxOf(requestedScale.x, requestedScale.y, requestedScale.z)
+            Vec3(max, max, max)
+        } else {
+            requestedScale
+        }
+    }
+
     fun scaleSelection(oldBB: BoundingBox, newBB: BoundingBox) {
         pushHistory()
         val newBrushes = selectedBrushes(_state.value, _model.value)
             .map { it.scale(oldBB, newBB) }.associateBy { it.id }
-        val scale = newBB.size divpercomp oldBB.size
-        val translate = newBB.center - (oldBB.center multpercomp scale)
+        val requestedScale = newBB.size divpercomp oldBB.size
+        val translate = newBB.center - (oldBB.center multpercomp requestedScale)
         val newEntityInstances = selectedEntityInstances(_state.value, _model.value)
             .map {
+                val scale = fixScale(requestedScale, it.modelId)
                 it.copy(transform = it.transform.scale(scale.x, scale.y, scale.z).translate(translate))
             }.associateBy { it.id }
         _model.update {

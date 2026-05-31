@@ -12,10 +12,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
+import androidx.compose.material3.Checkbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -54,6 +56,7 @@ import editor.ui.widget.FancyClickToTextInput
 import editor.ui.widget.FancyTextInput
 import editor.ui.widget.GroupBox
 import editor.ui.widget.IconButton
+import editor.ui.widget.LabeledFloatInput
 import editor.util.BoundingSphere
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -182,7 +185,6 @@ fun RowScope.EntityEditor(holder: StateHolder) {
                 }
 
                 GroupBox("Properties") {
-
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -191,6 +193,27 @@ fun RowScope.EntityEditor(holder: StateHolder) {
                             holder.updateEntityModelScale(entityModel, it)
                         }
                     }
+
+                    val dims = BoundingBox.from(entityModel!!.points).size * entityModel.defaultScale
+
+                    Text("Dims", style = Theme.mediumLabel, modifier = Modifier.padding(vertical = 4.dp))
+                    val dimValidator = { it: Float -> it in 1e-3..1e6 }
+                    LabeledFloatInput("width:", 40.dp, dims.x, dimValidator) { holder.updateEntityModelScale(entityModel, it * entityModel.defaultScale / dims.x) }
+                    LabeledFloatInput("height:", 40.dp, dims.y, dimValidator) { holder.updateEntityModelScale(entityModel, it * entityModel.defaultScale / dims.y) }
+                    LabeledFloatInput("depth:", 40.dp, dims.z, dimValidator) { holder.updateEntityModelScale(entityModel, it * entityModel.defaultScale / dims.z) }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Keep proportions", style = Theme.label, modifier = Modifier.weight(1f))
+                        Checkbox(
+                            modifier = Modifier.height(24.dp),
+                            checked = entityModel.keepProportions,
+                            onCheckedChange = {
+                                holder.updateEntityModelKeepProportions(entityModel, it)
+                            })
+                    }
+
                 }
             }
         }
@@ -237,7 +260,7 @@ fun modelFileDialog(state: State, holder: StateHolder, handler: (File) -> Unit) 
 fun collectModelPoints(modelInfo: ModelInfo): List<Vec3> {
     fun collect(node: ModelInfo.Node, parent: Mat4 = Mat4.IDENTITY): List<Vec3> {
         val transform = parent * (node.transform?.mat4 ?: Mat4.IDENTITY)
-        return (node.renderables?.flatMap { r -> r.mesh.vertices.mapNotNull { it.pos?.let { pt -> transform * pt }} } ?: emptyList()) +
+        return (node.renderables?.flatMap { r -> r.mesh.vertices.mapNotNull { it.pos?.let { pt -> transform * pt } } } ?: emptyList()) +
                 (node.children?.flatMap { collect(it, transform) } ?: emptyList())
     }
 

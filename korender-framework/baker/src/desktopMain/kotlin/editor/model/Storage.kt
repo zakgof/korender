@@ -219,6 +219,7 @@ data class EntityModelDto(
     val name: String,
     val filename: String,
     val defaultScale: Float,
+    val keepProportions: Boolean,
     val points: List<Vec3Dto> = emptyList(),
 ) {
     constructor(entityModel: EntityModel) : this(
@@ -226,6 +227,7 @@ data class EntityModelDto(
         name = entityModel.name,
         filename = entityModel.filename,
         defaultScale = entityModel.defaultScale,
+        keepProportions = entityModel.keepProportions,
         points = entityModel.points.map { Vec3Dto(it) },
     )
 
@@ -233,6 +235,7 @@ data class EntityModelDto(
         name = name,
         filename = filename,
         defaultScale = defaultScale,
+        keepProportions = keepProportions,
         points = points.map { it.toVec3() },
         id = id,
     )
