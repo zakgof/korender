@@ -47,6 +47,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zakgof.korender.baker.editor.ui.dialog.texturingDialog
+import com.zakgof.korender.baker.editor.ui.selectionBB
 import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.adddiamond
@@ -480,7 +481,7 @@ fun entitySelection(holder: StateHolder, state: State, model: Model) {
 
 @Composable
 private fun selectionDimension(state: State, model: Model, holder: StateHolder) {
-    val bb = if (state.mouseMode == State.MouseMode.CREATOR) state.creator else holder.selectionBB()
+    val bb = if (state.mouseMode == State.MouseMode.CREATOR) state.creator else selectionBB(state, model)
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween

@@ -3,6 +3,8 @@ package editor.state
 import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.baker.editor.collision.BvhCompiler
 import com.zakgof.korender.baker.editor.collision.CollisionSerialModel
+import com.zakgof.korender.baker.editor.ui.selectedBrushes
+import com.zakgof.korender.baker.editor.ui.selectedEntityInstances
 import com.zakgof.korender.impl.scene.KrModel
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
@@ -202,15 +204,15 @@ class StateHolder {
     fun copy() {
         _state.update {
             it.copy(
-                clipboardBrushes = selectedBrushes(),
-                clipboardEntityInstances = selectedEntityInstances()
+                clipboardBrushes = selectedBrushes(_state.value, _model.value),
+                clipboardEntityInstances = selectedEntityInstances(_state.value, _model.value)
             )
         }
     }
 
     fun cut() {
-        val brushes = selectedBrushes()
-        val entityInstances = selectedEntityInstances()
+        val brushes = selectedBrushes(_state.value, _model.value)
+        val entityInstances = selectedEntityInstances(_state.value, _model.value)
         pushHistory()
         _model.update {
             it.copy(
@@ -218,7 +220,8 @@ class StateHolder {
                 entityInstances = it.entityInstances.removeAll(state.value.entityInstanceSelection),
             )
         }
-        selectedEntityInstances().forEach { KorenderCache.remove(it) }
+        selectedEntityInstances(_state.value, _model.value)
+            .forEach { KorenderCache.remove(it) }
         _state.update {
             it.copy(
                 clipboardBrushes = brushes,
@@ -279,7 +282,8 @@ class StateHolder {
                 entityInstances = it.entityInstances.removeAll(state.value.entityInstanceSelection)
             )
         }
-        selectedEntityInstances().forEach { KorenderCache.remove(it) }
+        selectedEntityInstances(_state.value, _model.value)
+            .forEach { KorenderCache.remove(it) }
         _state.update {
             it.copy(brushSelection = setOf(), entityInstanceSelection = setOf())
         }
@@ -452,7 +456,7 @@ class StateHolder {
 
     fun zoomOnSelection() {
         if (state.value.brushSelection.isNotEmpty()) {
-            val bb = selectedBrushes()
+            val bb = selectedBrushes(_state.value, _model.value)
                 .map { it.bb }
                 .reduce(BoundingBox::merge)
 
@@ -472,7 +476,7 @@ class StateHolder {
     }
 
     fun carve(): Boolean {
-        val by = selectedBrushes()
+        val by = selectedBrushes(_state.value, _model.value)
         val target = model.value.brushes.values - by
         val carving = Brush.carve(target, by, state.value.materialId, model.value.materials[state.value.materialId]!!.fitToFace)
 
@@ -798,20 +802,6 @@ class StateHolder {
         }
     }
 
-    fun selectedBrushes() =
-        model.value.brushes.values
-            .filter { brush -> state.value.brushSelection.contains(brush.id) }
-            .toSet()
-
-    fun selectedEntityInstances() =
-        model.value.entityInstances.values
-            .filter { ei -> state.value.entityInstanceSelection.contains(ei.id) }
-            .toSet()
-
-    fun selectionBB() = (selectedBrushes() + selectedEntityInstances())
-        .map { it.bb }
-        .reduceOrNull(BoundingBox::merge)
-
     fun deleteEntityModel() {
         if (state.value.entityModelId != null) {
             pushHistory()
@@ -850,8 +840,10 @@ class StateHolder {
         if (pushHistory) {
             pushHistory()
         }
-        val newBrushes = selectedBrushes().map { it.translate(offset) }.associateBy { it.id }
-        val newEntityInstances = selectedEntityInstances().map { it.copy(transform = it.transform.translate(offset)) }.associateBy { it.id }
+        val newBrushes = selectedBrushes(_state.value, _model.value)
+            .map { it.translate(offset) }.associateBy { it.id }
+        val newEntityInstances = selectedEntityInstances(_state.value, _model.value)
+            .map { it.copy(transform = it.transform.translate(offset)) }.associateBy { it.id }
         _model.update {
             it.copy(
                 brushes = it.brushes.putAll(newBrushes),
@@ -862,12 +854,14 @@ class StateHolder {
 
     fun scaleSelection(oldBB: BoundingBox, newBB: BoundingBox) {
         pushHistory()
-        val newBrushes = selectedBrushes().map { it.scale(oldBB, newBB) }.associateBy { it.id }
+        val newBrushes = selectedBrushes(_state.value, _model.value)
+            .map { it.scale(oldBB, newBB) }.associateBy { it.id }
         val scale = newBB.size divpercomp oldBB.size
         val translate = newBB.center - (oldBB.center multpercomp scale)
-        val newEntityInstances = selectedEntityInstances().map {
-            it.copy(transform = it.transform.scale(scale.x, scale.y, scale.z).translate(translate))
-        }.associateBy { it.id }
+        val newEntityInstances = selectedEntityInstances(_state.value, _model.value)
+            .map {
+                it.copy(transform = it.transform.scale(scale.x, scale.y, scale.z).translate(translate))
+            }.associateBy { it.id }
         _model.update {
             it.copy(
                 brushes = it.brushes.putAll(newBrushes),
