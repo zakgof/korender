@@ -385,32 +385,38 @@ private fun materials(holder: StateHolder, state: State, model: Model) {
 }
 
 @Composable
+private fun simpleSelectionBox(text: String) =
+    Box(
+        modifier = Modifier.height(32.dp).fillMaxWidth(),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Text(text, style = Theme.label)
+    }
+
+
+@Composable
 fun selection(holder: StateHolder, state: State, model: Model) {
 
     GroupBox("Selection") {
         Column {
-            val creator = state.mouseMode == State.MouseMode.CREATOR
-            if (state.brushSelection.isEmpty() && state.entityInstanceSelection.isEmpty() || creator) {
-                Box(
-                    modifier = Modifier.height(32.dp).fillMaxWidth(),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Text(if (creator) "Brush painter" else "No selection", style = Theme.label)
-                }
-            } else {
-                if (state.entityInstanceSelection.isEmpty()) {
-                    brushSelection(holder, state, model)
-                } else if (state.brushSelection.isEmpty()) {
-                    entitySelection(holder, state, model)
-                } else {
-                    val count = state.brushSelection.size + state.entityInstanceSelection.size
-                    Box(
-                        modifier = Modifier.height(32.dp).fillMaxWidth(),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Text("$count objects", style = Theme.label)
+            when (state.mouseMode) {
+                State.MouseMode.CREATOR -> simpleSelectionBox("Brush painter")
+                State.MouseMode.FACE -> simpleSelectionBox(if (state.faceSelection.isEmpty()) "No selection" else "${state.faceSelection.size} faces")
+                State.MouseMode.SELECT -> {
+                    if (state.brushSelection.isEmpty() && state.entityInstanceSelection.isEmpty()) {
+                        simpleSelectionBox("No selection")
+                    } else {
+                        if (state.entityInstanceSelection.isEmpty()) {
+                            brushSelection(holder, state, model)
+                        } else if (state.brushSelection.isEmpty()) {
+                            entitySelection(holder, state, model)
+                        } else {
+                            val count = state.brushSelection.size + state.entityInstanceSelection.size
+                            simpleSelectionBox("$count objects")
+                        }
                     }
                 }
+                else -> simpleSelectionBox("No selection")
             }
             selectionDimension(state, model, holder)
         }
@@ -501,9 +507,9 @@ private fun selectionDimension(state: State, model: Model, holder: StateHolder) 
             }
             Text("Center", style = Theme.mediumLabel, modifier = Modifier.padding(vertical = 4.dp))
             val coordValidator = { it: Float -> it in -1e6..1e6 }
-            LabeledFloatInput("x:", 12.dp, bb?.center?.x, coordValidator) { setCenter(it, bb!!.center.y, bb.center.z) }
-            LabeledFloatInput("y:", 12.dp, bb?.center?.y, coordValidator) { setCenter(bb!!.center.x, it, bb.center.z) }
-            LabeledFloatInput("z:", 12.dp, bb?.center?.z, coordValidator) { setCenter(bb!!.center.x, bb.center.y, it) }
+            LabeledFloatInput("x:", 8.dp, bb?.center?.x, coordValidator) { setCenter(it, bb!!.center.y, bb.center.z) }
+            LabeledFloatInput("y:", 8.dp, bb?.center?.y, coordValidator) { setCenter(bb!!.center.x, it, bb.center.z) }
+            LabeledFloatInput("z:", 8.dp, bb?.center?.z, coordValidator) { setCenter(bb!!.center.x, bb.center.y, it) }
         }
         Column(
             modifier = Modifier.weight(1.4f)
@@ -518,9 +524,9 @@ private fun selectionDimension(state: State, model: Model, holder: StateHolder) 
             }
             Text("Dims", style = Theme.mediumLabel, modifier = Modifier.padding(vertical = 4.dp))
             val dimValidator = { it: Float -> it in 1e-3..1e6 }
-            LabeledFloatInput("width:", 40.dp, bb?.size?.x, dimValidator) { setSize(it, bb!!.size.y, bb.size.z) }
-            LabeledFloatInput("height:", 40.dp, bb?.size?.y, dimValidator) { setSize(bb!!.size.x, it, bb.size.z) }
-            LabeledFloatInput("depth:", 40.dp, bb?.size?.z, dimValidator) { setSize(bb!!.size.x, bb.size.y, it) }
+            LabeledFloatInput("width:", 32.dp, bb?.size?.x, dimValidator) { setSize(it, bb!!.size.y, bb.size.z) }
+            LabeledFloatInput("height:", 32.dp, bb?.size?.y, dimValidator) { setSize(bb!!.size.x, it, bb.size.z) }
+            LabeledFloatInput("depth:", 32.dp, bb?.size?.z, dimValidator) { setSize(bb!!.size.x, bb.size.y, it) }
         }
     }
 }

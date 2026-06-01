@@ -148,7 +148,9 @@ fun ProjectionView(axes: Axes, holder: StateHolder) {
         }
         drawBrushes(mapper, state, model)
         drawGroups(mapper, state, model)
-        drawSelection(mapper, state, model)
+        if (state.mouseMode == State.MouseMode.SELECT) {
+            drawSelection(mapper, state, model)
+        }
         drawEntityInstances(mapper, state, model, ::requestRedraw)
         mouseHandler.draw(this)
     }

@@ -18,6 +18,7 @@ import editor.model.Model
 import editor.model.ModelDto
 import editor.model.brush.Brush
 import editor.model.brush.CreatorShape
+import editor.model.brush.Face
 import editor.model.brush.Group
 import editor.model.entity.EntityInstance
 import editor.model.entity.EntityModel
@@ -95,12 +96,17 @@ class StateHolder {
         file.writeBytes(bytes)
     }
 
-    fun setMouseMode(newMode: State.MouseMode) {
-        if (newMode == State.MouseMode.CREATOR) {
+    fun setMouseMode(newMode: MouseMode) {
+        if (newMode == MouseMode.CREATOR) {
             resetCreator()
         }
         _state.update {
-            it.copy(mouseMode = newMode)
+            it.copy(
+                mouseMode = newMode,
+                brushSelection = setOf(),
+                entityInstanceSelection = setOf(),
+                faceSelection = setOf()
+            )
         }
     }
 
@@ -369,20 +375,43 @@ class StateHolder {
         }
     }
 
+    private fun applyMaterialToFace(face: Face, material: Material): Face =
+        face.copy(
+            materialId = material.id, texturing = face.texturing.copy(
+                u = face.texturing.u.copy(scale = material.scale),
+                v = face.texturing.v.copy(scale = material.scale),
+                fitToFace = material.fitToFace
+            )
+        )
+
     fun applyMaterialToSelection() {
-        pushHistory()
         val materialId = state.value.materialId
         val material = model.value.materials[materialId]!!
-        modifySelectedBrushes { brush ->
-            brush.copy(faces = brush.faces.values.map {
-                it.copy(
-                    materialId = materialId, texturing = it.texturing.copy(
-                        u = it.texturing.u.copy(scale = material.scale),
-                        v = it.texturing.v.copy(scale = material.scale),
-                        fitToFace = material.fitToFace
-                    )
-                )
-            }.associateBy { it.id })
+        when (state.value.mouseMode) {
+            MouseMode.SELECT -> modifySelectedBrushes { brush ->
+                brush.copy(faces = brush.faces.values.map {
+                    applyMaterialToFace(it, material)
+                }.associateBy { it.id })
+            }
+
+            MouseMode.FACE -> {
+                if (state.value.faceSelection.isEmpty()) {
+                    pushHistory()
+                }
+                val grouped = state.value.faceSelection.groupBy({ it.first }, { it.second })
+                val newBrushes = grouped.map { map ->
+                    val brush = model.value.brushes[map.key]!!
+                    val newFaces = map.value.map { faceId ->
+                        applyMaterialToFace(brush.faces[faceId]!!, material)
+                    }
+                    brush.copy(faces = brush.faces + newFaces.associateBy { it.id })
+                }
+                _model.update {
+                    it.copy(brushes = it.brushes.putAll(newBrushes.associateBy { it.id }))
+                }
+            }
+
+            else -> {}
         }
     }
 

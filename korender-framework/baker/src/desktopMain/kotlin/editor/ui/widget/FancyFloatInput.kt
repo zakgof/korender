@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.Text
@@ -117,7 +118,7 @@ fun LabeledFloatInput(label: String, labelW: Dp, value: Float?, validator: (Floa
                 value,
                 validator = validator,
                 editorModifier = Modifier.width(48.dp),
-                textModifier = Modifier.width(36.dp),
+                textModifier = Modifier.width(36.dp).padding(end = 8.dp),
                 onValueChange = onValueChanged
             )
         } ?: Box(modifier = Modifier.height(22.dp))
