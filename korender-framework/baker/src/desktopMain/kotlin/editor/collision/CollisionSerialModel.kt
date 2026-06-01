@@ -24,7 +24,7 @@ class CollisionSerialModel {
             right = bvhNode.right?.let { BvhNode(it) },
             brushes = bvhNode.brushes?.map { brush ->
                 Brush(
-                    planes = brush.faces.map { face ->
+                    planes = brush.faces.values.map { face ->
                         val n = face.plane.normal
                         Plane(n.x, n.y, n.z, face.plane.d)
                     }

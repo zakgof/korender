@@ -39,10 +39,10 @@ object TouchHandler {
                 ).normalize()
     }
 
-    fun KorenderScope.touch(e: TouchEvent, holder: StateHolder) {
+    fun KorenderScope.touch(e: TouchEvent, state: State, holder: StateHolder) {
         if (e.type == TouchEvent.Type.DOWN) {
             val look = screenToLook(e)
-            holder.selectViaRay(look, e.keyboardModifiers.ctrlPressed)
+            holder.selectViaRay(state.camera.position, look, e.keyboardModifiers.ctrlPressed)
             down = look
         }
         if (e.type == TouchEvent.Type.MOVE && down != null) {
@@ -69,7 +69,7 @@ fun KorenderView(holder: StateHolder) {
                 }
             }
         }
-        OnTouch { touch(it, holder) }
+        OnTouch { touch(it, state, holder) }
         Frame {
             KorenderCache.frame()
             AmbientLight(white(0.6f))
@@ -88,10 +88,15 @@ fun KorenderView(holder: StateHolder) {
                             val face = faceToTris.key
                             val tris = faceToTris.value
                             val vertexCount = tris.sumOf { it.points.size }
+                            val selected = if (state.mouseMode == State.MouseMode.FACE) {
+                                state.faceSelection.contains(brush.id to face.id)
+                            } else if (state.mouseMode == State.MouseMode.SELECT) {
+                                state.brushSelection.contains(brush.id)
+                            } else false
                             Renderable(
                                 toBaseMM(
                                     model.materials[face.materialId]!!,
-                                    state.brushSelection.contains(brush.id)
+                                    selected
                                 ),
                                 mesh = customMesh(brush.id + "-" + i + "-" + vertexCount, vertexCount, 0, POS, NORMAL, TEX, dynamic = true) {
                                     tris.forEach { tri ->

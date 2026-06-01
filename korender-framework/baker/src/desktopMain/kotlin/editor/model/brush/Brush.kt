@@ -7,10 +7,12 @@ import kotlin.math.abs
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+@OptIn(ExperimentalUuidApi::class)
 data class Face(
     val plane: Plane,
     val materialId: String,
     val texturing: Texturing,
+    val id: String = Uuid.generateV7().toHexDashString(),
 ) {
     constructor(plane: Plane, materialId: String, fitToFace: Boolean) :
             this(plane, materialId, Texturing(fitToFace = fitToFace))
@@ -19,7 +21,7 @@ data class Face(
 @OptIn(ExperimentalUuidApi::class)
 data class Brush(
     val name: String,
-    val faces: List<Face>,
+    val faces: Map<String, Face>,
     val id: String = Uuid.generateV7().toHexDashString(),
 ) : Boundable {
 
@@ -31,7 +33,7 @@ data class Brush(
         shape: CreatorShape,
         materialId: String,
         fitToFace: Boolean,
-    ) : this(name,shape.makeFaces(bb, materialId, fitToFace))
+    ) : this(name, shape.makeFaces(bb, materialId, fitToFace).associateBy { it.id })
 
     val points by lazy { BrushMesher.collectPoints(this) }
     val mesh by lazy { BrushMesher.buildBrushMesh(this, points) }
@@ -51,16 +53,19 @@ data class Brush(
     }
 
     fun translate(offset: Vec3) =
-        copy(faces = faces.map { face -> face.copy(plane = face.plane.translate(offset)) })
+        copy(faces = faces.values.map { face ->
+            face.copy(plane = face.plane.translate(offset))
+        }.associateBy { it.id })
 
-    fun scale(oldBB: BoundingBox, newBB: BoundingBox): Brush {
-        return copy(faces = faces.map { face ->
+    fun scale(oldBB: BoundingBox, newBB: BoundingBox) =
+        copy(faces = faces.values.map { face ->
             face.copy(plane = face.plane.scale(oldBB, newBB))
-        })
-    }
+        }.associateBy { it.id })
 
     fun rotate(center: Vec3, axis: Vec3, angle: Float) =
-        copy(faces = faces.map { face -> face.copy(plane = face.plane.rotate(center, axis, angle)) })
+        copy(faces = faces.values.map { face ->
+            face.copy(plane = face.plane.rotate(center, axis, angle))
+        }.associateBy { it.id })
 
     fun intersectRayBrush(r0: Vec3, look: Vec3): Pair<Face, Vec3>? {
 
@@ -68,7 +73,7 @@ data class Brush(
         var tExit = Float.POSITIVE_INFINITY
         var enterFace: Face? = null
 
-        for (f in faces) {
+        for (f in faces.values) {
             val p = f.plane
             val dist0 = p.normal * r0 + p.d
             val denom = p.normal * look
@@ -124,14 +129,14 @@ data class Brush(
     private fun filterFaces(): Brush {
         val EPS = 1e-3f
         val verts = mesh.points
-        val validFaces = faces.filter { face ->
+        val validFaces = faces.values.filter { face ->
             val plane = face.plane
             val onPlane = verts.count {
                 abs(plane.distanceTo(it)) < EPS
             }
             onPlane >= 3
         }
-        return if (validFaces.size == faces.size) this else copy(faces = validFaces)
+        return if (validFaces.size == faces.size) this else copy(faces = validFaces.associateBy { it.id })
     }
 
     companion object {
@@ -142,7 +147,7 @@ data class Brush(
             val partsMap = originals.associate { it.id to mutableListOf(it) }.toMutableMap()
 
             for (tool in by) {
-                val planes = tool.faces.map { it.plane }
+                val planes = tool.faces.values.map { it.plane }
                 if (planes.isEmpty()) continue
 
                 val newPartsMap = mutableMapOf<String, MutableList<Brush>>()
@@ -191,12 +196,12 @@ data class Brush(
                     val front = currentPart.copy(
                         name = "$name*",
                         id = Uuid.generateV7().toHexDashString(),
-                        faces = currentPart.faces + Face(plane.invert().copy(smoothId = Uuid.generateV7()), materialId, fitToFace)
+                        faces = (currentPart.faces.values + Face(plane.invert().copy(smoothId = Uuid.generateV7()), materialId, fitToFace)).associateBy { it.id }
                     ).filterFaces()
                     val back = currentPart.copy(
                         name = "$name*",
                         id = Uuid.generateV7().toHexDashString(),
-                        faces = currentPart.faces + Face(plane.copy(smoothId = Uuid.generateV7()), materialId, fitToFace)
+                        faces = (currentPart.faces.values  + Face(plane.copy(smoothId = Uuid.generateV7()), materialId, fitToFace)).associateBy { it.id }
                     ).filterFaces()
                     results += front
                     currentPart = back

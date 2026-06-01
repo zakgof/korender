@@ -138,13 +138,13 @@ data class BrushDto(
 ) {
     constructor(brush: Brush) : this(
         name = brush.name,
-        planes = brush.faces.map { FaceDto(it) },
+        planes = brush.faces.values.map { FaceDto(it) },
         id = brush.id
     )
 
     fun toBrush() = Brush(
         name = name,
-        faces = planes.map { it.toFace() },
+        faces = planes.map { it.toFace() }.associateBy { it.id },
         id = id
     )
 }

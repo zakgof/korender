@@ -201,7 +201,7 @@ internal class SelectorMouseHandler(
 
                     val rotation = Quaternion.fromAxisAngle(lookAxis, angle)
                     // TODO: add entity orientation snapping
-                    val da = origBrushes.flatMap { it.faces }
+                    val da = origBrushes.flatMap { it.faces.values }
                         .map { rotation * it.plane.normal }
                         .filter { it.dot(lookAxis) < 0.95f }
                         .filter { it.dot(lookAxis) > -0.95f }

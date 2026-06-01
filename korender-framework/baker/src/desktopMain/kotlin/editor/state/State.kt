@@ -20,6 +20,8 @@ data class State(
 
     val brushSelection: Set<String> = setOf(),
     val entityInstanceSelection: Set<String> = setOf(),
+    val faceSelection: Set<Pair<String, String>> = setOf(),
+
     val selectionMode: SelectionMode = SelectionMode.RESIZE,
 
     val clipboardBrushes: Set<Brush> = setOf(),
@@ -48,6 +50,7 @@ data class State(
     enum class MouseMode {
         CREATOR,
         SELECT,
+        FACE,
         DRAG
     }
 

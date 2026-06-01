@@ -244,9 +244,9 @@ class StateHolder {
             brush.copy(
                 name = generateBrushName(brush.name),
                 id = Uuid.generateV7().toHexDashString(),
-                faces = brush.faces.map {
+                faces = brush.faces.values.map {
                     it.copy(plane = it.plane.translate(offset))
-                }
+                }.associateBy { it.id }
             )
         }
         val newEntityInstances = state.value.clipboardEntityInstances.map { entityInstance ->
@@ -374,7 +374,7 @@ class StateHolder {
         val materialId = state.value.materialId
         val material = model.value.materials[materialId]!!
         modifySelectedBrushes { brush ->
-            brush.copy(faces = brush.faces.map {
+            brush.copy(faces = brush.faces.values.map {
                 it.copy(
                     materialId = materialId, texturing = it.texturing.copy(
                         u = it.texturing.u.copy(scale = material.scale),
@@ -382,7 +382,7 @@ class StateHolder {
                         fitToFace = material.fitToFace
                     )
                 )
-            })
+            }.associateBy { it.id })
         }
     }
 
@@ -426,27 +426,27 @@ class StateHolder {
 
     fun applyTexturingUScaleToSelection(uScale: Float) {
         pushHistory()
-        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(texturing = it.texturing.copy(u = it.texturing.u.copy(scale = uScale))) }) }
+        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.values.map { it.copy(texturing = it.texturing.copy(u = it.texturing.u.copy(scale = uScale))) }.associateBy { it.id }) }
     }
 
     fun applyTexturingUOffsetToSelection(uOffset: Float) {
         pushHistory()
-        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(texturing = it.texturing.copy(u = it.texturing.u.copy(offset = uOffset))) }) }
+        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.values.map { it.copy(texturing = it.texturing.copy(u = it.texturing.u.copy(offset = uOffset))) }.associateBy { it.id }) }
     }
 
     fun applyTexturingVScaleToSelection(vScale: Float) {
         pushHistory()
-        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(texturing = it.texturing.copy(v = it.texturing.v.copy(scale = vScale))) }) }
+        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.values.map { it.copy(texturing = it.texturing.copy(v = it.texturing.v.copy(scale = vScale))) }.associateBy { it.id }) }
     }
 
     fun applyTexturingVOffsetToSelection(vOffset: Float) {
         pushHistory()
-        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(texturing = it.texturing.copy(v = it.texturing.v.copy(offset = vOffset))) }) }
+        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.values.map { it.copy(texturing = it.texturing.copy(v = it.texturing.v.copy(offset = vOffset))) }.associateBy { it.id }) }
     }
 
     fun applyTexturingFitToFaceToSelection(newValue: Boolean) {
         pushHistory()
-        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.map { it.copy(texturing = it.texturing.copy(fitToFace = newValue)) }) }
+        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.values.map { it.copy(texturing = it.texturing.copy(fitToFace = newValue)) }.associateBy { it.id }) }
     }
 
     fun setLastTextureDir(dir: File) {
@@ -465,14 +465,33 @@ class StateHolder {
         }
     }
 
-    fun selectViaRay(look: Vec3, flip: Boolean) {
-        val brush = model.value.brushes.values
-            .mapNotNull { brush -> brush.intersectRayBrush(state.value.camera.position, look)?.let { brush to it.second } }
-            .minByOrNull { it.second.distanceTo(state.value.camera.position) }
-            ?.first
-        brush?.let {
-            selectBrushes(setOf(brush.id), flip, true)
-        } ?: clearSelection()
+    fun selectViaRay(cam: Vec3, look: Vec3, flip: Boolean) {
+        if (state.value.mouseMode == MouseMode.FACE) {
+            val face = model.value.brushes.values
+                .mapNotNull { brush -> brush.intersectRayBrush(cam, look)?.let { brush.id to it.first.id to it.second } }
+                .minByOrNull { it.second dot look }
+                ?.first
+            val newSelection = face?.let {
+                if (flip) {
+                    if (state.value.faceSelection.contains(face)) {
+                        state.value.faceSelection - face
+                    } else {
+                        state.value.faceSelection + face
+                    }
+                } else {
+                    setOf(face)
+                }
+            } ?: setOf<Pair<String, String>>()
+            _state.update { it.copy(faceSelection = newSelection) }
+        } else {
+            val brush = model.value.brushes.values
+                .mapNotNull { brush -> brush.intersectRayBrush(state.value.camera.position, look)?.let { brush to it.second } }
+                .minByOrNull { it.second.distanceTo(state.value.camera.position) }
+                ?.first
+            brush?.let {
+                selectBrushes(setOf(brush.id), flip, true)
+            } ?: clearSelection()
+        }
     }
 
     fun carve(): Boolean {

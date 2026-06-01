@@ -21,10 +21,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import com.zakgof.korender.baker.editor.ui.widget.FancyColumn
-import editor.util.sameOrNull
 import editor.state.StateHolder
 import editor.ui.Theme
 import editor.ui.widget.FancyFloatInput
+import editor.util.sameOrNull
 
 @Composable
 fun texturingDialog(holder: StateHolder): () -> Unit {
@@ -40,7 +40,7 @@ fun texturingDialog(holder: StateHolder): () -> Unit {
             onCloseRequest = { show = false },
             state = rememberDialogState(size = DpSize(Dp.Unspecified, Dp.Unspecified))
         ) {
-            val texturings = state.brushSelection.map { model.brushes[it]!! }.flatMap { it.faces }.map { it.texturing }
+            val texturings = state.brushSelection.map { model.brushes[it]!! }.flatMap { it.faces.values }.map { it.texturing }
             val uscale = texturings.map { it.u.scale }.sameOrNull()
             val vscale = texturings.map { it.v.scale }.sameOrNull()
             val uoffset = texturings.map { it.u.offset }.sameOrNull()
@@ -52,7 +52,7 @@ fun texturingDialog(holder: StateHolder): () -> Unit {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val texturings = state.brushSelection.map { model.brushes[it]!! }.flatMap { it.faces }.map { it.texturing }
+                    val texturings = state.brushSelection.map { model.brushes[it]!! }.flatMap { it.faces.values }.map { it.texturing }
                     val fitToFace = texturings.map { it.fitToFace }.sameOrNull()
                     Text("Fit to face", style = Theme.label, modifier = Modifier.weight(1f))
                     TriStateCheckbox(

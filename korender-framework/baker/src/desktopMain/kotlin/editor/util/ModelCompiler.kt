@@ -69,7 +69,7 @@ object ModelCompiler {
         /////
 
         val usedMaterialIds = model.brushes.values
-            .flatMap { it.faces }
+            .flatMap { it.faces.values }
             .map { it.materialId }
             .toSet()
         val usedMaterials = model.materials.values
@@ -103,7 +103,7 @@ object ModelCompiler {
         val materials = texArrayMaterials.ifEmpty { mapOf("notex" to KrModel.Material("notex")) }
         val noTexMaterialId = materials.keys.first()
 
-        val meshFaces = model.brushes.values.flatMap { brush -> brush.faces.map { brush.mesh to it } }
+        val meshFaces = model.brushes.values.flatMap { brush -> brush.faces.values.map { brush.mesh to it } }
 
         val meshes = meshFaces
             .groupBy({

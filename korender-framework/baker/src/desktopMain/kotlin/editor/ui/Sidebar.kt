@@ -54,6 +54,7 @@ import com.zakgof.korender.baker.resources.adddiamond
 import com.zakgof.korender.baker.resources.arrowdown
 import com.zakgof.korender.baker.resources.arrowup
 import com.zakgof.korender.baker.resources.drag
+import com.zakgof.korender.baker.resources.face
 import com.zakgof.korender.baker.resources.group
 import com.zakgof.korender.baker.resources.minus
 import com.zakgof.korender.baker.resources.paint
@@ -159,6 +160,7 @@ private fun modes(state: State, holder: StateHolder) {
             listOf(
                 Res.drawable.pen to "Draw Brushes",
                 Res.drawable.pointer to "Select Objects",
+                Res.drawable.face to "Select Faces",
                 Res.drawable.drag to "Drag Grid"
             ),
             state.mouseMode.ordinal,

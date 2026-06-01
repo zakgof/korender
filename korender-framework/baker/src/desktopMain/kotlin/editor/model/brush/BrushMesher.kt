@@ -24,7 +24,7 @@ object BrushMesher {
     const val EPS = 1e-3f
 
     fun collectPoints(brush: Brush): MutableList<Brush.Point> {
-        val planes = brush.faces.map { it.plane }
+        val planes = brush.faces.values.map { it.plane }
         val samples = planes.flatMap { listOf(it.p0, it.pu, it.pv) }
         val center = samples.reduce(Vec3::plus) / samples.size.toFloat()
         val maxDist = samples.maxOf { (it - center).length() }
@@ -97,7 +97,7 @@ object BrushMesher {
 
         val faces = mutableMapOf<Face, List<BrushMesh.Tri>>()
 
-        for (face in brush.faces) {
+        for (face in brush.faces.values) {
 
             val triangles = mutableListOf<BrushMesh.Tri>()
 

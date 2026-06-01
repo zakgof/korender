@@ -22,6 +22,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -34,6 +35,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import com.zakgof.korender.baker.editor.ui.projection.FaceMouseHandler
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
@@ -263,6 +265,26 @@ private fun DrawScope.drawBrush(brush: Brush, mapper: ProjectionMapper, state: S
             strokeWidth = if (selected) 3f else 2f
         )
     }
+    if  (state.mouseMode == State.MouseMode.FACE) {
+        state.faceSelection.flatMap { pair ->
+            val brush = model.brushes[pair.first]!!
+            val face = brush.faces[pair.second]
+            brush.mesh.faces[face]!!
+        }.forEach { tri ->
+            val path = Path().apply {
+                val offsets = tri.points.map {mapper.wToV(it)}
+                moveTo(offsets[0].x, offsets[0].y)
+                offsets.drop(1).forEach {
+                    lineTo(it.x, it.y)
+                }
+                close()
+            }
+            drawPath(
+                path = path,
+                color = Color.Red
+            )
+        }
+    }
 }
 
 private fun DrawScope.drawEntityInstances(mapper: ProjectionMapper, state: State, model: Model, requestRedraw: () -> Unit) {
@@ -305,16 +327,11 @@ private fun DrawScope.drawEntityInstance(entityInstance: EntityInstance, mapper:
                 strokeWidth = if (selected) 3f else 2f
             )
         }
-//    drawRect(
-//        color =  if (selected) Color.Red else entityInstance.color(),
-//        topLeft = rect.topLeft,
-//        size = rect.size,
-//        style = Stroke(width = if (selected) 3f else 2f)
-//    )
 }
 
 private fun mouseHandler(mapper: ProjectionMapper, state: State, model: Model, holder: StateHolder): MouseHandler = when (state.mouseMode) {
     State.MouseMode.CREATOR -> CreatorMouseHandler(mapper, state, holder)
     State.MouseMode.SELECT -> SelectorMouseHandler(mapper, state, model, holder)
+    State.MouseMode.FACE -> FaceMouseHandler(mapper, state, model, holder)
     State.MouseMode.DRAG -> DragMouseHandler(mapper, state, holder)
 }

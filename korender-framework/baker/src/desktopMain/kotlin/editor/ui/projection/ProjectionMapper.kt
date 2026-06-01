@@ -20,13 +20,6 @@ class ProjectionMapper(val axes: Axes, val state: State, val size: Size) {
     val centerX = state.viewCenter * axes.xAxis
     val centerY = state.viewCenter * axes.yAxis
 
-//    fun xVtoW(viewX: Float) = centerX + (viewX - size.width * 0.5f) / state.projectionScale
-//    fun yVtoW(viewY: Float) = centerY - (viewY - size.height * 0.5f) / state.projectionScale
-    // fun xWtoV(worldX: Float) = size.width * 0.5f + (worldX - centerX) * state.projectionScale
-    // fun yWtoV(worldY: Float) = size.height * 0.5f - (worldY - centerY) * state.projectionScale
-//    fun xWtoV(v: Vec3) = xWtoV(axes.xAxis * v)
-//    fun yWtoV(v: Vec3) = yWtoV(axes.yAxis * v)
-
     fun wToVx(v: Vec3) = size.width * 0.5f + (axes.xAxis * v - centerX) * state.projectionScale
     fun wToVy(v: Vec3) = size.height * 0.5f + (axes.yAxis * v - centerY) * state.projectionScale
     fun wToV(v: Vec3) = Offset(wToVx(v), wToVy(v))
@@ -51,7 +44,7 @@ class ProjectionMapper(val axes: Axes, val state: State, val size: Size) {
 
     fun deltaToW(o: Offset) = (axes.xAxis * o.x + axes.yAxis * o.y) / state.projectionScale
 
-    private fun vToW(o: Offset): Vec3 =
+    fun vToW(o: Offset): Vec3 =
         axes.xAxis * ((o.x - size.width * .5f) / state.projectionScale + centerX) +
                 axes.yAxis * ((o.y - size.height * .5f) / state.projectionScale + centerY)
 
