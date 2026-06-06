@@ -7,7 +7,6 @@ import com.zakgof.korender.impl.engine.shadow.ShadowerData
 import com.zakgof.korender.impl.engine.shadow.shadows
 import com.zakgof.korender.impl.geometry.DecalCube
 import com.zakgof.korender.impl.geometry.Instanceable
-import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
 import com.zakgof.korender.impl.geometry.MeshAttributes.COLOR
 import com.zakgof.korender.impl.geometry.MeshAttributes.COLORTEXINDEX
 import com.zakgof.korender.impl.geometry.MeshAttributes.METALLIC
@@ -570,7 +569,7 @@ internal class Renderer(
         ) {
             if ((declaration.material.customDefs and Defs.NO_SHADOW_CAST.bit) != 0L && shadowCasterModifier != null)
                 return
-            val meshLink = inventory.mesh(declaration.mesh as InternalMeshDeclaration)
+            val meshLink = inventory.mesh(declaration.mesh)
             if (meshLink == null) {
                 rk?.fail()
                 return

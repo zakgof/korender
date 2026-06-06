@@ -172,7 +172,6 @@ internal class ShaderPluginRegistry {
 
 }
 
-// TODO just use toString
 internal enum class Defs : ShaderFlag {
 
     VERTEX_TRANSFORM,
