@@ -49,10 +49,6 @@ kotlin {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 
-    compilerOptions {
-        freeCompilerArgs.addAll("-Xcontext-parameters")
-    }
-
     sourceSets {
         val desktopMain by getting
 
@@ -93,13 +89,11 @@ kotlin {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
-    jvmArgs("--add-exports", "java.desktop/sun.awt=ALL-UNNAMED")
 }
 
 compose.desktop {
     application {
         mainClass = "com.zakgof.korender.MainKt"
-        jvmArgs("--add-exports", "java.desktop/sun.awt=ALL-UNNAMED")
         nativeDistributions {
             targetFormats(TargetFormat.Msi)
             packageName = "com.zakgof.korender"

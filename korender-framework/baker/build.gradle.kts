@@ -19,10 +19,6 @@ kotlin {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 
-    compilerOptions {
-        freeCompilerArgs.addAll("-Xcontext-parameters")
-    }
-
     sourceSets {
         val desktopMain by getting
 
@@ -48,14 +44,12 @@ compose.desktop {
         jvmArgs += listOf(
             "--add-opens=java.base/java.lang=ALL-UNNAMED",
             "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
-            "--add-opens=java.desktop/sun.awt=ALL-UNNAMED"
         )
         mainClass = "com.zakgof.korender.baker.MainKt"
         nativeDistributions {
             jvmArgs += listOf(
                 "--add-opens=java.base/java.lang=ALL-UNNAMED",
                 "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
-                "--add-opens=java.desktop/sun.awt=ALL-UNNAMED"
             )
             windows {
                 includeAllModules = true
