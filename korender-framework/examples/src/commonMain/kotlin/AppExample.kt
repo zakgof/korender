@@ -34,17 +34,10 @@ import com.zakgof.app.resources.korender32
 import com.zakgof.app.resources.menu
 import com.zakgof.korender.examples.gltfviewer.GltfLibraryExample
 import com.zakgof.korender.examples.infcity.InfiniteCity
-import com.zakgof.korender.examples.island.IslandExample
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 val pages = listOf(
-
-    Case("Obj") { ObjModelExample() },
-
-    Case("Island") { IslandExample() },
-
-
 
     Case("Heightmap terrain") { HeightmapTerrainExample() },
     Case("Procedural terrain") { ProcTerrainExample() },
@@ -54,6 +47,7 @@ val pages = listOf(
     Case("GLTF crowd") { GltfCrowdExample() },
     Case("GLTF library") { GltfLibraryExample() },
     Case("Shadows") { ShadowExample() },
+    Case("Stochastic Texturing") { StochasticTexturingExample() },
     Case("Render to texture") { RenderToTextureExample() },
     Case("Point lights") { LightsExample() },
     Case("GUI") { GuiExample() },
@@ -64,7 +58,9 @@ val pages = listOf(
     Case("Decals") { DecalExample() },
     Case("Bloom") { BloomExample() },
     Case("SSR") { SsrExample() },
-    Case("SSAO") { SsaoExample() },
+    Case("HBAO") { HbaoExample() },
+
+    /*
     Case("Texture arrays") { TextureArrayExample() },
     Case("Multiple viewports") { MultipleViewportsExample() },
     Case("Sky") { SkyExample() },
@@ -75,7 +71,7 @@ val pages = listOf(
     Case("Env") { CaptureEnvExample() },
     Case("Capture frame") { CaptureFrameExample() },
     Case("Shapes") { BasicShapesExample() },
-    Case("Stochastic Texturing") { StochasticTexturingExample() },
+     */
 )
 
 @Composable

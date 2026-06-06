@@ -16,28 +16,24 @@ import com.zakgof.korender.math.z
 fun SsrExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
     val orbitCamera = OrbitCamera(20.z + 4.y, 1.y)
     OnTouch { orbitCamera.touch(it) }
-    val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })
+    val envTex = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })
     Frame {
         TestExchange.report(frameInfo)
         camera = orbitCamera.run { camera() }
-        val phase = frameInfo.time.toInt() % 3
-        val sky = cubeSky(env)
-        val iblSky = if (phase == 2) sky else null
+        val iblSky = cubeSky(envTex)
         DeferredShading {
-            if (phase == 1) {
-                Ssr(downsample = 2, envTexture = env)
-            }
+            Ssr(downsample = 2, envTexture = envTex)
         }
 
-        AmbientLight(white(if (phase == 0) 0.6f else 0f))
+        AmbientLight(white( 0.6f))
         DirectionalLight(Vec3(1f, -1f, 0f))
-        Sky(sky)
+        Sky(iblSky)
         Renderable(
             base {
                 color = ColorRGBA.Red
                 metallicFactor = 0f
                 roughnessFactor = 0.2f
-                this.env = iblSky
+                env = iblSky
             },
             mesh = sphere(),
             transform = translate(-2f, -1f, -4f),
@@ -48,7 +44,7 @@ fun SsrExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
                 color = ColorRGBA.Green
                 metallicFactor = 0f
                 roughnessFactor = 0.2f
-                this.env = iblSky
+                env = iblSky
             },
             mesh = sphere(),
             transform = translate(2f, -1f, -4f)
@@ -56,23 +52,17 @@ fun SsrExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
         Renderable(
             base {
                 colorTexture = texture("texture/asphalt-albedo.jpg")
-                metallicFactor = 0.3f
+                metallicFactor = 0.15f
                 roughnessFactor = 0.2f
                 triplanarScale = 0.4f
-                this.env = iblSky
+                env = iblSky
             },
             mesh = cube(6f),
             transform = translate(-8.y)
         )
         Gui {
-            val mode = when (phase) {
-                1 -> "SSR"
-                2 -> "ENV"
-                else -> "NO ENV"
-            }
             Column {
                 Filler()
-                Text(id = "mode", text = mode)
                 Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
             }
         }
