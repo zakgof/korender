@@ -6,22 +6,32 @@ Korender supports post-processing effects that can be applied to the rendered sc
 - Each post-processing effect renders a full-screen quad using a dedicated shader, utilizing color and depth data from the original scene or the output of the previous effect.
 - The final post-processing effect renders directly to the screen.
 
-To define a post-processing effect in your frame, use the `PostProcess` function with one or more material modifiers that specify the effect’s shader.
+To define a post-processing effect in your frame, use the `PostProcess` function. It accepts either a `PostProcessingMaterial` or a `PostProcessingEffect`:
 
-````kotlin
+```kotlin
 Frame {
     PostProcess(blurHorz(radius = 3.0f))
     PostProcess(blurVert(radius = 3.0f))
-````
+}
+```
 
-Korender includes the following built-in post-processing material modifiers:
+`PostProcess` also accepts an optional block to render geometry after the effect:
 
-| Post-process filter | Description                                |
-|---------------------|--------------------------------------------|
-| blurHorz            | Horizontal separable blur pass             |
-| blurVert            | Vertical separable blur pass               |
-| adjust              | Adjust brightness, contract and saturation |
-| water               | Water effect                               |
-| fog                 | Fog                                        |
-| fxaa                | FXAA anti-aliasing filter                  |
+```kotlin
+PostProcess(material = fxaa()) {
+    // geometry rendered after FXAA
+}
+```
 
+Korender includes the following built-in post-processing filters:
+
+| Post-process filter | Signature | Description |
+|---------------------|-----------|-------------|
+| blur | `blur(radius: Float): PostProcessingEffect` | Gaussian blur as a standalone effect |
+| blurHorz | `blurHorz(radius: Float): PostProcessingMaterial` | Horizontal separable Gaussian blur pass |
+| blurVert | `blurVert(radius: Float): PostProcessingMaterial` | Vertical separable Gaussian blur pass |
+| adjust | `adjust(brightness, contrast, saturation): PostProcessingMaterial` | Adjust brightness, contrast and saturation |
+| water | `water(waterColor, transparency, waveScale, waveMagnitude, sky): PostProcessingMaterial` | Water surface with waves (`sky: SkyMaterial` is required) |
+| fog | `fog(density, color): PostProcessingMaterial` | Fog effect |
+| fxaa | `fxaa(): PostProcessingMaterial` | FXAA anti-aliasing filter |
+| customPostProcessingFilter | `customPostProcessingFilter(fragmentShaderFile, block): PostProcessingMaterial` | Custom post-processing shader |

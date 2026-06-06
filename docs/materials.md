@@ -12,27 +12,29 @@ The material system allows customization at multiple levels, from high-level pro
 
 ### Base Material
 
-Korender provides a predefined `base` material supporting PBR (Physically-Based Rendering) with lighting and texturing. Use `BaseMaterialScope` properties to configure it:
+Korender provides a predefined `base` material supporting PBR (Physically-Based Rendering) with lighting and texturing. Use a lambda block to configure `BaseMaterialScope` properties:
 
-````kotlin
+```kotlin
 Renderable(
-    material = base(color = ColorRGBA(0x203040FF)),
+    material = base {
+        color = ColorRGBA(0x203040FF)
+    },
     mesh = sphere(1.0f)
 )
-````
+```
 
-Additional features can be enabled by setting optional properties:
+Additional features can be enabled by setting optional properties inside the block:
 
-````kotlin
-base(
-    color = ColorRGBA(1f, 1f, 1f, 1f),
-    colorTexture = texture("textures/diffuse.png"),
-    normalTexture = texture("textures/normal.png"),
-    metallicFactor = 0.5f,
-    roughnessFactor = 0.3f,
+```kotlin
+base {
+    color = ColorRGBA(1f, 1f, 1f, 1f)
+    colorTexture = texture("textures/diffuse.png")
+    normalTexture = texture("textures/normal.png")
+    metallicFactor = 0.5f
+    roughnessFactor = 0.3f
     triplanarScale = 1.0f  // Enable triplanar mapping
-)
-````
+}
+```
 
 #### Base Material Properties
 
@@ -63,13 +65,14 @@ Triplanar texturing projects the texture onto surfaces from three perpendicular 
 - **Use cases**: Procedural terrain, rocks, organic shapes
 - **Performance**: Higher cost than standard UV texturing
 
-Set `triplanarScale` to enable:
-````kotlin
-base(
-    colorTexture = texture("textures/rock.png"),
+Set `triplanarScale` inside the material block:
+
+```kotlin
+base {
+    colorTexture = texture("textures/rock.png")
     triplanarScale = 2.0f  // Texture covers 2 world units
-)
-````
+}
+```
 
 ### Stochastic Texture Sampling
 
@@ -79,13 +82,14 @@ Stochastic sampling adds randomized texture offset to reduce visible repetition 
 - **Use cases**: Terrain, walls, procedural surfaces
 - **Performance**: Slight overhead from randomness computation
 
-Set `stochasticSharpness` to enable:
-````kotlin
-base(
-    colorTexture = texture("textures/grass.png"),
+Set `stochasticSharpness` inside the material block:
+
+```kotlin
+base {
+    colorTexture = texture("textures/grass.png")
     stochasticSharpness = 0.5f
-)
-````
+}
+```
 
 ### Texture Arrays
 
@@ -95,32 +99,37 @@ Texture arrays allow indexed selection of multiple textures in a single draw cal
 - **Performance**: Efficient for many material variants on many objects
 
 Enable with `colorTextures`:
-````kotlin
-base(
-    colorTextures = textureArray(listOf(
-        "textures/sand.png",
-        "textures/grass.png",
-        "textures/rock.png"
-    ))
-)
-````
 
-### Material Scopes and Custom Uniforms
+```kotlin
+base {
+    colorTextures = textureArray("textures/sand.png", "textures/grass.png", "textures/rock.png")
+}
+```
 
-Access materials via scope to set custom uniforms and plugins:
+### Custom Uniforms and Shader Plugins
 
-````kotlin
-Renderable(
-    material = base(color = ColorRGBA.White),
-    mesh = sphere(1.0f),
-    materialModifier = {
-        float("myCustomFloat", 1.5f)
-        vec3("myCustomVec", Vec3(1f, 0f, 0f))
-        texture("myCustomTexture", texture("textures/custom.png"))
-        plugin(myCustomShaderPlugin)
-    }
-)
-````
+Materials support custom uniforms and shader plugins. These are configured inside the material block via `MaterialScope`:
+
+```kotlin
+base {
+    color = ColorRGBA.White
+    float("myCustomFloat", 1.5f)
+    vec3("myCustomVec", Vec3(1f, 0f, 0f))
+    texture("myCustomTexture", texture("textures/custom.png"))
+    plugin(myCustomShaderPlugin)
+}
+```
+
+### Other Material Types
+
+- `billboard` - camera-facing sprite material with position, scale, rotation, and effects (fire, fireball, smoke)
+- `decal` - decal material projected onto surfaces
+- `pipe` - material modifier for pipe mesh shapes
+- `customMaterial(vertShader, fragShader)` / `customMaterial(vertShader)` - fully custom shader materials
+- `customPostProcessingFilter(fragShader)` - custom post-processing filter shader
+- Sky materials: `fastCloudSky(...)`, `starrySky(...)`, `cubeSky(cubeTexture)`, `textureSky(texture)`
+- Post-processing: `blurHorz(radius)`, `blurVert(radius)`, `adjust(brightness, contrast, saturation)`, `water(...)`, `fog(...)`, `fxaa()`
+- Sky material can be assigned to `env` in any base material to enable reflections
 
 ### Custom Shaders and Plugins
 

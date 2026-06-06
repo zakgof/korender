@@ -2,25 +2,40 @@
 
 There are predefined helper functions for common shapes:
 
-- `quad(1.0f, 2.0f)` - quad in *xy* plane with half-side 1.0 along *x* and 2.0 along *y* axis
-- `cube(0.5f)` - cube with half-side 0.5
-- `sphere(1.0f)` - sphere with radius 1.0
-- `disk(1.0f)` - disk with radius 1.0
-- `coneTop(1.0f, 2.0f)` - conical surface with height 1.0 and radius 1.0
-- `cylinderSide(1.0f, 2.0f)` - cylindrical surface with height 1.0 and radius 1.0
-- `obj("models/file.obj")` - loads a mesh from a Wavefront .obj file `models/file.obj`
+- `quad(halfSideX, halfSideY)` - z-axis facing quad with given half-dimensions
+- `biQuad(halfSideX, halfSideY)` - two-sided quad visible from both sides
+- `cube(halfSide)` - cube with given half-edge
+- `sphere(radius, slices, sectors)` - sphere with given radius and tessellation
+- `cylinderSide(height, radius, sectors)` - cylindrical surface without bases
+- `coneTop(height, radius, sectors)` - conical surface without base
+- `disk(radius, sectors)` - flat disk in xz plane
+- `obj("models/file.obj")` - loads a mesh from a Wavefront .obj file
+- `pipeMesh(id, segments, dynamic, block)` - shape consisting of multiple connected cylinders (pipes)
 
 It's also possible to generate custom meshes via the `customMesh` helper function:
 
-````kotlin
+```kotlin
 customMesh("road", 4, 6) {
-    pos(-0.5f, 0f, 0f).normal(1.y).tex(0f, 0f)
-    pos(-0.5f, 0f, 32f).normal(1.y).tex(0f, 32f)
-    pos(0.5f, 0f, 32f).normal(1.y).tex(1f, 32f)
-    pos(0.5f, 0f, 0f).normal(1.y).tex(1f, 0f)
+    pos(Vec3(-0.5f, 0f, 0f), Vec3(-0.5f, 0f, 32f), Vec3(0.5f, 0f, 32f), Vec3(0.5f, 0f, 0f))
+    tex(Vec2(0f, 0f), Vec2(0f, 32f), Vec2(1f, 32f), Vec2(1f, 0f))
     index(0, 1, 2, 0, 2, 3)
 }
-````
+```
 
-Note that if `dynamic` attribute is set to `true`, the initializer block of the mesh if called every frame and mesh data is updated in GPU dynamically.
+Additional `MeshInitializer` methods for advanced geometry:
 
+- `normal(vararg Vec3)` - vertex normals for lighting
+- `attr(attribute, vararg values)` - custom per-vertex attributes
+- `attrBytes(attribute, rawBytes)` - custom attributes from raw byte data
+- `attrSet(attribute, index, value)` - set a single vertex attribute
+- `indexBytes(rawBytes)` - indices from raw byte data
+- `embed(prototype, transform, colorTexIndex)` - embed another mesh with optional transform
+
+Other mesh declaration methods:
+
+- `mesh(id, mesh)` - create a mesh declaration from an existing `Mesh` object
+- `compositeMesh(id, prototypes, attributes, instancingParameters, dynamic, block)` - combine multiple prototype meshes into a single instanced mesh
+- `heightField(id, cellsX, cellsZ, cellWidth, height)` - heightfield mesh from a height function
+- `loadMesh(meshDeclaration)` - eagerly load a mesh from a declaration (returns `Deferred<Mesh>`)
+
+Note that if `dynamic` is set to `true` for `customMesh` or `pipeMesh`, the mesh data can be updated each frame.
