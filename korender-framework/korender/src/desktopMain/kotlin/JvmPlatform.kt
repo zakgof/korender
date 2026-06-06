@@ -9,7 +9,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
 import androidx.compose.ui.input.key.Key
-import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
@@ -17,6 +16,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_RENDERER
 import com.zakgof.korender.impl.gl.GLConstants.GL_VENDOR
 import com.zakgof.korender.impl.gl.GLConstants.GL_VERSION
 import com.zakgof.korender.impl.image.InternalImage
+import com.zakgof.korender.scope.KorenderScope
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -53,15 +53,12 @@ import kotlin.math.round
 
 private fun detectDevicePixelRatio(): List<Float> {
     val device = GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice
-    val scaleX = device::class.members.firstOrNull { it.name == "getDefaultScaleX" }
-        ?.call(device) as Float?
-    val scaleY = device::class.members.firstOrNull { it.name == "getDefaultScaleY" }
-        ?.call(device) as Float?
-    val scaleFactor = device::class.members.firstOrNull { it.name == "getScaleFactor" }
-        ?.call(device) as Int?
+    val transform = device.defaultConfiguration.defaultTransform
+    val scaleX = transform.scaleX.toFloat()
+    val scaleY = transform.scaleY.toFloat()
     return listOf(
-        scaleX ?: scaleFactor?.toFloat() ?: 1.0f,
-        scaleY ?: scaleFactor?.toFloat() ?: 1.0f
+        if (scaleX > 0f) scaleX else 1.0f,
+        if (scaleY > 0f) scaleY else 1.0f
     )
 }
 
