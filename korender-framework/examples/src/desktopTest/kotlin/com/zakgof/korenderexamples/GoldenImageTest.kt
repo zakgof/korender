@@ -4,11 +4,11 @@ import androidx.compose.ui.awt.ComposeWindow
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Image
 import com.zakgof.korender.Korender
-import com.zakgof.korender.scope.FrameScope
-import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.examples.TestExchange
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import com.zakgof.korender.scope.FrameScope
+import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korenderexamples.golden.allInOne
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.jupiter.api.AfterAll
@@ -117,7 +117,7 @@ class GoldenImageTest {
                 val b = (c.b * 255f).roundToInt().coerceIn(0, 255)
                 val a = (c.a * 255f).roundToInt().coerceIn(0, 255)
                 val argb = (a shl 24) or (r shl 16) or (g shl 8) or b
-                buffered.setRGB(x, image.height - 1 - y, argb)
+                buffered.setRGB(x, y, argb)
             }
         }
         return buffered
