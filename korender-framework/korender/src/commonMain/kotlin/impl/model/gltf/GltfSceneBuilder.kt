@@ -17,8 +17,8 @@ import com.zakgof.korender.impl.geometry.CustomCpuMesh
 import com.zakgof.korender.impl.geometry.InstancedMesh
 import com.zakgof.korender.impl.geometry.InternalInstancingParameter
 import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
-import com.zakgof.korender.impl.material.InternalByteArrayTextureDeclaration
 import com.zakgof.korender.impl.material.InternalBaseMaterial
+import com.zakgof.korender.impl.material.InternalByteArrayTextureDeclaration
 import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.Plugins
 import com.zakgof.korender.impl.model.InternalModelInfo
@@ -30,9 +30,6 @@ import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
-import com.zakgof.korender.math.Transform.Companion.rotate
-import com.zakgof.korender.math.Transform.Companion.scale
-import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import kotlin.math.floor
 import kotlin.math.tan
@@ -175,12 +172,13 @@ internal class GltfSceneBuilder(private val cache: GltfCache, private val declar
         val rotation = na.rotation ?: node.rotation
         val scale = na.scale ?: node.scale
 
-        translation?.let { localTransform *= translate(Vec3(it[0], it[1], it[2])) }
-        rotation?.let { localTransform *= rotate(Quaternion(it[3], Vec3(it[0], it[1], it[2]))) }
-        scale?.let { localTransform *= scale(it[0], it[1], it[2]) }
+        scale?.let { localTransform = localTransform.scale(it[0], it[1], it[2]) }
+        rotation?.let { localTransform = localTransform.rotate(Quaternion(it[3], Vec3(it[0], it[1], it[2]))) }
+        translation?.let { localTransform = localTransform.translate(Vec3(it[0], it[1], it[2])) }
+
         node.matrix?.let { localTransform *= Transform(Mat4(it.toFloatArray())) }
 
-        val transform = parentTransform * localTransform
+        val transform = if (localTransform === Transform.IDENTITY) parentTransform else parentTransform * localTransform
 
         node.camera?.let {
             cameraTransforms[it] = transform

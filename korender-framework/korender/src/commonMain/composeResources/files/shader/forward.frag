@@ -196,17 +196,22 @@ void main() {
 
         populateShadowRatios(plane, position);
 
+        vec3 F0 = mix(vec3(0.04), albedo.rgb, metallic);
+        float NdotV = max(dot(look, normal), 0.0);
+        float alpha = roughness * roughness;
+        float alpha2 = alpha * alpha;
+        float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
+        float ggxV = NdotV / (NdotV * (1.0 - k) + k);
+
         color = emission;
 
         for (int l=0; l<numDirectionalLights; l++) {
-            color += dirLight(l, normal, look, albedo.rgb, metallic, roughness, occlusion);
+            color += dirLight(l, normal, look, albedo.rgb, metallic, alpha2, k, ggxV, F0, occlusion);
         }
         for (int l=0; l<numPointLights; l++) {
-            color += pointLight(position, l, normal, look, albedo.rgb, metallic, roughness, occlusion);
+            color += pointLight(position, l, normal, look, albedo.rgb, metallic, alpha2, k, ggxV, F0, occlusion);
         }
 
-        vec3 F0 = mix(vec3(0.04), albedo.rgb, metallic);
-        float NdotV = max(dot(look, normal), 0.0);
         vec3 diffFactor = albedo.rgb * (1.0 - metallic);
         color += ambientColor * diffFactor;
 

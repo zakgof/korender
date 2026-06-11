@@ -75,14 +75,19 @@ void main() {
     float plane = dot((vpos - cameraPos), cameraDir);
     populateShadowRatios(plane, vpos);
 
-    for (int l=0; l<numDirectionalLights; l++)
-        color += dirLight(l, N, V, albedo, metallic, roughness, occlusion);
-
-    for (int l=0; l<numPointLights; l++)
-        color += pointLight(vpos, l, N, V, albedo, metallic, roughness, occlusion);
-
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
     float NdotV = max(dot(V, N), 0.0);
+    float alpha = roughness * roughness;
+    float alpha2 = alpha * alpha;
+    float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
+    float ggxV = NdotV / (NdotV * (1.0 - k) + k);
+
+    for (int l=0; l<numDirectionalLights; l++)
+        color += dirLight(l, N, V, albedo, metallic, alpha2, k, ggxV, F0, occlusion);
+
+    for (int l=0; l<numPointLights; l++)
+        color += pointLight(vpos, l, N, V, albedo, metallic, alpha2, k, ggxV, F0, occlusion);
+
     vec3 diffFactor = albedo * (1.0 - metallic);
     color += ambientColor * diffFactor * ambientOcclusion;
 

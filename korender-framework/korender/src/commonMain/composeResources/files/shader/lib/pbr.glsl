@@ -1,7 +1,10 @@
 const float PI = 3.14159265359;
 
 vec3 fresnelSchlick(float cosTheta, vec3 F0) {
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+    float x = 1.0 - cosTheta;
+    float x2 = x * x;
+    float x5 = x2 * x2 * x;
+    return F0 + (1.0 - F0) * x5;
 }
 
 float distributionGGX(float NdotH, float roughness) {
@@ -28,8 +31,12 @@ float geometrySmith(float NdotV, float NdotL, float roughness) {
     return ggx1 * ggx2;
 }
 
-vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 albedo, float metallic, float roughness, vec3 lightColor) {
-
+vec3 calculatePBR(
+    vec3 N, vec3 V, vec3 L, 
+    vec3 albedo, float metallic, 
+    float alpha2, float k, float ggxV, vec3 F0, 
+    vec3 lightColor
+) {
     vec3 H = normalize(V + L);
 
     float NdotV = max(dot(N, V), 0.);
@@ -37,15 +44,33 @@ vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 albedo, float metallic, float rou
     float NdotH = max(dot(N, H), 0.);
     float VdotH = max(dot(V, H), 0.);
 
-    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+    // D = distributionGGX using alpha2
+    float NdotH2 = NdotH * NdotH;
+    float denomD = (NdotH2 * (alpha2 - 1.0) + 1.0);
+    float D = alpha2 / (PI * denomD * denomD);
 
-    float D = distributionGGX(NdotH, roughness);
-    float G = geometrySmith(NdotV, NdotL, roughness);
-    vec3 F = fresnelSchlick(VdotH, F0);
+    // G = geometrySmith with specular visibility cancellation
+    float denomG = 4.0 * (NdotV * (1.0 - k) + k) * (NdotL * (1.0 - k) + k);
 
-    vec3 specular = D * G * F / (4.0 * NdotV * NdotL + 0.001);
+    // F = fresnelSchlick
+    float x = 1.0 - VdotH;
+    float x2 = x * x;
+    float x5 = x2 * x2 * x;
+    vec3 F = F0 + (1.0 - F0) * x5;
+
+    vec3 specular = (D * F) / denomG;
     vec3 diffuse = (1.0 - F) * (1.0 - metallic) * albedo / PI;
     return (diffuse + specular) * lightColor * NdotL;
+}
+
+vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 albedo, float metallic, float roughness, vec3 lightColor) {
+    float alpha = roughness * roughness;
+    float alpha2 = alpha * alpha;
+    float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
+    float NdotV = max(dot(N, V), 0.);
+    float ggxV = NdotV / (NdotV * (1.0 - k) + k);
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+    return calculatePBR(N, V, L, albedo, metallic, alpha2, k, ggxV, F0, lightColor);
 }
 
 float antiAliasRoughness(float roughness, vec3 N, vec3 V) {

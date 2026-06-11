@@ -1,4 +1,7 @@
 float vsm(sampler2D shadowTexture, vec3 vshadow) {
+    if (vshadow.x < 0.001 || vshadow.x > 0.999 || vshadow.y < 0.001 || vshadow.y > 0.999)
+        return 0.;
+
     const float bias = 0.005;
 
     #ifdef WEBGL
@@ -16,56 +19,69 @@ float vsm(sampler2D shadowTexture, vec3 vshadow) {
     variance = max(variance, varianceMagic);
     float hardness =  p * p / (variance + p * p);
 
-    if (vshadow.x < 0.001 || vshadow.x > 0.999 || vshadow.y < 0.001 || vshadow.y > 0.999)
-        return 0.;
-
     return hardStep * hardness;
 }
 
-vec2 vogelDiskSample(int sampleIndex, int numSamples, float phi) {
-    float goldenAngle = 2.39996323;
-    float sampleVal = float(sampleIndex);
-    float angle = sampleVal * goldenAngle + phi;
-    return vec2(cos(angle), sin(angle)) * sqrt(sampleVal + 0.5) / sqrt(float(numSamples));
-}
-
 float swPcf(sampler2D shadowTexture, vec3 vshadow, int sampleCount, float radius, float bias) {
-
-    const float PHI = 1.61803398874989484820459;
-    float phi = 0.;
+    if (vshadow.x < 0.001 - radius || vshadow.x > 0.999 + radius || vshadow.y < 0.001 - radius || vshadow.y > 0.999 + radius)
+        return 0.;
 
     float cumulative = 0.;
-    float weight = 0.;
     vec2 dx = dFdx(vshadow.xy);
     vec2 dy = dFdy(vshadow.xy);
-    for (int s = 0; s < sampleCount; ++s) {
-        vec2 offset = vogelDiskSample(s, sampleCount, phi) * radius;
-        vec2 uv = vshadow.xy + offset;
-        float shadowSample = textureGrad(shadowTexture, uv, dx, dy).r;
-        float val = (shadowSample < vshadow.z - bias
-            && uv.x > 0.001 && uv.x < 0.999
-            && uv.y > 0.001 && uv.y < 0.999) ? 1. : 0.;
-        cumulative += val;
-        weight += 1.;
+    
+    float invSqrtSamples = inversesqrt(float(sampleCount));
+    vec2 dir = vec2(1.0, 0.0);
+    const vec2 rot = vec2(-0.73736882, 0.67549029);
+    
+    if (vshadow.x > 0.001 + radius && vshadow.x < 0.999 - radius &&
+        vshadow.y > 0.001 + radius && vshadow.y < 0.999 - radius) {
+        for (int s = 0; s < sampleCount; ++s) {
+            float r = sqrt(float(s) + 0.5) * invSqrtSamples;
+            vec2 uv = vshadow.xy + dir * (r * radius);
+            float shadowSample = textureGrad(shadowTexture, uv, dx, dy).r;
+            cumulative += (shadowSample < vshadow.z - bias) ? 1.0 : 0.0;
+            dir = vec2(dir.x * rot.x - dir.y * rot.y, dir.x * rot.y + dir.y * rot.x);
+        }
+    } else {
+        for (int s = 0; s < sampleCount; ++s) {
+            float r = sqrt(float(s) + 0.5) * invSqrtSamples;
+            vec2 uv = vshadow.xy + dir * (r * radius);
+            float shadowSample = textureGrad(shadowTexture, uv, dx, dy).r;
+            float val = (shadowSample < vshadow.z - bias
+                && uv.x > 0.001 && uv.x < 0.999
+                && uv.y > 0.001 && uv.y < 0.999) ? 1.0 : 0.0;
+            cumulative += val;
+            dir = vec2(dir.x * rot.x - dir.y * rot.y, dir.x * rot.y + dir.y * rot.x);
+        }
     }
-    return cumulative / weight;
+    return cumulative / float(sampleCount);
 }
 
 float hard(sampler2D shadowTexture, vec3 vshadow) {
+    if (vshadow.x < 0.001 || vshadow.x > 0.999 || vshadow.y < 0.001 || vshadow.y > 0.999)
+        return 0.;
+
     float beavis = 0.005;
     float shadowSample = texture(shadowTexture, vshadow.xy).r;
 
-    return (shadowSample < vshadow.z - beavis
-        && vshadow.x > 0.001 && vshadow.x < 0.999
-        && vshadow.y > 0.001 && vshadow.y < 0.999) ? 1. : 0.;
+    return (shadowSample < vshadow.z - beavis) ? 1. : 0.;
 }
 
 float hwPcf(sampler2DShadow pcfTexture, vec3 vshadow, int sampleCount, float radius, float bias) {
-    float phi = 0.;
+    if (vshadow.x < 0.001 - radius || vshadow.x > 0.999 + radius || vshadow.y < 0.001 - radius || vshadow.y > 0.999 + radius)
+        return 0.;
+
     float result = 0.;
+    float invSqrtSamples = inversesqrt(float(sampleCount));
+    vec2 dir = vec2(1.0, 0.0);
+    const vec2 rot = vec2(-0.73736882, 0.67549029);
+
     for (int i = 0; i < sampleCount; i++) {
-        vec2 offset = vogelDiskSample(i, sampleCount, phi) * radius;
+        float r = sqrt(float(i) + 0.5) * invSqrtSamples;
+        vec2 offset = dir * (r * radius);
         result += texture(pcfTexture, vec3(vshadow.xy + offset, vshadow.z - bias));
+        dir = vec2(dir.x * rot.x - dir.y * rot.y, dir.x * rot.y + dir.y * rot.x);
     }
     return 1.0 - (result / float(sampleCount));
 }
@@ -74,9 +90,9 @@ float shadow(sampler2D shadowTexture, sampler2DShadow pcfTexture, int index, vec
     float sh = 0.;
     switch (mode) {
           case 0: sh = hard(shadowTexture, vshadow); break;
-          case 1: sh =  swPcf(shadowTexture, vshadow, i1[index], f1[index], f2[index]); break;
-          case 2: sh =  vsm(shadowTexture, vshadow); break;
-          case 3: sh =  hwPcf(pcfTexture, vshadow, i1[index], f1[index], f2[index]); break;
+          case 1: sh = swPcf(shadowTexture, vshadow, i1[index], f1[index], f2[index]); break;
+          case 2: sh = vsm(shadowTexture, vshadow); break;
+          case 3: sh = hwPcf(pcfTexture, vshadow, i1[index], f1[index], f2[index]); break;
     }
     return sh;
 }
@@ -86,13 +102,17 @@ float linstep(float edge0, float edge1, float x) {
 }
 
 float casc(int s, float plane, vec3 vpos, sampler2D shadowTexture, sampler2DShadow pcfTexture) {
+    vec4 ci = cascade[s];
+    float cascadeContribution = linstep(ci.r, ci.g, plane) * (1.0 - linstep(ci.b, ci.a, plane));
+    if (cascadeContribution < 0.0001) {
+        return 0.0;
+    }
+
     vec3 vshadow = (bsps[s] * vec4(vpos, 1.0)).xyz;
     if ((shadowMode[s] & 0x80) != 0) {
         vshadow.z = (yMax[s] - vpos.y) / (yMax[s] - yMin[s]);
     }
     float sh = shadow(shadowTexture, pcfTexture, s, vshadow, shadowMode[s] & 0x07);
-    vec4 ci = cascade[s];
-    float cascadeContribution = linstep(ci.r, ci.g, plane) * (1.0 - linstep(ci.b, ci.a, plane));
     return sh * cascadeContribution;
 }
 
