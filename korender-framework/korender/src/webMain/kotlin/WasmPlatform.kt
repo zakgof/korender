@@ -420,6 +420,10 @@ actual fun Korender(
 
         onDispose {
             println("Destroying canvas")
+            val ext = gl.getExtension("WEBGL_lose_context")
+            if (ext != null) {
+                loseContext(ext)
+            }
             canvas.remove()
         }
     }

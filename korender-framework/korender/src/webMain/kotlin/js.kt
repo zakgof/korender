@@ -73,3 +73,6 @@ internal fun maxTexAniso(ext: JsAny): Int = js("ext.MAX_TEXTURE_MAX_ANISOTROPY_E
 
 @OptIn(ExperimentalWasmJsInterop::class)
 internal fun texAniso(ext: JsAny): Int = js("ext.TEXTURE_MAX_ANISOTROPY_EXT")
+
+@OptIn(ExperimentalWasmJsInterop::class)
+internal fun loseContext(ext: JsAny): Unit = js("ext.loseContext()")
