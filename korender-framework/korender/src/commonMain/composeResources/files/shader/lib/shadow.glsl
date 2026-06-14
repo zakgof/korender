@@ -1,3 +1,10 @@
+vec2 vogelDiskSample(int sampleIndex, int numSamples, float phi) {
+    float goldenAngle = 2.39996323;
+    float sampleVal = float(sampleIndex);
+    float angle = sampleVal * goldenAngle + phi;
+    return vec2(cos(angle), sin(angle)) * sqrt(sampleVal + 0.5) / sqrt(float(numSamples));
+}
+
 float vsm(sampler2D shadowTexture, vec3 vshadow) {
     if (vshadow.x < 0.001 || vshadow.x > 0.999 || vshadow.y < 0.001 || vshadow.y > 0.999)
         return 0.;
@@ -73,6 +80,8 @@ float hwPcf(sampler2DShadow pcfTexture, vec3 vshadow, int sampleCount, float rad
         return 0.;
 
     float result = 0.;
+    vec2 dx = dFdx(vshadow.xy);
+    vec2 dy = dFdy(vshadow.xy);
     float invSqrtSamples = inversesqrt(float(sampleCount));
     vec2 dir = vec2(1.0, 0.0);
     const vec2 rot = vec2(-0.73736882, 0.67549029);
@@ -80,7 +89,7 @@ float hwPcf(sampler2DShadow pcfTexture, vec3 vshadow, int sampleCount, float rad
     for (int i = 0; i < sampleCount; i++) {
         float r = sqrt(float(i) + 0.5) * invSqrtSamples;
         vec2 offset = dir * (r * radius);
-        result += texture(pcfTexture, vec3(vshadow.xy + offset, vshadow.z - bias));
+        result += textureGrad(pcfTexture, vec3(vshadow.xy + offset, vshadow.z - bias), dx, dy);
         dir = vec2(dir.x * rot.x - dir.y * rot.y, dir.x * rot.y + dir.y * rot.x);
     }
     return 1.0 - (result / float(sampleCount));

@@ -106,7 +106,7 @@ void main() {
             continue;
         }
 
-        float sampleDepth = texture(depthGeometryTexture, sampleUv).r;
+        float sampleDepth = textureLod(depthGeometryTexture, sampleUv, 0.0).r;
         if (sampleDepth >= 1.0) {
             continue;
         }
