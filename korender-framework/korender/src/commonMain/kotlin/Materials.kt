@@ -204,7 +204,32 @@ interface BaseMaterialScope : MaterialScope {
      */
     var occlusionTexture: TextureDeclaration?
 
+    fun detailTexture(block: DetailTextureScope.() -> Unit)
+
     var env: SkyMaterial?
+}
+
+/**
+ * DSL scope for configuring detail texturing.
+ * Blends a secondary detail texture over the base texture at a configurable scale and strength.
+ */
+interface DetailTextureScope {
+
+    /**
+     * Detail texture to overlay.
+     */
+    var texture: TextureDeclaration?
+
+    /**
+     * UV scale factor for the detail texture (default 1.0).
+     * Higher values tile the detail texture more frequently across the surface.
+     */
+    var scale: Float
+
+    /**
+     * Blend strength of the detail texture (0.0 = no detail, 1.0 = full strength).
+     */
+    var strength: Float
 }
 
 interface BillboardMaterialScope : BaseMaterialScope {

@@ -5,6 +5,7 @@ import com.zakgof.korender.BillboardEffect
 import com.zakgof.korender.BillboardMaterial
 import com.zakgof.korender.BillboardMaterialScope
 import com.zakgof.korender.DecalMaterial
+import com.zakgof.korender.DetailTextureScope
 import com.zakgof.korender.Material
 import com.zakgof.korender.MaterialScope
 import com.zakgof.korender.PipeMaterial
@@ -41,6 +42,12 @@ import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+
+internal class InternalDetailTextureScope : DetailTextureScope {
+    override var texture: TextureDeclaration? = null
+    override var scale: Float = 1f
+    override var strength: Float = 1f
+}
 
 internal class InternalSpecularGlossinessScope : SpecularGlossinessScope {
     override var specularFactor: ColorRGB = ColorRGB(1f, 1f, 1f)
@@ -172,6 +179,12 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
         val scope = specularGlossinessScope ?: InternalSpecularGlossinessScope().also { specularGlossinessScope = it }
         scope.block()
     }
+    private var detailTextureScope: InternalDetailTextureScope? = null
+
+    override fun detailTexture(block: DetailTextureScope.() -> Unit) {
+        val scope = detailTextureScope ?: InternalDetailTextureScope().also { detailTextureScope = it }
+        scope.block()
+    }
     override var emissionTexture: TextureDeclaration? = null
     override var occlusionTexture: TextureDeclaration? = null
     override var env: SkyMaterial? = null
@@ -194,6 +207,9 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
             "specularFactor" -> ColorRGBGetter<InternalBaseMaterial> { it.specularGlossinessScope?.specularFactor }
             "glossinessFactor" -> FloatGetter<InternalBaseMaterial> { it.specularGlossinessScope?.glossinessFactor }
             "specularGlossinessTexture" -> TextureGetter<InternalBaseMaterial> { it.specularGlossinessScope?.texture }
+            "detailTexture" -> TextureGetter<InternalBaseMaterial> { it.detailTextureScope?.texture }
+            "detailStrength" -> FloatGetter<InternalBaseMaterial> { it.detailTextureScope?.strength }
+            "detailScale" -> FloatGetter<InternalBaseMaterial> { it.detailTextureScope?.scale }
             "occlusionTexture" -> TextureGetter<InternalBaseMaterial> { it.occlusionTexture }
             "emissionTexture" -> TextureGetter<InternalBaseMaterial> { it.emissionTexture }
             "jntMatrices[0]" -> Mat4ListGetter<InternalBaseMaterial> { it.jntMatrices }
@@ -211,6 +227,7 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
         .pluginOverride1IfNotNull(metallicRoughnessTexture, Plugins.METALLIC_ROUGHNESS_TEXTURE)
         .pluginOverride1IfNotNull(specularGlossinessScope, Plugins.SPECULAR_GLOSSINESS_FACTOR)
         .pluginOverride1IfNotNull(specularGlossinessScope?.texture, Plugins.SPECULAR_GLOSSINESS_TEXTURE)
+        .pluginOverride1IfNotNull(detailTextureScope?.texture, Plugins.TEXTURING_DETAIL)
         .pluginOverride1IfNotNull(occlusionTexture, Plugins.OCCLUSION_TEXTURE)
         .pluginOverride1IfNotNull(emissionTexture, Plugins.EMISSION_TEXTURE)
 

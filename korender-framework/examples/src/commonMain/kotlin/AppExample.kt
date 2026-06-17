@@ -48,6 +48,7 @@ val pages = listOf(
     Case("GLTF library") { GltfLibraryExample() },
     Case("Shadows") { ShadowExample() },
     Case("Stochastic Texturing") { StochasticTexturingExample() },
+    Case("Detail Texturing") { DetailTexturingExample() },
     Case("Render to texture") { RenderToTextureExample() },
     Case("Point lights") { LightsExample() },
     Case("GUI") { GuiExample() },

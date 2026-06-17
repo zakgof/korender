@@ -26,6 +26,7 @@ internal enum class Plugins(
 
     TEXTURING_TRIPLANAR(ShaderPluginId.TEXTURING, 1, "!shader/plugin/texturing.triplanar.frag"),
     TEXTURING_STOCHASTIC(ShaderPluginId.TEXTURING, 2, "!shader/plugin/texturing.stochastic.frag"),
+    TEXTURING_DETAIL(ShaderPluginId.TEXTURING, 3, "!shader/plugin/texturing.detail.frag"),
 
     ALBEDO_ISLAND_WINDOW(ShaderPluginId.ALBEDO, 1,  "island/building/shader/island.window.albedo.frag"),
     ALBEDO_RADIANT(ShaderPluginId.ALBEDO, 2,  "!shader/plugin/albedo.radiant.frag"),
