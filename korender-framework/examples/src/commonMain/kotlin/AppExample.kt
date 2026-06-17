@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zakgof.app.resources.Res
@@ -37,55 +38,71 @@ import com.zakgof.korender.examples.infcity.InfiniteCity
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
-val pages = listOf(
+val folders = listOf(
+    Folder("Demos", listOf(
+        Case("City") { InfiniteCity() },
+    )),
+    Folder("Terrain", listOf(
+        Case("Heightmap terrain") { HeightmapTerrainExample() },
+        Case("Procedural terrain") { ProcTerrainExample() },
+    )),
 
-    Case("Heightmap terrain") { HeightmapTerrainExample() },
-    Case("Procedural terrain") { ProcTerrainExample() },
-    Case("City demo") { InfiniteCity() },
-    Case("PBR materials") { MetallicRoughnessExample() },
-    Case("OBJ mesh") { ObjMeshExample() },
-    Case("GLTF crowd") { GltfCrowdExample() },
-    Case("GLTF library") { GltfLibraryExample() },
-    Case("Shadows") { ShadowExample() },
-    Case("Stochastic Texturing") { StochasticTexturingExample() },
-    Case("Detail Texturing") { DetailTexturingExample() },
-    Case("Render to texture") { RenderToTextureExample() },
-    Case("Point lights") { LightsExample() },
-    Case("GUI") { GuiExample() },
-    Case("Particles / Billboards") { InstancedBillboardsExample() },
-    Case("Particles / Cubes") { InstancedCubesExample() },
-    Case("Blur") { BlurExample() },
-    Case("Effects") { EffectsExample() },
-    Case("Decals") { DecalExample() },
-    Case("Bloom") { BloomExample() },
-    Case("SSR") { SsrExample() },
-    Case("HBAO") { HbaoExample() },
+    Folder("Models", listOf(
+        Case("OBJ mesh") { ObjMeshExample() },
+        Case("GLTF crowd") { GltfCrowdExample() },
+        Case("GLTF library") { GltfLibraryExample() },
+    )),
+    Folder("Lighting", listOf(
+        Case("PBR materials") { MetallicRoughnessExample() },
+        Case("Shadows") { ShadowExample() },
+        Case("Point lights") { LightsExample() },
+    )),
+    Folder("Texturing", listOf(
+        Case("Stochastic Texturing") { StochasticTexturingExample() },
+        Case("Detail Texturing") { DetailTexturingExample() },
+        Case("Render to texture") { RenderToTextureExample() },
+    )),
+    Folder("Instancing", listOf(
+        Case("Billboards") { InstancedBillboardsExample() },
+        Case("Cubes") { InstancedCubesExample() },
+    )),
+    Folder("Effects", listOf(
+        Case("Blur") { BlurExample() },
+        Case("Effects") { EffectsExample() },
+        Case("Decals") { DecalExample() },
+        Case("Bloom") { BloomExample() },
+        Case("SSR") { SsrExample() },
+        Case("HBAO") { HbaoExample() },
+    )),
+    Folder("Gui", listOf(
+        Case("Widgets") { GuiExample() },
+    )),
+)
 
-    /*
-    Case("Texture arrays") { TextureArrayExample() },
-    Case("Multiple viewports") { MultipleViewportsExample() },
-    Case("Sky") { SkyExample() },
-    Case("Transparency") { TransparencyExample() },
-    Case("Meshes") { MeshesExample() },
-    Case("FXAA") { FxaaExample() },
-    Case("CSM") { CSMExample() },
-    Case("Env") { CaptureEnvExample() },
-    Case("Capture frame") { CaptureFrameExample() },
-    Case("Shapes") { BasicShapesExample() },
-     */
+data class Folder(
+    val title: String,
+    val pages: List<Case>,
+)
+
+data class Case(
+    val title: String,
+    val composable: @Composable () -> Unit,
 )
 
 @Composable
 fun AppExample() {
 
     var isExpanded by remember { mutableStateOf(false) }
-    var selectedOption by remember { mutableStateOf(pages.first()) }
+    val allPages = remember { folders.flatMap { it.pages } }
+    var selectedOption by remember { mutableStateOf(allPages.first()) }
+    var collapsedFolders by remember { mutableStateOf(emptySet<String>()) }
     val coroutineScope = rememberCoroutineScope()
 
     val scrollState = rememberScrollState()
     val backgroundColor = Color(0xFF181818)
     val selectColor = Color(0xFF808080)
     val textColor = Color(0xFFFFFFFF)
+    val folderColor = Color(0xFF808080)
 
     @Composable
     fun MenuImage() = Image(
@@ -128,18 +145,38 @@ fun AppExample() {
                     )
                     MenuImage()
                 }
-                pages.map { option ->
+                folders.forEach { folder ->
+                    val collapsed = folder.title in collapsedFolders
                     Text(
                         modifier = Modifier
-                            .background(color = if (option == selectedOption) selectColor else backgroundColor)
                             .clickable {
-                                selectedOption = option
+                                collapsedFolders = if (collapsed) {
+                                    collapsedFolders - folder.title
+                                } else {
+                                    collapsedFolders + folder.title
+                                }
                             }
-                            .padding(12.dp, 6.dp),
-                        text = option.title,
-                        fontSize = 12.sp,
-                        color = textColor
+                            .padding(start = 8.dp, top = 8.dp, bottom = 8.dp, end = 12.dp),
+                        text = "${if (collapsed) "\u25B6" else "\u25BC"} ${folder.title}",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = folderColor
                     )
+                    if (!collapsed) {
+                        folder.pages.forEach { option ->
+                            Text(
+                                modifier = Modifier
+                                    .background(color = if (option == selectedOption) selectColor else backgroundColor)
+                                    .clickable {
+                                        selectedOption = option
+                                    }
+                                    .padding(start = 28.dp, top = 6.dp, bottom = 6.dp, end = 12.dp),
+                                text = option.title,
+                                fontSize = 12.sp,
+                                color = textColor
+                            )
+                        }
+                    }
                 }
             } else {
                 MenuImage()
@@ -150,8 +187,3 @@ fun AppExample() {
         }
     }
 }
-
-data class Case(
-    val title: String,
-    val composable: @Composable () -> Unit,
-)
