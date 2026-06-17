@@ -14,7 +14,7 @@ import com.zakgof.korender.ShaderFlag
 import com.zakgof.korender.ShaderPlugin
 import com.zakgof.korender.ShadingMaterialScope
 import com.zakgof.korender.SkyMaterial
-import com.zakgof.korender.SpecularGlossiness
+import com.zakgof.korender.SpecularGlossinessScope
 import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.TextureArrayDeclaration
 import com.zakgof.korender.TextureDeclaration
@@ -41,6 +41,12 @@ import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+
+internal class InternalSpecularGlossinessScope : SpecularGlossinessScope {
+    override var specularFactor: ColorRGB = ColorRGB(1f, 1f, 1f)
+    override var glossinessFactor: Float = 1f
+    override var texture: TextureDeclaration? = null
+}
 
 internal open class InternalMaterialModifier(vararg getters: Pair<String, UniformGetter<*>>) :
     MaterialScope, UniformSupplier {
@@ -160,8 +166,12 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
     override var normalTexture: TextureDeclaration? = null
     override var emission: ColorRGB? = null
     override var metallicRoughnessTexture: TextureDeclaration? = null
-    override var specularGlossiness: SpecularGlossiness? = null
-    override var specularGlossinessTexture: TextureDeclaration? = null
+    private var specularGlossinessScope: InternalSpecularGlossinessScope? = null
+
+    override fun specularGlossiness(block: SpecularGlossinessScope.() -> Unit) {
+        val scope = specularGlossinessScope ?: InternalSpecularGlossinessScope().also { specularGlossinessScope = it }
+        scope.block()
+    }
     override var emissionTexture: TextureDeclaration? = null
     override var occlusionTexture: TextureDeclaration? = null
     override var env: SkyMaterial? = null
@@ -181,9 +191,9 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
             "normalTexture" -> TextureGetter<InternalBaseMaterial> { it.normalTexture }
             "emissionFactor" -> ColorRGBGetter<InternalBaseMaterial> { it.emission!! }
             "metallicRoughnessTexture" -> TextureGetter<InternalBaseMaterial> { it.metallicRoughnessTexture }
-            "specularFactor" -> ColorRGBGetter<InternalBaseMaterial> { it.specularGlossiness?.specularFactor }
-            "glossinessFactor" -> FloatGetter<InternalBaseMaterial> { it.specularGlossiness?.glossinessFactor }
-            "specularGlossinessTexture" -> TextureGetter<InternalBaseMaterial> { it.specularGlossinessTexture }
+            "specularFactor" -> ColorRGBGetter<InternalBaseMaterial> { it.specularGlossinessScope?.specularFactor }
+            "glossinessFactor" -> FloatGetter<InternalBaseMaterial> { it.specularGlossinessScope?.glossinessFactor }
+            "specularGlossinessTexture" -> TextureGetter<InternalBaseMaterial> { it.specularGlossinessScope?.texture }
             "occlusionTexture" -> TextureGetter<InternalBaseMaterial> { it.occlusionTexture }
             "emissionTexture" -> TextureGetter<InternalBaseMaterial> { it.emissionTexture }
             "jntMatrices[0]" -> Mat4ListGetter<InternalBaseMaterial> { it.jntMatrices }
@@ -199,8 +209,8 @@ internal open class InternalBaseMaterial(vertexShaderFile: String = "!shader/bas
         .pluginOverride1IfNotNull(normalTexture, Plugins.NORMAL_TEXTURE)
         .pluginOverride1IfNotNull(emission, Plugins.EMISSION_FACTOR)
         .pluginOverride1IfNotNull(metallicRoughnessTexture, Plugins.METALLIC_ROUGHNESS_TEXTURE)
-        .pluginOverride1IfNotNull(specularGlossiness, Plugins.SPECULAR_GLOSSINESS_FACTOR)
-        .pluginOverride1IfNotNull(specularGlossinessTexture, Plugins.SPECULAR_GLOSSINESS_TEXTURE)
+        .pluginOverride1IfNotNull(specularGlossinessScope, Plugins.SPECULAR_GLOSSINESS_FACTOR)
+        .pluginOverride1IfNotNull(specularGlossinessScope?.texture, Plugins.SPECULAR_GLOSSINESS_TEXTURE)
         .pluginOverride1IfNotNull(occlusionTexture, Plugins.OCCLUSION_TEXTURE)
         .pluginOverride1IfNotNull(emissionTexture, Plugins.EMISSION_TEXTURE)
 

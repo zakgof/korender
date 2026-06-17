@@ -3,7 +3,6 @@ package com.zakgof.korender.impl.model.gltf
 import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.ProjectionDeclaration
-import com.zakgof.korender.SpecularGlossiness
 import com.zakgof.korender.TextureDeclaration
 import com.zakgof.korender.TextureFilter
 import com.zakgof.korender.TextureWrap
@@ -257,11 +256,12 @@ internal class GltfSceneBuilder(private val cache: GltfCache, private val declar
         mat.occlusionTexture = material?.occlusionTexture?.let { getTexture(it) }
         mat.emissionTexture = material?.emissiveTexture?.let { getTexture(it) }
 
-        mat.specularGlossiness = matSpecularGlossiness?.let { sg ->
-            SpecularGlossiness(
-                sg.specularFactor.let { ColorRGB(it[0], it[1], it[2]) },
-                sg.glossinessFactor
-            )
+        matSpecularGlossiness?.let { sg ->
+            mat.specularGlossiness {
+                specularFactor = sg.specularFactor.let { ColorRGB(it[0], it[1], it[2]) }
+                glossinessFactor = sg.glossinessFactor
+                texture = sg.specularGlossinessTexture?.let { getTexture(it) }
+            }
         }
         materialModifier.invoke(mat)
         return (material?.alphaMode == "BLEND") to mat

@@ -42,16 +42,27 @@ interface PostProcessingMaterial : Material
 interface SkyMaterial : Material
 
 /**
- * Specular-glossiness PBR model factors.
+ * DSL scope for configuring the specular-glossiness PBR model.
  * Used as an alternative to metallic-roughness PBR model.
- *
- * @param specularFactor RGB color representing specular reflection
- * @param glossinessFactor glossiness factor (0.0 = rough, 1.0 = mirror-like)
  */
-data class SpecularGlossiness(
-    val specularFactor: ColorRGB,
-    val glossinessFactor: Float,
-)
+interface SpecularGlossinessScope {
+
+    /**
+     * RGB color representing specular reflection.
+     */
+    var specularFactor: ColorRGB
+
+    /**
+     * Glossiness factor (0.0 = rough, 1.0 = mirror-like).
+     */
+    var glossinessFactor: Float
+
+    /**
+     * Specular-glossiness texture (rgb for specular, a for glossiness).
+     * Set to enable specular-glossiness texturing.
+     */
+    var texture: TextureDeclaration?
+}
 
 /**
  * Effect applied to billboard rendering (e.g., particle effects).
@@ -176,16 +187,10 @@ interface BaseMaterialScope : MaterialScope {
     var metallicRoughnessTexture: TextureDeclaration?
 
     /**
-     * Specular-glossiness PBR model factors.
+     * Configures the specular-glossiness PBR model.
      * Set to enable specular-glossiness PBR flavor for the base material.
      */
-    var specularGlossiness: SpecularGlossiness?
-
-    /**
-     * Specular-glossiness texture (r channel for specular, g for glossiness).
-     * Set to enable specular-glossiness texturing for the base material.
-     */
-    var specularGlossinessTexture: TextureDeclaration?
+    fun specularGlossiness(block: SpecularGlossinessScope.() -> Unit)
 
     /**
      * Emission texture.
