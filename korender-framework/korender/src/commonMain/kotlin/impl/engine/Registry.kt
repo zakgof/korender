@@ -36,6 +36,10 @@ internal class Registry<D : NodeKeeper, R : AutoCloseable>(
         return null
     }
 
+    fun forEachKey(action: (D) -> Unit) {
+        map.keys.forEach(action)
+    }
+
     inner class Entry(val value: R, var freeTime: Float? = null, var used: Boolean = true) {
 
         fun attemptDelete(retentionPolicy: RetentionPolicy, currentTime: Float, currentGeneration: Int): Boolean {

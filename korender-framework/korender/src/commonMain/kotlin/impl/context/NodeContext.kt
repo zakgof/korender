@@ -48,6 +48,7 @@ import com.zakgof.korender.impl.material.InternalImageTextureArrayDeclaration
 import com.zakgof.korender.impl.material.InternalImageTextureDeclaration
 import com.zakgof.korender.impl.material.ResourceCubeTextureDeclaration
 import com.zakgof.korender.impl.material.InternalResourceTextureArrayDeclaration
+import com.zakgof.korender.impl.material.InternalDynamicTextureDeclaration
 import com.zakgof.korender.impl.material.InternalResourceTextureDeclaration
 import com.zakgof.korender.impl.material.simpleBlur
 import com.zakgof.korender.math.ColorRGBA
@@ -76,6 +77,9 @@ internal class NodeContext(
 
     override fun texture(id: String, image: Image, filter: TextureFilter, wrap: TextureWrap, aniso: Int) =
         InternalImageTextureDeclaration(id, image as InternalImage, filter, wrap, aniso, this)
+
+    override fun texture(id: String, imageSupplier: () -> Image, filter: TextureFilter, wrap: TextureWrap, aniso: Int) =
+        InternalDynamicTextureDeclaration(id, imageSupplier, filter, wrap, aniso, this)
 
     override fun texture3D(id: String, image: Image3D, filter: TextureFilter, wrap: TextureWrap, aniso: Int): Texture3DDeclaration =
         ImageTexture3DDeclaration(id, image as InternalImage3D, filter, wrap, aniso, this)

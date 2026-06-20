@@ -5,6 +5,7 @@ import com.zakgof.korender.CubeTextureDeclaration
 import com.zakgof.korender.CubeTextureImages
 import com.zakgof.korender.CubeTextureResources
 import com.zakgof.korender.CubeTextureSide
+import com.zakgof.korender.Image
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Platform
 import com.zakgof.korender.ResourceLoader
@@ -29,6 +30,7 @@ import com.zakgof.korender.impl.glgpu.GlGpuCubeTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
 import com.zakgof.korender.impl.glgpu.GlGpuTexture3D
 import com.zakgof.korender.impl.glgpu.GlGpuTextureArray
+import com.zakgof.korender.impl.glgpu.formatMap
 import com.zakgof.korender.impl.image.InternalImage
 import com.zakgof.korender.impl.image.impl.image.InternalImage3D
 import kotlinx.coroutines.CoroutineScope
@@ -88,6 +90,7 @@ internal object Texturing {
 
 internal interface InternalTexture : NodeKeeper {
     fun generateGpuTexture(loader: Loader): GlBindableTexture?
+    fun updateTexture(loader: Loader) {}
 }
 
 internal class InternalResourceTextureDeclaration(
@@ -95,7 +98,7 @@ internal class InternalResourceTextureDeclaration(
     val filter: TextureFilter = TextureFilter.MipMap,
     private val wrap: TextureWrap = TextureWrap.Repeat,
     private val aniso: Int = 1024,
-    override val nodeContext: NodeContext
+    override val nodeContext: NodeContext,
 ) : ResourceTextureDeclaration, InternalTexture {
     override fun equals(other: Any?): Boolean =
         (other is InternalResourceTextureDeclaration && other.textureResource == textureResource)
@@ -114,7 +117,7 @@ internal class InternalImageTextureDeclaration(
     val filter: TextureFilter,
     private val wrap: TextureWrap,
     private val aniso: Int,
-    override val nodeContext: NodeContext
+    override val nodeContext: NodeContext,
 ) : TextureDeclaration, InternalTexture {
     override fun equals(other: Any?): Boolean =
         (other is InternalImageTextureDeclaration && other.id == id)
@@ -130,7 +133,7 @@ internal class InternalResourceTextureArrayDeclaration(
     val filter: TextureFilter = TextureFilter.MipMap,
     private val wrap: TextureWrap = TextureWrap.Repeat,
     private val aniso: Int = 1024,
-    override val nodeContext: NodeContext
+    override val nodeContext: NodeContext,
 ) : TextureArrayDeclaration, InternalTexture {
     override fun equals(other: Any?): Boolean =
         (other is InternalResourceTextureArrayDeclaration && other.textureResources == textureResources)
@@ -150,7 +153,7 @@ internal class InternalImageTextureArrayDeclaration(
     val filter: TextureFilter,
     private val wrap: TextureWrap,
     private val aniso: Int,
-    override val nodeContext: NodeContext
+    override val nodeContext: NodeContext,
 ) : TextureArrayDeclaration, InternalTexture {
     override fun equals(other: Any?): Boolean =
         (other is InternalImageTextureArrayDeclaration && other.id == id)
@@ -167,7 +170,7 @@ internal class ImageTexture3DDeclaration(
     val filter: TextureFilter,
     private val wrap: TextureWrap,
     private val aniso: Int,
-    override val nodeContext: NodeContext
+    override val nodeContext: NodeContext,
 ) : Texture3DDeclaration, NodeKeeper {
     override fun equals(other: Any?): Boolean =
         (other is ImageTexture3DDeclaration && other.id == id)
@@ -185,7 +188,7 @@ internal class InternalByteArrayTextureDeclaration(
     val aniso: Int,
     override val fileBytesLoader: () -> ByteArray,
     override val extension: String,
-    override val nodeContext: NodeContext
+    override val nodeContext: NodeContext,
 ) : ByteArrayTextureDeclaration, InternalTexture {
 
     override fun equals(other: Any?): Boolean =
@@ -205,7 +208,7 @@ internal class TextureLinkDeclaration(
     private val id: String,
     val width: Int,
     val height: Int,
-    override val nodeContext: NodeContext
+    override val nodeContext: NodeContext,
 ) : TextureDeclaration, InternalTexture {
     override fun equals(other: Any?): Boolean =
         (other is TextureLinkDeclaration && other.id == id)
@@ -235,7 +238,7 @@ internal data class ResourceCubeTextureDeclaration(val resources: CubeTextureRes
 internal class ImageCubeTextureDeclaration(
     val id: String,
     val images: CubeTextureImages,
-    override val nodeContext: NodeContext
+    override val nodeContext: NodeContext,
 ) : CubeTextureDeclaration, NodeKeeper {
     override fun equals(other: Any?): Boolean =
         (other is ImageCubeTextureDeclaration && other.id == id)
@@ -244,6 +247,36 @@ internal class ImageCubeTextureDeclaration(
 }
 
 internal data class ProbeCubeTextureDeclaration(val envProbeName: String) : CubeTextureDeclaration
+
+internal class InternalDynamicTextureDeclaration(
+    private val id: String,
+    val imageSupplier: () -> Image,
+    val filter: TextureFilter,
+    private val wrap: TextureWrap,
+    private val aniso: Int,
+    override val nodeContext: NodeContext,
+) : TextureDeclaration, InternalTexture {
+    private var gpuTexture: GlGpuTexture? = null
+
+    override fun equals(other: Any?): Boolean =
+        (other is InternalDynamicTextureDeclaration && other.id == id)
+
+    override fun hashCode(): Int = id.hashCode()
+
+    override fun generateGpuTexture(loader: Loader): GlGpuTexture {
+        val image = imageSupplier() as InternalImage
+        gpuTexture = GlGpuTexture(image, filter, wrap, aniso)
+        return gpuTexture!!
+    }
+
+    override fun updateTexture(loader: Loader) {
+        val texture = gpuTexture ?: return
+        val image = imageSupplier() as InternalImage
+        if (image.width != texture.width || image.height != texture.height)
+            throw KorenderException("Dynamic texture image dimensions mismatch")
+        texture.uploadData(image.bytes, formatMap[image.format]!!)
+    }
+}
 
 internal class GpuTextureLink(
     val texture: GlGpuTexture,

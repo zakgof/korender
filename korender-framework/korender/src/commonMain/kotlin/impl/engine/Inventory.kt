@@ -59,6 +59,7 @@ internal class Inventory(private val loader: Loader) {
 
     fun go(time: Float, generation: Int, block: Inventory.() -> Boolean) {
         registries.forEach { it.begin() }
+        textures.forEachKey { it.updateTexture(loader) }
         val ok = block.invoke(this)
         if (ok) {
             registries.forEach { it.end(time, generation) }

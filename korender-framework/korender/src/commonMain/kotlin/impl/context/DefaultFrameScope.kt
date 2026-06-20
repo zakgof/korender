@@ -110,6 +110,9 @@ internal class DefaultFrameScope(
     override fun texture(id: String, image: Image, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureDeclaration =
         nodeContext.texture(id, image, filter, wrap, aniso)
 
+    override fun texture(id: String, imageSupplier: () -> Image, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureDeclaration =
+        nodeContext.texture(id, imageSupplier, filter, wrap, aniso)
+
     override fun textureArray(vararg textureResources: String, filter: TextureFilter, wrap: TextureWrap, aniso: Int): TextureArrayDeclaration =
         nodeContext.textureArray(*textureResources, filter = filter, wrap = wrap, aniso = aniso)
 

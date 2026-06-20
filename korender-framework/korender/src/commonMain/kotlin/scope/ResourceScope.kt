@@ -62,6 +62,20 @@ interface ResourceScope {
     fun texture(id: String, image: Image, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): TextureDeclaration
 
     /**
+     * Creates a dynamic texture declaration from a per-frame Image supplier.
+     *
+     * @param id unique declaration id
+     * @param imageSupplier Image object supplier - will be called every frame to get texture images
+     * @param filter texture filtering mode
+     * @param wrap texture wrapping mode
+     * @param aniso anisotropy factor
+     * @return texture declaration
+     */
+    fun texture(id: String, imageSupplier: () -> Image, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024): TextureDeclaration
+
+
+
+    /**
      * Creates a texture array declaration from resource image files.
      *
      * @param textureResources resource file names (png, jpg)
