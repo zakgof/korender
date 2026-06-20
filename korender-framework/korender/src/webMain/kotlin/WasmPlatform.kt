@@ -237,17 +237,6 @@ internal actual object Platform {
         return result
     }
 
-    actual fun createImage(width: Int, height: Int, format: PixelFormat): InternalImage {
-        val pixelBytes = when(format) {
-            PixelFormat.RGB -> 3
-            PixelFormat.RGBA -> 4
-            PixelFormat.Gray -> 1
-            PixelFormat.Gray16 -> 2
-        }
-        val buffer = NativeByteBuffer(width * height * pixelBytes)
-        return InternalImage(width, height, buffer, format)
-    }
-
     actual fun nanoTime(): Long =
         (performanceNow() * 1_000_000).toLong()
 

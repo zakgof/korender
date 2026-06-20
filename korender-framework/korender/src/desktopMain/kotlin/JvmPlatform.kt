@@ -211,9 +211,6 @@ internal actual object Platform {
 
     actual fun nanoTime() = System.nanoTime()
 
-    internal actual fun createImage(width: Int, height: Int, format: PixelFormat) =
-        image(BufferedImage(width, height, format.toBufferedImageType()))
-
     internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage> =
         CompletableDeferred(image(ImageIO.read(ByteArrayInputStream(bytes))))
 

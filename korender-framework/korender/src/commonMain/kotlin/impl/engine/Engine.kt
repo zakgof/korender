@@ -47,6 +47,7 @@ import com.zakgof.korender.impl.geometry.MeshAttributes
 import com.zakgof.korender.impl.gl.GL.glEnable
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP_SEAMLESS
 import com.zakgof.korender.impl.ignoringGlError
+import com.zakgof.korender.impl.image.InternalImage
 import com.zakgof.korender.impl.image.impl.image.InternalImage3D
 import com.zakgof.korender.impl.load
 import com.zakgof.korender.impl.material.AdjustmentMaterial
@@ -336,8 +337,8 @@ internal class Engine(
         val height: Int
             get() = regularFrameContext.height
 
-        override fun createImage(width: Int, height: Int, format: PixelFormat): Image =
-            Platform.createImage(width, height, format)
+        override fun createImage(width: Int, height: Int, format: PixelFormat, rawBytes: ByteArray?): Image =
+            InternalImage.createImage(width, height, format, rawBytes)
 
         override fun createImage3D(width: Int, height: Int, depth: Int, format: PixelFormat): Image3D =
             InternalImage3D(width, height, depth, NativeByteBuffer(width * height * depth * format.bytes), format)

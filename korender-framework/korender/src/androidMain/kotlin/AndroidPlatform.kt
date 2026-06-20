@@ -22,11 +22,11 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.createBitmap
-import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.image.InternalImage
+import com.zakgof.korender.scope.KorenderScope
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -105,11 +105,6 @@ internal actual object Platform {
     }
 
     actual fun nanoTime() = System.nanoTime()
-    internal actual fun createImage(width: Int, height: Int, format: PixelFormat): InternalImage {
-        // TODO image types support!
-        val bitmap = createBitmap(width, height)
-        return bitmapToImage(bitmap)
-    }
 }
 
 @OptIn(DelicateCoroutinesApi::class)

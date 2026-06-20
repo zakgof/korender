@@ -170,7 +170,7 @@ internal class GlGpuCubeTexture : GlBindableTexture, AutoCloseable {
             if (status != GL_FRAMEBUFFER_COMPLETE) {
                 throw KorenderException("Framebuffer not complete for face $side: status=$status")
             }
-            val img = Platform.createImage(width!!, height!!, format!!)
+            val img = InternalImage.createImage(width!!, height!!, format!!)
             glReadPixels(0, 0, width!!, height!!, glFormat!!.format, GL_UNSIGNED_BYTE, img.bytes)
             CubeTextureSide.entries[index] to img
         }.toMap()

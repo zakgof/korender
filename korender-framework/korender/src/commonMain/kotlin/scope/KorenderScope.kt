@@ -376,14 +376,15 @@ interface KorenderScope : ResourceScope {
     fun log(c: Float = 1.0f): ProjectionMode
 
     /**
-     * Creates an empty image.
+     * Creates an image.
      *
      * @param width image width in pixels
      * @param height image height in pixels
      * @param format image pixel format
+     * @param rawBytes raw pixel data in the specified format, or null to create an empty (zero-filled) image; must match width * height * format.bytes
      * @return image
      */
-    fun createImage(width: Int, height: Int, format: PixelFormat): Image
+    fun createImage(width: Int, height: Int, format: PixelFormat, rawBytes: ByteArray? = null): Image
 
     /**
      * Creates an image from resource.

@@ -202,7 +202,7 @@ internal class GlGpuTexture(val width: Int, val height: Int, filter: TextureFilt
             throw KorenderException("Framebuffer not complete, status=$status")
         }
 
-        val img = Platform.createImage(width, height, format!!)
+        val img = InternalImage.createImage(width, height, format!!)
         glReadPixels(0, 0, width, height, glFormat.format, glFormat.type, img.bytes)
         flipRows(img.bytes, width, height, format!!.bytes)
 
