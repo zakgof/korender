@@ -23,10 +23,10 @@ fun BlurExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
             Column {
                 Filler()
                 Row {
-                    Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40f, color = ColorRGBA(0x66FF55A0))
+                    Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 64f, color = ColorRGBA(0x66FF55A0))
                     Filler()
-                    Text(id = "blur", height = 32f, text = "R=${slider.position.toInt()} ")
-                    Slider(id = "blur-slider", width = width * 0.5f, height = 32f, state = slider)
+                    Text(id = "blur", height = 64f, text = "R=${slider.position.toInt()} ")
+                    Slider(id = "blur-slider", width = width * 0.5f, height = 64f, state = slider)
                 }
             }
         }

@@ -1,7 +1,7 @@
 package com.zakgof.korender
 
-import com.zakgof.korender.scope.GuiContainerScope
 import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.scope.GuiContainerScope
 import kotlin.math.sqrt
 
 /**
@@ -106,7 +106,7 @@ fun GuiContainerScope.ProgressBar(id: String, width: Int, height: Int = 48, valu
  * @param state slider state
  * @param onChange callback when slider position changes
  */
-fun GuiContainerScope.Slider(id: String, width: Float, height: Float = 48f, state: SliderState, onChange: (Float) -> Unit = {}) =
+fun GuiContainerScope.Slider(id: String, state: SliderState, width: Float, height: Float = 64f, handleWidth: Float = 64f, onChange: (Float) -> Unit = {}) =
     Row {
         val setPosition = { p: Float ->
             state.position = p.coerceIn(state.min, state.max)
@@ -114,11 +114,11 @@ fun GuiContainerScope.Slider(id: String, width: Float, height: Float = 48f, stat
         }
         val jumpLeft = { setPosition(state.position - (state.max - state.min) * 0.1f) }
         val jumpRight = { setPosition(state.position + (state.max - state.min) * 0.1f) }
-        val fillLeft = (state.position - state.min) * (width - 96f) / (state.max - state.min)
-        val fillRight = width - 96f - fillLeft
+        val fillLeft = (state.position - state.min) * (width - 64f - handleWidth) / (state.max - state.min)
+        val fillRight = width - 64f -handleWidth - fillLeft
         Image(id = "slider.left.$id", imageResource = "!gui/slider.left.png", width = 32f, height = height, marginLeft = 8f) { onClick(it) { jumpLeft() } }
         Image(id = "slider.left.empty.$id", imageResource = "!gui/slider.empty.png", width = fillLeft, height = height) { onClick(it) { jumpLeft() } }
-        Image(id = "slider.handle.$id", imageResource = "!gui/slider.handle.png", width = 32f, height = height) { te ->
+        Image(id = "slider.handle.$id", imageResource = "!gui/slider.handle.png", width = handleWidth, height = height) { te ->
             when (te.type) {
                 TouchEvent.Type.DOWN -> {
                     state.dragStartX = te.x
@@ -138,9 +138,6 @@ fun GuiContainerScope.Slider(id: String, width: Float, height: Float = 48f, stat
         Image(id = "slider.right.empty.$id", imageResource = "!gui/slider.empty.png", width = fillRight, height = height) { onClick(it) { jumpRight() } }
         Image(id = "slider.right.$id", imageResource = "!gui/slider.right.png", width = 32f, height = height, marginRight = 8f) { onClick(it) { jumpRight() } }
     }
-
-fun GuiContainerScope.Slider(id: String, width: Int, height: Int = 48, state: SliderState, onChange: (Float) -> Unit = {}) =
-    Slider(id, width.toFloat(), height.toFloat(), state, onChange)
 
 fun GuiContainerScope.Joystick(id: String, state: JoystickState, width: Float) {
 

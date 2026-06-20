@@ -157,7 +157,7 @@ fun AppExample() {
                                 }
                             }
                             .padding(start = 8.dp, top = 8.dp, bottom = 8.dp, end = 12.dp),
-                        text = "${if (collapsed) "\u25B6" else "\u25BC"} ${folder.title}",
+                        text = folder.title,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = folderColor

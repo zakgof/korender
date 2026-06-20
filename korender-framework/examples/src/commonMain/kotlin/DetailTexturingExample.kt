@@ -17,9 +17,9 @@ fun DetailTexturingExample() {
         val orbitCamera = OrbitCamera(15.z, 0.z)
         val plane = customMesh("plane", 4, 6, POS, TEX) {
             pos(Vec3(-2f, -2f, 0f)).tex(Vec2(0f, 0f))
-            pos(Vec3( 2f, -2f, 0f)).tex(Vec2(2f, 0f))
-            pos(Vec3( 2f,  2f, 0f)).tex(Vec2(2f, 2f))
-            pos(Vec3(-2f,  2f, 0f)).tex(Vec2(0f, 2f))
+            pos(Vec3(2f, -2f, 0f)).tex(Vec2(2f, 0f))
+            pos(Vec3(2f, 2f, 0f)).tex(Vec2(2f, 2f))
+            pos(Vec3(-2f, 2f, 0f)).tex(Vec2(0f, 2f))
             index(0, 1, 2, 0, 2, 3)
         }
         val scaleSlider = SliderState(3f, 0.5f, 8f)
@@ -55,14 +55,14 @@ fun DetailTexturingExample() {
                     Column {
                         Row {
                             Filler()
-                            Text(id = "scale1", height = 24f, text = "Scale ${scaleSlider.position.fixedDecimals(1)} ")
-                            Slider("scale2", width / 3f, 32f, scaleSlider)
+                            Text(id = "scale1", height = 48f, text = "Scale ${scaleSlider.position.fixedDecimals(1)} ")
+                            Slider("scale2", scaleSlider, width / 2f, 64f)
                         }
                         Row {
                             Filler()
                             val s = strengthSlider.position.fixedDecimals(1)
-                            Text(id = "strength1", height = 24f, text = "Strength $s ")
-                            Slider("strength2", width / 3f, 32f, strengthSlider)
+                            Text(id = "strength1", height = 48f, text = "Strength $s ")
+                            Slider("strength2", strengthSlider, width / 2f, 64f)
                         }
                     }
                 }
