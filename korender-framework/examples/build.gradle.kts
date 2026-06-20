@@ -1,6 +1,3 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
-
 plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinMultiplatform)
@@ -32,37 +29,15 @@ kotlin {
         }
     }
 
-    jvm("desktop")
-
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser {
-            commonWebpackConfig {
-                outputFileName = "composeApp.js"
-            }
-        }
-        binaries.executable()
-    }
-
     jvmToolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 
     sourceSets {
-        val desktopMain by getting
-
-        getByName("desktopTest") {
-            dependencies {
-                implementation(libs.junit.jupiter.api)
-                implementation(libs.junit.jupiter.params)
-                runtimeOnly(libs.junit.jupiter.engine)
-                runtimeOnly(libs.junit.platform.launcher)
-            }
-        }
-
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
+
         }
         commonMain.dependencies {
             implementation(project(":korender"))
@@ -75,41 +50,18 @@ kotlin {
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
-        }
-        desktopMain.dependencies {
-            implementation(compose.desktop.currentOs)
-            implementation(libs.ktor.client.java)
-        }
-        getByName("wasmJsMain").dependencies {
-            implementation(libs.ktor.client.js)
+            implementation("androidx.camera:camera-core:1.6.1")
+            implementation("androidx.camera:camera-lifecycle:1.6.1")
+            implementation("androidx.camera:camera-camera2:1.6.1")
+            implementation("dev.icerock.moko:permissions-camera:0.20.1")
+            implementation("dev.icerock.moko:permissions-compose:0.20.1")
+            implementation("androidx.activity:activity-compose:1.10.1")
+            implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+            implementation("androidx.compose.ui:ui")
         }
     }
 }
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
-}
-
-compose.desktop {
-    application {
-        mainClass = "com.zakgof.korender.MainKt"
-        nativeDistributions {
-            targetFormats(TargetFormat.Msi)
-            packageName = "com.zakgof.korender"
-            packageVersion = korenderVersion
-            modules(
-                "java.net.http",
-                "jdk.unsupported"
-            )
-            windows {
-                iconFile.set(project.file("korender32.ico"))
-            }
-            linux {
-                iconFile.set(project.file("korender32.png"))
-            }
-        }
-        buildTypes.release.proguard {
-            isEnabled = false
-        }
-    }
 }

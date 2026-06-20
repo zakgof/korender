@@ -40,6 +40,7 @@ import org.jetbrains.compose.resources.painterResource
 
 val folders = listOf(
     Folder("Demos", listOf(
+        Case("Camera") { CameraExample() },
         Case("City") { InfiniteCity() },
     )),
     Folder("Terrain", listOf(
