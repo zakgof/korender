@@ -12,12 +12,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
-import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.gl.GL
 import com.zakgof.korender.impl.image.InternalImage
+import com.zakgof.korender.scope.KorenderScope
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.CompletableDeferred
@@ -255,18 +255,22 @@ actual fun Korender(
     Column(
         modifier = Modifier.onGloballyPositioned { coordinates ->
             val crds = coordinates.boundsInWindow()
+            val ratio = window.devicePixelRatio
 
-            canvas.width = (crds.width / window.devicePixelRatio).toInt()
-            canvas.height = (crds.height / window.devicePixelRatio).toInt()
+            canvas.width = (crds.width).toInt()
+            canvas.height = (crds.height).toInt()
+
             canvas.style.apply {
                 position = "absolute"
-                left = "${(crds.left / window.devicePixelRatio).toInt()}px"
-                top = "${(crds.top / window.devicePixelRatio)}px"
+                left = "${(crds.left / ratio).toInt()}px"
+                top = "${(crds.top / ratio).toInt()}px"
+                width = "${(crds.width / ratio).toInt()}px"
+                height = "${(crds.height / ratio).toInt()}px"
                 background = "black"
             }
             engine?.resize(
-                (crds.width / window.devicePixelRatio).toInt(),
-                (crds.height / window.devicePixelRatio).toInt()
+                canvas.width,
+                canvas.height
             )
         }.fillMaxSize() // TODO
     )
@@ -347,7 +351,9 @@ actual fun Korender(
             val x = me.pageX - canvas.offsetLeft
             val y = me.pageY - canvas.offsetTop
             GlobalScope.launch {
-                engine?.pushTouch(TouchEvent(type, me.button.toButton(), x.toFloat(), y.toFloat(), keyboardModifiers(me)))
+                engine?.pushTouch(TouchEvent(type, me.button.toButton(),
+                    (x * window.devicePixelRatio).toFloat(), (y * window.devicePixelRatio).toFloat(),
+                    keyboardModifiers(me)))
             }
         }
 
@@ -357,7 +363,9 @@ actual fun Korender(
                 val x = touch.pageX - canvas.offsetLeft
                 val y = touch.pageY - canvas.offsetTop
                 GlobalScope.launch {
-                    engine?.pushTouch(TouchEvent(type, TouchEvent.Button.LEFT, x.toFloat(), y.toFloat(), KeyboardModifiers()))
+                    engine?.pushTouch(TouchEvent(type, TouchEvent.Button.LEFT,
+                        (x * window.devicePixelRatio).toFloat(), (y * window.devicePixelRatio).toFloat(),
+                        KeyboardModifiers()))
                 }
             }
             // TODO improve this POC
@@ -366,7 +374,9 @@ actual fun Korender(
                     val x = touch.pageX - canvas.offsetLeft
                     val y = touch.pageY - canvas.offsetTop
                     GlobalScope.launch {
-                        engine?.pushTouch(TouchEvent(type, TouchEvent.Button.LEFT, x.toFloat(), y.toFloat(), KeyboardModifiers()))
+                        engine?.pushTouch(TouchEvent(type, TouchEvent.Button.LEFT,
+                            (x * window.devicePixelRatio).toFloat(), (y * window.devicePixelRatio).toFloat(),
+                            KeyboardModifiers()))
                     }
                 }
             }
