@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerButtons
 import androidx.compose.ui.input.pointer.isPrimaryPressed
 import androidx.compose.ui.input.pointer.isSecondaryPressed
+import com.zakgof.korender.baker.editor.ui.isSelectionKeepProportions
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Vec3
 import editor.model.BoundingBox
@@ -157,7 +158,7 @@ internal class SelectorMouseHandler(
 
     private fun pick(handleHalfSize: Int, a: Offset, b: Offset) = abs(a.x - b.x) < handleHalfSize && abs(a.y - b.y) < handleHalfSize
 
-    override fun onDrag(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean) : Boolean {
+    override fun onDrag(current: Offset, buttons: PointerButtons, isCtrlDown: Boolean): Boolean {
         val d = drag
         if (buttons.isPrimaryPressed) {
             now = current
@@ -178,9 +179,18 @@ internal class SelectorMouseHandler(
 
                 is ResizeDrag -> {
                     val oldBB = d.selectionMap.bb()
-                    val rect = safeRect(d.frozenCorner, current, d.corner)
 
-                    val newBB = mapper.toW(rect, oldBB)
+                    val keepProportions = isSelectionKeepProportions(state, model)
+
+                    val rect = if (keepProportions)
+                        keepProportionsRect(d.frozenCorner, current, d.corner, oldBB)
+                    else
+                        safeRect(d.frozenCorner, current, d.corner)
+
+                    var newBB = mapper.toW(rect, oldBB)
+                    if (keepProportions)
+                        newBB = fixZProportions(newBB, oldBB)
+
                     state.brushSelection.forEach {
                         val origBrush = d.selectionMap.originalBrushSelection[it]!!
                         holder.brushChanged(origBrush.scale(oldBB, newBB), false)
@@ -307,5 +317,44 @@ internal class SelectorMouseHandler(
         if ((target.y - frozenCorner.y) * corner.ySign < 0.5f * step)
             ty = frozenCorner.y + corner.ySign * step
         return unirect(frozenCorner, Offset(tx, ty))
+    }
+
+    private fun keepProportionsRect(frozenCorner: Offset, current: Offset, corner: Corner, oldBB: BoundingBox): Rect {
+        val ratio = abs((oldBB.size dot mapper.axes.xAxis) / (oldBB.size dot mapper.axes.yAxis))
+        val step = state.gridScale * state.projectionScale
+
+        var tx = mapper.snapH(current.x)
+        if ((tx - frozenCorner.x) * corner.xSign < 0.5f * step)
+            tx = frozenCorner.x + corner.xSign * step
+        val tty = frozenCorner.y + (tx - frozenCorner.x) * corner.xSign * corner.ySign / ratio
+        val candidateByX = Offset(tx, tty)
+        val errorByX =(candidateByX - current).getDistanceSquared()
+
+        var ty = mapper.snapV(current.y)
+        if ((ty - frozenCorner.y) * corner.ySign < 0.5f * step)
+            ty = frozenCorner.y + corner.ySign * step
+        val ttx = frozenCorner.x + (ty - frozenCorner.y) * corner.xSign * corner.ySign * ratio
+        val candidateByY = Offset(ttx, ty)
+        val errorByY =(candidateByY - current).getDistanceSquared()
+
+        val finalTarget = if (errorByX > errorByY) candidateByY else candidateByX
+
+        return unirect(frozenCorner, finalTarget)
+    }
+
+    private fun fixZProportions(newBB: BoundingBox, oldBB: BoundingBox): BoundingBox {
+        val scaleX = (newBB.size divpercomp oldBB.size) dot mapper.axes.xAxis
+        val scaleY = (newBB.size divpercomp oldBB.size) dot mapper.axes.yAxis
+        val scale = max(scaleX, scaleY)
+        val halfZSize = oldBB.size * scale * 0.5f
+        val min =  mapper.axes.xAxis * (newBB.min dot mapper.axes.xAxis) +
+                mapper.axes.yAxis * (newBB.min dot mapper.axes.yAxis) +
+                mapper.axes.lookAxis * (newBB.center dot mapper.axes.lookAxis - halfZSize)
+
+        val max =  mapper.axes.xAxis * (newBB.max dot mapper.axes.xAxis) +
+                mapper.axes.yAxis * (newBB.max dot mapper.axes.yAxis) +
+                mapper.axes.lookAxis * (newBB.center dot mapper.axes.lookAxis + halfZSize)
+
+        return BoundingBox.from(min, max)
     }
 }

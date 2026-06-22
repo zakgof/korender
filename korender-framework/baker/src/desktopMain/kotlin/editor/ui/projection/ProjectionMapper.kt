@@ -25,7 +25,7 @@ class ProjectionMapper(val axes: Axes, val state: State, val size: Size) {
     fun wToV(v: Vec3) = Offset(wToVx(v), wToVy(v))
 
 
-    private fun snapH(x: Float): Float = size.width * .5f - centerX * state.projectionScale +
+    fun snapH(x: Float): Float = size.width * .5f - centerX * state.projectionScale +
             ((x - (size.width * .5f - centerX * state.projectionScale)) /
                     (state.gridScale * state.projectionScale)).roundToInt() * (state.gridScale * state.projectionScale)
 

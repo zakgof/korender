@@ -18,3 +18,8 @@ fun selectionBB(state: State, model: Model) =
     (selectedBrushes(state, model) + selectedEntityInstances(state, model))
         .map { it.bb }
         .reduceOrNull(BoundingBox::merge)
+
+fun isSelectionKeepProportions(state: State, model: Model) =
+    model.entityInstances.values
+        .filter { ei -> state.entityInstanceSelection.contains(ei.id) }
+        .any { ei -> model.entityModels[ei.modelId]!!.keepProportions }
