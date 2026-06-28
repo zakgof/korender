@@ -40,6 +40,8 @@ import org.jetbrains.compose.resources.painterResource
 
 val folders = listOf(
     Folder("Demos", listOf(
+        Case("Stochastic Texturing") { StochasticTexturingExample() },
+        Case("PBR materials") { MetallicRoughnessExample() },
         Case("City") { InfiniteCity() },
     )),
     Folder("Terrain", listOf(

@@ -235,6 +235,7 @@ internal class GlGpuShader(
             return null
         val blockSize = IntArray(1)
         glGetActiveUniformBlockiv(programHandle, blockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, blockSize)
+        glUniformBlockBinding(programHandle, blockIndex, 1)
         return UniformBlock(blockIndex, blockSize[0], fetchUniformBlockBindings(blockIndex))
     }
 
@@ -281,10 +282,8 @@ internal class GlGpuShader(
     }
 
     fun render(uniformPack: UniformPack, loader: (Any?) -> GlBindableTexture, mesh: GlGpuMesh, rk: ResultKeeper?) {
-        shaderServices.uboHolder.populate(uniformPack, shaderUniformBlock, this.toString(), rk) { binding, _ ->
+        shaderServices.uboHolder.populate(uniformPack, shaderUniformBlock, this.toString(), rk) { _ ->
             glUseProgram(programHandle)
-            shaderUniformBlock?.let { glUniformBlockBinding(programHandle, it.shaderBlockIndex, binding) }
-            // println("---------- Draw call: $this -------------")
             shaderServices.textureBindingCache.nextDraw()
             if (bindUniforms(uniformPack, loader, rk)) {
                 mesh.render()
@@ -292,7 +291,6 @@ internal class GlGpuShader(
                 rk?.fail()
             }
         }
-
     }
 
     private fun bindUniforms(uniformPack: UniformPack, loader: (Any?) -> GlBindableTexture, rk: ResultKeeper?): Boolean {

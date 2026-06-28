@@ -25,6 +25,7 @@ fun StochasticTexturingExample() {
         }
         OnTouch { orbitCamera.touch(it) }
         Frame {
+            println("== frame")
             AmbientLight(White)
             camera = orbitCamera.run { camera() }
             Renderable(
@@ -32,6 +33,7 @@ fun StochasticTexturingExample() {
                     colorTexture = texture("texture/brick.jpg")
                     metallicFactor = 0.3f
                     roughnessFactor = 0.5f
+                    stochasticSharpness = 12f
                 },
                 mesh = plane,
                 transform = translate(-3.x)
@@ -46,13 +48,6 @@ fun StochasticTexturingExample() {
                 mesh = plane,
                 transform = translate(3.x)
             )
-            Gui {
-                Column {
-                    Filler()
-                    Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
-                }
-            }
-            TestExchange.report(frameInfo)
         }
     }
 }

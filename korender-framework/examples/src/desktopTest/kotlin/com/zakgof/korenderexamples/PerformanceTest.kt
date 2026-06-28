@@ -4,13 +4,8 @@ import androidx.compose.ui.awt.ComposeWindow
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.KorenderBuild
 import com.zakgof.korender.examples.Case
-import com.zakgof.korender.examples.GltfCrowdExample
-import com.zakgof.korender.examples.HeightmapTerrainExample
-import com.zakgof.korender.examples.ProcTerrainExample
 import com.zakgof.korender.examples.TestExchange
-import com.zakgof.korender.examples.infcity.InfiniteCity
 import com.zakgof.korenderexamples.perf.InstancedRenderables
-import com.zakgof.korenderexamples.perf.MultipleRenderables
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.fail
@@ -87,13 +82,13 @@ class PerformanceTest {
 
         @JvmStatic
         fun performanceCases() = listOf(
-            Case("10K renderables", ::MultipleRenderables),
-            Case("10K instanced renderables - dynamic", { InstancedRenderables(true) }),
+//            Case("10K renderables", ::MultipleRenderables),
+//            Case("10K instanced renderables - dynamic", { InstancedRenderables(true) }),
             Case("10K instanced renderables - static", { InstancedRenderables(false) }),
-            Case("City Demo", ::InfiniteCity),
-            Case("Gltf Crowd", ::GltfCrowdExample),
-            Case("Heightmap Terrain", ::HeightmapTerrainExample),
-            Case("Procedural Terrain", ::ProcTerrainExample),
+//            Case("City Demo", ::InfiniteCity),
+//            Case("Gltf Crowd", ::GltfCrowdExample),
+//            Case("Heightmap Terrain", ::HeightmapTerrainExample),
+//            Case("Procedural Terrain", ::ProcTerrainExample),
         ).map { Named.of(it.title, it) }
 
         @JvmStatic

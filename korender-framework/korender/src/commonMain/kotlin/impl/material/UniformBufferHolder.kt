@@ -4,7 +4,6 @@ import com.zakgof.korender.KorenderException
 import com.zakgof.korender.impl.engine.ResultKeeper
 import com.zakgof.korender.impl.gl.GL.glGetInteger
 import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_UNIFORM_BLOCK_SIZE
-import com.zakgof.korender.impl.gl.GLConstants.GL_MAX_UNIFORM_BUFFER_BINDINGS
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT
 import com.zakgof.korender.impl.glgpu.CompiledBlockBinding
 import com.zakgof.korender.impl.glgpu.GlGpuUniformBuffer
@@ -50,14 +49,12 @@ internal class UniformBufferHolder {
     private val compiledUniformBindings = mutableListOf<CompiledBlockBinding>()
 
     private val bufferOffsetAlignment = glGetInteger(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT)
-    private val maxBindings = glGetInteger(GL_MAX_UNIFORM_BUFFER_BINDINGS)
     private val shaderUboSize = glGetInteger(GL_MAX_UNIFORM_BLOCK_SIZE).coerceIn(0, 65536)
 
     private val shaderUbo = GlGpuUniformBuffer(shaderUboSize)
 
     private val renderQueue = mutableListOf<RenderItem>()
     private var bufferShift = 0
-    private var currentBinding = 1
 
     init {
         frameUbo.bindBase(0)
@@ -74,7 +71,7 @@ internal class UniformBufferHolder {
             }
         }
         frameUbo.populate(uniformPack, 0, compiledUniformBindings, "FrameContext", ignoreMissing)
-        frameUbo.upload(4650)
+        frameUbo.upload()
     }
 
     fun populate(
@@ -82,41 +79,39 @@ internal class UniformBufferHolder {
         uniformBlock: UniformBlock?,
         materialName: String,
         rk: ResultKeeper?,
-        render: (Int, ResultKeeper?) -> Unit,
-    ): Int? {
+        render: (ResultKeeper?) -> Unit,
+    ) {
         val renderItem = if (uniformBlock != null) {
-            if (shaderUboSize - bufferShift < uniformBlock.size || currentBinding >= maxBindings) {
+            if (shaderUboSize - bufferShift < uniformBlock.size) {
                 flush(rk)
             }
             shaderUbo.populate(uniformPack, bufferShift, uniformBlock.bindings, materialName)
-            val ri = RenderItem(render, bufferShift, uniformBlock.size, currentBinding)
+            val ri = RenderItem(render, bufferShift, uniformBlock.size)
             bufferShift = ((bufferShift + uniformBlock.size + bufferOffsetAlignment - 1) / bufferOffsetAlignment) * bufferOffsetAlignment
-            currentBinding++
             ri
         } else {
-            RenderItem(render, bufferShift, 0, null)
+            RenderItem(render, 0, 0)
         }
         renderQueue += renderItem
-        return renderItem.binding
     }
 
     fun flush(rk: ResultKeeper?) {
         if (renderQueue.isNotEmpty()) {
-            shaderUbo.upload(bufferShift)
+            shaderUbo.upload()
             renderQueue.forEach { renderItem ->
-                renderItem.binding?.let { shaderUbo.bindRange(it, renderItem.shift, renderItem.size) }
-                renderItem.render(renderItem.binding ?: -1, rk)
+                if (renderItem.size > 0) {
+                    shaderUbo.bindRange(1, renderItem.shift, renderItem.size)
+                }
+                renderItem.render(rk)
             }
         }
         bufferShift = 0
-        currentBinding = 1
         renderQueue.clear()
     }
 
     private class RenderItem(
-        val render: (Int, ResultKeeper?) -> Unit,
+        val render: (ResultKeeper?) -> Unit,
         val shift: Int,
-        val size: Int,
-        val binding: Int?,
+        val size: Int
     )
 }

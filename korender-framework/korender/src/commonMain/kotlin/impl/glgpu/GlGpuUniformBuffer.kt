@@ -9,7 +9,6 @@ import com.zakgof.korender.impl.gl.GL.glBindBuffer
 import com.zakgof.korender.impl.gl.GL.glBindBufferBase
 import com.zakgof.korender.impl.gl.GL.glBindBufferRange
 import com.zakgof.korender.impl.gl.GL.glBufferData
-import com.zakgof.korender.impl.gl.GL.glBufferSubData
 import com.zakgof.korender.impl.gl.GL.glDeleteBuffers
 import com.zakgof.korender.impl.gl.GL.glGenBuffers
 import com.zakgof.korender.impl.gl.GLConstants.GL_DYNAMIC_DRAW
@@ -176,20 +175,20 @@ internal class GlGpuUniformBuffer(size: Int) : AutoCloseable {
 
     private val ubo = glGenBuffers()
     private val uboBuffer = NativeByteBuffer(size)
-    private var allocatedSize = 0
 
     init {
-        glBindBuffer(GL_UNIFORM_BUFFER, ubo)
-        glBufferData(GL_UNIFORM_BUFFER, uboBuffer.rewind(), GL_DYNAMIC_DRAW)
-        allocatedSize = uboBuffer.size()
-        println("Creating GPU UBO : $ubo")
+        println("Creating GPU UBO : $ubo $size bytes")
     }
 
-    fun bindBase(binding: Int) =
+    fun bindBase(binding: Int) {
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo)
         glBindBufferBase(GL_UNIFORM_BUFFER, binding, ubo)
+    }
 
-    fun bindRange(binding: Int, shift: Int, size: Int) =
+    fun bindRange(binding: Int, shift: Int, size: Int) {
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo)
         glBindBufferRange(GL_UNIFORM_BUFFER, binding, ubo, shift, size)
+    }
 
     fun populate(
         uniformPack: UniformPack,
@@ -203,19 +202,13 @@ internal class GlGpuUniformBuffer(size: Int) : AutoCloseable {
         }
     }
 
-    fun upload(size: Int) {
-        val requestedSize = size.coerceAtMost(uboBuffer.size())
+    fun upload() {
         glBindBuffer(GL_UNIFORM_BUFFER, ubo)
-        if (requestedSize > allocatedSize) {
-            glBufferData(GL_UNIFORM_BUFFER, requestedSize.toLong(), GL_DYNAMIC_DRAW)
-            allocatedSize = requestedSize
-        }
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, uboBuffer.rewind())
+        glBufferData(GL_UNIFORM_BUFFER, uboBuffer.rewind(), GL_DYNAMIC_DRAW)
     }
 
     override fun close() {
         println("Destroying GPU UBO [$ubo]")
         glDeleteBuffers(ubo)
     }
-
 }
