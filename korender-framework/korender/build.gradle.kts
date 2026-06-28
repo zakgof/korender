@@ -82,7 +82,7 @@ kotlin {
     sourceSets {
         val desktopMain by getting
         val commonMain by getting {
-            kotlin.srcDir(generatedBuildDir)
+            kotlin.srcDir(generateKorenderBuild.map { generatedBuildDir.get().asFile })
         }
 
         androidMain.dependencies {
@@ -119,6 +119,10 @@ kotlin {
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    dependsOn(generateKorenderBuild)
+}
+
+tasks.matching { it.name.endsWith("SourcesJar") }.configureEach {
     dependsOn(generateKorenderBuild)
 }
 
