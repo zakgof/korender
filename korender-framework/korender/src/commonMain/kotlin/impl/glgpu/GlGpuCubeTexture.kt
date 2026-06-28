@@ -17,6 +17,7 @@ import com.zakgof.korender.impl.gl.GL.glGenTextures
 import com.zakgof.korender.impl.gl.GL.glGenerateMipmap
 import com.zakgof.korender.impl.gl.GL.glGetError
 import com.zakgof.korender.impl.gl.GL.glGetFloatv
+import com.zakgof.korender.impl.gl.GL.glPixelStorei
 import com.zakgof.korender.impl.gl.GL.glReadPixels
 import com.zakgof.korender.impl.gl.GL.glTexImage2D
 import com.zakgof.korender.impl.gl.GL.glTexParameteri
@@ -39,13 +40,14 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MIN_FILTER
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_R
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_S
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_T
+import com.zakgof.korender.impl.gl.GLConstants.GL_UNPACK_ALIGNMENT
 import com.zakgof.korender.impl.gl.GLConstants.GL_UNSIGNED_BYTE
 import com.zakgof.korender.impl.gl.GLTexture
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.image.InternalImage
 import kotlin.math.min
 
-internal class GlGpuCubeTexture : GLBindableTexture, AutoCloseable {
+internal class GlGpuCubeTexture : GlBindableTexture, AutoCloseable {
 
     override val glHandle: GLTexture = glGenTextures()
 
@@ -53,6 +55,8 @@ internal class GlGpuCubeTexture : GLBindableTexture, AutoCloseable {
     var height: Int? = null
     private var format: PixelFormat? = null
     private var glFormat: GlGpuTexture.GlFormat? = null
+
+    override var unit = -1
 
     val sides = listOf(
         GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
@@ -74,7 +78,7 @@ internal class GlGpuCubeTexture : GLBindableTexture, AutoCloseable {
         format = images[CubeTextureSide.NX]!!.format
         glFormat = formatMap[format]!!
 
-        sides.forEachIndexed{ index, glSide ->
+        sides.forEachIndexed { index, glSide ->
             loadSide(glSide, images[CubeTextureSide.entries[index]]!! as InternalImage)
         }
 
@@ -116,12 +120,14 @@ internal class GlGpuCubeTexture : GLBindableTexture, AutoCloseable {
 
     private fun loadSide(glSide: Int, image: InternalImage) {
         val glFormat = formatMap[image.format]!!
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
         glTexImage2D(glSide, 0, glFormat.internal, image.width, image.height, 0, glFormat.format, glFormat.type, image.bytes)
     }
 
     @OptIn(ExperimentalStdlibApi::class)
     private fun initSide(glSide: Int, width: Int, height: Int, preset: GlGpuTexture.Preset) {
         for (glFormat in preset.formats) {
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
             glTexImage2D(glSide, 0, glFormat.internal, width, height, 0, glFormat.format, glFormat.type, null)
             val errcode = glGetError()
             if (errcode != 0) {
@@ -140,8 +146,11 @@ internal class GlGpuCubeTexture : GLBindableTexture, AutoCloseable {
     }
 
     override fun bind(unit: Int) {
-        glActiveTexture(GLConstants.GL_TEXTURE0 + unit)
-        glBindTexture(GL_TEXTURE_CUBE_MAP, glHandle)
+        if (unit >= 0) {
+            glActiveTexture(GLConstants.GL_TEXTURE0 + unit)
+            glBindTexture(GL_TEXTURE_CUBE_MAP, glHandle)
+        }
+        this.unit = unit
     }
 
     override fun close() {
@@ -161,7 +170,7 @@ internal class GlGpuCubeTexture : GLBindableTexture, AutoCloseable {
             if (status != GL_FRAMEBUFFER_COMPLETE) {
                 throw KorenderException("Framebuffer not complete for face $side: status=$status")
             }
-            val img = Platform.createImage(width!!, height!!, format!!)
+            val img = InternalImage.createImage(width!!, height!!, format!!)
             glReadPixels(0, 0, width!!, height!!, glFormat!!.format, GL_UNSIGNED_BYTE, img.bytes)
             CubeTextureSide.entries[index] to img
         }.toMap()

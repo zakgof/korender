@@ -1,0 +1,381 @@
+package editor.ui.dialog
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Text
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogWindow
+import androidx.compose.ui.window.rememberDialogState
+import com.zakgof.korender.Korender
+import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
+import com.zakgof.korender.baker.resources.Res
+import com.zakgof.korender.baker.resources.file
+import com.zakgof.korender.baker.resources.material
+import com.zakgof.korender.baker.resources.trash
+import com.zakgof.korender.math.ColorRGB.Companion.white
+import com.zakgof.korender.math.Quaternion
+import com.zakgof.korender.math.Transform.Companion.rotate
+import com.zakgof.korender.math.Vec2
+import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.x
+import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
+import editor.model.Material
+import editor.model.Model
+import editor.state.State
+import editor.state.StateHolder
+import editor.ui.Theme
+import editor.ui.toBaseMM
+import editor.ui.widget.ColorPicker
+import editor.ui.widget.FancyClickToFloatInput
+import editor.ui.widget.FancyClickToTextInput
+import editor.ui.widget.FancyTextInput
+import editor.ui.widget.GroupBox
+import editor.ui.widget.IconButton
+import editor.ui.widget.disabled
+import editor.util.toCompose
+import editor.util.toKorender
+import org.jetbrains.compose.resources.painterResource
+import java.awt.FileDialog
+import java.awt.Frame
+import java.io.File
+
+@Composable
+fun MaterialsDialog(holder: StateHolder): () -> Unit {
+
+    var show by remember { mutableStateOf(false) }
+    val openDialog = { show = true }
+
+    if (show) {
+        DialogWindow(
+            title = "Materials",
+            icon = painterResource(Res.drawable.material),
+            onCloseRequest = { show = false },
+            state = rememberDialogState(size = DpSize(800.dp, 630.dp))
+        ) {
+            val state by holder.state.collectAsState()
+            val model by holder.model.collectAsState()
+            val focusManager = LocalFocusManager.current
+            Row(
+                Modifier.background(Theme.background)
+                    .focusable()
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        focusManager.clearFocus()
+                    }) {
+                Column(modifier = Modifier.weight(1f).padding(8.dp)) {
+                    MaterialSelector(model, state, holder)
+                }
+                MaterialEditor(holder)
+                MaterialPreview(holder)
+            }
+        }
+    }
+    return openDialog
+}
+
+@Composable
+fun ColumnScope.MaterialSelector(model: Model, state: State, holder: StateHolder) =
+    Column(Modifier.weight(1f)) {
+        var search by remember { mutableStateOf("") }
+        val visibleMaterials by remember(model.materials.values, search, state.materialId) {
+            derivedStateOf {
+                model.materials.values.filter { it.name.contains(search) || it.id == state.materialId }
+            }
+        }
+        GroupBox("Materials") {
+            FancyTextInput(
+                modifier = Modifier.fillMaxWidth(),
+                value = search
+            ) { search = it }
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp)
+                    .weight(1f)
+            ) {
+                items(visibleMaterials.size) { i ->
+                    val material = visibleMaterials[i]
+                    MaterialWidget(material, state.materialId == material.id) {
+                        holder.selectMaterial(material)
+                    }
+                }
+            }
+        }
+    }
+
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun RowScope.MaterialEditor(holder: StateHolder) {
+    val state by holder.state.collectAsState()
+    val model by holder.model.collectAsState()
+    val material = model.materials[state.materialId]!!
+    val disabled by remember { derivedStateOf { state.materialId == Material.generic.id } }
+    Column(
+        Modifier.weight(1f).padding(8.dp)
+    ) {
+        GroupBox("Operations") {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                IconButton(Res.drawable.file, "New material") {
+                    holder.createMaterial()
+                }
+                if (state.materialId != Material.generic.id) {
+                    IconButton(Res.drawable.trash, "Delete Material") {
+                        holder.deleteMaterial()
+                    }
+                }
+            }
+        }
+        Column(
+            Modifier.weight(1f)
+                .disabled(disabled)
+        ) {
+            GroupBox("Name") {
+                FancyClickToTextInput(
+                    textModifier = Modifier.fillMaxWidth(),
+                    editorModifier = Modifier.fillMaxWidth(),
+                    value = model.materials[state.materialId]!!.name,
+                    onValueChange = {
+                        holder.updateMaterial(material.copy(name = it))
+                    }
+                )
+            }
+            GroupBox("Base color") {
+                ColorPicker(color = material.baseColor.toKorender(), disabled = disabled) {
+                    holder.updateMaterial(material.copy(baseColor = it.toCompose()))
+                }
+            }
+            if (!disabled) {
+                GroupBox("Color Texture") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = material.colorTexture?.let { File(it).name } ?: "-none-",
+                            style = Theme.label.copy(textDecoration = TextDecoration.Underline),
+                            modifier = Modifier.weight(1f).clickable {
+                                val file = textureDialog(state, holder)
+                                file?.let {
+                                    holder.updateMaterial(
+                                        material.copy(
+                                            colorTexture = file.path,
+                                            name = file.name
+                                        )
+                                    )
+                                }
+                            },
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        material.colorTexture?.let {
+                            IconButton(icon = Res.drawable.trash, "Delete texture") {
+                                holder.updateMaterial(material.copy(colorTexture = null))
+                            }
+                        }
+                    }
+                    material.colorTexture?.let {
+                        CompositionLocalProvider(
+                            LocalMinimumInteractiveComponentSize provides 0.dp
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Fit to face", style = Theme.label, modifier = Modifier.weight(1f))
+                                Checkbox(
+                                    modifier = Modifier.height(24.dp),
+                                    checked = material.fitToFace,
+                                    onCheckedChange = {
+                                        holder.updateMaterial(material.copy(fitToFace = it))
+                                    })
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Stochastic", style = Theme.label, modifier = Modifier.weight(1f))
+                                Checkbox(
+                                    modifier = Modifier.height(24.dp),
+                                    checked = material.stochastic,
+                                    onCheckedChange = {
+                                        holder.updateMaterial(material.copy(stochastic = it))
+                                    })
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Triplanar", style = Theme.label, modifier = Modifier.weight(1f))
+                                Checkbox(
+                                    modifier = Modifier.height(24.dp),
+                                    checked = material.triplanar,
+                                    onCheckedChange = {
+                                        holder.updateMaterial(material.copy(triplanar = it))
+                                    })
+                            }
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Default scale", style = Theme.label, modifier = Modifier.weight(1f))
+                            FancyClickToFloatInput(value = material.scale, validator = { it in 1e-3f..1e3f }) {
+                                holder.updateMaterial(material.copy(scale = it))
+                            }
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Metallic", style = Theme.label, modifier = Modifier.weight(1f))
+                            FancyClickToFloatInput(value = material.metallic, validator = { it in 0f..1f }) {
+                                holder.updateMaterial(material.copy(metallic = it))
+                            }
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Roughness", style = Theme.label, modifier = Modifier.weight(1f))
+                            FancyClickToFloatInput(value = material.roughness, validator = { it in 0f..1f }) {
+                                holder.updateMaterial(material.copy(roughness = it))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RowScope.MaterialPreview(holder: StateHolder) {
+    val state by holder.state.collectAsState()
+    val model by holder.model.collectAsState()
+    Box(Modifier.weight(1.6f).fillMaxSize()) {
+        Korender({ Res.readBytes(it) }, vSync = true) {
+            Frame {
+                AmbientLight(white(0.6f))
+                val mat = model.materials[state.materialId]!!
+                val fitToFaceMesh = customMesh("world", 24, 36, POS, NORMAL, TEX) {
+                    pos(Vec3(-3f, -2f, 1f)).normal(1.z).tex(Vec2(0f, 1f))
+                    pos(Vec3(3f, -2f, 1f)).normal(1.z).tex(Vec2(1f, 1f))
+                    pos(Vec3(3f, 2f, 1f)).normal(1.z).tex(Vec2(1f, 0f))
+                    pos(Vec3(-3f, 2f, 1f)).normal(1.z).tex(Vec2(0f, 0f))
+                    pos(Vec3(3f, -2f, -1f)).normal((-1).z).tex(Vec2(0f, 1f))
+                    pos(Vec3(-3f, -2f, -1f)).normal((-1).z).tex(Vec2(1f, 1f))
+                    pos(Vec3(-3f, 2f, -1f)).normal((-1).z).tex(Vec2(1f, 0f))
+                    pos(Vec3(3f, 2f, -1f)).normal((-1).z).tex(Vec2(0f, 0f))
+                    pos(Vec3(-3f, -2f, -1f)).normal((-1).x).tex(Vec2(0f, 1f))
+                    pos(Vec3(-3f, -2f, 1f)).normal((-1).x).tex(Vec2(1f, 1f))
+                    pos(Vec3(-3f, 2f, 1f)).normal((-1).x).tex(Vec2(1f, 0f))
+                    pos(Vec3(-3f, 2f, -1f)).normal((-1).x).tex(Vec2(0f, 0f))
+                    pos(Vec3(3f, -2f, 1f)).normal(1.x).tex(Vec2(0f, 1f))
+                    pos(Vec3(3f, -2f, -1f)).normal(1.x).tex(Vec2(1f, 1f))
+                    pos(Vec3(3f, 2f, -1f)).normal(1.x).tex(Vec2(1f, 0f))
+                    pos(Vec3(3f, 2f, 1f)).normal(1.x).tex(Vec2(0f, 0f))
+                    pos(Vec3(-3f, 2f, 1f)).normal(1.y).tex(Vec2(0f, 0f))
+                    pos(Vec3(3f, 2f, 1f)).normal(1.y).tex(Vec2(1f, 0f))
+                    pos(Vec3(3f, 2f, -1f)).normal(1.y).tex(Vec2(1f, 1f))
+                    pos(Vec3(-3f, 2f, -1f)).normal(1.y).tex(Vec2(0f, 1f))
+                    pos(Vec3(-3f, -2f, -1f)).normal((-1).y).tex(Vec2(0f, 0f))
+                    pos(Vec3(3f, -2f, -1f)).normal((-1).y).tex(Vec2(1f, 0f))
+                    pos(Vec3(3f, -2f, 1f)).normal((-1).y).tex(Vec2(1f, 1f))
+                    pos(Vec3(-3f, -2f, 1f)).normal((-1).y).tex(Vec2(0f, 1f))
+                    index(
+                        0, 1, 2, 0, 2, 3,
+                        4, 5, 6, 4, 6, 7,
+                        8, 9, 10, 8, 10, 11,
+                        12, 13, 14, 12, 14, 15,
+                        16, 17, 18, 16, 18, 19,
+                        20, 21, 22, 20, 22, 23
+                    )
+                }
+                val worldTexMesh = customMesh("fit", 24, 36, POS, NORMAL, TEX, dynamic = true) {
+                    val s = mat.scale
+                    pos(Vec3(-3f, -2f, 1f)).normal(1.z).tex(Vec2(-3f * s, 2f * s))
+                    pos(Vec3(3f, -2f, 1f)).normal(1.z).tex(Vec2(3f * s, 2f * s))
+                    pos(Vec3(3f, 2f, 1f)).normal(1.z).tex(Vec2(3f * s, -2f * s))
+                    pos(Vec3(-3f, 2f, 1f)).normal(1.z).tex(Vec2(-3f * s, -2f * s))
+                    pos(Vec3(3f, -2f, -1f)).normal((-1).z).tex(Vec2(-3f * s, 2f * s))
+                    pos(Vec3(-3f, -2f, -1f)).normal((-1).z).tex(Vec2(3f * s, 2f * s))
+                    pos(Vec3(-3f, 2f, -1f)).normal((-1).z).tex(Vec2(3f * s, -2f * s))
+                    pos(Vec3(3f, 2f, -1f)).normal((-1).z).tex(Vec2(-3f * s, -2f * s))
+                    pos(Vec3(-3f, -2f, -1f)).normal((-1).x).tex(Vec2(-1f * s, 2f * s))
+                    pos(Vec3(-3f, -2f, 1f)).normal((-1).x).tex(Vec2(1f * s, 2f * s))
+                    pos(Vec3(-3f, 2f, 1f)).normal((-1).x).tex(Vec2(1f * s, -2f * s))
+                    pos(Vec3(-3f, 2f, -1f)).normal((-1).x).tex(Vec2(-1f * s, -2f * s))
+                    pos(Vec3(3f, -2f, 1f)).normal(1.x).tex(Vec2(-1f * s, 2f * s))
+                    pos(Vec3(3f, -2f, -1f)).normal(1.x).tex(Vec2(1f * s, 2f * s))
+                    pos(Vec3(3f, 2f, -1f)).normal(1.x).tex(Vec2(1f * s, -2f * s))
+                    pos(Vec3(3f, 2f, 1f)).normal(1.x).tex(Vec2(-1f * s, -2f * s))
+                    pos(Vec3(-3f, 2f, 1f)).normal(1.y).tex(Vec2(-3f * s, 1f * s))
+                    pos(Vec3(3f, 2f, 1f)).normal(1.y).tex(Vec2(3f * s, 1f * s))
+                    pos(Vec3(3f, 2f, -1f)).normal(1.y).tex(Vec2(3f * s, -1f * s))
+                    pos(Vec3(-3f, 2f, -1f)).normal(1.y).tex(Vec2(-3f * s, -1f * s))
+                    pos(Vec3(-3f, -2f, -1f)).normal((-1).y).tex(Vec2(-3f * s, 1f * s))
+                    pos(Vec3(3f, -2f, -1f)).normal((-1).y).tex(Vec2(3f * s, 1f * s))
+                    pos(Vec3(3f, -2f, 1f)).normal((-1).y).tex(Vec2(3f * s, -1f * s))
+                    pos(Vec3(-3f, -2f, 1f)).normal((-1).y).tex(Vec2(-3f * s, -1f * s))
+                    index(
+                        0, 1, 2, 0, 2, 3,
+                        4, 5, 6, 4, 6, 7,
+                        8, 9, 10, 8, 10, 11,
+                        12, 13, 14, 12, 14, 15,
+                        16, 17, 18, 16, 18, 19,
+                        20, 21, 22, 20, 22, 23
+                    )
+                }
+                camera = camera(10.z, -1.z, 1.y)
+                projection = projection(width.toFloat() / height.toFloat(), 1f, 1f, 100f)
+                AmbientLight(white(0.5f))
+                DirectionalLight(Vec3(1f, -1f, -1f), white(0.5f))
+                Renderable(
+                    toBaseMM(mat, false),
+                    mesh = if (mat.fitToFace) fitToFaceMesh else worldTexMesh,
+                    transform = rotate(Quaternion.fromAxisAngle(1.y, frameInfo.time)),
+                    transparent = true
+                )
+            }
+        }
+    }
+}
+
+fun textureDialog(state: State, holder: StateHolder): File? {
+    val dialog = FileDialog(Frame(), "Select texture image", FileDialog.LOAD)
+    dialog.directory = state.persistentState.lastDir
+    dialog.isVisible = true
+    dialog.files.firstOrNull()?.let { holder.setLastTextureDir(it.parentFile) }
+    return dialog.files.firstOrNull()
+}

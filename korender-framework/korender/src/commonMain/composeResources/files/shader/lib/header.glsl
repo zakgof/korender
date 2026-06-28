@@ -6,4 +6,5 @@
     precision highp int;
     precision highp sampler2D;
     precision highp sampler2DShadow;
+    precision highp sampler2DArray;
 #endif

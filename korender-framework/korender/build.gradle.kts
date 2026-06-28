@@ -9,30 +9,68 @@ plugins {
     alias(libs.plugins.vanniktech.mavenPublish)
 }
 
+// Fix for LWJGL native resolution
+configurations.all {
+    resolutionStrategy.dependencySubstitution {
+        substitute(module("org.lwjgl:lwjgl-natives-windows")).using(module("org.lwjgl:lwjgl:3.4.1"))
+        substitute(module("org.lwjgl:lwjgl-natives-linux")).using(module("org.lwjgl:lwjgl:3.4.1"))
+        substitute(module("org.lwjgl:lwjgl-natives-macos")).using(module("org.lwjgl:lwjgl:3.4.1"))
+        substitute(module("org.lwjgl:lwjgl-natives-macos-arm64")).using(module("org.lwjgl:lwjgl:3.4.1"))
+    }
+}
+
 compose.resources {
     publicResClass = true
     packageOfResClass = "com.zakgof.korender.resources"
     generateResClass = always
 }
 
+// Generated build config
+val generatedBuildDir = layout.buildDirectory.dir("generated/kotlin/korenderBuild")
+val korenderVersion: String by project
+val korenderVersionSuffix: String by project
+val generatedKorenderVersion = korenderVersion + korenderVersionSuffix
+
+val generateKorenderBuild by tasks.registering {
+    outputs.dir(generatedBuildDir)
+    inputs.property("korenderVersion", generatedKorenderVersion)
+    doLast {
+        val pkgDir = generatedBuildDir.get().asFile.resolve("com/zakgof/korender")
+        pkgDir.mkdirs()
+        val outFile = pkgDir.resolve("KorenderBuild.kt")
+        outFile.writeText("""package com.zakgof.korender
+
+object KorenderBuild {
+    const val version: String = "${generatedKorenderVersion}"
+}
+""")
+    }
+}
+
 kotlin {
 
     jvm("desktop")
-    androidLibrary {
+
+    android {
         namespace = "com.zakgof.korender"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
+        androidResources {
+            enable = true
+        }
         packaging {
             resources {
                 excludes += "/META-INF/{AL2.0,LGPL2.1}"
             }
         }
-        androidResources.enable = true
     }
-    jvmToolchain(17)
+
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
 
     compilerOptions {
-        freeCompilerArgs.add("-Xexpect-actual-classes")
+        freeCompilerArgs.addAll("-Xexpect-actual-classes")
     }
 
     @OptIn(ExperimentalWasmDsl::class)
@@ -43,16 +81,20 @@ kotlin {
 
     sourceSets {
         val desktopMain by getting
+        val commonMain by getting {
+            kotlin.srcDir(generatedBuildDir)
+        }
 
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
-            implementation(compose.ui)
-            implementation(compose.material)
-            implementation(compose.components.resources)
+            implementation(libs.compose.ui)
+            implementation(libs.compose.material)
+            implementation(libs.compose.components.resources)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.serialization.cbor)
         }
         desktopMain.dependencies {
             implementation(libs.kotlinx.coroutines.swing)
@@ -70,10 +112,14 @@ kotlin {
                 runtimeOnly(dependencies.variantOf(libs.lwjgl.opengl) { classifier("natives-$it") })
             }
         }
-        webMain.dependencies {
+        getByName("wasmJsMain").dependencies {
             implementation(libs.kotlinx.browser)
         }
     }
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    dependsOn(generateKorenderBuild)
 }
 
 mavenPublishing {

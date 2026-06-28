@@ -4,10 +4,10 @@ import com.zakgof.korender.TouchEvent
 import com.zakgof.korender.TouchHandler
 
 internal class TouchBox(
-    private val x: Int,
-    private val y: Int,
-    private val w: Int,
-    private val h: Int,
+    private val x: Float,
+    private val y: Float,
+    private val w: Float,
+    private val h: Float,
     val id: Any?,
     private val handler: TouchHandler
 ) {

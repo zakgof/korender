@@ -8,6 +8,7 @@ in vec3 vnormal;
 in vec2 vtex;
 
 #uniform float power;
+#uniform float time;
 
 #uniforms
 

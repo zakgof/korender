@@ -16,25 +16,28 @@ fun MultipleViewportsExample() = Column(
     verticalArrangement = Arrangement.spacedBy(5.dp)
 ) {
     Box (modifier = Modifier.weight(1f)) {
-        Korender(appResourceLoader = { Res.readBytes(it) }) {
+        Korender(resourceLoader = { Res.readBytes("files/$it") }) {
             Frame {
+                TestExchange.report(frameInfo)
                 DirectionalLight(Vec3(1f, -1f, 0f))
                 Renderable(
-                    base(color = ColorRGBA.Red),
+                    base { color = ColorRGBA.Red },
                     mesh = sphere(1f)
                 )
             }
         }
     }
     Box (modifier = Modifier.weight(1f)) {
-        Korender(appResourceLoader = { Res.readBytes(it) }) {
+        Korender(resourceLoader = { Res.readBytes("files/$it") }) {
             Frame {
+                TestExchange.report(frameInfo)
                 DirectionalLight(Vec3(1f, -1f, 0f))
                 Renderable(
-                    base(color = ColorRGBA.Green),
+                    base { color = ColorRGBA.Green },
                     mesh = sphere(1f)
                 )
             }
         }
     }
 }
+

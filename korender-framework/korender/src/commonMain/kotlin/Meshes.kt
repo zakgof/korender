@@ -1,195 +1,238 @@
 package com.zakgof.korender
 
-import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.TEX
-import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 
+/**
+ * Data type for mesh indices.
+ * - Byte: 8-bit indices (0-255)
+ * - Short: 16-bit indices (0-65535)
+ * - Int: 32-bit indices (0-4294967295)
+ */
 enum class IndexType {
     Byte,
     Short,
     Int
 }
 
-enum class AttributeType {
-    Byte,
-    Short,
-    Int,
-    SignedByte,
-    SignedShort,
-    SignedInt,
-    Float
+/**
+ * Describes a custom per-vertex mesh attribute.
+ * Implementations define the attribute name and its binary size in the mesh buffer.
+ *
+ * @param T attribute value type
+ */
+interface MeshAttribute<T> {
+    val name: String
+    val structSize: Int
 }
 
-class MeshAttribute<T>(
-    val name: String,
-    val structSize: Int,
-    val primitiveType: AttributeType,
-    val location: Int,
-    val bufferAccessor: BufferAccessor<T>,
-    val instance: Boolean = false,
-)
-
-interface BufferAccessor<T> {
-    fun get(buffer: NativeByteBuffer, index: Int): T
-    fun put(buffer: NativeByteBuffer, index: Int, value: T)
-}
-
-object Vec2BufferAccessor : BufferAccessor<Vec2> {
-    override fun get(buffer: NativeByteBuffer, index: Int) =
-        Vec2(buffer.float(index * 2), buffer.float(index * 2 + 1))
-
-    override fun put(buffer: NativeByteBuffer, index: Int, value: Vec2) {
-        buffer.position(8 * index)
-        buffer.put(value.x)
-        buffer.put(value.y)
-    }
-}
-
-object Vec3BufferAccessor : BufferAccessor<Vec3> {
-    override fun get(buffer: NativeByteBuffer, index: Int) =
-        Vec3(buffer.float(index * 3), buffer.float(index * 3 + 1), buffer.float(index * 3 + 2))
-
-    override fun put(buffer: NativeByteBuffer, index: Int, value: Vec3) {
-        buffer.position(12 * index)
-        buffer.put(value.x)
-        buffer.put(value.y)
-        buffer.put(value.z)
-    }
-}
-
-object Byte4BufferAccessor : BufferAccessor<ByteArray> {
-    override fun get(buffer: NativeByteBuffer, index: Int) =
-        byteArrayOf(buffer.byte(index), buffer.byte(index + 1), buffer.byte(index + 2), buffer.byte(index + 3))
-
-    override fun put(buffer: NativeByteBuffer, index: Int, value: ByteArray) {
-        // TODO
-    }
-}
-
-object Short4BufferAccessor : BufferAccessor<ShortArray> {
-    override fun get(buffer: NativeByteBuffer, index: Int) =
-        shortArrayOf(buffer.short(index), buffer.short(index + 1), buffer.short(index + 2), buffer.short(index + 3))
-
-    override fun put(buffer: NativeByteBuffer, index: Int, value: ShortArray) {
-        // TODO
-    }
-}
-
-object Int4BufferAccessor : BufferAccessor<IntArray> {
-    override fun get(buffer: NativeByteBuffer, index: Int) =
-        intArrayOf(buffer.int(index), buffer.int(index + 1), buffer.int(index + 2), buffer.int(index + 3))
-
-    override fun put(buffer: NativeByteBuffer, index: Int, value: IntArray) {
-        // TODO
-    }
-}
-
-object Float4BufferAccessor : BufferAccessor<FloatArray> {
-    override fun get(buffer: NativeByteBuffer, index: Int) =
-        floatArrayOf(buffer.float(index), buffer.float(index + 1), buffer.float(index + 2), buffer.float(index + 3))
-
-    override fun put(buffer: NativeByteBuffer, index: Int, value: FloatArray) {
-        buffer.position(4 * 4 * index)
-        value.forEach { buffer.put(it) }
-    }
-}
-
-object FloatBufferAccessor : BufferAccessor<Float> {
-    override fun get(buffer: NativeByteBuffer, index: Int) =
-        buffer.float(index)
-
-    override fun put(buffer: NativeByteBuffer, index: Int, value: Float) {
-        buffer.position(index * 4)
-        buffer.put(value)
-    }
-}
-
-object ByteBufferAccessor : BufferAccessor<Byte> {
-    override fun get(buffer: NativeByteBuffer, index: Int) =
-        buffer.byte(index)
-
-    override fun put(buffer: NativeByteBuffer, index: Int, value: Byte) {
-        // TODO
-    }
-}
-
-object Attributes {
-    val POS = MeshAttribute("pos", 3, AttributeType.Float, 0, Vec3BufferAccessor)
-    val NORMAL = MeshAttribute("normal", 3, AttributeType.Float, 1, Vec3BufferAccessor)
-    val TEX = MeshAttribute("tex", 2, AttributeType.Float, 2, Vec2BufferAccessor)
-    val JOINTS_BYTE = MeshAttribute("joints", 4, AttributeType.Byte, 3, Byte4BufferAccessor)
-    val JOINTS_SHORT = MeshAttribute("joints", 4, AttributeType.Short, 3, Short4BufferAccessor)
-    val JOINTS_INT = MeshAttribute("joints", 4, AttributeType.Int, 3, Int4BufferAccessor)
-    val WEIGHTS = MeshAttribute("weights", 4, AttributeType.Float, 4, Float4BufferAccessor)
-    val SCALE = MeshAttribute("scale", 2, AttributeType.Float, 5, Vec2BufferAccessor)
-    val B1 = MeshAttribute("b1", 1, AttributeType.SignedByte, 8, ByteBufferAccessor)
-    val B2 = MeshAttribute("b2", 1, AttributeType.SignedByte, 9, ByteBufferAccessor)
-    val B3 = MeshAttribute("b3", 1, AttributeType.SignedByte, 10, ByteBufferAccessor)
-    val MODEL0 = MeshAttribute("instanceModel0", 4, AttributeType.Float, 11, Float4BufferAccessor, true)
-    val MODEL1 = MeshAttribute("instanceModel1", 4, AttributeType.Float, 12, Float4BufferAccessor, true)
-    val MODEL2 = MeshAttribute("instanceModel2", 4, AttributeType.Float, 13, Float4BufferAccessor, true)
-    val MODEL3 = MeshAttribute("instanceModel3", 4, AttributeType.Float, 14, Float4BufferAccessor, true)
-    val INSTPOS = MeshAttribute("instpos", 3, AttributeType.Float, 11, Vec3BufferAccessor, true)
-    val INSTSCALE = MeshAttribute("instscale", 2, AttributeType.Float, 12, Vec2BufferAccessor, true)
-    val INSTROT = MeshAttribute("instrot", 1, AttributeType.Float, 13, FloatBufferAccessor, true)
-    val INSTTEX = MeshAttribute("insttexrect", 4, AttributeType.Float, 11, Float4BufferAccessor, true)
-    val INSTSCREEN = MeshAttribute("instscreentect", 4, AttributeType.Float, 12, Float4BufferAccessor, true)
-}
-
+/**
+ * Immutable mesh declaration for use in rendering.
+ * Implementations provide geometry data for 3D objects.
+ */
 interface MeshDeclaration
 
+/**
+ * Builder interface for constructing mesh geometry.
+ * Provides a fluent API to define vertices, normals, texture coordinates, and indices.
+ */
 interface MeshInitializer {
-    fun attr(attr: MeshAttribute<*>, vararg v: Float): MeshInitializer
-    fun attr(attr: MeshAttribute<*>, vararg b: Byte): MeshInitializer
+    /**
+     * Adds custom attribute values to vertices.
+     * @param attr the mesh attribute to set
+     * @param value attribute values (one per vertex)
+     * @return this builder for chaining
+     */
+    fun <T> attr(attr: MeshAttribute<T>, vararg value: T): MeshInitializer
+
+    /**
+     * Adds vertex positions.
+     * @param position vertex positions
+     * @return this builder for chaining
+     */
     fun pos(vararg position: Vec3): MeshInitializer
-    fun pos(vararg v: Float): MeshInitializer
+
+    /**
+     * Adds vertex normals for lighting calculations.
+     * @param normal vertex normals (should be normalized)
+     * @return this builder for chaining
+     */
     fun normal(vararg normal: Vec3): MeshInitializer
-    fun normal(vararg v: Float): MeshInitializer
+
+    /**
+     * Adds texture coordinates for each vertex.
+     * @param tex texture coordinates in UV space (0.0-1.0)
+     * @return this builder for chaining
+     */
     fun tex(vararg tex: Vec2): MeshInitializer
-    fun tex(vararg v: Float): MeshInitializer
+
+    /**
+     * Adds vertex indices to define triangle topology.
+     * @param indices vertex indices (groups of 3 form triangles)
+     * @return this builder for chaining
+     */
     fun index(vararg indices: Int): MeshInitializer
+
+    /**
+     * Sets vertex indices from raw byte data.
+     * @param rawBytes raw index data in platform byte order
+     * @return this builder for chaining
+     */
     fun indexBytes(rawBytes: ByteArray): MeshInitializer
-    fun attrBytes(attr: MeshAttribute<*>, rawBytes: ByteArray): MeshInitializer
+
+    /**
+     * Sets custom attribute data from raw byte data.
+     * @param attr the mesh attribute to set
+     * @param rawBytes raw attribute data in platform byte order
+     * @return this builder for chaining
+     */
+    fun <T> attrBytes(attr: MeshAttribute<T>, rawBytes: ByteArray): MeshInitializer
+
+    /**
+     * Sets a custom attribute value for a specific vertex.
+     * @param attr the mesh attribute to set
+     * @param index vertex index (0-based)
+     * @param value attribute value for the vertex
+     * @return this builder for chaining
+     */
     fun <T> attrSet(attr: MeshAttribute<T>, index: Int, value: T): MeshInitializer
+
+    /**
+     * Embeds another mesh into this one with optional transform and color texture index mapping.
+     * Useful for combining meshes or creating complex geometries.
+     * @param prototype the mesh to embed
+     * @param transform transformation to apply to embedded mesh vertices
+     * @param colorTexIndex optional color texture index for the embedded mesh
+     */
+    fun embed(prototype: Mesh, transform: Transform = Transform.IDENTITY, colorTexIndex: Int? = null)
 }
 
+/**
+ * Immutable mesh geometry.
+ * Contains vertex data and optional triangle indices.
+ */
 interface Mesh {
 
+    val attributes: List<MeshAttribute<*>>
+
+    /**
+     * List of mesh vertices. Accessible via indices if they exist.
+     */
     val vertices: List<Vertex>
+
+    /**
+     * Optional list of triangle vertex indices.
+     * If null, vertices define triangles in order (0,1,2), (3,4,5), etc.
+     * If present, indices group vertices into triangles (in sets of 3).
+     */
     val indices: List<Int>?
 
+    /**
+     * Represents a single vertex in the mesh.
+     */
     interface Vertex {
+        /**
+         * Vertex position in local mesh space. May be null for some mesh types.
+         */
         val pos: Vec3?
+
+        /**
+         * Vertex normal for lighting calculations (should be normalized). May be null if auto-calculated.
+         */
         val normal: Vec3?
+
+        /**
+         * Texture coordinate (UV) in [0.0, 1.0] range. May be null if not texture-mapped.
+         */
         val tex: Vec2?
-        fun <T> value(attribute: MeshAttribute<T>): T?
+
+        /**
+         * Gets a custom attribute value for this vertex.
+         * @param attribute the mesh attribute to retrieve
+         * @return the attribute value or null if not set
+         */
+        operator fun <T> get(attribute: MeshAttribute<T>): T?
     }
 }
 
-class MutableMesh : Mesh {
+/**
+ * Mutable mesh geometry that can be modified after creation.
+ * Extends [Mesh] with the ability to add/modify vertices and indices.
+ */
+interface MutableMesh : Mesh {
 
-    override val vertices = mutableListOf<MutableVertex>()
-    override val indices = mutableListOf<Int>()
+    /**
+     * Mutable list of vertices. Can be directly modified.
+     */
+    override val vertices: MutableList<MutableVertex>
 
-    class MutableVertex : Mesh.Vertex {
+    /**
+     * Mutable list of triangle indices. Can be directly modified.
+     */
+    override val indices: MutableList<Int>
 
-        override var pos: Vec3? = null
-        override var normal: Vec3? = null
-        override var tex: Vec2? = null
+    /**
+     * Creates a new vertex in the mesh (initially uninitialized).
+     * Vertex must be added to vertices list manually.
+     * @return a new mutable vertex
+     */
+    fun createVertex(): MutableVertex
 
-        fun pos(p: Vec3) = apply { pos = p }
-        fun normal(n: Vec3) = apply { normal = n }
-        fun tex(t: Vec2) = apply { tex = t }
+    /**
+     * Creates and appends a new vertex to the mesh.
+     * @return the newly appended vertex (already added to vertices list)
+     */
+    fun appendVertex(): MutableVertex
 
-        @Suppress("UNCHECKED_CAST")
-        override fun <T> value(attribute: MeshAttribute<T>): T? = when (attribute) {
-            POS -> pos
-            NORMAL -> normal
-            TEX -> tex
-            else -> null
-        } as T?
+    /**
+     * Mutable vertex that can have its properties modified.
+     */
+    interface MutableVertex : Mesh.Vertex {
+
+        /**
+         * Mutable vertex position in local mesh space.
+         */
+        override var pos: Vec3?
+
+        /**
+         * Mutable vertex normal (should be normalized for lighting).
+         */
+        override var normal: Vec3?
+
+        /**
+         * Mutable texture coordinate.
+         */
+        override var tex: Vec2?
+
+        /**
+         * Sets a custom attribute value for this vertex.
+         * @param attribute the mesh attribute to set
+         * @param value the attribute value
+         */
+        operator fun <T> set(attribute: MeshAttribute<T>, value: T)
+
+        /**
+         * Builder method to set position and return this vertex.
+         * @param pos vertex position
+         * @return this vertex for chaining
+         */
+        fun pos(pos: Vec3): MutableVertex = apply { this.pos = pos }
+
+        /**
+         * Builder method to set normal and return this vertex.
+         * @param normal vertex normal
+         * @return this vertex for chaining
+         */
+        fun normal(normal: Vec3): MutableVertex = apply { this.normal = normal }
+
+        /**
+         * Builder method to set texture coordinate and return this vertex.
+         * @param tex texture coordinate
+         * @return this vertex for chaining
+         */
+        fun tex(tex: Vec2): MutableVertex = apply { this.tex = tex }
     }
 }
+
+

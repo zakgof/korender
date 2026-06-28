@@ -1,0 +1,958 @@
+package editor.state
+
+import androidx.compose.ui.input.key.Key
+import com.zakgof.korender.baker.editor.collision.BvhCompiler
+import com.zakgof.korender.baker.editor.collision.CollisionSerialModel
+import com.zakgof.korender.baker.editor.ui.selectedBrushes
+import com.zakgof.korender.baker.editor.ui.selectedEntityInstances
+import com.zakgof.korender.impl.scene.KrModel
+import com.zakgof.korender.math.Transform.Companion.scale
+import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.y
+import com.zakgof.korender.math.z
+import editor.cache.KorenderCache
+import editor.cache.TextureImageCache
+import editor.model.BoundingBox
+import editor.model.Material
+import editor.model.Model
+import editor.model.ModelDto
+import editor.model.brush.Brush
+import editor.model.brush.CreatorShape
+import editor.model.brush.Face
+import editor.model.brush.Group
+import editor.model.entity.EntityInstance
+import editor.model.entity.EntityModel
+import editor.state.State.MouseMode
+import editor.ui.dialog.collectModelPoints
+import editor.util.ModelCompiler
+import editor.util.floor2
+import editor.util.floorSig
+import editor.util.roundSane
+import editor.util.snap
+import kotlinx.collections.immutable.PersistentMap
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.cbor.Cbor
+import kotlinx.serialization.decodeFromByteArray
+import kotlinx.serialization.encodeToByteArray
+import java.io.File
+import kotlin.math.atan
+import kotlin.math.min
+import kotlin.math.tan
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+
+
+@OptIn(ExperimentalSerializationApi::class)
+class StateHolder {
+
+    private val _model = MutableStateFlow(Model())
+    private val _state = MutableStateFlow(defaultState(MouseMode.CREATOR, System.identityHashCode(_model.value), persistentState = loadPersistentState()))
+
+    val state: StateFlow<State> = _state
+    val model: StateFlow<Model> = _model
+
+    private val history = History()
+
+    private fun defaultState(mouseMode: MouseMode = MouseMode.CREATOR, modelHash: Int, savePath: String? = null, persistentState: PersistentState?) = State(
+        projectionScale = 32f,
+        gridScale = 0.5f,
+        creator = defaultCreator(grid = 0.5f),
+        mouseMode = mouseMode,
+        lastSavedModelHash = modelHash,
+        savePath = savePath,
+        persistentState = persistentState ?: PersistentState(null)
+    )
+
+    private fun defaultCreator(center: Vec3 = Vec3.ZERO, grid: Float = state.value.gridScale): BoundingBox {
+        val snappedCenter = center.snap(grid)
+        val halfSize = Vec3(3f, 1f, 2f) * grid
+        return BoundingBox(
+            snappedCenter - halfSize,
+            snappedCenter + halfSize
+        )
+    }
+
+    private fun loadPersistentState(): PersistentState? {
+        val userHome = System.getProperty("user.home")
+        val file = File("$userHome/.korender/baker.options")
+        if (file.exists()) {
+            return Cbor.decodeFromByteArray<PersistentState>(file.readBytes())
+        }
+        return null
+    }
+
+    private fun savePersistentState() {
+        val userHome = System.getProperty("user.home")
+        val file = File("$userHome/.korender/baker.options")
+        file.parentFile.mkdir()
+        val bytes = Cbor.encodeToByteArray<PersistentState>(state.value.persistentState)
+        file.writeBytes(bytes)
+    }
+
+    fun setMouseMode(newMode: MouseMode) {
+        if (newMode == MouseMode.CREATOR) {
+            resetCreator()
+        }
+        _state.update {
+            it.copy(
+                mouseMode = newMode,
+                brushSelection = setOf(),
+                entityInstanceSelection = setOf(),
+                faceSelection = setOf()
+            )
+        }
+    }
+
+    fun setGridScale(newScale: Float) = _state.update { it.copy(gridScale = newScale.coerceIn(0.1f, 10000f)) }
+
+    fun setProjectionScale(newScale: Float) {
+
+        _state.update { it.copy(projectionScale = newScale.coerceIn(0.1f, 10000f)) }
+
+        val width = min(UiState.viewSize["top"]!!.first, UiState.viewSize["top"]!!.second)
+        val cells = width / (state.value.gridScale * state.value.projectionScale)
+
+        if (cells < 5f) {
+            _state.update { it.copy(gridScale = (width / (5f * state.value.projectionScale)).roundSane()) }
+        } else if (cells > 50f) {
+            _state.update { it.copy(gridScale = (width / (50f * state.value.projectionScale)).roundSane()) }
+        }
+    }
+
+    fun setCreator(min: Vec3, max: Vec3) = _state.update {
+        it.copy(creator = BoundingBox(min, max))
+    }
+
+    fun resetCreator() = _state.update {
+        it.copy(creator = defaultCreator(state.value.viewCenter, state.value.gridScale))
+    }
+
+    fun create() {
+        val bb = state.value.creator
+        val newBrush = Brush(
+            generateBrushName(state.value.creatorShape.name),
+            bb,
+            state.value.creatorShape,
+            state.value.materialId,
+            model.value.materials[state.value.materialId]!!.fitToFace
+        )
+        pushHistory()
+        _model.update {
+            it.copy(brushes = it.brushes.put(newBrush.id, newBrush))
+        }
+        _state.update {
+            it.copy(
+                creator = defaultCreator(state.value.viewCenter),
+                brushSelection = setOf(newBrush.id),
+                entityInstanceSelection = setOf(),
+                mouseMode = MouseMode.SELECT
+            )
+        }
+    }
+
+    fun pushHistory() = history.push(model.value)
+
+    fun brushChanged(brush: Brush, pushHistory: Boolean) {
+        if (pushHistory) {
+            pushHistory()
+        }
+        _model.update {
+            it.copy(brushes = it.brushes.put(brush.id, brush))
+        }
+    }
+
+    fun setViewCenter(newCenter: Vec3) {
+        _state.update { it.copy(viewCenter = newCenter) }
+    }
+
+    fun keyDown(key: Key) {
+        _state.update { it.copy(pressedKeys = it.pressedKeys + key) }
+    }
+
+    fun keyUp(key: Key) {
+        _state.update { it.copy(pressedKeys = it.pressedKeys - key) }
+    }
+
+    fun frame(dt: Float) {
+        if (_state.value.pressedKeys.contains(Key.W)) {
+            _state.update { it.copy(camera = it.camera.forward(dt * state.value.projectionScale)) }
+        }
+        if (_state.value.pressedKeys.contains(Key.S)) {
+            _state.update { it.copy(camera = it.camera.forward(-dt * state.value.projectionScale)) }
+        }
+        if (_state.value.pressedKeys.contains(Key.A)) {
+            _state.update { it.copy(camera = it.camera.strafeRight(-dt * state.value.projectionScale)) }
+        }
+        if (_state.value.pressedKeys.contains(Key.D)) {
+            _state.update { it.copy(camera = it.camera.strafeRight(dt * state.value.projectionScale)) }
+        }
+        if (_state.value.pressedKeys.contains(Key.DirectionLeft)) {
+            _state.update { it.copy(camera = it.camera.right(-dt)) }
+        }
+        if (_state.value.pressedKeys.contains(Key.DirectionRight)) {
+            _state.update { it.copy(camera = it.camera.right(dt)) }
+        }
+        if (_state.value.pressedKeys.contains(Key.DirectionUp)) {
+            _state.update { it.copy(camera = it.camera.up(dt)) }
+        }
+        if (_state.value.pressedKeys.contains(Key.DirectionDown)) {
+            _state.update { it.copy(camera = it.camera.up(-dt)) }
+        }
+    }
+
+    fun copy() {
+        _state.update {
+            it.copy(
+                clipboardBrushes = selectedBrushes(_state.value, _model.value),
+                clipboardEntityInstances = selectedEntityInstances(_state.value, _model.value)
+            )
+        }
+    }
+
+    fun cut() {
+        val brushes = selectedBrushes(_state.value, _model.value)
+        val entityInstances = selectedEntityInstances(_state.value, _model.value)
+        pushHistory()
+        _model.update {
+            it.copy(
+                brushes = it.brushes.removeAll(state.value.brushSelection),
+                entityInstances = it.entityInstances.removeAll(state.value.entityInstanceSelection),
+            )
+        }
+        selectedEntityInstances(_state.value, _model.value)
+            .forEach { KorenderCache.remove(it) }
+        _state.update {
+            it.copy(
+                clipboardBrushes = brushes,
+                brushSelection = setOf(),
+                clipboardEntityInstances = entityInstances,
+                entityInstanceSelection = setOf()
+            )
+        }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    fun paste() {
+        if (state.value.clipboardBrushes.isEmpty() && state.value.clipboardEntityInstances.isEmpty())
+            return
+        val clipboardBoundingBox = (state.value.clipboardBrushes + state.value.clipboardEntityInstances)
+            .map { it.bb }
+            .reduce(BoundingBox::merge)
+        val offset = state.value.viewCenter - clipboardBoundingBox.center
+        val newBrushes = state.value.clipboardBrushes.mapIndexed { index, brush ->
+            brush.copy(
+                name = generateBrushName(brush.name),
+                id = Uuid.generateV7().toHexDashString(),
+                faces = brush.faces.values.map {
+                    it.copy(plane = it.plane.translate(offset))
+                }.associateBy { it.id }
+            )
+        }
+        val newEntityInstances = state.value.clipboardEntityInstances.map { entityInstance ->
+            entityInstance.copy(
+                name = generateEntityInstanceName(entityInstance.name),
+                id = Uuid.generateV7().toHexDashString(),
+                transform = entityInstance.transform.translate(offset)
+            )
+        }
+        pushHistory()
+        _model.update {
+            it.copy(
+                brushes = it.brushes.putAll(newBrushes.associateBy { nb -> nb.id }),
+                entityInstances = it.entityInstances.putAll(newEntityInstances.associateBy { nei -> nei.id })
+            )
+        }
+        _state.update {
+            it.copy(
+                brushSelection = newBrushes.map { nb -> nb.id }.toSet(),
+                entityInstanceSelection = newEntityInstances.map { nei -> nei.id }.toSet(),
+            )
+        }
+    }
+
+    fun deleteSelected() {
+        val groupIds = state.value.brushSelection.mapNotNull { model.value.brushGroups[it] }
+        pushHistory()
+        _model.update {
+            it.copy(
+                brushes = it.brushes.removeAll(state.value.brushSelection),
+                brushGroups = it.brushGroups.removeAll(state.value.brushSelection),
+                groups = it.groups.removeAll(groupIds),
+                entityInstances = it.entityInstances.removeAll(state.value.entityInstanceSelection)
+            )
+        }
+        selectedEntityInstances(_state.value, _model.value)
+            .forEach { KorenderCache.remove(it) }
+        _state.update {
+            it.copy(brushSelection = setOf(), entityInstanceSelection = setOf())
+        }
+    }
+
+    fun rotateSelectionModes() {
+        _state.update {
+            val modes = State.SelectionMode.entries
+            it.copy(selectionMode = modes[(modes.indexOf(it.selectionMode) + 1) % modes.size])
+        }
+    }
+
+    fun clearSelection() {
+        _state.update { it.copy(brushSelection = setOf(), entityInstanceSelection = setOf()) }
+    }
+
+    fun selectBrushes(brushIds: Set<String>, flip: Boolean, allGroup: Boolean) {
+        _state.update { state ->
+            val newSelection = if (flip) {
+                val s = LinkedHashSet(state.brushSelection)
+                for (brushId in brushIds) {
+                    if (brushId in state.brushSelection)
+                        s -= brushId
+                    else
+                        s += brushId
+                }
+                s
+            } else {
+                brushIds
+            }
+            val result = if (allGroup) {
+                newSelection +
+                        newSelection.mapNotNull { model.value.brushGroups[it] }
+                            .flatMap { model.value.groups[it]!!.brushIds }
+                            .toSet()
+            } else {
+                newSelection -
+                        newSelection.mapNotNull { model.value.brushGroups[it] }
+                            .map { model.value.groups[it]!!.brushIds }
+                            .filter { !newSelection.containsAll(it) }
+                            .flatten()
+                            .toSet()
+            }
+            val newEntityInstanceSelection = if (flip) state.entityInstanceSelection else setOf()
+            state.copy(brushSelection = result, entityInstanceSelection = newEntityInstanceSelection)
+        }
+    }
+
+    fun selectMaterial(material: Material) {
+        _state.update { it.copy(materialId = material.id) }
+    }
+
+    fun createMaterial() {
+        val material = Material(name = generateMaterialName())
+        addMaterial(material)
+    }
+
+    fun addMaterial(material: Material) {
+        pushHistory()
+        _model.update { it.copy(materials = it.materials.put(material.id, material)) }
+        selectMaterial(material)
+    }
+
+    fun updateMaterial(material: Material) {
+        pushHistory()
+        val oldMaterial = model.value.materials[state.value.materialId]!!
+        TextureImageCache.dispose(oldMaterial.colorTexture ?: "")
+        _model.update {
+            it.copy(materials = it.materials.put(material.id, material))
+        }
+    }
+
+    fun deleteMaterial() {
+        pushHistory()
+        val oldMaterial = model.value.materials[state.value.materialId]!!
+        TextureImageCache.dispose(oldMaterial.colorTexture ?: "")
+        // TODO : need to replace existing material references to Generic !
+        _model.update {
+            it.copy(materials = it.materials.remove(state.value.materialId))
+        }
+        _state.update {
+            it.copy(materialId = Material.generic.id)
+        }
+    }
+
+    private fun applyMaterialToFace(face: Face, material: Material): Face =
+        face.copy(
+            materialId = material.id, texturing = face.texturing.copy(
+                u = face.texturing.u.copy(scale = material.scale),
+                v = face.texturing.v.copy(scale = material.scale),
+                fitToFace = material.fitToFace
+            )
+        )
+
+    fun applyMaterialToSelection() {
+        val materialId = state.value.materialId
+        val material = model.value.materials[materialId]!!
+        when (state.value.mouseMode) {
+            MouseMode.SELECT -> modifySelectedBrushes { brush ->
+                brush.copy(faces = brush.faces.values.map {
+                    applyMaterialToFace(it, material)
+                }.associateBy { it.id })
+            }
+
+            MouseMode.FACE -> {
+                if (state.value.faceSelection.isEmpty()) {
+                    pushHistory()
+                }
+                val grouped = state.value.faceSelection.groupBy({ it.first }, { it.second })
+                val newBrushes = grouped.map { map ->
+                    val brush = model.value.brushes[map.key]!!
+                    val newFaces = map.value.map { faceId ->
+                        applyMaterialToFace(brush.faces[faceId]!!, material)
+                    }
+                    brush.copy(faces = brush.faces + newFaces.associateBy { it.id })
+                }
+                _model.update {
+                    it.copy(brushes = it.brushes.putAll(newBrushes.associateBy { it.id }))
+                }
+            }
+
+            else -> {}
+        }
+    }
+
+    fun newProject() {
+        history.clear()
+        _model.update { Model() }
+        _state.update { defaultState(State.MouseMode.CREATOR, System.identityHashCode(_model.value), persistentState = state.value.persistentState) }
+    }
+
+    @OptIn(ExperimentalSerializationApi::class)
+    fun loadProject(file: File) {
+        history.clear()
+        val bytes = file.readBytes()
+        val modelDto: ModelDto = Cbor.decodeFromByteArray(bytes)
+        _model.update { modelDto.toModel() }
+        val newRecentProjects = addToRecentProjects(state.value.persistentState.recentProjects, file.path)
+        _state.update { defaultState(MouseMode.SELECT, System.identityHashCode(_model.value), savePath = file.path, persistentState = state.value.persistentState.copy(lastDir = file.parentFile.path, recentProjects = newRecentProjects)) }
+        resetViews()
+        savePersistentState()
+    }
+
+    @OptIn(ExperimentalSerializationApi::class)
+    fun saveProject(file: File) {
+        val bytes = Cbor.encodeToByteArray(ModelDto(model.value))
+        file.writeBytes(bytes)
+        val newRecentProjects = addToRecentProjects(state.value.persistentState.recentProjects, file.path)
+        _state.update {
+            it.copy(
+                savePath = file.path,
+                lastSavedModelHash = System.identityHashCode(model.value),
+                persistentState = it.persistentState.copy(lastDir = file.parentFile.path, recentProjects = newRecentProjects)
+            )
+        }
+        savePersistentState()
+    }
+
+    private fun addToRecentProjects(current: List<String>, newProject: String): List<String> {
+        val updated = (listOf(newProject) + current.filter { it != newProject }).take(10)
+        return updated
+    }
+
+    fun applyTexturingUScaleToSelection(uScale: Float) {
+        pushHistory()
+        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.values.map { it.copy(texturing = it.texturing.copy(u = it.texturing.u.copy(scale = uScale))) }.associateBy { it.id }) }
+    }
+
+    fun applyTexturingUOffsetToSelection(uOffset: Float) {
+        pushHistory()
+        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.values.map { it.copy(texturing = it.texturing.copy(u = it.texturing.u.copy(offset = uOffset))) }.associateBy { it.id }) }
+    }
+
+    fun applyTexturingVScaleToSelection(vScale: Float) {
+        pushHistory()
+        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.values.map { it.copy(texturing = it.texturing.copy(v = it.texturing.v.copy(scale = vScale))) }.associateBy { it.id }) }
+    }
+
+    fun applyTexturingVOffsetToSelection(vOffset: Float) {
+        pushHistory()
+        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.values.map { it.copy(texturing = it.texturing.copy(v = it.texturing.v.copy(offset = vOffset))) }.associateBy { it.id }) }
+    }
+
+    fun applyTexturingFitToFaceToSelection(newValue: Boolean) {
+        pushHistory()
+        modifySelectedBrushes { brush -> brush.copy(faces = brush.faces.values.map { it.copy(texturing = it.texturing.copy(fitToFace = newValue)) }.associateBy { it.id }) }
+    }
+
+    fun setLastTextureDir(dir: File) {
+        _state.update { it.copy(persistentState = it.persistentState.copy(lastDir = dir.path)) }
+        savePersistentState()
+    }
+
+    fun zoomOnSelection() {
+        if (state.value.brushSelection.isNotEmpty()) {
+            val bb = selectedBrushes(_state.value, _model.value)
+                .map { it.bb }
+                .reduce(BoundingBox::merge)
+
+            _state.update { it.copy(viewCenter = bb.center) }
+            // TODO: zoom too ?
+        }
+    }
+
+    fun selectViaRay(cam: Vec3, look: Vec3, flip: Boolean) {
+        if (state.value.mouseMode == MouseMode.FACE) {
+            val face = model.value.brushes.values
+                .mapNotNull { brush -> brush.intersectRayBrush(cam, look)?.let { brush.id to it.first.id to it.second } }
+                .minByOrNull { it.second dot look }
+                ?.first
+            val newSelection = face?.let {
+                if (flip) {
+                    if (state.value.faceSelection.contains(face)) {
+                        state.value.faceSelection - face
+                    } else {
+                        state.value.faceSelection + face
+                    }
+                } else {
+                    setOf(face)
+                }
+            } ?: setOf<Pair<String, String>>()
+            _state.update { it.copy(faceSelection = newSelection) }
+        } else {
+            val brush = model.value.brushes.values
+                .mapNotNull { brush -> brush.intersectRayBrush(state.value.camera.position, look)?.let { brush to it.second } }
+                .minByOrNull { it.second.distanceTo(state.value.camera.position) }
+                ?.first
+            brush?.let {
+                selectBrushes(setOf(brush.id), flip, true)
+            } ?: clearSelection()
+        }
+    }
+
+    fun carve(): Boolean {
+        val by = selectedBrushes(_state.value, _model.value)
+        val target = model.value.brushes.values - by
+        val carving = Brush.carve(target, by, state.value.materialId, model.value.materials[state.value.materialId]!!.fitToFace)
+
+        if (carving.isEmpty())
+            return false
+
+        var brushes = model.value.brushes
+        var groups = model.value.groups
+        var brushGroups = model.value.brushGroups
+
+        carving.forEach { (old, new) ->
+            val newBrushIds = new.map { it.id }.toSet()
+            brushes = brushes.putAll(new.associateBy { it.id }).remove(old.id)
+            val oldGroupId = brushGroups[old.id]
+            if (oldGroupId != null) {
+                val oldGroup = groups[oldGroupId]!!
+                groups = groups.put(oldGroupId, oldGroup.copy(brushIds = oldGroup.brushIds + newBrushIds - old.id))
+                brushGroups = brushGroups.putAll(newBrushIds.associateWith { oldGroupId }).remove(old.id)
+            } else {
+                val newGroup = Group(old.name, newBrushIds)
+                groups = groups.put(newGroup.id, newGroup)
+                brushGroups = brushGroups.putAll(newBrushIds.associateWith { newGroup.id })
+            }
+        }
+        pushHistory()
+        _model.update {
+            it.copy(
+                brushes = brushes,
+                groups = groups,
+                brushGroups = brushGroups
+            )
+        }
+        return true
+    }
+
+
+    private fun modifySelectedBrushes(mutator: (Brush) -> Brush) {
+        val selection = state.value.brushSelection
+        if (selection.isEmpty())
+            return
+        pushHistory()
+        _model.update { model ->
+            var brushes = model.brushes
+            model.brushes.forEach { (id, brush) ->
+                if (id in selection) brushes = brushes.put(id, mutator(brush))
+            }
+            model.copy(brushes = brushes)
+        }
+    }
+
+    private fun generateMaterialName(): String {
+        val existing = model.value.materials.values.map { it.name }
+            .filter { it.startsWith("Material") }
+            .toSet()
+        var i = 0
+        while ("Material $i" in existing) {
+            i++
+        }
+        return "Material $i"
+    }
+
+    private fun generateEntityInstanceName(name: String) =
+        generateUniqueName(name, model.value.entityInstances.values.map { it.name })
+
+    private fun generateBrushName(name: String) =
+        generateUniqueName(name, model.value.brushes.values.map { it.name })
+
+    private fun generateUniqueName(name: String, allExisting: List<String>): String {
+        val parts = Regex("^(.*?) (\\d+)$").matchEntire(name)?.groupValues
+        val base = parts?.get(1) ?: name
+        val num = parts?.get(2)?.toInt() ?: 0
+
+        val existing = allExisting
+            .filter { it.startsWith(base) }
+            .toSet()
+        var i = num
+        while ("$base $i" in existing) {
+            i++
+        }
+        return "$base $i"
+    }
+
+    suspend fun dryRun(): Pair<KrModel, ByteArray> {
+        return ModelCompiler.compile(model.value) to Cbor.encodeToByteArray(CollisionSerialModel.BvhNode(BvhCompiler.compile(model.value.brushes.values)))
+    }
+
+    fun selectAll() {
+        _state.update { it.copy(brushSelection = model.value.brushes.keys) }
+    }
+
+    fun setCamera(position: Vec3, direction: Vec3, up: Vec3) {
+        _state.update { it.copy(camera = State.Camera(position, direction, up)) }
+    }
+
+    fun resetViews() {
+
+        if (model.value.brushes.isEmpty()) {
+            _state.update {
+                it.copy(
+                    projectionScale = defaultState(State.MouseMode.SELECT, System.identityHashCode(_model.value), persistentState = state.value.persistentState).projectionScale,
+                    viewCenter = Vec3.ZERO
+                )
+            }
+
+        } else {
+
+            val bb = model.value.brushes.values
+                .map { it.bb }
+                .reduce(BoundingBox::merge)
+
+
+            val widthX = min(UiState.viewSize["top"]!!.first, UiState.viewSize["front"]!!.first)
+            val widthY = min(UiState.viewSize["left"]!!.second, UiState.viewSize["front"]!!.second)
+            val widthZ = min(UiState.viewSize["left"]!!.first, UiState.viewSize["top"]!!.second)
+
+            val minX = widthX / bb.size.x
+            val minY = widthY / bb.size.y
+            val minZ = widthZ / bb.size.z
+
+            val scale = (minOf(minX, minY, minZ) * 0.9f).floorSig(2)
+            val grid = (minOf(widthX, widthY, widthZ) / (30f * scale)).floor2()
+
+            val aspect = UiState.viewSize["korender"]!!.first / UiState.viewSize["korender"]!!.second
+            val fovY = 2f * atan(5f * 0.5f / 10f)
+
+            val dY = (bb.size.y * 0.5f) / tan(fovY * 0.5f)
+            val dX = (bb.size.x * 0.5f) / (tan(fovY * 0.5f) * aspect)
+            val distance = maxOf(dX, dY, bb.max.z - bb.center.z + 10f)
+
+            val cameraPos = bb.center + distance.z
+
+            _state.update {
+                it.copy(
+                    projectionScale = scale,
+                    gridScale = grid,
+                    viewCenter = bb.center,
+                    camera = State.Camera(cameraPos, -1.z, 1.y)
+                )
+            }
+        }
+
+    }
+
+    fun viewResized(name: String, width: Int, height: Int) {
+        UiState.viewSize[name] = width to height
+    }
+
+    fun groupSelection() {
+        val brushIds = state.value.brushSelection
+        val existingGroupsIds = brushIds.mapNotNull { model.value.brushGroups[it] }
+            .toSet()
+        val existingGroupBrushIds = existingGroupsIds.mapNotNull { model.value.groups[it] }
+            .flatMap { it.brushIds }
+            .toSet()
+        val newGroup = Group("Group", brushIds)
+        val newBrushGroupMappings = brushIds.associateWith { newGroup.id }
+        pushHistory()
+        _model.update {
+            it.copy(
+                groups = it.groups.removeAll(existingGroupsIds).put(newGroup.id, newGroup),
+                brushGroups = it.brushGroups.removeAll(existingGroupBrushIds).putAll(newBrushGroupMappings)
+            )
+        }
+    }
+
+    fun ungroupSelection() {
+        val brushIds = state.value.brushSelection
+        val groupsIds = brushIds.mapNotNull { model.value.brushGroups[it] }
+        pushHistory()
+        _model.update {
+            it.copy(
+                groups = it.groups.removeAll(groupsIds),
+                brushGroups = it.brushGroups.removeAll(brushIds)
+            )
+        }
+    }
+
+    fun renameGroup(groupId: String, newName: String) {
+        pushHistory()
+        _model.update { it.copy(groups = it.groups.put(groupId, it.groups[groupId]!!.copy(name = newName))) }
+    }
+
+    fun hideSelection() {
+        pushHistory()
+        _model.update { it.copy(invisibleBrushes = it.invisibleBrushes + state.value.brushSelection) }
+        clearSelection()
+    }
+
+    fun unhideSelection() {
+        pushHistory()
+        _model.update { it.copy(invisibleBrushes = it.invisibleBrushes - state.value.brushSelection) }
+    }
+
+    fun compileToFile(path: String) {
+        CoroutineScope(Dispatchers.Default).launch {
+            val sceneModel = ModelCompiler.compile(model.value)
+            withContext(Dispatchers.Main) {
+                val bytes = Cbor.encodeToByteArray(sceneModel)
+                File(path).writeBytes(bytes)
+            }
+        }
+    }
+
+    fun setCreatorShape(shape: CreatorShape) {
+        _state.update { it.copy(creatorShape = shape, mouseMode = MouseMode.CREATOR) }
+    }
+
+    fun canUndo() = history.canUndo()
+
+    fun canRedo() = history.canRedo()
+
+    fun undo() {
+        history.undo()?.let { prev -> _model.update { prev } }
+        clearSelection()
+        if (!model.value.materials.keys.contains(state.value.materialId)) {
+            selectMaterial(Material.generic)
+        }
+    }
+
+    fun redo() {
+        history.redo()?.let { next -> _model.update { next } }
+        clearSelection()
+        if (!model.value.materials.keys.contains(state.value.materialId)) {
+            selectMaterial(Material.generic)
+        }
+    }
+
+    fun selectEntityModel(entityModel: EntityModel?) {
+        _state.update { it.copy(entityModelId = entityModel?.id) }
+    }
+
+    fun updateEntityModelName(entityModel: EntityModel, newName: String) {
+        pushHistory()
+        _model.update {
+            it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel.copy(name = newName)))
+        }
+    }
+
+    fun updateEntityModelKeepProportions(entityModel: EntityModel, keepProportions: Boolean) {
+        pushHistory()
+        _model.update {
+            it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel.copy(keepProportions = keepProportions)))
+        }
+    }
+
+    fun updateEntityModelScale(entityModel: EntityModel, newScale: Float) {
+        pushHistory()
+        _model.update {
+            it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel.copy(defaultScale = newScale)))
+        }
+    }
+
+    fun createEntityInstance() {
+        pushHistory()
+        val entityModel = model.value.entityModels[state.value.entityModelId]!!
+        val transform = scale(entityModel.defaultScale).translate(state.value.viewCenter)
+        val instance = EntityInstance(generateEntityInstanceName(entityModel.name), entityModel, transform)
+        _model.update {
+            it.copy(entityInstances = it.entityInstances.put(instance.id, instance))
+        }
+        _state.update {
+            it.copy(mouseMode = MouseMode.SELECT)
+        }
+        selectEntityInstances(setOf(instance.id))
+    }
+
+    private fun selectEntityInstances(entityInstanceIds: Set<String>) {
+        _state.update {
+            it.copy(brushSelection = setOf(), entityInstanceSelection = entityInstanceIds)
+        }
+    }
+
+    fun selectEntityInstance(entityInstanceIds: Set<String>, flip: Boolean) {
+        _state.update { state ->
+            val newSelection = if (flip) {
+                val s = LinkedHashSet(state.entityInstanceSelection)
+                for (entityInstanceId in entityInstanceIds) {
+                    if (entityInstanceId in state.entityInstanceSelection)
+                        s -= entityInstanceId
+                    else
+                        s += entityInstanceId
+                }
+                s
+            } else {
+                entityInstanceIds
+            }
+            val newBrushSelection = if (flip) state.brushSelection else setOf()
+            state.copy(entityInstanceSelection = newSelection, brushSelection = newBrushSelection)
+        }
+    }
+
+    fun translateEntityInstance(instance: EntityInstance, offset: Vec3, pushHistory: Boolean) {
+        if (pushHistory) {
+            pushHistory()
+        }
+        val newInstance = instance.copy(transform = instance.transform.translate(offset))
+        _model.update {
+            it.copy(entityInstances = it.entityInstances.put(instance.id, newInstance))
+        }
+    }
+
+    fun renameEntityInstance(instance: EntityInstance, newName: String) {
+        pushHistory()
+        _model.update {
+            it.copy(entityInstances = it.entityInstances.put(instance.id, instance.copy(name = newName)))
+        }
+    }
+
+    fun scaleEntityInstance(instance: EntityInstance, oldBB: BoundingBox, newBB: BoundingBox, pushHistory: Boolean) {
+        if (pushHistory) {
+            pushHistory()
+        }
+
+        val requestedScale = newBB.size divpercomp oldBB.size
+
+        val scale = fixScale(requestedScale, instance.modelId)
+        val translate = newBB.center - (oldBB.center multpercomp scale)
+        val newInstance = instance.copy(transform = instance.transform.scale(scale.x, scale.y, scale.z).translate(translate))
+        _model.update {
+            it.copy(entityInstances = it.entityInstances.put(instance.id, newInstance))
+        }
+    }
+
+    fun rotateEntityInstance(instance: EntityInstance, center: Vec3, axis: Vec3, angle: Float, pushHistory: Boolean) {
+        if (pushHistory) {
+            pushHistory()
+        }
+        KorenderCache.remove(instance)
+        val transform = instance.transform.rotate(center, axis, angle)
+        val newInstance = instance.copy(transform = transform)
+        _model.update {
+            it.copy(entityInstances = it.entityInstances.put(instance.id, newInstance))
+        }
+    }
+
+    fun deleteEntityModel() {
+        if (state.value.entityModelId != null) {
+            pushHistory()
+            val entityInstancesToRemove = model.value.entityInstances.entries
+                .filter { ei -> ei.value.modelId == state.value.entityModelId }
+                .map { it.key }
+                .toSet()
+            KorenderCache.remove(model.value.entityModels[state.value.entityModelId]!!)
+            _model.update {
+                it.copy(
+                    entityInstances = it.entityInstances.removeAll(entityInstancesToRemove),
+                    entityModels = it.entityModels.remove(state.value.entityModelId!!)
+                )
+            }
+            _state.update {
+                it.copy(
+                    entityModelId = null,
+                    entityInstanceSelection = it.entityInstanceSelection - entityInstancesToRemove
+                )
+            }
+        }
+    }
+
+    suspend fun createEntityModel(name: String, filename: String): EntityModel {
+        val pts = collectModelPoints(KorenderCache.entityModelInfo(filename))
+        val entityModel = EntityModel(name, filename, pts)
+        withContext(Dispatchers.Main) {
+            pushHistory()
+            _model.update { it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel)) }
+            selectEntityModel(entityModel)
+        }
+        return entityModel
+    }
+
+    fun moveSelection(offset: Vec3, pushHistory: Boolean) {
+        if (pushHistory) {
+            pushHistory()
+        }
+        val newBrushes = selectedBrushes(_state.value, _model.value)
+            .map { it.translate(offset) }.associateBy { it.id }
+        val newEntityInstances = selectedEntityInstances(_state.value, _model.value)
+            .map { it.copy(transform = it.transform.translate(offset)) }.associateBy { it.id }
+        _model.update {
+            it.copy(
+                brushes = it.brushes.putAll(newBrushes),
+                entityInstances = it.entityInstances.putAll(newEntityInstances)
+            )
+        }
+    }
+
+    private fun fixScale(requestedScale: Vec3, modelId: String): Vec3 {
+        val keepProportions = model.value.entityModels[modelId]!!.keepProportions
+        return if (keepProportions) {
+            val max = maxOf(requestedScale.x, requestedScale.y, requestedScale.z)
+            Vec3(max, max, max)
+        } else {
+            requestedScale
+        }
+    }
+
+    fun scaleSelection(oldBB: BoundingBox, newBB: BoundingBox) {
+        pushHistory()
+        val newBrushes = selectedBrushes(_state.value, _model.value)
+            .map { it.scale(oldBB, newBB) }.associateBy { it.id }
+        val requestedScale = newBB.size divpercomp oldBB.size
+        val translate = newBB.center - (oldBB.center multpercomp requestedScale)
+        val newEntityInstances = selectedEntityInstances(_state.value, _model.value)
+            .map {
+                val scale = fixScale(requestedScale, it.modelId)
+                it.copy(transform = it.transform.scale(scale.x, scale.y, scale.z).translate(translate))
+            }.associateBy { it.id }
+        _model.update {
+            it.copy(
+                brushes = it.brushes.putAll(newBrushes),
+                entityInstances = it.entityInstances.putAll(newEntityInstances)
+            )
+        }
+    }
+}
+
+fun <K, V> PersistentMap<K, V>.removeAll(keys: Collection<K>): PersistentMap<K, V> {
+    var res = this
+    keys.forEach {
+        res = res.remove(it)
+    }
+    return res
+}
+
+fun <K, V> PersistentMap<K, V>.remove(condition: (V) -> Boolean): PersistentMap<K, V> {
+    var res = this
+    this.entries.filter { condition(it.value) }
+        .forEach {
+            res = res.remove(it.key)
+        }
+    return res
+}

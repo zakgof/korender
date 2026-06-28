@@ -1,25 +1,22 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.Attributes.MODEL0
-import com.zakgof.korender.Attributes.MODEL1
-import com.zakgof.korender.Attributes.MODEL2
-import com.zakgof.korender.Attributes.MODEL3
-import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.SCALE
-import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.MeshInitializer
-import com.zakgof.korender.RetentionPolicy
-import com.zakgof.korender.context.PipeMeshContext
-import com.zakgof.korender.impl.context.DefaultPipeMeshContext
+import com.zakgof.korender.scope.PipeMeshScope
+import com.zakgof.korender.impl.context.DefaultPipeMeshScope
+import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.context.PipeNode
 import com.zakgof.korender.impl.geometry.CustomMesh
+import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
+import com.zakgof.korender.impl.geometry.MeshAttributes.POS
+import com.zakgof.korender.impl.geometry.MeshAttributes.SCALE
+import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import kotlin.math.sqrt
 
-internal fun createPipeMesh(id: String, segments: Int, dynamic: Boolean, retentionPolicy: RetentionPolicy, block: PipeMeshContext.() -> Unit) =
-    CustomMesh(id, segments * 4, segments * 6, listOf(POS, NORMAL, TEX, SCALE, MODEL0, MODEL1, MODEL2, MODEL3), dynamic, indexType = null, retentionPolicy) {
-        val pipeMeshContext = DefaultPipeMeshContext()
+internal fun createPipeMesh(id: String, segments: Int, dynamic: Boolean, nodeContext: NodeContext, block: PipeMeshScope.() -> Unit) =
+    CustomMesh(id, segments * 4, segments * 6, listOf(POS, NORMAL, TEX, SCALE), dynamic, indexType = null, nodeContext) {
+        val pipeMeshContext = DefaultPipeMeshScope()
         block.invoke(pipeMeshContext)
         var segmentIndex = 0
         pipeMeshContext.sequences.forEach { sequence ->
@@ -46,10 +43,10 @@ private fun MeshInitializer.pipeSegment(prevNode: PipeNode?, node: PipeNode, nex
     val start = if (prevNode == null) node.position else jointPipes1(prevNode.position, node.position, nextNode.position, node.radius)
     val end = if (nextNextNode == null) nextNode.position else jointPipes2(node.position, nextNode.position, nextNextNode.position, nextNode.radius)
     val t = end - start
-    pos(start).normal(t).tex(0f, 0f).attr(SCALE, node.radius, nextNode.radius)
-    pos(start).normal(t).tex(1f, 0f).attr(SCALE, node.radius, nextNode.radius)
-    pos(start).normal(t).tex(1f, 1f).attr(SCALE, node.radius, nextNode.radius)
-    pos(start).normal(t).tex(0f, 1f).attr(SCALE, node.radius, nextNode.radius)
+    pos(start).normal(t).tex(Vec2(0f, 0f)).attr(SCALE, Vec2(node.radius, nextNode.radius))
+    pos(start).normal(t).tex(Vec2(1f, 0f)).attr(SCALE, Vec2(node.radius, nextNode.radius))
+    pos(start).normal(t).tex(Vec2(1f, 1f)).attr(SCALE, Vec2(node.radius, nextNode.radius))
+    pos(start).normal(t).tex(Vec2(0f, 1f)).attr(SCALE, Vec2(node.radius, nextNode.radius))
     index(segmentIndex * 4 + 0, segmentIndex * 4 + 1, segmentIndex * 4 + 2, segmentIndex * 4 + 0, segmentIndex * 4 + 2, segmentIndex * 4 + 3)
 }
 

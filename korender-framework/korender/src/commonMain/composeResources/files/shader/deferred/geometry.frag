@@ -8,6 +8,12 @@ in vec2 vtex;
 #ifdef VERTEX_COLOR
     in vec4 vcolor;
 #endif
+#ifdef VERTEX_METALLIC
+    in float vmetallic;
+#endif
+#ifdef VERTEX_ROUGHNESS
+    in float vroughness;
+#endif
 #ifdef VERTEX_OCCLUSION
     in float vocclusion;
 #endif
@@ -39,8 +45,13 @@ vec3 color;
 #import "$position"
 #endif
 
-#ifdef PLUGIN_TEXTURING
-#import "$texturing"
+#ifdef PLUGIN_TEXSOURCE
+    #import "$texsource"
+    #ifndef PLUGIN_TEXTURING
+        #import "!shader/plugin/texturing.default.frag"
+    #else
+        #import "$texturing"
+    #endif
 #endif
 
 #ifdef PLUGIN_ALBEDO
@@ -89,18 +100,14 @@ void main() {
         position = vpos;
     #endif
 
-    #ifdef PLUGIN_TEXTURING
-        albedo *= pluginTexturing();
-    #else
-        #ifdef BASE_COLOR_MAP
-            albedo *= texture(baseColorTexture, vtex);
-        #endif
-    #endif
-
     #ifdef PLUGIN_NORMAL
         normal = pluginNormal();
     #else
         normal = normalize(vnormal);
+    #endif
+
+    #ifdef PLUGIN_TEXSOURCE
+        albedo *= pluginTexturing();
     #endif
 
     #ifdef PLUGIN_ALBEDO
@@ -137,6 +144,14 @@ void main() {
             albedo.rgb = sg.rgb;
         }
         roughness = 1. - sg.a;
+    #endif
+
+    #ifdef VERTEX_METALLIC
+        metallic = vmetallic;
+    #endif
+
+    #ifdef VERTEX_ROUGHNESS
+        roughness = vroughness;
     #endif
 
     occlusion = 1.;

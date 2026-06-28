@@ -1,54 +1,65 @@
 # Environment mapping
 
-Korender supports environment mapping (via cube maps).
-When enabled, rendered objects incorporate distant lighting from the environment map, following Korender’s physically-based rendering (PBR) model for realistic illumination.
+Korender supports environment mapping (via cube maps or sky materials).
+When enabled, rendered objects incorporate distant lighting from the environment map, following Korender's physically-based rendering (PBR) model for realistic illumination.
 
 ## Cube map creation
-There a several ways to create a cube map:
 
-- from 6 textures images:
+There are several ways to create a cube map:
 
-````kotlin
+- from 6 texture image files:
+
+```kotlin
 Frame {
-    val cubeMap = cubeTexture("env", mapOf(
-        NX to "textures/env-nx.jpg",
-        NY to "textures/env-ny.jpg",
-        NZ to "textures/env-nz.jpg",
-        PX to "textures/env-px.jpg",
-        PY to "textures/env-py.jpg",
-        PZ to "textures/env-pz.jpg"
+    val cubeMap = cubeTexture(mapOf(
+        CubeTextureSide.NX to "textures/env-nx.jpg",
+        CubeTextureSide.NY to "textures/env-ny.jpg",
+        CubeTextureSide.NZ to "textures/env-nz.jpg",
+        CubeTextureSide.PX to "textures/env-px.jpg",
+        CubeTextureSide.PY to "textures/env-py.jpg",
+        CubeTextureSide.PZ to "textures/env-pz.jpg"
     ))
-````
+}
+```
 
 - capture env probe from a scene:
 
-````kotlin
+```kotlin
 Frame {
     CaptureEnv("probe1", 1024) {
         // Render capture scene here
     }
     val cubeMap = cubeTextureProbe("probe1")
-````
+}
+```
 
 ## Environment rendering
 
-To render an object with environment mapping, add the `ibl` material modifier to a `Renderable` declaration:
+To render an object with environment mapping, set the `env` property in a material block. The `env` property accepts any `SkyMaterial` — use `cubeSky(cubeMap)` to wrap a cube texture:
 
-````kotlin
+```kotlin
 Frame {
     val cubeMap = ...
     Renderable(
-        base(...),
-        ibl(cubeMap),
-````
+        material = base {
+            color = ColorRGBA.White
+            env = cubeSky(cubeMap)
+        },
+        mesh = sphere()
+    )
+}
+```
 
-It's also possible to use a sky material modifier as the ibl source:
+It's also possible to use a procedural sky material as the env source:
 
-````kotlin
+```kotlin
 Frame {
     Renderable(
-        base(...),
-        ibl(fastCloudSky()),
-````
-
-
+        material = base {
+            color = ColorRGBA.White
+            env = fastCloudSky()
+        },
+        mesh = sphere()
+    )
+}
+```

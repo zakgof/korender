@@ -1,14 +1,17 @@
 package com.zakgof.korender.impl.material
 
+import androidx.compose.runtime.CompositionServices
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Platform
 import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.engine.ShaderDeclaration
+import com.zakgof.korender.impl.engine.ShaderServices
 import com.zakgof.korender.impl.gl.GL.shaderEnv
 import com.zakgof.korender.impl.glgpu.GlGpuShader
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
+import com.zakgof.korender.impl.load
 
 internal fun <T> MutableList<T>.peek(): T = this.last()
 internal fun <T> MutableList<T>.pop(): T = this.removeAt(this.size - 1)
@@ -18,14 +21,14 @@ private class Line(val text: String, val originFile: String, val originLine: Int
 
 internal object Shaders {
 
-    fun create(declaration: ShaderDeclaration, loader: Loader, zeroTex: GlGpuTexture, zeroShadowTex: GlGpuTexture, uniformBufferHolder: UniformBufferHolder): GlGpuShader? =
-        loader.syncy(declaration) { load(declaration, it) }?.let {
-            GlGpuShader(it.title, it.vertCode, it.fragCode, it.vertDebugInfo, it.fragDebugInfo, zeroTex, zeroShadowTex, uniformBufferHolder)
+    fun create(shaderServices: ShaderServices, declaration: ShaderDeclaration, loader: Loader, resourceLoader: ResourceLoader): GlGpuShader? =
+        loader.syncy(declaration, resourceLoader) { load(shaderServices.shaderPluginRegistry, declaration, it) }?.let {
+            GlGpuShader(it.title, it.vertCode, it.fragCode, it.vertDebugInfo, it.fragDebugInfo, declaration.uniformPack, shaderServices)
         }
 
-    private suspend fun load(declaration: ShaderDeclaration, appResourceLoader: ResourceLoader): ShaderData {
-        val defs = declaration.defs + shaderEnv + declaration.plugins.keys.map { "PLUGIN_" + it.uppercase() }
-        val shaderBaker = ShaderBaker(defs, declaration.plugins, appResourceLoader)
+    private suspend fun load(shaderPluginRegistry: ShaderPluginRegistry, declaration: ShaderDeclaration, appResourceLoader: ResourceLoader): ShaderData {
+        val (defs, plugins) = shaderPluginRegistry.decode(declaration, shaderEnv)
+        val shaderBaker = ShaderBaker(defs, plugins, appResourceLoader)
         return shaderBaker.load(declaration.vertFile, declaration.fragFile)
     }
 
@@ -48,7 +51,7 @@ internal object Shaders {
             val vertDebugInfo: (String) -> String = { debugInfo(it, vertLines) }
             val fragDebugInfo: (String) -> String = { debugInfo(it, fragLines) }
 
-            return ShaderData("${vertFile}:${fragFile} $defs", vertCode, fragCode, vertDebugInfo, fragDebugInfo)
+            return ShaderData("${vertFile}:${fragFile} $defs $plugins", vertCode, fragCode, vertDebugInfo, fragDebugInfo)
         }
 
         private fun buildUniformBlock(): List<String> {
@@ -87,7 +90,7 @@ internal object Shaders {
                 ?.let {
                     val row = it.groups[2]!!.value.toInt()
                     val offset = when (Platform.target) {
-                        KorenderContext.TargetPlatform.Desktop -> 2
+                        KorenderScope.TargetPlatform.Desktop -> 2
                         else -> 1
                     }
                     val entry = lines[row - offset]
@@ -100,7 +103,7 @@ internal object Shaders {
             private val includedFnames = mutableSetOf<String>()
 
             suspend fun preprocessFile(fname: String): MutableList<Line> {
-                val content = appResourceLoader(fname).decodeToString()
+                val content = appResourceLoader.load(fname).decodeToString()
                 return preprocess(content, fname)
             }
 
@@ -121,7 +124,7 @@ internal object Shaders {
                 outputLines: MutableList<Line>,
                 lineText: String,
                 originFile: String,
-                originLine: Int
+                originLine: Int,
             ) {
                 val ifdefMatcher = Regex("#ifdef (.+)").find(lineText)
                 if (ifdefMatcher != null) {

@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.impl.gl.GL
 import com.zakgof.korender.impl.gl.GL.glBindFramebuffer
 import com.zakgof.korender.impl.gl.GL.glBindTexture
 import com.zakgof.korender.impl.gl.GL.glCheckFramebufferStatus
@@ -14,6 +15,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_ATTACHMENT0
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_ATTACHMENT
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER_COMPLETE
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE0
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_CUBE_MAP
 import com.zakgof.korender.impl.gl.GLFrameBuffer
 
@@ -40,7 +42,7 @@ internal class GlGpuCubeFrameBuffer(
         depthTexture = if (useDepthBuffer) {
             GlGpuCubeTexture(width, height, GlGpuTexture.Preset.Depth).apply {
                 sides.forEach {
-                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, it, glHandle,0)
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, it, glHandle, 0)
                 }
             }
         } else
@@ -76,6 +78,7 @@ internal class GlGpuCubeFrameBuffer(
     }
 
     fun finish() {
+        GL.glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_CUBE_MAP, colorTexture.glHandle)
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP)
         glBindTexture(GL_TEXTURE_CUBE_MAP, null)
@@ -83,4 +86,13 @@ internal class GlGpuCubeFrameBuffer(
     }
 
     override fun toString() = "[$name] ${width}x${height}: $fbHandle"
+}
+
+internal class GlGpuCubeFrameBufferSide(
+    val cfb: GlGpuCubeFrameBuffer,
+    val side: Int
+) : GlRenderableFrameBuffer {
+    override fun exec(block: () -> Unit) {
+        cfb.exec(side, block)
+    }
 }

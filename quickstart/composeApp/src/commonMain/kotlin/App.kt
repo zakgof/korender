@@ -23,8 +23,8 @@ fun App() = Korender(appResourceLoader = { Res.readBytes(it) }) {
             Column {
                 Filler()
                 Row {
-                    Image(id = "icon", imageResource = "icon.png", width = 30, height = 30)
-                    Text(id = "fps", height = 40, text = "FPS: " + frameInfo.avgFps.toInt())
+                    Image(id = "icon", imageResource = "icon.png", width = 30f, height = 30f)
+                    Text(id = "fps", height = 40f, text = "FPS: " + frameInfo.avgFps.toInt())
                 }
             }
         }

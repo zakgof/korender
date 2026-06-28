@@ -64,7 +64,7 @@ vec4 ssr(vec3 vpos, vec3 N, vec3 V, float roughness) {
             break;
         }
 
-        float deepen = uv.z - texture(depthGeometryTexture, uv.xy).r;
+        float deepen = uv.z - textureLod(depthGeometryTexture, uv.xy, 0.0).r;
 
         if (deepen > peel)
             continue;
@@ -75,7 +75,7 @@ vec4 ssr(vec3 vpos, vec3 N, vec3 V, float roughness) {
             rayPoint = (r1 + r2) * 0.5;
             for (int b = 0; b < binarySteps; b++) {
                 uv = wToS(rayPoint);
-                deepen = uv.z - texture(depthGeometryTexture, uv.xy).r;
+                deepen = uv.z - textureLod(depthGeometryTexture, uv.xy, 0.0).r;
                 if (deepen > 0.) {
                     r2 = rayPoint;
                 } else {
@@ -86,7 +86,7 @@ vec4 ssr(vec3 vpos, vec3 N, vec3 V, float roughness) {
             uv = wToS(rayPoint);
             w *= smoothstep (peel, 0.0, abs(deepen));
             w *= smoothstep(maxReflectionDistance, 0., travel);
-            return vec4(texture(colorInputTexture, uv.xy /*, 8. * roughness*/).rgb, w);
+            return vec4(textureLod(colorInputTexture, uv.xy, 0.0 /*, 8. * roughness*/).rgb, w);
         }
 
         step *= nextStepRatio;

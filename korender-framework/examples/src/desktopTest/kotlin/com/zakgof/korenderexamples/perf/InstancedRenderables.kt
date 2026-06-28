@@ -13,7 +13,7 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 @Composable
-fun InstancedRenderables(dynamic: Boolean) = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun InstancedRenderables(dynamic: Boolean) = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
     val env = cubeTexture(CubeTextureSide.entries.associateWith { "cube/room/${it.toString().lowercase()}.jpg" })
     Frame {
 
@@ -30,14 +30,14 @@ fun InstancedRenderables(dynamic: Boolean) = Korender(appResourceLoader = { Res.
         AmbientLight(ColorRGB.Black)
 
         Renderable(
-            base(
-                color = ColorRGBA(0x80A0FFFF),
-                metallicFactor = 0.5f,
+            base {
+                color = ColorRGBA(0x80A0FFFF)
+                metallicFactor = 0.5f
                 roughnessFactor = 0.5f
-            ),
-            ibl(sky),
+                this.env = sky
+            },
             mesh = sphere(4f / w, 8, 8),
-            instancing = instancing("10K", w * h, dynamic) {
+            instancing = instancing("10K", w * h, dynamic, TRANSFORM_INSTANCING) {
                 for (m in 0 until w) {
                     for (r in 0 until h) {
                         Instance(

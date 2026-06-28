@@ -1,33 +1,74 @@
 package com.zakgof.korender.impl.geometry
 
-import com.zakgof.korender.AttributeType
-import com.zakgof.korender.Attributes.INSTPOS
-import com.zakgof.korender.Attributes.INSTROT
-import com.zakgof.korender.Attributes.INSTSCALE
-import com.zakgof.korender.Attributes.INSTSCREEN
-import com.zakgof.korender.Attributes.INSTTEX
-import com.zakgof.korender.Attributes.MODEL0
-import com.zakgof.korender.Attributes.MODEL1
-import com.zakgof.korender.Attributes.MODEL2
-import com.zakgof.korender.Attributes.MODEL3
-import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.IndexType
 import com.zakgof.korender.KorenderException
 import com.zakgof.korender.Mesh
 import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.ResourceLoader
+import com.zakgof.korender.impl.context.NodeContext
 import com.zakgof.korender.impl.engine.Loader
+import com.zakgof.korender.impl.geometry.MeshAttributes.COLOR
+import com.zakgof.korender.impl.geometry.MeshAttributes.COLORTEXINDEX
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTCOLOR
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTCOLORTEXINDEX
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTMETALLIC
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTPOS
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTROT
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTROUGHNESS
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTSCALE
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTSCREEN
+import com.zakgof.korender.impl.geometry.MeshAttributes.INSTTEX
+import com.zakgof.korender.impl.geometry.MeshAttributes.METALLIC
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL0
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL1
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL2
+import com.zakgof.korender.impl.geometry.MeshAttributes.MODEL3
+import com.zakgof.korender.impl.geometry.MeshAttributes.NORMAL
+import com.zakgof.korender.impl.geometry.MeshAttributes.POS
+import com.zakgof.korender.impl.geometry.MeshAttributes.ROUGHNESS
+import com.zakgof.korender.impl.geometry.MeshAttributes.TEX
 import com.zakgof.korender.impl.glgpu.GlGpuMesh
+import com.zakgof.korender.impl.load
+import com.zakgof.korender.impl.material.Defs
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import com.zakgof.korender.scope.BillboardInstancingParameter
+import com.zakgof.korender.scope.InstancingParameter
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
+
+internal enum class InternalInstancingParameter(
+    val composeMeshAttribute: InternalMeshAttribute<*>?,
+    val instanceMeshAttributes: List<InternalMeshAttribute<*>>,
+    val instancingDefs: Long
+) : InstancingParameter {
+    TRANSFORM_INSTANCING(null, listOf(MODEL0, MODEL1, MODEL2, MODEL3), Defs.VERTEX_TRANSFORM.bit),
+    COLOR_INSTANCING(COLOR, listOf(INSTCOLOR), Defs.VERTEX_COLOR.bit),
+    METALLIC_INSTANCING(METALLIC, listOf(INSTMETALLIC), Defs.VERTEX_METALLIC.bit),
+    ROUGHNESS_INSTANCING(ROUGHNESS, listOf(INSTROUGHNESS), Defs.VERTEX_ROUGHNESS.bit),
+    COLOR_TEXTURE_INDEX_INSTANCING(COLORTEXINDEX, listOf(INSTCOLORTEXINDEX), Defs.VERTEX_COLORTEXINDEX.bit), ;
+}
+
+internal enum class InternalBillboardInstancingParameter(
+    val instanceMeshAttribute: InternalMeshAttribute<*>,
+    val instancingDefs: Long
+) : BillboardInstancingParameter {
+    POSITION_BILLBOARD_INSTANCING(INSTPOS, Defs.VERTEX_POS.bit),
+    SCALE_BILLBOARD_INSTANCING(INSTSCALE, Defs.VERTEX_SCALE.bit),
+    ROTATION_BILLBOARD_INSTANCING(INSTROT, Defs.VERTEX_ROT.bit),
+    COLOR_BILLBOARD_INSTANCING(INSTCOLOR, Defs.VERTEX_COLOR.bit),
+    COLOR_TEXTURE_INDEX_BILLBOARD_INSTANCING(INSTCOLORTEXINDEX, Defs.VERTEX_COLORTEXINDEX.bit),
+}
 
 internal class MeshLink(val cpuMesh: CMesh, dynamic: Boolean) : AutoCloseable {
 
@@ -55,96 +96,125 @@ internal class MeshLink(val cpuMesh: CMesh, dynamic: Boolean) : AutoCloseable {
 
 internal object Geometry {
 
-    fun create(meshDeclaration: MeshDeclaration, loader: Loader): MeshLink? {
+    fun create(meshDeclaration: MeshDeclaration, loader: Loader, nodeContext: NodeContext): MeshLink? {
         val dynamic = ((meshDeclaration as? InstancedMesh)?.static == false) or
                 (meshDeclaration is InstancedBillboard)
-        return createCpuMesh(meshDeclaration, loader)?.let {
+        return createCpuMesh(meshDeclaration, loader, nodeContext.resourceLoader)?.let {
             MeshLink(it, dynamic)
         }
     }
 
-    fun createCpuMesh(meshDeclaration: MeshDeclaration, loader: Loader): CMesh? {
-        val simpleMeshDeclaration = (meshDeclaration as? InstancedMesh)?.mesh ?: (meshDeclaration as? InstancedBillboard)?.let { Billboard(it.retentionPolicy) } ?: meshDeclaration
-        val count = (meshDeclaration as? Instanceable)?.count ?: -1
+    fun loadCpuMesh(meshDeclaration: MeshDeclaration, appResourceLoader: ResourceLoader): Deferred<CMesh> {
+        return when (meshDeclaration) {
+            is ObjMesh -> CoroutineScope(Dispatchers.Default).async {
+                obj(appResourceLoader.load(meshDeclaration.objFile), -1)
+            }
 
+            else -> CompletableDeferred(createMeshSync(meshDeclaration, -1, arrayOf()))
+        }
+    }
+
+    fun createCpuMesh(meshDeclaration: MeshDeclaration, loader: Loader, resourceLoader: ResourceLoader): CMesh? {
+        val simpleMeshDeclaration = (meshDeclaration as? InstancedMesh)?.mesh ?: (meshDeclaration as? InstancedBillboard)?.let { Billboard(it.nodeContext) } ?: meshDeclaration
+        val count = (meshDeclaration as? Instanceable)?.count ?: -1
+        val instancingAttributes = instancingAttributes(meshDeclaration)
         return when (simpleMeshDeclaration) {
-            is Sphere -> sphere(simpleMeshDeclaration.radius, simpleMeshDeclaration.slices, simpleMeshDeclaration.sectors, count)
-            is Cube -> cube(simpleMeshDeclaration.halfSide, count)
-            is DecalCube -> decalCube(simpleMeshDeclaration.halfSide, count)
+            is ObjMesh -> loader.safeBytes(simpleMeshDeclaration.objFile, resourceLoader) { obj(it, count) }
+            is CustomCpuMesh -> toCMesh(simpleMeshDeclaration.mesh, count, instancingAttributes)
+            is CustomMesh -> customMeshFromDeclaration(simpleMeshDeclaration, count)
+            is FontMesh -> font(count)
+            else -> createMeshSync(simpleMeshDeclaration, count, instancingAttributes)
+        }
+    }
+
+    fun customMeshFromDeclaration(simpleMeshDeclaration: CustomMesh, count: Int): CMesh =
+        CMesh(simpleMeshDeclaration.vertexCount, simpleMeshDeclaration.indexCount, count, attributes = simpleMeshDeclaration.attributes.toTypedArray(), simpleMeshDeclaration.indexType, simpleMeshDeclaration.block)
+
+    private fun instancingAttributes(meshDeclaration: MeshDeclaration): Array<InternalMeshAttribute<*>> =
+        when (meshDeclaration) {
+            is InstancedMesh -> meshDeclaration.parameters.flatMap { it.instanceMeshAttributes }.toTypedArray()
+            is InstancedBillboard -> meshDeclaration.parameters.map { it.instanceMeshAttribute }.toTypedArray()
+            else -> arrayOf()
+        }
+
+    private fun createMeshSync(meshDeclaration: MeshDeclaration, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>): CMesh {
+        return when (meshDeclaration) {
+            is Sphere -> sphere(meshDeclaration.radius, meshDeclaration.slices, meshDeclaration.sectors, count, instancingAttributes)
+            is Cube -> cube(meshDeclaration.halfSide, count, instancingAttributes)
+            is DecalCube -> decalCube(meshDeclaration.halfSide, count, instancingAttributes)
             is ScreenQuad -> screenQuad()
-            is Billboard -> billboard(count)
+            is Billboard -> billboard(count, instancingAttributes)
             is ImageQuad -> imageQuad()
-            is Quad -> quad(simpleMeshDeclaration.halfSideX, simpleMeshDeclaration.halfSideY, count)
-            is BiQuad -> biquad(simpleMeshDeclaration.halfSideX, simpleMeshDeclaration.halfSideY, count)
-            is Disk -> disk(simpleMeshDeclaration.radius, simpleMeshDeclaration.sectors, count)
-            is CylinderSide -> cylinderSide(simpleMeshDeclaration.radius, simpleMeshDeclaration.height, simpleMeshDeclaration.sectors, count)
-            is ConeTop -> coneTop(simpleMeshDeclaration.radius, simpleMeshDeclaration.height, simpleMeshDeclaration.sectors, count)
-            is HeightField -> heightField(simpleMeshDeclaration.cellsX, simpleMeshDeclaration.cellsZ, simpleMeshDeclaration.cellWidth, simpleMeshDeclaration.height, count)
-            is ObjMesh -> loader.safeBytes(simpleMeshDeclaration.objFile) { obj(it, count) }
-            is CustomCpuMesh -> toCMesh(simpleMeshDeclaration.mesh, count)
-            is CustomMesh -> CMesh(simpleMeshDeclaration.vertexCount, simpleMeshDeclaration.indexCount, count, attributes = simpleMeshDeclaration.attributes.toTypedArray(), simpleMeshDeclaration.indexType, simpleMeshDeclaration.block)
+            is Quad -> quad(meshDeclaration.halfSideX, meshDeclaration.halfSideY, count, instancingAttributes)
+            is BiQuad -> biquad(meshDeclaration.halfSideX, meshDeclaration.halfSideY, count, instancingAttributes)
+            is Disk -> disk(meshDeclaration.radius, meshDeclaration.sectors, count, instancingAttributes)
+            is CylinderSide -> cylinderSide(meshDeclaration.radius, meshDeclaration.height, meshDeclaration.sectors, count, instancingAttributes)
+            is ConeTop -> coneTop(meshDeclaration.radius, meshDeclaration.height, meshDeclaration.sectors, count, instancingAttributes)
+            is HeightField -> heightField(meshDeclaration.cellsX, meshDeclaration.cellsZ, meshDeclaration.cellWidth, meshDeclaration.height, count, instancingAttributes)
+            is CustomCpuMesh -> toCMesh(meshDeclaration.mesh, count, instancingAttributes)
+            is CustomMesh -> CMesh(meshDeclaration.vertexCount, meshDeclaration.indexCount, count, attributes = meshDeclaration.attributes.toTypedArray() + instancingAttributes, meshDeclaration.indexType, meshDeclaration.block)
             is FontMesh -> font(count)
             else -> throw KorenderException("Unknown mesh type $meshDeclaration")
         }
     }
 
-    private fun quad(halfSideX: Float, halfSideY: Float, count: Int) = CMesh(
+    private fun quad(halfSideX: Float, halfSideY: Float, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>) = CMesh(
         4,
         6,
         count,
-        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+        POS, NORMAL, TEX, *instancingAttributes
     ) {
-        pos(Vec3(-halfSideX, -halfSideY, 0f)).tex(0f, 0f).normal(1.z)
-        pos(Vec3(halfSideX, -halfSideY, 0f)).tex(1f, 0f).normal(1.z)
-        pos(Vec3(halfSideX, halfSideY, 0f)).tex(1f, 1f).normal(1.z)
-        pos(Vec3(-halfSideX, halfSideY, 0f)).tex(0f, 1f).normal(1.z)
+        pos(Vec3(-halfSideX, -halfSideY, 0f)).tex(Vec2(0f, 0f)).normal(1.z)
+        pos(Vec3(halfSideX, -halfSideY, 0f)).tex(Vec2(1f, 0f)).normal(1.z)
+        pos(Vec3(halfSideX, halfSideY, 0f)).tex(Vec2(1f, 1f)).normal(1.z)
+        pos(Vec3(-halfSideX, halfSideY, 0f)).tex(Vec2(0f, 1f)).normal(1.z)
         index(0, 1, 2, 0, 2, 3)
     }
 
-    private fun biquad(halfSideX: Float, halfSideY: Float, count: Int) = CMesh(
+    private fun biquad(halfSideX: Float, halfSideY: Float, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>) = CMesh(
         8,
         12,
         count,
-        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+        POS, NORMAL, TEX, *instancingAttributes
     ) {
-        pos(Vec3(-halfSideX, -halfSideY, 0f)).tex(0f, 0f).normal(1.z)
-        pos(Vec3(halfSideX, -halfSideY, 0f)).tex(1f, 0f).normal(1.z)
-        pos(Vec3(halfSideX, halfSideY, 0f)).tex(1f, 1f).normal(1.z)
-        pos(Vec3(-halfSideX, halfSideY, 0f)).tex(0f, 1f).normal(1.z)
+        pos(Vec3(-halfSideX, -halfSideY, 0f)).tex(Vec2(0f, 0f)).normal(1.z)
+        pos(Vec3(halfSideX, -halfSideY, 0f)).tex(Vec2(1f, 0f)).normal(1.z)
+        pos(Vec3(halfSideX, halfSideY, 0f)).tex(Vec2(1f, 1f)).normal(1.z)
+        pos(Vec3(-halfSideX, halfSideY, 0f)).tex(Vec2(0f, 1f)).normal(1.z)
 
-        pos(Vec3(-halfSideX, -halfSideY, 0f)).tex(0f, 0f).normal(-1.z)
-        pos(Vec3(halfSideX, -halfSideY, 0f)).tex(1f, 0f).normal(-1.z)
-        pos(Vec3(halfSideX, halfSideY, 0f)).tex(1f, 1f).normal(-1.z)
-        pos(Vec3(-halfSideX, halfSideY, 0f)).tex(0f, 1f).normal(-1.z)
+        pos(Vec3(-halfSideX, -halfSideY, 0f)).tex(Vec2(0f, 0f)).normal(-1.z)
+        pos(Vec3(halfSideX, -halfSideY, 0f)).tex(Vec2(1f, 0f)).normal(-1.z)
+        pos(Vec3(halfSideX, halfSideY, 0f)).tex(Vec2(1f, 1f)).normal(-1.z)
+        pos(Vec3(-halfSideX, halfSideY, 0f)).tex(Vec2(0f, 1f)).normal(-1.z)
 
         index(0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6)
     }
 
-    private fun disk(radius: Float, sectors: Int, count: Int) = CMesh(
+    private fun disk(radius: Float, sectors: Int, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>) = CMesh(
         sectors * 2,
         sectors * 3,
         count,
-        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+        POS, NORMAL, TEX, *instancingAttributes
     ) {
         for (sector in 0 until sectors) {
             val phi = PI * 2f * sector / sectors
             pos(Vec3(radius * cos(phi), radius * sin(phi), 0f))
                 .normal(1.z)
-                .tex(0.5f + 0.5f * cos(phi), 0.5f + 0.5f * sin(phi))
+                .tex(Vec2(0.5f + 0.5f * cos(phi), 0.5f + 0.5f * sin(phi)))
         }
         pos(Vec3.ZERO)
             .normal(1.z)
-            .tex(0.5f, 0.5f)
+            .tex(Vec2(0.5f, 0.5f))
         for (sector in 0 until sectors) {
             index(sector, (sector + 1) % sectors, sectors)
         }
     }
 
-    private fun coneTop(radius: Float, height: Float, sectors: Int, count: Int) = CMesh(
+    private fun coneTop(radius: Float, height: Float, sectors: Int, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>) = CMesh(
         sectors * 2,
         sectors * 3,
         count,
-        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+        POS, NORMAL, TEX, *instancingAttributes
     ) {
         val base = 1f / Vec2(radius, height).length()
         val xSlope = height * base
@@ -154,10 +224,10 @@ internal object Geometry {
             val normal = Vec3(xSlope * cos(phi), ySlope, xSlope * sin(phi))
             pos(Vec3(radius * cos(phi), 0f, radius * sin(phi)))
                 .normal(normal)
-                .tex(sector.toFloat() / sectors, 0f)
+                .tex(Vec2(sector.toFloat() / sectors, 0f))
             pos(height.y)
                 .normal(normal)
-                .tex(sector.toFloat() / sectors, 1f)
+                .tex(Vec2(sector.toFloat() / sectors, 1f))
         }
         val d = 2 * sectors
         for (sector in 0 until sectors) {
@@ -165,11 +235,11 @@ internal object Geometry {
         }
     }
 
-    private fun cylinderSide(radius: Float, height: Float, sectors: Int, count: Int) = CMesh(
+    private fun cylinderSide(radius: Float, height: Float, sectors: Int, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>) = CMesh(
         sectors * 2,
         sectors * 6,
         count,
-        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+        POS, NORMAL, TEX, *instancingAttributes
     ) {
         for (sector in 0 until sectors) {
             val phi = PI * 2f * sector / sectors
@@ -178,10 +248,10 @@ internal object Geometry {
             val normal = Vec3(cosPhi, 0f, sinPhi)
             pos(Vec3(radius * cosPhi, 0f, radius * sinPhi))
                 .normal(normal)
-                .tex(sector.toFloat() / sectors, 0f)
+                .tex(Vec2(sector.toFloat() / sectors, 0f))
             pos(Vec3(radius * cosPhi, height, radius * sinPhi))
                 .normal(normal)
-                .tex(sector.toFloat() / sectors, 1f)
+                .tex(Vec2(sector.toFloat() / sectors, 1f))
         }
         val d = 2 * sectors
         for (sector in 0 until sectors) {
@@ -190,22 +260,24 @@ internal object Geometry {
         }
     }
 
-    private fun heightField(xsize: Int, zsize: Int, cell: Float, height: (Int, Int) -> Float, count: Int) = CMesh(
+    private fun heightField(xsize: Int, zsize: Int, cell: Float, height: (Int, Int) -> Float, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>) = CMesh(
         (xsize + 1) * (zsize + 1),
         xsize * zsize * 6,
         count,
-        POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+        POS, NORMAL, TEX, *instancingAttributes
     ) {
         for (x in 0..xsize) {
             for (z in 0..zsize) {
                 pos(
-                    x * cell - 0.5f * cell * xsize,
-                    height(x, z),
-                    z * cell - 0.5f * cell * zsize
+                    Vec3(
+                        x * cell - 0.5f * cell * xsize,
+                        height(x, z),
+                        z * cell - 0.5f * cell * zsize
+                    )
                 )
                 val n = normal(x, z, xsize, zsize, cell, height)
                 normal(n)
-                tex(x.toFloat() / xsize, z.toFloat() / zsize)
+                tex(Vec2(x.toFloat() / xsize, z.toFloat() / zsize))
             }
         }
         for (x in 0..<xsize) {
@@ -222,7 +294,7 @@ internal object Geometry {
         xsize: Int,
         ysize: Int,
         cell: Float,
-        height: (Int, Int) -> Float
+        height: (Int, Int) -> Float,
     ): Vec3 {
         val h = height(x, y)
         val dhx = (max(x - 1, 0)..min(x + 1, xsize) step 2)
@@ -238,7 +310,7 @@ internal object Geometry {
         val model: ObjModel = ObjLoader.load(objFileBytes)
         return CMesh(model.vertices.size, model.indices.size, count, POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3) {
             model.vertices.forEach {
-                pos(it.pos).normal(it.normal).tex(it.tex.x, it.tex.y)
+                pos(it.pos).normal(it.normal).tex(Vec2(it.tex.x, it.tex.y))
             }
             model.indices.forEach {
                 index(it)
@@ -246,14 +318,14 @@ internal object Geometry {
         }
     }
 
-    private fun sphere(radius: Float, slices: Int, sectors: Int, count: Int) =
+    private fun sphere(radius: Float, slices: Int, sectors: Int, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>) =
         CMesh(
             2 + (slices - 1) * sectors,
             sectors * 3 * 2 + (slices - 2) * sectors * 6,
             count,
-            POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3
+            POS, NORMAL, TEX, *instancingAttributes
         ) {
-            pos(0f, -radius, 0f).normal(0f, -1f, 0f).tex(0f, 0f)
+            pos(Vec3(0f, -radius, 0f)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(0f, 0f))
             for (slice in 1..<slices) {
                 for (sector in 0..<sectors) {
                     val theta = PI - PI * slice / slices
@@ -261,11 +333,11 @@ internal object Geometry {
                     val normal = Vec3(sin(theta) * cos(phi), cos(theta), sin(theta) * sin(phi))
                     pos(normal * radius)
                         .normal(normal)
-                        .tex(sector.toFloat() / sectors, slice.toFloat() / slices)
+                        .tex(Vec2(sector.toFloat() / sectors, slice.toFloat() / slices))
 
                 }
             }
-            pos(0f, radius, 0f).normal(0f, 1f, 0f).tex(0f, 1f)
+            pos(Vec3(0f, radius, 0f)).normal(Vec3(0f, 1f, 0f)).tex(Vec2(0f, 1f))
 
             for (sector in 0 until sectors) {
                 index(0, sector + 1, ((sector + 1) % sectors) + 1)
@@ -287,37 +359,37 @@ internal object Geometry {
 
     private fun screenQuad() =
         CMesh(4, 6, -1, TEX) {
-            tex(0f, 0f).tex(0f, 1f)
-            tex(1f, 1f).tex(1f, 0f)
+            tex(Vec2(0f, 0f)).tex(Vec2(0f, 1f))
+            tex(Vec2(1f, 1f)).tex(Vec2(1f, 0f))
             index(0, 2, 1, 0, 3, 2)
         }
 
-    private fun cube(halfSide: Float, count: Int) =
-        CMesh(24, 36, count, POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3) {
-            pos(-halfSide, -halfSide, -halfSide).normal(-1f, 0f, 0f).tex(0f, 0f)
-            pos(-halfSide, halfSide, -halfSide).normal(-1f, 0f, 0f).tex(0f, 1f)
-            pos(-halfSide, halfSide, halfSide).normal(-1f, 0f, 0f).tex(1f, 1f)
-            pos(-halfSide, -halfSide, halfSide).normal(-1f, 0f, 0f).tex(1f, 0f)
-            pos(-halfSide, -halfSide, halfSide).normal(0f, 0f, 1f).tex(0f, 0f)
-            pos(-halfSide, halfSide, halfSide).normal(0f, 0f, 1f).tex(0f, 1f)
-            pos(halfSide, halfSide, halfSide).normal(0f, 0f, 1f).tex(1f, 1f)
-            pos(halfSide, -halfSide, halfSide).normal(0f, 0f, 1f).tex(1f, 0f)
-            pos(halfSide, -halfSide, halfSide).normal(1f, 0f, 0f).tex(0f, 0f)
-            pos(halfSide, halfSide, halfSide).normal(1f, 0f, 0f).tex(0f, 1f)
-            pos(halfSide, halfSide, -halfSide).normal(1f, 0f, 0f).tex(1f, 1f)
-            pos(halfSide, -halfSide, -halfSide).normal(1f, 0f, 0f).tex(1f, 0f)
-            pos(halfSide, -halfSide, -halfSide).normal(0f, 0f, -1f).tex(0f, 0f)
-            pos(halfSide, halfSide, -halfSide).normal(0f, 0f, -1f).tex(0f, 1f)
-            pos(-halfSide, halfSide, -halfSide).normal(0f, 0f, -1f).tex(1f, 1f)
-            pos(-halfSide, -halfSide, -halfSide).normal(0f, 0f, -1f).tex(1f, 0f)
-            pos(-halfSide, halfSide, halfSide).normal(0f, 1f, 0f).tex(0f, 0f)
-            pos(-halfSide, halfSide, -halfSide).normal(0f, 1f, 0f).tex(0f, 1f)
-            pos(halfSide, halfSide, -halfSide).normal(0f, 1f, 0f).tex(1f, 1f)
-            pos(halfSide, halfSide, halfSide).normal(0f, 1f, 0f).tex(1f, 0f)
-            pos(halfSide, -halfSide, halfSide).normal(0f, -1f, 0f).tex(0f, 0f)
-            pos(halfSide, -halfSide, -halfSide).normal(0f, -1f, 0f).tex(0f, 1f)
-            pos(-halfSide, -halfSide, -halfSide).normal(0f, -1f, 0f).tex(1f, 1f)
-            pos(-halfSide, -halfSide, halfSide).normal(0f, -1f, 0f).tex(1f, 0f)
+    private fun cube(halfSide: Float, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>) =
+        CMesh(24, 36, count, POS, NORMAL, TEX, *instancingAttributes) {
+            pos(Vec3(-halfSide, -halfSide, -halfSide)).normal(Vec3(-1f, 0f, 0f)).tex(Vec2(0f, 0f))
+            pos(Vec3(-halfSide, halfSide, -halfSide)).normal(Vec3(-1f, 0f, 0f)).tex(Vec2(0f, 1f))
+            pos(Vec3(-halfSide, halfSide, halfSide)).normal(Vec3(-1f, 0f, 0f)).tex(Vec2(1f, 1f))
+            pos(Vec3(-halfSide, -halfSide, halfSide)).normal(Vec3(-1f, 0f, 0f)).tex(Vec2(1f, 0f))
+            pos(Vec3(-halfSide, -halfSide, halfSide)).normal(Vec3(0f, 0f, 1f)).tex(Vec2(0f, 0f))
+            pos(Vec3(-halfSide, halfSide, halfSide)).normal(Vec3(0f, 0f, 1f)).tex(Vec2(0f, 1f))
+            pos(Vec3(halfSide, halfSide, halfSide)).normal(Vec3(0f, 0f, 1f)).tex(Vec2(1f, 1f))
+            pos(Vec3(halfSide, -halfSide, halfSide)).normal(Vec3(0f, 0f, 1f)).tex(Vec2(1f, 0f))
+            pos(Vec3(halfSide, -halfSide, halfSide)).normal(Vec3(1f, 0f, 0f)).tex(Vec2(0f, 0f))
+            pos(Vec3(halfSide, halfSide, halfSide)).normal(Vec3(1f, 0f, 0f)).tex(Vec2(0f, 1f))
+            pos(Vec3(halfSide, halfSide, -halfSide)).normal(Vec3(1f, 0f, 0f)).tex(Vec2(1f, 1f))
+            pos(Vec3(halfSide, -halfSide, -halfSide)).normal(Vec3(1f, 0f, 0f)).tex(Vec2(1f, 0f))
+            pos(Vec3(halfSide, -halfSide, -halfSide)).normal(Vec3(0f, 0f, -1f)).tex(Vec2(0f, 0f))
+            pos(Vec3(halfSide, halfSide, -halfSide)).normal(Vec3(0f, 0f, -1f)).tex(Vec2(0f, 1f))
+            pos(Vec3(-halfSide, halfSide, -halfSide)).normal(Vec3(0f, 0f, -1f)).tex(Vec2(1f, 1f))
+            pos(Vec3(-halfSide, -halfSide, -halfSide)).normal(Vec3(0f, 0f, -1f)).tex(Vec2(1f, 0f))
+            pos(Vec3(-halfSide, halfSide, halfSide)).normal(Vec3(0f, 1f, 0f)).tex(Vec2(0f, 0f))
+            pos(Vec3(-halfSide, halfSide, -halfSide)).normal(Vec3(0f, 1f, 0f)).tex(Vec2(0f, 1f))
+            pos(Vec3(halfSide, halfSide, -halfSide)).normal(Vec3(0f, 1f, 0f)).tex(Vec2(1f, 1f))
+            pos(Vec3(halfSide, halfSide, halfSide)).normal(Vec3(0f, 1f, 0f)).tex(Vec2(1f, 0f))
+            pos(Vec3(halfSide, -halfSide, halfSide)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(0f, 0f))
+            pos(Vec3(halfSide, -halfSide, -halfSide)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(0f, 1f))
+            pos(Vec3(-halfSide, -halfSide, -halfSide)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(1f, 1f))
+            pos(Vec3(-halfSide, -halfSide, halfSide)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(1f, 0f))
 
             index(0, 2, 1, 0, 3, 2)
             index(4, 6, 5, 4, 7, 6)
@@ -327,16 +399,16 @@ internal object Geometry {
             index(20, 22, 21, 20, 23, 22)
         }
 
-    private fun decalCube(halfSide: Float, count: Int) =
-        CMesh(8, 36, count, POS, MODEL0, MODEL1, MODEL2, MODEL3) {
-            pos(-halfSide, -halfSide, -halfSide)
-            pos(halfSide, -halfSide, -halfSide)
-            pos(-halfSide, halfSide, -halfSide)
-            pos(halfSide, halfSide, -halfSide)
-            pos(-halfSide, -halfSide, halfSide)
-            pos(halfSide, -halfSide, halfSide)
-            pos(-halfSide, halfSide, halfSide)
-            pos(halfSide, halfSide, halfSide)
+    private fun decalCube(halfSide: Float, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>) =
+        CMesh(8, 36, count, POS, *instancingAttributes) {
+            pos(Vec3(-halfSide, -halfSide, -halfSide))
+            pos(Vec3(halfSide, -halfSide, -halfSide))
+            pos(Vec3(-halfSide, halfSide, -halfSide))
+            pos(Vec3(halfSide, halfSide, -halfSide))
+            pos(Vec3(-halfSide, -halfSide, halfSide))
+            pos(Vec3(halfSide, -halfSide, halfSide))
+            pos(Vec3(-halfSide, halfSide, halfSide))
+            pos(Vec3(halfSide, halfSide, halfSide))
 
             index(0, 1, 2, 1, 3, 2)
             index(5, 4, 7, 4, 6, 7)
@@ -346,37 +418,37 @@ internal object Geometry {
             index(4, 5, 0, 5, 1, 0)
         }
 
-    private fun billboard(count: Int) =
-        CMesh(4, 6, count, TEX, INSTPOS, INSTSCALE, INSTROT) {
-            tex(0f, 0f).tex(0f, 1f).tex(1f, 1f).tex(1f, 0f)
+    private fun billboard(count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>) =
+        CMesh(4, 6, count, TEX, *instancingAttributes) {
+            tex(Vec2(0f, 0f)).tex(Vec2(0f, 1f)).tex(Vec2(1f, 1f)).tex(Vec2(1f, 0f))
                 .index(0, 2, 1, 0, 3, 2)
         }
 
     private fun imageQuad() =
         CMesh(4, 6, -1, TEX) {
-            tex(0f, 0f)
-            tex(0f, 1f)
-            tex(1f, 1f)
-            tex(1f, 0f)
+            tex(Vec2(0f, 0f))
+            tex(Vec2(0f, 1f))
+            tex(Vec2(1f, 1f))
+            tex(Vec2(1f, 0f))
             index(0, 2, 1, 0, 3, 2)
         }
 
     private fun font(count: Int) =
         CMesh(4, 6, count, TEX, INSTTEX, INSTSCREEN) {
-            tex(0f, 0f).tex(0f, 1f).tex(1f, 1f).tex(1f, 0f)
+            tex(Vec2(0f, 0f)).tex(Vec2(0f, 1f)).tex(Vec2(1f, 1f)).tex(Vec2(1f, 0f))
             index(0, 1, 2, 0, 2, 3)
         }
 
-    private fun toCMesh(mesh: Mesh, count: Int): CMesh? {
+    private fun toCMesh(mesh: Mesh, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>): CMesh {
         if (mesh is CMesh) {
             return mesh
         }
-        return CMesh(mesh.vertices.size, mesh.indices?.size ?: -1, count, POS, NORMAL, TEX) {
+        return CMesh(mesh.vertices.size, mesh.indices?.size ?: -1, count, POS, NORMAL, TEX, *instancingAttributes) {
             (0 until mesh.vertices.size).forEach {
                 val vertex = mesh.vertices[it]
                 pos(vertex.pos!!).normal(vertex.normal!!).tex(vertex.tex!!)
             }
-            mesh.indices?.let {indices ->
+            mesh.indices?.let { indices ->
                 (0 until indices.size).forEach {
                     index(indices[it])
                 }
@@ -392,9 +464,12 @@ fun IndexType.size() = when (this) {
     IndexType.Int -> 4
 }
 
-fun AttributeType.size() = when (this) {
+internal fun AttributeType.size() = when (this) {
     AttributeType.Byte, AttributeType.SignedByte -> 1
     AttributeType.Short, AttributeType.SignedShort -> 2
     AttributeType.Int, AttributeType.SignedInt -> 4
     AttributeType.Float -> 4
 }
+
+
+

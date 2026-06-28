@@ -12,18 +12,22 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 @Composable
-fun RenderToTextureExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun RenderToTextureExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
 
     Frame {
 
-        CaptureFrame("timer", 256, 256, camera = camera(10.z, -1.z, 1.y), projection = projection(2f, 2f, 1f, 20f, ortho())) {
+        TestExchange.report(frameInfo)
+
+        CaptureFrame("timer", 256, 256) {
+            camera = camera(10.z, -1.z, 1.y)
+            projection = projection(2f, 2f, 1f, 20f, ortho())
             Sky(starrySky(density = 250f))
             Gui {
                 Column {
                     Filler()
                     Row {
                         Filler()
-                        Text(id = "countdown", text = "${99 - frameInfo.time.toInt().coerceAtMost(99)}", height = 200, color = ColorRGBA.Red)
+                        Text(id = "countdown", text = "${99 - frameInfo.time.toInt().coerceAtMost(99)}", height = 200f, color = ColorRGBA.Red)
                         Filler()
                     }
                     Filler()
@@ -34,9 +38,7 @@ fun RenderToTextureExample() = Korender(appResourceLoader = { Res.readBytes(it) 
         AmbientLight(ColorRGB.White)
         DirectionalLight(-1.z, ColorRGB.white(3f))
         Renderable(
-            base(
-                colorTexture = textureProbe("timer")
-            ),
+            base { colorTexture = textureProbe("timer") },
             mesh = cube(2f),
             transform = rotate(Quaternion.fromAxisAngle(Vec3(1f, 1f, 1f).normalize(), frameInfo.time))
         )
@@ -49,3 +51,4 @@ fun RenderToTextureExample() = Korender(appResourceLoader = { Res.readBytes(it) 
         }
     }
 }
+

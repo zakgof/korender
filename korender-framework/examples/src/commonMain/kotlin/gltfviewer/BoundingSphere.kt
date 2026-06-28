@@ -2,11 +2,11 @@ package com.zakgof.korender.examples.gltfviewer
 
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.Mesh
+import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.ProjectionDeclaration
-import com.zakgof.korender.context.KorenderContext
-import com.zakgof.korender.gltf.GltfUpdate
 import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.scope.KorenderScope
 import kotlin.math.atan
 import kotlin.math.tan
 
@@ -73,23 +73,23 @@ class BoundingSphere(val center: Vec3, val radius: Float) {
     )
 }
 
-fun boundingSphere(node: GltfUpdate.Node): BoundingSphere {
-    val meshSpheres = node.mesh?.let { mesh ->
-        mesh.primitives.map { boundingSphere(it).transform(node.transform.mat4) }
+fun boundingSphere(node: ModelInfo.Node): BoundingSphere {
+    val renderablesSpheres = node.renderables?.map { renderable ->
+        boundingSphere(renderable.mesh).transform(node.transform?.mat4 ?: Mat4.IDENTITY)
     } ?: listOf()
-    val childrenSpheres = node.children.map { boundingSphere(it) }
-    return BoundingSphere.merge(meshSpheres + childrenSpheres)
+    val childrenSpheres = node.children?.map { boundingSphere(it) } ?: listOf()
+    return BoundingSphere.merge(renderablesSpheres + childrenSpheres)
 }
 
 fun boundingSphere(mesh: Mesh) = BoundingSphere.fromPoints(mesh.vertices.map { it.pos!! })
 
-fun KorenderContext.cameraFor(bs: BoundingSphere): CameraDeclaration {
+fun KorenderScope.cameraFor(bs: BoundingSphere): CameraDeclaration {
     val look = Vec3(0f, -1f, -2f).normalize()
     val up = Vec3(0f, 2f, -1f).normalize()
     return camera(bs.center - look * (3f * bs.radius), look, up)
 }
 
-fun KorenderContext.projectionFor(bs: BoundingSphere, whr: Float): ProjectionDeclaration {
+fun KorenderScope.projectionFor(bs: BoundingSphere, whr: Float): ProjectionDeclaration {
     val near = 2f * bs.radius
     val far = 4f * bs.radius
     val fovY2 = if (whr >= 1f) atan(0.33f) else atan(0.33f / whr)

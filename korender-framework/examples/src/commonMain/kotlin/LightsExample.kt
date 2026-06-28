@@ -11,21 +11,26 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
 fun LightsExample() =
-    Korender(appResourceLoader = { Res.readBytes(it) }) {
+    Korender(resourceLoader = { Res.readBytes("files/$it") }) {
         camera = camera(Vec3(0f, 3f, 20f), (-1).z, 1.y)
 
-        val mat = base(metallicFactor = 0.0f, roughnessFactor = 0.7f)
+        val mat = base {
+            metallicFactor = 0.0f
+            roughnessFactor = 0.7f
+        }
         Frame {
+            TestExchange.report(frameInfo)
 
-            fun LightMark(pos: Vec3, color: ColorRGB) = Renderable(
-                base(color = ColorRGBA.Black),
-                emission(factor = color),
+            fun LightMark(pos: Vec3, markColor: ColorRGB) = Renderable(
+                base {
+                    color = ColorRGBA.Black
+                    emission = markColor
+                },
                 mesh = sphere(0.05f),
                 transform = translate(pos)
             )
@@ -63,3 +68,4 @@ fun LightsExample() =
             }
         }
     }
+

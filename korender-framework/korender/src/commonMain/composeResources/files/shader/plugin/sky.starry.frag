@@ -6,6 +6,7 @@ uniform sampler2D noiseTexture;
 #uniform float density;
 #uniform float speed;
 #uniform float size;
+#uniform float time;
 
 float noi(vec2 uv) {
     return fract(texture(noiseTexture, uv).r * 5.0) * 0.8 + 0.1;

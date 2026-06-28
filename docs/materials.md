@@ -2,76 +2,135 @@
 
 Internally, a material definition in Korender consists of:
 
-- `shader` - a small program running on the GPU to render objects, which is defined by    
-  * `vertex shader` - GPU code in GLSL language to process mesh vertices    
-  * `fragment shader` - GPU code in GLSL language to process rendered pixels (fragments)    
-- `defs` - a set of flags that control shader options    
-- `plugins` - customized chunks of code to be injected into shaders    
-- `uniforms` - key-value pairs representing shaders' parameters    
+- **Shader** - GPU program to render objects, comprised of:
+  - **Vertex Shader** - GLSL code processing mesh vertices
+  - **Fragment Shader** - GLSL code processing rendered pixels (fragments)
+- **Shader Plugins** - Modular chunks of GLSL code injected into specific stages of the rendering pipeline
+- **Uniforms** - Per-material parameters (colors, texture samplers, numeric values)
 
-Each of the above material components can be modified by a `MaterialModifier`.
+The material system allows customization at multiple levels, from high-level property modifications to low-level shader plugins.
 
-Using custom shaders or shader plugins is an advanced topic, however, predefined materials should be sufficient for most use cases.
+### Base Material
 
-### Base material
+Korender provides a predefined `base` material supporting PBR (Physically-Based Rendering) with lighting and texturing. Use a lambda block to configure `BaseMaterialScope` properties:
 
-Korender comes with a predefined `base` material supporting a decent lighting set and texturing options. Additionally, several modifiers are available to enable additional features on top of the `base` material:
-
-````kotlin
-base(
-    color = ColorRGBA(0x203040FF),
-    colorTexture = texture("textures/texture.png"),
-    metallicFactor = 0.5f,
-    roughnessFactor = 0.3f
-),
-triplanar(
-    scale = 0.5f
+```kotlin
+Renderable(
+    material = base {
+        color = ColorRGBA(0x203040FF)
+    },
+    mesh = sphere(1.0f)
 )
-````
+```
 
-#### `base` modifier
+Additional features can be enabled by setting optional properties inside the block:
 
-Basic rendering with texturing and PBR lighting model
+```kotlin
+base {
+    color = ColorRGBA(1f, 1f, 1f, 1f)
+    colorTexture = texture("textures/diffuse.png")
+    normalTexture = texture("textures/normal.png")
+    metallicFactor = 0.5f
+    roughnessFactor = 0.3f
+    triplanarScale = 1.0f  // Enable triplanar mapping
+}
+```
 
-| Uniform name   | Type               | Default value            | Description                                                                                                                           |
-|----------------|--------------------|--------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| color          | ColorRGBA          | ColorRBGA.White          | Base surface color (albedo)                                                                                                           |
-| colorTexture   | TextureDeclaration | -                        | Base surface texture (albedo), texel values are multiplied by `color`                                                               |
-| metallicFactor | Float              | 0.1f                     | PBR metallic factor: from 0.0 (non-metal) to 1.0 (metal). Metals reflect more light and do not have a diffuse color — their color comes from specular reflections. Non-metals reflect less light and have a diffuse base color. |
-| roughnessFactor| Float              | 0.5f                     | PBR roughness factor: from 0.0 (smooth) to 1.0 (rough). Affects how light scatters off the surface. Low roughness = sharp, mirror-like reflections. High roughness = diffuse, blurry reflections.|
+#### Base Material Properties
 
-#### `triplanar` modifier
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `color` | ColorRGBA | White | Base surface color (albedo), multiplied by colorTexture |
+| `colorTexture` | TextureDeclaration | - | Base diffuse/albedo texture |
+| `metallicFactor` | Float | 0.1 | PBR metallic: 0.0 (non-metal) to 1.0 (fully metal). Metals reflect light as specular only; non-metals have diffuse reflections. |
+| `roughnessFactor` | Float | 0.5 | PBR roughness: 0.0 (mirror-smooth) to 1.0 (diffuse). Controls how light scatters from the surface. |
+| `alphaCutoff` | Float | 0.5 | Transparency threshold for alpha cutoff (discard fragments below this alpha) |
+| `triplanarScale` | Float? | null | Enable triplanar texturing at this world-space scale. When enabled, projects texture from 3 directions instead of using UV coords. |
+| `stochasticSharpness` | Float? | null | Enable stochastic texture sampling at this sharpness level. Reduces texture repetition patterns. |
+| `colorTextures` | TextureArrayDeclaration? | null | Enable texture array texturing (indexed texture selection per vertex) |
+| `normalTexture` | TextureDeclaration | - | Normal map texture for fine surface detail without geometry |
+| `metallicRoughnessTexture` | TextureDeclaration | - | Packed texture: R channel = metallic, G channel = roughness |
+| `emission` | ColorRGB? | null | Emission color (self-illumination) added to lighting |
+| `emissionTexture` | TextureDeclaration | - | Emission texture |
+| `occlusionTexture` | TextureDeclaration | - | Ambient occlusion texture (pre-baked shadows) |
+| `specularGlossiness` | SpecularGlossiness? | null | Alternative PBR model: specular color and glossiness factors |
+| `specularGlossinessTexture` | TextureDeclaration | - | Specular-glossiness packed texture |
+| `env` | SkyMaterial? | null | Environment map for reflections |
 
-Enables triplanar texturing.
+### Triplanar Mapping
 
-Instead of using UV coordinates, triplanar texturing projects the texture onto the surface from three directions: X-axis (side), Y-axis (top), Z-axis (front). The results are blended together based on the surface normal to avoid visible seams.
+Triplanar texturing projects the texture onto surfaces from three perpendicular directions (X, Y, Z axes) and blends them based on surface normal:
 
-| Uniform name   | Type               | Default value            | Description                                                                                                                           |
-|----------------|--------------------|--------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| scale          | Float              | 1.0f                     | Controls how large or small the texture appears when projected onto the object. High scale value: texture appears more frequently repeated (smaller features). Low scale value: texture appears stretched or zoomed in (larger features). `scale = 1.0` → Texture covers 1 unit of world space.|
+- **Advantages**: No UV unwrapping needed, seamless tiling on any geometry
+- **Use cases**: Procedural terrain, rocks, organic shapes
+- **Performance**: Higher cost than standard UV texturing
 
-#### `normalTexture` modifier
+Set `triplanarScale` inside the material block:
 
-Enables normal texturing.
-A normal texture is a special kind of image used to simulate fine surface detail, such as bumps, wrinkles, or grooves, without increasing the polygon count of a model.
+```kotlin
+base {
+    colorTexture = texture("textures/rock.png")
+    triplanarScale = 2.0f  // Texture covers 2 world units
+}
+```
 
-| Uniform name   | Type               | Default value            | Description      |
-|----------------|--------------------|--------------------------|------------------|
-| normalTexture  | TextureDeclaration | -                        | Normal texture   |
+### Stochastic Texture Sampling
 
-#### `emission` modifier
+Stochastic sampling adds randomized texture offset to reduce visible repetition patterns:
 
-Enables material emission factor/color. Emission refers to the ability of a surface to emit light, as if it's glowing on its own without needing any external light source.
-Emitted light is added to diffuse/directional light reflected from the surface.
+- **Advantages**: More natural appearance for repeated textures
+- **Use cases**: Terrain, walls, procedural surfaces
+- **Performance**: Slight overhead from randomness computation
 
-| Uniform name   | Type               | Default value            | Description      |
-|----------------|--------------------|--------------------------|------------------|
-| factor         | ColorRGB           | -                        | Emission factor/color   |
+Set `stochasticSharpness` inside the material block:
 
-#### `metallicRoughnessTexture` modifier
+```kotlin
+base {
+    colorTexture = texture("textures/grass.png")
+    stochasticSharpness = 0.5f
+}
+```
 
-Enables metallic-roughness texture - a packed texture used in PBR to control how a material reflects light. It stores two properties: metallic and roughness in respectively, B and G channels of the texture.
+### Texture Arrays
 
-| Uniform name   | Type               | Default value            | Description      |
-|----------------|--------------------|--------------------------|------------------|
-| texture        | TextureDeclaration | -                        | Metallic-roughness texture |
+Texture arrays allow indexed selection of multiple textures in a single draw call:
+
+- **Use cases**: Procedural terrain with multiple material types, vertex-colored surface selection
+- **Performance**: Efficient for many material variants on many objects
+
+Enable with `colorTextures`:
+
+```kotlin
+base {
+    colorTextures = textureArray("textures/sand.png", "textures/grass.png", "textures/rock.png")
+}
+```
+
+### Custom Uniforms and Shader Plugins
+
+Materials support custom uniforms and shader plugins. These are configured inside the material block via `MaterialScope`:
+
+```kotlin
+base {
+    color = ColorRGBA.White
+    float("myCustomFloat", 1.5f)
+    vec3("myCustomVec", Vec3(1f, 0f, 0f))
+    texture("myCustomTexture", texture("textures/custom.png"))
+    plugin(myCustomShaderPlugin)
+}
+```
+
+### Other Material Types
+
+- `billboard` - camera-facing sprite material with position, scale, rotation, and effects (fire, fireball, smoke)
+- `decal` - decal material projected onto surfaces
+- `pipe` - material modifier for pipe mesh shapes
+- `customMaterial(vertShader, fragShader)` / `customMaterial(vertShader)` - fully custom shader materials
+- `customPostProcessingFilter(fragShader)` - custom post-processing filter shader
+- Sky materials: `fastCloudSky(...)`, `starrySky(...)`, `cubeSky(cubeTexture)`, `textureSky(texture)`
+- Post-processing: `blurHorz(radius)`, `blurVert(radius)`, `adjust(brightness, contrast, saturation)`, `water(...)`, `fog(...)`, `fxaa()`
+- Sky material can be assigned to `env` in any base material to enable reflections
+
+### Custom Shaders and Plugins
+
+For advanced rendering, implement custom shader plugins using the `ShaderPlugin` interface. Plugins inject GLSL code into specific pipeline stages identified by `ShaderPluginId`.

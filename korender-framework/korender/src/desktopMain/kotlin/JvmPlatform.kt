@@ -8,7 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
-import com.zakgof.korender.context.KorenderContext
+import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
@@ -16,6 +16,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_RENDERER
 import com.zakgof.korender.impl.gl.GLConstants.GL_VENDOR
 import com.zakgof.korender.impl.gl.GLConstants.GL_VERSION
 import com.zakgof.korender.impl.image.InternalImage
+import com.zakgof.korender.scope.KorenderScope
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -32,6 +33,7 @@ import java.awt.Font
 import java.awt.GraphicsEnvironment
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
+import java.awt.event.InputEvent
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
@@ -51,23 +53,21 @@ import kotlin.math.round
 
 private fun detectDevicePixelRatio(): List<Float> {
     val device = GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice
-    val scaleX = device::class.members.firstOrNull { it.name == "getDefaultScaleX" }
-        ?.call(device) as Float?
-    val scaleY = device::class.members.firstOrNull { it.name == "getDefaultScaleY" }
-        ?.call(device) as Float?
-    val scaleFactor = device::class.members.firstOrNull { it.name == "getScaleFactor" }
-        ?.call(device) as Int?
+    val transform = device.defaultConfiguration.defaultTransform
+    val scaleX = transform.scaleX.toFloat()
+    val scaleY = transform.scaleY.toFloat()
     return listOf(
-        scaleX ?: scaleFactor?.toFloat() ?: 1.0f,
-        scaleY ?: scaleFactor?.toFloat() ?: 1.0f
+        if (scaleX > 0f) scaleX else 1.0f,
+        if (scaleY > 0f) scaleY else 1.0f
     )
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
 actual fun Korender(
-    appResourceLoader: ResourceLoader,
-    block: KorenderContext.() -> Unit
+    resourceLoader: ResourceLoader,
+    vSync: Boolean,
+    block: KorenderScope.() -> Unit
 ) {
     var engine: Engine? by remember { mutableStateOf(null) }
     val pixelRatio by remember { mutableStateOf(detectDevicePixelRatio()) }
@@ -76,23 +76,29 @@ actual fun Korender(
         type: TouchEvent.Type,
         button: TouchEvent.Button,
         ex: Int,
-        ey: Int
+        ey: Int,
+        keyboardModifiers: KeyboardModifiers,
     ) {
         GlobalScope.launch {
-            engine?.pushTouch(TouchEvent(type, button, ex * pixelRatio[0], ey * pixelRatio[1]))
+            engine?.pushTouch(
+                TouchEvent(
+                    type, button, ex * pixelRatio[0], ey * pixelRatio[1], keyboardModifiers
+                )
+            )
         }
     }
 
     fun sendKey(
         type: com.zakgof.korender.KeyEvent.Type,
-        c: String
+        mapping: KeyMapping,
+        keyboardModifiers: KeyboardModifiers,
     ) {
         GlobalScope.launch {
-            engine?.pushKey(KeyEvent(type, c))
+            engine?.pushKey(KeyEvent(type, mapping.key, mapping.composeKey, keyboardModifiers))
         }
     }
 
-    fun awtKeyCodeToKorender(awtKeyCode: Int): String = KEY_MAPPING.getOrDefault(awtKeyCode, "UNKNOWN")
+    fun awtKeyCodeToKorender(awtKeyCode: Int): KeyMapping = KEY_MAPPING.getOrDefault(awtKeyCode, KeyMapping("UNKNOWN", Key.Unknown))
 
     SwingPanel(
         modifier = Modifier.fillMaxSize(),
@@ -111,7 +117,7 @@ actual fun Korender(
         },
         factory = {
             val data = GLData()
-            data.swapInterval = 0
+            data.swapInterval = if (vSync) 1 else 0
             data.majorVersion = 3
             data.minorVersion = 3
             data.profile = GLData.Profile.COMPATIBILITY
@@ -133,7 +139,7 @@ actual fun Korender(
                     engine = Engine(
                         (this.size.width * pixelRatio[0]).toInt(),
                         (this.size.height * pixelRatio[1]).toInt(),
-                        appResourceLoader,
+                        resourceLoader,
                         block
                     )
 
@@ -155,27 +161,32 @@ actual fun Korender(
                 else -> TouchEvent.Button.NONE
             }
 
+            fun keyboardModifiers(e: InputEvent) =
+                KeyboardModifiers(e.isShiftDown, e.isControlDown, e.isAltDown, e.isMetaDown)
+
             canvas.addMouseMotionListener(object : MouseMotionAdapter() {
                 override fun mouseMoved(e: MouseEvent) =
-                    sendTouch(TouchEvent.Type.MOVE, e.button.toButton(), e.x, e.y)
+                    sendTouch(TouchEvent.Type.MOVE, e.button.toButton(), e.x, e.y, keyboardModifiers(e))
 
                 override fun mouseDragged(e: MouseEvent) =
-                    sendTouch(TouchEvent.Type.MOVE, e.button.toButton(), e.x, e.y)
+                    sendTouch(TouchEvent.Type.MOVE, e.button.toButton(), e.x, e.y, keyboardModifiers(e))
             })
             canvas.addMouseListener(object : MouseAdapter() {
                 override fun mousePressed(e: MouseEvent) =
-                    sendTouch(TouchEvent.Type.DOWN, e.button.toButton(), e.x, e.y)
+                    sendTouch(TouchEvent.Type.DOWN, e.button.toButton(), e.x, e.y, keyboardModifiers(e))
 
                 override fun mouseReleased(e: MouseEvent) =
-                    sendTouch(TouchEvent.Type.UP, e.button.toButton(), e.x, e.y)
+                    sendTouch(TouchEvent.Type.UP, e.button.toButton(), e.x, e.y, keyboardModifiers(e))
             })
             canvas.addKeyListener(object : KeyAdapter() {
                 override fun keyPressed(e: KeyEvent) {
-                    sendKey(com.zakgof.korender.KeyEvent.Type.DOWN, awtKeyCodeToKorender(e.keyCode)) // TODO all keycodes
+                    val mapping = awtKeyCodeToKorender(e.keyCode)
+                    sendKey(com.zakgof.korender.KeyEvent.Type.DOWN, mapping, keyboardModifiers(e)) // TODO all keycodes
                 }
 
                 override fun keyReleased(e: KeyEvent) {
-                    sendKey(com.zakgof.korender.KeyEvent.Type.UP, awtKeyCodeToKorender(e.keyCode)) // TODO all keycodes
+                    val mapping = awtKeyCodeToKorender(e.keyCode)
+                    sendKey(com.zakgof.korender.KeyEvent.Type.UP, mapping, keyboardModifiers(e)) // TODO all keycodes
                 }
             })
 
@@ -196,12 +207,9 @@ actual fun Korender(
 
 internal actual object Platform {
 
-    actual val target = KorenderContext.TargetPlatform.Desktop
+    actual val target = KorenderScope.TargetPlatform.Desktop
 
     actual fun nanoTime() = System.nanoTime()
-
-    internal actual fun createImage(width: Int, height: Int, format: PixelFormat) =
-        image(BufferedImage(width, height, format.toBufferedImageType()))
 
     internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage> =
         CompletableDeferred(image(ImageIO.read(ByteArrayInputStream(bytes))))
@@ -277,27 +285,44 @@ internal actual object Platform {
     }
 
     private fun image(bufferedImage: BufferedImage): InternalImage {
-        val raster = bufferedImage.raster
-        val bytes = when (bufferedImage.type) {
+        // Convert unsupported BufferedImage types (e.g. TYPE_BYTE_BINARY, TYPE_INT_ARGB, etc.)
+        // to a known byte-based format to simplify extraction.
+        var img = bufferedImage
+        val supportedTypes = setOf(
+            BufferedImage.TYPE_3BYTE_BGR,
+            BufferedImage.TYPE_4BYTE_ABGR,
+            BufferedImage.TYPE_BYTE_GRAY,
+            BufferedImage.TYPE_USHORT_GRAY,
+            BufferedImage.TYPE_BYTE_INDEXED
+        )
+        if (img.type !in supportedTypes) {
+            val converted = BufferedImage(img.width, img.height, BufferedImage.TYPE_4BYTE_ABGR)
+            val g = converted.createGraphics()
+            g.drawImage(img, 0, 0, null)
+            g.dispose()
+            img = converted
+        }
+
+        val raster = img.raster
+        val bytes = when (img.type) {
             BufferedImage.TYPE_3BYTE_BGR -> loadBgr((raster.dataBuffer as DataBufferByte).data)
             BufferedImage.TYPE_4BYTE_ABGR -> loadAbgr((raster.dataBuffer as DataBufferByte).data)
             BufferedImage.TYPE_BYTE_GRAY -> loadGray((raster.dataBuffer as DataBufferByte).data)
             BufferedImage.TYPE_USHORT_GRAY -> loadGray16((raster.dataBuffer as DataBufferUShort).data)
-            BufferedImage.TYPE_BYTE_INDEXED -> loadIndexed(bufferedImage)
-            else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
+            BufferedImage.TYPE_BYTE_INDEXED -> loadIndexed(img)
+            else -> throw KorenderException("Unknown image format ${img.type}")
         }
-        val format = when (bufferedImage.type) {
+        val format = when (img.type) {
             BufferedImage.TYPE_3BYTE_BGR -> PixelFormat.RGB
             BufferedImage.TYPE_4BYTE_ABGR -> PixelFormat.RGBA
             BufferedImage.TYPE_BYTE_GRAY -> PixelFormat.Gray
             BufferedImage.TYPE_USHORT_GRAY -> PixelFormat.Gray16
-            // TODO support TYPE_BYTE_BINARY
-            BufferedImage.TYPE_BYTE_INDEXED -> if ((bufferedImage.colorModel as IndexColorModel).numComponents == 3) PixelFormat.RGB else PixelFormat.RGBA
-            else -> throw KorenderException("Unknown image format ${bufferedImage.type}")
+            BufferedImage.TYPE_BYTE_INDEXED -> if ((img.colorModel as IndexColorModel).numComponents == 3) PixelFormat.RGB else PixelFormat.RGBA
+            else -> throw KorenderException("Unknown image format ${img.type}")
         }
         return InternalImage(
-            bufferedImage.width,
-            bufferedImage.height,
+            img.width,
+            img.height,
             bytes,
             format
         )

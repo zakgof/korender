@@ -14,12 +14,13 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 @Composable
-fun BasicShapesExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
-    val material = base(color = ColorRGBA.Blue)
+fun BasicShapesExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
+    val material = base { color = ColorRGBA.Blue }
     val freeCamera = FreeCamera(this, 20.z, (-1).z)
     OnTouch { freeCamera.touch(it) }
     OnKey { freeCamera.handle(it) }
     Frame {
+        TestExchange.report(frameInfo)
         val rot = rotate(Quaternion.fromAxisAngle(Vec3(1f, 1f, 0f).normalize(), frameInfo.time))
         camera = freeCamera.camera(projection, width, height, frameInfo.dt)
         DirectionalLight(Vec3(1f, -1f, 0f))
@@ -58,8 +59,9 @@ fun BasicShapesExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         Gui {
             Column {
                 Filler()
-                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40, color = ColorRGBA(0x66FF55A0))
+                Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40f, color = ColorRGBA(0x66FF55A0))
             }
         }
     }
 }
+

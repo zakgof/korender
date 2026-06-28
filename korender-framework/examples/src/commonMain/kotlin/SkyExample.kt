@@ -9,21 +9,25 @@ import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.z
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @Composable
 fun SkyExample() {
-    Korender(appResourceLoader = { Res.readBytes(it) }) {
+    Korender(resourceLoader = { Res.readBytes("files/$it") }) {
         val freeCamera = FreeCamera(this, Vec3(0f, 4f, 20f), -1.z)
         OnTouch { freeCamera.touch(it) }
         Frame {
+            TestExchange.report(frameInfo)
             AmbientLight(ColorRGB.White)
             camera = freeCamera.camera(projection, width, height, 0f)
             Sky(starrySky())
             Renderable(
-                base(colorTexture = texture("texture/asphalt-albedo.jpg"), metallicFactor = 0.2f, roughnessFactor = 0.9f),
-                normalTexture(normalTexture = texture("texture/asphalt-normal.jpg")),
-                triplanar(0.1f),
+                base {
+                    colorTexture = texture("texture/asphalt-albedo.jpg")
+                    metallicFactor = 0.2f
+                    roughnessFactor = 0.9f
+                    normalTexture = texture("texture/asphalt-normal.jpg")
+                    triplanarScale = 0.1f
+                },
                 mesh = cube(1f),
                 transform = scale(2000f, 1f, 2000f)
             )
@@ -36,3 +40,4 @@ fun SkyExample() {
         }
     }
 }
+

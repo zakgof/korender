@@ -2,32 +2,35 @@ package com.zakgof.korender.examples.infcity
 
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
-import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.TEX
 import com.zakgof.korender.Korender
+import com.zakgof.korender.ShaderPlugin
+import com.zakgof.korender.ShaderPluginId
 import com.zakgof.korender.examples.TestExchange
-import com.zakgof.korender.context.FrameContext
-import com.zakgof.korender.context.KorenderContext
-import com.zakgof.korender.math.ColorRGB.Companion.White
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Transform.Companion.translate
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import com.zakgof.korender.scope.FrameScope
+import com.zakgof.korender.scope.KorenderScope
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.floor
 
 private val buildings = (0 until 10).map { generateBuilding() }
+private lateinit var emissionPlugin: ShaderPlugin
+private lateinit var secSkyPlugin: ShaderPlugin
 
 @Composable
-fun InfiniteCity() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun InfiniteCity() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
+    emissionPlugin = shaderPlugin(ShaderPluginId.EMISSION, "infcity/window.emission.plugin.frag")
+    secSkyPlugin = shaderPlugin(ShaderPluginId.SECSKY, "infcity/moon.secsky.plugin.frag")
     Frame {
         TestExchange.report(frameInfo)
         OnLoading {
@@ -37,20 +40,20 @@ fun InfiniteCity() = Korender(appResourceLoader = { Res.readBytes(it) }) {
     }
 }
 
-private fun FrameContext.loader() =
+private fun FrameScope.loader() =
     Gui {
         Column {
             Filler()
             Row {
                 Filler()
-                Text(id = "loader", text = "loading...", static = true, height = 40)
+                Text(id = "loader", text = "loading...", static = true, height = 40f)
                 Filler()
             }
             Filler()
         }
     }
 
-private fun FrameContext.frame() {
+private fun FrameScope.frame() {
     val z = frameInfo.time * 0.2f
 
     DeferredShading()
@@ -65,36 +68,36 @@ private fun FrameContext.frame() {
     gui()
 }
 
-private fun FrameContext.light() {
+private fun FrameScope.light() {
     AmbientLight(white(0.7f))
     DirectionalLight(Vec3(0.1f, -1f, -1f), white(2f)) {
-        if (target == KorenderContext.TargetPlatform.Desktop) {
-            Cascade(1024, 0.3f, 2.0f, 0f to 60f, softwarePcf(6))
+        if (target == KorenderScope.TargetPlatform.Desktop) {
+            Cascade(1024, 0.3f, 2.0f, 0f to 60f, hardwarePcf(6, 1.5f, 0.00001f))
             Cascade(512, 1.7f, 12.0f, 0f to 60f, vsm())
             Cascade(512, 10.0f, 50.0f, 0f to 60f, vsm())
         } else {
-            Cascade(512, 0.3f, 2.0f, 0f to 60f, hardwarePcf(0.0003f))
+            Cascade(512, 0.3f, 2.0f, 0f to 60f, hardwarePcf(6, 1.5f,0.0001f))
             Cascade(512, 1.7f, 30.0f, 0f to 60f, vsm())
         }
     }
 }
 
-private fun FrameContext.character(z: Float) {
-    Gltf(
+private fun FrameScope.character(z: Float) {
+    Model(
         resource = "infcity/swat-woman.glb",
         animation = 2,
         transform = scale(0.002f).translate(z.z + 0.1f.x)
     )
 }
 
-private fun FrameContext.city(z: Float) {
+private fun FrameScope.city(z: Float) {
     val start = floor(z / 32f) * 32f - 4f
     cityChunk(start)
     cityChunk(start + 32f)
     cityChunk(start + 64f)
 }
 
-private fun FrameContext.cityChunk(startZ: Float) {
+private fun FrameScope.cityChunk(startZ: Float) {
     road(startZ)
     building(abs(startZ.hashCode()) % 10, startZ, -20f)
     building(abs((startZ * 5f).hashCode()) % 10, startZ, 4f)
@@ -106,27 +109,29 @@ private fun FrameContext.cityChunk(startZ: Float) {
     tree(startZ + 24f, -1.2f)
 }
 
-private fun FrameContext.tree(z: Float, x: Float) {
-    Gltf(
+private fun FrameScope.tree(z: Float, x: Float) {
+    Model(
         resource = "infcity/tree.glb",
         transform = rotate(1.y, z + x).translate(x, 0.95f, z)
     )
 }
 
-private fun FrameContext.building(buildingId: Int, z: Float, x: Float) {
+private fun FrameScope.building(buildingId: Int, z: Float, x: Float) {
 
     val building = buildings[buildingId]
 
-    val roof = arrayOf(
-        base(colorTexture = texture("infcity/roof.jpg"), metallicFactor = 0f, roughnessFactor = 1f),
-    )
-    val windows = arrayOf(
-        base(colorTexture = texture("infcity/dw.jpg"), metallicFactor = 0.5f, roughnessFactor = 0.1f),
-        emission(White),
-        uniforms(
-            "windowTexture" to texture("infcity/lw.jpg")
-        )
-    )
+    val roof = base {
+        colorTexture = texture("infcity/roof.jpg")
+        metallicFactor = 0f
+        roughnessFactor = 1f
+    }
+    val windows = base {
+        colorTexture = texture("infcity/dw.jpg")
+        metallicFactor = 0.5f
+        roughnessFactor = 0.1f
+        plugin(emissionPlugin)
+        texture("windowTexture", texture("infcity/lw.jpg"))
+    }
 
     fun Triangulation.toCustomMesh(id: String) = customMesh(id, this.points.size, this.indexes.size, POS, NORMAL, TEX) {
         pos(*points.toTypedArray())
@@ -136,60 +141,70 @@ private fun FrameContext.building(buildingId: Int, z: Float, x: Float) {
     }
 
     Renderable(
-        *roof,
+        roof,
         mesh = building.rf().toCustomMesh("roof-$buildingId"),
         transform = translate(x, 0f, z + 8f)
     )
     Renderable(
-        *windows,
-        plugin("emission", "infcity/window.emission.plugin.frag"),
+        windows,
         mesh = building.lw().toCustomMesh("wnd-$buildingId"),
         transform = translate(x, 0f, z + 8f)
     )
 }
 
-private fun FrameContext.road(startZ: Float) = Renderable(
-    base(colorTexture = texture("infcity/road.jpg"), metallicFactor = 0f, roughnessFactor = 1.0f),
+private fun FrameScope.road(startZ: Float) = Renderable(
+    base {
+        colorTexture = texture("infcity/road.jpg")
+        metallicFactor = 0f
+        roughnessFactor = 1.0f
+    },
     mesh = roadMesh(),
     transform = translate(startZ.z)
 )
 
-private fun FrameContext.roadMesh() = customMesh("road", 4, 6, POS, NORMAL, TEX) {
-    pos(-0.5f, 0f, 0f).normal(1.y).tex(0f, 0f)
-    pos(-0.5f, 0f, 32f).normal(1.y).tex(0f, 32f)
-    pos(0.5f, 0f, 32f).normal(1.y).tex(1f, 32f)
-    pos(0.5f, 0f, 0f).normal(1.y).tex(1f, 0f)
+private fun FrameScope.roadMesh() = customMesh("road", 4, 6, POS, NORMAL, TEX) {
+    pos(Vec3(-0.5f, 0f, 0f)).normal(1.y).tex(Vec2(0f, 0f))
+    pos(Vec3(-0.5f, 0f, 32f)).normal(1.y).tex(Vec2(0f, 32f))
+    pos(Vec3(0.5f, 0f, 32f)).normal(1.y).tex(Vec2(1f, 32f))
+    pos(Vec3(0.5f, 0f, 0f)).normal(1.y).tex(Vec2(1f, 0f))
     index(0, 1, 2, 0, 2, 3)
 }
 
-private fun FrameContext.sidewalk(z: Float, x: Float) = Renderable(
-    base(colorTexture = texture("infcity/roof.jpg"), metallicFactor = 0.1f, roughnessFactor = 0.2f),
-    triplanar(0.5f),
+private fun FrameScope.sidewalk(z: Float, x: Float) = Renderable(
+    base {
+        colorTexture = texture("infcity/roof.jpg")
+        metallicFactor = 0.1f
+        roughnessFactor = 0.2f
+        triplanarScale = 0.5f
+    },
     mesh = sidewalkMesh(),
     transform = translate(x, 0f, z)
 )
 
-private fun FrameContext.sidewalkMesh() = customMesh("sidewalk", 4, 6, POS, NORMAL, TEX) {
-    pos(0f, 0f, 0f).normal(1.y).tex(0f, 0f)
-    pos(0f, 0f, 32f).normal(1.y).tex(0f, 1f)
-    pos(32f, 0f, 32f).normal(1.y).tex(1f, 1f)
-    pos(32f, 0f, 0f).normal(1.y).tex(1f, 0f)
+private fun FrameScope.sidewalkMesh() = customMesh("sidewalk", 4, 6, POS, NORMAL, TEX) {
+    pos(Vec3(0f, 0f, 0f)).normal(1.y).tex(Vec2(0f, 0f))
+    pos(Vec3(0f, 0f, 32f)).normal(1.y).tex(Vec2(0f, 1f))
+    pos(Vec3(32f, 0f, 32f)).normal(1.y).tex(Vec2(1f, 1f))
+    pos(Vec3(32f, 0f, 0f)).normal(1.y).tex(Vec2(1f, 0f))
     index(0, 1, 2, 0, 2, 3)
 }
 
-private fun FrameContext.gui() =
+private fun FrameScope.gui() =
     Gui {
         Column {
             Filler()
-            Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40, color = ColorRGBA(0x66FF55A0))
+            Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}", height = 40f, color = ColorRGBA(0x66FF55A0))
         }
     }
 
-private fun FrameContext.atmosphere() =
+private fun FrameScope.atmosphere() =
     PostProcess(fog(density = 0.06f, color = white(0.05f))) {
         Sky(
-            starrySky(colorness = 0.4f, density = 20f, size = 20f),
-            plugin("secsky", "infcity/moon.secsky.plugin.frag"),
-            uniforms("moonTexture" to texture("infcity/moon.png"))
+            starrySky(colorness = 0.4f, density = 20f, size = 20f) {
+                plugin(secSkyPlugin)
+                texture("moonTexture", texture("infcity/moon.png"))
+            }
         )
     }
+
+

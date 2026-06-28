@@ -1,4 +1,4 @@
-﻿package com.zakgof.korenderexamples
+package com.zakgof.korenderexamples
 
 import androidx.compose.ui.awt.ComposeWindow
 import java.io.File
@@ -7,7 +7,7 @@ import javax.swing.SwingUtilities
 
 object TestUtil {
 
-    val resultsFolder = File("D:\\kot\\dev\\assets")
+    val resultsFolder = File(System.getProperty("user.home"), ".korender")
     val timestampFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
 
     fun createWindow(): ComposeWindow {

@@ -6,20 +6,20 @@ import com.zakgof.korender.Korender
 import com.zakgof.korender.math.ColorRGB.Companion.White
 import com.zakgof.korender.math.ColorRGBA.Companion.Green
 import com.zakgof.korender.math.ColorRGBA.Companion.Red
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @Composable
-fun FxaaExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun FxaaExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
     Frame {
+        TestExchange.report(frameInfo)
         AmbientLight(White)
         Renderable(
-            base(color = Green),
+            base { color = Green },
             mesh = sphere(4f),
         )
         val doFxaa = (frameInfo.time.toInt() % 6 < 3)
         Gui {
             val text = if (doFxaa) "FXAA ON" else "FXAA OFF"
-            Text(text = text, fontResource = "font/orbitron.ttf", height = 50, color = Red, id = "fxaa")
+            Text(text = text, fontResource = "font/orbitron.ttf", height = 50f, color = Red, id = "fxaa")
         }
 
         if (doFxaa) {
@@ -27,3 +27,4 @@ fun FxaaExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         }
     }
 }
+

@@ -1,0 +1,52 @@
+package com.zakgof.korender.impl.scene
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+class KrModel(
+    val textures: Map<String, Texture>,
+    val materials: Map<String, Material>,
+    val meshes: Map<String, Mesh>,
+    val renderables: Map<String, Renderable>,
+    val version: Int = 1,
+) {
+    @Serializable
+    class Texture(
+        val id: String,
+        val format: String,
+        val bytes: ByteArray
+    )
+
+    @Serializable
+    class Material(
+        val id: String,
+        val baseColor: Long = -1,
+        val colorTextureId: String? = null,
+        val colorTextureIds: List<String>? = null,
+        val stochasticSharpness: Float? = null,
+        val triplanarScale: Float? = null,
+        val metallic: Float? = null,
+        val roughness: Float? = null
+    )
+
+    @Serializable
+    class Mesh(
+        val id: String,
+        val vertices: Int,
+        val indices: Int,
+        val attrBytes: Map<Attribute, ByteArray>,
+        val indexBytes: ByteArray?
+    )
+
+    @Serializable
+    enum class Attribute {
+        POS, NORMAL, TEX, COLOR, COLORTEXINDEX, METALLIC, ROUGHNESS
+    }
+    @Serializable
+    class Renderable(
+        val id: String,
+        val meshId: String,
+        val materialId: String,
+        val transform: FloatArray
+    )
+}

@@ -1,4 +1,4 @@
-﻿package com.zakgof.korender.examples
+package com.zakgof.korender.examples
 
 import com.zakgof.korender.FrameInfo
 import com.zakgof.korender.Image

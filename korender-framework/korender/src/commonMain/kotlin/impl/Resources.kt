@@ -10,18 +10,19 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 @OptIn(ExperimentalCoroutinesApi::class)
 internal fun <T> Deferred<T>.resultOrNull(): T? = if (this.isCompleted) this.getCompleted() else null
 
-internal suspend fun resourceBytes(appResourceLoader: ResourceLoader, resource: String): ByteArray {
+internal suspend fun ResourceLoader.load(resource: String): ByteArray {
     println("Loading resource [$resource]")
     if (resource.startsWith("!")) {
         return Res.readBytes("files/" + resource.substring(1))
     }
-    return appResourceLoader.invoke("files/$resource")
+    return this.invoke(resource)
 }
 
 internal fun absolutizeResource(resource: String, referrer: String): String {
     if (resource.startsWith("data:"))
         return resource;
-    return referrer.split("/").dropLast(1).joinToString("/") + "/" + resource;
+    return referrer.replace("\\", "/").split("/").dropLast(1).joinToString("/") + "/" + resource;
+
 }
 
 internal fun ignoringGlError(block: () -> Unit) {

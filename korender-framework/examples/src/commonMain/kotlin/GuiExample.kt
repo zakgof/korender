@@ -15,21 +15,22 @@ import com.zakgof.korender.TextStyle
 import com.zakgof.korender.math.ColorRGBA
 
 @Composable
-fun GuiExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun GuiExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
     val statusStyle = TextStyle(height = 36, color = ColorRGBA(0xF06543A0))
     val widgetStyle = TextStyle(height = 48, color = ColorRGBA(0x66FF55A0))
     val checkboxState = CheckboxState(true)
     val sliderState = SliderState(30f, 0f, 100f)
     val joystickState = JoystickState()
     Frame {
+        TestExchange.report(frameInfo)
         val progress = fract(frameInfo.time * 0.1f)
         Sky(starrySky())
         Gui {
             Column {
                 Row {
                     Filler()
-                    Image(id = "icon", imageResource = "texture/korender32.png", width = 48, height = 48, marginTop = 8, marginRight = 8)
-                    Text(id = "header", fontResource = "font/orbitron.ttf", height = 64, text = "Korender GUI Demo", color = ColorRGBA(0x246EB9A0))
+                    Image(id = "icon", imageResource = "texture/korender32.png", width = 48f, height = 48f, marginTop = 8f, marginRight = 8f)
+                    Text(id = "header", fontResource = "font/orbitron.ttf", height = 64f, text = "Korender GUI Demo", color = ColorRGBA(0x246EB9A0))
                     Filler()
                 }
                 Filler()
@@ -47,7 +48,7 @@ fun GuiExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                 Row {
                     Filler()
                     Text(id = "pbl", text = "Progress bar", style = widgetStyle)
-                    ProgressBar(id = "pbw", width = 320, value = progress)
+                    ProgressBar(id = "pbw", width = 320f, value = progress)
                     Filler()
                 }
                 Row {
@@ -59,7 +60,7 @@ fun GuiExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                 Row {
                     Filler()
                     Text(id = "sll", text = "Slider", style = widgetStyle)
-                    Slider(id = "slw", width = 320, state = sliderState)
+                    Slider(id = "slw", width = 320f, state = sliderState)
                     Filler()
                 }
                 Row {
@@ -71,7 +72,7 @@ fun GuiExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
                 Row {
                     Filler()
                     Text(id = "jl", text = "Joystick", style = widgetStyle)
-                    Joystick(id = "jw", state = joystickState, width = 256)
+                    Joystick(id = "jw", state = joystickState, width = 256f)
                     Filler()
                 }
                 Row {

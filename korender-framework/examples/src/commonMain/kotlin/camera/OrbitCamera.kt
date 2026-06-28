@@ -2,7 +2,7 @@ package com.zakgof.korender.examples.camera
 
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.TouchEvent
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 
@@ -17,7 +17,7 @@ class OrbitCamera(initialPosition: Vec3, private val targetPosition: Vec3 = Vec3
 
     private val r = (targetPosition - initialPosition).length()
 
-    fun KorenderContext.camera(): CameraDeclaration {
+    fun KorenderScope.camera(): CameraDeclaration {
         if (startPosition != null) {
             val startDirection = (targetPosition - startPosition!!).normalize()
             val startRight = (startDirection % 1.y).normalize()

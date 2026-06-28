@@ -1,8 +1,12 @@
+package island
+
 import com.zakgof.korender.Image
-import com.zakgof.korender.Prefab
 import com.zakgof.korender.TextureFilter
-import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.scope.FrameScope
+import com.zakgof.korender.examples.island.albedoTerrainPlugin
 import com.zakgof.korender.examples.island.loadBinary
+import com.zakgof.korender.examples.island.normalTerrainPlugin
+import com.zakgof.korender.examples.island.terrainHeightPlugin
 import com.zakgof.korender.math.Vec2
 
 fun loadRunway(bytes: ByteArray): Pair<Vec2, Vec2> = loadBinary(bytes) {
@@ -11,23 +15,20 @@ fun loadRunway(bytes: ByteArray): Pair<Vec2, Vec2> = loadBinary(bytes) {
     p1 to p2
 }
 
-fun FrameContext.island(heightMap: Image, rwSeeds: Pair<Vec2, Vec2>, terrain: Prefab) {
-    Renderable(
-        base(metallicFactor = 0.0f),
-        plugin("normal", "!shader/plugin/normal.terrain.frag"),
-        plugin("terrain", "island/terrain/shader/height.glsl"),
-        plugin("albedo", "island/terrain/shader/albedo.glsl"),
-        uniforms(
-            "heightTexture" to texture("base-terrain", heightMap),
-            "patchTexture" to texture("island/terrain/color.png"),
-            "sdf" to texture("island/terrain/sdf.png", TextureFilter.Linear),
-            "road" to texture("infcity/road.jpg"),
-            "grassTexture" to texture("texture/grass.jpg"),
-            "runwayTexture" to texture("island/terrain/runway.jpg"),
-            "runwayP1" to rwSeeds.first,
-            "runwayP2" to rwSeeds.second
-        ),
-        defs("NO_SHADOW_CAST"),
-        prefab = terrain
-    )
+fun FrameScope.island(heightMap: Image, rwSeeds: Pair<Vec2, Vec2>) {
+    HeightField("terrain", 32.0f, 24, 6) {
+        metallicFactor = 0.0f
+        plugin(normalTerrainPlugin)
+        plugin(terrainHeightPlugin)
+        plugin(albedoTerrainPlugin)
+        texture("heightMapTexture", texture("base-terrain", heightMap, filter = TextureFilter.Linear))
+        texture("patchTexture", texture("island/terrain/color.png"))
+        texture("sdf", texture("island/terrain/sdf.png", TextureFilter.Linear))
+        texture("road", texture("infcity/road.jpg"))
+        texture("grassTexture", texture("texture/grass.jpg"))
+        texture("runwayTexture", texture("island/terrain/runway.jpg"))
+        vec2("runwayP1", rwSeeds.first)
+        vec2("runwayP2", rwSeeds.second)
+        // defs ("NO_SHADOW_CAST")
+    }
 }

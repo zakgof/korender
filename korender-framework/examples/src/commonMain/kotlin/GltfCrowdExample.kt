@@ -11,7 +11,7 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 
 @Composable
-fun GltfCrowdExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
+fun GltfCrowdExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
     val orbitCamera = OrbitCamera(15.z, 0.y)
     OnTouch { orbitCamera.touch(it) }
     Frame {
@@ -19,9 +19,9 @@ fun GltfCrowdExample() = Korender(appResourceLoader = { Res.readBytes(it) }) {
         camera = orbitCamera.run { camera() }
         AmbientLight(white(0.6f))
         DirectionalLight(Vec3(1.0f, -1.0f, -1.0f), white(3f))
-        Gltf(
+        Model(
             resource = "gltf/ai/swat.glb",
-            instancing = gltfInstancing("crowd", 49, true) {
+            instancing = modelInstancing("crowd", 49, true) {
                 (-3..3).forEach { x ->
                     (-3..3).forEach { z ->
                         Instance(

@@ -1,12 +1,10 @@
-
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.kotlinSerialization)
 }
@@ -20,10 +18,17 @@ compose.resources {
 }
 
 kotlin {
-
-    androidTarget {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
+    android {
+        namespace = "com.zakgof.korender.examples"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        androidResources {
+            enable = true
+        }
+        packaging {
+            resources {
+                excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            }
         }
     }
 
@@ -39,13 +44,14 @@ kotlin {
         binaries.executable()
     }
 
-    compilerOptions {
-        freeCompilerArgs.addAll("-Xcontext-parameters")
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
 
     sourceSets {
         val desktopMain by getting
-        val desktopTest by getting {
+
+        getByName("desktopTest") {
             dependencies {
                 implementation(libs.junit.jupiter.api)
                 implementation(libs.junit.jupiter.params)
@@ -60,11 +66,11 @@ kotlin {
         }
         commonMain.dependencies {
             implementation(project(":korender"))
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.material)
+            implementation(libs.compose.ui)
+            implementation(libs.compose.components.resources)
             implementation(libs.kotlinx.serialization.core)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
@@ -74,7 +80,7 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.ktor.client.java)
         }
-        webMain.dependencies {
+        getByName("wasmJsMain").dependencies {
             implementation(libs.ktor.client.js)
         }
     }
@@ -82,55 +88,11 @@ kotlin {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
-    jvmArgs("--add-exports", "java.desktop/sun.awt=ALL-UNNAMED")
-}
-
-android {
-    namespace = "com.zakgof.korender"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-
-    defaultConfig {
-        applicationId = "com.zakgof.korenderexamples"
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 6
-        versionName = korenderVersion
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
-    signingConfigs {
-        create("release") {
-            keyAlias = project.properties["keyname"].toString()
-            keyPassword = project.properties["keypassword"].toString()
-            storeFile = file(project.properties["keystorelocation"].toString())
-            storePassword = project.properties["keystorepassword"].toString()
-        }
-    }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = true
-            signingConfig = signingConfigs.getByName("release")
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
 }
 
 compose.desktop {
-
     application {
         mainClass = "com.zakgof.korender.MainKt"
-
-        jvmArgs("--add-exports", "java.desktop/sun.awt=ALL-UNNAMED")
-
-        nativeApplication {
-        }
-
         nativeDistributions {
             targetFormats(TargetFormat.Msi)
             packageName = "com.zakgof.korender"

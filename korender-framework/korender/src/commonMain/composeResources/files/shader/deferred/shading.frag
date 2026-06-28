@@ -31,6 +31,15 @@ float shadowRatios[5] = float[5](0., 0., 0., 0., 0.);
     #import "!shader/lib/skyibl.glsl"
 #endif
 
+
+#ifdef SSAO
+    #import "!shader/deferred/shading-ssao.glsl"
+#endif
+
+#ifdef HBAO
+    #import "!shader/deferred/shading-hbao.glsl"
+#endif
+
 void main() {
 
     float depth = texture(depthGeometryTexture, vtex).r;
@@ -50,22 +59,43 @@ void main() {
 
     vec3 color = emissionTexel.rgb;
     float occlusion = emissionTexel.a;
+    float ssao = 1.0;
+    float hbao = 1.0;
+
+    #ifdef SSAO
+        ssao = sampleSsao();
+    #endif
+
+    #ifdef HBAO
+        hbao = sampleHbao();
+    #endif
+
+    float ambientOcclusion = ssao * hbao;
 
     float plane = dot((vpos - cameraPos), cameraDir);
     populateShadowRatios(plane, vpos);
 
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+    float NdotV = max(dot(V, N), 0.0);
+    float alpha = roughness * roughness;
+    float alpha2 = alpha * alpha;
+    float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
+    float ggxV = NdotV / (NdotV * (1.0 - k) + k);
+
     for (int l=0; l<numDirectionalLights; l++)
-        color += dirLight(l, N, V, albedo, metallic, roughness, occlusion);
+        color += dirLight(l, N, V, albedo, metallic, alpha2, k, ggxV, F0, occlusion);
 
     for (int l=0; l<numPointLights; l++)
-        color += pointLight(vpos, l, N, V, albedo, metallic, roughness, occlusion);
+        color += pointLight(vpos, l, N, V, albedo, metallic, alpha2, k, ggxV, F0, occlusion);
 
-    vec3 F0 = mix(vec3(0.04), albedo, metallic);
     vec3 diffFactor = albedo * (1.0 - metallic);
-    vec3 specFactor = fresnelSchlick(max(dot(V, N), 0.1), F0);
-    color += ambientColor * (diffFactor + specFactor * 0.3);
+    color += ambientColor * diffFactor * ambientOcclusion;
+
     #ifdef PLUGIN_SKY
-        color += skyibl(N, V, roughness, diffFactor, specFactor);
+        color += skyibl(N, V, roughness, diffFactor, F0, NdotV) * ambientOcclusion;
+    #else
+        // Fallback for ambient-only setups: keep metallic surfaces from going black without IBL.
+        color += ambientColor * F0 * metallic * ambientOcclusion;
     #endif
 
     fragColor = vec4(color, 1.);

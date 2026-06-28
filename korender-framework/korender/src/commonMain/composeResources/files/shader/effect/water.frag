@@ -7,6 +7,7 @@ in vec2 vtex;
 #uniform float transparency;
 #uniform float waveScale;
 #uniform float waveMagnitude;
+#uniform float time;
 
 #uniforms
 

@@ -14,6 +14,7 @@ import com.zakgof.korender.impl.gl.GL.glGetError
 import com.zakgof.korender.impl.gl.GL.glGetFloatv
 import com.zakgof.korender.impl.gl.GL.glGetMaxTextureMaxAnisotropyConstant
 import com.zakgof.korender.impl.gl.GL.glGetTextureMaxAnisotropyConstant
+import com.zakgof.korender.impl.gl.GL.glPixelStorei
 import com.zakgof.korender.impl.gl.GL.glTexImage3D
 import com.zakgof.korender.impl.gl.GL.glTexParameteri
 import com.zakgof.korender.impl.gl.GL.glTexSubImage3D
@@ -23,17 +24,20 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MAG_FILTER
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_MIN_FILTER
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_S
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_WRAP_T
+import com.zakgof.korender.impl.gl.GLConstants.GL_UNPACK_ALIGNMENT
 import com.zakgof.korender.impl.ignoringGlError
 import com.zakgof.korender.impl.image.impl.image.InternalImage3D
 import kotlin.math.min
 
-internal class GlGpuTexture3D(private val width: Int, private val height: Int, private val depth: Int, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024) : GLBindableTexture, AutoCloseable {
+internal class GlGpuTexture3D(private val width: Int, private val height: Int, private val depth: Int, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024) : GlBindableTexture, AutoCloseable {
 
     override val glHandle = glGenTextures()
     val mipmapped = filter == TextureFilter.MipMap
 
     private var format: PixelFormat? = null
     private lateinit var glFormat: GlGpuTexture.GlFormat
+
+    override var unit = -1
 
     constructor(image: InternalImage3D, filter: TextureFilter = TextureFilter.MipMap, wrap: TextureWrap = TextureWrap.Repeat, aniso: Int = 1024) : this(image.width, image.height, image.depth, filter, wrap, aniso) {
         uploadData(image.bytes, formatMap[image.format]!!)
@@ -80,10 +84,11 @@ internal class GlGpuTexture3D(private val width: Int, private val height: Int, p
     private fun upload(width: Int, height: Int, buffer: NativeBuffer?, format: GlGpuTexture.GlFormat): Boolean {
 
         if (this.format != null && buffer != null) {
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
             glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, width, height, depth, format.format, format.type, buffer.rewind())
             return true
         }
-
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
         glTexImage3D(GL_TEXTURE_3D, 0, format.internal, width, height, depth, 0, format.format, format.type, buffer?.rewind())
         val error = glGetError()
         if (error != 0) {
@@ -96,8 +101,11 @@ internal class GlGpuTexture3D(private val width: Int, private val height: Int, p
     }
 
     override fun bind(unit: Int) {
-        glActiveTexture(GL_TEXTURE0 + unit)
-        glBindTexture(GL_TEXTURE_3D, glHandle)
+        if (unit >= 0) {
+            glActiveTexture(GL_TEXTURE0 + unit)
+            glBindTexture(GL_TEXTURE_3D, glHandle)
+        }
+        this.unit = unit
     }
 
     override fun close() {

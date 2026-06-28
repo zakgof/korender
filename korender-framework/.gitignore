@@ -4,7 +4,6 @@
 .kotlin
 build
 local.properties
-.gradle-user
 /examples/src/commonMain/composeResources/files/island/building/buildings.bin
 /examples/src/commonMain/composeResources/files/island/terrain/color.png
 /examples/src/commonMain/composeResources/files/island/terrain/height.png
@@ -15,3 +14,6 @@ local.properties
 /examples/src/commonMain/composeResources/files/island/tree/cards.bin
 /examples/src/commonMain/composeResources/files/island/tree/branches.bin
 /examples/src/commonMain/composeResources/files/island/tree/atlas.png
+/gradle/gradle-daemon-jvm.properties
+/kotlin-js-store/wasm/yarn.lock
+/.android

@@ -1,9 +1,9 @@
 package com.zakgof.korender.impl.glgpu
 
-import com.zakgof.korender.AttributeType
 import com.zakgof.korender.IndexType
-import com.zakgof.korender.MeshAttribute
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
+import com.zakgof.korender.impl.geometry.AttributeType
+import com.zakgof.korender.impl.geometry.InternalMeshAttribute
 import com.zakgof.korender.impl.gl.GL.glBindBuffer
 import com.zakgof.korender.impl.gl.GL.glBindVertexArray
 import com.zakgof.korender.impl.gl.GL.glBufferData
@@ -43,7 +43,7 @@ internal fun AttributeType.toGL(): Int = when (this) {
 }
 
 internal class GlGpuMesh(
-    val attrs: List<MeshAttribute<*>>,
+    val attrs: List<InternalMeshAttribute<*>>,
     isDynamic: Boolean = false,
     private val indexType: IndexType
 ) : AutoCloseable {

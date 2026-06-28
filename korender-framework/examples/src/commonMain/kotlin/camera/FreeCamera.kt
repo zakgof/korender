@@ -4,11 +4,11 @@ import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.ProjectionDeclaration
 import com.zakgof.korender.TouchEvent
-import com.zakgof.korender.context.KorenderContext
+import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 
-class FreeCamera(private val context: KorenderContext, initialPosition: Vec3, initialDirection: Vec3, private val velocity: Float = 3.0f) {
+class FreeCamera(private val context: KorenderScope, initialPosition: Vec3, initialDirection: Vec3, private val velocity: Float = 3.0f) {
 
     private var deltaX: Float = 0f
     private var deltaY: Float = 0f

@@ -1,6 +1,7 @@
 package com.zakgof.korender.impl.glgpu
 
 import com.zakgof.korender.KorenderException
+import com.zakgof.korender.impl.gl.GL.glActiveTexture
 import com.zakgof.korender.impl.gl.GL.glBindFramebuffer
 import com.zakgof.korender.impl.gl.GL.glBindTexture
 import com.zakgof.korender.impl.gl.GL.glCheckFramebufferStatus
@@ -14,6 +15,7 @@ import com.zakgof.korender.impl.gl.GLConstants.GL_COLOR_ATTACHMENT0
 import com.zakgof.korender.impl.gl.GLConstants.GL_DEPTH_ATTACHMENT
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER
 import com.zakgof.korender.impl.gl.GLConstants.GL_FRAMEBUFFER_COMPLETE
+import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE0
 import com.zakgof.korender.impl.gl.GLConstants.GL_TEXTURE_2D
 import com.zakgof.korender.impl.gl.GLFrameBuffer
 
@@ -23,8 +25,8 @@ internal class GlGpuFrameBuffer(
     private val width: Int,
     private val height: Int,
     colorTexturePresets: List<GlGpuTexture.Preset>,
-    useDepthBuffer: Boolean
-) : AutoCloseable {
+    useDepthBuffer: Boolean,
+) : AutoCloseable, GlRenderableFrameBuffer {
 
     private val fbHandle: GLFrameBuffer = glGenFramebuffers()
 
@@ -44,7 +46,7 @@ internal class GlGpuFrameBuffer(
 
         if (useDepthBuffer) {
             depthTexture = GlGpuTexture(width, height, GlGpuTexture.Preset.Depth)
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D,depthTexture.glHandle,0)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture.glHandle, 0)
             println(" - FB depth textures [${depthTexture.glHandle}]")
         } else {
             depthTexture = null
@@ -62,7 +64,7 @@ internal class GlGpuFrameBuffer(
     private fun attachColorTexture(index: Int, preset: GlGpuTexture.Preset): GlGpuTexture {
         repeat(preset.formats.size) {
             val tex = GlGpuTexture(width, height, preset, it)
-            glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0 + index,GL_TEXTURE_2D,tex.glHandle,0)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, GL_TEXTURE_2D, tex.glHandle, 0)
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
                 println("Framebuffer [$this] did not accept color target texture with internal format [${preset.formats[it].internal.toHexString()}]")
                 tex.close()
@@ -80,7 +82,7 @@ internal class GlGpuFrameBuffer(
         depthTexture?.close()
     }
 
-    fun exec(block: () -> Unit) {
+    override fun exec(block: () -> Unit) {
         try {
             bind()
             block.invoke()
@@ -95,6 +97,7 @@ internal class GlGpuFrameBuffer(
     }
 
     private fun unbind() {
+        glActiveTexture(GL_TEXTURE0)
         colorTextures.filter { it.mipmapped }.forEach {
             glBindTexture(GL_TEXTURE_2D, it.glHandle)
             glGenerateMipmap(GL_TEXTURE_2D)

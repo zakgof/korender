@@ -49,7 +49,7 @@ actual object GL {
         gl!!.deleteTexture(texture.texture)
 
     actual fun glPixelStorei(pname: Int, param: Int) =
-        gl!!.pixelStorei(param, param)
+        gl!!.pixelStorei(pname, param)
 
     actual fun glGenTextures(): GLTexture =
         com.zakgof.korender.impl.gl.GLTexture(

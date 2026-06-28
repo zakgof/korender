@@ -1,6 +1,8 @@
 package com.zakgof.korender.impl.image
 
+import androidx.compose.ui.graphics.ImageBitmap
 import com.zakgof.korender.Image
+import com.zakgof.korender.KorenderException
 import com.zakgof.korender.PixelFormat
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.math.ColorRGBA
@@ -11,6 +13,28 @@ internal class InternalImage(
     val bytes: NativeByteBuffer,
     override val format: PixelFormat
 ) : Image {
+
+    companion object {
+
+        fun createImage(width: Int, height: Int, format: PixelFormat, rawBytes: ByteArray? = null): InternalImage {
+            val buffer = NativeByteBuffer(imageBytesLength(width, height, format))
+            rawBytes?.let {
+                if (rawBytes.size != buffer.size())
+                    throw KorenderException("Image bytes size mismatch, expected ${buffer.size()}, actual ${rawBytes.size}")
+                buffer.put(it)
+                buffer.rewind()
+            }
+            return InternalImage(width, height, buffer, format)
+        }
+
+        private fun imageBytesLength(width: Int, height: Int, format: PixelFormat): Int =
+            width * height * when (format) {
+                PixelFormat.RGB -> 3
+                PixelFormat.RGBA -> 4
+                PixelFormat.Gray -> 1
+                PixelFormat.Gray16 -> 2
+            }
+    }
 
     override fun pixel(x: Int, y: Int): ColorRGBA =
         when (format) {
@@ -77,5 +101,8 @@ internal class InternalImage(
     override fun toTga(): ByteArray = Tga.encode(width, height, format, bytes)
 
     override fun toRaw(): ByteArray = ByteArray(bytes.size()) { bytes.byte(it) }
+
+    override fun toCompose(): ImageBitmap =
+        composeImageFromArgbPixels(width, height, toArgbPixels())
 
 }

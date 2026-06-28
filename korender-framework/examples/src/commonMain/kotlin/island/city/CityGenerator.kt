@@ -6,6 +6,7 @@ import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import com.zakgof.korender.scope.KorenderScope
 
 private fun cube(x: Int, y: Int, z: Int) = x or (y shl 8) or (z shl 16)
 
@@ -25,10 +26,10 @@ private val Int.cy: Int
 private val Int.cz: Int
     get() = (this shr 16) and 0xFF
 
-class CityGenerator {
+class CityGenerator(kc: KorenderScope) {
 
-    val lightWindow = MutableMesh()
-    val roof = MutableMesh()
+    val lightWindow = kc.mutableMesh(kc.POS, kc.NORMAL, kc.TEX)
+    val roof = kc.mutableMesh(kc.POS, kc.NORMAL, kc.TEX)
 
     fun building(xoffset: Int, yoffset: Int, xsize: Int, ysize: Int, height: Int, block: Context.() -> Unit): CityGenerator {
         val cubes = collectCubes(xsize, ysize, height, block)
@@ -230,10 +231,10 @@ class CityGenerator {
 
     private fun MutableMesh.face(pos1: Vec3, pos2: Vec3, pos3: Vec3, pos4: Vec3, normal: Vec3, ucells: Int, vcells: Int) {
         val base = vertices.size
-        vertices += MutableMesh.MutableVertex().pos(pos1).normal(normal).tex(Vec2(0f, 0f))
-        vertices += MutableMesh.MutableVertex().pos(pos2).normal(normal).tex(Vec2(0f, vcells.toFloat()))
-        vertices += MutableMesh.MutableVertex().pos(pos3).normal(normal).tex(Vec2(ucells.toFloat(), vcells.toFloat()))
-        vertices += MutableMesh.MutableVertex().pos(pos4).normal(normal).tex(Vec2(ucells.toFloat(), 0f))
+        this.appendVertex().pos(pos1).normal(normal).tex(Vec2(0f, 0f))
+        this.appendVertex().pos(pos2).normal(normal).tex(Vec2(0f, vcells.toFloat()))
+        this.appendVertex().pos(pos3).normal(normal).tex(Vec2(ucells.toFloat(), vcells.toFloat()))
+        this.appendVertex().pos(pos4).normal(normal).tex(Vec2(ucells.toFloat(), 0f))
         indices += listOf(base + 0, base + 2, base + 1, base + 0, base + 3, base + 2)
     }
 
@@ -303,3 +304,9 @@ class CityGenerator {
         }
     }
 }
+
+
+
+
+
+

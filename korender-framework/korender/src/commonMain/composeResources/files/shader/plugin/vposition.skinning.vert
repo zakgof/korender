@@ -3,14 +3,14 @@ layout(location = 4) in vec4 weights;
 
 mat4 skinningMatrix;
 
-#ifdef INSTANCING
+#ifdef VERTEX_TRANSFORM
     uniform sampler2D jntTexture;
 #else
     #uniform mat4 jntMatrices[32];
 #endif
 
 
-#ifdef INSTANCING
+#ifdef VERTEX_TRANSFORM
     mat4 fetchJointMatrix(uint jnt) {
         mat4 jointMatrix;
         jointMatrix[0] = texelFetch(jntTexture, ivec2(int(jnt) * 4 + 0, gl_InstanceID), 0);
@@ -22,7 +22,7 @@ mat4 skinningMatrix;
 #endif
 
 vec4 pluginVPosition() {
-    #ifdef INSTANCING
+    #ifdef VERTEX_TRANSFORM
         skinningMatrix =
             weights.x * fetchJointMatrix(joints.x) +
             weights.y * fetchJointMatrix(joints.y) +

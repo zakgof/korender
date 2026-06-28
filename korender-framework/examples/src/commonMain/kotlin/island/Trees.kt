@@ -1,17 +1,11 @@
 package com.zakgof.korender.examples.island
 
-import com.zakgof.korender.Attributes.MODEL0
-import com.zakgof.korender.Attributes.MODEL1
-import com.zakgof.korender.Attributes.MODEL2
-import com.zakgof.korender.Attributes.MODEL3
-import com.zakgof.korender.Attributes.NORMAL
-import com.zakgof.korender.Attributes.POS
-import com.zakgof.korender.Attributes.TEX
-import com.zakgof.korender.context.FrameContext
+import com.zakgof.korender.scope.FrameScope
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Transform.Companion.scale
+import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import kotlin.random.Random
@@ -62,20 +56,21 @@ fun loadTreeSeeds(heightFunc: Height, bytes: ByteArray) = loadBinary(bytes) {
     }
 }
 
-fun FrameContext.trees(branches: List<Branch>, cards: List<Card>, seeds: List<Vec3>) {
+fun FrameScope.trees(branches: List<Branch>, cards: List<Card>, seeds: List<Vec3>) {
     renderBranches(branches, seeds)
     renderCards(cards, seeds)
 }
 
-fun FrameContext.renderBranches(branches: List<Branch>, seeds: List<Vec3>) {
+fun FrameScope.renderBranches(branches: List<Branch>, seeds: List<Vec3>) {
 
     fun thinDown(r: Float, threshold: Float): Float =
         if (r < 2f * threshold) (r - threshold) * r / threshold else r
 
     Renderable(
-        base(color = ColorRGBA(0x553311FF)),
-        pipe(),
-        defs("NO_SHADOW_CAST"),
+        pipe {
+            color = ColorRGBA(0x553311FF)
+            flags(NO_SHADOW_CAST)
+        },
         mesh = pipeMesh("trunk-forest", branches.size * seeds.size, true) {
             val r = Random(0)
             seeds.forEach { seed ->
@@ -83,7 +78,7 @@ fun FrameContext.renderBranches(branches: List<Branch>, seeds: List<Vec3>) {
                     scale(treeScale)
                         .rotate(1.y, r.nextFloat() * 2f * PI)
                         .translate(seed)
-                val threshold = (seed - camera.position).length() * 3e-4f
+                val threshold = (seed - camera.position).length() * 9e-4f
                 branches.forEach { branch ->
                     if (branch.radiusAtHead * 50.0f > threshold) {
                         sequence {
@@ -98,14 +93,16 @@ fun FrameContext.renderBranches(branches: List<Branch>, seeds: List<Vec3>) {
     )
 }
 
-fun FrameContext.renderCards(cards: List<Card>, seeds: List<Vec3>) {
+fun FrameScope.renderCards(cards: List<Card>, seeds: List<Vec3>) {
     Renderable(
-        base(
-            colorTexture = texture("island/tree/atlas.png"),
-            metallicFactor = 0.4f,
+        base {
+            colorTexture = texture("island/tree/atlas.png")
+            metallicFactor = 0.4f
             roughnessFactor = 0.6f
-        ),
-        plugin("discard", "island/tree/shader/island.foliage.discard.frag"),
+            alphaCutoff = 0.1f
+            // TODO plugin("discard", "island/tree/shader/island.foliage.discard.frag")
+        },
+        transparent = true,
         mesh = customMesh(
             "foliage", cards.size * seeds.size * 8, cards.size * seeds.size * 12,
             POS, NORMAL, TEX, MODEL0, MODEL1, MODEL2, MODEL3, dynamic = false
@@ -124,14 +121,14 @@ fun FrameContext.renderCards(cards: List<Card>, seeds: List<Vec3>) {
                     val transform =
                         rotate(1.y, r.nextFloat() * 2f * PI)
                             .translate(seed)
-                    pos(transform * p1).normal(-card.normal).tex(texX, texY)
-                    pos(transform * p2).normal(-card.normal).tex(texX + 0.25f, texY)
-                    pos(transform * p3).normal(-card.normal).tex(texX + 0.25f, texY + 0.25f)
-                    pos(transform * p4).normal(-card.normal).tex(texX, texY + 0.25f)
-                    pos(transform * p1).normal(card.normal).tex(texX, texY)
-                    pos(transform * p2).normal(card.normal).tex(texX + 0.25f, texY)
-                    pos(transform * p3).normal(card.normal).tex(texX + 0.25f, texY + 0.25f)
-                    pos(transform * p4).normal(card.normal).tex(texX, texY + 0.25f)
+                    pos(transform * p1).normal(-card.normal).tex(Vec2(texX, texY))
+                    pos(transform * p2).normal(-card.normal).tex(Vec2(texX + 0.25f, texY))
+                    pos(transform * p3).normal(-card.normal).tex(Vec2(texX + 0.25f, texY + 0.25f))
+                    pos(transform * p4).normal(-card.normal).tex(Vec2(texX, texY + 0.25f))
+                    pos(transform * p1).normal(card.normal).tex(Vec2(texX, texY))
+                    pos(transform * p2).normal(card.normal).tex(Vec2(texX + 0.25f, texY))
+                    pos(transform * p3).normal(card.normal).tex(Vec2(texX + 0.25f, texY + 0.25f))
+                    pos(transform * p4).normal(card.normal).tex(Vec2(texX, texY + 0.25f))
                     index(indexBase + 0, indexBase + 1, indexBase + 2, indexBase + 0, indexBase + 2, indexBase + 3)
                     index(indexBase + 4, indexBase + 6, indexBase + 5, indexBase + 4, indexBase + 7, indexBase + 6)
                     indexBase += 8

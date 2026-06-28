@@ -3,6 +3,8 @@ package com.zakgof.korender.examples
 import androidx.compose.runtime.Composable
 import com.zakgof.app.resources.Res
 import com.zakgof.korender.Korender
+import com.zakgof.korender.ShaderPluginId.ALBEDO
+import com.zakgof.korender.ShaderPluginId.TERRAIN
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
@@ -13,9 +15,10 @@ import kotlin.math.sin
 
 @Composable
 fun ProcTerrainExample() =
-    Korender(appResourceLoader = { Res.readBytes(it) }) {
+    Korender(resourceLoader = { Res.readBytes("files/$it") }) {
 
-        val terrain = clipmapTerrainPrefab("terrain", 2.0f, 16, 13)
+        val procTerrainHeightPlugin = shaderPlugin(TERRAIN, "procterrain/height.glsl")
+        val procTerrainAlbedoPlugin = shaderPlugin(ALBEDO, "procterrain/albedo.glsl")
         Frame {
             TestExchange.report(frameInfo)
 
@@ -30,13 +33,11 @@ fun ProcTerrainExample() =
 
             AmbientLight(ColorRGB.white(0.3f - 0.3f * cloudy))
             DirectionalLight(Vec3(1.0f, -1.0f, 0.0f), ColorRGB.white(1.1f - cloudy))
-            Renderable(
-                base(metallicFactor = 0.0f),
-                plugin("normal", "!shader/plugin/normal.terrain.frag"),
-                plugin("terrain", "procterrain/height.glsl"),
-                plugin("albedo", "procterrain/albedo.glsl"),
-                prefab = terrain
-            )
+            HeightField("terrain", 2.0f, 16, 13) {
+                metallicFactor = 0.0f
+                plugin(procTerrainHeightPlugin)
+                plugin(procTerrainAlbedoPlugin)
+            }
 
             val zenithRGB = ColorRGB(0.102f, 0.322f, 0.620f) * (1.0f - cloudy) + ColorRGB.white(0.300f) * cloudy
             val horizonRGB = zenithRGB * (0.3f + 0.7f * cloudy) + ColorRGB.white(0.7f * (1.0f - cloudy))
@@ -59,3 +60,4 @@ fun ProcTerrainExample() =
             }
         }
     }
+

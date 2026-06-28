@@ -22,11 +22,11 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.createBitmap
-import com.zakgof.korender.context.KorenderContext
 import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.impl.engine.Engine
 import com.zakgof.korender.impl.font.FontDef
 import com.zakgof.korender.impl.image.InternalImage
+import com.zakgof.korender.scope.KorenderScope
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -44,7 +44,7 @@ val androidContext = AtomicReference<Context>(null)
 
 internal actual object Platform {
 
-    actual val target = KorenderContext.TargetPlatform.Android
+    actual val target = KorenderScope.TargetPlatform.Android
 
     internal actual fun loadImage(bytes: ByteArray, type: String): Deferred<InternalImage> =
         CompletableDeferred(bitmapToImage(BitmapFactory.decodeByteArray(bytes, 0, bytes.size)))
@@ -54,14 +54,11 @@ internal actual object Platform {
         val byteBuffer = ByteBuffer.allocateDirect(size).order(ByteOrder.nativeOrder())
         bitmap.copyPixelsToBuffer(byteBuffer)
         val format = bitmap.config
-        val gpuFormat = when (format) {
-            Bitmap.Config.ARGB_8888 -> PixelFormat.RGBA
-            else -> throw KorenderException("Unsupported image format $format")
+        if (format != Bitmap.Config.ARGB_8888) {
+            throw KorenderException("Unsupported image format $format")
         }
-        val gpuBytes = when (format) {
-            Bitmap.Config.ARGB_8888 -> ARGBtoRGBA(byteBuffer) // TODO: how come ?
-            else -> throw KorenderException("Unsupported image format $format")
-        }
+        val gpuFormat = PixelFormat.RGBA
+        val gpuBytes = ARGBtoRGBA(byteBuffer) // TODO: how come ?
         return InternalImage(
             bitmap.width,
             bitmap.height,
@@ -108,23 +105,22 @@ internal actual object Platform {
     }
 
     actual fun nanoTime() = System.nanoTime()
-    internal actual fun createImage(width: Int, height: Int, format: PixelFormat): InternalImage {
-        // TODO image types support!
-        val bitmap = createBitmap(width, height)
-        return bitmapToImage(bitmap)
-    }
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
-actual fun Korender(appResourceLoader: ResourceLoader, block: KorenderContext.() -> Unit) {
+actual fun Korender(
+    resourceLoader: ResourceLoader,
+    vSync: Boolean,
+    block: KorenderScope.() -> Unit
+) {
 
     var engine: Engine? by remember { mutableStateOf(null) }
 
     class KorenderGLRenderer(private val view: View) : GLSurfaceView.Renderer {
 
         override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
-            engine = Engine(view.width, view.height, appResourceLoader, block)
+            engine = Engine(view.width, view.height, resourceLoader, block)
         }
 
         override fun onDrawFrame(unused: GL10) {
@@ -161,13 +157,37 @@ actual fun Korender(appResourceLoader: ResourceLoader, block: KorenderContext.()
                 event.changes.forEach {
                     val position = it.position
                     if (event.type == PointerEventType.Press && it.pressed && !it.previousPressed) {
-                        touch(TouchEvent(TouchEvent.Type.DOWN, TouchEvent.Button.LEFT, position.x, position.y))
+                        touch(
+                            TouchEvent(
+                                TouchEvent.Type.DOWN,
+                                TouchEvent.Button.LEFT,
+                                position.x,
+                                position.y,
+                                KeyboardModifiers()
+                            )
+                        )
                     }
                     if (event.type == PointerEventType.Release && !it.pressed && it.previousPressed) {
-                        touch(TouchEvent(TouchEvent.Type.UP, TouchEvent.Button.LEFT, position.x, position.y))
+                        touch(
+                            TouchEvent(
+                                TouchEvent.Type.UP,
+                                TouchEvent.Button.LEFT,
+                                position.x,
+                                position.y,
+                                KeyboardModifiers()
+                            )
+                        )
                     }
                     if (event.type == PointerEventType.Move) {
-                        touch(TouchEvent(TouchEvent.Type.MOVE, TouchEvent.Button.LEFT, position.x, position.y))
+                        touch(
+                            TouchEvent(
+                                TouchEvent.Type.MOVE,
+                                TouchEvent.Button.LEFT,
+                                position.x,
+                                position.y,
+                                KeyboardModifiers()
+                            )
+                        )
                     }
                 }
             }

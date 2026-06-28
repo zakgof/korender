@@ -1,20 +1,22 @@
 package com.zakgof.korender.impl.engine
 
-import com.zakgof.korender.MaterialModifier
-import com.zakgof.korender.MeshDeclaration
+import com.zakgof.korender.BaseMaterialScope
+import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.PostProcessingEffect
-import com.zakgof.korender.PostShadingEffect
-import com.zakgof.korender.ResourceLoader
-import com.zakgof.korender.RetentionPolicy
 import com.zakgof.korender.ShadowAlgorithmDeclaration
+import com.zakgof.korender.TerrainMaterialScope
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.context.BillboardInstancingDeclaration
-import com.zakgof.korender.context.GltfInstancingDeclaration
-import com.zakgof.korender.context.InstancingDeclaration
-import com.zakgof.korender.gltf.GltfUpdate
+import com.zakgof.korender.impl.context.DefaultFrameScope
 import com.zakgof.korender.impl.context.Direction
+import com.zakgof.korender.impl.context.NodeContext
+import com.zakgof.korender.impl.geometry.InternalMeshDeclaration
 import com.zakgof.korender.impl.glgpu.GlGpuTexture
-import com.zakgof.korender.impl.material.InternalMaterialModifier
+import com.zakgof.korender.impl.glgpu.UniformPack
+import com.zakgof.korender.impl.material.InternalDecalMaterial
+import com.zakgof.korender.impl.material.InternalMaterial
+import com.zakgof.korender.impl.material.InternalMultiPassEffect
+import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
+import com.zakgof.korender.impl.material.InternalShadingMaterial
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
@@ -22,6 +24,11 @@ import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.scope.BillboardInstancingDeclaration
+import com.zakgof.korender.scope.BillboardInstancingParameter
+import com.zakgof.korender.scope.InstancingDeclaration
+import com.zakgof.korender.scope.InstancingParameter
+import com.zakgof.korender.scope.ModelInstancingDeclaration
 
 internal class SceneDeclaration {
     val pointLights = mutableListOf<PointLightDeclaration>()
@@ -33,12 +40,14 @@ internal class SceneDeclaration {
     val skies = mutableListOf<RenderableDeclaration>()
 
     val guis = mutableListOf<ElementDeclaration.Container>()
-    val gltfs = mutableListOf<GltfDeclaration>()
+    val models = mutableListOf<ModelDeclaration>()
+    val heightFields = mutableListOf<HeightFieldDeclaration>()
     var filters = mutableListOf<InternalFilterDeclaration>()
     var deferredShadingDeclaration: DeferredShadingDeclaration? = null
-    val envCaptures = mutableMapOf<String, EnvCaptureContext>()
-    val frameCaptures = mutableMapOf<String, FrameCaptureContext>()
+    val envCaptures = mutableMapOf<String, CaptureContext>()
+    val frameCaptures = mutableMapOf<String, CaptureContext>()
     var loaderSceneDeclaration: SceneDeclaration? = null
+    var loaderForced = false
 
     fun append(renderableDeclaration: RenderableDeclaration) =
         if (renderableDeclaration.transparent)
@@ -47,55 +56,83 @@ internal class SceneDeclaration {
             opaques += renderableDeclaration
 }
 
-internal class DeferredShadingDeclaration() {
-    var postShadingEffects = mutableListOf<PostShadingEffect>()
-    var shadingModifiers = mutableListOf<MaterialModifier>()
-    var decals = mutableListOf<InternalDecalDeclaration>()
+internal class DeferredShadingDeclaration(val nodeContext: NodeContext) {
+    var shadingMaterial = InternalShadingMaterial()
+    var shadingEffects = mutableListOf<InternalMultiPassEffect>()
+    val postShadingEffects = mutableListOf<InternalMultiPassEffect>()
+    val decals = mutableListOf<InternalDecalDeclaration>()
 }
 
-internal class InternalDecalDeclaration(val position: Vec3, val look: Vec3, val up: Vec3, val size: Float, val materialModifiers: List<MaterialModifier>)
+internal data class SsaoDeclaration(
+    val downsample: Int = 2,
+    val sampleCount: Int = 16,
+    val radius: Float = 0.75f,
+    val bias: Float = 0.03f,
+    val intensity: Float = 1.0f,
+    val blurRadius: Float = 5f,
+)
 
-internal class BillboardInstance(val pos: Vec3, val scale: Vec2 = Vec2.ZERO, val phi: Float = 0f)
+internal data class HbaoDeclaration(
+    val downsample: Int = 2,
+    val sampleCount: Int = 16,
+    val radius: Float = 0.75f,
+    val bias: Float = 0.02f,
+    val intensity: Float = 1.0f,
+    val blurRadius: Float = 5f,
+)
+
+internal class InternalDecalDeclaration(
+    val position: Vec3,
+    val look: Vec3,
+    val up: Vec3,
+    val size: Float,
+    val material: InternalDecalMaterial,
+)
+
+internal class BillboardInstance(
+    val pos: Vec3?,
+    val scale: Vec2?,
+    val rotation: Float?,
+    val color: ColorRGBA?,
+    val colorTextureIndex: Int?
+)
 
 internal class MeshInstance(
-    val transform: Transform,
-    val jointMatrices: List<Mat4>?
+    val transform: Transform? = null,
+    val jointMatrices: List<Mat4>? = null,
+    val color: ColorRGBA? = null,
+    val metallic: Float? = null,
+    val roughness: Float? = null,
+    val colorTextureIndex: Int? = null,
 )
 
 internal data class ShaderDeclaration(
     val vertFile: String,
     val fragFile: String,
-    val defs: Set<String> = setOf(),
-    val plugins: Map<String, String> = mapOf(),
-    override val retentionPolicy: RetentionPolicy
-) : Retentionable
+    val defs: Long,
+    val plugins1: Long,
+    val plugins2: Long,
+    val uniformPack: UniformPack,
+    override val nodeContext: NodeContext,
+) : NodeKeeper {
+    override fun equals(other: Any?): Boolean =
+        other is ShaderDeclaration &&
+                vertFile == other.vertFile &&
+                fragFile == other.fragFile &&
+                defs == other.defs &&
+                plugins1 == other.plugins1 &&
+                plugins2 == other.plugins2
 
-internal class RenderableDeclaration(
-    val base: BaseMaterial,
-    val materialModifiers: List<MaterialModifier>,
-    val mesh: MeshDeclaration,
-    val transform: Transform = Transform.IDENTITY,
-    val transparent: Boolean,
-    override val retentionPolicy: RetentionPolicy
-) : Retentionable
-
-internal enum class BaseMaterial {
-    Renderable,
-    Billboard,
-    Screen,
-    Font,
-    Image,
-    Sky,
-    Shading,
-    Composition,
-    Decal,
-    DecalBlend
+    override fun hashCode(): Int = listOf(vertFile, fragFile, defs, plugins1, plugins2).hashCode()  // TODO
 }
 
-internal class MaterialDeclaration(
-    val shader: ShaderDeclaration,
-    val uniforms: Map<String, Any?>
-)
+internal class RenderableDeclaration(
+    val material: InternalMaterial,
+    val mesh: InternalMeshDeclaration,
+    val transform: Transform = Transform.IDENTITY,
+    val transparent: Boolean,
+    override val nodeContext: NodeContext,
+) : NodeKeeper
 
 internal sealed interface ElementDeclaration {
 
@@ -104,26 +141,26 @@ internal sealed interface ElementDeclaration {
     class Text(
         val id: String,
         val fontResource: String,
-        val height: Int,
+        val height: Float,
         val text: String,
         val color: ColorRGBA,
         val static: Boolean,
         val onTouch: TouchHandler,
-        override val retentionPolicy: RetentionPolicy
-    ) : ElementDeclaration, Retentionable
+        override val nodeContext: NodeContext,
+    ) : ElementDeclaration, NodeKeeper
 
     class Image(
         val id: String,
         val imageResource: String,
-        val width: Int,
-        val height: Int,
-        val marginTop: Int,
-        val marginBottom: Int,
-        val marginLeft: Int,
-        val marginRight: Int,
+        val width: Float,
+        val height: Float,
+        val marginTop: Float,
+        val marginBottom: Float,
+        val marginLeft: Float,
+        val marginRight: Float,
         val onTouch: TouchHandler,
-        override val retentionPolicy: RetentionPolicy
-    ) : ElementDeclaration, Retentionable {
+        override val nodeContext: NodeContext,
+    ) : ElementDeclaration, NodeKeeper {
         val fullWidth = width + marginLeft + marginRight
         val fullHeight = height + marginTop + marginBottom
     }
@@ -134,31 +171,22 @@ internal sealed interface ElementDeclaration {
     }
 }
 
-internal class TransientProperty<T>(val property: T) {
-    override fun equals(other: Any?) = true
-    override fun hashCode() = 0
-}
-
 internal data class FrameBufferDeclaration(
     val id: String,
     val width: Int,
     val height: Int,
     val colorTexturePresets: List<GlGpuTexture.Preset>,
     val withDepth: Boolean,
-    val retentionPolicyHolder: TransientProperty<RetentionPolicy>
-) : Retentionable {
-    override val retentionPolicy = retentionPolicyHolder.property
-}
+    override val nodeContext: NodeContext,
+) : NodeKeeper
 
 internal data class CubeFrameBufferDeclaration(
     val id: String,
     val width: Int,
     val height: Int,
     val withDepth: Boolean,
-    val retentionPolicyHolder: TransientProperty<RetentionPolicy>
-) : Retentionable {
-    override val retentionPolicy = retentionPolicyHolder.property
-}
+    override val nodeContext: NodeContext,
+) : NodeKeeper
 
 internal class ShadowDeclaration {
     val cascades = mutableListOf<CascadeDeclaration>()
@@ -166,37 +194,51 @@ internal class ShadowDeclaration {
 
 internal data class CascadeDeclaration(val mapSize: Int, val near: Float, val far: Float, val fixedYRange: Pair<Float, Float>?, val algorithm: ShadowAlgorithmDeclaration)
 
-internal class GltfDeclaration(
+internal class ModelDeclaration(
     val resource: String,
-    val materialModifiers: List<MaterialModifier>,
-    val loader: ResourceLoader,
-    val onUpdate: (GltfUpdate) -> Unit,
     val transform: Transform,
+    val instancingDeclaration: InternalModelInstancingDeclaration?,
     val time: Float,
     val animation: Int,
-    val instancingDeclaration: InternalGltfInstancingDeclaration?,
-    override val retentionPolicy: RetentionPolicy
-) : Retentionable {
-    override fun equals(other: Any?): Boolean = (other is GltfDeclaration && other.resource == resource)
+    val onUpdate: ((ModelInfo) -> Unit)?,
+    val materialModifier: BaseMaterialScope.() -> Unit,
+    override val nodeContext: NodeContext,
+) : NodeKeeper {
+    override fun equals(other: Any?): Boolean = (other is ModelDeclaration && other.resource == resource)
     override fun hashCode(): Int = resource.hashCode()
 }
 
-internal class GltfInstance(val transform: Transform, val time: Float?, val animation: Int?)
+internal class HeightFieldDeclaration(
+    val id: String,
+    val cellSize: Float,
+    val hg: Int,
+    val rings: Int,
+    val block: TerrainMaterialScope.() -> Unit,
+    val frameScope: DefaultFrameScope
+) : NodeKeeper {
+    override val nodeContext = frameScope.nodeContext
+    override fun equals(other: Any?): Boolean = (other is HeightFieldDeclaration && other.id == id)
+    override fun hashCode(): Int = id.hashCode()
+}
+
+internal class ModelInstance(val transform: Transform, val time: Float?, val animation: Int?)
 
 internal class PointLightDeclaration(val position: Vec3, val color: ColorRGB, val attenuation: Vec3)
 
 internal class DirectionalLightDeclaration(val direction: Vec3, val color: ColorRGB, val shadowDeclaration: ShadowDeclaration)
 
-internal class InternalInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<MeshInstance>) : InstancingDeclaration
+internal class InternalInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val parameters: List<InstancingParameter>, val instancer: () -> List<MeshInstance>) : InstancingDeclaration
 
-internal class InternalGltfInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<GltfInstance>) : GltfInstancingDeclaration
+internal class InternalModelInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<ModelInstance>) : ModelInstancingDeclaration
 
-internal class InternalBillboardInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val instancer: () -> List<BillboardInstance>) : BillboardInstancingDeclaration
+internal class InternalBillboardInstancingDeclaration(val id: String, val count: Int, val dynamic: Boolean, val parameters: List<BillboardInstancingParameter>, val instancer: () -> List<BillboardInstance>) : BillboardInstancingDeclaration
 
 internal class InternalFilterDeclaration(val passes: List<InternalPassDeclaration>) : PostProcessingEffect
 
-internal class InternalPassDeclaration(val mapping: Map<String, String>, val modifiers: List<InternalMaterialModifier>, val sceneDeclaration: SceneDeclaration?, val target: FrameTarget, override val retentionPolicy: RetentionPolicy) : Retentionable
+internal class InternalPassDeclaration(val mapping: Map<String, String>, val material: InternalPostProcessingMaterial, val sceneDeclaration: SceneDeclaration?, val target: FrameTarget, override val nodeContext: NodeContext) : NodeKeeper
 
-internal data class ReusableFrameBufferDefinition(val pingPong: Int, val width: Int, val height: Int)
-
-internal data class FrameTarget(val width: Int, val height: Int, val colorOutput: String, val depthOutput: String)
+internal data class FrameTarget(val colorOutput: String, val depthOutput: String, val downSample: Int = 1) {
+    companion object {
+        val default = FrameTarget("colorTexture", "depthTexture")
+    }
+}

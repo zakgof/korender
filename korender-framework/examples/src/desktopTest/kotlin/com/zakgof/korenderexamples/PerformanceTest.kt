@@ -2,6 +2,7 @@
 
 import androidx.compose.ui.awt.ComposeWindow
 import com.zakgof.korender.FrameInfo
+import com.zakgof.korender.KorenderBuild
 import com.zakgof.korender.examples.Case
 import com.zakgof.korender.examples.GltfCrowdExample
 import com.zakgof.korender.examples.HeightmapTerrainExample
@@ -110,7 +111,7 @@ class PerformanceTest {
                 printComparisonTable(results, latestRelease, latestReleaseFile)
             }
 
-            val version = "0.6.1"
+            val version = KorenderBuild.version
             val timestamp = LocalDateTime.now().format(timestampFormat)
             val output = if (version.endsWith("-SNAPSHOT")) {
                 File(resultsFolder, "${version}-$timestamp.perf.txt")

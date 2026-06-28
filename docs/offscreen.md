@@ -1,74 +1,98 @@
 # Offscreen rendering and probes
 
-Instead of rendering to screen, Korender allows to render a scene to an image/texture or to a cube map.
+Instead of rendering to screen, Korender allows rendering a scene to an image/texture or to a cube map.
 
-## Render frame to image
+## Render frame to image (CPU readback)
 
-Set up a virtual camera and projection and call `captureFrame` - that will return `Deferred<Image>` with the captured image: 
+Call `captureFrame` on the Korender scope — it returns `Deferred<Image>` with the captured pixels:
 
-````kotlin
-Korender {
-    val camera = camera(...)
-    val projection = projection(...)
-    val deferredImage = captureFrame(1024, 1024, camera, projection) {
+```kotlin
+Korender(resourceLoader = { ... }) {
+    val deferredImage = captureFrame(1024, 1024) {
+        camera = camera(Vec3(...), ...)
+        projection = projection(...)
         Renderable(...)
     }
     ...
     Frame {
-       if (deferredImage.isCompleted) {
-           val capturedImage = deferredImage.getCompleted()
-           // Use the captured image
-    
-````
+        if (deferredImage.isCompleted) {
+            val capturedImage = deferredImage.getCompleted()
+            // Use the captured image
+        }
+    }
+}
+```
 
-## Render environment to cube images
+`captureFrame(width: Int, height: Int, block: FrameScope.() -> Unit): Deferred<Image>`
 
-`captureFrame` samples the environment at the given world-space position and outputs six images aligned with the standard cubemap face orientations. The function returns a `Deferred<CubeTextureImages>`:
+## Render environment to cube images (CPU readback)
 
-````kotlin
-Korender {
-    val deferredCubeImages = captureEnv(1024, 1f, 1000f) {
+`captureEnv` samples the environment at the given world-space position and outputs six images aligned with standard cubemap face orientations:
+
+```kotlin
+Korender(resourceLoader = { ... }) {
+    val deferredCubeImages = captureEnv(1024) {
         Renderable(...)
     }
     ...
     Frame {
-       if (deferredCubeImages.isCompleted) {
-           val cubeImages = deferredCubeImages.getCompleted()
-           val negativeXSide = cubeImages[CubeTextureSide.NX]
-           // Use the captured images
-    
-````
+        if (deferredCubeImages.isCompleted) {
+            val cubeImages = deferredCubeImages.getCompleted()
+            val negativeXSide = cubeImages[CubeTextureSide.NX]
+        }
+    }
+}
+```
 
-## Render frame to texture
+`captureEnv(resolution: Int, block: FrameScope.() -> Unit): Deferred<CubeTextureImages>`
 
-The functions above retrieve image data from the GPU. If you intend to reuse the rendered scene in subsequent rendering passes, it’s more efficient to keep the data on the GPU - in a texture or cube texture - rather than reading it back.
-The following function can be invoked within a Frame context to render the scene directly into a texture:
+## Render frame to texture (GPU-only)
 
-````kotlin
+The functions above retrieve image data from the GPU to CPU. If you intend to reuse the rendered scene in subsequent rendering passes, it's more efficient to keep the data on the GPU — in a texture or cube texture — rather than reading it back.
+
+Use `CaptureFrame` inside a Frame context to render directly into a GPU texture:
+
+```kotlin
 Frame {
-    CaptureFrame("capturedFrame", 256, 256, camera = ..., projection = ...)) {
+    CaptureFrame("capturedFrame", 256, 256) {
+        camera = camera(...)
+        projection = projection(...)
         Renderable(...)
     }
-````
-In this example, the scene is rendered into a texture stored in a probe named "capturedFrame". This texture remains on the GPU and can be used in subsequent rendering operations:
+}
+```
 
-````kotlin
+The scene is rendered into a probe named "capturedFrame". This texture stays on the GPU and can be used in subsequent rendering:
+
+```kotlin
 Renderable(
-   base(colorTexture = textureProbe("capturedFrame"), ...
-````
-#### Render environment to cube texture
+    material = base { colorTexture = textureProbe("capturedFrame") },
+    mesh = sphere()
+)
+```
 
-Similarly, environment can be captured without retrieving from GPU to CPU:
+### Render environment to cube texture
 
-````kotlin
+Similarly, environment can be captured without readback to CPU:
+
+```kotlin
 Frame {
-    CaptureEnv("capturedEnv", 256, position = ..., near = ..., far = ... ) {
+    CaptureEnv("capturedEnv", 256) {
         Renderable(...)
     }
-````
-In this example, the environment is rendered into a cube texture stored in a cube probe named "capturedEnv". This cube texture remains on the GPU and can be used in subsequent rendering operations:
+}
+```
 
-````kotlin
+The cube texture is stored in a cube probe named "capturedEnv" and stays on the GPU:
+
+```kotlin
 Sky(cubeTextureProbe("capturedEnv"))
-````
+```
 
+Or as environment map for PBR reflections:
+
+```kotlin
+base {
+    env = cubeSky(cubeTextureProbe("capturedEnv"))
+}
+```
