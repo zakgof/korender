@@ -25,7 +25,6 @@ fun StochasticTexturingExample() {
         }
         OnTouch { orbitCamera.touch(it) }
         Frame {
-            println("== frame")
             AmbientLight(White)
             camera = orbitCamera.run { camera() }
             Renderable(
@@ -48,6 +47,12 @@ fun StochasticTexturingExample() {
                 mesh = plane,
                 transform = translate(3.x)
             )
+            Gui {
+                Column {
+                    Filler()
+                    Text(id = "fps", text = "FPS ${frameInfo.avgFps.toInt()}")
+                }
+            }
         }
     }
 }
