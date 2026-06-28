@@ -211,7 +211,7 @@ internal object Geometry {
     }
 
     private fun coneTop(radius: Float, height: Float, sectors: Int, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>) = CMesh(
-        sectors * 2,
+        (sectors + 1) * 2,
         sectors * 3,
         count,
         POS, NORMAL, TEX, *instancingAttributes
@@ -219,7 +219,7 @@ internal object Geometry {
         val base = 1f / Vec2(radius, height).length()
         val xSlope = height * base
         val ySlope = radius * base
-        for (sector in 0 until sectors) {
+        for (sector in 0..<sectors + 1) {
             val phi = PI * 2f * sector / sectors
             val normal = Vec3(xSlope * cos(phi), ySlope, xSlope * sin(phi))
             pos(Vec3(radius * cos(phi), 0f, radius * sin(phi)))
@@ -229,19 +229,18 @@ internal object Geometry {
                 .normal(normal)
                 .tex(Vec2(sector.toFloat() / sectors, 1f))
         }
-        val d = 2 * sectors
         for (sector in 0 until sectors) {
-            index(sector * 2, (sector * 2 + 1) % d, (sector * 2 + 2) % d)
+            index(sector * 2, sector * 2 + 1, sector * 2 + 2)
         }
     }
 
     private fun cylinderSide(radius: Float, height: Float, sectors: Int, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>) = CMesh(
-        sectors * 2,
+        (sectors + 1) * 2,
         sectors * 6,
         count,
         POS, NORMAL, TEX, *instancingAttributes
     ) {
-        for (sector in 0 until sectors) {
+        for (sector in 0..<sectors + 1) {
             val phi = PI * 2f * sector / sectors
             val cosPhi = cos(phi)
             val sinPhi = sin(phi)
@@ -253,10 +252,9 @@ internal object Geometry {
                 .normal(normal)
                 .tex(Vec2(sector.toFloat() / sectors, 1f))
         }
-        val d = 2 * sectors
         for (sector in 0 until sectors) {
-            index(sector * 2, (sector * 2 + 1) % d, (sector * 2 + 2) % d)
-            index((sector * 2 + 1) % d, (sector * 2 + 3) % d, (sector * 2 + 2) % d)
+            index(sector * 2, sector * 2 + 1, sector * 2 + 2)
+            index(sector * 2 + 1, sector * 2 + 3, sector * 2 + 2)
         }
     }
 
@@ -320,40 +318,39 @@ internal object Geometry {
 
     private fun sphere(radius: Float, slices: Int, sectors: Int, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>) =
         CMesh(
-            2 + (slices - 1) * sectors,
-            sectors * 3 * 2 + (slices - 2) * sectors * 6,
+            2 + (slices - 1) * (sectors + 1),
+            sectors * 6 + (slices - 2) * sectors * 6,
             count,
             POS, NORMAL, TEX, *instancingAttributes
         ) {
             pos(Vec3(0f, -radius, 0f)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(0f, 0f))
             for (slice in 1..<slices) {
-                for (sector in 0..<sectors) {
+                for (sector in 0..<sectors + 1) {
                     val theta = PI - PI * slice / slices
                     val phi = PI * 2f * sector / sectors
                     val normal = Vec3(sin(theta) * cos(phi), cos(theta), sin(theta) * sin(phi))
                     pos(normal * radius)
                         .normal(normal)
                         .tex(Vec2(sector.toFloat() / sectors, slice.toFloat() / slices))
-
                 }
             }
             pos(Vec3(0f, radius, 0f)).normal(Vec3(0f, 1f, 0f)).tex(Vec2(0f, 1f))
 
             for (sector in 0 until sectors) {
-                index(0, sector + 1, ((sector + 1) % sectors) + 1)
+                index(0, 1 + sector, 1 + sector + 1)
             }
             for (slice in 1..<slices - 1) {
-                val b = 1 + (slice - 1) * sectors
+                val b = 1 + (slice - 1) * (sectors + 1)
+                val nextb = b + (sectors + 1)
                 for (sector in 0..<sectors) {
-                    val nextSector = (sector + 1) % sectors
-                    index(b + sector, b + sector + sectors, b + nextSector + sectors)
-                    index(b + nextSector + sectors, b + nextSector, b + sector)
+                    index(b + sector, nextb + sector, nextb + sector + 1)
+                    index(nextb + sector + 1, b + sector + 1, b + sector)
                 }
             }
-            val b = 1 + sectors * (slices - 2)
-            val top = b + sectors
+            val b = 1 + (slices - 2) * (sectors + 1)
+            val top = 1 + (slices - 1) * (sectors + 1)
             for (sector in 0..<sectors) {
-                index(b + sector, top, b + ((sector + 1) % sectors))
+                index(b + sector, top, b + sector + 1)
             }
         }
 
