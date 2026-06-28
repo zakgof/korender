@@ -1,5 +1,5 @@
 # ![Korender](readme/korender32.png) korender
-[![Maven Central](https://img.shields.io/badge/Maven_Central-0.6.1-8e27c7.svg?logo=mavenCentral)](https://central.sonatype.com/artifact/com.github.zakgof/korender/0.6.1)
+[![Maven Central](https://img.shields.io/badge/Maven_Central-0.7.0-8e27c7.svg?logo=mavenCentral)](https://central.sonatype.com/artifact/com.github.zakgof/korender/0.7.0)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.3.0-278ec7.svg?logo=kotlin)](http://kotlinlang.org)
 
 ![wasm](https://img.shields.io/badge/wasm-624FE8)
@@ -9,23 +9,22 @@
 
 Kotlin Multiplatform 3D graphics rendering engine based on OpenGL / OpenGL ES / WebGL.
 
-Korender uses declarative approach that seamlessly integrates 3D viewport into Compose Multiplatform UI. 
-Same Korender code runs on all supported platforms.
+Korender enables you to embed 3D scenes directly into Compose Multiplatform UI, making it an excellent choice for applications that combine standard UI with 3D, such as product, architectural, or scientific visualizations, interactive demos, or cross-platform games.
+
+Korender is designed to be highly developer-friendly: there is no need to manually create scene graph objects, load and initialize assets, or attach them to nodes. Instead, you simply declare scene objects using a straightforward DSL. OpenGL knowledge is not required, although familiarity with GLSL can be helpful when writing shader plugins or custom shaders.
 
 ![Mobile](readme/mobile.jpg)![Web](readme/web.jpg)![Desktop](readme/desktop.jpg)
 
 Live web demo: https://zakgof.github.io/projects/korender/wasm/
 
-Korender is BETA - APIs may change without notice.
-
-### Supported platforms
+## Supported platforms
 | Platform                | 3D API      |
 |-------------------------|-------------|
 | Desktop (Windows/Linux) | OpenGL 3.3  |
 | Android                 | OpenGL ES 3 |
 | Web                     | WebGL 2     |
 
-### Features
+## Features
 - Physically Based Rendering (PBR) metallic-roughness model
 - Directional and point lights
 - Shadows: Variance shadow mapping (VSM), percentage-closer filter (PCF)
@@ -41,18 +40,18 @@ Korender is BETA - APIs may change without notice.
 - Custom shaders support
 - Multi-pass rendering and screen-space shaders (filters)
 - Simple effects (water, smoke, fire)
-- Deferred shading pipeline ![experimental](https://img.shields.io/badge/experimental-FF4040)
+- Deferred shading pipeline with screen-space effects: SSAO/HBAO, SSR, Bloom
 
-### Examples showcase app
+## Examples showcase app
 
-#### Precompiled:
+### Precompiled:
 - [Web live demo](https://zakgof.github.io/projects/korender/wasm/)
-- [JVM Desktop Windows](https://github.com/zakgof/korender/releases/download/0.6.1/korender-demo-0.6.0.zip)
-- [Android APK](https://github.com/zakgof/korender/releases/download/0.6.1/korender-demo-0.6.0.apk)
+- [JVM Desktop Windows](https://github.com/zakgof/korender/releases/download/0.7.0/korender-demo-0.7.0.zip)
+- [Android APK](https://github.com/zakgof/korender/releases/download/0.7.0/korender-demo-0.7.0.apk)
 
 [Examples source code](https://github.com/zakgof/korender/tree/main/korender-framework/examples/src/commonMain/kotlin)
 
-#### Run locally:
+### Run locally:
 - Web: `./gradlew :examples:wasmJsBrowserDevelopmentRun`
 - Desktop: `./gradlew :examples:run`
 - Android: `./gradlew :examples:installRelease`
@@ -68,10 +67,10 @@ Korender {
   Frame {
     DirectionalLight(Vec3(1f, -1f, -1f))
     Renderable(
-      base(
-        color = ColorRGBA(0.2f, 1.0f, 0.5f + 0.5f * sin(frameInfo.time), 1.0f),
-        metallicFactor = 0.4f
-      ),
+      base {
+        color = ColorRGBA(0.2f, 1.0f, 0.5f + 0.5f * sin(frameInfo.time), 1.0f)
+        metallicFactor = 0.4f 
+      },
       mesh = sphere(2.0f),
       transform = translate(sin(frameInfo.time).y)
     )
@@ -85,10 +84,12 @@ Korender {
 #### From scratch
 
 - Generate a new KMP application using [Kotlin Multiplatform Wizard](https://kmp.jetbrains.com/). Select Android, Desktop and WASM platforms.
-- Add Korender dependency `com.github.zakgof:korender:0.6.1`
+- Add Korender dependency `com.github.zakgof:korender:0.7.0`
 - Add the above code to commonMain
 - Run on desktop: `./gradlew composeApp:run`
 
+
+Korender is BETA - APIs may change without notice.
 
 ### Further reading
 Explore the [Korender Wiki](https://zakgof.github.io/projects/korender/wiki)
