@@ -12,23 +12,59 @@ interface GuiContainerScope : FrameScope {
     /**
      *  Arranges GUI widgets into a horizontal row.
      *
+     *  @param paddingTop padding above the row
+     *  @param paddingRight padding to the right of the row
+     *  @param paddingBottom padding below the row
+     *  @param paddingLeft padding to the left of the row
      *  @param block row's widgets or children layouts
      */
-    fun Row(block: GuiContainerScope.() -> Unit)
+    fun Row(paddingTop: Float = 0f, paddingRight: Float = 0f, paddingBottom: Float = 0f, paddingLeft: Float = 0f, block: GuiContainerScope.() -> Unit)
+
+    /**
+     *  Arranges GUI widgets into a horizontal row with uniform padding.
+     *
+     *  @param padding uniform padding on all sides
+     *  @param block row's widgets or children layouts
+     */
+    fun Row(padding: Float, block: GuiContainerScope.() -> Unit) = Row(paddingLeft = padding, paddingRight = padding, paddingTop = padding, paddingBottom = padding, block = block)
 
     /**
      *  Arranges GUI widgets into a vertical column.
      *
+     *  @param paddingTop padding above the column
+     *  @param paddingRight padding to the right of the column
+     *  @param paddingBottom padding below the column
+     *  @param paddingLeft padding to the left of the column
      *  @param block column's widgets or children layouts
      */
-    fun Column(block: GuiContainerScope.() -> Unit)
+    fun Column(paddingTop: Float = 0f, paddingRight: Float = 0f, paddingBottom: Float = 0f, paddingLeft: Float = 0f, block: GuiContainerScope.() -> Unit)
+
+    /**
+     *  Arranges GUI widgets into a vertical column with uniform padding.
+     *
+     *  @param padding uniform padding on all sides
+     *  @param block column's widgets or children layouts
+     */
+    fun Column(padding: Float, block: GuiContainerScope.() -> Unit) = Column(paddingLeft = padding, paddingRight = padding, paddingTop = padding, paddingBottom = padding, block = block)
 
     /**
      *  Arranges GUI widgets into a stack (one on top on another).
      *
+     *  @param paddingTop padding above the stack
+     *  @param paddingRight padding to the right of the stack
+     *  @param paddingBottom padding below the stack
+     *  @param paddingLeft padding to the left of the stack
      *  @param block stack's widgets or children layouts
      */
-    fun Stack(block: GuiContainerScope.() -> Unit)
+    fun Stack(paddingTop: Float = 0f, paddingRight: Float = 0f, paddingBottom: Float = 0f, paddingLeft: Float = 0f, block: GuiContainerScope.() -> Unit)
+
+    /**
+     *  Arranges GUI widgets into a stack with uniform padding.
+     *
+     *  @param padding uniform padding on all sides
+     *  @param block stack's widgets or children layouts
+     */
+    fun Stack(padding: Float, block: GuiContainerScope.() -> Unit) = Stack(paddingLeft = padding, paddingRight = padding, paddingTop = padding, paddingBottom = padding, block = block)
 
     /**
      *  Renders a text.
@@ -56,11 +92,7 @@ interface GuiContainerScope : FrameScope {
      *  @param imageResource image resource file name
      *  @param width image width, in screen pixels
      *  @param height image height, in screen pixels
-     *  @param marginTop margin to add above the image
-     *  @param marginBottom margin to add below the image
-     *  @param marginLeft margin to add to the left to the image
-     *  @param marginRight margin to add to the right to the image
      *  @param onTouch touch event handler for the image
      */
-    fun Image(id: String, imageResource: String, width: Float, height: Float, marginTop: Float = 0f, marginBottom: Float = 0f, marginLeft: Float = 0f, marginRight: Float = 0f, onTouch: TouchHandler = {})
+    fun Image(id: String, imageResource: String, width: Float, height: Float, onTouch: TouchHandler = {})
 }

@@ -16,8 +16,8 @@ import com.zakgof.korender.math.ColorRGBA
 
 @Composable
 fun GuiExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
-    val statusStyle = TextStyle(height = 36, color = ColorRGBA(0xF06543A0))
-    val widgetStyle = TextStyle(height = 48, color = ColorRGBA(0x66FF55A0))
+    val statusStyle = TextStyle(height = 36f, color = ColorRGBA(0xF06543A0))
+    val widgetStyle = TextStyle(height = 48f, color = ColorRGBA(0x66FF55A0))
     val checkboxState = CheckboxState(true)
     val sliderState = SliderState(30f, 0f, 100f)
     val joystickState = JoystickState()
@@ -29,7 +29,9 @@ fun GuiExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
             Column {
                 Row {
                     Filler()
-                    Image(id = "icon", imageResource = "texture/korender32.png", width = 48f, height = 48f, marginTop = 8f, marginRight = 8f)
+                    Stack(padding = 8f) {
+                        Image(id = "icon", imageResource = "texture/korender32.png", width = 48f, height = 48f)
+                    }
                     Text(id = "header", fontResource = "font/orbitron.ttf", height = 64f, text = "Korender GUI Demo", color = ColorRGBA(0x246EB9A0))
                     Filler()
                 }

@@ -33,6 +33,7 @@ import com.zakgof.korender.impl.material.Defs
 import com.zakgof.korender.math.FloatMath.PI
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import com.zakgof.korender.scope.BillboardInstancingParameter
@@ -50,18 +51,19 @@ import kotlin.math.sin
 internal enum class InternalInstancingParameter(
     val composeMeshAttribute: InternalMeshAttribute<*>?,
     val instanceMeshAttributes: List<InternalMeshAttribute<*>>,
-    val instancingDefs: Long
+    val instancingDefs: Long,
 ) : InstancingParameter {
     TRANSFORM_INSTANCING(null, listOf(MODEL0, MODEL1, MODEL2, MODEL3), Defs.VERTEX_TRANSFORM.bit),
     COLOR_INSTANCING(COLOR, listOf(INSTCOLOR), Defs.VERTEX_COLOR.bit),
     METALLIC_INSTANCING(METALLIC, listOf(INSTMETALLIC), Defs.VERTEX_METALLIC.bit),
     ROUGHNESS_INSTANCING(ROUGHNESS, listOf(INSTROUGHNESS), Defs.VERTEX_ROUGHNESS.bit),
-    COLOR_TEXTURE_INDEX_INSTANCING(COLORTEXINDEX, listOf(INSTCOLORTEXINDEX), Defs.VERTEX_COLORTEXINDEX.bit), ;
+    COLOR_TEXTURE_INDEX_INSTANCING(COLORTEXINDEX, listOf(INSTCOLORTEXINDEX), Defs.VERTEX_COLORTEXINDEX.bit),
+    ;
 }
 
 internal enum class InternalBillboardInstancingParameter(
     val instanceMeshAttribute: InternalMeshAttribute<*>,
-    val instancingDefs: Long
+    val instancingDefs: Long,
 ) : BillboardInstancingParameter {
     POSITION_BILLBOARD_INSTANCING(INSTPOS, Defs.VERTEX_POS.bit),
     SCALE_BILLBOARD_INSTANCING(INSTSCALE, Defs.VERTEX_SCALE.bit),
@@ -224,10 +226,10 @@ internal object Geometry {
             val normal = Vec3(xSlope * cos(phi), ySlope, xSlope * sin(phi))
             pos(Vec3(radius * cos(phi), 0f, radius * sin(phi)))
                 .normal(normal)
-                .tex(Vec2(sector.toFloat() / sectors, 0f))
+                .tex(Vec2(sector.toFloat() / sectors, 1f))
             pos(height.y)
                 .normal(normal)
-                .tex(Vec2(sector.toFloat() / sectors, 1f))
+                .tex(Vec2(sector.toFloat() / sectors, 0f))
         }
         for (sector in 0 until sectors) {
             index(sector * 2, sector * 2 + 1, sector * 2 + 2)
@@ -247,10 +249,10 @@ internal object Geometry {
             val normal = Vec3(cosPhi, 0f, sinPhi)
             pos(Vec3(radius * cosPhi, 0f, radius * sinPhi))
                 .normal(normal)
-                .tex(Vec2(sector.toFloat() / sectors, 0f))
+                .tex(Vec2(sector.toFloat() / sectors, 1f))
             pos(Vec3(radius * cosPhi, height, radius * sinPhi))
                 .normal(normal)
-                .tex(Vec2(sector.toFloat() / sectors, 1f))
+                .tex(Vec2(sector.toFloat() / sectors, 0f))
         }
         for (sector in 0 until sectors) {
             index(sector * 2, sector * 2 + 1, sector * 2 + 2)
@@ -318,39 +320,29 @@ internal object Geometry {
 
     private fun sphere(radius: Float, slices: Int, sectors: Int, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>) =
         CMesh(
-            2 + (slices - 1) * (sectors + 1),
-            sectors * 6 + (slices - 2) * sectors * 6,
+            (slices + 1) * (sectors + 1),
+            slices * sectors * 6,
             count,
             POS, NORMAL, TEX, *instancingAttributes
         ) {
-            pos(Vec3(0f, -radius, 0f)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(0f, 0f))
-            for (slice in 1..<slices) {
-                for (sector in 0..<sectors + 1) {
-                    val theta = PI - PI * slice / slices
-                    val phi = PI * 2f * sector / sectors
+            for (slice in 0..slices) {
+                val theta = PI * slice / slices
+                for (sector in 0..sectors) {
+                    val phi = PI * 2f * (sector.toFloat() / sectors - 0.5f)
                     val normal = Vec3(sin(theta) * cos(phi), cos(theta), sin(theta) * sin(phi))
                     pos(normal * radius)
                         .normal(normal)
-                        .tex(Vec2(sector.toFloat() / sectors, slice.toFloat() / slices))
+                        .tex(Vec2(sector.toFloat() / sectors, (theta / PI)))
                 }
             }
-            pos(Vec3(0f, radius, 0f)).normal(Vec3(0f, 1f, 0f)).tex(Vec2(0f, 1f))
 
-            for (sector in 0 until sectors) {
-                index(0, 1 + sector, 1 + sector + 1)
-            }
-            for (slice in 1..<slices - 1) {
-                val b = 1 + (slice - 1) * (sectors + 1)
+            for (slice in 0..<slices) {
+                val b = slice * (sectors + 1)
                 val nextb = b + (sectors + 1)
                 for (sector in 0..<sectors) {
                     index(b + sector, nextb + sector, nextb + sector + 1)
                     index(nextb + sector + 1, b + sector + 1, b + sector)
                 }
-            }
-            val b = 1 + (slices - 2) * (sectors + 1)
-            val top = 1 + (slices - 1) * (sectors + 1)
-            for (sector in 0..<sectors) {
-                index(b + sector, top, b + sector + 1)
             }
         }
 
@@ -363,30 +355,30 @@ internal object Geometry {
 
     private fun cube(halfSide: Float, count: Int, instancingAttributes: Array<InternalMeshAttribute<*>>) =
         CMesh(24, 36, count, POS, NORMAL, TEX, *instancingAttributes) {
-            pos(Vec3(-halfSide, -halfSide, -halfSide)).normal(Vec3(-1f, 0f, 0f)).tex(Vec2(0f, 0f))
-            pos(Vec3(-halfSide, halfSide, -halfSide)).normal(Vec3(-1f, 0f, 0f)).tex(Vec2(0f, 1f))
-            pos(Vec3(-halfSide, halfSide, halfSide)).normal(Vec3(-1f, 0f, 0f)).tex(Vec2(1f, 1f))
-            pos(Vec3(-halfSide, -halfSide, halfSide)).normal(Vec3(-1f, 0f, 0f)).tex(Vec2(1f, 0f))
-            pos(Vec3(-halfSide, -halfSide, halfSide)).normal(Vec3(0f, 0f, 1f)).tex(Vec2(0f, 0f))
-            pos(Vec3(-halfSide, halfSide, halfSide)).normal(Vec3(0f, 0f, 1f)).tex(Vec2(0f, 1f))
-            pos(Vec3(halfSide, halfSide, halfSide)).normal(Vec3(0f, 0f, 1f)).tex(Vec2(1f, 1f))
-            pos(Vec3(halfSide, -halfSide, halfSide)).normal(Vec3(0f, 0f, 1f)).tex(Vec2(1f, 0f))
-            pos(Vec3(halfSide, -halfSide, halfSide)).normal(Vec3(1f, 0f, 0f)).tex(Vec2(0f, 0f))
-            pos(Vec3(halfSide, halfSide, halfSide)).normal(Vec3(1f, 0f, 0f)).tex(Vec2(0f, 1f))
-            pos(Vec3(halfSide, halfSide, -halfSide)).normal(Vec3(1f, 0f, 0f)).tex(Vec2(1f, 1f))
-            pos(Vec3(halfSide, -halfSide, -halfSide)).normal(Vec3(1f, 0f, 0f)).tex(Vec2(1f, 0f))
-            pos(Vec3(halfSide, -halfSide, -halfSide)).normal(Vec3(0f, 0f, -1f)).tex(Vec2(0f, 0f))
-            pos(Vec3(halfSide, halfSide, -halfSide)).normal(Vec3(0f, 0f, -1f)).tex(Vec2(0f, 1f))
-            pos(Vec3(-halfSide, halfSide, -halfSide)).normal(Vec3(0f, 0f, -1f)).tex(Vec2(1f, 1f))
-            pos(Vec3(-halfSide, -halfSide, -halfSide)).normal(Vec3(0f, 0f, -1f)).tex(Vec2(1f, 0f))
-            pos(Vec3(-halfSide, halfSide, halfSide)).normal(Vec3(0f, 1f, 0f)).tex(Vec2(0f, 0f))
-            pos(Vec3(-halfSide, halfSide, -halfSide)).normal(Vec3(0f, 1f, 0f)).tex(Vec2(0f, 1f))
-            pos(Vec3(halfSide, halfSide, -halfSide)).normal(Vec3(0f, 1f, 0f)).tex(Vec2(1f, 1f))
-            pos(Vec3(halfSide, halfSide, halfSide)).normal(Vec3(0f, 1f, 0f)).tex(Vec2(1f, 0f))
-            pos(Vec3(halfSide, -halfSide, halfSide)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(0f, 0f))
-            pos(Vec3(halfSide, -halfSide, -halfSide)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(0f, 1f))
-            pos(Vec3(-halfSide, -halfSide, -halfSide)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(1f, 1f))
-            pos(Vec3(-halfSide, -halfSide, halfSide)).normal(Vec3(0f, -1f, 0f)).tex(Vec2(1f, 0f))
+            pos(Vec3(-halfSide, -halfSide, -halfSide)).normal((-1).x).tex(Vec2(0f, 0f))
+            pos(Vec3(-halfSide, halfSide, -halfSide)).normal((-1).x).tex(Vec2(0f, 1f))
+            pos(Vec3(-halfSide, halfSide, halfSide)).normal((-1).x).tex(Vec2(1f, 1f))
+            pos(Vec3(-halfSide, -halfSide, halfSide)).normal((-1).x).tex(Vec2(1f, 0f))
+            pos(Vec3(-halfSide, -halfSide, halfSide)).normal(1.z).tex(Vec2(0f, 0f))
+            pos(Vec3(-halfSide, halfSide, halfSide)).normal(1.z).tex(Vec2(0f, 1f))
+            pos(Vec3(halfSide, halfSide, halfSide)).normal(1.z).tex(Vec2(1f, 1f))
+            pos(Vec3(halfSide, -halfSide, halfSide)).normal(1.z).tex(Vec2(1f, 0f))
+            pos(Vec3(halfSide, -halfSide, halfSide)).normal(1.x).tex(Vec2(0f, 0f))
+            pos(Vec3(halfSide, halfSide, halfSide)).normal(1.x).tex(Vec2(0f, 1f))
+            pos(Vec3(halfSide, halfSide, -halfSide)).normal(1.x).tex(Vec2(1f, 1f))
+            pos(Vec3(halfSide, -halfSide, -halfSide)).normal(1.x).tex(Vec2(1f, 0f))
+            pos(Vec3(halfSide, -halfSide, -halfSide)).normal((-1).z).tex(Vec2(0f, 0f))
+            pos(Vec3(halfSide, halfSide, -halfSide)).normal((-1).z).tex(Vec2(0f, 1f))
+            pos(Vec3(-halfSide, halfSide, -halfSide)).normal((-1).z).tex(Vec2(1f, 1f))
+            pos(Vec3(-halfSide, -halfSide, -halfSide)).normal((-1).z).tex(Vec2(1f, 0f))
+            pos(Vec3(-halfSide, halfSide, halfSide)).normal(1.y).tex(Vec2(0f, 0f))
+            pos(Vec3(-halfSide, halfSide, -halfSide)).normal(1.y).tex(Vec2(0f, 1f))
+            pos(Vec3(halfSide, halfSide, -halfSide)).normal(1.y).tex(Vec2(1f, 1f))
+            pos(Vec3(halfSide, halfSide, halfSide)).normal(1.y).tex(Vec2(1f, 0f))
+            pos(Vec3(halfSide, -halfSide, halfSide)).normal((-1).y).tex(Vec2(0f, 0f))
+            pos(Vec3(halfSide, -halfSide, -halfSide)).normal((-1).y).tex(Vec2(0f, 1f))
+            pos(Vec3(-halfSide, -halfSide, -halfSide)).normal((-1).y).tex(Vec2(1f, 1f))
+            pos(Vec3(-halfSide, -halfSide, halfSide)).normal((-1).y).tex(Vec2(1f, 0f))
 
             index(0, 2, 1, 0, 3, 2)
             index(4, 6, 5, 4, 7, 6)
@@ -441,13 +433,12 @@ internal object Geometry {
             return mesh
         }
         return CMesh(mesh.vertices.size, mesh.indices?.size ?: -1, count, POS, NORMAL, TEX, *instancingAttributes) {
-            (0 until mesh.vertices.size).forEach {
-                val vertex = mesh.vertices[it]
-                pos(vertex.pos!!).normal(vertex.normal!!).tex(vertex.tex!!)
+            mesh.vertices.forEach {
+                pos(it.pos!!).normal(it.normal!!).tex(it.tex!!)
             }
             mesh.indices?.let { indices ->
-                (0 until indices.size).forEach {
-                    index(indices[it])
+                indices.forEach {
+                    index(it)
                 }
             }
         }

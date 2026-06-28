@@ -46,15 +46,15 @@ internal class GuiRenderer(
             val normalsHeight =
                 container.elements.map { sizes[it]!!.height }.filter { it >= 0f }.sum()
             val fillerHeight = if (fillers == 0) 0f else (height - normalsHeight) / fillers
-            var currY = y
+            var currY = y + container.paddingTop
             for (child in container.elements) {
                 val declSize = sizes[child]!!
                 val childWidth = if (declSize.width < 0f) width else declSize.width
                 val childHeight = if (declSize.height < 0f) fillerHeight else declSize.height
                 when (child) {
-                    is ElementDeclaration.Text -> createText(child, x, currY, childWidth)
-                    is ElementDeclaration.Image -> createImage(child, x, currY)
-                    is ElementDeclaration.Container -> layoutContainer(sizes, x, currY, childWidth, childHeight, child)
+                    is ElementDeclaration.Text -> createText(child, x + container.paddingLeft, currY, childWidth)
+                    is ElementDeclaration.Image -> createImage(child, x + container.paddingLeft, currY)
+                    is ElementDeclaration.Container -> layoutContainer(sizes, x + container.paddingLeft, currY, childWidth, childHeight, child)
                     is ElementDeclaration.Filler -> {}
                 }
                 currY += childHeight
@@ -66,15 +66,15 @@ internal class GuiRenderer(
             val normalsWidths =
                 container.elements.map { sizes[it]!!.width }.filter { it >= 0f }.sum()
             val fillerWidth = if (fillers == 0) 0f else (width - normalsWidths) / fillers
-            var currX = x
+            var currX = x + container.paddingLeft
             for (child in container.elements) {
                 val declSize = sizes[child]!!
                 val childWidth = if (declSize.width < 0f) fillerWidth else declSize.width
                 val childHeight = if (declSize.height < 0f) height else declSize.height
                 when (child) {
-                    is ElementDeclaration.Text -> createText(child, currX, y, childWidth)
-                    is ElementDeclaration.Image -> createImage(child, currX, y)
-                    is ElementDeclaration.Container -> layoutContainer(sizes, currX, y, childWidth, childHeight, child)
+                    is ElementDeclaration.Text -> createText(child, currX, y + container.paddingTop, childWidth)
+                    is ElementDeclaration.Image -> createImage(child, currX, y + container.paddingTop)
+                    is ElementDeclaration.Container -> layoutContainer(sizes, currX, y + container.paddingTop, childWidth, childHeight, child)
                     is ElementDeclaration.Filler -> {}
                 }
                 currX += childWidth
@@ -86,10 +86,12 @@ internal class GuiRenderer(
                 val declSize = sizes[child]!!
                 val w = if (declSize.width < 0f) width else declSize.width
                 val h = if (declSize.height < 0f) height else declSize.height
+                val xPos = x + container.paddingLeft
+                val yPos = y + container.paddingTop
                 when (child) {
-                    is ElementDeclaration.Text -> createText(child, x, y, w)
-                    is ElementDeclaration.Image -> createImage(child, x, y)
-                    is ElementDeclaration.Container -> layoutContainer(sizes, x, y, w, h, child)
+                    is ElementDeclaration.Text -> createText(child, xPos, yPos, w)
+                    is ElementDeclaration.Image -> createImage(child, xPos, yPos)
+                    is ElementDeclaration.Container -> layoutContainer(sizes, xPos, yPos, w, h, child)
                     is ElementDeclaration.Filler -> {}
                 }
             }
@@ -100,8 +102,8 @@ internal class GuiRenderer(
 
         val imageMaterial = ImageMaterial(
             pos = Vec2(
-                (x + declaration.marginLeft) / width,
-                1.0f - (y + declaration.marginTop + declaration.height) / height
+                x / width,
+                1.0f - (y + declaration.height) / height
             ),
             size = Vec2(
                 declaration.width / width,
@@ -119,8 +121,8 @@ internal class GuiRenderer(
 
         touchBoxes.add(
             TouchBox(
-                x + declaration.marginLeft,
-                y + declaration.marginTop,
+                x,
+                y,
                 declaration.width,
                 declaration.height,
                 declaration.id,
@@ -150,7 +152,7 @@ internal class GuiRenderer(
     ): Size {
         val size = when (element) {
             is ElementDeclaration.Text -> textSize(element)
-            is ElementDeclaration.Image -> Size(element.fullWidth, element.fullHeight)
+            is ElementDeclaration.Image -> Size(element.width, element.height)
             is ElementDeclaration.Filler -> {
                 if (parentDirection == Direction.Vertical) Size(0f, -1f) else Size(-1f, 0f)
             }
@@ -173,7 +175,7 @@ internal class GuiRenderer(
                                 }
                             }
                         }
-                        Size(w, h)
+                        Size(w, h).withPadding(element)
                     }
 
                     Direction.Horizontal -> {
@@ -192,7 +194,7 @@ internal class GuiRenderer(
                                 }
                             }
                         }
-                        Size(w, h)
+                        Size(w, h).withPadding(element)
                     }
 
                     Direction.Stack -> {
@@ -203,7 +205,7 @@ internal class GuiRenderer(
                             w = if (childSize.width < 0f || w < 0f) -1f else max(childSize.width, w)
                             h = if (childSize.height < 0f || h < 0f) -1f else max(childSize.height, h)
                         }
-                        Size(w, h)
+                        Size(w, h).withPadding(element)
                     }
                 }
         }
@@ -220,7 +222,13 @@ internal class GuiRenderer(
         )
     }
 
-    class Size(val width: Float, val height: Float)
+    class Size(val width: Float, val height: Float) {
+        fun withPadding(container: ElementDeclaration.Container): Size =
+            Size(
+                if (width < 0) width else width + container.paddingLeft + container.paddingRight,
+                if (height < 0) height else height + container.paddingTop + container.paddingBottom
+            )
+    }
 }
 
 private class ImageMaterial(

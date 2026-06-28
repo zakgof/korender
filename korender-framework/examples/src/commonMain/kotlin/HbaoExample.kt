@@ -13,6 +13,7 @@ import com.zakgof.korender.math.Transform.Companion.translate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import com.zakgof.korender.scope.GuiContainerScope
 
 @Composable
 fun HbaoExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
@@ -76,36 +77,21 @@ fun HbaoExample() = Korender(resourceLoader = { Res.readBytes("files/$it") }) {
                 }
                 Filler()
                 Column {
-                    Row {
-                        Filler()
-                        Text(id = "samples1", height = 48f, text = "Samples ${samples.position.toInt()} ")
-                        Slider("samples2", samples, width / 2f, 64f)
-                    }
-                    Row {
-                        Filler()
-                        val r = radius.position.fixedDecimals(1)
-                        Text(id = "radius1", height = 48f, text = "Radius $r ")
-                        Slider("radius2", radius, width / 2f, 64f)
-                    }
-                    Row {
-                        Filler()
-                        val b = bias.position.fixedDecimals(3)
-                        Text(id = "bias1", height = 48f, text = "Bias $b ")
-                        Slider("bias2", bias, width / 2f, 64f)
-                    }
-                    Row {
-                        Filler()
-                        val i = intensity.position.fixedDecimals(2)
-                        Text(id = "intensity1", height = 48f, text = "Intensity $i ")
-                        Slider("intensity2", intensity, width / 2f, 64f)
-                    }
-                    Row {
-                        Filler()
-                        Text(id = "bradius1", height = 48f, text = "Blur Radius ${bradius.position.toInt()} ")
-                        Slider("bradius2", bradius, width / 2f, 64f)
-                    }
+                    Tuner("samples", "Samples ${samples.position.toInt()} ", samples)
+                    Tuner("radius", "Radius ${radius.position.fixedDecimals(1)} ", radius)
+                    Tuner("bias", "Bias ${bias.position.fixedDecimals(3)} ", bias)
+                    Tuner("intensity", "Intensity ${intensity.position.fixedDecimals(2)} ", intensity)
+                    Tuner("blur-radius", "Blur Radius ${bradius.position.toInt()} ", bradius)
                 }
             }
         }
+    }
+}
+
+private fun GuiContainerScope.Tuner(id: String, label: String, state: SliderState) {
+    Row(padding = 4f) {
+        Filler()
+        Text(id = "$id.text", height = 36f, text = label)
+        Slider("$id.slider", state, width / 2f, 48f)
     }
 }

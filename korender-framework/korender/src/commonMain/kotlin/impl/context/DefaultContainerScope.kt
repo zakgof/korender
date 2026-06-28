@@ -2,30 +2,30 @@ package com.zakgof.korender.impl.context
 
 import com.zakgof.korender.TextStyle
 import com.zakgof.korender.TouchHandler
-import com.zakgof.korender.scope.FrameScope
-import com.zakgof.korender.scope.GuiContainerScope
 import com.zakgof.korender.impl.engine.ElementDeclaration
 import com.zakgof.korender.math.ColorRGBA
+import com.zakgof.korender.scope.FrameScope
+import com.zakgof.korender.scope.GuiContainerScope
 
 internal class DefaultContainerScope(
     private val frameContext: DefaultFrameScope,
-    private val declaration: ElementDeclaration.Container
+    private val declaration: ElementDeclaration.Container,
 ) : GuiContainerScope, FrameScope by frameContext {
 
-    override fun Row(block: GuiContainerScope.() -> Unit) {
-        val row = ElementDeclaration.Container(Direction.Horizontal)
+    override fun Row(paddingTop: Float, paddingRight: Float, paddingBottom: Float, paddingLeft: Float, block: GuiContainerScope.() -> Unit) {
+        val row = ElementDeclaration.Container(Direction.Horizontal, paddingTop, paddingRight, paddingBottom, paddingLeft)
         DefaultContainerScope(frameContext, row).apply(block)
         declaration.add(row)
     }
 
-    override fun Column(block: GuiContainerScope.() -> Unit) {
-        val column = ElementDeclaration.Container(Direction.Vertical)
+    override fun Column(paddingTop: Float, paddingRight: Float, paddingBottom: Float, paddingLeft: Float, block: GuiContainerScope.() -> Unit) {
+        val column = ElementDeclaration.Container(Direction.Vertical, paddingTop, paddingRight, paddingBottom, paddingLeft)
         DefaultContainerScope(frameContext, column).apply(block)
         declaration.add(column)
     }
 
-    override fun Stack(block: GuiContainerScope.() -> Unit) {
-        val stack = ElementDeclaration.Container(Direction.Stack)
+    override fun Stack(paddingTop: Float, paddingRight: Float, paddingBottom: Float, paddingLeft: Float, block: GuiContainerScope.() -> Unit) {
+        val stack = ElementDeclaration.Container(Direction.Stack, paddingTop, paddingRight, paddingBottom, paddingLeft)
         DefaultContainerScope(frameContext, stack).apply(block)
         declaration.add(stack)
     }
@@ -35,7 +35,7 @@ internal class DefaultContainerScope(
             ElementDeclaration.Text(
                 id,
                 fontResource ?: style?.fontResource ?: "!font/anta.ttf",
-                height ?: style?.height?.toFloat() ?: 32f,
+                height ?: style?.height ?: 32f,
                 text,
                 color ?: style?.color ?: ColorRGBA(0x66FF55A0),
                 static,
@@ -49,8 +49,8 @@ internal class DefaultContainerScope(
         declaration.add(ElementDeclaration.Filler())
     }
 
-    override fun Image(id: String, imageResource: String, width: Float, height: Float, marginTop: Float, marginBottom: Float, marginLeft: Float, marginRight: Float, onTouch: TouchHandler) {
-        declaration.add(ElementDeclaration.Image(id, imageResource, width, height, marginTop, marginBottom, marginLeft, marginRight, onTouch, frameContext.nodeContext))
+    override fun Image(id: String, imageResource: String, width: Float, height: Float, onTouch: TouchHandler) {
+        declaration.add(ElementDeclaration.Image(id, imageResource, width, height, onTouch, frameContext.nodeContext))
     }
 }
 

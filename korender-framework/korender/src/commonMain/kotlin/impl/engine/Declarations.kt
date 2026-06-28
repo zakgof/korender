@@ -154,18 +154,17 @@ internal sealed interface ElementDeclaration {
         val imageResource: String,
         val width: Float,
         val height: Float,
-        val marginTop: Float,
-        val marginBottom: Float,
-        val marginLeft: Float,
-        val marginRight: Float,
         val onTouch: TouchHandler,
         override val nodeContext: NodeContext,
-    ) : ElementDeclaration, NodeKeeper {
-        val fullWidth = width + marginLeft + marginRight
-        val fullHeight = height + marginTop + marginBottom
-    }
+    ) : ElementDeclaration, NodeKeeper
 
-    class Container(val direction: Direction) : ElementDeclaration {
+    class Container(
+        val direction: Direction,
+        val paddingTop: Float = 0f,
+        val paddingRight: Float = 0f,
+        val paddingBottom: Float = 0f,
+        val paddingLeft: Float = 0f,
+    ) : ElementDeclaration {
         val elements = mutableListOf<ElementDeclaration>()
         fun add(element: ElementDeclaration) = elements.add(element)
     }
