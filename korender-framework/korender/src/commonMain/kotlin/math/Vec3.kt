@@ -1,6 +1,8 @@
 package com.zakgof.korender.math
 
 import com.zakgof.korender.KorenderException
+import kotlin.math.acos
+import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.random.Random
 
@@ -71,6 +73,18 @@ class Vec3(val x: Float, val y: Float, val z: Float) {
             1 -> Y
             2 -> Z
             else -> throw KorenderException("Unknown axis index $axis")
+        }
+
+        fun slerp(a: Vec3, b: Vec3, t: Float): Vec3 {
+            val dot = a.dot(b).coerceIn(-1f, 1f)
+            val theta = acos(dot)
+            val sinTheta = sin(theta)
+            if (sinTheta < 1e-4) {
+                return (a * (1f - t) + b * t).normalize()
+            }
+            val w1 = (sin((1f - t) * theta) / sinTheta)
+            val w2 = (sin(t * theta) / sinTheta)
+            return a * w1 + b * w2
         }
     }
 
