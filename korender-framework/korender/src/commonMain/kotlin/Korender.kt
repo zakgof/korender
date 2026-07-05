@@ -143,4 +143,8 @@ enum class ShaderPluginId {
     VPROJECTION
 }
 
+/**
+ * Marker interface for shader flags used to customize shader behavior.
+ * Use predefined flags like [KorenderScope.NO_SHADOW_CAST] to toggle shader features.
+ */
 interface ShaderFlag

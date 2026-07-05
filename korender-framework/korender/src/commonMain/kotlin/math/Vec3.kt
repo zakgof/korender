@@ -75,6 +75,13 @@ class Vec3(val x: Float, val y: Float, val z: Float) {
             else -> throw KorenderException("Unknown axis index $axis")
         }
 
+        /**
+         * Spherical linear interpolation between two unit vectors.
+         * @param a start unit vector
+         * @param b end unit vector
+         * @param t interpolation factor in [0, 1]
+         * @return interpolated unit vector
+         */
         fun slerp(a: Vec3, b: Vec3, t: Float): Vec3 {
             val dot = a.dot(b).coerceIn(-1f, 1f)
             val theta = acos(dot)

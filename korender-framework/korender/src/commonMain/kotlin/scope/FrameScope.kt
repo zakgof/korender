@@ -1,5 +1,6 @@
 package com.zakgof.korender.scope
 
+import com.zakgof.korender.AnimationDeclaration
 import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.BillboardMaterial
 import com.zakgof.korender.FrameInfo
@@ -43,12 +44,12 @@ interface FrameScope : KorenderScope {
      * @param resource resource file
      * @param transform model space transform
      * @param instancing instancing declaration to render multiple objects in a batch
-     * @param animation index of animation to apply
-     * @param onUpdate callback with runtime Gltf details
+     * @param animation animation declaration to override the default animation (if present)
+     * @param onUpdate callback with runtime model details
      * @param materialModifier material modifiers block
      */
 
-    fun Model(resource: String, transform: Transform = Transform.IDENTITY, instancing: ModelInstancingDeclaration? = null, animation: Int? = null, onUpdate: ((ModelInfo) -> Unit)? = null, materialModifier: BaseMaterialScope.() -> Unit = {})
+    fun Model(resource: String, transform: Transform = Transform.IDENTITY, instancing: ModelInstancingDeclaration? = null, animation: AnimationDeclaration? = null, onUpdate: ((ModelInfo) -> Unit)? = null, materialModifier: BaseMaterialScope.() -> Unit = {})
 
 
     /**

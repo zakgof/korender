@@ -2,6 +2,34 @@ package com.zakgof.korender.math
 
 import com.zakgof.korender.KorenderException
 
+/**
+ * 4x4 matrix for 3D transformations (translation, rotation, scaling, projection).
+ * Uses row-major ordering internally.
+ *
+ * Example:
+ * ```kotlin
+ * val mat = Mat4.IDENTITY
+ * val transformed = mat * vec3
+ * val projected = mat.project(vec3)
+ * ```
+ *
+ * @param m00 row 0, col 0
+ * @param m01 row 0, col 1
+ * @param m02 row 0, col 2
+ * @param m03 row 0, col 3
+ * @param m10 row 1, col 0
+ * @param m11 row 1, col 1
+ * @param m12 row 1, col 2
+ * @param m13 row 1, col 3
+ * @param m20 row 2, col 0
+ * @param m21 row 2, col 1
+ * @param m22 row 2, col 2
+ * @param m23 row 2, col 3
+ * @param m30 row 3, col 0
+ * @param m31 row 3, col 1
+ * @param m32 row 3, col 2
+ * @param m33 row 3, col 3
+ */
 class Mat4(
     val m00: Float,
     val m01: Float,
@@ -20,6 +48,10 @@ class Mat4(
     val m32: Float,
     val m33: Float
 ) {
+    /**
+     * Creates from a 16-element column-major float array.
+     * @param array 16 floats in column-major order (OpenGL format)
+     */
     constructor(array: FloatArray) : this(
         array[0],
         array[4],
@@ -40,10 +72,13 @@ class Mat4(
     )
 
     companion object {
+        /** Zero matrix */
         val ZERO: Mat4 = Mat4(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
+        /** Identity matrix */
         val IDENTITY: Mat4 = Mat4(1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f)
     }
 
+    /** Matrix addition */
     operator fun plus(a: Mat4) =
         Mat4(
             m00 + a.m00,
@@ -64,6 +99,7 @@ class Mat4(
             m33 + a.m33
         )
 
+    /** Scalar multiplication */
     operator fun times(a: Float) = Mat4(
         m00 * a,
         m01 * a,
@@ -83,12 +119,18 @@ class Mat4(
         m33 * a
     )
 
+    /** Transforms a 3D vector (with translation component). */
     operator fun times(vec: Vec3) = Vec3(
         (m00 * vec.x + m01 * vec.y + m02 * vec.z + m03),
         (m10 * vec.x + m11 * vec.y + m12 * vec.z + m13),
         (m20 * vec.x + m21 * vec.y + m22 * vec.z + m23)
     )
 
+    /**
+     * Projects a vector using perspective division.
+     * @param vec vector to project
+     * @return projected vector in normalized device coordinates
+     */
     fun project(vec: Vec3): Vec3 {
         val winv: Float = 1.0f / (m30 * vec.x + m31 * vec.y + m32 * vec.z + m33)
         return Vec3(
@@ -98,6 +140,7 @@ class Mat4(
         )
     }
 
+    /** Converts to column-major float array (OpenGL format) */
     fun asArray(): FloatArray = floatArrayOf(
         m00, m10, m20, m30,
         m01, m11, m21, m31,
@@ -105,6 +148,7 @@ class Mat4(
         m03, m13, m23, m33
     )
 
+    /** Matrix-matrix multiplication */
     operator fun times(mat: Mat4): Mat4 = Mat4(
         m00 * mat.m00 + m01 * mat.m10 + m02 * mat.m20 + m03 * mat.m30,
         m00 * mat.m01 + m01 * mat.m11 + m02 * mat.m21 + m03 * mat.m31,
@@ -127,6 +171,12 @@ class Mat4(
         m30 * mat.m03 + m31 * mat.m13 + m32 * mat.m23 + m33 * mat.m33
     )
 
+    /**
+     * Computes the inverse transpose of the upper-left 3x3 part.
+     * Used for normal matrix calculation.
+     * @return inverse transpose 3x3 matrix
+     * @throws KorenderException if the 3x3 matrix is singular
+     */
     fun invTranspose(): Mat3 {
         val determinant = m00 * (m11 * m22 - m12 * m21) -
                 m01 * (m10 * m22 - m12 * m20) +

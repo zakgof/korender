@@ -27,16 +27,12 @@ import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Mat4
-import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
-import com.zakgof.korender.math.Vec3
-import kotlin.math.floor
 import kotlin.math.tan
 
-internal class InstanceData(nodes: Int) {
+internal class InstanceData(nodes: Int, val animationStrategy: GltfNodeAnimationStrategy) {
     val nodeMatrices = Array(nodes) { Transform.IDENTITY }
     val nodeLocalMatrices = Array(nodes) { Transform.IDENTITY }
-    val nodeAnimations = Array(nodes) { NodeAnimation(null, null, null) }
     val jointMatrices = mutableListOf<List<Mat4>>()
 }
 
@@ -57,7 +53,10 @@ internal class GltfSceneBuilder(private val cache: GltfCache, private val declar
     private val cameraTransforms = MutableList(cache.model.cameras?.size ?: 0) { Transform() }
     private val meshNodes = mutableListOf<Pair<Int, Int>>()
     private val instances = declaration.instancingDeclaration?.instancer?.invoke() ?: listOf(ModelInstance(Transform.IDENTITY, declaration.time, declaration.animation))
-    private val instanceData: Array<InstanceData> = Array(instances.size) { InstanceData(cache.model.nodes?.size ?: 0) }
+    private val instanceData: Array<InstanceData> = Array(instances.size) {
+        val nodeCount = cache.model.nodes?.size ?: 0
+        InstanceData(nodeCount, instances[it].animation?.strategy(nodeCount) ?: SingleAnimationStrategy(0, nodeCount))
+    }
 
     fun build(): List<RenderableDeclaration> {
 
@@ -122,35 +121,9 @@ internal class GltfSceneBuilder(private val cache: GltfCache, private val declar
     private fun calculateInstanceData(instanceIndex: Int, instanceData: InstanceData) {
         if (cache.model.animations?.isNotEmpty() == true) {
             val instanceDeclaration = instances[instanceIndex]
-            val animationIndex = (instanceDeclaration.animation ?: declaration.animation).coerceIn(0, cache.model.animations.size - 1)
-            val animation = cache.model.animations[animationIndex]
-            animation.channels.forEach { channel ->
-                channel.target.node?.let {
-                    val samplerValue = getSamplerValue(animation.samplers[channel.sampler], instanceDeclaration.time ?: declaration.time)
-                    instanceData.nodeAnimations[channel.target.node].populate(channel.target.path, samplerValue)
-                }
-            }
+            val effectiveTime =  instanceDeclaration.time ?: declaration.time
+            instanceData.animationStrategy.populate(cache, effectiveTime)
         }
-    }
-
-    private fun getSamplerValue(sampler: InternalGltfFileModel.Animation.AnimationSampler, currentTime: Float): List<Float> {
-
-        // TODO validate float input and output
-        // TODO support other types of samplers
-        val inputFloats = cache.accessors.floats[sampler.input]!!
-        val outputValues = cache.accessors.floatArrays[sampler.output] ?: return listOf(0f) // TODO this is ugly fallback
-
-        // TODO validate same lengths
-        val max = inputFloats.last()
-        val timeOffset = currentTime - floor(currentTime / max) * max
-
-        var samplerPositionBefore =
-            inputFloats.indexOfLast { timeOffset > it } // TODO linear scan - ineffective!
-        if (samplerPositionBefore < 0) samplerPositionBefore = 0
-
-        // TODO this is STEP, implement other interpolations
-        val output = outputValues[samplerPositionBefore]
-        return output
     }
 
     private fun collectMeshesFromNode(nodeIndex: Int) {
@@ -163,19 +136,7 @@ internal class GltfSceneBuilder(private val cache: GltfCache, private val declar
 
     private fun processNode(instanceData: InstanceData, parentTransform: Transform, nodeIndex: Int, node: InternalGltfFileModel.Node) {
 
-        var localTransform = Transform.IDENTITY
-
-        val na = instanceData.nodeAnimations[nodeIndex]
-
-        val translation = na.translation ?: node.translation
-        val rotation = na.rotation ?: node.rotation
-        val scale = na.scale ?: node.scale
-
-        scale?.let { localTransform = localTransform.scale(it[0], it[1], it[2]) }
-        rotation?.let { localTransform = localTransform.rotate(Quaternion(it[3], Vec3(it[0], it[1], it[2]))) }
-        translation?.let { localTransform = localTransform.translate(Vec3(it[0], it[1], it[2])) }
-
-        node.matrix?.let { localTransform *= Transform(Mat4(it.toFloatArray())) }
+        val localTransform = instanceData.animationStrategy.transform(nodeIndex, node)
 
         val transform = if (localTransform === Transform.IDENTITY) parentTransform else parentTransform * localTransform
 
@@ -231,10 +192,9 @@ internal class GltfSceneBuilder(private val cache: GltfCache, private val declar
             mat.plugin(Plugins.VPOSITION_SKINNING)
             mat.plugin(Plugins.VNORMAL_SKINNING)
             if (declaration.instancingDeclaration == null && jointMatrices != null) {
-                val jointMatrixList = jointMatrices.mapIndexed { ind, jm ->
+                mat.jntMatrices = jointMatrices.mapIndexed { ind, jm ->
                     jm * cache.loadedSkins[skinIndex]!![ind]
                 }
-                mat.jntMatrices = jointMatrixList
             }
         }
 

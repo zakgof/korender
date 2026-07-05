@@ -1,5 +1,6 @@
 package com.zakgof.korender.impl.context
 
+import com.zakgof.korender.AnimationDeclaration
 import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.BillboardMaterial
 import com.zakgof.korender.CameraDeclaration
@@ -58,6 +59,7 @@ import com.zakgof.korender.impl.material.InternalBillboardMaterial
 import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
 import com.zakgof.korender.impl.material.InternalSkyMaterial
+import com.zakgof.korender.impl.model.gltf.InternalAnimationDeclaration
 import com.zakgof.korender.impl.projection.Projection
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.Transform
@@ -187,13 +189,13 @@ internal class DefaultFrameScope(
         DefaultDeferredShadingScope(sceneDeclaration.deferredShadingDeclaration!!).apply(block)
     }
 
-    override fun Model(resource: String, transform: Transform, instancing: ModelInstancingDeclaration?, animation: Int?, onUpdate: ((ModelInfo) -> Unit)?, materialModifier: BaseMaterialScope.() -> Unit) {
+    override fun Model(resource: String, transform: Transform, instancing: ModelInstancingDeclaration?, animation: AnimationDeclaration?, onUpdate: ((ModelInfo) -> Unit)?, materialModifier: BaseMaterialScope.() -> Unit) {
         sceneDeclaration.models += ModelDeclaration(
             resource,
             transform,
             instancing as InternalModelInstancingDeclaration?,
             nodeContext.time ?: frameInfo.time,
-            animation ?: 0,
+            animation as InternalAnimationDeclaration?,
             onUpdate,
             materialModifier,
             nodeContext

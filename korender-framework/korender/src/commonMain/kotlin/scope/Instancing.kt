@@ -1,5 +1,6 @@
 package com.zakgof.korender.scope
 
+import com.zakgof.korender.AnimationDeclaration
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
@@ -65,24 +66,6 @@ interface BillboardInstancingScope {
 }
 
 /**
- * Scope for declaring individual GLTF model instances within a batch.
- */
-interface GltfInstancingScope {
-    /**
-     * Declares a single GLTF model instance.
-     *
-     * @param transform spatial transform of the model instance
-     * @param time time offset for animations in seconds
-     * @param animation index of the animation to apply to this instance
-     */
-    fun Instance(
-        transform: Transform,
-        time: Float? = null,
-        animation: Int? = null,
-    )
-}
-
-/**
  * Scope for declaring individual model instances within a batch.
  */
 interface ModelInstancingScope {
@@ -91,12 +74,12 @@ interface ModelInstancingScope {
      *
      * @param transform spatial transform of the model instance
      * @param time time offset for animations in seconds
-     * @param animation index of the animation to apply to this instance
+     * @param animation animation declaration to override the animation for this instance
      */
     fun Instance(
         transform: Transform,
         time: Float? = null,
-        animation: Int? = null,
+        animation: AnimationDeclaration? = null,
     )
 }
 

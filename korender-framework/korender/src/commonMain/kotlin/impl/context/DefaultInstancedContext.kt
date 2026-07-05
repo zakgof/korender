@@ -1,8 +1,10 @@
 package com.zakgof.korender.impl.context
 
+import com.zakgof.korender.AnimationDeclaration
 import com.zakgof.korender.impl.engine.BillboardInstance
 import com.zakgof.korender.impl.engine.MeshInstance
 import com.zakgof.korender.impl.engine.ModelInstance
+import com.zakgof.korender.impl.model.gltf.InternalAnimationDeclaration
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec2
@@ -24,7 +26,7 @@ internal class DefaultInstancingScope internal constructor(private val instances
 }
 
 internal class DefaultModelInstancingScope internal constructor(private val instances: MutableList<ModelInstance>) : ModelInstancingScope {
-    override fun Instance(transform: Transform, time: Float?, animation: Int?) {
-        instances.add(ModelInstance(transform, time, animation))
+    override fun Instance(transform: Transform, time: Float?, animation: AnimationDeclaration?) {
+        instances.add(ModelInstance(transform, time, animation as InternalAnimationDeclaration?))
     }
 }

@@ -17,6 +17,7 @@ import com.zakgof.korender.impl.material.InternalMaterial
 import com.zakgof.korender.impl.material.InternalMultiPassEffect
 import com.zakgof.korender.impl.material.InternalPostProcessingMaterial
 import com.zakgof.korender.impl.material.InternalShadingMaterial
+import com.zakgof.korender.impl.model.gltf.InternalAnimationDeclaration
 import com.zakgof.korender.math.ColorRGB
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.ColorRGBA
@@ -198,7 +199,7 @@ internal class ModelDeclaration(
     val transform: Transform,
     val instancingDeclaration: InternalModelInstancingDeclaration?,
     val time: Float,
-    val animation: Int,
+    val animation: InternalAnimationDeclaration?,
     val onUpdate: ((ModelInfo) -> Unit)?,
     val materialModifier: BaseMaterialScope.() -> Unit,
     override val nodeContext: NodeContext,
@@ -220,7 +221,7 @@ internal class HeightFieldDeclaration(
     override fun hashCode(): Int = id.hashCode()
 }
 
-internal class ModelInstance(val transform: Transform, val time: Float?, val animation: Int?)
+internal class ModelInstance(val transform: Transform, val time: Float?, val animation: InternalAnimationDeclaration?)
 
 internal class PointLightDeclaration(val position: Vec3, val color: ColorRGB, val attenuation: Vec3)
 

@@ -85,7 +85,7 @@ private fun FrameScope.light() {
 private fun FrameScope.character(z: Float) {
     Model(
         resource = "infcity/swat-woman.glb",
-        animation = 2,
+        animation = animation(2),
         transform = scale(0.002f).translate(z.z + 0.1f.x)
     )
 }

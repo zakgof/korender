@@ -88,7 +88,7 @@ fun GltfLibraryExample() = Row {
                     ) {
                         Model(
                             resource = model.file,
-                            animation = animations.indexOf(selectedAnimation),
+                            animation = animation(animations.indexOf(selectedAnimation)),
                             materialModifier = {
                                 this.env = cubeSky(env)
                             },

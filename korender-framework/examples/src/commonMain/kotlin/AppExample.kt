@@ -52,6 +52,7 @@ val folders = listOf(
         Case("OBJ mesh") { ObjMeshExample() },
         Case("GLTF crowd") { GltfCrowdExample() },
         Case("GLTF library") { GltfLibraryExample() },
+        Case("Animation blending") { AnimationBlendingExample() },
     )),
     Folder("Lighting", listOf(
         Case("PBR materials") { MetallicRoughnessExample() },

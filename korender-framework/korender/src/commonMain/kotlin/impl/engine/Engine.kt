@@ -71,6 +71,8 @@ import com.zakgof.korender.impl.material.SmokeEffect
 import com.zakgof.korender.impl.material.StarrySkyMaterial
 import com.zakgof.korender.impl.material.TextureSkyMaterial
 import com.zakgof.korender.impl.material.WaterMaterial
+import com.zakgof.korender.impl.model.gltf.BlendedAnimationDeclaration
+import com.zakgof.korender.impl.model.gltf.SingleAnimationDeclaration
 import com.zakgof.korender.impl.projection.FrustumProjectionMode
 import com.zakgof.korender.impl.projection.LogProjectionMode
 import com.zakgof.korender.impl.projection.OrthoProjectionMode
@@ -391,6 +393,10 @@ internal class Engine(
         override fun keepForever() = KeepForeverRetentionPolicy
         override fun untilGeneration(generation: Int) = UntilGenerationRetentionPolicy(generation)
         override fun time(seconds: Float) = TimeRetentionPolicy(seconds)
+
+        override fun animation(animationIndex: Int) = SingleAnimationDeclaration(animationIndex)
+        override fun blendedAnimation(animationIndex1: Int, animationIndex2: Int, weight: Float)=
+            BlendedAnimationDeclaration(animationIndex1, animationIndex2, weight)
 
         override
         val POS = MeshAttributes.POS

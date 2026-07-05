@@ -65,7 +65,7 @@ interface SpecularGlossinessScope {
 }
 
 /**
- * Effect applied to billboard rendering (e.g., particle effects).
+ * Effect applied to billboard rendering (e.g., particle effects like fire, smoke).
  */
 interface BillboardEffect
 
@@ -123,6 +123,9 @@ interface MaterialScope {
     fun texture(key: String, value: TextureDeclaration)
 }
 
+/**
+ * Scope for configuring base material properties including PBR factors, textures, and environment mapping.
+ */
 interface BaseMaterialScope : MaterialScope {
 
     /**
@@ -204,8 +207,16 @@ interface BaseMaterialScope : MaterialScope {
      */
     var occlusionTexture: TextureDeclaration?
 
+    /**
+     * Configures detail texturing to overlay a secondary texture.
+     * @param block detail texture configuration
+     */
     fun detailTexture(block: DetailTextureScope.() -> Unit)
 
+    /**
+     * Environment map used for reflections.
+     * Set to enable environment reflections on this material.
+     */
     var env: SkyMaterial?
 }
 
@@ -232,46 +243,62 @@ interface DetailTextureScope {
     var strength: Float
 }
 
+/**
+ * Scope for configuring billboard material properties.
+ */
 interface BillboardMaterialScope : BaseMaterialScope {
     /**
-     * Creates a material modifier for billboards.
-     * Used with the base material.
-     *
-     * @param position billboard center position
-     * @param scale billboard quad size
-     * @param rotation rotation angle
-     * @return material modifier
+     * Billboard center position in world space.
      */
-
     var position: Vec3
+    /**
+     * Billboard quad dimensions (width, height).
+     */
     var scale: Vec2
+    /**
+     * Billboard rotation angle in radians.
+     */
     var rotation: Float
+    /**
+     * Optional billboard effect (e.g., fire, smoke).
+     */
     var effect: BillboardEffect?
 }
 
+/**
+ * Scope for configuring terrain heightfield material properties.
+ */
 interface TerrainMaterialScope : BaseMaterialScope {
 
     /**
-     * TODO
-     * Creates a material modifier for clipmap terrains.
-     * Used with the base material.
+     * Configures the terrain heightmap.
+     * Used with clipmap terrain rendering.
      *
-     * @param heightTexture texture declaration for the heightmap, must be square. Red channel is used for elevation value
-     * @param heightScale height scale: world space terrain elevation value for max texture sample value
-     * @param outsideHeight world space elevation valur for points outside the texture range
-     * @param terrainCenter world space point corresponding to terrain center
-     * @return material modifier
+     * @param heightTexture heightmap texture (must be square, red channel used for elevation)
+     * @param heightScale world-space elevation for max texture sample value
+     * @param outsideHeight world-space elevation for points outside the texture
+     * @param terrainCenter world-space point for terrain center
      */
-
     fun heightTexture(heightTexture: TextureDeclaration, heightScale: Float, outsideHeight: Float = 0f, terrainCenter: Vec3 = Vec3.ZERO)
 }
 
+/**
+ * Scope for configuring post-processing material properties.
+ */
 interface PostProcessMaterialScope : MaterialScope
 
-
+/**
+ * Post-processing effect declaration (e.g., blur).
+ * Applied to the final rendered frame.
+ */
 interface PostProcessingEffect
 
-
+/**
+ * Scope for configuring shading material properties in deferred rendering.
+ */
 interface ShadingMaterialScope : MaterialScope {
+    /**
+     * Environment map used for reflections in shading.
+     */
     var env: SkyMaterial?
 }

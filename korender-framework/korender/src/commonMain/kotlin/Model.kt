@@ -49,3 +49,9 @@ interface ModelInfo {
         val occlusionTextureResource: TextureDeclaration?
     }
 }
+
+/**
+ * Base interface for animation declarations used to control GLTF model animations.
+ * Use [KorenderScope.animation] or [KorenderScope.blendedAnimation] to create instances.
+ */
+interface AnimationDeclaration

@@ -1,5 +1,19 @@
 package com.zakgof.korender.math
 
+/**
+ * 3x3 matrix for 3D linear transformations (rotation, scaling).
+ * Used for normal matrix calculations and 2D transformations.
+ *
+ * @param m00 row 0, col 0
+ * @param m01 row 0, col 1
+ * @param m02 row 0, col 2
+ * @param m10 row 1, col 0
+ * @param m11 row 1, col 1
+ * @param m12 row 1, col 2
+ * @param m20 row 2, col 0
+ * @param m21 row 2, col 1
+ * @param m22 row 2, col 2
+ */
 class Mat3(
     val m00: Float,
     val m01: Float,
@@ -12,10 +26,13 @@ class Mat3(
     val m22: Float
 ) {
     companion object {
+        /** Zero matrix */
         val ZERO: Mat3 = Mat3(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
+        /** Identity matrix */
         val IDENTITY: Mat3 = Mat3(1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f)
     }
 
+    /** Scalar multiplication */
     operator fun times(a: Float): Mat3 {
         return Mat3(
             m00 * a,
@@ -30,6 +47,7 @@ class Mat3(
         )
     }
 
+    /** Matrix-vector multiplication */
     operator fun times(vec: Vec3): Vec3 {
         return Vec3(
             (m00 * vec.x + m01 * vec.y + m02 * vec.z),
@@ -38,12 +56,14 @@ class Mat3(
         )
     }
 
+    /** Converts to column-major float array (OpenGL format) */
     fun asArray(): FloatArray = floatArrayOf(
         m00, m10, m20,
         m01, m11, m21,
         m02, m12, m22
     )
 
+    /** Matrix-matrix multiplication */
     operator fun times(mat: Mat3): Mat3 = Mat3(
         m00 * mat.m00 + m01 * mat.m10 + m02 * mat.m20,
         m00 * mat.m01 + m01 * mat.m11 + m02 * mat.m21,

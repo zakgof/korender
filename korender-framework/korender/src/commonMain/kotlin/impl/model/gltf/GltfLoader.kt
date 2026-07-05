@@ -33,6 +33,7 @@ import kotlinx.coroutines.async
 import kotlinx.serialization.json.Json
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlin.math.floor
 
 internal class GltfCache(
     val model: InternalGltfFileModel,
@@ -46,6 +47,26 @@ internal class GltfCache(
         val floats: Map<Int, FloatArray>,
         val floatArrays: Map<Int, Array<List<Float>>>
     )
+
+    fun getSamplerValue(sampler: InternalGltfFileModel.Animation.AnimationSampler, currentTime: Float): List<Float> {
+
+        // TODO validate float input and output
+        // TODO support other types of samplers
+        val inputFloats = accessors.floats[sampler.input]!!
+        val outputValues = accessors.floatArrays[sampler.output] ?: return listOf(0f) // TODO this is ugly fallback
+
+        // TODO validate same lengths
+        val max = inputFloats.last()
+        val timeOffset = currentTime - floor(currentTime / max) * max
+
+        var samplerPositionBefore =
+            inputFloats.indexOfLast { timeOffset > it } // TODO linear scan - ineffective!
+        if (samplerPositionBefore < 0) samplerPositionBefore = 0
+
+        // TODO this is STEP, implement other interpolations
+        val output = outputValues[samplerPositionBefore]
+        return output
+    }
 }
 
 internal class InternalLoadedGltfModel(private val declaration: ModelDeclaration) : InternalModel {

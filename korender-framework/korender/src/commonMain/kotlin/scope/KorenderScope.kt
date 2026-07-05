@@ -1,5 +1,6 @@
 package com.zakgof.korender.scope
 
+import com.zakgof.korender.AnimationDeclaration
 import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.BillboardEffect
 import com.zakgof.korender.BillboardMaterial
@@ -519,6 +520,24 @@ interface KorenderScope : ResourceScope {
      * @return retention policy
      */
     fun time(seconds: Float): RetentionPolicy
+
+    /**
+     * Creates an animation declaration for a single animation by index.
+     *
+     * @param animationIndex index of the animation in the GLTF model
+     * @return animation declaration
+     */
+    fun animation(animationIndex: Int): AnimationDeclaration
+
+    /**
+     * Creates a blended animation declaration between two animations by index.
+     *
+     * @param animationIndex1 index of the first animation
+     * @param animationIndex2 index of the second animation
+     * @param weight blend weight for the second animation [0, 1]
+     * @return blended animation declaration
+     */
+    fun blendedAnimation(animationIndex1: Int, animationIndex2: Int, weight: Float): AnimationDeclaration
 
 
     /**
