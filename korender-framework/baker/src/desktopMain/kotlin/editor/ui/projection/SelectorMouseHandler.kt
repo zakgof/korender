@@ -180,16 +180,13 @@ internal class SelectorMouseHandler(
                 is ResizeDrag -> {
                     val oldBB = d.selectionMap.bb()
 
-                    val keepProportions = isSelectionKeepProportions(state, model)
-
-                    val rect = if (keepProportions)
-                        keepProportionsRect(d.frozenCorner, current, d.corner, oldBB)
-                    else
-                        safeRect(d.frozenCorner, current, d.corner)
-
-                    var newBB = mapper.toW(rect, oldBB)
-                    if (keepProportions)
-                        newBB = fixZProportions(newBB, oldBB)
+                    val newBB = if (isSelectionKeepProportions(state, model)) {
+                        val rect = keepProportionsRect(d.frozenCorner, current, d.corner, oldBB)
+                        fixZProportions(mapper.toW(rect, oldBB), oldBB)
+                    } else {
+                        val rect = safeRect(d.frozenCorner, current, d.corner)
+                        mapper.toW(rect, oldBB)
+                    }
 
                     state.brushSelection.forEach {
                         val origBrush = d.selectionMap.originalBrushSelection[it]!!
@@ -328,14 +325,14 @@ internal class SelectorMouseHandler(
             tx = frozenCorner.x + corner.xSign * step
         val tty = frozenCorner.y + (tx - frozenCorner.x) * corner.xSign * corner.ySign / ratio
         val candidateByX = Offset(tx, tty)
-        val errorByX =(candidateByX - current).getDistanceSquared()
+        val errorByX = (candidateByX - current).getDistanceSquared()
 
         var ty = mapper.snapV(current.y)
         if ((ty - frozenCorner.y) * corner.ySign < 0.5f * step)
             ty = frozenCorner.y + corner.ySign * step
         val ttx = frozenCorner.x + (ty - frozenCorner.y) * corner.xSign * corner.ySign * ratio
         val candidateByY = Offset(ttx, ty)
-        val errorByY =(candidateByY - current).getDistanceSquared()
+        val errorByY = (candidateByY - current).getDistanceSquared()
 
         val finalTarget = if (errorByX > errorByY) candidateByY else candidateByX
 
@@ -343,18 +340,15 @@ internal class SelectorMouseHandler(
     }
 
     private fun fixZProportions(newBB: BoundingBox, oldBB: BoundingBox): BoundingBox {
-        val scaleX = (newBB.size divpercomp oldBB.size) dot mapper.axes.xAxis
-        val scaleY = (newBB.size divpercomp oldBB.size) dot mapper.axes.yAxis
+        val scaleX = abs((newBB.size divpercomp oldBB.size) dot mapper.axes.xAxis)
+        val scaleY = abs((newBB.size divpercomp oldBB.size) dot mapper.axes.yAxis)
         val scale = max(scaleX, scaleY)
-        val halfZSize = oldBB.size * scale * 0.5f
-        val min =  mapper.axes.xAxis * (newBB.min dot mapper.axes.xAxis) +
-                mapper.axes.yAxis * (newBB.min dot mapper.axes.yAxis) +
-                mapper.axes.lookAxis * (newBB.center dot mapper.axes.lookAxis - halfZSize)
-
-        val max =  mapper.axes.xAxis * (newBB.max dot mapper.axes.xAxis) +
-                mapper.axes.yAxis * (newBB.max dot mapper.axes.yAxis) +
-                mapper.axes.lookAxis * (newBB.center dot mapper.axes.lookAxis + halfZSize)
-
-        return BoundingBox.from(min, max)
+        val newCenter = mapper.axes.xAxis * (newBB.center dot mapper.axes.xAxis) +
+                mapper.axes.yAxis * (newBB.center dot mapper.axes.yAxis) +
+                mapper.axes.lookAxis * (oldBB.center dot mapper.axes.lookAxis)
+        val size = oldBB.size * scale
+        val bb = BoundingBox.from(newCenter - size * 0.5f, newCenter + size * 0.5f)
+        println("Final scale: " + (bb.size divpercomp oldBB.size))
+        return bb
     }
 }
