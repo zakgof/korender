@@ -74,7 +74,7 @@ fun EntitiesDialog(holder: StateHolder): () -> Unit {
     if (show) {
         DialogWindow(
             title = "Models",
-            icon = painterResource(Res.drawable.cube), // TODO
+            icon = painterResource(Res.drawable.cube),
             onCloseRequest = { show = false },
             state = rememberDialogState(size = DpSize(800.dp, 630.dp))
         ) {
@@ -192,8 +192,12 @@ fun RowScope.EntityEditor(holder: StateHolder) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text("Default scale", style = Theme.label, modifier = Modifier.weight(1f))
-                        FancyClickToFloatInput(value = entityModel!!.defaultScale, validator = { it in 1e-3f..1e3f }) {
-                            holder.updateEntityModelScale(entityModel, it)
+                        if (entityModel!!.keepProportions) {
+                            FancyClickToFloatInput(value = entityModel.defaultScale.x, validator = { it in 1e-3f..1e3f }) {
+                                holder.updateEntityModelScale(entityModel, Vec3(it, it, it))
+                            }
+                        } else {
+                            Text("--", style = Theme.label)
                         }
                     }
                     Row(
@@ -207,17 +211,31 @@ fun RowScope.EntityEditor(holder: StateHolder) {
                                 modifier = Modifier.height(24.dp).padding(0.dp),
                                 checked = entityModel!!.keepProportions,
                                 onCheckedChange = {
-                                    holder.updateEntityModelKeepProportions(entityModel, it)
+                                    val newEntityModel = holder.updateEntityModelKeepProportions(entityModel, it)
+                                    val scale = minOf(entityModel.defaultScale.x, entityModel.defaultScale.y, entityModel.defaultScale.z)
+                                    holder.updateEntityModelScale(newEntityModel, Vec3(scale, scale, scale))
                                 })
                         }
                     }
                 }
                 GroupBox("Dimensions") {
-                    val dims = BoundingBox.from(entityModel!!.points).size * entityModel.defaultScale
+                    val dims = BoundingBox.from(entityModel!!.points).size multpercomp entityModel.defaultScale
                     val dimValidator = { it: Float -> it in 1e-3..1e6 }
-                    LabeledFloatInput("width:", 40.dp, dims.x, dimValidator) { holder.updateEntityModelScale(entityModel, it * entityModel.defaultScale / dims.x) }
-                    LabeledFloatInput("height:", 40.dp, dims.y, dimValidator) { holder.updateEntityModelScale(entityModel, it * entityModel.defaultScale / dims.y) }
-                    LabeledFloatInput("depth:", 40.dp, dims.z, dimValidator) { holder.updateEntityModelScale(entityModel, it * entityModel.defaultScale / dims.z) }
+                    LabeledFloatInput("width:", 40.dp, dims.x, dimValidator) {
+                        val scaleX = entityModel.defaultScale.x * it / dims.x
+                        val scale = if (entityModel.keepProportions) Vec3(scaleX, scaleX, scaleX) else Vec3(scaleX, entityModel.defaultScale.y, entityModel.defaultScale.z)
+                        holder.updateEntityModelScale(entityModel, scale)
+                    }
+                    LabeledFloatInput("height:", 40.dp, dims.y, dimValidator) {
+                        val scaleY = entityModel.defaultScale.y * it / dims.y
+                        val scale = if (entityModel.keepProportions) Vec3(scaleY, scaleY, scaleY) else Vec3(entityModel.defaultScale.x, scaleY, entityModel.defaultScale.z)
+                        holder.updateEntityModelScale(entityModel, scale)
+                    }
+                    LabeledFloatInput("depth:", 40.dp, dims.z, dimValidator) {
+                        val scaleZ = entityModel.defaultScale.y * it / dims.z
+                        val scale = if (entityModel.keepProportions) Vec3(scaleZ, scaleZ, scaleZ) else Vec3(entityModel.defaultScale.x, entityModel.defaultScale.y, scaleZ)
+                        holder.updateEntityModelScale(entityModel, scale)
+                    }
                 }
             }
         }

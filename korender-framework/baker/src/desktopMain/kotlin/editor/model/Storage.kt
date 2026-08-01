@@ -218,7 +218,7 @@ data class EntityModelDto(
     val id: String,
     val name: String,
     val filename: String,
-    val defaultScale: Float,
+    val defaultScale: List<Float>,
     val keepProportions: Boolean,
     val points: List<Vec3Dto> = emptyList(),
 ) {
@@ -226,7 +226,7 @@ data class EntityModelDto(
         id = entityModel.id,
         name = entityModel.name,
         filename = entityModel.filename,
-        defaultScale = entityModel.defaultScale,
+        defaultScale = listOf(entityModel.defaultScale.x, entityModel.defaultScale.y, entityModel.defaultScale.z),
         keepProportions = entityModel.keepProportions,
         points = entityModel.points.map { Vec3Dto(it) },
     )
@@ -234,7 +234,7 @@ data class EntityModelDto(
     fun toEntityModel() = EntityModel(
         name = name,
         filename = filename,
-        defaultScale = defaultScale,
+        defaultScale = Vec3(defaultScale[0], defaultScale[1], defaultScale[2]),
         keepProportions = keepProportions,
         points = points.map { it.toVec3() },
         id = id,

@@ -9,7 +9,7 @@ data class EntityModel(
     val name: String,
     val filename: String,
     val points: List<Vec3>,
-    val defaultScale: Float = 1f,
+    val defaultScale: Vec3 = Vec3(1f, 1f, 1f),
     val keepProportions: Boolean = true,
     val id: String = Uuid.generateV7().toHexDashString(),
 )

@@ -763,14 +763,16 @@ class StateHolder {
         }
     }
 
-    fun updateEntityModelKeepProportions(entityModel: EntityModel, keepProportions: Boolean) {
+    fun updateEntityModelKeepProportions(entityModel: EntityModel, keepProportions: Boolean): EntityModel {
         pushHistory()
+        val newEntityModel = entityModel.copy(keepProportions = keepProportions)
         _model.update {
-            it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel.copy(keepProportions = keepProportions)))
+            it.copy(entityModels = it.entityModels.put(entityModel.id, newEntityModel))
         }
+        return newEntityModel
     }
 
-    fun updateEntityModelScale(entityModel: EntityModel, newScale: Float) {
+    fun updateEntityModelScale(entityModel: EntityModel, newScale: Vec3) {
         pushHistory()
         _model.update {
             it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel.copy(defaultScale = newScale)))
