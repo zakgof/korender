@@ -76,11 +76,11 @@ private fun FrameScope.plane(position: Vec3, look: Vec3, up: Vec3) = Model(
 )
 
 private fun FrameScope.atmosphere() {
-    DeferredShading {
-        Shading {
-            env = fastCloudSky()
-        }
-    }
+//    DeferredShading {
+//        Shading {
+//            env = fastCloudSky()
+//        }
+//    }
     // AmbientLight(ColorRGB.white(0.5f))
     DirectionalLight(Vec3(3.0f, -3.0f, 1.0f), ColorRGB.white(1.5f)) {
         Cascade(512, 2f, 5000f, 0f to 4000f, hardwarePcf())

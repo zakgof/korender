@@ -35,11 +35,13 @@ import com.zakgof.app.resources.korender32
 import com.zakgof.app.resources.menu
 import com.zakgof.korender.examples.gltfviewer.GltfLibraryExample
 import com.zakgof.korender.examples.infcity.InfiniteCity
+import com.zakgof.korender.examples.island.IslandExample
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 val folders = listOf(
     Folder("Demos", listOf(
+        Case("Island") { IslandExample() },
         Case("City") { InfiniteCity() },
         Case("Night Earth") { NightEarth() },
     )),

@@ -15,7 +15,7 @@ float pluginTerrainHeight(vec2 uv) {
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
         return - 256.0 * 16.0 * 0.1;
 
-    vec4 samp = texture(heightMapTexture, uv);
+    vec4 samp = textureLod(heightMapTexture, uv, 0.0);
 
     // TODO
     float base = (samp.g * 255.0 + samp.r) * 16.0 - 256.0 * 16.0 * 0.1;
