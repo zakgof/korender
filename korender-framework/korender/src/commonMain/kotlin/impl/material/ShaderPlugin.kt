@@ -185,6 +185,7 @@ internal enum class Defs : ShaderFlag {
     VERTEX_SCALE,
     VERTEX_OCCLUSION,
     TRIPLANAR,
+    ANTITERRACE,
     SHADOW_CASTER,
     SSAO,
     HBAO,

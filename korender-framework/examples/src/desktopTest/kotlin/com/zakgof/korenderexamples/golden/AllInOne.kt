@@ -36,12 +36,12 @@ private fun FrameScope.terrainDemo() {
     HeightField("terrain", 0.016f, 10, 6) {
         colorTexture = texture("terrain/terrain-albedo.jpg", wrap = TextureWrap.ClampToEdge)
         metallicFactor = 0.0f
-        heightTexture(
-            heightTexture = texture("terrain/terrain-height.png"),
-            heightScale = 2.0f,
-            outsideHeight = -0.04f,
+        heightTexture {
+            texture = texture("terrain/terrain-height.png")
+            heightScale = 2.0f
+            outsideHeight = -0.04f
             terrainCenter = Vec3(0f, -0.03f, 0f)
-        )
+        }
     }
 }
 

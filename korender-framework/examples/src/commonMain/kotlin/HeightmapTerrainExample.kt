@@ -25,12 +25,16 @@ fun HeightmapTerrainExample() =
             HeightField("terrain", 2.0f, 10, 6) {
                 colorTexture = texture("terrain/terrain-albedo.jpg", wrap = TextureWrap.ClampToEdge)
                 metallicFactor = 0.0f
-                heightTexture(
-                    heightTexture = texture("terrain/terrain-height.png"),
-                    heightScale = 200.0f,
-                    outsideHeight = -100.0f,
+                heightTexture {
+                    texture = texture("terrain/terrain-height.png")
+                    heightScale = 200.0f
+                    outsideHeight = -100.0f
                     terrainCenter = Vec3(0f, -14f, 0f)
-                )
+                }
+                antiTerrace {
+                    step = 3.0f
+                    threshold = 0.15f
+                }
             }
 
             val sky = fastCloudSky()

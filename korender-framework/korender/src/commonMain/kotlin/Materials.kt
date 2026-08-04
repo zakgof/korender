@@ -266,20 +266,63 @@ interface BillboardMaterialScope : BaseMaterialScope {
 }
 
 /**
+ * Scope for configuring the terrain heightmap texture.
+ * Used with clipmap terrain rendering.
+ */
+interface HeightTextureScope {
+
+    /**
+     * Heightmap texture (must be square, red channel used for elevation).
+     */
+    var texture: TextureDeclaration?
+
+    /**
+     * World-space elevation for max texture sample value.
+     */
+    var heightScale: Float
+
+    /**
+     * World-space elevation for points outside the texture.
+     */
+    var outsideHeight: Float
+
+    /**
+     * World-space point for terrain center.
+     */
+    var terrainCenter: Vec3
+}
+
+/**
+ * Scope for configuring anti-terracing of terrain normals.
+ * Blends the small-scale normal with a wide-step normal to remove heightmap stair-stepping artifacts.
+ */
+interface AntiTerraceScope {
+
+    /**
+     * Widened sampling step in texels (e.g. 4.0f).
+     */
+    var step: Float
+
+    /**
+     * Flatness blend threshold (e.g. 0.15f). Higher values apply the wide-step normal over flatter areas.
+     */
+    var threshold: Float
+}
+
+/**
  * Scope for configuring terrain heightfield material properties.
  */
 interface TerrainMaterialScope : BaseMaterialScope {
 
     /**
-     * Configures the terrain heightmap.
-     * Used with clipmap terrain rendering.
-     *
-     * @param heightTexture heightmap texture (must be square, red channel used for elevation)
-     * @param heightScale world-space elevation for max texture sample value
-     * @param outsideHeight world-space elevation for points outside the texture
-     * @param terrainCenter world-space point for terrain center
+     * Configures the terrain heightmap texture.
      */
-    fun heightTexture(heightTexture: TextureDeclaration, heightScale: Float, outsideHeight: Float = 0f, terrainCenter: Vec3 = Vec3.ZERO)
+    fun heightTexture(block: HeightTextureScope.() -> Unit)
+
+    /**
+     * Configures anti-terracing of terrain normals to remove heightmap stair-stepping artifacts.
+     */
+    fun antiTerrace(block: AntiTerraceScope.() -> Unit)
 }
 
 /**

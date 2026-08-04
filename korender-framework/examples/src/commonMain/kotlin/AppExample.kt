@@ -41,7 +41,9 @@ import org.jetbrains.compose.resources.painterResource
 
 val folders = listOf(
     Folder("Demos", listOf(
+        Case("Heightmap terrain") { HeightmapTerrainExample() },
         Case("Island") { IslandExample() },
+
         Case("City") { InfiniteCity() },
         Case("Night Earth") { NightEarth() },
     )),

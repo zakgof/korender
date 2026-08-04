@@ -1,11 +1,13 @@
 package com.zakgof.korender.impl.material
 
+import com.zakgof.korender.AntiTerraceScope
 import com.zakgof.korender.BaseMaterialScope
 import com.zakgof.korender.BillboardEffect
 import com.zakgof.korender.BillboardMaterial
 import com.zakgof.korender.BillboardMaterialScope
 import com.zakgof.korender.DecalMaterial
 import com.zakgof.korender.DetailTextureScope
+import com.zakgof.korender.HeightTextureScope
 import com.zakgof.korender.Material
 import com.zakgof.korender.MaterialScope
 import com.zakgof.korender.PipeMaterial
@@ -282,6 +284,18 @@ internal class InternalDecalMaterial : InternalBaseMaterial(), DecalMaterial {
     override val deferredFragmentShaderFile = "!shader/deferred/decal.frag"
 }
 
+internal class InternalHeightTextureScope : HeightTextureScope {
+    override var texture: TextureDeclaration? = null
+    override var heightScale: Float = 1f
+    override var outsideHeight: Float = 0f
+    override var terrainCenter: Vec3 = Vec3.ZERO
+}
+
+internal class InternalAntiTerraceScope : AntiTerraceScope {
+    override var step: Float = 4.0f
+    override var threshold: Float = 0.15f
+}
+
 internal data class InternalTerrainMaterial(val modifier: TerrainMaterialModifier) : InternalBaseMaterial("!shader/terrain.vert"), TerrainMaterialScope {
 
     class HeightTexturePlugin(
@@ -293,8 +307,16 @@ internal data class InternalTerrainMaterial(val modifier: TerrainMaterialModifie
 
     var heightTexturePlugin: HeightTexturePlugin? = null
 
-    override fun heightTexture(heightTexture: TextureDeclaration, heightScale: Float, outsideHeight: Float, terrainCenter: Vec3) {
-        heightTexturePlugin = HeightTexturePlugin(heightTexture, heightScale, outsideHeight, terrainCenter)
+    override fun heightTexture(block: HeightTextureScope.() -> Unit) {
+        val scope = InternalHeightTextureScope().apply(block)
+        heightTexturePlugin = HeightTexturePlugin(scope.texture, scope.heightScale, scope.outsideHeight, scope.terrainCenter)
+    }
+
+    var antiTerracePlugin: InternalAntiTerraceScope? = null
+
+    override fun antiTerrace(block: AntiTerraceScope.() -> Unit) {
+        val scope = antiTerracePlugin ?: InternalAntiTerraceScope().also { antiTerracePlugin = it }
+        scope.block()
     }
 
     // TODO ugly
@@ -304,12 +326,17 @@ internal data class InternalTerrainMaterial(val modifier: TerrainMaterialModifie
             .pluginOverride1IfNotNull(heightTexturePlugin, Plugins.TERRAIN_TEXTURE)
     )
 
+    override fun collectDefs(accumulator: Long): Long = super.collectDefs(accumulator)
+        .combineDefsIfNotNull(antiTerracePlugin, Defs.ANTITERRACE)
+
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
             "heightTexture" -> TextureGetter<InternalTerrainMaterial> { it.heightTexturePlugin?.heightTexture }
             "heightScale" -> FloatGetter<InternalTerrainMaterial> { it.heightTexturePlugin?.heightScale }
             "outsideHeight" -> FloatGetter<InternalTerrainMaterial> { it.heightTexturePlugin?.outsideHeight }
             "terrainCenter" -> Vec3Getter<InternalTerrainMaterial> { it.heightTexturePlugin?.terrainCenter }
+            "antiTerraceStep" -> FloatGetter<InternalTerrainMaterial> { it.antiTerracePlugin?.step }
+            "antiTerraceThreshold" -> FloatGetter<InternalTerrainMaterial> { it.antiTerracePlugin?.threshold }
             else -> super.uniform(name)
         }
 
