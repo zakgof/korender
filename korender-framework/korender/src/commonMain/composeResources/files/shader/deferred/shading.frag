@@ -92,7 +92,7 @@ void main() {
     color += ambientColor * diffFactor * ambientOcclusion;
 
     #ifdef PLUGIN_SKY
-        color += skyibl(N, V, roughness, diffFactor, F0, NdotV) * ambientOcclusion;
+        color += skyibl(N, V, roughness, ambientColor, F0, NdotV) * ambientOcclusion;
     #else
         // Fallback for ambient-only setups: keep metallic surfaces from going black without IBL.
         color += ambientColor * F0 * metallic * ambientOcclusion;
