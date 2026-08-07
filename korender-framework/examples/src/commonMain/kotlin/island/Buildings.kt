@@ -2,13 +2,15 @@ package com.zakgof.korender.examples.island
 
 import com.zakgof.korender.ShaderPlugin
 import com.zakgof.korender.ShaderPluginId
-import com.zakgof.korender.scope.FrameScope
-import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.examples.island.city.CityGenerator
 import com.zakgof.korender.examples.island.city.generateBuilding
 import com.zakgof.korender.math.ColorRGBA.Companion.white
+import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
+import com.zakgof.korender.math.y
+import com.zakgof.korender.scope.FrameScope
+import com.zakgof.korender.scope.KorenderScope
 
 private lateinit var buildingsAlbedoPlugin: ShaderPlugin
 private lateinit var buildingsMetallicPlugin: ShaderPlugin
@@ -65,5 +67,9 @@ fun FrameScope.buildings(cityGenerator: CityGenerator) {
         concrete,
         mesh = mesh("rf", cityGenerator.roof),
         transform = tr
+    )
+    Model(
+        resource = "island/models/church.kr",
+        transform = rotate(1.y, 2.9f).scale(50f).translate(100f,0f, -4800f)
     )
 }

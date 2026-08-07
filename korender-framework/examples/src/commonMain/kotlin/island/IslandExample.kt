@@ -81,10 +81,10 @@ private fun FrameScope.atmosphere() {
             env = fastCloudSky()
         }
     }
-    AmbientLight(ColorRGB.white(0.1f))
-    DirectionalLight(Vec3(3.0f, -3.0f, 1.0f), ColorRGB.white(1.0f)) {
-        Cascade(512, 2f, 5000f, 0f to 4000f, hardwarePcf())
-        Cascade(512, 2500f, 12000f, 0f to 4000f, hardwarePcf())
+    AmbientLight(ColorRGB.white(0.3f))
+    DirectionalLight(Vec3(3.0f, -3.0f, 1.7f), ColorRGB.white()) {
+        Cascade(512, 2f, 5000f, 0f to 4000f, hardwarePcf(bias = 0.02f))
+        Cascade(512, 2500f, 12000f, 0f to 4000f, hardwarePcf(bias = 0.02f))
     }
     PostProcess(water(waveScale = 3000.0f, transparency = 0.05f, sky = fastCloudSky()))
     PostProcess(fxaa())

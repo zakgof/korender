@@ -55,13 +55,13 @@ data class ColorRGB(val r: Float, val g: Float, val b: Float) {
          * @param intensity gray value (0.0 = black, 1.0 = white)
          * @return grayscale RGB color
          */
-        fun white(intensity: Float) = ColorRGB(intensity, intensity, intensity)
+        fun white(intensity: Float = 1f) = ColorRGB(intensity, intensity, intensity)
 
         /** Black (intensity 0.0) */
         val Black = white(0f)
 
         /** White (intensity 1.0) */
-        val White = white(1f)
+        val White = white()
 
         /** Blue */
         val Blue = ColorRGB(0f, 0f, 1f)

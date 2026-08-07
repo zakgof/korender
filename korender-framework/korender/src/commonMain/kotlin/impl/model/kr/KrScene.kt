@@ -52,7 +52,7 @@ internal class KrScene(declaration: ModelDeclaration) : InternalModel {
                     RenderableDeclaration(
                         material = childNodeContext.material(sceneModel.materials[re.value.materialId]!!),
                         mesh = childNodeContext.mesh(re.value.meshId, sceneModel.meshes[re.value.meshId]!!),
-                        transform = Transform(Mat4(re.value.transform)),
+                        transform = Transform(modelDeclaration.transform.mat4 * Mat4(re.value.transform)),
                         transparent = false, // TODO,
                         childNodeContext
                     )

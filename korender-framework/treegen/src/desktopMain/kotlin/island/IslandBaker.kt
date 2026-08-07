@@ -143,9 +143,9 @@ private fun perturb(p: Vec2): Vec2 {
 fun steppy(a: Float, b: Float) = (0..16)
     .map { a + (it.toFloat() / 16f) * (b - a) }
 
-private fun grid(cells: Int): List<Pair<Int, Int>> = (1..cells - 1)
+private fun grid(cells: Int): List<Pair<Int, Int>> = (1..<cells)
     .flatMap { xx ->
-        (1..cells - 1).map { yy ->
+        (1..<cells).map { yy ->
             xx to yy
         }
     }
