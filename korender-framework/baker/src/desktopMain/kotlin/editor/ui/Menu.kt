@@ -217,7 +217,7 @@ private fun MenuBarScope.materials(holder: StateHolder) {
         }
         Item("New textured Material", painterResource(Res.drawable.newmaterial)) {
             textureDialog(state, holder)?.let { file ->
-                val material = Material(file.name, file.path)
+                val material = Material(file.name, file.readBytes())
                 holder.addMaterial(material)
             }
         }

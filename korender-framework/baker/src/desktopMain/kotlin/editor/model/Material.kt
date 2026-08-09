@@ -9,7 +9,7 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalUuidApi::class)
 data class Material(
     val name: String,
-    val colorTexture: String? = null,
+    val colorTextureBytes: ByteArray? = null,
     val baseColor: Color = White,
     val id: String = Uuid.generateV7().toHexDashString(),
     val fitToFace: Boolean = false,

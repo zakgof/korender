@@ -260,7 +260,7 @@ fun RowScope.EntityPreview(holder: StateHolder) {
                     projection = projection(bs.radius * 2f * width.toFloat() / height.toFloat(), bs.radius * 2f, bs.radius, bs.radius * 6f)
                     AmbientLight(white(0.5f))
                     DirectionalLight(Vec3(1f, -1f, -1f), white(0.5f))
-                    Model(entityModel.filename, onUpdate = { objInfo ->
+                    Model(entityModel.id, onUpdate = { objInfo ->
                         val points = collectModelPoints(objInfo)
                         bs = BoundingSphere.fromPoints(points)
                     })

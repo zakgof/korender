@@ -188,14 +188,14 @@ fun RowScope.MaterialEditor(holder: StateHolder) {
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = material.colorTexture?.let { File(it).name } ?: "-none-",
+                            text = material.colorTextureBytes?.let { "${it.size} bytes" } ?: "-none-",
                             style = Theme.label.copy(textDecoration = TextDecoration.Underline),
                             modifier = Modifier.weight(1f).clickable {
                                 val file = textureDialog(state, holder)
                                 file?.let {
                                     holder.updateMaterial(
                                         material.copy(
-                                            colorTexture = file.path,
+                                            colorTextureBytes = file.readBytes(),
                                             name = file.name
                                         )
                                     )
@@ -204,13 +204,13 @@ fun RowScope.MaterialEditor(holder: StateHolder) {
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        material.colorTexture?.let {
+                        material.colorTextureBytes?.let {
                             IconButton(icon = Res.drawable.trash, "Delete texture") {
-                                holder.updateMaterial(material.copy(colorTexture = null))
+                                holder.updateMaterial(material.copy(colorTextureBytes = null))
                             }
                         }
                     }
-                    material.colorTexture?.let {
+                    material.colorTextureBytes?.let {
                         CompositionLocalProvider(
                             LocalMinimumInteractiveComponentSize provides 0.dp
                         ) {

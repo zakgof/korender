@@ -31,9 +31,9 @@ fun MaterialWidget(material: Material, selected: Boolean, onClick: () -> Unit) {
             .padding(1.dp)
     )
     {
-        material.colorTexture?.let {
+        material.colorTextureBytes?.let {
             Image(
-                bitmap = TextureImageCache.compose(material.colorTexture),
+                bitmap = TextureImageCache.compose(material.colorTextureBytes,  material.id),
                 contentDescription = null,
                 colorFilter = ColorFilter.tint(
                     color = material.baseColor,

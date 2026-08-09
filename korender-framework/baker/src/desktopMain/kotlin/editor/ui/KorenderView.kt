@@ -21,7 +21,6 @@ import editor.state.State
 import editor.state.StateHolder
 import editor.ui.TouchHandler.touch
 import editor.util.toKorender
-import java.io.File
 
 object TouchHandler {
 
@@ -108,13 +107,15 @@ fun KorenderView(holder: StateHolder) {
                             )
                         }
                 }
-            Node(resourceLoader = { File(it).readBytes() }) {
-                model.entityInstances.values
-                    .forEach { entityInstance ->
-                        val entityModel = model.entityModels[entityInstance.modelId]!!
-                        Model(entityModel.filename, entityInstance.transform)
+
+            model.entityInstances.values
+                .forEach { entityInstance ->
+                    val entityModel = model.entityModels[entityInstance.modelId]!!
+                    Node(resourceLoader = { entityModel.bytes }) {
+                        Model(entityModel.id, entityInstance.transform)
                     }
-            }
+                }
+
             Gui {
                 Column {
                     Filler()
@@ -128,7 +129,7 @@ fun KorenderView(holder: StateHolder) {
 fun FrameScope.toBaseMM(material: Material, selected: Boolean): com.zakgof.korender.Material =
     base {
         color = if (selected) ColorRGBA.Red else material.baseColor.toKorender()
-        colorTexture = material.colorTexture?.let { texture(it, TextureImageCache.korender(it)) }
+        colorTexture = material.colorTextureBytes?.let { texture(material.id, TextureImageCache.korender(material.id)) }
         stochasticSharpness = if (material.stochastic) 12f else null
         triplanarScale = if (material.triplanar) material.scale else null
         metallicFactor = material.metallic

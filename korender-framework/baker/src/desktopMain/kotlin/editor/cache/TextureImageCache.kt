@@ -20,10 +20,8 @@ object TextureImageCache {
             runBlocking { context.loadImage(bytes, file.extension).await() }
         }
 
-    fun compose(path: String): ImageBitmap =
-        compose.computeIfAbsent(path) {
-            val file = File(path)
-            val bytes = file.readBytes()
+    fun compose(bytes: ByteArray, id: String): ImageBitmap =
+        compose.computeIfAbsent(id) {
             bytes.decodeToImageBitmap()
         }
 

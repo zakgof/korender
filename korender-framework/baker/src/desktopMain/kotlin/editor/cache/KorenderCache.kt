@@ -29,7 +29,6 @@ object KorenderCache {
     private val modelInfoFetcher = ModelInfoFetcher()
     private val modelSnapCache = KorenderCacheHolder<EntityModel, ImageBitmap> { entityModel, first, consumer ->
         if (first) {
-            println("Capture model snap started: ${entityModel.filename}")
             val bs = BoundingSphere.fromPoints(entityModel.points)
             val deferredKorenderImage = captureFrame(256, 256) {
                 camera = camera(
@@ -45,13 +44,12 @@ object KorenderCache {
                     ortho()
                 )
                 AmbientLight(white(1f))
-                Node(resourceLoader = { File(it.split("#")[1]).readBytes() }) {
-                    Model("${entityModel.id}#${entityModel.filename}")
+                Node(resourceLoader = { entityModel.bytes }) {
+                    Model(entityModel.id)
                 }
 
             }
             deferredKorenderImage.invokeOnCompletion {
-                println("Capture model snap complete: ${entityModel.filename}")
                 val imageBitmap = deferredKorenderImage.getCompleted().toCompose()
                 consumer.accept(imageBitmap)
             }
@@ -60,7 +58,6 @@ object KorenderCache {
 
     private val instanceSnapCache = KorenderCacheHolder<EntityInstanceEntry, ImageBitmap> { entry, first, consumer ->
         if (first) {
-            println("Capture instance snap started: $entry")
             val deferredKorenderImage = captureFrame(256, 256) {
                 val depth = abs(entry.instance.bb.size dot entry.axes.lookAxis)
                 camera = camera(
@@ -77,7 +74,7 @@ object KorenderCache {
                 )
                 AmbientLight(white(1f))
                 Node(resourceLoader = { File(it).readBytes() }) {
-                    Model(entry.model.filename, entry.instance.transform)
+                    Model(entry.model.id, entry.instance.transform)
                 }
             }
             deferredKorenderImage.invokeOnCompletion {
@@ -95,8 +92,8 @@ object KorenderCache {
         return instanceSnapCache[EntityInstanceEntry(entityInstance, model, axes)]
     }
 
-    suspend fun entityModelInfo(filename: String): ModelInfo =
-        modelInfoFetcher.push(filename).await()
+    suspend fun entityModelInfo(entityModel: EntityModel): ModelInfo =
+        modelInfoFetcher.push(entityModel).await()
 
     fun remove(entityModel: EntityModel) {
         modelSnapCache.remove(entityModel)
@@ -129,14 +126,14 @@ private class EntityInstanceEntry(
 private class ModelInfoFetcher {
 
     class PointsJob(
-        val filename: String,
+        val model: EntityModel,
         val deferred: CompletableDeferred<ModelInfo> = CompletableDeferred()
     )
 
     val jobs = ConcurrentLinkedQueue<PointsJob>()
 
-    fun push(filename: String): Deferred<ModelInfo> {
-        val job = PointsJob(filename)
+    fun push(model: EntityModel): Deferred<ModelInfo> {
+        val job = PointsJob(model)
         jobs.add(job)
         return job.deferred
     }
@@ -144,10 +141,8 @@ private class ModelInfoFetcher {
     context(fs: FrameScope)
     fun frame() = with(fs) {
             jobs.peek()?.let { job ->
-            println("Capture points: ${job.filename}")
-            Node(resourceLoader = { File(it.split("#")[1]).readBytes() }) {
-                Model("${System.identityHashCode(job)}#${job.filename}", onUpdate = {
-                    println("Capture points done: ${job.filename}")
+            Node(resourceLoader = { job.model.bytes }) {
+                Model(job.model.id, onUpdate = {
                     job.deferred.complete(it)
                     jobs.remove(job)
                 })

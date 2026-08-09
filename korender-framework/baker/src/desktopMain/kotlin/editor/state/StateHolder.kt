@@ -356,7 +356,7 @@ class StateHolder {
     fun updateMaterial(material: Material) {
         pushHistory()
         val oldMaterial = model.value.materials[state.value.materialId]!!
-        TextureImageCache.dispose(oldMaterial.colorTexture ?: "")
+        TextureImageCache.dispose(oldMaterial.id)
         _model.update {
             it.copy(materials = it.materials.put(material.id, material))
         }
@@ -365,7 +365,7 @@ class StateHolder {
     fun deleteMaterial() {
         pushHistory()
         val oldMaterial = model.value.materials[state.value.materialId]!!
-        TextureImageCache.dispose(oldMaterial.colorTexture ?: "")
+        TextureImageCache.dispose(oldMaterial.id)
         // TODO : need to replace existing material references to Generic !
         _model.update {
             it.copy(materials = it.materials.remove(state.value.materialId))
@@ -886,8 +886,9 @@ class StateHolder {
     }
 
     suspend fun createEntityModel(name: String, filename: String): EntityModel {
-        val pts = collectModelPoints(KorenderCache.entityModelInfo(filename))
-        val entityModel = EntityModel(name, filename, pts)
+        val bytes = File(filename).readBytes()
+        val pts = collectModelPoints(KorenderCache.entityModelInfo(File(filename).readBytes()))
+        val entityModel = EntityModel(name, bytes, pts)
         withContext(Dispatchers.Main) {
             pushHistory()
             _model.update { it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel)) }
