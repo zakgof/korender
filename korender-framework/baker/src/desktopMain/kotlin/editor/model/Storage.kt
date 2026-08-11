@@ -152,7 +152,7 @@ data class BrushDto(
 @Serializable
 class MaterialDto(
     val name: String,
-    val colorTextureBytes: ByteArray? = null,
+    val colorTexture: TexDto? = null,
     val baseColor: Int,
     val id: String,
     val fitToFace: Boolean,
@@ -164,7 +164,7 @@ class MaterialDto(
 ) {
     constructor(material: Material) : this(
         name = material.name,
-        colorTextureBytes = material.colorTextureBytes,
+        colorTexture = material.colorTexture?.let { TexDto(it) },
         baseColor = material.baseColor.toArgb(),
         id = material.id,
         fitToFace = material.fitToFace,
@@ -177,7 +177,7 @@ class MaterialDto(
 
     fun toMaterial() = Material(
         name = name,
-        colorTextureBytes = colorTextureBytes,
+        colorTexture = colorTexture?.toTex(),
         baseColor = Color(baseColor),
         id = id,
         fitToFace = fitToFace,
@@ -186,6 +186,21 @@ class MaterialDto(
         scale = scale,
         metallic = metallic,
         roughness = roughness
+    )
+}
+
+@Serializable
+class TexDto(
+    val name: String,
+    val ext: String,
+    val bytes: ByteArray
+) {
+    fun toTex() = Tex(name, ext, bytes)
+
+    constructor(tex: Tex) : this(
+        name = tex.name,
+        ext = tex.ext,
+        bytes = tex.bytes
     )
 }
 
@@ -217,6 +232,7 @@ data class TransformDto(
 class EntityModelDto(
     val id: String,
     val name: String,
+    val ext: String,
     val bytes: ByteArray,
     val defaultScale: List<Float>,
     val keepProportions: Boolean,
@@ -225,6 +241,7 @@ class EntityModelDto(
     constructor(entityModel: EntityModel) : this(
         id = entityModel.id,
         name = entityModel.name,
+        ext = entityModel.ext,
         bytes = entityModel.bytes,
         defaultScale = listOf(entityModel.defaultScale.x, entityModel.defaultScale.y, entityModel.defaultScale.z),
         keepProportions = entityModel.keepProportions,
@@ -233,6 +250,7 @@ class EntityModelDto(
 
     fun toEntityModel() = EntityModel(
         name = name,
+        ext = ext,
         bytes = bytes,
         defaultScale = Vec3(defaultScale[0], defaultScale[1], defaultScale[2]),
         keepProportions = keepProportions,

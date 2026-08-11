@@ -19,6 +19,10 @@ kotlin {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 
+    compilerOptions {
+        freeCompilerArgs.addAll("-Xcontext-parameters")
+    }
+
     sourceSets {
         val desktopMain by getting
 

@@ -36,6 +36,7 @@ import com.zakgof.korender.baker.resources.ungroup
 import com.zakgof.korender.baker.resources.zoomin
 import com.zakgof.korender.baker.resources.zoomout
 import editor.model.Material
+import editor.model.Tex
 import editor.state.State
 import editor.state.StateHolder
 import editor.ui.dialog.EntitiesDialog
@@ -217,7 +218,7 @@ private fun MenuBarScope.materials(holder: StateHolder) {
         }
         Item("New textured Material", painterResource(Res.drawable.newmaterial)) {
             textureDialog(state, holder)?.let { file ->
-                val material = Material(file.name, file.readBytes())
+                val material = Material(file.name, Tex(file))
                 holder.addMaterial(material)
             }
         }
@@ -235,10 +236,8 @@ private fun MenuBarScope.models(holder: StateHolder) {
         }
         Item("Quick insert model", painterResource(Res.drawable.cubeplus)) {
             modelFileDialog(state, holder) {
-                val name = it.nameWithoutExtension
-                val filename = it.absolutePath
                 coroutineScope.launch {
-                    holder.createEntityModel(name, filename)
+                    holder.createEntityModel(it)
                     withContext(Dispatchers.Main) {
                         holder.createEntityInstance()
                     }

@@ -69,7 +69,7 @@ internal actual object Platform {
 
     private fun ARGBtoRGBA(data: ByteBuffer): ByteBuffer {
         val buffer = ByteBuffer.allocateDirect(data.limit()).order(ByteOrder.nativeOrder())
-        buffer.put(data.rewind() as ByteBuffer)
+        buffer.putting(data.rewind() as ByteBuffer)
         return buffer.flip() as ByteBuffer
     }
 

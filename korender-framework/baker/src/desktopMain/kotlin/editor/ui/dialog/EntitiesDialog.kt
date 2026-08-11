@@ -148,10 +148,8 @@ fun RowScope.EntityEditor(holder: StateHolder) {
             ) {
                 IconButton(Res.drawable.file, "New Model") {
                     modelFileDialog(state, holder) {
-                        val name = it.nameWithoutExtension
-                        val filename = it.absolutePath
                         coroutineScope.launch {
-                            holder.createEntityModel(name, filename)
+                            holder.createEntityModel(it)
                         }
                     }
                 }
@@ -247,23 +245,23 @@ fun RowScope.EntityPreview(holder: StateHolder) {
     val state by holder.state.collectAsState()
     val model by holder.model.collectAsState()
     var bs by remember(state.entityModelId) { mutableStateOf(BoundingSphere(0.y, 1f)) }
+
     Box(Modifier.weight(1.6f).fillMaxSize()) {
-        Korender(
-            resourceLoader = { File(it).readBytes() },
-            vSync = true
-        ) {
+        Korender(vSync = true) {
             Frame {
                 state.entityModelId?.let {
+                    val entityModel = state.entityModelId?.let { model.entityModels[it]!! }
                     AmbientLight(white(0.6f))
-                    val entityModel = model.entityModels[state.entityModelId]!!
                     camera = camera(bs.center + (bs.radius * 2f).z, -1.z, 1.y)
                     projection = projection(bs.radius * 2f * width.toFloat() / height.toFloat(), bs.radius * 2f, bs.radius, bs.radius * 6f)
                     AmbientLight(white(0.5f))
                     DirectionalLight(Vec3(1f, -1f, -1f), white(0.5f))
-                    Model(entityModel.id, onUpdate = { objInfo ->
-                        val points = collectModelPoints(objInfo)
-                        bs = BoundingSphere.fromPoints(points)
-                    })
+                    Node (resourceLoader = {entityModel!!.bytes}) {
+                        Model(entityModel!!.name + "." + entityModel.ext, onUpdate = { objInfo ->
+                            val points = collectModelPoints(objInfo)
+                            bs = BoundingSphere.fromPoints(points)
+                        })
+                    }
                 }
             }
         }

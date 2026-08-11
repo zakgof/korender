@@ -45,7 +45,7 @@ object KorenderCache {
                 )
                 AmbientLight(white(1f))
                 Node(resourceLoader = { entityModel.bytes }) {
-                    Model(entityModel.id)
+                    Model(entityModel.name + "." + entityModel.ext)
                 }
 
             }
@@ -92,8 +92,8 @@ object KorenderCache {
         return instanceSnapCache[EntityInstanceEntry(entityInstance, model, axes)]
     }
 
-    suspend fun entityModelInfo(entityModel: EntityModel): ModelInfo =
-        modelInfoFetcher.push(entityModel).await()
+    suspend fun entityModelInfo(name: String, ext: String, bytes: ByteArray): ModelInfo =
+        modelInfoFetcher.push(name, ext, bytes).await()
 
     fun remove(entityModel: EntityModel) {
         modelSnapCache.remove(entityModel)
@@ -109,8 +109,6 @@ object KorenderCache {
         instanceSnapCache.frame()
         modelInfoFetcher.frame()
     }
-
-
 }
 
 private class EntityInstanceEntry(
@@ -126,14 +124,16 @@ private class EntityInstanceEntry(
 private class ModelInfoFetcher {
 
     class PointsJob(
-        val model: EntityModel,
+        val name: String,
+        val ext: String,
+        val bytes: ByteArray,
         val deferred: CompletableDeferred<ModelInfo> = CompletableDeferred()
     )
 
     val jobs = ConcurrentLinkedQueue<PointsJob>()
 
-    fun push(model: EntityModel): Deferred<ModelInfo> {
-        val job = PointsJob(model)
+    fun push(name: String, ext: String, bytes: ByteArray): Deferred<ModelInfo> {
+        val job = PointsJob(name, ext, bytes)
         jobs.add(job)
         return job.deferred
     }
@@ -141,8 +141,8 @@ private class ModelInfoFetcher {
     context(fs: FrameScope)
     fun frame() = with(fs) {
             jobs.peek()?.let { job ->
-            Node(resourceLoader = { job.model.bytes }) {
-                Model(job.model.id, onUpdate = {
+            Node(resourceLoader = { job.bytes }) {
+                Model(job.name + "." + job.ext, onUpdate = {
                     job.deferred.complete(it)
                     jobs.remove(job)
                 })

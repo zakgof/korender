@@ -21,6 +21,7 @@ import editor.cache.KorenderCache
 import editor.cache.TextureImageCache
 import editor.model.Material
 import editor.model.Model
+import editor.model.Tex
 import editor.model.brush.BrushMesh
 import editor.model.brush.Face
 import java.io.File
@@ -33,7 +34,7 @@ object ModelCompiler {
 
         val entityRenderables = model.entityInstances.values.flatMap { entityInstance ->
             val entityModel = model.entityModels[entityInstance.modelId]!!
-            val modelInfo = KorenderCache.entityModelInfo(entityModel.id)
+            val modelInfo = KorenderCache.entityModelInfo(entityModel.id, entityModel.ext, entityModel.bytes)
             modelInfo.renderables(entityInstance.transform)
         }
 
@@ -76,10 +77,8 @@ object ModelCompiler {
             .filter { usedMaterialIds.contains(it.id) }
 
         val textures = usedMaterials
-            .filter { it.colorTexture != null }
-            .map { it.colorTexture!! }
-            .distinct()
-            .associateWith { texture(it) }
+            .mapNotNull { it.colorTexture }
+            .associate { it.name to texture(it) }
 
         val texArrayGroups = usedMaterials
             .filter { it.colorTexture != null }
@@ -94,7 +93,7 @@ object ModelCompiler {
                 id = it.key.toString(),
                 baseColor = 0xFFFFFFFF,
                 colorTextureId = null,
-                colorTextureIds = it.value.map { p -> p.second },
+                colorTextureIds = it.value.map { p -> p.second.name },
                 stochasticSharpness = if (it.key.stochastic) 12f else null,
                 triplanarScale = it.key.triplanarScale
             )
@@ -145,10 +144,8 @@ object ModelCompiler {
         )
     }
 
-    private fun texture(path: String): KrModel.Texture {
-        val file = File(path)
-        val image = file.readBytes()
-        return KrModel.Texture(file.name, file.extension, image)
+    private fun texture(tex: Tex): KrModel.Texture {
+        return KrModel.Texture(tex.name, tex.ext, tex.bytes)
     }
 
     private fun posBytes(faces: List<Pair<BrushMesh, Face>>): ByteArray {

@@ -52,6 +52,7 @@ import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
 import editor.model.Material
 import editor.model.Model
+import editor.model.Tex
 import editor.state.State
 import editor.state.StateHolder
 import editor.ui.Theme
@@ -188,14 +189,14 @@ fun RowScope.MaterialEditor(holder: StateHolder) {
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = material.colorTextureBytes?.let { "${it.size} bytes" } ?: "-none-",
+                            text = material.colorTexture?.name ?: "-none-",
                             style = Theme.label.copy(textDecoration = TextDecoration.Underline),
                             modifier = Modifier.weight(1f).clickable {
                                 val file = textureDialog(state, holder)
                                 file?.let {
                                     holder.updateMaterial(
                                         material.copy(
-                                            colorTextureBytes = file.readBytes(),
+                                            colorTexture = Tex(file),
                                             name = file.name
                                         )
                                     )
@@ -204,13 +205,13 @@ fun RowScope.MaterialEditor(holder: StateHolder) {
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        material.colorTextureBytes?.let {
+                        material.colorTexture?.let {
                             IconButton(icon = Res.drawable.trash, "Delete texture") {
-                                holder.updateMaterial(material.copy(colorTextureBytes = null))
+                                holder.updateMaterial(material.copy(colorTexture = null))
                             }
                         }
                     }
-                    material.colorTextureBytes?.let {
+                    material.colorTexture?.let {
                         CompositionLocalProvider(
                             LocalMinimumInteractiveComponentSize provides 0.dp
                         ) {

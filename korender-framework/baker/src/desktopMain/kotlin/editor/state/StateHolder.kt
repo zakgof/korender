@@ -145,7 +145,7 @@ class StateHolder {
         )
         pushHistory()
         _model.update {
-            it.copy(brushes = it.brushes.put(newBrush.id, newBrush))
+            it.copy(brushes = it.brushes.putting(newBrush.id, newBrush))
         }
         _state.update {
             it.copy(
@@ -164,7 +164,7 @@ class StateHolder {
             pushHistory()
         }
         _model.update {
-            it.copy(brushes = it.brushes.put(brush.id, brush))
+            it.copy(brushes = it.brushes.putting(brush.id, brush))
         }
     }
 
@@ -246,7 +246,7 @@ class StateHolder {
             .map { it.bb }
             .reduce(BoundingBox::merge)
         val offset = state.value.viewCenter - clipboardBoundingBox.center
-        val newBrushes = state.value.clipboardBrushes.mapIndexed { index, brush ->
+        val newBrushes = state.value.clipboardBrushes.map { brush ->
             brush.copy(
                 name = generateBrushName(brush.name),
                 id = Uuid.generateV7().toHexDashString(),
@@ -265,8 +265,8 @@ class StateHolder {
         pushHistory()
         _model.update {
             it.copy(
-                brushes = it.brushes.putAll(newBrushes.associateBy { nb -> nb.id }),
-                entityInstances = it.entityInstances.putAll(newEntityInstances.associateBy { nei -> nei.id })
+                brushes = it.brushes.puttingAll(newBrushes.associateBy { nb -> nb.id }),
+                entityInstances = it.entityInstances.puttingAll(newEntityInstances.associateBy { nei -> nei.id })
             )
         }
         _state.update {
@@ -349,26 +349,26 @@ class StateHolder {
 
     fun addMaterial(material: Material) {
         pushHistory()
-        _model.update { it.copy(materials = it.materials.put(material.id, material)) }
+        _model.update { it.copy(materials = it.materials.putting(material.id, material)) }
         selectMaterial(material)
     }
 
     fun updateMaterial(material: Material) {
         pushHistory()
         val oldMaterial = model.value.materials[state.value.materialId]!!
-        TextureImageCache.dispose(oldMaterial.id)
+        TextureImageCache.dispose(oldMaterial.colorTexture?.name ?: "")
         _model.update {
-            it.copy(materials = it.materials.put(material.id, material))
+            it.copy(materials = it.materials.putting(material.id, material))
         }
     }
 
     fun deleteMaterial() {
         pushHistory()
         val oldMaterial = model.value.materials[state.value.materialId]!!
-        TextureImageCache.dispose(oldMaterial.id)
+        TextureImageCache.dispose(oldMaterial.colorTexture?.name ?: "")
         // TODO : need to replace existing material references to Generic !
         _model.update {
-            it.copy(materials = it.materials.remove(state.value.materialId))
+            it.copy(materials = it.materials.removing(state.value.materialId))
         }
         _state.update {
             it.copy(materialId = Material.generic.id)
@@ -407,7 +407,7 @@ class StateHolder {
                     brush.copy(faces = brush.faces + newFaces.associateBy { it.id })
                 }
                 _model.update {
-                    it.copy(brushes = it.brushes.putAll(newBrushes.associateBy { it.id }))
+                    it.copy(brushes = it.brushes.puttingAll(newBrushes.associateBy { it.id }))
                 }
             }
 
@@ -537,16 +537,16 @@ class StateHolder {
 
         carving.forEach { (old, new) ->
             val newBrushIds = new.map { it.id }.toSet()
-            brushes = brushes.putAll(new.associateBy { it.id }).remove(old.id)
+            brushes = brushes.puttingAll(new.associateBy { it.id }).removing(old.id)
             val oldGroupId = brushGroups[old.id]
             if (oldGroupId != null) {
                 val oldGroup = groups[oldGroupId]!!
-                groups = groups.put(oldGroupId, oldGroup.copy(brushIds = oldGroup.brushIds + newBrushIds - old.id))
-                brushGroups = brushGroups.putAll(newBrushIds.associateWith { oldGroupId }).remove(old.id)
+                groups = groups.putting(oldGroupId, oldGroup.copy(brushIds = oldGroup.brushIds + newBrushIds - old.id))
+                brushGroups = brushGroups.puttingAll(newBrushIds.associateWith { oldGroupId }).removing(old.id)
             } else {
                 val newGroup = Group(old.name, newBrushIds)
-                groups = groups.put(newGroup.id, newGroup)
-                brushGroups = brushGroups.putAll(newBrushIds.associateWith { newGroup.id })
+                groups = groups.putting(newGroup.id, newGroup)
+                brushGroups = brushGroups.puttingAll(newBrushIds.associateWith { newGroup.id })
             }
         }
         pushHistory()
@@ -569,7 +569,7 @@ class StateHolder {
         _model.update { model ->
             var brushes = model.brushes
             model.brushes.forEach { (id, brush) ->
-                if (id in selection) brushes = brushes.put(id, mutator(brush))
+                if (id in selection) brushes = brushes.putting(id, mutator(brush))
             }
             model.copy(brushes = brushes)
         }
@@ -684,8 +684,8 @@ class StateHolder {
         pushHistory()
         _model.update {
             it.copy(
-                groups = it.groups.removeAll(existingGroupsIds).put(newGroup.id, newGroup),
-                brushGroups = it.brushGroups.removeAll(existingGroupBrushIds).putAll(newBrushGroupMappings)
+                groups = it.groups.removeAll(existingGroupsIds).putting(newGroup.id, newGroup),
+                brushGroups = it.brushGroups.removeAll(existingGroupBrushIds).puttingAll(newBrushGroupMappings)
             )
         }
     }
@@ -704,7 +704,7 @@ class StateHolder {
 
     fun renameGroup(groupId: String, newName: String) {
         pushHistory()
-        _model.update { it.copy(groups = it.groups.put(groupId, it.groups[groupId]!!.copy(name = newName))) }
+        _model.update { it.copy(groups = it.groups.putting(groupId, it.groups[groupId]!!.copy(name = newName))) }
     }
 
     fun hideSelection() {
@@ -759,7 +759,7 @@ class StateHolder {
     fun updateEntityModelName(entityModel: EntityModel, newName: String) {
         pushHistory()
         _model.update {
-            it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel.copy(name = newName)))
+            it.copy(entityModels = it.entityModels.putting(entityModel.id, entityModel.copy(name = newName)))
         }
     }
 
@@ -767,7 +767,7 @@ class StateHolder {
         pushHistory()
         val newEntityModel = entityModel.copy(keepProportions = keepProportions)
         _model.update {
-            it.copy(entityModels = it.entityModels.put(entityModel.id, newEntityModel))
+            it.copy(entityModels = it.entityModels.putting(entityModel.id, newEntityModel))
         }
         return newEntityModel
     }
@@ -775,7 +775,7 @@ class StateHolder {
     fun updateEntityModelScale(entityModel: EntityModel, newScale: Vec3) {
         pushHistory()
         _model.update {
-            it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel.copy(defaultScale = newScale)))
+            it.copy(entityModels = it.entityModels.putting(entityModel.id, entityModel.copy(defaultScale = newScale)))
         }
     }
 
@@ -785,7 +785,7 @@ class StateHolder {
         val transform = scale(entityModel.defaultScale).translate(state.value.viewCenter)
         val instance = EntityInstance(generateEntityInstanceName(entityModel.name), entityModel, transform)
         _model.update {
-            it.copy(entityInstances = it.entityInstances.put(instance.id, instance))
+            it.copy(entityInstances = it.entityInstances.putting(instance.id, instance))
         }
         _state.update {
             it.copy(mouseMode = MouseMode.SELECT)
@@ -824,14 +824,14 @@ class StateHolder {
         }
         val newInstance = instance.copy(transform = instance.transform.translate(offset))
         _model.update {
-            it.copy(entityInstances = it.entityInstances.put(instance.id, newInstance))
+            it.copy(entityInstances = it.entityInstances.putting(instance.id, newInstance))
         }
     }
 
     fun renameEntityInstance(instance: EntityInstance, newName: String) {
         pushHistory()
         _model.update {
-            it.copy(entityInstances = it.entityInstances.put(instance.id, instance.copy(name = newName)))
+            it.copy(entityInstances = it.entityInstances.putting(instance.id, instance.copy(name = newName)))
         }
     }
 
@@ -846,7 +846,7 @@ class StateHolder {
         val translate = newBB.center - (oldBB.center multpercomp scale)
         val newInstance = instance.copy(transform = instance.transform.scale(scale.x, scale.y, scale.z).translate(translate))
         _model.update {
-            it.copy(entityInstances = it.entityInstances.put(instance.id, newInstance))
+            it.copy(entityInstances = it.entityInstances.putting(instance.id, newInstance))
         }
     }
 
@@ -858,7 +858,7 @@ class StateHolder {
         val transform = instance.transform.rotate(center, axis, angle)
         val newInstance = instance.copy(transform = transform)
         _model.update {
-            it.copy(entityInstances = it.entityInstances.put(instance.id, newInstance))
+            it.copy(entityInstances = it.entityInstances.putting(instance.id, newInstance))
         }
     }
 
@@ -873,7 +873,7 @@ class StateHolder {
             _model.update {
                 it.copy(
                     entityInstances = it.entityInstances.removeAll(entityInstancesToRemove),
-                    entityModels = it.entityModels.remove(state.value.entityModelId!!)
+                    entityModels = it.entityModels.removing(state.value.entityModelId!!)
                 )
             }
             _state.update {
@@ -885,13 +885,17 @@ class StateHolder {
         }
     }
 
-    suspend fun createEntityModel(name: String, filename: String): EntityModel {
-        val bytes = File(filename).readBytes()
-        val pts = collectModelPoints(KorenderCache.entityModelInfo(File(filename).readBytes()))
-        val entityModel = EntityModel(name, bytes, pts)
+    @OptIn(ExperimentalUuidApi::class)
+    suspend fun createEntityModel(file: File): EntityModel {
+        val bytes = file.readBytes()
+        val name = file.nameWithoutExtension
+        val ext = file.extension.lowercase()
+        val id = Uuid.generateV7().toString()
+        val points = collectModelPoints(KorenderCache.entityModelInfo(name, ext, bytes))
+        val entityModel = EntityModel(name, ext, bytes, points, id = id)
         withContext(Dispatchers.Main) {
             pushHistory()
-            _model.update { it.copy(entityModels = it.entityModels.put(entityModel.id, entityModel)) }
+            _model.update { it.copy(entityModels = it.entityModels.putting(entityModel.id, entityModel)) }
             selectEntityModel(entityModel)
         }
         return entityModel
@@ -907,8 +911,8 @@ class StateHolder {
             .map { it.copy(transform = it.transform.translate(offset)) }.associateBy { it.id }
         _model.update {
             it.copy(
-                brushes = it.brushes.putAll(newBrushes),
-                entityInstances = it.entityInstances.putAll(newEntityInstances)
+                brushes = it.brushes.puttingAll(newBrushes),
+                entityInstances = it.entityInstances.puttingAll(newEntityInstances)
             )
         }
     }
@@ -936,8 +940,8 @@ class StateHolder {
             }.associateBy { it.id }
         _model.update {
             it.copy(
-                brushes = it.brushes.putAll(newBrushes),
-                entityInstances = it.entityInstances.putAll(newEntityInstances)
+                brushes = it.brushes.puttingAll(newBrushes),
+                entityInstances = it.entityInstances.puttingAll(newEntityInstances)
             )
         }
     }
@@ -946,16 +950,16 @@ class StateHolder {
 fun <K, V> PersistentMap<K, V>.removeAll(keys: Collection<K>): PersistentMap<K, V> {
     var res = this
     keys.forEach {
-        res = res.remove(it)
+        res = res.removing(it)
     }
     return res
 }
 
-fun <K, V> PersistentMap<K, V>.remove(condition: (V) -> Boolean): PersistentMap<K, V> {
+fun <K, V> PersistentMap<K, V>.removing(condition: (V) -> Boolean): PersistentMap<K, V> {
     var res = this
     this.entries.filter { condition(it.value) }
         .forEach {
-            res = res.remove(it.key)
+            res = res.removing(it.key)
         }
     return res
 }

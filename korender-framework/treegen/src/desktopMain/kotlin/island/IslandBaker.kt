@@ -209,22 +209,22 @@ fun seedTrees(colorMap: ChannelMap, heightMap: Float2PixelMap, runwaySeed: Vec2)
 
 fun saveBuildings(buildings: List<Pair<Vec3, Vec3>>, file: File) = save(buildings, buildings.size * 2 * 3 * 4, file) { trees, nb ->
     buildings.forEach {
-        nb.put(it.first)
-        nb.put(it.second)
+        nb.putting(it.first)
+        nb.putting(it.second)
     }
 }
 
 fun saveTrees(trees: List<Vec3>, file: File) = save(trees, trees.size * 3 * 4, file) { trees, nb ->
     trees.forEach {
-        nb.put(it)
+        nb.putting(it)
     }
 }
 
 fun saveRunway(rw1: Vec2, rw2: Vec2, file: File) = save(rw1 to rw2, 16, file) { pts, nb ->
-    nb.put(pts.first.x)
-    nb.put(pts.first.y)
-    nb.put(pts.second.x)
-    nb.put(pts.second.y)
+    nb.putting(pts.first.x)
+    nb.putting(pts.first.y)
+    nb.putting(pts.second.x)
+    nb.putting(pts.second.y)
 }
 
 fun <T> save(data: T, size: Int, file: File, serializer: (T, NativeByteBuffer) -> Unit) {

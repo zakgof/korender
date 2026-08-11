@@ -129,7 +129,7 @@ fun KorenderView(holder: StateHolder) {
 fun FrameScope.toBaseMM(material: Material, selected: Boolean): com.zakgof.korender.Material =
     base {
         color = if (selected) ColorRGBA.Red else material.baseColor.toKorender()
-        colorTexture = material.colorTextureBytes?.let { texture(material.id, TextureImageCache.korender(material.id)) }
+        colorTexture = material.colorTexture?.let { texture(it.name, TextureImageCache.korender(it)) }
         stochasticSharpness = if (material.stochastic) 12f else null
         triplanarScale = if (material.triplanar) material.scale else null
         metallicFactor = material.metallic
