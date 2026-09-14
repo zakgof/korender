@@ -1,15 +1,12 @@
 package editor.state
 
 import androidx.compose.ui.input.key.Key
-import com.zakgof.korender.ModelInfo
 import com.zakgof.korender.baker.editor.collision.BvhCompiler
 import com.zakgof.korender.baker.editor.collision.CollisionSerialModel
+import com.zakgof.korender.baker.editor.state.toKrFileBytes
 import com.zakgof.korender.baker.editor.ui.selectedBrushes
 import com.zakgof.korender.baker.editor.ui.selectedEntityInstances
 import com.zakgof.korender.impl.scene.KrModel
-import com.zakgof.korender.impl.scene.KrModel.Mesh
-import com.zakgof.korender.impl.scene.KrModel.Renderable
-import com.zakgof.korender.math.Mat4
 import com.zakgof.korender.math.Transform.Companion.scale
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
@@ -46,8 +43,6 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import java.io.File
-import kotlin.String
-import kotlin.collections.Map
 import kotlin.math.atan
 import kotlin.math.min
 import kotlin.math.tan
@@ -893,17 +888,14 @@ class StateHolder {
 
     @OptIn(ExperimentalUuidApi::class)
     suspend fun createEntityModel(file: File): EntityModel {
-        val bytes = file.readBytes()
         val name = file.nameWithoutExtension
-        val ext = file.extension.lowercase()
         val id = Uuid.generateV7().toString()
-        val modelInfo = KorenderCache.entityModelInfo(name, ext, bytes)
+        val modelInfo = KorenderCache.entityModelInfo(file, id)
 
-        val krBytes = composeKr(modelInfo)
-
+        val krBytes = modelInfo.toKrFileBytes(file)
 
         val points = collectModelPoints(modelInfo)
-        val entityModel = EntityModel(name, ext, bytes, points, id = id)
+        val entityModel = EntityModel(name, krBytes, points, id = "$id.kr")
         withContext(Dispatchers.Main) {
             pushHistory()
             _model.update { it.copy(entityModels = it.entityModels.putting(entityModel.id, entityModel)) }
@@ -912,25 +904,6 @@ class StateHolder {
         return entityModel
     }
 
-    private fun composeKr(modelInfo: ModelInfo) {
-
-        fun renderables(mat4: Mat4, node: ModelInfo.Node): List<Pair<ModelInfo.Renderable, Mat4>> {
-            val m = mat4 * (node.transform?.mat4 ?: Mat4.IDENTITY)
-            return (node.renderables?.map { it to m } ?: listOf()) +
-                    (node.children?.flatMap { renderables(m, it) } ?: listOf())
-        }
-
-        val allRenderables = modelInfo.instances.flatMap { renderables(Mat4.IDENTITY, it) }
-        val allMaterials = allRenderables.map { it.first.material }
-
-        val krModel = KrModel(
-            val textures : Map < String, Texture>,
-        val materials: Map<String, KrModel.Material>,
-        val meshes: Map<String, Mesh>,
-        val renderables: Map<String, Renderable>,
-        )
-
-    }
 
     fun moveSelection(offset: Vec3, pushHistory: Boolean) {
         if (pushHistory) {

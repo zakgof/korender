@@ -53,7 +53,7 @@ internal class Inventory(private val loader: Loader) {
     private val frameBuffers = Registry<FrameBufferDeclaration, GlGpuFrameBuffer> { GlGpuFrameBuffer(it.id, it.width, it.height, it.colorTexturePresets, it.withDepth) }
     private val cubeFrameBuffers = Registry<CubeFrameBufferDeclaration, GlGpuCubeFrameBuffer> { GlGpuCubeFrameBuffer(it.id, it.width, it.height, it.withDepth) }
     private val heightFields = Registry<HeightFieldDeclaration, Clipmaps> { Clipmaps(it) }
-    private val models = Registry<ModelDeclaration, InternalModel> { ModelFactory.load(it, loader) }
+    private val models = Registry<ModelDeclaration, InternalModel> { ModelFactory.load(it) }
 
     private val registries = listOf(meshes, shaders, textures, textures3D, textureLinks, resourceCubeTextures, imageCubeTextures, fonts, frameBuffers, cubeFrameBuffers, heightFields, models)
 

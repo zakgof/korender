@@ -244,23 +244,20 @@ fun RowScope.EntityEditor(holder: StateHolder) {
 fun RowScope.EntityPreview(holder: StateHolder) {
     val state by holder.state.collectAsState()
     val model by holder.model.collectAsState()
-    var bs by remember(state.entityModelId) { mutableStateOf(BoundingSphere(0.y, 1f)) }
 
     Box(Modifier.weight(1.6f).fillMaxSize()) {
         Korender(vSync = true) {
             Frame {
-                state.entityModelId?.let {
-                    val entityModel = state.entityModelId?.let { model.entityModels[it]!! }
+                state.entityModelId?.let { modelId ->
+                    val entityModel = model.entityModels[modelId]!!
+                    val bs by lazy { BoundingSphere.fromPoints(entityModel.points) }
                     AmbientLight(white(0.6f))
                     camera = camera(bs.center + (bs.radius * 2f).z, -1.z, 1.y)
                     projection = projection(bs.radius * 2f * width.toFloat() / height.toFloat(), bs.radius * 2f, bs.radius, bs.radius * 6f)
                     AmbientLight(white(0.5f))
                     DirectionalLight(Vec3(1f, -1f, -1f), white(0.5f))
-                    Node (resourceLoader = {entityModel!!.bytes}) {
-                        Model(entityModel!!.name + "." + entityModel.ext, onUpdate = { objInfo ->
-                            val points = collectModelPoints(objInfo)
-                            bs = BoundingSphere.fromPoints(points)
-                        })
+                    Node(resourceLoader = { entityModel.bytes }) {
+                        Model(entityModel.id + ".kr")
                     }
                 }
             }

@@ -232,7 +232,6 @@ data class TransformDto(
 class EntityModelDto(
     val id: String,
     val name: String,
-    val ext: String,
     val bytes: ByteArray,
     val defaultScale: List<Float>,
     val keepProportions: Boolean,
@@ -241,7 +240,6 @@ class EntityModelDto(
     constructor(entityModel: EntityModel) : this(
         id = entityModel.id,
         name = entityModel.name,
-        ext = entityModel.ext,
         bytes = entityModel.bytes,
         defaultScale = listOf(entityModel.defaultScale.x, entityModel.defaultScale.y, entityModel.defaultScale.z),
         keepProportions = entityModel.keepProportions,
@@ -250,7 +248,6 @@ class EntityModelDto(
 
     fun toEntityModel() = EntityModel(
         name = name,
-        ext = ext,
         bytes = bytes,
         defaultScale = Vec3(defaultScale[0], defaultScale[1], defaultScale[2]),
         keepProportions = keepProportions,

@@ -5,6 +5,7 @@ import com.zakgof.korender.impl.buffer.NativeByteBuffer
 import com.zakgof.korender.math.ColorRGBA
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
+import kotlin.experimental.and
 
 internal enum class AttributeType {
     Byte,
@@ -25,6 +26,7 @@ internal interface BufferAccessor<T> {
 
     fun seek(buffer: NativeByteBuffer, index: Int)
     fun put(buffer: NativeByteBuffer, value: T)
+    fun toByteArray(value: T): ByteArray
 }
 
 internal class InternalMeshAttribute<T>(
@@ -34,7 +36,9 @@ internal class InternalMeshAttribute<T>(
     val location: Int,
     val bufferAccessor: BufferAccessor<T>,
     val instance: Boolean = false,
-) : MeshAttribute<T>
+) : MeshAttribute<T> {
+    override fun toByteArray(value: T) = bufferAccessor.toByteArray(value)
+}
 
 internal object Vec2BufferAccessor : BufferAccessor<Vec2> {
     override fun get(buffer: NativeByteBuffer, index: Int) =
@@ -46,6 +50,13 @@ internal object Vec2BufferAccessor : BufferAccessor<Vec2> {
     override fun put(buffer: NativeByteBuffer, value: Vec2) {
         buffer.put(value.x)
         buffer.put(value.y)
+    }
+
+    override fun toByteArray(value: Vec2): ByteArray {
+        val ba = ByteArray(8)
+        ba.setFloat(0, value.x)
+        ba.setFloat(4, value.y)
+        return ba
     }
 }
 
@@ -61,6 +72,14 @@ internal object Vec3BufferAccessor : BufferAccessor<Vec3> {
         buffer.put(value.y)
         buffer.put(value.z)
     }
+
+    override fun toByteArray(value: Vec3): ByteArray {
+        val ba = ByteArray(12)
+        ba.setFloat(0, value.x)
+        ba.setFloat(4, value.y)
+        ba.setFloat(8, value.z)
+        return ba
+    }
 }
 
 internal object Byte4BufferAccessor : BufferAccessor<ByteArray> {
@@ -73,6 +92,8 @@ internal object Byte4BufferAccessor : BufferAccessor<ByteArray> {
     override fun put(buffer: NativeByteBuffer, value: ByteArray) {
         // TODO
     }
+
+    override fun toByteArray(value: ByteArray) = value
 }
 
 internal object Short4BufferAccessor : BufferAccessor<ShortArray> {
@@ -84,6 +105,12 @@ internal object Short4BufferAccessor : BufferAccessor<ShortArray> {
 
     override fun put(buffer: NativeByteBuffer, value: ShortArray) {
         // TODO
+    }
+
+    override fun toByteArray(value: ShortArray): ByteArray {
+        val ba = ByteArray(value.size * 2)
+        value.forEachIndexed { index, sh -> ba.setShort(index * 2, sh) }
+        return ba
     }
 }
 
@@ -97,6 +124,12 @@ internal object Int4BufferAccessor : BufferAccessor<IntArray> {
     override fun put(buffer: NativeByteBuffer, value: IntArray) {
         // TODO
     }
+
+    override fun toByteArray(value: IntArray): ByteArray {
+        val ba = ByteArray(4 * 4)
+        value.forEachIndexed { index, i -> ba.setInt(index * 4, i) }
+        return ba
+    }
 }
 
 internal object Float4BufferAccessor : BufferAccessor<FloatArray> {
@@ -108,6 +141,12 @@ internal object Float4BufferAccessor : BufferAccessor<FloatArray> {
 
     override fun put(buffer: NativeByteBuffer, value: FloatArray) {
         value.forEach { buffer.put(it) }
+    }
+
+    override fun toByteArray(value: FloatArray): ByteArray {
+        val ba = ByteArray(4 * 4)
+        value.forEachIndexed { index, i -> ba.setFloat(index * 4, i) }
+        return ba
     }
 }
 
@@ -124,6 +163,15 @@ internal object ColorRGBABufferAccessor : BufferAccessor<ColorRGBA> {
         buffer.put(value.b)
         buffer.put(value.a)
     }
+
+    override fun toByteArray(value: ColorRGBA): ByteArray {
+        val ba = ByteArray(4 * 4)
+        ba.setFloat(0, value.r)
+        ba.setFloat(4, value.g)
+        ba.setFloat(8, value.b)
+        ba.setFloat(16, value.a)
+        return ba
+    }
 }
 
 internal object FloatBufferAccessor : BufferAccessor<Float> {
@@ -136,9 +184,15 @@ internal object FloatBufferAccessor : BufferAccessor<Float> {
     override fun put(buffer: NativeByteBuffer, value: Float) {
         buffer.put(value)
     }
+
+    override fun toByteArray(value: Float): ByteArray {
+        val ba = ByteArray(4)
+        ba.setFloat(0, value)
+        return ba
+    }
 }
 
-object ByteBufferAccessor : BufferAccessor<Byte> {
+internal object ByteBufferAccessor : BufferAccessor<Byte> {
     override fun get(buffer: NativeByteBuffer, index: Int) =
         buffer.byte(index)
 
@@ -148,4 +202,22 @@ object ByteBufferAccessor : BufferAccessor<Byte> {
     override fun put(buffer: NativeByteBuffer, value: Byte) {
         buffer.put(value)
     }
+
+    override fun toByteArray(value: Byte): ByteArray = ByteArray(1) { value }
+}
+
+internal fun ByteArray.setFloat(index: Int, v: Float) {
+    setInt(index, v.toBits())
+}
+
+internal fun ByteArray.setInt(index: Int, v: Int) {
+    this[index + 0] = (v and 0xFF).toByte()
+    this[index + 1] = ((v shr 8) and 0xFF).toByte()
+    this[index + 2] = ((v shr 16) and 0xFF).toByte()
+    this[index + 3] = ((v shr 24) and 0xFF).toByte()
+}
+
+internal fun ByteArray.setShort(index: Int, v: Short) {
+    this[index + 0] = (v and 0xFF).toByte()
+    this[index + 1] = ((v.toInt() shr 8) and 0xFF).toByte()
 }

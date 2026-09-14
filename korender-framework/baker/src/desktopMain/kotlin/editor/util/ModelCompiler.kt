@@ -34,7 +34,7 @@ object ModelCompiler {
 
         val entityRenderables = model.entityInstances.values.flatMap { entityInstance ->
             val entityModel = model.entityModels[entityInstance.modelId]!!
-            val modelInfo = KorenderCache.entityModelInfo(entityModel.id, entityModel.ext, entityModel.bytes)
+            val modelInfo = KorenderCache.entityModelInfo(entityModel.bytes, entityModel.id)
             modelInfo.renderables(entityInstance.transform)
         }
 

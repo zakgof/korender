@@ -1,7 +1,6 @@
 package com.zakgof.korender.impl.model
 
 import com.zakgof.korender.KorenderException
-import com.zakgof.korender.impl.engine.Loader
 import com.zakgof.korender.impl.engine.ModelDeclaration
 import com.zakgof.korender.impl.engine.ResultKeeper
 import com.zakgof.korender.impl.engine.SceneDeclaration
@@ -16,7 +15,7 @@ internal fun interface InternalModel : AutoCloseable {
 
 internal object ModelFactory {
 
-    fun load(modelDeclaration: ModelDeclaration, loader: Loader): InternalModel {
+    fun load(modelDeclaration: ModelDeclaration): InternalModel {
         val extension = modelDeclaration.resource.substringAfterLast('.', "").lowercase()
         return when (extension) {
             "glb", "gltf" -> InternalLoadedGltfModel(modelDeclaration)

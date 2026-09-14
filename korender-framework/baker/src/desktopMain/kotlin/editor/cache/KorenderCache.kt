@@ -45,7 +45,7 @@ object KorenderCache {
                 )
                 AmbientLight(white(1f))
                 Node(resourceLoader = { entityModel.bytes }) {
-                    Model(entityModel.name + "." + entityModel.ext)
+                    Model(entityModel.name + ".kr")
                 }
 
             }
@@ -73,7 +73,7 @@ object KorenderCache {
                     ortho()
                 )
                 AmbientLight(white(1f))
-                Node(resourceLoader = { File(it).readBytes() }) {
+                Node(resourceLoader = { entry.model.bytes }) {
                     Model(entry.model.id, entry.instance.transform)
                 }
             }
@@ -92,8 +92,11 @@ object KorenderCache {
         return instanceSnapCache[EntityInstanceEntry(entityInstance, model, axes)]
     }
 
-    suspend fun entityModelInfo(name: String, ext: String, bytes: ByteArray): ModelInfo =
-        modelInfoFetcher.push(name, ext, bytes).await()
+    suspend fun entityModelInfo(file: File, modelId: String): ModelInfo =
+        modelInfoFetcher.push(file, modelId).await()
+
+    suspend fun entityModelInfo(krBytes: ByteArray, modelId: String): ModelInfo =
+        modelInfoFetcher.push(krBytes, modelId).await()
 
     fun remove(entityModel: EntityModel) {
         modelSnapCache.remove(entityModel)
@@ -123,26 +126,32 @@ private class EntityInstanceEntry(
 
 private class ModelInfoFetcher {
 
-    class PointsJob(
-        val name: String,
-        val ext: String,
-        val bytes: ByteArray,
+    class ModelInfoFetchJob(
+        val file: File?,
+        val krBytes: ByteArray?,
+        val modelId: String,
         val deferred: CompletableDeferred<ModelInfo> = CompletableDeferred()
     )
 
-    val jobs = ConcurrentLinkedQueue<PointsJob>()
+    val jobs = ConcurrentLinkedQueue<ModelInfoFetchJob>()
 
-    fun push(name: String, ext: String, bytes: ByteArray): Deferred<ModelInfo> {
-        val job = PointsJob(name, ext, bytes)
+    fun push(file: File, modelId: String): Deferred<ModelInfo> {
+        val job = ModelInfoFetchJob(file, null, modelId)
+        jobs.add(job)
+        return job.deferred
+    }
+
+    fun push(krBytes: ByteArray, modelId: String): Deferred<ModelInfo> {
+        val job = ModelInfoFetchJob(null, krBytes, modelId)
         jobs.add(job)
         return job.deferred
     }
 
     context(fs: FrameScope)
     fun frame() = with(fs) {
-            jobs.peek()?.let { job ->
-            Node(resourceLoader = { job.bytes }) {
-                Model(job.name + "." + job.ext, onUpdate = {
+        jobs.peek()?.let { job ->
+            Node(resourceLoader = { if (job.file == null) job.krBytes!! else File(job.file.parentFile, it).readBytes() }) {
+                Model(if (job.file == null) job.modelId + ".kr" else job.file.name, onUpdate = {
                     job.deferred.complete(it)
                     jobs.remove(job)
                 })

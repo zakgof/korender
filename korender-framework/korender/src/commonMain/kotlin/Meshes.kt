@@ -23,8 +23,11 @@ enum class IndexType {
  * @param T attribute value type
  */
 interface MeshAttribute<T> {
+
     val name: String
     val structSize: Int
+
+    fun toByteArray(value: T): ByteArray
 }
 
 /**
