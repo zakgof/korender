@@ -162,6 +162,8 @@ fun RowScope.EntityEditor(holder: StateHolder) {
                     IconButton(Res.drawable.trash, "Delete Model") {
                         if (existing > 0) {
                             configDlg()
+                        } else {
+                            holder.deleteEntityModel()
                         }
                     }
                     IconButton(Res.drawable.adddiamond, "Add to scene") {

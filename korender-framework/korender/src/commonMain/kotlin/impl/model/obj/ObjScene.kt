@@ -124,7 +124,7 @@ private data class LoadedObjScene(val meshes: List<PreparedMesh>) {
         val renderables = meshes.map {
             InternalModelInfo.Renderable(null, it.cmesh, it.material?.toMaterialInfo(nodeContext))
         }
-        val instance = InternalModelInfo.Node("instances", null, null, renderables)
+        val instance = InternalModelInfo.Node("obj", null, null, renderables)
         return InternalModelInfo(
             listOf(instance),
             null,
