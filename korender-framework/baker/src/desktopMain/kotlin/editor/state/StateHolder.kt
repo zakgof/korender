@@ -892,7 +892,7 @@ class StateHolder {
         val id = Uuid.generateV7().toString()
         val modelInfo = KorenderCache.entityModelInfo(file, id)
 
-        val krBytes = modelInfo.toKrFileBytes(file)
+        val krBytes = if (file.extension.lowercase() == "kr") file.readBytes() else modelInfo.toKrFileBytes(file)
 
         val points = collectModelPoints(modelInfo)
         val entityModel = EntityModel(name, krBytes, points, id = "$id.kr")
