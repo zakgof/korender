@@ -7,6 +7,7 @@ androidx-activityCompose = "1.13.0"
 commonsMath3 = "3.6.1"
 compose = "1.11.1"
 compose-material3 = "1.9.0"
+filekit = "0.16.0"
 kotlin = "2.4.10"
 kotlinxCollectionsImmutable = "0.5.1"
 kotlinxCoroutinesCore = "1.11.0"
@@ -53,6 +54,7 @@ compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", v
 compose-material = { module = "org.jetbrains.compose.material:material", version.ref = "compose" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-material3" }
 compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose" }
+filekit-dialogs = { module = "io.github.vinceglb:filekit-dialogs", version.ref = "filekit" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

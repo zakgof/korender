@@ -36,6 +36,7 @@ kotlin {
             implementation(libs.commons.math3)
             implementation(libs.kotlinxcollections.immutable)
             implementation(libs.kotlinx.serialization.cbor)
+            implementation(libs.filekit.dialogs)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

@@ -77,15 +77,17 @@ private fun MenuBarScope.file(holder: StateHolder) {
     val newProjectConfirmDialog = confirmDialog("New project", "Discard changes and start a new project ?") {
         holder.newProject()
     }
+    val coroutineScope = rememberCoroutineScope()
     fun load() {
-        fileDialog("Open Project", false, state.persistentState.lastDir, "Korender maps", listOf("krmap")) {
-            holder.loadProject(it)
+        coroutineScope.launch {
+            fileDialog("Open Project", false, state.persistentState.lastDir, "Korender maps", listOf("krmap")) {
+                holder.loadProject(it)
+            }
         }
     }
     val loadProjectConfirmDialog = confirmDialog("Load Project", "Discard changes and load a project ?") {
         load()
     }
-    val coroutineScope = rememberCoroutineScope()
 
     Menu("File") {
         Item("New", icon = painterResource(Res.drawable.file)) {
@@ -100,8 +102,10 @@ private fun MenuBarScope.file(holder: StateHolder) {
             }
         }
         Item("Save Project as...", painterResource(Res.drawable.save)) {
-            fileDialog("Save Project", true, state.persistentState.lastDir, "Korender maps", listOf("krmap")) {
-                holder.saveProject(it)
+            coroutineScope.launch {
+                fileDialog("Save Project", true, state.persistentState.lastDir, "Korender maps", listOf("krmap")) {
+                    holder.saveProject(it)
+                }
             }
         }
         Separator()
@@ -131,8 +135,10 @@ private fun MenuBarScope.file(holder: StateHolder) {
             }
         }
         Item("Export Scene", painterResource(Res.drawable.export)) {
-            fileDialog("Export Scene", true, state.persistentState.lastDir,"Korender model files", listOf("kr")) {
-                holder.compileToFile(it.path)
+            coroutineScope.launch {
+                fileDialog("Export Scene", true, state.persistentState.lastDir, "Korender model files", listOf("kr")) {
+                    holder.compileToFile(it.path)
+                }
             }
         }
     }
@@ -235,8 +241,8 @@ private fun MenuBarScope.models(holder: StateHolder) {
             entitiesDialog()
         }
         Item("Quick insert model", painterResource(Res.drawable.cubeplus)) {
-            modelFileDialog(state, holder) {
-                coroutineScope.launch {
+            coroutineScope.launch {
+                modelFileDialog(state, holder) {
                     holder.createEntityModel(it)
                     withContext(Dispatchers.Main) {
                         holder.createEntityInstance()

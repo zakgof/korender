@@ -10,9 +10,12 @@ import com.zakgof.korender.baker.resources.korender
 import editor.state.StateHolder
 import editor.ui.BrushEditor
 import editor.ui.dialog.confirmDialog
+import io.github.vinceglb.filekit.FileKit
 import org.jetbrains.compose.resources.painterResource
 
-fun main() = application {
+fun main() {
+    FileKit.init(appId = "com.zakgof.korender.baker")
+    application {
     val holder = remember { StateHolder() }
     val state by holder.state.collectAsState()
     val model by holder.model.collectAsState()
@@ -33,5 +36,6 @@ fun main() = application {
         // BillboardTreeBaker()
         // RadiantTreeBaker()
         BrushEditor(holder)
+    }
     }
 }

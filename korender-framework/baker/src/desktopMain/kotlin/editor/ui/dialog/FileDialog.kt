@@ -1,23 +1,32 @@
 package editor.ui.dialog
 
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.openFilePicker
+import io.github.vinceglb.filekit.dialogs.openFileSaver
 import java.io.File
-import javax.swing.JFileChooser
-import javax.swing.filechooser.FileNameExtensionFilter
 
-fun fileDialog(title: String, save: Boolean, lastDir: String?, typeTitle: String, typeExtensions: List<String>, handler: (File) -> Unit) {
-    val chooser = JFileChooser()
-    chooser.dialogType = if (save) JFileChooser.SAVE_DIALOG else JFileChooser.OPEN_DIALOG
-    chooser.dialogTitle = title
-    chooser.currentDirectory = lastDir?.let { File(it) }
-    val extensionList = typeExtensions.joinToString(", ") { "*.$it" }
-    chooser.fileFilter = FileNameExtensionFilter(
-        "$typeTitle ($extensionList)", *typeExtensions.toTypedArray()
-    )
-    val res = if (save) chooser.showSaveDialog(null) else chooser.showOpenDialog(null)
-    if (res == JFileChooser.APPROVE_OPTION) {
-        var file = chooser.selectedFile
-        if (save && typeExtensions.size == 1 && !file.name.endsWith(".${typeExtensions[0]}"))
-            file = File(file.parentFile, file.name + "." + typeExtensions[0])
-        handler(file)
+suspend fun fileDialog(title: String, save: Boolean, lastDir: String?, typeTitle: String, typeExtensions: List<String>, handler: suspend (File) -> Unit) {
+    val directory: PlatformFile? = lastDir?.takeIf { it.isNotBlank() }?.let { PlatformFile(it) }
+    val dialogSettings = FileKitDialogSettings(title = title)
+    if (save) {
+        val defaultExtension = typeExtensions.singleOrNull()
+        val file = FileKit.openFileSaver(
+            suggestedName = "untitled",
+            defaultExtension = defaultExtension,
+            allowedExtensions = typeExtensions.toSet(),
+            directory = directory,
+            dialogSettings = dialogSettings
+        )
+        file?.let { handler(it.file) }
+    } else {
+        val file = FileKit.openFilePicker(
+            type = FileKitType.File(typeExtensions),
+            directory = directory,
+            dialogSettings = dialogSettings
+        )
+        file?.let { handler(it.file) }
     }
 }

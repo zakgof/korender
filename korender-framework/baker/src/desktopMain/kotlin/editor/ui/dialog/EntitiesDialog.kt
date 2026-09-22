@@ -147,8 +147,8 @@ fun RowScope.EntityEditor(holder: StateHolder) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 IconButton(Res.drawable.file, "New Model") {
-                    modelFileDialog(state, holder) {
-                        coroutineScope.launch {
+                    coroutineScope.launch {
+                        modelFileDialog(state, holder) {
                             holder.createEntityModel(it)
                         }
                     }
@@ -267,7 +267,7 @@ fun RowScope.EntityPreview(holder: StateHolder) {
     }
 }
 
-fun modelFileDialog(state: State, holder: StateHolder, handler: (File) -> Unit) =
+suspend fun modelFileDialog(state: State, holder: StateHolder, handler: suspend (File) -> Unit) =
     fileDialog(
         "Select 3d model file", false, state.persistentState.lastDir, "3D model files",
         listOf("obj", "gltf", "glb", "kr")
