@@ -45,9 +45,11 @@ import com.zakgof.korender.baker.resources.file
 import com.zakgof.korender.baker.resources.trash
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.Mat4
+import com.zakgof.korender.math.Transform
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import editor.korender.rememberOrbitRotation
 import editor.model.BoundingBox
 import editor.model.Model
 import editor.state.State
@@ -246,20 +248,41 @@ fun RowScope.EntityEditor(holder: StateHolder) {
 fun RowScope.EntityPreview(holder: StateHolder) {
     val state by holder.state.collectAsState()
     val model by holder.model.collectAsState()
+    val entityModel = state.entityModelId?.let { model.entityModels[it] }
+
+    // Stable instance (see rememberOrbitRotation): key changes reset yaw/pitch
+    // via LaunchedEffect in composition, which does re-run on state changes.
+    val orbit = rememberOrbitRotation(
+        entityModel?.id,
+        entityModel?.defaultScale?.x,
+        entityModel?.defaultScale?.y,
+        entityModel?.defaultScale?.z
+    )
+
+    // Stable cache; only touched inside Frame (single GL thread).
+    // Unscaled sphere is cached per model, scaling applied per frame (cheap),
+    // so scale edits stay live without recomputing fromPoints.
+    val baseSphereCache = remember { mutableMapOf<String, BoundingSphere>() }
 
     Box(Modifier.weight(1.6f).fillMaxSize()) {
         Korender(vSync = true) {
+            OnTouch { orbit.handleTouch(it) }
             Frame {
-                state.entityModelId?.let { modelId ->
-                    val entityModel = model.entityModels[modelId]!!
-                    val bs by lazy { BoundingSphere.fromPoints(entityModel.points) }
+                // Read live state INSIDE Frame. This lambda is registered once at
+                // Engine init, so any snapshot captured outside stays frozen.
+                val liveEntity = holder.state.value.entityModelId?.let { holder.model.value.entityModels[it] }
+                if (liveEntity != null) {
+                    val base = baseSphereCache.getOrPut(liveEntity.id) {
+                        BoundingSphere.fromPoints(liveEntity.points)
+                    }
+                    val scaled = base.transform(Transform.scale(liveEntity.defaultScale).mat4)
                     AmbientLight(white(0.6f))
-                    camera = camera(bs.center + (bs.radius * 2f).z, -1.z, 1.y)
-                    projection = projection(bs.radius * 2f * width.toFloat() / height.toFloat(), bs.radius * 2f, bs.radius, bs.radius * 6f)
+                    camera = camera(scaled.center + (scaled.radius * 2f).z, -1.z, 1.y)
+                    projection = projection(scaled.radius * 2f * width.toFloat() / height.toFloat(), scaled.radius * 2f, scaled.radius, scaled.radius * 6f)
                     AmbientLight(white(0.5f))
                     DirectionalLight(Vec3(1f, -1f, -1f), white(0.5f))
-                    Node(resourceLoader = { entityModel.bytes }) {
-                        Model(entityModel.id + ".kr")
+                    Node(resourceLoader = { liveEntity.bytes }) {
+                        Model(liveEntity.id + ".kr", transform = orbit.modelTransform(liveEntity.defaultScale, scaled.center))
                     }
                 }
             }

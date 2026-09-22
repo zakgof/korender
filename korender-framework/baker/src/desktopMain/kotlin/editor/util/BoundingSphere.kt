@@ -67,7 +67,7 @@ class BoundingSphere(val center: Vec3, val radius: Float) {
         ),
         radius * maxOf(
             sqrt(m.m00 * m.m00 + m.m10 * m.m10 + m.m20 * m.m20),
-            sqrt(m.m01 * m.m01 + m.m21 * m.m21 + m.m31 * m.m31),
+            sqrt(m.m01 * m.m01 + m.m11 * m.m11 + m.m21 * m.m21),
             sqrt(m.m02 * m.m02 + m.m12 * m.m12 + m.m22 * m.m22)
         )
     )

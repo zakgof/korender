@@ -44,13 +44,13 @@ import com.zakgof.korender.baker.resources.material
 import com.zakgof.korender.baker.resources.newmaterial
 import com.zakgof.korender.baker.resources.trash
 import com.zakgof.korender.math.ColorRGB.Companion.white
-import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec2
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.x
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import editor.korender.rememberOrbitRotation
 import editor.model.Material
 import editor.model.Model
 import editor.model.Tex
@@ -291,8 +291,11 @@ fun RowScope.MaterialEditor(holder: StateHolder) {
 fun RowScope.MaterialPreview(holder: StateHolder) {
     val state by holder.state.collectAsState()
     val model by holder.model.collectAsState()
+    // Stable instance (Korender registers OnTouch/Frame once); resets on material switch.
+    val orbit = rememberOrbitRotation(state.materialId)
     Box(Modifier.weight(1.6f).fillMaxSize()) {
         Korender({ Res.readBytes(it) }, vSync = true) {
+            OnTouch { orbit.handleTouch(it) }
             Frame {
                 AmbientLight(white(0.6f))
                 val mat = model.materials[state.materialId]!!
@@ -327,8 +330,7 @@ fun RowScope.MaterialPreview(holder: StateHolder) {
                         8, 9, 10, 8, 10, 11,
                         12, 13, 14, 12, 14, 15,
                         16, 17, 18, 16, 18, 19,
-                        20, 21, 22, 20, 22, 23
-                    )
+                        20, 21, 22, 20, 22, 23                    )
                 }
                 val worldTexMesh = customMesh("fit", 24, 36, POS, NORMAL, TEX, dynamic = true) {
                     val s = mat.scale
@@ -365,14 +367,14 @@ fun RowScope.MaterialPreview(holder: StateHolder) {
                         20, 21, 22, 20, 22, 23
                     )
                 }
-                camera = camera(10.z, -1.z, 1.y)
+                camera = camera(14.z, -1.z, 1.y)
                 projection = projection(width.toFloat() / height.toFloat(), 1f, 1f, 100f)
                 AmbientLight(white(0.5f))
                 DirectionalLight(Vec3(1f, -1f, -1f), white(0.5f))
                 Renderable(
                     toBaseMM(mat, false),
                     mesh = if (mat.fitToFace) fitToFaceMesh else worldTexMesh,
-                    transform = rotate(Quaternion.fromAxisAngle(1.y, frameInfo.time)),
+                    transform = rotate(orbit.rotation()),
                     transparent = true
                 )
             }
