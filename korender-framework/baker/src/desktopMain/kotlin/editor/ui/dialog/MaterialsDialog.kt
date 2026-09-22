@@ -41,6 +41,7 @@ import com.zakgof.korender.baker.editor.ui.widget.MaterialWidget
 import com.zakgof.korender.baker.resources.Res
 import com.zakgof.korender.baker.resources.file
 import com.zakgof.korender.baker.resources.material
+import com.zakgof.korender.baker.resources.newmaterial
 import com.zakgof.korender.baker.resources.trash
 import com.zakgof.korender.math.ColorRGB.Companion.white
 import com.zakgof.korender.math.Quaternion
@@ -154,6 +155,12 @@ fun RowScope.MaterialEditor(holder: StateHolder) {
             ) {
                 IconButton(Res.drawable.file, "New material") {
                     holder.createMaterial()
+                }
+                IconButton(Res.drawable.newmaterial, "Quick add Material") {
+                    textureDialog(state, holder)?.let { file ->
+                        val material = Material(file.name, Tex(file))
+                        holder.addMaterial(material)
+                    }
                 }
                 if (state.materialId != Material.generic.id) {
                     IconButton(Res.drawable.trash, "Delete Material") {
