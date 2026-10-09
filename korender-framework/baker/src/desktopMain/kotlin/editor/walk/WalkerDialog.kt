@@ -37,7 +37,9 @@ fun walkerDialog(): (Pair<KrModel, ByteArray>) -> Unit {
             state = rememberDialogState(size = DpSize(800.dp, 600.dp))
         ) {
             Korender({
-                if (it == "scene/foobar.kr") Cbor.encodeToByteArray(data!!.first) else Res.readBytes("files/$it")
+                if (it == "scene/foobar.kr") Cbor.encodeToByteArray(data!!.first) else Res.readBytes(
+                    "files/$it"
+                )
             }) {
                 val controller = Controller(data!!.second)
                 OnKey { controller.key(it) }
@@ -60,15 +62,38 @@ fun walkerDialog(): (Pair<KrModel, ByteArray>) -> Unit {
                     Sky(sky)
                     PostProcess(fxaa())
                     DirectionalLight(Vec3(1f, -2f, -1f), white(2f)) {
-                        Cascade(1024, 0.5f, 35f, -0.2f to 20f, hardwarePcf(samples = 8, blurRadius = 1.5f, bias = 0.01f))
-                        Cascade(512, 30f, 100f, -0.2f to 20f, hardwarePcf(samples = 6, blurRadius = 1.5f, bias = 0.01f))
+                        Cascade(
+                            1024,
+                            0.5f,
+                            35f,
+                            -0.2f to 20f,
+                            hardwarePcf(samples = 8, blurRadius = 1.5f, bias = 0.03f)
+                        )
+                        Cascade(
+                            512,
+                            30f,
+                            100f,
+                            -0.2f to 20f,
+                            hardwarePcf(samples = 6, blurRadius = 1.5f, bias = 0.03f)
+                        )
                     }
                     DirectionalLight(Vec3(-1f, -2f, 1f), white(0.5f))
                     controller.update(frameInfo.dt, frameInfo.time)
                     projection = projection(0.5f * width / height, 0.5f, 0.5f, 1000f)
                     camera = controller.camera()
-                    Model("scene/foobar.kr") {}
-                    Model(resource = "walk/swat-woman.glb", transform = controller.player())
+                    Model("scene/foobar.kr")
+//                    Model(
+//                        resource = "walk/swat-woman.glb",
+//                        transform = controller.player() * (scale(0.01f).translate(-1.0f.y))
+//                    )
+//                    Renderable(
+//                        material = base {
+//                            color = ColorRGBA(1f, 0f, 0f, 0.2f)
+//                        },
+//                        mesh = cube(),
+//                        transparent = true,
+//                        transform = controller.player() * scale(Vec3(0.3f, 1.75f, 0.3f))
+//                    )
                     Gui {
                         Column {
                             Filler()

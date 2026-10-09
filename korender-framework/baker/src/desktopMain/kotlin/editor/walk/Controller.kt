@@ -4,24 +4,21 @@ import androidx.compose.ui.input.key.Key
 import com.zakgof.korender.CameraDeclaration
 import com.zakgof.korender.KeyEvent
 import com.zakgof.korender.TouchEvent
-import com.zakgof.korender.scope.KorenderScope
 import com.zakgof.korender.math.Quaternion
 import com.zakgof.korender.math.Transform
-import com.zakgof.korender.math.Transform.Companion.scale
+import com.zakgof.korender.math.Transform.Companion.rotate
 import com.zakgof.korender.math.Vec3
 import com.zakgof.korender.math.y
 import com.zakgof.korender.math.z
+import com.zakgof.korender.scope.KorenderScope
 
 class Controller(bvhBytes: ByteArray) {
 
 
     private val collider = Collider(bvhBytes)
 
-    private var player: Vec3 = Vec3(0f, 1.0f, 0f)
-    private var up: Vec3 = 1.y
+    private var player: Vec3 = Vec3(0f, 0.9f, 0f)
     private var look: Vec3 = 1.z
-    private val horzLook
-        get() = (look - (look.y).y).normalize()
     private var keys = mutableSetOf<Key>()
     private var touchDown: Vec3? = null
 
@@ -36,29 +33,16 @@ class Controller(bvhBytes: ByteArray) {
 
     context(kc: KorenderScope)
     fun touch(touchEvent: TouchEvent) {
-        if (touchEvent.type == TouchEvent.Type.DOWN) {
-            touchDown = screenToLook(touchEvent)
-        }
-        if (touchEvent.type == TouchEvent.Type.MOVE && touchDown != null) {
-            val newLook = screenToLook(touchEvent)
-            val rot = Quaternion.shortestArc(newLook, touchDown!!)
-            look = (rot * look).normalize()
-            up = (rot * up).normalize()
-        }
-        if (touchEvent.type == TouchEvent.Type.UP) {
-            touchDown = null
-        }
+
     }
 
     context(kc: KorenderScope)
     fun camera(): CameraDeclaration {
-        return kc.camera(player - look * 2f + up * 1f, look, up)
+        return kc.camera(player + 0.7f.y, look, 1.y)
     }
 
     fun player(): Transform {
-        return scale(0.01f)
-            .translate(-1.0f.y)
-            .rotate(-horzLook, 1.y)
+        return rotate(-look, 1.y)
             .translate(player)
     }
 
@@ -73,10 +57,10 @@ class Controller(bvhBytes: ByteArray) {
         var delta = Vec3.ZERO
         if (keys.contains(Key.W)) delta += look * dt * v
         if (keys.contains(Key.S)) delta -= look * dt * v
-        if (keys.contains(Key.D)) delta += (look cross up) * dt * v
-        if (keys.contains(Key.A)) delta -= (look cross up) * dt * v
+        if (keys.contains(Key.D)) delta += (look cross 1.y) * dt * v
+        if (keys.contains(Key.A)) delta -= (look cross 1.y) * dt * v
 
-        val hit = collider.test(player, delta, Vec3(0.3f, 1.75f, 0.3f))
+        val hit = collider.test(player, delta, Vec3(0.3f, 1.8f, 0.3f))
         player += (hit?.let { delta * it.t - delta.normalize() * 0.1f } ?: delta)
 
     }
