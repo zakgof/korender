@@ -439,9 +439,10 @@ interface KorenderScope : ResourceScope {
      * @param samples number of softening samples
      * @param blurRadius filtering kernel size
      * @param bias shadow mapping bias: smaller values may cause acne artifact, larger values cause peter-panning
+     * @param normalBias world-space offset of the shadow lookup along the surface normal, in scene units: removes acne on grazing surfaces without the peter-panning of depth bias
      * @return shadow algorithm declaration
      */
-    fun softwarePcf(samples: Int = 8, blurRadius: Float = 1.5f, bias: Float = 0.005f): ShadowAlgorithmDeclaration
+    fun softwarePcf(samples: Int = 8, blurRadius: Float = 1.5f, bias: Float = 0.005f, normalBias: Float = 0f): ShadowAlgorithmDeclaration
 
     /**
      * Returns GPU-based percentage close filtering shadow algorithm declaration.
@@ -450,9 +451,10 @@ interface KorenderScope : ResourceScope {
      * @param samples number of softening samples
      * @param blurRadius filtering kernel size
      * @param bias shadow mapping bias: smaller values may cause acne artifact, larger values cause peter-panning
+     * @param normalBias world-space offset of the shadow lookup along the surface normal, in scene units: removes acne on grazing surfaces without the peter-panning of depth bias
      * @return shadow algorithm declaration
      */
-    fun hardwarePcf(samples: Int = 8, blurRadius: Float = 1.5f, bias: Float = 0.005f): ShadowAlgorithmDeclaration
+    fun hardwarePcf(samples: Int = 8, blurRadius: Float = 1.5f, bias: Float = 0.005f, normalBias: Float = 0f): ShadowAlgorithmDeclaration
 
 
     /**

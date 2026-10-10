@@ -506,6 +506,7 @@ internal class Renderer(
             lightMaterialModifier.i1 = shadowData.map { it.i1 }
             lightMaterialModifier.f1 = shadowData.map { it.f1 }
             lightMaterialModifier.f2 = shadowData.map { it.f2 }
+            lightMaterialModifier.f3 = shadowData.map { it.f3 }
             contextMaterialModifier.shadowTextures = GlGpuTextureList(shadowData.map { it.texture }, 5)
             contextMaterialModifier.pcfTextures = GlGpuShadowTextureList(shadowData.map { it.pcfTexture }, 5)
             lightMaterialModifier.dlsti = directionalShadowIndexes

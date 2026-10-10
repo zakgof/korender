@@ -50,14 +50,14 @@ fun walkerDialog(): (Pair<KrModel, ByteArray>) -> Unit {
                         Shading {
                             env = sky
                         }
-                        Hbao(
-                            downsample = 2,
-                            sampleCount = 12,
-                            radius = 3.0f,
-                            bias = 0.1f,
-                            intensity = 1.4f,
-                            blurRadius = 16f
-                        )
+//                        Hbao(
+//                            downsample = 2,
+//                            sampleCount = 36,
+//                            radius = 3.0f,
+//                            bias = 0.1f,
+//                            intensity = 1.4f,
+//                            blurRadius = 16f
+//                        )
                     }
                     Sky(sky)
                     PostProcess(fxaa())
@@ -65,21 +65,21 @@ fun walkerDialog(): (Pair<KrModel, ByteArray>) -> Unit {
                         Cascade(
                             1024,
                             0.5f,
-                            35f,
-                            -0.2f to 20f,
-                            hardwarePcf(samples = 8, blurRadius = 1.5f, bias = 0.03f)
+                            5f,
+                            -0.2f to 4f,
+                            hardwarePcf(samples = 16, blurRadius = 2.5f, bias = 0.005f, normalBias = 0.025f)
                         )
                         Cascade(
-                            512,
-                            30f,
-                            100f,
-                            -0.2f to 20f,
-                            hardwarePcf(samples = 6, blurRadius = 1.5f, bias = 0.03f)
+                            1024,
+                            4f,
+                            20f,
+                            -0.2f to 4f,
+                            hardwarePcf(samples = 6, blurRadius = 1.5f, bias = 0.005f, normalBias = 0.1f)
                         )
                     }
                     DirectionalLight(Vec3(-1f, -2f, 1f), white(0.5f))
                     controller.update(frameInfo.dt, frameInfo.time)
-                    projection = projection(0.5f * width / height, 0.5f, 0.5f, 1000f)
+                    projection = projection(0.3f * width / height, 0.3f, 0.3f, 1000f)
                     camera = controller.camera()
                     Model("scene/foobar.kr")
 //                    Model(

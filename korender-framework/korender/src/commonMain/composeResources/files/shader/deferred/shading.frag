@@ -73,7 +73,7 @@ void main() {
     float ambientOcclusion = ssao * hbao;
 
     float plane = dot((vpos - cameraPos), cameraDir);
-    populateShadowRatios(plane, vpos);
+    populateShadowRatios(plane, vpos, N);
 
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
     float NdotV = max(dot(V, N), 0.0);

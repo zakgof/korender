@@ -49,6 +49,7 @@ internal class LightMaterialModifier(sc: SceneDeclaration) : InternalMaterialMod
     var i1 = listOf<Int>()
     var f1 = listOf<Float>()
     var f2 = listOf<Float>()
+    var f3 = listOf<Float>()
 
     override fun uniform(name: String): UniformGetter<*>? =
         when (name) {
@@ -71,6 +72,7 @@ internal class LightMaterialModifier(sc: SceneDeclaration) : InternalMaterialMod
             "i1[0]" -> IntListGetter<LightMaterialModifier> { it.i1 }
             "f1[0]" -> FloatListGetter<LightMaterialModifier> { it.f1 }
             "f2[0]" -> FloatListGetter<LightMaterialModifier> { it.f2 }
+            "f3[0]" -> FloatListGetter<LightMaterialModifier> { it.f3 }
             else -> super.uniform(name)
         }
 }

@@ -33,5 +33,6 @@ layout(std140) uniform Frame {
     float f1[5];
     float f2[5];
     int i1[5];
+    float f3[5];
 
 };

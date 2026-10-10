@@ -110,25 +110,28 @@ float linstep(float edge0, float edge1, float x) {
     return clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
 }
 
-float casc(int s, float plane, vec3 vpos, sampler2D shadowTexture, sampler2DShadow pcfTexture) {
+float casc(int s, float plane, vec3 vpos, vec3 vnormal, sampler2D shadowTexture, sampler2DShadow pcfTexture) {
     vec4 ci = cascade[s];
     float cascadeContribution = linstep(ci.r, ci.g, plane) * (1.0 - linstep(ci.b, ci.a, plane));
     if (cascadeContribution < 0.0001) {
         return 0.0;
     }
 
-    vec3 vshadow = (bsps[s] * vec4(vpos, 1.0)).xyz;
+    // World-space normal bias, applied BEFORE projection so it works for
+    // both plain and fixed-Y depth modes (meters, range-independent).
+    vec3 bpos = vpos + vnormal * f3[s];
+    vec3 vshadow = (bsps[s] * vec4(bpos, 1.0)).xyz;
     if ((shadowMode[s] & 0x80) != 0) {
-        vshadow.z = (yMax[s] - vpos.y) / (yMax[s] - yMin[s]);
+        vshadow.z = (yMax[s] - bpos.y) / (yMax[s] - yMin[s]);
     }
     float sh = shadow(shadowTexture, pcfTexture, s, vshadow, shadowMode[s] & 0x07);
     return sh * cascadeContribution;
 }
 
-void populateShadowRatios(float plane, vec3 vpos) {
-    if (numShadows > 0) shadowRatios[0] = casc(0, plane, vpos, shadowTextures[0], pcfTextures[0]);
-    if (numShadows > 1) shadowRatios[1] = casc(1, plane, vpos, shadowTextures[1], pcfTextures[1]);
-    if (numShadows > 2) shadowRatios[2] = casc(2, plane, vpos, shadowTextures[2], pcfTextures[2]);
-    if (numShadows > 3) shadowRatios[3] = casc(3, plane, vpos, shadowTextures[3], pcfTextures[3]);
-    if (numShadows > 4) shadowRatios[4] = casc(4, plane, vpos, shadowTextures[4], pcfTextures[4]);
+void populateShadowRatios(float plane, vec3 vpos, vec3 vnormal) {
+    if (numShadows > 0) shadowRatios[0] = casc(0, plane, vpos, vnormal, shadowTextures[0], pcfTextures[0]);
+    if (numShadows > 1) shadowRatios[1] = casc(1, plane, vpos, vnormal, shadowTextures[1], pcfTextures[1]);
+    if (numShadows > 2) shadowRatios[2] = casc(2, plane, vpos, vnormal, shadowTextures[2], pcfTextures[2]);
+    if (numShadows > 3) shadowRatios[3] = casc(3, plane, vpos, vnormal, shadowTextures[3], pcfTextures[3]);
+    if (numShadows > 4) shadowRatios[4] = casc(4, plane, vpos, vnormal, shadowTextures[4], pcfTextures[4]);
 }

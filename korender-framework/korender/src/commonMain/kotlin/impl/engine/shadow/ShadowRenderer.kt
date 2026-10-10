@@ -135,6 +135,11 @@ internal fun Renderer.Scene.shadows(
             is InternalSoftwarePcfShadow -> declaration.algorithm.bias
             is InternalHardwarePcfShadow -> declaration.algorithm.bias
             else -> 0f
+        },
+        when (declaration.algorithm) {
+            is InternalSoftwarePcfShadow -> declaration.algorithm.normalBias
+            is InternalHardwarePcfShadow -> declaration.algorithm.normalBias
+            else -> 0f
         }
     )
 }
@@ -299,6 +304,7 @@ internal class ShadowerData(
     val i1: Int,
     val f1: Float,
     val f2: Float,
+    val f3: Float,
 )
 
 internal class CasterMaterialModifier(

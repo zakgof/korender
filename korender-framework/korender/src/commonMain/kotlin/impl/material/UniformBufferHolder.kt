@@ -13,7 +13,7 @@ import com.zakgof.korender.impl.glgpu.UniformPack
 
 internal class UniformBufferHolder {
 
-    private val frameUbo = GlGpuUniformBuffer(4640)
+    private val frameUbo = GlGpuUniformBuffer(4720)
 
     private val frameBindings: List<Pair<String, Int>> = listOf(
         "cameraPos" to 0,
@@ -43,7 +43,8 @@ internal class UniformBufferHolder {
         "shadowMode[0]" to 4320,
         "f1[0]" to 4400,
         "f2[0]" to 4480,
-        "i1[0]" to 4560
+        "i1[0]" to 4560,
+        "f3[0]" to 4640
     )
 
     private val compiledUniformBindings = mutableListOf<CompiledBlockBinding>()

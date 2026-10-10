@@ -194,7 +194,7 @@ void main() {
             occlusion *= pluginOcclusion();
         #endif
 
-        populateShadowRatios(plane, position);
+        populateShadowRatios(plane, position, normal);
 
         vec3 F0 = mix(vec3(0.04), albedo.rgb, metallic);
         float NdotV = max(dot(look, normal), 0.0);

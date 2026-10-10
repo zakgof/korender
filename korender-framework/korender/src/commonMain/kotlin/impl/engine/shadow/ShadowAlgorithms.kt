@@ -6,7 +6,7 @@ internal class InternalVsmShadow(val blurRadius: Float?) : ShadowAlgorithmDeclar
 
 internal class InternalHardShadow : ShadowAlgorithmDeclaration
 
-internal class InternalSoftwarePcfShadow(val samples: Int, val blurRadius: Float, val bias: Float) : ShadowAlgorithmDeclaration
+internal class InternalSoftwarePcfShadow(val samples: Int, val blurRadius: Float, val bias: Float, val normalBias: Float) : ShadowAlgorithmDeclaration
 
-internal class InternalHardwarePcfShadow(val samples: Int, val blurRadius: Float, val bias: Float) : ShadowAlgorithmDeclaration
+internal class InternalHardwarePcfShadow(val samples: Int, val blurRadius: Float, val bias: Float, val normalBias: Float) : ShadowAlgorithmDeclaration
 
